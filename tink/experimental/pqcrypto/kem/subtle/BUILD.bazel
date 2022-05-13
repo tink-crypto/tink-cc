@@ -1,0 +1,216 @@
+# package containing subtle implementations of PQC primitives
+
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "cecpq2_hkdf_sender_kem_boringssl",
+    srcs = ["cecpq2_hkdf_sender_kem_boringssl.cc"],
+    hdrs = ["cecpq2_hkdf_sender_kem_boringssl.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/internal:fips_utils",
+        "//tink/subtle",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:hkdf",
+        "//tink/subtle:random",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "cecpq2_hkdf_recipient_kem_boringssl",
+    srcs = ["cecpq2_hkdf_recipient_kem_boringssl.cc"],
+    hdrs = ["cecpq2_hkdf_recipient_kem_boringssl.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cecpq2_hkdf_sender_kem_boringssl",
+        "//tink/internal:fips_utils",
+        "//tink/subtle",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:hkdf",
+        "//tink/util:errors",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "cecpq2_subtle_boringssl_util",
+    srcs = ["cecpq2_subtle_boringssl_util.cc"],
+    hdrs = ["cecpq2_subtle_boringssl_util.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/subtle",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+    ],
+)
+
+cc_library(
+    name = "cecpq2_aead_hkdf_hybrid_decrypt",
+    srcs = ["cecpq2_aead_hkdf_hybrid_decrypt.cc"],
+    hdrs = ["cecpq2_aead_hkdf_hybrid_decrypt.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:hybrid_decrypt",
+        "//tink/experimental/pqcrypto/kem:cecpq2_aead_hkdf_dem_helper",
+        "//tink/experimental/pqcrypto/kem/subtle:cecpq2_hkdf_recipient_kem_boringssl",
+        "//tink/experimental/pqcrypto/kem/subtle:cecpq2_subtle_boringssl_util",
+        "//tink/experimental/pqcrypto/proto:cecpq2_aead_hkdf_cc_proto",
+        "//tink/subtle:ec_util",
+        "//tink/util:enums",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "cecpq2_aead_hkdf_hybrid_encrypt",
+    srcs = ["cecpq2_aead_hkdf_hybrid_encrypt.cc"],
+    hdrs = ["cecpq2_aead_hkdf_hybrid_encrypt.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem/subtle",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:aead",
+        "//tink:hybrid_encrypt",
+        "//tink/experimental/pqcrypto/kem:cecpq2_aead_hkdf_dem_helper",
+        "//tink/experimental/pqcrypto/kem/subtle:cecpq2_hkdf_sender_kem_boringssl",
+        "//tink/experimental/pqcrypto/kem/subtle:cecpq2_subtle_boringssl_util",
+        "//tink/experimental/pqcrypto/proto:cecpq2_aead_hkdf_cc_proto",
+        "//tink/util:enums",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+#tests
+
+cc_test(
+    name = "cecpq2_hkdf_sender_kem_boringssl_test",
+    srcs = ["cecpq2_hkdf_sender_kem_boringssl_test.cc"],
+    deps = [
+        ":cecpq2_hkdf_recipient_kem_boringssl",
+        ":cecpq2_hkdf_sender_kem_boringssl",
+        ":cecpq2_subtle_boringssl_util",
+        "//tink/config:tink_fips",
+        "//tink/subtle",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:hkdf",
+        "//tink/subtle:random",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "cecpq2_hkdf_recipient_kem_boringssl_test",
+    srcs = ["cecpq2_hkdf_recipient_kem_boringssl_test.cc"],
+    deps = [
+        ":cecpq2_hkdf_recipient_kem_boringssl",
+        "//tink/config:tink_fips",
+        "//tink/subtle:random",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "cecpq2_subtle_boringssl_util_test",
+    srcs = ["cecpq2_subtle_boringssl_util_test.cc"],
+    deps = [
+        ":cecpq2_subtle_boringssl_util",
+        "//tink/subtle:random",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@boringssl//:crypto",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "cecpq2_aead_hkdf_hybrid_encrypt_test",
+    size = "small",
+    srcs = ["cecpq2_aead_hkdf_hybrid_encrypt_test.cc"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        ":cecpq2_aead_hkdf_hybrid_encrypt",
+        "//tink:hybrid_encrypt",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/experimental/pqcrypto/kem/subtle:cecpq2_subtle_boringssl_util",
+        "//tink/experimental/pqcrypto/kem/util:test_util",
+        "//tink/subtle:random",
+        "//tink/subtle:subtle_util",
+        "//tink/util:enums",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "cecpq2_aead_hkdf_hybrid_decrypt_test",
+    size = "small",
+    srcs = ["cecpq2_aead_hkdf_hybrid_decrypt_test.cc"],
+    copts = ["-Iexternal/gtest/include"],
+    deps = [
+        ":cecpq2_aead_hkdf_hybrid_decrypt",
+        ":cecpq2_aead_hkdf_hybrid_encrypt",
+        "//tink:hybrid_encrypt",
+        "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/aead:xchacha20_poly1305_key_manager",
+        "//tink/config:tink_config",
+        "//tink/experimental/pqcrypto/kem/subtle:cecpq2_subtle_boringssl_util",
+        "//tink/experimental/pqcrypto/kem/util:test_util",
+        "//tink/experimental/pqcrypto/proto:cecpq2_aead_hkdf_cc_proto",
+        "//tink/subtle:random",
+        "//tink/subtle:subtle_util",
+        "//tink/util:enums",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,242 @@
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "mac_wrapper",
+    srcs = ["mac_wrapper.cc"],
+    hdrs = ["mac_wrapper.h"],
+    include_prefix = "tink/mac",
+    deps = [
+        "//tink:crypto_format",
+        "//tink:mac",
+        "//tink:primitive_set",
+        "//tink:primitive_wrapper",
+        "//tink/internal:util",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "mac_config",
+    srcs = ["mac_config.cc"],
+    hdrs = ["mac_config.h"],
+    include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":aes_cmac_key_manager",
+        ":hmac_key_manager",
+        ":mac_wrapper",
+        "//tink:registry",
+        "//tink/config:config_util",
+        "//tink/config:tink_fips",
+        "//proto:config_cc_proto",
+        "//tink/util:status",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+    ],
+)
+
+cc_library(
+    name = "mac_factory",
+    srcs = ["mac_factory.cc"],
+    hdrs = ["mac_factory.h"],
+    include_prefix = "tink/mac",
+    deps = [
+        ":mac_wrapper",
+        "//tink:key_manager",
+        "//tink:keyset_handle",
+        "//tink:mac",
+        "//tink:registry",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/base:core_headers",
+    ],
+)
+
+cc_library(
+    name = "mac_key_templates",
+    srcs = ["mac_key_templates.cc"],
+    hdrs = ["mac_key_templates.h"],
+    include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto:aes_cmac_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "aes_cmac_key_manager",
+    hdrs = ["aes_cmac_key_manager.h"],
+    include_prefix = "tink/mac",
+    deps = [
+        "//tink:core/key_type_manager",
+        "//tink:key_manager",
+        "//tink:mac",
+        "//proto:aes_cmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:aes_cmac_boringssl",
+        "//tink/subtle:random",
+        "//tink/util:constants",
+        "//tink/util:errors",
+        "//tink/util:protobuf_helper",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:validation",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "hmac_key_manager",
+    srcs = ["hmac_key_manager.cc"],
+    hdrs = ["hmac_key_manager.h"],
+    include_prefix = "tink/mac",
+    deps = [
+        "//tink:core/key_type_manager",
+        "//tink:mac",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:hmac_boringssl",
+        "//tink/subtle:random",
+        "//tink/util:constants",
+        "//tink/util:enums",
+        "//tink/util:errors",
+        "//tink/util:input_stream_util",
+        "//tink/util:protobuf_helper",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:validation",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+# tests
+
+cc_test(
+    name = "mac_wrapper_test",
+    size = "small",
+    srcs = ["mac_wrapper_test.cc"],
+    deps = [
+        ":mac_wrapper",
+        "//tink:crypto_format",
+        "//tink:mac",
+        "//tink:primitive_set",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "mac_config_test",
+    size = "small",
+    srcs = ["mac_config_test.cc"],
+    tags = ["fips"],
+    deps = [
+        ":hmac_key_manager",
+        ":mac_config",
+        ":mac_key_templates",
+        "//tink:config",
+        "//tink:keyset_handle",
+        "//tink:mac",
+        "//tink:registry",
+        "//tink/config:tink_fips",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "mac_factory_test",
+    size = "small",
+    srcs = ["mac_factory_test.cc"],
+    deps = [
+        ":hmac_key_manager",
+        ":mac_config",
+        ":mac_factory",
+        "//tink:crypto_format",
+        "//tink:keyset_handle",
+        "//tink:mac",
+        "//tink/internal:key_info",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:test_keyset_handle",
+        "//tink/util:test_util",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "mac_key_templates_test",
+    size = "small",
+    srcs = ["mac_key_templates_test.cc"],
+    deps = [
+        ":aes_cmac_key_manager",
+        ":hmac_key_manager",
+        ":mac_key_templates",
+        "//tink:core/key_manager_impl",
+        "//proto:aes_cmac_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_cmac_key_manager_test",
+    size = "small",
+    srcs = ["aes_cmac_key_manager_test.cc"],
+    deps = [
+        ":aes_cmac_key_manager",
+        "//proto:aes_cmac_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "hmac_key_manager_test",
+    size = "small",
+    srcs = ["hmac_key_manager_test.cc"],
+    deps = [
+        ":hmac_key_manager",
+        "//tink:core/key_manager_impl",
+        "//tink:mac",
+        "//proto:hmac_cc_proto",
+        "//tink/util:istream_input_stream",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

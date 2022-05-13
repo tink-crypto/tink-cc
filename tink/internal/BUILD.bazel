@@ -1,0 +1,468 @@
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "ssl_util",
+    hdrs = ["ssl_util.h"],
+    include_prefix = "tink/internal",
+    deps = ["@boringssl//:crypto"],
+)
+
+cc_library(
+    name = "keyset_wrapper",
+    hdrs = ["keyset_wrapper.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/container:flat_hash_map",
+    ],
+)
+
+cc_library(
+    name = "util",
+    srcs = ["util.cc"],
+    hdrs = ["util.h"],
+    include_prefix = "tink/internal",
+    deps = ["@com_google_absl//absl/strings"],
+)
+
+cc_library(
+    name = "test_file_util",
+    testonly = 1,
+    srcs = ["test_file_util_bazel.cc"],
+    hdrs = ["test_file_util.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "@bazel_tools//tools/cpp/runfiles",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "keyset_wrapper_impl",
+    hdrs = ["keyset_wrapper_impl.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":key_info",
+        ":keyset_wrapper",
+        "//tink:primitive_set",
+        "//tink:primitive_wrapper",
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "//tink/util:validation",
+        "@com_google_absl//absl/container:flat_hash_map",
+    ],
+)
+
+cc_library(
+    name = "ssl_unique_ptr",
+    hdrs = ["ssl_unique_ptr.h"],
+    include_prefix = "tink/internal",
+    deps = ["@boringssl//:crypto"],
+)
+
+cc_library(
+    name = "key_info",
+    srcs = ["key_info.cc"],
+    hdrs = ["key_info.h"],
+    include_prefix = "tink/internal",
+    deps = ["//proto:tink_cc_proto"],
+)
+
+cc_library(
+    name = "registry_impl",
+    srcs = ["registry_impl.cc"],
+    hdrs = ["registry_impl.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":fips_utils",
+        ":keyset_wrapper",
+        ":keyset_wrapper_impl",
+        "//tink:catalogue",
+        "//tink:core/key_manager_impl",
+        "//tink:core/key_type_manager",
+        "//tink:core/private_key_manager_impl",
+        "//tink:core/private_key_type_manager",
+        "//tink:key_manager",
+        "//tink:primitive_set",
+        "//tink:primitive_wrapper",
+        "//tink/monitoring",
+        "//proto:tink_cc_proto",
+        "//tink/util:errors",
+        "//tink/util:protobuf_helper",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:validation",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+config_setting(
+    name = "fips_enabled",
+    flag_values = {"//tink/config:use_only_fips": "True"},
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "fips_utils",
+    srcs = ["fips_utils.cc"],
+    hdrs = ["fips_utils.h"],
+    defines = select({
+        "fips_enabled": ["TINK_USE_ONLY_FIPS"],
+        "//conditions:default": [],
+    }),
+    include_prefix = "tink/internal",
+    deps = [
+        "//tink/util:status",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "err_util",
+    srcs = ["err_util.cc"],
+    hdrs = ["err_util.h"],
+    include_prefix = "tink/internal",
+    deps = ["@boringssl//:crypto"],
+)
+
+cc_library(
+    name = "bn_util",
+    srcs = ["bn_util.cc"],
+    hdrs = ["bn_util.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":ssl_unique_ptr",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "rsa_util",
+    srcs = ["rsa_util.cc"],
+    hdrs = ["rsa_util.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":bn_util",
+        ":err_util",
+        ":ssl_unique_ptr",
+        ":ssl_util",
+        "//tink/config:tink_fips",
+        "//tink/subtle:common_enums",
+        "//tink/util:errors",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "ec_util",
+    srcs = ["ec_util.cc"],
+    hdrs = ["ec_util.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":bn_util",
+        ":err_util",
+        ":fips_utils",
+        ":ssl_unique_ptr",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:random",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "md_util",
+    srcs = ["md_util.cc"],
+    hdrs = ["md_util.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":err_util",
+        ":util",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:subtle_util",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "util_test",
+    srcs = ["util_test.cc"],
+    deps = [
+        ":util",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "keyset_wrapper_impl_test",
+    srcs = ["keyset_wrapper_impl_test.cc"],
+    deps = [
+        ":keyset_wrapper_impl",
+        "//tink:primitive_set",
+        "//tink:primitive_wrapper",
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "key_info_test",
+    srcs = ["key_info_test.cc"],
+    deps = [
+        ":key_info",
+        "//proto:tink_cc_proto",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "registry_impl_test",
+    size = "small",
+    srcs = ["registry_impl_test.cc"],
+    tags = ["fips"],
+    deps = [
+        "//tink:aead",
+        "//tink:catalogue",
+        "//tink:core/key_manager_impl",
+        "//tink:core/key_type_manager",
+        "//tink:crypto_format",
+        "//tink:keyset_manager",
+        "//tink:registry",
+        "//tink/aead:aead_wrapper",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/config:tink_fips",
+        "//tink/hybrid:ecies_aead_hkdf_private_key_manager",
+        "//tink/hybrid:ecies_aead_hkdf_public_key_manager",
+        "//tink/monitoring",
+        "//tink/monitoring:monitoring_client_mocks",
+        "//proto:aes_ctr_hmac_aead_cc_proto",
+        "//proto:aes_gcm_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:ecdsa_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:aes_gcm_boringssl",
+        "//tink/subtle:random",
+        "//tink/util:istream_input_stream",
+        "//tink/util:protobuf_helper",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_keyset_handle",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "fips_utils_test",
+    size = "small",
+    srcs = ["fips_utils_test.cc"],
+    tags = ["fips"],
+    deps = [
+        ":fips_utils",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "err_util_test",
+    size = "small",
+    srcs = ["err_util_test.cc"],
+    deps = [
+        ":err_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "bn_util_test",
+    size = "small",
+    srcs = ["bn_util_test.cc"],
+    deps = [
+        ":bn_util",
+        ":ssl_unique_ptr",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "rsa_util_test",
+    size = "large",
+    srcs = ["rsa_util_test.cc"],
+    deps = [
+        ":bn_util",
+        ":rsa_util",
+        ":ssl_unique_ptr",
+        "//tink/subtle:random",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ec_util_test",
+    size = "large",
+    srcs = ["ec_util_test.cc"],
+    data = [
+        "@wycheproof//testvectors:ecdh",
+        "@wycheproof//testvectors:ecdsa_webcrypto",
+        "@wycheproof//testvectors:eddsa",
+    ],
+    deps = [
+        ":bn_util",
+        ":ec_util",
+        ":fips_utils",
+        ":ssl_unique_ptr",
+        ":ssl_util",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:subtle_util",
+        "//tink/subtle:wycheproof_util",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "md_util_test",
+    size = "small",
+    srcs = ["md_util_test.cc"],
+    deps = [
+        ":md_util",
+        "//tink/subtle:common_enums",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "aes_util",
+    srcs = ["aes_util.cc"],
+    hdrs = ["aes_util.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":util",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "aes_util_test",
+    size = "small",
+    srcs = ["aes_util_test.cc"],
+    deps = [
+        ":aes_util",
+        "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "monitoring_util",
+    hdrs = ["monitoring_util.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "//tink:primitive_set",
+        "//tink/monitoring",
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_test(
+    name = "monitoring_util_test",
+    srcs = ["monitoring_util_test.cc"],
+    deps = [
+        ":monitoring_util",
+        "//tink:primitive_set",
+        "//tink/monitoring",
+        "//proto:tink_cc_proto",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

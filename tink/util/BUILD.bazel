@@ -1,0 +1,585 @@
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "buffer",
+    srcs = ["buffer.cc"],
+    hdrs = ["buffer.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":status",
+        ":statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "constants",
+    srcs = ["constants.cc"],
+    hdrs = ["constants.h"],
+    include_prefix = "tink/util",
+    deps = ["@com_google_absl//absl/base:core_headers"],
+)
+
+cc_library(
+    name = "secret_data_internal",
+    hdrs = ["secret_data_internal.h"],
+    include_prefix = "tink/util",
+    deps = [
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+    ],
+)
+
+cc_library(
+    name = "secret_data",
+    hdrs = ["secret_data.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":secret_data_internal",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "secret_proto",
+    hdrs = ["secret_proto.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":secret_data",
+        ":status",
+        ":statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_protobuf//:protobuf_lite",
+    ],
+)
+
+cc_library(
+    name = "errors",
+    hdrs = ["errors.h"],
+    include_prefix = "tink/util",
+    deps = [
+        ":status",
+        "@com_google_absl//absl/strings:str_format",
+    ],
+)
+
+cc_library(
+    name = "enums",
+    srcs = ["enums.cc"],
+    hdrs = ["enums.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":statusor",
+        "//proto:common_cc_proto",
+        "//proto:ecdsa_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:common_enums",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "status",
+    srcs = ["status.cc"],
+    hdrs = ["status.h"],
+    defines = select({
+        "//tink/config:absl_status_enabled": ["TINK_USE_ABSL_STATUS"],
+        "//conditions:default": [],
+    }),
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "status_test",
+    srcs = ["status_test.cc"],
+    deps = [
+        ":status",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "statusor",
+    srcs = ["statusor.h"],
+    hdrs = ["statusor.h"],
+    defines = select({
+        "//tink/config:absl_statusor_enabled": ["TINK_USE_ABSL_STATUSOR"],
+        "//conditions:default": [],
+    }),
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":status",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_test(
+    name = "statusor_test",
+    srcs = ["statusor_test.cc"],
+    deps = [
+        ":status",
+        ":statusor",
+        ":test_matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "validation",
+    srcs = ["validation.cc"],
+    hdrs = ["validation.h"],
+    include_prefix = "tink/util",
+    deps = [
+        ":errors",
+        ":status",
+        "//proto:tink_cc_proto",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "file_input_stream",
+    srcs = ["file_input_stream.cc"],
+    hdrs = ["file_input_stream.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":errors",
+        ":status",
+        ":statusor",
+        "//tink:input_stream",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "file_output_stream",
+    srcs = ["file_output_stream.cc"],
+    hdrs = ["file_output_stream.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":errors",
+        ":status",
+        ":statusor",
+        "//tink:output_stream",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "file_random_access_stream",
+    srcs = ["file_random_access_stream.cc"],
+    hdrs = ["file_random_access_stream.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":buffer",
+        ":errors",
+        ":status",
+        ":statusor",
+        "//tink:random_access_stream",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "istream_input_stream",
+    srcs = ["istream_input_stream.cc"],
+    hdrs = ["istream_input_stream.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":errors",
+        ":status",
+        ":statusor",
+        "//tink:input_stream",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "ostream_output_stream",
+    srcs = ["ostream_output_stream.cc"],
+    hdrs = ["ostream_output_stream.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":errors",
+        ":status",
+        ":statusor",
+        "//tink:output_stream",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "test_util",
+    testonly = 1,
+    srcs = ["test_util.cc"],
+    hdrs = ["test_util.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":buffer",
+        ":constants",
+        ":enums",
+        ":protobuf_helper",
+        ":secret_data",
+        ":status",
+        ":statusor",
+        "//tink:aead",
+        "//tink:cleartext_keyset_handle",
+        "//tink:deterministic_aead",
+        "//tink:hybrid_decrypt",
+        "//tink:hybrid_encrypt",
+        "//tink:input_stream",
+        "//tink:keyset_handle",
+        "//tink:kms_client",
+        "//tink:mac",
+        "//tink:output_stream",
+        "//tink:public_key_sign",
+        "//tink:public_key_verify",
+        "//tink:random_access_stream",
+        "//tink:streaming_aead",
+        "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/aead:cord_aead",
+        "//tink/aead:xchacha20_poly1305_key_manager",
+        "//tink/daead:aes_siv_key_manager",
+        "//tink/internal:ec_util",
+        "//proto:aes_ctr_cc_proto",
+        "//proto:aes_ctr_hmac_aead_cc_proto",
+        "//proto:aes_siv_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:ecdsa_cc_proto",
+        "//proto:ecies_aead_hkdf_cc_proto",
+        "//proto:ed25519_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//proto:xchacha20_poly1305_cc_proto",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:random",
+        "//tink/subtle/mac:stateful_mac",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:cord",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+cc_library(
+    name = "test_matchers",
+    testonly = 1,
+    hdrs = ["test_matchers.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":status",
+        ":statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "protobuf_helper",
+    hdrs = ["protobuf_helper.h"],
+    include_prefix = "tink/util",
+    deps = ["@com_google_protobuf//:protobuf_lite"],
+)
+
+cc_library(
+    name = "test_keyset_handle",
+    testonly = 1,
+    srcs = ["test_keyset_handle.cc"],
+    hdrs = ["test_keyset_handle.h"],
+    include_prefix = "tink/util",
+    deps = [
+        "//tink:keyset_handle",
+        "//proto:tink_cc_proto",
+        "@com_google_absl//absl/memory",
+    ],
+)
+
+cc_library(
+    name = "input_stream_util",
+    srcs = ["input_stream_util.cc"],
+    hdrs = ["input_stream_util.h"],
+    include_prefix = "tink/util",
+    deps = [
+        ":secret_data",
+        ":statusor",
+        "//tink:input_stream",
+        "@com_google_absl//absl/algorithm:container",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_library(
+    name = "keyset_util",
+    srcs = ["keyset_util.cc"],
+    hdrs = ["keyset_util.h"],
+    include_prefix = "tink/util",
+    deps = ["//proto:tink_cc_proto"],
+)
+
+# This should only be used by tink/python/tink/cc/pybind,
+# where we need this target without the testonly flag.
+
+cc_library(
+    name = "fake_kms_client_pybind",
+    srcs = ["fake_kms_client.cc"],
+    hdrs = ["fake_kms_client.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":errors",
+        ":status",
+        ":statusor",
+        "//tink:aead",
+        "//tink:binary_keyset_reader",
+        "//tink:binary_keyset_writer",
+        "//tink:cleartext_keyset_handle",
+        "//tink:keyset_handle",
+        "//tink:kms_client",
+        "//tink:kms_clients",
+        "//tink/aead:aead_key_templates",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "fake_kms_client",
+    testonly = 1,
+    srcs = ["fake_kms_client.cc"],
+    hdrs = ["fake_kms_client.h"],
+    include_prefix = "tink/util",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":errors",
+        ":status",
+        ":statusor",
+        "//tink:aead",
+        "//tink:binary_keyset_reader",
+        "//tink:binary_keyset_writer",
+        "//tink:cleartext_keyset_handle",
+        "//tink:keyset_handle",
+        "//tink:kms_client",
+        "//tink:kms_clients",
+        "//tink/aead:aead_key_templates",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+# tests
+
+cc_test(
+    name = "buffer_test",
+    size = "small",
+    srcs = ["buffer_test.cc"],
+    deps = [
+        ":buffer",
+        ":status",
+        ":test_matchers",
+        "//tink/subtle:random",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "errors_test",
+    size = "small",
+    srcs = ["errors_test.cc"],
+    deps = [
+        ":errors",
+        ":status",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "enums_test",
+    size = "small",
+    srcs = ["enums_test.cc"],
+    deps = [
+        ":enums",
+        "//proto:common_cc_proto",
+        "//tink/subtle:common_enums",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "file_input_stream_test",
+    srcs = ["file_input_stream_test.cc"],
+    deps = [
+        ":file_input_stream",
+        ":test_util",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "file_output_stream_test",
+    srcs = ["file_output_stream_test.cc"],
+    deps = [
+        ":file_output_stream",
+        ":test_util",
+        "//tink/subtle:random",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "file_random_access_stream_test",
+    srcs = ["file_random_access_stream_test.cc"],
+    deps = [
+        ":buffer",
+        ":file_random_access_stream",
+        ":test_util",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "istream_input_stream_test",
+    srcs = ["istream_input_stream_test.cc"],
+    deps = [
+        ":istream_input_stream",
+        ":test_util",
+        "//tink/subtle:random",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ostream_output_stream_test",
+    srcs = ["ostream_output_stream_test.cc"],
+    deps = [
+        ":ostream_output_stream",
+        ":test_util",
+        "//tink/subtle:random",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "secret_data_test",
+    srcs = ["secret_data_test.cc"],
+    deps = [
+        ":secret_data",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "secret_proto_test",
+    srcs = ["secret_proto_test.cc"],
+    deps = [
+        ":secret_proto",
+        "//proto:test_proto_cc_proto",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+cc_test(
+    name = "test_util_test",
+    srcs = ["test_util_test.cc"],
+    deps = [
+        ":test_matchers",
+        ":test_util",
+        "//proto:aes_gcm_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "validation_test",
+    srcs = ["validation_test.cc"],
+    deps = [
+        ":test_matchers",
+        ":validation",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "input_stream_util_test",
+    srcs = ["input_stream_util_test.cc"],
+    deps = [
+        ":input_stream_util",
+        ":istream_input_stream",
+        ":secret_data",
+        ":status",
+        ":test_matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "fake_kms_client_test",
+    srcs = ["fake_kms_client_test.cc"],
+    deps = [
+        ":fake_kms_client",
+        ":status",
+        ":statusor",
+        ":test_matchers",
+        ":test_util",
+        "//tink/aead:aead_config",
+        "//tink/aead:aead_key_templates",
+        "//proto:kms_aead_cc_proto",
+        "//proto:kms_envelope_cc_proto",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

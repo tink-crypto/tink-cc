@@ -1,0 +1,129 @@
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "tink_config",
+    srcs = ["tink_config.cc"],
+    hdrs = ["tink_config.h"],
+    include_prefix = "tink/config",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:config",
+        "//tink:key_manager",
+        "//tink:registry",
+        "//tink/daead:deterministic_aead_config",
+        "//tink/hybrid:hybrid_config",
+        "//tink/prf:prf_config",
+        "//proto:config_cc_proto",
+        "//tink/signature:signature_config",
+        "//tink/streamingaead:streaming_aead_config",
+        "//tink/util:status",
+        "@com_google_absl//absl/base:core_headers",
+    ],
+)
+
+cc_library(
+    name = "config_util",
+    srcs = ["config_util.cc"],
+    hdrs = ["config_util.h"],
+    include_prefix = "tink/config",
+    deps = ["//proto:config_cc_proto"],
+)
+
+bool_flag(
+    name = "use_only_fips",
+    build_setting_default = False,
+)
+
+bool_flag(
+    name = "tink_use_absl_status",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "absl_status_enabled",
+    flag_values = {"//tink/config:tink_use_absl_status": "True"},
+    visibility = ["//visibility:public"],
+)
+
+bool_flag(
+    name = "tink_use_absl_statusor",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "absl_statusor_enabled",
+    flag_values = {"//tink/config:tink_use_absl_statusor": "True"},
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "tink_fips",
+    srcs = ["tink_fips.cc"],
+    hdrs = ["tink_fips.h"],
+    include_prefix = "tink/config",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/internal:fips_utils",
+        "//tink/internal:registry_impl",
+        "//tink/util:status",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+    ],
+)
+
+# tests
+
+cc_test(
+    name = "tink_config_test",
+    size = "small",
+    srcs = ["tink_config_test.cc"],
+    deps = [
+        ":tink_config",
+        "//tink:aead",
+        "//tink:config",
+        "//tink:deterministic_aead",
+        "//tink:hybrid_decrypt",
+        "//tink:hybrid_encrypt",
+        "//tink:mac",
+        "//tink:registry",
+        "//tink:streaming_aead",
+        "//tink:tink_cc",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "config_util_test",
+    size = "small",
+    srcs = ["config_util_test.cc"],
+    deps = [
+        ":config_util",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "tink_fips_test",
+    size = "small",
+    srcs = ["tink_fips_test.cc"],
+    tags = ["fips"],
+    deps = [
+        ":tink_fips",
+        "//tink:registry",
+        "//tink/aead:aead_config",
+        "//tink/internal:fips_utils",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,429 @@
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "streaming_aead_wrapper",
+    srcs = ["streaming_aead_wrapper.cc"],
+    hdrs = ["streaming_aead_wrapper.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        ":decrypting_input_stream",
+        ":decrypting_random_access_stream",
+        "//tink:crypto_format",
+        "//tink:input_stream",
+        "//tink:output_stream",
+        "//tink:primitive_set",
+        "//tink:primitive_wrapper",
+        "//tink:random_access_stream",
+        "//tink:streaming_aead",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "streaming_aead_config",
+    srcs = ["streaming_aead_config.cc"],
+    hdrs = ["streaming_aead_config.h"],
+    include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":aes_ctr_hmac_streaming_key_manager",
+        ":aes_gcm_hkdf_streaming_key_manager",
+        ":streaming_aead_wrapper",
+        "//tink:registry",
+        "//tink/config:config_util",
+        "//tink/config:tink_fips",
+        "//proto:config_cc_proto",
+        "//tink/util:status",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+    ],
+)
+
+cc_library(
+    name = "streaming_aead_key_templates",
+    srcs = ["streaming_aead_key_templates.cc"],
+    hdrs = ["streaming_aead_key_templates.h"],
+    include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto:aes_ctr_hmac_streaming_cc_proto",
+        "//proto:aes_gcm_hkdf_streaming_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+    ],
+)
+
+cc_library(
+    name = "aes_gcm_hkdf_streaming_key_manager",
+    srcs = ["aes_gcm_hkdf_streaming_key_manager.cc"],
+    hdrs = ["aes_gcm_hkdf_streaming_key_manager.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        "//tink:core/key_type_manager",
+        "//tink:key_manager",
+        "//tink:streaming_aead",
+        "//proto:aes_gcm_hkdf_streaming_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:aes_gcm_hkdf_stream_segment_encrypter",
+        "//tink/subtle:aes_gcm_hkdf_streaming",
+        "//tink/subtle:random",
+        "//tink/util:constants",
+        "//tink/util:enums",
+        "//tink/util:errors",
+        "//tink/util:input_stream_util",
+        "//tink/util:protobuf_helper",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:validation",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "aes_ctr_hmac_streaming_key_manager",
+    srcs = ["aes_ctr_hmac_streaming_key_manager.cc"],
+    hdrs = ["aes_ctr_hmac_streaming_key_manager.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        "//tink:core/key_type_manager",
+        "//tink:streaming_aead",
+        "//proto:aes_ctr_hmac_streaming_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:aes_ctr_hmac_streaming",
+        "//tink/subtle:random",
+        "//tink/util:constants",
+        "//tink/util:enums",
+        "//tink/util:errors",
+        "//tink/util:input_stream_util",
+        "//tink/util:protobuf_helper",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:validation",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "buffered_input_stream",
+    srcs = ["buffered_input_stream.cc"],
+    hdrs = ["buffered_input_stream.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        "//tink:input_stream",
+        "//tink/util:errors",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "shared_input_stream",
+    srcs = ["shared_input_stream.h"],
+    hdrs = ["shared_input_stream.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        "//tink:input_stream",
+        "//tink/util:statusor",
+    ],
+)
+
+cc_library(
+    name = "shared_random_access_stream",
+    srcs = ["shared_random_access_stream.h"],
+    hdrs = ["shared_random_access_stream.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        "//tink:random_access_stream",
+        "//tink/util:buffer",
+        "//tink/util:status",
+        "//tink/util:statusor",
+    ],
+)
+
+cc_library(
+    name = "decrypting_input_stream",
+    srcs = ["decrypting_input_stream.cc"],
+    hdrs = ["decrypting_input_stream.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        ":buffered_input_stream",
+        ":shared_input_stream",
+        "//tink:input_stream",
+        "//tink:primitive_set",
+        "//tink:streaming_aead",
+        "//tink/util:errors",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "decrypting_random_access_stream",
+    srcs = ["decrypting_random_access_stream.cc"],
+    hdrs = ["decrypting_random_access_stream.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        ":shared_random_access_stream",
+        "//tink:primitive_set",
+        "//tink:random_access_stream",
+        "//tink:streaming_aead",
+        "//tink/util:buffer",
+        "//tink/util:errors",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/synchronization",
+    ],
+)
+
+# tests
+
+cc_test(
+    name = "streaming_aead_wrapper_test",
+    size = "small",
+    srcs = ["streaming_aead_wrapper_test.cc"],
+    deps = [
+        ":streaming_aead_wrapper",
+        "//tink:input_stream",
+        "//tink:output_stream",
+        "//tink:primitive_set",
+        "//tink:random_access_stream",
+        "//tink:streaming_aead",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:random",
+        "//tink/subtle:test_util",
+        "//tink/util:buffer",
+        "//tink/util:file_random_access_stream",
+        "//tink/util:istream_input_stream",
+        "//tink/util:ostream_output_stream",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_gcm_hkdf_streaming_key_manager_test",
+    size = "small",
+    srcs = ["aes_gcm_hkdf_streaming_key_manager_test.cc"],
+    deps = [
+        ":aes_gcm_hkdf_streaming_key_manager",
+        "//tink:streaming_aead",
+        "//proto:aes_eax_cc_proto",
+        "//proto:aes_gcm_hkdf_streaming_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:aes_gcm_hkdf_streaming",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:random",
+        "//tink/subtle:streaming_aead_test_util",
+        "//tink/subtle:test_util",
+        "//tink/util:istream_input_stream",
+        "//tink/util:ostream_output_stream",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_ctr_hmac_streaming_key_manager_test",
+    size = "small",
+    srcs = ["aes_ctr_hmac_streaming_key_manager_test.cc"],
+    deps = [
+        ":aes_ctr_hmac_streaming_key_manager",
+        "//tink:streaming_aead",
+        "//proto:aes_ctr_hmac_streaming_cc_proto",
+        "//proto:aes_eax_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:aes_ctr_hmac_streaming",
+        "//tink/subtle:common_enums",
+        "//tink/subtle:random",
+        "//tink/subtle:streaming_aead_test_util",
+        "//tink/subtle:test_util",
+        "//tink/util:istream_input_stream",
+        "//tink/util:ostream_output_stream",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "streaming_aead_key_templates_test",
+    size = "small",
+    srcs = ["streaming_aead_key_templates_test.cc"],
+    deps = [
+        ":aes_ctr_hmac_streaming_key_manager",
+        ":aes_gcm_hkdf_streaming_key_manager",
+        ":streaming_aead_key_templates",
+        "//proto:aes_ctr_hmac_streaming_cc_proto",
+        "//proto:aes_gcm_hkdf_streaming_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "streaming_aead_config_test",
+    size = "small",
+    srcs = ["streaming_aead_config_test.cc"],
+    tags = ["fips"],
+    deps = [
+        ":aes_ctr_hmac_streaming_key_manager",
+        ":aes_gcm_hkdf_streaming_key_manager",
+        ":streaming_aead_config",
+        ":streaming_aead_key_templates",
+        "//tink:config",
+        "//tink:keyset_handle",
+        "//tink:registry",
+        "//tink:streaming_aead",
+        "//tink/config:tink_fips",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "buffered_input_stream_test",
+    size = "small",
+    srcs = ["buffered_input_stream_test.cc"],
+    deps = [
+        ":buffered_input_stream",
+        "//tink:input_stream",
+        "//tink/subtle:random",
+        "//tink/subtle:test_util",
+        "//tink/util:istream_input_stream",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "decrypting_input_stream_test",
+    size = "small",
+    srcs = ["decrypting_input_stream_test.cc"],
+    deps = [
+        ":decrypting_input_stream",
+        "//tink:input_stream",
+        "//tink:output_stream",
+        "//tink:primitive_set",
+        "//tink:streaming_aead",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:random",
+        "//tink/subtle:test_util",
+        "//tink/util:istream_input_stream",
+        "//tink/util:ostream_output_stream",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "decrypting_random_access_stream_test",
+    size = "small",
+    srcs = ["decrypting_random_access_stream_test.cc"],
+    deps = [
+        ":decrypting_random_access_stream",
+        "//tink:output_stream",
+        "//tink:primitive_set",
+        "//tink:random_access_stream",
+        "//tink:streaming_aead",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:random",
+        "//tink/subtle:test_util",
+        "//tink/util:file_random_access_stream",
+        "//tink/util:ostream_output_stream",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "shared_input_stream_test",
+    size = "small",
+    srcs = ["shared_input_stream_test.cc"],
+    deps = [
+        ":buffered_input_stream",
+        ":shared_input_stream",
+        "//tink:input_stream",
+        "//tink/subtle:random",
+        "//tink/subtle:test_util",
+        "//tink/util:istream_input_stream",
+        "//tink/util:status",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "shared_random_access_stream_test",
+    size = "small",
+    srcs = ["shared_random_access_stream_test.cc"],
+    deps = [
+        ":shared_random_access_stream",
+        "//tink:random_access_stream",
+        "//tink/util:buffer",
+        "//tink/util:file_random_access_stream",
+        "//tink/util:status",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

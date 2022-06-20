@@ -753,6 +753,7 @@ cc_library(
     include_prefix = "tink/signature",
     deps = [
         "//tink:public_key_sign",
+        "//tink:public_key_verify",
         "@com_google_absl//absl/strings",
     ],
 )

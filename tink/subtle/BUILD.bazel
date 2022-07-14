@@ -850,6 +850,7 @@ cc_library(
         "//tink:streaming_mac",
         "//tink/subtle/mac:stateful_mac",
         "//tink/util:status",
+        "@boringssl//:crypto",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
     ],

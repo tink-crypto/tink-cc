@@ -79,3 +79,21 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "chunked_mac_test",
+    size = "small",
+    srcs = ["chunked_mac_test.cc"],
+    deps = [
+        "//tink:chunked_mac",
+        "//tink:keyset_handle",
+        "//tink:mac",
+        "//tink/mac:mac_config",
+        "//tink/mac:mac_key_templates",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

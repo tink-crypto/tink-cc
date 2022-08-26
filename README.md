@@ -1,7 +1,11 @@
 # Tink C++
 
-<!-- copybara:tink_placeholder(GCP Ubuntu badge) -->
-<!-- copybara:tink_placeholder(MacOs badge) -->
+[tink_github_cc_bazel_badge]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-github-cc-bazel.png
+
+**GCP Ubuntu**                            |
+----------------------------------------- |
+[![Bazel][tink_github_cc_bazel_badge]](#) |
+
 
 Using crypto in your application [shouldn't have to][devs_are_users_too_slides]
 feel like juggling chainsaws in the dark. Tink is a crypto library written by a

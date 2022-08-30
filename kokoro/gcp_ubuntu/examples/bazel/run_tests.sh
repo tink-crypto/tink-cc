@@ -18,10 +18,11 @@ set -euo pipefail
 
 # If we are running on Kokoro cd into the repository.
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
-  cd "${KOKORO_ARTIFACTS_DIR}/git/tink_cc"
+  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
-TINK_BASE_DIR="$(pwd)/.."
+: "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 
 # Sourcing required to update callers environment.
 source ./kokoro/testutils/install_python3.sh

@@ -7,6 +7,7 @@
 [tink_cc_bazel_fips_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-bazel-fips-gcp-ubuntu.svg
 [tink_cc_cmake_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-gcp-ubuntu.svg
 [tink_cc_cmake_openssl_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-openssl-gcp-ubuntu.svg
+[tink_cc_examples_bazel_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-examples-bazel-gcp-ubuntu.svg
 
 <!-- MacOS --->
 
@@ -22,7 +23,7 @@ Tink using Abseil Status (Bazel) | [![Bazel_Abseil_Status_GcpUbuntu][tink_cc_baz
 Tink FIPS (Bazel)                | [![Bazel_Fips_GcpUbuntu][tink_cc_bazel_fips_badge_gcp_ubuntu]](#)                 | N/A
 Tink (CMake)                     | [![CMake_GcpUbuntu][tink_cc_cmake_badge_gcp_ubuntu]](#)                           | [![CMake_MacOs][tink_cc_cmake_badge_macos]](#)
 Tink using OpenSSL (CMake)       | [![CMake_OpenSsl_GcpUbuntu][tink_cc_cmake_openssl_badge_gcp_ubuntu]](#)           | [![CMake_OpenSsl_MacOs][tink_cc_cmake_openssl_badge_macos]](#)
-
+Tink Examples                    | [![Examples_Bazel_GcpUbuntu][tink_cc_examples_bazel_badge_gcp_ubuntu]](#)         | N/A
 
 Using crypto in your application [shouldn't have to][devs_are_users_too_slides]
 feel like juggling chainsaws in the dark. Tink is a crypto library written by a

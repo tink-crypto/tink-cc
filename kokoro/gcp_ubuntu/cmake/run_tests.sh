@@ -21,4 +21,8 @@ if [[ -n "${KOKORO_ROOT:-}" ]]; then
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
+# Sourcing is needed to update the caller environment.
+# Install CMake 3.8 which is the minimum required.
+source ./kokoro/testutils/install_cmake.sh "3.8.0" \
+  "330357990d84599f9c1a87f568a724f0fe5de1687c32961dda689d52588a5b24"
 ./kokoro/testutils/run_cmake_tests.sh .

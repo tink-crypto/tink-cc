@@ -14,7 +14,6 @@
 # limitations under the License.
 ################################################################################
 
-
 set -euo pipefail
 
 # If we are running on Kokoro cd into the repository.
@@ -24,6 +23,9 @@ if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   chmod +x "${KOKORO_GFILE_DIR}/use_bazel.sh"
   "${KOKORO_GFILE_DIR}/use_bazel.sh" "$(cat .bazelversion)"
 fi
+
+source ./kokoro/testutils/install_cmake.sh "3.8.0" \
+  "330357990d84599f9c1a87f568a724f0fe5de1687c32961dda689d52588a5b24"
 
 # Run build and tests with the BoringSSL FIPS module
 

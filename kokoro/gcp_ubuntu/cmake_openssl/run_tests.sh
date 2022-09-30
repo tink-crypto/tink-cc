@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-if [[ -n "${KOKORO_ROOT:-}" ]]; then
+if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
 fi

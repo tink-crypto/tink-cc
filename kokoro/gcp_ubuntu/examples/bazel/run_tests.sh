@@ -16,22 +16,20 @@
 
 set -euo pipefail
 
+readonly WORKSPACE_FOLDER="examples"
+
 # If we are running on Kokoro cd into the repository.
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  chmod +x "${KOKORO_GFILE_DIR}/use_bazel.sh"
+  "${KOKORO_GFILE_DIR}/use_bazel.sh" "$(cat ${WORKSPACE_FOLDER}/.bazelversion)"
 fi
 
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 
 # Sourcing required to update callers environment.
 source ./kokoro/testutils/install_python3.sh
-
-readonly WORKSPACE_FOLDER="examples"
-
-if [[ -n "${KOKORO_ROOT:-}" ]]; then
-  use_bazel.sh "$(cat ${WORKSPACE_FOLDER}/.bazelversion)"
-fi
 
 cp "${WORKSPACE_FOLDER}/WORKSPACE" "${WORKSPACE_FOLDER}/WORKSPACE.bak"
 ./kokoro/testutils/replace_http_archive_with_local_repository.py \

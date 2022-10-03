@@ -24,9 +24,6 @@ if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   "${KOKORO_GFILE_DIR}/use_bazel.sh" "$(cat .bazelversion)"
 fi
 
-source ./kokoro/testutils/install_cmake.sh "3.8.0" \
-  "330357990d84599f9c1a87f568a724f0fe5de1687c32961dda689d52588a5b24"
-
 # Run build and tests with the BoringSSL FIPS module
 
 # Prepare the workspace to use BoringCrypto which is in

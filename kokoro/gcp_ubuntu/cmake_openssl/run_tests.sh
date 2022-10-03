@@ -23,6 +23,5 @@ fi
 
 ./kokoro/testutils/update_certs.sh
 # Sourcing is needed to update the caller environment.
-source ./kokoro/testutils/install_cmake.sh
 source ./kokoro/testutils/install_openssl.sh
 ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON

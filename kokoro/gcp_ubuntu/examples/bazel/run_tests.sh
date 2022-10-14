@@ -28,9 +28,6 @@ fi
 
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 
-# Sourcing required to update callers environment.
-source ./kokoro/testutils/install_python3.sh
-
 cp "${WORKSPACE_FOLDER}/WORKSPACE" "${WORKSPACE_FOLDER}/WORKSPACE.bak"
 ./kokoro/testutils/replace_http_archive_with_local_repository.py \
   -f "${WORKSPACE_FOLDER}/WORKSPACE" \

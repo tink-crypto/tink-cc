@@ -24,9 +24,6 @@ fi
 
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 
-# Sourcing required to update callers environment.
-source ./kokoro/testutils/install_python3.sh
-
 # TODO(b/251078186): Test helloworld too.
 ./kokoro/testutils/run_cmake_tests.sh "examples/walkthrough" \
   -DTINK_BUILD_TESTS=OFF

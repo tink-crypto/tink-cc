@@ -24,6 +24,4 @@ fi
 
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 
-# TODO(b/251078186): Test helloworld too.
-./kokoro/testutils/run_cmake_tests.sh "examples/walkthrough" \
-  -DTINK_BUILD_TESTS=OFF
+./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF

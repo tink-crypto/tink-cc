@@ -2,43 +2,6 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_library(
-    name = "util",
-    srcs = ["util.cc"],
-    hdrs = ["util.h"],
-    deps = [
-        "@tink_cc//tink:binary_keyset_reader",
-        "@tink_cc//tink:binary_keyset_writer",
-        "@tink_cc//tink:cleartext_keyset_handle",
-        "@tink_cc//tink:keyset_handle",
-        "@tink_cc//tink:keyset_reader",
-        "@tink_cc//tink:keyset_writer",
-        "@tink_cc//tink/config:tink_config",
-        "@tink_cc//tink/util:status",
-    ],
-)
-
-cc_binary(
-    name = "hybrid_encryption_cli",
-    srcs = ["hybrid_encryption_cli.cc"],
-    deps = [
-        ":util",
-        "@tink_cc//tink:hybrid_decrypt",
-        "@tink_cc//tink:hybrid_encrypt",
-        "@tink_cc//tink/hybrid:hybrid_key_templates",
-    ],
-)
-
-sh_test(
-    name = "hybrid_encryption_cli_test",
-    size = "small",
-    srcs = ["hybrid_encryption_cli_test.sh"],
-    args = [
-        "$(rootpath :hybrid_encryption_cli)",
-    ],
-    data = [":hybrid_encryption_cli"],
-)
-
 filegroup(
     name = "hybrid_test_keyset",
     srcs = [

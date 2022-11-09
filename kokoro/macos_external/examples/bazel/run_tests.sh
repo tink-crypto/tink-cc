@@ -16,10 +16,17 @@
 
 set -euo pipefail
 
-# If we are running on Kokoro cd into the repository.
-if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
+readonly WORKSPACE_FOLDER="examples"
+
+if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
+: "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 
-./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF
+cp "${WORKSPACE_FOLDER}/WORKSPACE" "${WORKSPACE_FOLDER}/WORKSPACE.bak"
+./kokoro/testutils/replace_http_archive_with_local_repository.py \
+  -f "${WORKSPACE_FOLDER}/WORKSPACE" \
+  -t "${TINK_BASE_DIR}"
+./kokoro/testutils/run_bazel_tests.sh "${WORKSPACE_FOLDER}"
+mv "${WORKSPACE_FOLDER}/WORKSPACE.bak" "${WORKSPACE_FOLDER}/WORKSPACE"

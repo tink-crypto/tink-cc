@@ -16,10 +16,10 @@
 
 set -euo pipefail
 
-# If we are running on Kokoro cd into the repository.
-if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
+if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
-./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF
+./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF \
+  -DTINK_USE_SYSTEM_OPENSSL=ON

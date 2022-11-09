@@ -21,6 +21,7 @@ readonly WORKSPACE_FOLDER="examples"
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  use_bazel.sh "$(cat .bazelversion)"
 fi
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 

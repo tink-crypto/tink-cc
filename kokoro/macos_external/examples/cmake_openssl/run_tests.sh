@@ -21,5 +21,7 @@ if [[ -n "${KOKORO_ROOT:-}" ]]; then
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
+# Sourcing is needed to update the caller environment.
+source ./kokoro/testutils/install_openssl.sh
 ./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF \
   -DTINK_USE_SYSTEM_OPENSSL=ON

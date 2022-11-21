@@ -14,22 +14,26 @@
 # limitations under the License.
 ################################################################################
 
-
 set -euo pipefail
 
+BAZEL_CMD="bazel"
 # If we are running on Kokoro cd into the repository.
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
-  chmod +x "${KOKORO_GFILE_DIR}/use_bazel.sh"
-  "${KOKORO_GFILE_DIR}/use_bazel.sh" "$(cat .bazelversion)"
+  if command -v "bazelisk" &> /dev/null; then
+    BAZEL_CMD="bazelisk"
+  fi
 fi
+readonly BAZEL_CMD
 
-bazel build \
+"${BAZEL_CMD}" --version
+
+"${BAZEL_CMD}" build \
   --//tink/config:tink_use_absl_status=True \
   --//tink/config:tink_use_absl_statusor=True \
   -- ...
-bazel test \
+"${BAZEL_CMD}" test \
   --//tink/config:tink_use_absl_status=True \
   --//tink/config:tink_use_absl_statusor=True \
   --test_output=errors \

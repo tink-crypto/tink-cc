@@ -22,11 +22,10 @@ readonly WORKSPACE_FOLDER="examples"
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
-  chmod +x "${KOKORO_GFILE_DIR}/use_bazel.sh"
-  "${KOKORO_GFILE_DIR}/use_bazel.sh" "$(cat ${WORKSPACE_FOLDER}/.bazelversion)"
 fi
 
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
+readonly TINK_BASE_DIR
 
 cp "${WORKSPACE_FOLDER}/WORKSPACE" "${WORKSPACE_FOLDER}/WORKSPACE.bak"
 ./kokoro/testutils/replace_http_archive_with_local_repository.py \

@@ -16,13 +16,18 @@
 
 set -euo pipefail
 
+BAZEL_CMD="bazel"
 # If we are running on Kokoro cd into the repository.
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
-  chmod +x "${KOKORO_GFILE_DIR}/use_bazel.sh"
-  "${KOKORO_GFILE_DIR}/use_bazel.sh" "$(cat .bazelversion)"
+  if command -v "bazelisk" &> /dev/null; then
+    BAZEL_CMD="bazelisk"
+  fi
 fi
+readonly BAZEL_CMD
+
+"${BAZEL_CMD}" --version
 
 # Run build and tests with the BoringSSL FIPS module
 
@@ -51,11 +56,11 @@ BAZEL_FLAGS=(
   --build_tag_filters=fips,-requires_boringcrypto_update
 )
 
-bazel build \
+"${BAZEL_CMD}" build \
   "${BAZEL_FLAGS[@]}" \
   -- ...
 
-bazel test \
+"${BAZEL_CMD}" test \
   "${BAZEL_FLAGS[@]}" \
   --build_tests_only \
   --test_output=errors \

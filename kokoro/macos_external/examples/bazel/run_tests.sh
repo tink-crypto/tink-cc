@@ -16,18 +16,15 @@
 
 set -euo pipefail
 
-readonly WORKSPACE_FOLDER="examples"
-
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
-  use_bazel.sh "$(cat .bazelversion)"
 fi
+
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 
-cp "${WORKSPACE_FOLDER}/WORKSPACE" "${WORKSPACE_FOLDER}/WORKSPACE.bak"
+cp "examples/WORKSPACE" "examples/WORKSPACE.bak"
 ./kokoro/testutils/replace_http_archive_with_local_repository.py \
-  -f "${WORKSPACE_FOLDER}/WORKSPACE" \
-  -t "${TINK_BASE_DIR}"
-./kokoro/testutils/run_bazel_tests.sh "${WORKSPACE_FOLDER}"
-mv "${WORKSPACE_FOLDER}/WORKSPACE.bak" "${WORKSPACE_FOLDER}/WORKSPACE"
+ -f "examples/WORKSPACE" -t "${TINK_BASE_DIR}"
+./kokoro/testutils/run_bazel_tests.sh "examples"
+mv "examples/WORKSPACE.bak" "examples/WORKSPACE"

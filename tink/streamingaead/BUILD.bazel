@@ -420,8 +420,6 @@ cc_test(
         "//tink:random_access_stream",
         "//tink/internal:test_random_access_stream",
         "//tink/subtle:random",
-        "//tink/util:buffer",
-        "//tink/util:status",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",

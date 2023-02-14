@@ -22,4 +22,6 @@ if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
-./kokoro/testutils/run_bazel_tests.sh .
+# Build using Bazel Modules.
+./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
+  -t "--enable_bzlmod" .

@@ -27,9 +27,13 @@ fi
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
 readonly TINK_BASE_DIR
 
+# Build and run tests from WORKSPACE.
 cp "${WORKSPACE_FOLDER}/WORKSPACE" "${WORKSPACE_FOLDER}/WORKSPACE.bak"
 ./kokoro/testutils/replace_http_archive_with_local_repository.py \
-  -f "${WORKSPACE_FOLDER}/WORKSPACE" \
-  -t "${TINK_BASE_DIR}"
+  -f "${WORKSPACE_FOLDER}/WORKSPACE" -t "${TINK_BASE_DIR}"
 ./kokoro/testutils/run_bazel_tests.sh "${WORKSPACE_FOLDER}"
 mv "${WORKSPACE_FOLDER}/WORKSPACE.bak" "${WORKSPACE_FOLDER}/WORKSPACE"
+
+# Build and run tests using Bazel Modules.
+./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
+  -t "--enable_bzlmod" "${WORKSPACE_FOLDER}"

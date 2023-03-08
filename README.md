@@ -3,7 +3,6 @@
 <!-- GCP Ubuntu --->
 
 [tink_cc_bazel_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-bazel-gcp-ubuntu.svg
-[tink_cc_bazel_absl_status_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-bazel-absl-status-gcp-ubuntu.svg
 [tink_cc_bazel_fips_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-bazel-fips-gcp-ubuntu.svg
 [tink_cc_cmake_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-gcp-ubuntu.svg
 [tink_cc_cmake_openssl_badge_gcp_ubuntu]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-openssl-gcp-ubuntu.svg
@@ -12,14 +11,12 @@
 <!-- MacOS --->
 
 [tink_cc_bazel_badge_macos]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-bazel-macos-external.svg
-[tink_cc_bazel_absl_status_badge_macos]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-bazel-absl-status-macos-external.svg
 [tink_cc_cmake_badge_macos]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-macos-external.svg
 [tink_cc_cmake_openssl_badge_macos]: https://storage.googleapis.com/tink-kokoro-build-badges/tink-cc-cmake-openssl-macos-external.svg
 
 **Test**                         | **GCP Ubuntu**                                                                    | **MacOS**
 -------------------------------- | --------------------------------------------------------------------------------- | ---------
 Tink (Bazel)                     | [![Bazel_GcpUbuntu][tink_cc_bazel_badge_gcp_ubuntu]](#)                           | [![Bazel_MacOs][tink_cc_bazel_badge_macos]](#)
-Tink using Abseil Status (Bazel) | [![Bazel_Abseil_Status_GcpUbuntu][tink_cc_bazel_absl_status_badge_gcp_ubuntu]](#) | [![Bazel_Abseil_Status_MacOs][tink_cc_bazel_absl_status_badge_macos]](#)
 Tink FIPS (Bazel)                | [![Bazel_Fips_GcpUbuntu][tink_cc_bazel_fips_badge_gcp_ubuntu]](#)                 | N/A
 Tink (CMake)                     | [![CMake_GcpUbuntu][tink_cc_cmake_badge_gcp_ubuntu]](#)                           | [![CMake_MacOs][tink_cc_cmake_badge_macos]](#)
 Tink using OpenSSL (CMake)       | [![CMake_OpenSsl_GcpUbuntu][tink_cc_cmake_openssl_badge_gcp_ubuntu]](#)           | [![CMake_OpenSsl_MacOs][tink_cc_cmake_openssl_badge_macos]](#)

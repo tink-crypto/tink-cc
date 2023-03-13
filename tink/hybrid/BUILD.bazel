@@ -284,7 +284,6 @@ cc_test(
         ":ecies_aead_hkdf_public_key_manager",
         ":hybrid_config",
         ":hybrid_key_templates",
-        "//tink:config",
         "//tink:hybrid_decrypt",
         "//tink:hybrid_encrypt",
         "//tink:keyset_handle",
@@ -373,7 +372,6 @@ cc_test(
         ":ecies_aead_hkdf_public_key_manager",
         ":hybrid_config",
         ":hybrid_decrypt_factory",
-        "//tink:config",
         "//tink:crypto_format",
         "//tink:hybrid_decrypt",
         "//tink:hybrid_encrypt",
@@ -395,7 +393,6 @@ cc_test(
     deps = [
         ":hybrid_config",
         ":hybrid_encrypt_factory",
-        "//tink:config",
         "//tink:crypto_format",
         "//tink:hybrid_encrypt",
         "//tink:keyset_handle",

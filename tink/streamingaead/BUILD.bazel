@@ -315,7 +315,6 @@ cc_test(
         ":aes_gcm_hkdf_streaming_key_manager",
         ":streaming_aead_config",
         ":streaming_aead_key_templates",
-        "//tink:config",
         "//tink:keyset_handle",
         "//tink:registry",
         "//tink:streaming_aead",

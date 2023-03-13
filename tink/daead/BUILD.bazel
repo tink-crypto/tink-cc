@@ -146,7 +146,6 @@ cc_test(
         ":aes_siv_key_manager",
         ":deterministic_aead_config",
         ":deterministic_aead_key_templates",
-        "//tink:config",
         "//tink:deterministic_aead",
         "//tink:keyset_handle",
         "//tink:registry",

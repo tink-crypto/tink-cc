@@ -264,7 +264,6 @@ cc_test(
         ":mac_config",
         ":mac_key_templates",
         "//tink:chunked_mac",
-        "//tink:config",
         "//tink:keyset_handle",
         "//tink:mac",
         "//tink:partial_key_access",

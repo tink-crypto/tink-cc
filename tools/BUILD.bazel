@@ -1,0 +1,24 @@
+# Bazel rules for tools.
+
+sh_binary(
+    name = "update_build_files_for_tink_2_0_bazel",
+    srcs = ["update_build_files_for_tink_2_0_bazel.sh"],
+)
+
+sh_test(
+    name = "update_build_files_for_tink_2_0_bazel_test",
+    size = "small",
+    srcs = ["update_build_files_for_tink_2_0_bazel_test.sh"],
+    args = [
+        "$(rlocationpath :update_build_files_for_tink_2_0_bazel.sh)",
+        "$(rlocationpath //kokoro/testutils:test_utils)",
+    ],
+    data = [
+        ":update_build_files_for_tink_2_0_bazel.sh",
+        "//kokoro/testutils:test_utils",
+    ],
+    target_compatible_with = select({
+        "@platforms//os:windows": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+)

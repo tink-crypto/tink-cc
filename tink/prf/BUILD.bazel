@@ -274,7 +274,7 @@ cc_test(
         ":prf_key_templates",
         ":prf_set",
         "//tink:tink_cc",
-        "//tink/config:tink_fips",
+        "//tink/internal:fips_utils",
         "//tink/util:status",
         "//tink/util:test_matchers",
         "//tink/util:test_util",

@@ -682,7 +682,7 @@ cc_test(
         "//tink:public_key_sign",
         "//tink:public_key_verify",
         "//tink:registry",
-        "//tink/config:tink_fips",
+        "//tink/internal:fips_utils",
         "//tink/util:status",
         "//tink/util:test_matchers",
         "//tink/util:test_util",

@@ -288,7 +288,7 @@ cc_test(
         "//tink:hybrid_encrypt",
         "//tink:keyset_handle",
         "//tink:registry",
-        "//tink/config:tink_fips",
+        "//tink/internal:fips_utils",
         "//tink/util:status",
         "//tink/util:test_matchers",
         "//tink/util:test_util",

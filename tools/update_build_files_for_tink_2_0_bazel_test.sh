@@ -32,7 +32,7 @@ _create_test_inputs() {
   mkdir -p "${destination}/input_project/nested"
 
   cat <<EOF > "${destination}/input_project/BUILD"
-tink_cc(
+cc_library(
     name = "example_target",
     srcs = ["example_target.cc"],
     hdrs = ["example_target.h"],
@@ -47,7 +47,7 @@ tink_cc(
 EOF
 
   cat <<EOF > "${destination}/input_project/BUILD_expected"
-tink_cc(
+cc_library(
     name = "example_target",
     srcs = ["example_target.cc"],
     hdrs = ["example_target.h"],
@@ -62,7 +62,7 @@ tink_cc(
 EOF
 
   cat <<EOF > "${destination}/input_project/nested/BUILD.bazel"
-tink_cc(
+cc_library(
     name = "example_target",
     srcs = ["example_target.cc"],
     hdrs = ["example_target.h"],
@@ -77,7 +77,7 @@ tink_cc(
 EOF
 
   cat <<EOF > "${destination}/input_project/nested/BUILD.bazel_expected"
-tink_cc(
+cc_library(
     name = "example_target",
     srcs = ["example_target.cc"],
     hdrs = ["example_target.h"],

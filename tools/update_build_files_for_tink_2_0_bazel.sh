@@ -24,6 +24,8 @@
 #   - "@${TINK_CC_REPO_NAME}//:([a-z_]+)" => "@${TINK_CC_REPO_NAME}//tink:\1"
 #   - "@${TINK_CC_REPO_NAME}" => "@${TINK_CC_REPO_NAME}//tink:${TINK_CC_REPO_NAME}"
 
+set -euo pipefail
+
 WORKSPACE_DIR=
 TINK_CC_REPO_NAME=
 
@@ -56,8 +58,18 @@ main() {
   fi
 
   pushd "${WORKSPACE_DIR}"
+
+  readonly platform="$(uname | tr '[:upper:]' '[:lower:]')"
+
+  SEDOPTS=( -i )
+  # Different than GNU sed, BSD sed's -i parameter requires an extra argument.
+  if [[ "${platform}" == "darwin" ]]; then
+    SEDOPTS+=( '' )
+  fi
+  readonly SEDOPTS
+
   grep "@${TINK_CC_REPO_NAME}" . -r -l --include BUILD --include BUILD.bazel \
-    | xargs sed -i '' \
+    | xargs sed "${SEDOPTS[@]}" \
         -e 's#"@'"${TINK_CC_REPO_NAME}"'//\([a-z_]\{1,\}\)\(.*\)"#"@'"${TINK_CC_REPO_NAME}"'//tink/\1\2"#g' \
         -e 's#"@'"${TINK_CC_REPO_NAME}"'"#"@'"${TINK_CC_REPO_NAME}"'//tink:tink_cc"#g' \
         -e 's#"@'"${TINK_CC_REPO_NAME}"'//:\(.*\)"#"@'"${TINK_CC_REPO_NAME}"'//tink:\1"#g'

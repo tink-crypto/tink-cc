@@ -105,7 +105,6 @@ cc_library(
         "//tink/monitoring",
         "//proto:tink_cc_proto",
         "//tink/util:errors",
-        "//tink/util:protobuf_helper",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/base:core_headers",

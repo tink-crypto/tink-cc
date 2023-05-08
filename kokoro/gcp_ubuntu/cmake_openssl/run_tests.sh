@@ -21,5 +21,4 @@ if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
-./kokoro/testutils/update_certs.sh
 ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON

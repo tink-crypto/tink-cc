@@ -27,5 +27,8 @@ readonly OPENSSL3_SHA256="6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a
 source ./kokoro/testutils/install_openssl.sh "${OPENSSL3_VERSION}" \
   "${OPENSSL3_SHA256}"
 
-./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON \
-  -DOPENSSL_ROOT_DIR="${OPENSSL_ROOT_DIR}"
+# This is needed because CMake < 3.23 doesn't look for a lib64 folder. See
+# this commit https://github.com/Kitware/CMake/commit/ae48449cf05815f35631159b92fd53d62b81f907.
+ln -s "${OPENSSL_ROOT_DIR}/lib64" "${OPENSSL_ROOT_DIR}/lib"
+
+./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON

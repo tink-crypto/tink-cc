@@ -1,0 +1,114 @@
+package(
+    default_visibility = ["//:__subpackages__"],
+)
+
+licenses(["notice"])
+
+cc_library(
+    name = "key_derivation_config",
+    srcs = ["key_derivation_config.cc"],
+    hdrs = ["key_derivation_config.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyset_deriver_wrapper",
+        "//tink/config:tink_fips",
+        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
+        "//tink/prf:hkdf_prf_key_manager",
+        "//tink/util:status",
+    ],
+)
+
+cc_test(
+    name = "key_derivation_config_test",
+    srcs = ["key_derivation_config_test.cc"],
+    deps = [
+        ":key_derivation_config",
+        ":key_derivation_key_templates",
+        ":keyset_deriver",
+        "//tink:registry",
+        "//tink/aead:aead_config",
+        "//tink/aead:aead_key_templates",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/prf:prf_key_templates",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "key_derivation_key_templates",
+    srcs = ["key_derivation_key_templates.cc"],
+    hdrs = ["key_derivation_key_templates.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
+        "//proto:tink_cc_proto",
+        "//tink/subtle:random",
+        "//tink/util:statusor",
+    ],
+)
+
+cc_test(
+    name = "key_derivation_key_templates_test",
+    srcs = ["key_derivation_key_templates_test.cc"],
+    deps = [
+        ":key_derivation_key_templates",
+        ":keyset_deriver_wrapper",
+        "//tink:registry",
+        "//tink/aead:aead_key_templates",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
+        "//tink/prf:hkdf_prf_key_manager",
+        "//tink/prf:prf_key_templates",
+        "//proto:prf_based_deriver_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "keyset_deriver",
+    hdrs = ["keyset_deriver.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:keyset_handle",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "keyset_deriver_wrapper",
+    srcs = ["keyset_deriver_wrapper.cc"],
+    hdrs = ["keyset_deriver_wrapper.h"],
+    include_prefix = "tink/keyderivation",
+    deps = [
+        ":keyset_deriver",
+        "//tink:cleartext_keyset_handle",
+        "//tink:primitive_set",
+        "//tink:primitive_wrapper",
+        "//tink/keyderivation/internal:keyset_deriver_set_wrapper_impl",
+        "//proto:tink_cc_proto",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_test(
+    name = "keyset_deriver_wrapper_test",
+    srcs = ["keyset_deriver_wrapper_test.cc"],
+    deps = [
+        ":keyset_deriver_wrapper",
+        "//tink:cleartext_keyset_handle",
+        "//proto:tink_cc_proto",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

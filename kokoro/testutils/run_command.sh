@@ -31,7 +31,7 @@ usage() {
   cat <<EOF
 Usage:  $0 [-c <container image>] [-k <service key file path>] <command>
   -c: [Optional] Container image to run the command on.
-  -k: [Optional] Service key file path for pulling the image from gcr.io.
+  -k: [Optional] Service key file path for pulling the image from the Google Artifact Registry (https://cloud.google.com/artifact-registry).
   -h: Help. Print this usage information.
 EOF
   exit 1
@@ -72,10 +72,10 @@ main() {
   else
     echo "Running command on a new container from image ${CONTAINER_IMAGE_NAME}"
     if [[ ! -z "${GCR_SERVICE_KEY_PATH:-}" ]]; then
-      # Activate a service account to read from a private gcr.io.
+      # Activate service account to read from a private artifact registry repo.
       gcloud auth activate-service-account --key-file="${GCR_SERVICE_KEY_PATH}"
       gcloud config set project tink-test-infrastructure
-      gcloud auth configure-docker --quiet
+      gcloud auth configure-docker us-docker.pkg.dev --quiet
     fi
     set -x
     local -r path_to_mount="$(dirname "$(pwd)")"

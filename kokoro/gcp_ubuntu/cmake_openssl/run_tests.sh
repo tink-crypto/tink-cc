@@ -20,16 +20,16 @@ set -euo pipefail
 # host. The CONTAINER_IMAGE variable can be set to run on a custom container
 # image for local testing. E.g.:
 #
-# CONTAINER_IMAGE="gcr.io/tink-test-infrastructure/linux-tink-cc-cmake-and-openssl-1_1_1:latest" \
+# CONTAINER_IMAGE="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images/linux-tink-cc-cmake-and-openssl-1_1_1:latest" \
 #  sh ./kokoro/gcp_ubuntu/cmake_openssl/run_tests.sh
 #
 RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
-  readonly C_PREFIX="gcr.io/tink-test-infrastructure"
+  readonly C_PREFIX="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images"
   readonly C_NAME="linux-tink-cc-cmake-and-openssl-1_1_1"
-  readonly C_HASH="45b7a6c9d4c459bf173bff76ca39c88753172fa731b0c4615de5c20f0116a031"
+  readonly C_HASH="9fd2a1deff3b1c0168ae09cb5403fd3ad64b55735bbff89f0ec6b2a3707fabbf"
   CONTAINER_IMAGE="${C_PREFIX}/${C_NAME}@sha256:${C_HASH}"
   RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
 fi

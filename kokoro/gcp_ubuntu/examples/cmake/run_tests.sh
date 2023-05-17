@@ -16,10 +16,28 @@
 
 set -euo pipefail
 
-# If we are running on Kokoro cd into the repository.
+# By default when run locally this script runs the command below directly on the
+# host. The CONTAINER_IMAGE variable can be set to run on a custom container
+# image for local testing. E.g.:
+#
+# CONTAINER_IMAGE="gcr.io/tink-test-infrastructure/linux-tink-cc-cmake:latest" \
+#  sh ./kokoro/gcp_ubuntu/examples/cmake/run_tests.sh
+#
+RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  readonly C_PREFIX="gcr.io/tink-test-infrastructure"
+  readonly C_NAME="linux-tink-cc-cmake"
+  readonly C_HASH="6ee81956f78632f0e035ed49fdecea4815f36ed6bf07cb5cd18fe587474a37b3"
+  CONTAINER_IMAGE="${C_PREFIX}/${C_NAME}@sha256:${C_HASH}"
+  RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
+fi
+readonly CONTAINER_IMAGE
+
+if [[ -n "${CONTAINER_IMAGE}" ]]; then
+  RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+  ./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF

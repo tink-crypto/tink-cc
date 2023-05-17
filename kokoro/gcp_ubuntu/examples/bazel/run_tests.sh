@@ -16,24 +16,37 @@
 
 set -euo pipefail
 
-readonly WORKSPACE_FOLDER="examples"
-
-# If we are running on Kokoro cd into the repository.
+# By default when run locally this script runs the command below directly on the
+# host. The CONTAINER_IMAGE variable can be set to run on a custom container
+# image for local testing. E.g.:
+#
+# CONTAINER_IMAGE="gcr.io/tink-test-infrastructure/linux-tink-cc-base:latest" \
+#  sh ./kokoro/gcp_ubuntu/examples/bazel/run_tests.sh
+#
+RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  readonly C_PREFIX="gcr.io/tink-test-infrastructure"
+  readonly C_NAME="linux-tink-cc-base"
+  readonly C_HASH="06d54b318be1b17b81d971b89aa753e7d14034fcfe45842caae5a7e43ca13625"
+  CONTAINER_IMAGE="${C_PREFIX}/${C_NAME}@sha256:${C_HASH}"
+  RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
+fi
+readonly CONTAINER_IMAGE
+
+if [[ -n "${CONTAINER_IMAGE}" ]]; then
+  RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-: "${TINK_BASE_DIR:=$(cd .. && pwd)}"
-readonly TINK_BASE_DIR
-
-# Build and run tests from WORKSPACE.
-cp "${WORKSPACE_FOLDER}/WORKSPACE" "${WORKSPACE_FOLDER}/WORKSPACE.bak"
+cp examples/WORKSPACE examples/WORKSPACE.bak
 ./kokoro/testutils/replace_http_archive_with_local_repository.py \
-  -f "${WORKSPACE_FOLDER}/WORKSPACE" -t "${TINK_BASE_DIR}"
-./kokoro/testutils/run_bazel_tests.sh "${WORKSPACE_FOLDER}"
-mv "${WORKSPACE_FOLDER}/WORKSPACE.bak" "${WORKSPACE_FOLDER}/WORKSPACE"
+  -f examples/WORKSPACE -t "../.."
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+  ./kokoro/testutils/run_bazel_tests.sh examples
+mv examples/WORKSPACE.bak examples/WORKSPACE
 
-# Build and run tests using Bazel Modules.
-./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
-  -t "--enable_bzlmod" "${WORKSPACE_FOLDER}"
+# Also build and test the examples using Bazel Modules.
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+  ./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
+  -t "--enable_bzlmod" examples

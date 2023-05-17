@@ -16,21 +16,30 @@
 
 set -euo pipefail
 
-BAZEL_CMD="bazel"
-# If we are running on Kokoro cd into the repository.
+# By default when run locally this script runs the command below directly on the
+# host. The CONTAINER_IMAGE variable can be set to run on a custom container
+# image for local testing. E.g.:
+#
+# CONTAINER_IMAGE="gcr.io/tink-test-infrastructure/linux-tink-cc-cmake:latest" \
+#  sh ./kokoro/gcp_ubuntu/bazel_fips/run_tests.sh
+#
+RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
-  if command -v "bazelisk" &> /dev/null; then
-    BAZEL_CMD="bazelisk"
-  fi
+  readonly C_PREFIX="gcr.io/tink-test-infrastructure"
+  readonly C_NAME="linux-tink-cc-cmake"
+  readonly C_HASH="6ee81956f78632f0e035ed49fdecea4815f36ed6bf07cb5cd18fe587474a37b3"
+  CONTAINER_IMAGE="${C_PREFIX}/${C_NAME}@sha256:${C_HASH}"
+  RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
 fi
-readonly BAZEL_CMD
+readonly CONTAINER_IMAGE
 
-"${BAZEL_CMD}" --version
+if [[ -n "${CONTAINER_IMAGE}" ]]; then
+  RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
+fi
 
 # Run build and tests with the BoringSSL FIPS module
-
 # Prepare the workspace to use BoringCrypto which is in
 # third_party/boringssl_fips; insert the local_repository instruction below
 # in WORKSPACE.
@@ -40,14 +49,12 @@ if (( $? != 0 || NUM_MATCHES != 1)); then
   echo "ERROR: Could not patch WORKSPACE to build BoringSSL with FIPS module"
   exit 1
 fi
-
 mapfile LOCAL_FIPS_REPOSITORY <<EOM
 local_repository(
   name = "boringssl",
   path = "third_party/boringssl_fips",
 )
 EOM
-
 printf -v INSERT_TEXT '\\n%s' "${LOCAL_FIPS_REPOSITORY[@]//$'\n'/}"
 sed -i.bak "/${APPEND_AFTER}/a \\${INSERT_TEXT}" WORKSPACE
 
@@ -56,15 +63,11 @@ BAZEL_FLAGS=(
   --build_tag_filters=fips,-requires_boringcrypto_update
 )
 
-"${BAZEL_CMD}" build \
-  "${BAZEL_FLAGS[@]}" \
-  -- ...
-
-"${BAZEL_CMD}" test \
-  "${BAZEL_FLAGS[@]}" \
-  --build_tests_only \
-  --test_output=errors \
-  --test_tag_filters=fips,-requires_boringcrypto_update \
-  -- ...
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+    bazelisk build "${BAZEL_FLAGS[@]}" -- ... \
+    "&&" bazelisk test "${BAZEL_FLAGS[@]}" \
+      --build_tests_only \
+      --test_output=errors \
+      --test_tag_filters=fips,-requires_boringcrypto_update -- ...
 
 mv WORKSPACE.bak WORKSPACE

@@ -16,19 +16,28 @@
 
 set -euo pipefail
 
+# By default when run locally this script runs the command below directly on the
+# host. The CONTAINER_IMAGE variable can be set to run on a custom container
+# image for local testing. E.g.:
+#
+# CONTAINER_IMAGE="gcr.io/tink-test-infrastructure/linux-tink-cc-cmake-and-openssl-3:latest" \
+#  sh ./kokoro/gcp_ubuntu/cmake_openssl/run_tests.sh
+#
+RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
+  readonly C_PREFIX="gcr.io/tink-test-infrastructure"
+  readonly C_NAME="linux-tink-cc-cmake-and-openssl-3"
+  readonly C_HASH="7d3a085f1cb5a6eb467d67fa62d5525e303426bb40a93ed03f8de75f637bd4cf"
+  CONTAINER_IMAGE="${C_PREFIX}/${C_NAME}@sha256:${C_HASH}"
+  RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
+fi
+readonly CONTAINER_IMAGE
+
+if [[ -n "${CONTAINER_IMAGE}" ]]; then
+  RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-readonly OPENSSL3_VERSION="3.0.8"
-readonly OPENSSL3_SHA256="6c13d2bf38fdf31eac3ce2a347073673f5d63263398f1f69d0df4a41253e4b3e"
-
-source ./kokoro/testutils/install_openssl.sh "${OPENSSL3_VERSION}" \
-  "${OPENSSL3_SHA256}"
-
-# This is needed because CMake < 3.23 doesn't look for a lib64 folder. See
-# this commit https://github.com/Kitware/CMake/commit/ae48449cf05815f35631159b92fd53d62b81f907.
-ln -s "${OPENSSL_ROOT_DIR}/lib64" "${OPENSSL_ROOT_DIR}/lib"
-
-./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+  ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON

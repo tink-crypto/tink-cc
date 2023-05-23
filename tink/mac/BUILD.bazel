@@ -242,6 +242,26 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "hmac_key",
+    srcs = ["hmac_key.cc"],
+    hdrs = ["hmac_key.h"],
+    include_prefix = "tink/mac",
+    deps = [
+        ":hmac_parameters",
+        ":mac_key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/subtle:subtle_util",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -442,6 +462,21 @@ cc_test(
         ":hmac_parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "hmac_key_test",
+    srcs = ["hmac_key_test.cc"],
+    deps = [
+        ":hmac_key",
+        ":hmac_parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

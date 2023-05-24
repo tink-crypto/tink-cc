@@ -39,14 +39,21 @@ if [[ -n "${CONTAINER_IMAGE}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-cp examples/WORKSPACE examples/WORKSPACE.bak
-./kokoro/testutils/replace_http_archive_with_local_repository.py \
-  -f examples/WORKSPACE -t "../.."
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_bazel_tests.sh examples
-mv examples/WORKSPACE.bak examples/WORKSPACE
-
 # Also build and test the examples using Bazel Modules.
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
   -t "--enable_bzlmod" examples
+
+cp examples/WORKSPACE examples/WORKSPACE.bak
+
+# Run cleanup on EXIT.
+trap cleanup EXIT
+
+cleanup() {
+  mv examples/WORKSPACE.bak examples/WORKSPACE
+}
+
+./kokoro/testutils/replace_http_archive_with_local_repository.py \
+  -f examples/WORKSPACE -t "../.."
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+  ./kokoro/testutils/run_bazel_tests.sh examples

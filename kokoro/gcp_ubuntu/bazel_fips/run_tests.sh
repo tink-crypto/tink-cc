@@ -14,7 +14,7 @@
 # limitations under the License.
 ################################################################################
 
-set -euo pipefail
+set -eEuo pipefail
 
 # By default when run locally this script runs the command below directly on the
 # host. The CONTAINER_IMAGE variable can be set to run on a custom container
@@ -58,16 +58,28 @@ EOM
 printf -v INSERT_TEXT '\\n%s' "${LOCAL_FIPS_REPOSITORY[@]//$'\n'/}"
 sed -i.bak "/${APPEND_AFTER}/a \\${INSERT_TEXT}" WORKSPACE
 
-BAZEL_FLAGS=(
+cat <<'EOF' > _do_run_test.sh
+set -euo pipefail
+
+readonly BAZEL_FLAGS=(
   --//tink/config:use_only_fips=True
   --build_tag_filters=fips,-requires_boringcrypto_update
 )
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-    bazelisk build "${BAZEL_FLAGS[@]}" -- ... \
-    "&&" bazelisk test "${BAZEL_FLAGS[@]}" \
-      --build_tests_only \
-      --test_output=errors \
-      --test_tag_filters=fips,-requires_boringcrypto_update -- ...
+bazelisk build "${BAZEL_FLAGS[@]}" -- ...
+bazelisk test "${BAZEL_FLAGS[@]}" \
+  --build_tests_only \
+  --test_output=errors \
+  --test_tag_filters=fips,-requires_boringcrypto_update -- ...
+EOF
+chmod +x _do_run_test.sh
 
-mv WORKSPACE.bak WORKSPACE
+# Run cleanup on EXIT.
+trap cleanup EXIT
+
+cleanup() {
+  mv WORKSPACE.bak WORKSPACE
+  rm -rf _do_run_test.sh
+}
+
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" ./_do_run_test.sh

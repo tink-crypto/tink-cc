@@ -110,7 +110,7 @@ if (NOT TARGET crypto)
       "$<BUILD_INTERFACE:${boringssl_SOURCE_DIR}/src/include>")
   else()
     # Support for ED25519 was added from 1.1.1.
-    find_package(OpenSSL 1.1.1 REQUIRED)
+    find_package(OpenSSL REQUIRED)
     _create_interface_target(crypto OpenSSL::Crypto)
   endif()
 else()
@@ -123,11 +123,13 @@ set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Tink dependency override" FORCE)
 set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Tink dependency override" FORCE)
 set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Tink dependency override" FORCE)
 
-http_archive(
-  NAME rapidjson
-  URL https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz
-  SHA256 bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e
-)
+if(NOT TINK_USE_INSTALLED_RAPIDJSON)
+  http_archive(
+    NAME rapidjson
+    URL https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz
+    SHA256 bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e
+  )
+endif()
 # Rapidjson is a header-only library with no explicit target. Here we create one.
 add_library(rapidjson INTERFACE)
 target_include_directories(rapidjson INTERFACE "${rapidjson_SOURCE_DIR}")
@@ -136,8 +138,12 @@ set(protobuf_BUILD_TESTS OFF CACHE BOOL "Tink dependency override" FORCE)
 set(protobuf_BUILD_EXAMPLES OFF CACHE BOOL "Tink dependency override" FORCE)
 set(protobuf_INSTALL OFF CACHE BOOL "Tink dependency override" FORCE)
 
-http_archive(
-  NAME com_google_protobuf
-  URL https://github.com/protocolbuffers/protobuf/releases/download/v25.1/protobuf-25.1.zip
-  SHA256 5c86c077b0794c3e9bb30cac872cf883043febfb0f992137f0a8b1c3d534617c
-)
+if(NOT TINK_USE_INSTALLED_PROTOBUF)
+  http_archive(
+    NAME com_google_protobuf
+    URL https://github.com/protocolbuffers/protobuf/releases/download/v25.1/protobuf-25.1.zip
+    SHA256 5c86c077b0794c3e9bb30cac872cf883043febfb0f992137f0a8b1c3d534617c
+  )
+else()
+  find_package(Protobuf REQUIRED)
+endif()

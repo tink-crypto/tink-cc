@@ -137,6 +137,24 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "aes_siv_key",
+    srcs = ["aes_siv_key.cc"],
+    hdrs = ["aes_siv_key.h"],
+    include_prefix = "tink/daead",
+    deps = [
+        ":aes_siv_parameters",
+        ":deterministic_aead_key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/subtle:subtle_util",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -252,6 +270,21 @@ cc_test(
         ":aes_siv_parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_siv_key_test",
+    srcs = ["aes_siv_key_test.cc"],
+    deps = [
+        ":aes_siv_key",
+        ":aes_siv_parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

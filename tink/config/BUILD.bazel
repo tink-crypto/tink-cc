@@ -52,6 +52,59 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "fips_140_2",
+    srcs = ["fips_140_2.cc"],
+    hdrs = ["fips_140_2.h"],
+    include_prefix = "tink/config",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:configuration",
+        "//tink/aead:aead_wrapper",
+        "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/internal:configuration_impl",
+        "//tink/mac:hmac_key_manager",
+        "//tink/mac:mac_wrapper",
+        "//tink/mac/internal:chunked_mac_wrapper",
+        "//tink/prf:hmac_prf_key_manager",
+        "//tink/prf:prf_set_wrapper",
+        "//tink/signature:ecdsa_sign_key_manager",
+        "//tink/signature:ecdsa_verify_key_manager",
+        "//tink/signature:public_key_sign_wrapper",
+        "//tink/signature:public_key_verify_wrapper",
+        "//tink/signature:rsa_ssa_pkcs1_sign_key_manager",
+        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
+        "//tink/signature:rsa_ssa_pss_sign_key_manager",
+        "//tink/signature:rsa_ssa_pss_verify_key_manager",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
+cc_library(
+    name = "key_gen_fips_140_2",
+    srcs = ["key_gen_fips_140_2.cc"],
+    hdrs = ["key_gen_fips_140_2.h"],
+    include_prefix = "tink/config",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:key_gen_configuration",
+        "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/internal:fips_utils",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/mac:hmac_key_manager",
+        "//tink/prf:hmac_prf_key_manager",
+        "//tink/signature:ecdsa_sign_key_manager",
+        "//tink/signature:ecdsa_verify_key_manager",
+        "//tink/signature:rsa_ssa_pkcs1_sign_key_manager",
+        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
+        "//tink/signature:rsa_ssa_pss_sign_key_manager",
+        "//tink/signature:rsa_ssa_pss_verify_key_manager",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -104,34 +157,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "fips_140_2",
-    srcs = ["fips_140_2.cc"],
-    hdrs = ["fips_140_2.h"],
-    include_prefix = "tink/config",
-    deps = [
-        "//tink:configuration",
-        "//tink/aead:aead_wrapper",
-        "//tink/aead:aes_ctr_hmac_aead_key_manager",
-        "//tink/aead:aes_gcm_key_manager",
-        "//tink/internal:configuration_impl",
-        "//tink/mac:hmac_key_manager",
-        "//tink/mac:mac_wrapper",
-        "//tink/mac/internal:chunked_mac_wrapper",
-        "//tink/prf:hmac_prf_key_manager",
-        "//tink/prf:prf_set_wrapper",
-        "//tink/signature:ecdsa_sign_key_manager",
-        "//tink/signature:ecdsa_verify_key_manager",
-        "//tink/signature:public_key_sign_wrapper",
-        "//tink/signature:public_key_verify_wrapper",
-        "//tink/signature:rsa_ssa_pkcs1_sign_key_manager",
-        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
-        "//tink/signature:rsa_ssa_pss_sign_key_manager",
-        "//tink/signature:rsa_ssa_pss_verify_key_manager",
-        "@com_google_absl//absl/log:check",
-    ],
-)
-
 cc_test(
     name = "fips_140_2_test",
     srcs = ["fips_140_2_test.cc"],
@@ -152,6 +177,28 @@ cc_test(
         "//tink/util:test_keyset_handle",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "key_gen_fips_140_2_test",
+    srcs = ["key_gen_fips_140_2_test.cc"],
+    deps = [
+        ":key_gen_fips_140_2",
+        "//tink/aead:aead_key_templates",
+        "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/internal:fips_utils",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/mac:aes_cmac_key_manager",
+        "//tink/mac:hmac_key_manager",
+        "//tink/prf:hmac_prf_key_manager",
+        "//proto:tink_cc_proto",
+        "//tink/signature:ecdsa_verify_key_manager",
+        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
+        "//tink/signature:rsa_ssa_pss_verify_key_manager",
+        "//tink/util:test_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

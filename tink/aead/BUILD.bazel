@@ -681,6 +681,7 @@ cc_test(
         "//tink:aead",
         "//tink:keyset_handle",
         "//tink:registry",
+        "//tink/internal:ssl_util",
         "//tink/mac:mac_key_templates",
         "//proto:aes_gcm_cc_proto",
         "//tink/util:status",
@@ -700,6 +701,7 @@ cc_test(
     size = "small",
     srcs = ["kms_envelope_aead_key_manager_test.cc"],
     deps = [
+        ":aead_config",
         ":aead_key_templates",
         ":aes_eax_key_manager",
         ":kms_envelope_aead",
@@ -711,6 +713,7 @@ cc_test(
         "//proto:kms_envelope_cc_proto",
         "//proto:tink_cc_proto",
         "//tink/subtle:aead_test_util",
+        "//tink/util:fake_kms_client",
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:test_matchers",

@@ -1092,12 +1092,14 @@ cc_test(
     deps = [
         ":configuration_impl",
         ":keyset_wrapper_store",
+        "//tink:cleartext_keyset_handle",
         "//tink:configuration",
         "//proto:aes_gcm_cc_proto",
         "//proto:rsa_ssa_pss_cc_proto",
         "//tink/subtle:random",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -1195,6 +1197,7 @@ cc_test(
     deps = [
         ":key_gen_configuration_impl",
         "//tink:key_gen_configuration",
+        "//tink/aead:aead_key_templates",
         "//proto:aes_gcm_cc_proto",
         "//proto:rsa_ssa_pss_cc_proto",
         "//tink/util:test_matchers",

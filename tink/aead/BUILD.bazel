@@ -282,6 +282,7 @@ cc_library(
     deps = [
         "//tink:aead",
         "//tink:registry",
+        "//tink/aead/internal:aead_util",
         "//proto:tink_cc_proto",
         "//tink/util:status",
         "//tink/util:statusor",
@@ -303,6 +304,7 @@ cc_library(
         "//tink:core/template_util",
         "//tink:kms_client",
         "//tink:kms_clients",
+        "//tink/aead/internal:aead_util",
         "//tink/internal:fips_utils",
         "//proto:kms_envelope_cc_proto",
         "//proto:tink_cc_proto",
@@ -710,6 +712,7 @@ cc_test(
         "//tink:kms_client",
         "//tink:kms_clients",
         "//tink:registry",
+        "//tink/mac:mac_key_templates",
         "//proto:kms_envelope_cc_proto",
         "//proto:tink_cc_proto",
         "//tink/subtle:aead_test_util",

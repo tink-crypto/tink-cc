@@ -686,6 +686,7 @@ cc_test(
         "//tink/internal:ssl_util",
         "//tink/mac:mac_key_templates",
         "//proto:aes_gcm_cc_proto",
+        "//tink/util:fake_kms_client",
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:test_matchers",

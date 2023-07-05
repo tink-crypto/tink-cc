@@ -27,10 +27,8 @@ RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
-  readonly C_PREFIX="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images"
-  readonly C_NAME="linux-tink-cc-cmake"
-  readonly C_HASH="379a51d8aa072d27317a8fb8bdf84e2675f0c5c2a2ead5ae2ea0e514c9c4ea6f"
-  CONTAINER_IMAGE="${C_PREFIX}/${C_NAME}@sha256:${C_HASH}"
+  source kokoro/testutils/tink_test_container_images.sh
+  CONTAINER_IMAGE="${TINK_CC_CMAKE_IMAGE}"
   RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
 fi
 readonly CONTAINER_IMAGE

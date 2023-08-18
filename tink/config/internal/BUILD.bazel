@@ -1,0 +1,48 @@
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "aead_v0",
+    srcs = ["aead_v0.cc"],
+    hdrs = ["aead_v0.h"],
+    include_prefix = "tink/config/internal",
+    deps = [
+        "//tink:configuration",
+        "//tink/aead:aead_wrapper",
+        "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_eax_key_manager",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/aead:aes_gcm_siv_key_manager",
+        "//tink/aead:xchacha20_poly1305_key_manager",
+        "//tink/internal:configuration_impl",
+        "//tink/util:status",
+        "@com_google_absl//absl/memory",
+    ],
+)
+
+cc_test(
+    name = "test",
+    srcs = ["test.cc"],
+    deps = [
+        ":aead_v0",
+        "//tink:aead",
+        "//tink:configuration",
+        "//tink:key_gen_configuration",
+        "//tink:keyset_handle",
+        "//tink/aead:aead_key_templates",
+        "//tink/aead:aes_ctr_hmac_aead_key_manager",
+        "//tink/aead:aes_eax_key_manager",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/aead:aes_gcm_siv_key_manager",
+        "//tink/aead:xchacha20_poly1305_key_manager",
+        "//tink/internal:configuration_impl",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/internal:key_type_info_store",
+        "//tink/internal:keyset_wrapper_store",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

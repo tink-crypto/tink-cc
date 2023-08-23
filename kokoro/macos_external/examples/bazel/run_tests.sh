@@ -18,13 +18,10 @@ set -euo pipefail
 
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
   TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
-  cd "${TINK_BASE_DIR}/tink_cc"
 fi
-
 : "${TINK_BASE_DIR:=$(cd .. && pwd)}"
+readonly TINK_BASE_DIR
 
-cp "examples/WORKSPACE" "examples/WORKSPACE.bak"
-./kokoro/testutils/replace_http_archive_with_local_repository.py \
- -f "examples/WORKSPACE" -t "${TINK_BASE_DIR}"
+cd "${TINK_BASE_DIR}/tink_cc"
+
 ./kokoro/testutils/run_bazel_tests.sh "examples"
-mv "examples/WORKSPACE.bak" "examples/WORKSPACE"

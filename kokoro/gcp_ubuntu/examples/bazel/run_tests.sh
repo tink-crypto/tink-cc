@@ -25,33 +25,26 @@ set -euo pipefail
 #
 RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
-  cd "${TINK_BASE_DIR}/tink_cc"
-  source kokoro/testutils/cc_test_container_images.sh
+  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  source "${TINK_BASE_DIR}/tink_cc/kokoro/testutils/cc_test_container_images.sh"
   CONTAINER_IMAGE="${TINK_CC_BASE_IMAGE}"
   RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
 fi
+: "${TINK_BASE_DIR:=$(cd .. && pwd)}"
+readonly TINK_BASE_DIR
 readonly CONTAINER_IMAGE
+
+cd "${TINK_BASE_DIR}/tink_cc"
 
 if [[ -n "${CONTAINER_IMAGE}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-# Also build and test the examples using Bazel Modules.
+# Build and run tests using bzlmod.
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
   -t "--enable_bzlmod" examples
 
-cp examples/WORKSPACE examples/WORKSPACE.bak
-
-# Run cleanup on EXIT.
-trap cleanup EXIT
-
-cleanup() {
-  mv examples/WORKSPACE.bak examples/WORKSPACE
-}
-
-./kokoro/testutils/replace_http_archive_with_local_repository.py \
-  -f examples/WORKSPACE -t "../.."
+# Build and run tests using the WORKSPACE file.
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_bazel_tests.sh examples

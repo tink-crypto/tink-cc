@@ -235,6 +235,7 @@ cc_library(
         "//tink:hybrid_encrypt",
         "//tink:input_stream",
         "//tink:keyset_handle",
+        "//tink:keyset_writer",
         "//tink:kms_client",
         "//tink:mac",
         "//tink:output_stream",

@@ -348,6 +348,7 @@ cc_library(
         "//tink/util:protobuf_helper",
         "//tink/util:status",
         "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
     ],

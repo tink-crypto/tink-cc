@@ -18,8 +18,9 @@ set -euo pipefail
 
 # If we are running on Kokoro cd into the repository.
 if [[ -n "${KOKORO_ROOT:-}" ]]; then
-  TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
+  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
 ./kokoro/testutils/run_bazel_tests.sh .
+./kokoro/testutils/run_bazel_tests.sh "examples"

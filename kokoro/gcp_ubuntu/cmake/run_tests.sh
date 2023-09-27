@@ -14,15 +14,20 @@
 # limitations under the License.
 ################################################################################
 
+# Builds and tests tink-cc and its examples using CMake.
+#
+# The behavior of this script can be modified using the following optional env
+# variables:
+#
+# - CONTAINER_IMAGE (unset by default): By default when run locally this script
+#   executes tests directly on the host. The CONTAINER_IMAGE variable can be set
+#   to execute tests in a custom container image for local testing. E.g.:
+#
+#   CONTAINER_IMAGE="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images/linux-tink-cc-cmake:latest" \
+#     sh ./kokoro/gcp_ubuntu/cmake/run_tests.sh
+#
 set -euo pipefail
 
-# By default when run locally this script runs the command below directly on the
-# host. The CONTAINER_IMAGE variable can be set to run on a custom container
-# image for local testing. E.g.:
-#
-# CONTAINER_IMAGE="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images/linux-tink-cc-cmake:latest" \
-#  sh ./kokoro/gcp_ubuntu/cmake/run_tests.sh
-#
 RUN_COMMAND_ARGS=()
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
@@ -33,7 +38,7 @@ if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
 fi
 readonly CONTAINER_IMAGE
 
-if [[ -n "${CONTAINER_IMAGE}" ]]; then
+if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 

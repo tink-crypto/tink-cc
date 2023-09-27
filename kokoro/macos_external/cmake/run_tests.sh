@@ -22,3 +22,4 @@ if [[ -n "${KOKORO_ROOT:-}" ]]; then
 fi
 
 ./kokoro/testutils/run_cmake_tests.sh .
+./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF

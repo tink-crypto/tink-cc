@@ -978,6 +978,7 @@ cc_test(
         ":key_gen_config_v0",
         "//tink:aead",
         "//tink:keyset_handle",
+        "//tink/internal:ssl_util",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_googletest//:gtest_main",

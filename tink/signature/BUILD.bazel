@@ -600,6 +600,29 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "rsa_ssa_pkcs1_proto_serialization",
+    srcs = ["rsa_ssa_pkcs1_proto_serialization.cc"],
+    hdrs = ["rsa_ssa_pkcs1_proto_serialization.h"],
+    include_prefix = "tink/signature",
+    deps = [
+        ":rsa_ssa_pkcs1_parameters",
+        "//tink:big_integer",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "//proto:common_cc_proto",
+        "//proto:rsa_ssa_pkcs1_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -1112,6 +1135,29 @@ cc_test(
         "//proto:tink_cc_proto",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "rsa_ssa_pkcs1_proto_serialization_test",
+    srcs = ["rsa_ssa_pkcs1_proto_serialization_test.cc"],
+    deps = [
+        ":rsa_ssa_pkcs1_parameters",
+        ":rsa_ssa_pkcs1_proto_serialization",
+        "//tink:big_integer",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//proto:common_cc_proto",
+        "//proto:rsa_ssa_pkcs1_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

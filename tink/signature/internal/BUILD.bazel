@@ -70,6 +70,31 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "config_fips_140_2",
+    srcs = ["config_fips_140_2.cc"],
+    hdrs = ["config_fips_140_2.h"],
+    include_prefix = "tink/signature/internal",
+    deps = [
+        "//tink:configuration",
+        "//tink/internal:configuration_impl",
+        "//tink/internal:fips_utils",
+        "//tink/signature:ecdsa_sign_key_manager",
+        "//tink/signature:ecdsa_verify_key_manager",
+        "//tink/signature:public_key_sign_wrapper",
+        "//tink/signature:public_key_verify_wrapper",
+        "//tink/signature:rsa_ssa_pkcs1_sign_key_manager",
+        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
+        "//tink/signature:rsa_ssa_pss_sign_key_manager",
+        "//tink/signature:rsa_ssa_pss_verify_key_manager",
+        "//tink/util:status",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+# tests
+
 cc_test(
     name = "ecdsa_raw_sign_boringssl_test",
     size = "small",
@@ -105,6 +130,33 @@ cc_test(
         "//tink:public_key_verify",
         "//tink/internal:configuration_impl",
         "//tink/internal:key_gen_configuration_impl",
+        "//tink/internal:key_type_info_store",
+        "//tink/internal:keyset_wrapper_store",
+        "//proto:tink_cc_proto",
+        "//tink/signature:ecdsa_verify_key_manager",
+        "//tink/signature:ed25519_verify_key_manager",
+        "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
+        "//tink/signature:rsa_ssa_pss_verify_key_manager",
+        "//tink/signature:signature_key_templates",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "config_fips_140_2_test",
+    srcs = ["config_fips_140_2_test.cc"],
+    deps = [
+        ":config_fips_140_2",
+        ":key_gen_config_v0",
+        "//tink:configuration",
+        "//tink:key_gen_configuration",
+        "//tink:keyset_handle",
+        "//tink:public_key_sign",
+        "//tink:public_key_verify",
+        "//tink/internal:configuration_impl",
+        "//tink/internal:fips_utils",
         "//tink/internal:key_type_info_store",
         "//tink/internal:keyset_wrapper_store",
         "//proto:tink_cc_proto",

@@ -236,6 +236,7 @@ cc_test(
         "//tink:proto_keyset_format",
         "//tink:random_access_stream",
         "//tink:streaming_aead",
+        "//tink/config:global_registry",
         "//tink/internal:test_random_access_stream",
         "//proto:aes_gcm_hkdf_streaming_cc_proto",
         "//proto:common_cc_proto",

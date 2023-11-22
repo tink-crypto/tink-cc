@@ -191,6 +191,7 @@ cc_library(
         "//tink/util:statusor",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/synchronization",
     ],
 )
@@ -411,8 +412,10 @@ cc_test(
         "//proto:tink_cc_proto",
         "//tink/subtle:random",
         "//tink/subtle:test_util",
+        "//tink/util:buffer",
         "//tink/util:ostream_output_stream",
         "//tink/util:status",
+        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@com_google_absl//absl/memory",

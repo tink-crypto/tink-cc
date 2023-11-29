@@ -28,25 +28,4 @@
 #
 set -euo pipefail
 
-RUN_COMMAND_ARGS=()
-if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
-  readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
-  cd "${TINK_BASE_DIR}/tink_cc"
-  source kokoro/testutils/cc_test_container_images.sh
-  CONTAINER_IMAGE="${TINK_CC_BASE_IMAGE}"
-  RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
-fi
-readonly CONTAINER_IMAGE
-
-if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
-  RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
-fi
-
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
-  -t "--enable_bzlmod" .
-
-# Build and run tests using bzlmod.
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_bazel_tests.sh -b "--enable_bzlmod" \
-  -t "--enable_bzlmod" examples
+# TODO(b/292091379) Tentatively a noop. Remove this from Kokoro

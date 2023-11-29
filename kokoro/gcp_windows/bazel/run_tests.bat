@@ -23,12 +23,15 @@ CD !WORKSPACE_DIR!
 if %errorlevel% neq 0 EXIT /B 1
 
 ECHO Build started at %TIME%
-bazel build ...
+@REM See https://github.com/protocolbuffers/protobuf/issues/12947 and
+@REM  https://bazel.build/configure/windows#long-path-issues for why
+@REM --output_base=C:\O is needed.
+bazel --output_base=C:\O build ...
 IF %errorlevel% neq 0 EXIT /B 1
 ECHO Build completed at %TIME%
 
 ECHO Test started at %TIME%
-bazel test --strategy=TestRunner=standalone --test_output=errors -- ...
+bazel --output_base=C:\O test --strategy=TestRunner=standalone --test_output=errors -- ...
 IF %errorlevel% neq 0 EXIT /B 1
 ECHO Test completed at %TIME%
 

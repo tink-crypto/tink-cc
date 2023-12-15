@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 ################################################################################
 
 # Builds and tests tink-cc and its examples using CMake with preinstalled deps.
+#
+# NOTE: This script assumes OpenSSL, Abseil and googletest are preinstalled.
 #
 # The behavior of this script can be modified using the following optional env
 # variables:
@@ -42,11 +44,14 @@ if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON \
-  -DTINK_USE_INSTALLED_ABSEIL=ON -DTINK_USE_INSTALLED_GOOGLETEST=ON
+readonly CMAKE_ARGS=(
+  -DTINK_USE_SYSTEM_OPENSSL=ON
+  -DTINK_USE_INSTALLED_ABSEIL=ON
+  -DTINK_USE_INSTALLED_GOOGLETEST=ON
+)
 
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_cmake_tests.sh "examples" \
-  -DTINK_USE_SYSTEM_OPENSSL=ON -DTINK_USE_INSTALLED_ABSEIL=ON \
-  -DTINK_USE_INSTALLED_GOOGLETEST=ON
+  ./kokoro/testutils/run_cmake_tests.sh . "${CMAKE_ARGS[@]}"
+
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+  ./kokoro/testutils/run_cmake_tests.sh "examples" "${CMAKE_ARGS[@]}"

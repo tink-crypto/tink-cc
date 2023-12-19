@@ -12,10 +12,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":keyset_deriver_wrapper",
+        "//tink:registry",
         "//tink/config:tink_fips",
         "//tink/keyderivation/internal:prf_based_deriver_key_manager",
         "//tink/prf:hkdf_prf_key_manager",
         "//tink/util:status",
+        "@com_google_absl//absl/memory",
     ],
 )
 
@@ -26,13 +28,17 @@ cc_test(
         ":key_derivation_config",
         ":key_derivation_key_templates",
         ":keyset_deriver",
+        "//tink:aead",
+        "//tink:keyset_handle",
         "//tink:registry",
         "//tink/aead:aead_config",
         "//tink/aead:aead_key_templates",
         "//tink/aead:aes_gcm_key_manager",
+        "//tink/config:global_registry",
         "//tink/prf:prf_key_templates",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -44,9 +50,11 @@ cc_library(
     include_prefix = "tink/keyderivation",
     visibility = ["//visibility:public"],
     deps = [
+        ":keyset_deriver",
+        "//tink:keyset_handle",
+        "//tink/config:global_registry",
         "//tink/keyderivation/internal:prf_based_deriver_key_manager",
         "//proto:tink_cc_proto",
-        "//tink/subtle:random",
         "//tink/util:statusor",
     ],
 )
@@ -67,6 +75,7 @@ cc_test(
         "//proto:tink_cc_proto",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
@@ -92,10 +101,15 @@ cc_library(
     deps = [
         ":keyset_deriver",
         "//tink:cleartext_keyset_handle",
+        "//tink:keyset_handle",
         "//tink:primitive_set",
         "//tink:primitive_wrapper",
         "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )
 
@@ -106,10 +120,15 @@ cc_test(
         ":keyset_deriver",
         ":keyset_deriver_wrapper",
         "//tink:cleartext_keyset_handle",
+        "//tink:keyset_handle",
         "//tink:primitive_set",
         "//proto:tink_cc_proto",
+        "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )

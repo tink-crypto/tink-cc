@@ -18,6 +18,8 @@
 
 #include <set>
 
+#include "absl/strings/str_cat.h"
+
 namespace crypto {
 namespace tink {
 

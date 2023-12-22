@@ -19,6 +19,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/strings/str_cat.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 

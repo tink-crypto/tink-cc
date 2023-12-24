@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(Tink VERSION 2.1.1 LANGUAGES CXX)
+project(tink VERSION 2.1.1 LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -7,7 +7,14 @@ option(TINK_BUILD_TESTS "Build Tink tests" OFF)
 option(TINK_USE_SYSTEM_OPENSSL "Build Tink linking to OpenSSL installed in the system" OFF)
 option(TINK_USE_INSTALLED_ABSEIL "Build Tink linking to Abseil installed in the system" OFF)
 option(TINK_USE_INSTALLED_GOOGLETEST "Build Tink linking to GTest installed in the system" OFF)
+option(TINK_USE_INSTALLED_PROTOBUF "Build Tink linking to Protobuf installed in the system" OFF)
+option(TINK_USE_INSTALLED_RAPIDJSON "Build Tink linking to Rapidjson installed in the system" OFF)
 option(USE_ONLY_FIPS "Enables the FIPS only mode in Tink" OFF)
+option(TINK_BUILD_SHARED_LIB "Build libtink bundle it with the headers" OFF)
+
+if (TINK_BUILD_SHARED_LIB)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "libtink override" FORCE)
+endif()
 
 set(CPACK_GENERATOR TGZ)
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
@@ -34,3 +41,25 @@ list(APPEND TINK_INCLUDE_DIRS "${TINK_INCLUDE_ALIAS_DIR}")
 
 add_subdirectory(tink)
 add_subdirectory(proto)
+
+if (TINK_BUILD_SHARED_LIB)
+  install(
+    DIRECTORY
+      "${CMAKE_CURRENT_SOURCE_DIR}/tink/"
+      "${TINK_GENFILE_DIR}/tink/"
+    DESTINATION "include/tink"
+    FILES_MATCHING PATTERN "*.h"
+  )
+
+  install(
+    DIRECTORY
+      "${TINK_GENFILE_DIR}/proto"
+    DESTINATION "include"
+    FILES_MATCHING PATTERN "*.h"
+  )
+
+  export(EXPORT Tink FILE tinkConfig.cmake)
+  install(FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+  )
+endif()

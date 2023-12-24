@@ -25,9 +25,7 @@ endif()
 
 set(TINK_VERSION_H "${TINK_GENFILE_DIR}/tink/version.h")
 
-tink_cc_library(
-  NAME cc
-  SRCS
+set(TINK_PUBLIC_APIS
     aead.h
     aead_config.h
     aead_factory.h
@@ -74,7 +72,9 @@ tink_cc_library(
     streaming_mac.h
     tink_config.h
     "${TINK_VERSION_H}"
-  DEPS
+)
+
+set(TINK_PUBLIC_API_DEPS
     tink::core::aead
     tink::core::binary_keyset_reader
     tink::core::binary_keyset_writer
@@ -139,7 +139,15 @@ tink_cc_library(
     tink::util::validation
     tink::proto::config_cc_proto
     tink::proto::tink_cc_proto
-  PUBLIC
+)
+
+tink_cc_library(
+  NAME cc
+  SRCS
+    ${TINK_PUBLIC_APIS}
+  DEPS
+    ${TINK_PUBLIC_API_DEPS}
+    PUBLIC
 )
 
 add_library(tink::static ALIAS tink_core_cc)
@@ -1122,6 +1130,33 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
 )
+
+
+if (TINK_BUILD_SHARED_LIB)
+  add_library(tink SHARED
+    ${TINK_PUBLIC_APIS}
+    version_script.lds
+    exported_symbols.lds
+  )
+  target_link_libraries(tink
+	  PRIVATE
+    -fuse-ld=gold  # GNU ld does not support ICF.
+    -Wl,--version-script="${CMAKE_CURRENT_SOURCE_DIR}/version_script.lds"
+    -Wl,--gc-sections
+    -Wl,--icf=all
+    -Wl,--strip-all
+  )
+  target_include_directories(tink PUBLIC ${TINK_INCLUDE_DIRS})
+  target_link_libraries(tink
+	  PRIVATE
+      -Wl,--whole-archive
+      ${TINK_PUBLIC_API_DEPS}
+      -Wl,--no-whole-archive
+  )
+  set_target_properties(tink PROPERTIES SOVERSION ${TINK_CC_VERSION_LABEL})
+
+  install(TARGETS tink EXPORT Tink LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
 
 tink_cc_test(
   NAME big_integer_test

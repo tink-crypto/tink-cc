@@ -22,9 +22,9 @@
 
 **Test**                     | **GCP Ubuntu**                                                | **macOS**                                        | **GCP Windows**
 ---------------------------- | ------------------------------------------------------------- | ------------------------------------------------ | ---------------
-Bazel                        | [![Bazel_GcpUbuntu][bazel_gcp_ubuntu]](#)                     | [![Bazel_MacOs][bazel_macos]](#)                 | [![Bazel_GcpUbuntu][bazel_gcp_windows]](#)
+Bazel                        | [![Bazel_GcpUbuntu][bazel_gcp_ubuntu]](#)                     | [![Bazel_MacOs][bazel_macos]](#)                 | [![Bazel_GcpWindows][bazel_gcp_windows]](#)
 Bazel w/ BoringCrypto (FIPS) | [![Bazel_Fips_GcpUbuntu][bazel_fips_gcp_ubuntu]](#)           | N/A                                              | N/A
-CMake                        | [![CMake_GcpUbuntu][cmake_gcp_ubuntu]](#)                     | [![CMake_MacOs][cmake_macos]](#)                 | [![Bazel_CMake][cmake_gcp_windows]](#)
+CMake                        | [![CMake_GcpUbuntu][cmake_gcp_ubuntu]](#)                     | [![CMake_MacOs][cmake_macos]](#)                 | [![CMake_GcpWindows[cmake_gcp_windows]](#)
 CMake w/ OpenSSL             | [![CMake_OpenSsl_GcpUbuntu][cmake_openssl_gcp_ubuntu]](#)     | [![CMake_OpenSsl_MacOs][cmake_openssl_macos]](#) | N/A
 CMake w/ OpenSSL3            | [![CMake_OpenSsl3_GcpUbuntu][cmake_openssl3_gcp_ubuntu]](#)   | N/A                                              | N/A
 CMake w/ Installed Deps      | [![CMake_Installed_Deps][cmake_installed_deps_gcp_ubuntu]](#) | N/A                                              | N/A

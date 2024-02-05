@@ -529,6 +529,8 @@ cc_library(
         "//proto:tink_cc_proto",
         "//tink/subtle:random",
         "//tink/util:secret_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",

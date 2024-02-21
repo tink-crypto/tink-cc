@@ -521,6 +521,32 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "ecies_proto_serialization",
+    srcs = ["ecies_proto_serialization.cc"],
+    hdrs = ["ecies_proto_serialization.h"],
+    include_prefix = "tink/hybrid",
+    deps = [
+        ":ecies_parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "//proto:aes_gcm_cc_proto",
+        "//proto:aes_siv_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:ecies_aead_hkdf_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -1021,6 +1047,31 @@ cc_test(
         "@boringssl//:crypto",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ecies_proto_serialization_test",
+    srcs = ["ecies_proto_serialization_test.cc"],
+    deps = [
+        ":ecies_parameters",
+        ":ecies_proto_serialization",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//proto:aes_gcm_cc_proto",
+        "//proto:aes_siv_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:ecies_aead_hkdf_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",

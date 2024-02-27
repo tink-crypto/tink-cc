@@ -8,6 +8,7 @@ cc_library(
     hdrs = ["prf_based_deriver.h"],
     include_prefix = "tink/keyderivation/internal",
     deps = [
+        ":config_prf_for_deriver",
         ":key_derivers",
         "//tink:cleartext_keyset_handle",
         "//tink:input_stream",
@@ -16,8 +17,9 @@ cc_library(
         "//tink:keyset_handle",
         "//tink:keyset_handle_builder",
         "//tink:parameters",
-        "//tink:registry",
         "//tink/aead:aes_gcm_proto_serialization",
+        "//tink/internal:configuration_impl",
+        "//tink/internal:key_type_info_store",
         "//tink/internal:mutable_serialization_registry",
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:registry_impl",
@@ -188,6 +190,37 @@ cc_test(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "config_prf_for_deriver",
+    hdrs = ["config_prf_for_deriver.h"],
+    include_prefix = "tink/keyderivation/internal",
+    deps = [
+        "//tink:configuration",
+        "//tink/internal:configuration_impl",
+        "//tink/prf:hkdf_prf_key_manager",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/memory",
+    ],
+)
+
+cc_test(
+    name = "config_prf_for_deriver_test",
+    srcs = ["config_prf_for_deriver_test.cc"],
+    deps = [
+        ":config_prf_for_deriver",
+        "//tink/internal:configuration_impl",
+        "//tink/internal:key_type_info_store",
+        "//tink/prf:hkdf_prf_key_manager",
+        "//proto:tink_cc_proto",
+        "//tink/subtle/prf:streaming_prf",
+        "//tink/util:input_stream_util",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
         "@com_google_googletest//:gtest_main",
     ],
 )

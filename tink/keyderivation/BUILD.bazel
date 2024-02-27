@@ -157,7 +157,6 @@ cc_test(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:serialization",
         "//tink/keyderivation/internal:prf_based_deriver_key_manager",
-        "//tink/prf:hkdf_prf_key_manager",
         "//proto:hkdf_prf_cc_proto",
         "//proto:prf_based_deriver_cc_proto",
         "//proto:tink_cc_proto",

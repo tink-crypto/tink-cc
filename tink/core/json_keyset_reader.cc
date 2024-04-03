@@ -19,7 +19,6 @@
 #include <iostream>
 #include <istream>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <utility>
 
@@ -30,8 +29,6 @@
 #include "include/rapidjson/document.h"
 #include "include/rapidjson/error/en.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
@@ -261,6 +258,10 @@ util::StatusOr<std::unique_ptr<Keyset>> JsonKeysetReader::Read() {
         absl::StrCat(
             "Invalid JSON Keyset: Error (offset ", json_doc.GetErrorOffset(),
             "): ", rapidjson::GetParseError_En(json_doc.GetParseError())));
+  }
+  if (!json_doc.IsObject()) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Invalid JSON Keyset: Expected object.");
   }
   return KeysetFromJson(json_doc);
 }

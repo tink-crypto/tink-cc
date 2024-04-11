@@ -27,11 +27,13 @@
 #include "gtest/gtest.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/substitute.h"
+#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
+#include "tink/keyset_reader.h"
 
 namespace crypto {
 namespace tink {
@@ -393,6 +395,23 @@ TEST_F(JsonKeysetReaderTest, RejectsKeyIdLargerThanUint32) {
   auto reader = std::move(reader_result.value());
   auto read_result = reader->Read();
   EXPECT_THAT(read_result, Not(IsOk()));
+}
+
+
+TEST_F(JsonKeysetReaderTest, parseRecursiveJsonStringFails) {
+  std::string recursive_json;
+  for (int i = 0; i < 1000000; i++) {
+    recursive_json.append("{\"a\":");
+  }
+  recursive_json.append("1");
+  for (int i = 0; i < 1000000; i++) {
+    recursive_json.append("}");
+  }
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(recursive_json);
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, Not(IsOk()));
 }
 
 }  // namespace

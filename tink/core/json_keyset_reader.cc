@@ -28,6 +28,9 @@
 #include "absl/strings/str_cat.h"
 #include "include/rapidjson/document.h"
 #include "include/rapidjson/error/en.h"
+#include "include/rapidjson/rapidjson.h"
+#include "include/rapidjson/reader.h"
+#include "tink/keyset_reader.h"
 #include "tink/util/enums.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -252,7 +255,8 @@ util::StatusOr<std::unique_ptr<Keyset>> JsonKeysetReader::Read() {
     serialized_keyset = &serialized_keyset_from_stream;
   }
   rapidjson::Document json_doc(rapidjson::kObjectType);
-  if (json_doc.Parse(serialized_keyset->c_str()).HasParseError()) {
+  if (json_doc.Parse<rapidjson::kParseIterativeFlag>(serialized_keyset->c_str())
+          .HasParseError()) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat(
@@ -278,7 +282,8 @@ JsonKeysetReader::ReadEncrypted() {
     serialized_keyset = &serialized_keyset_from_stream;
   }
   rapidjson::Document json_doc;
-  if (json_doc.Parse(serialized_keyset->c_str()).HasParseError()) {
+  if (json_doc.Parse<rapidjson::kParseIterativeFlag>(serialized_keyset->c_str())
+          .HasParseError()) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid JSON EncryptedKeyset: Error (offset ",

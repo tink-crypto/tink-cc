@@ -246,6 +246,27 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "jwt_hmac_proto_serialization",
+    srcs = ["jwt_hmac_proto_serialization.cc"],
+    hdrs = ["jwt_hmac_proto_serialization.h"],
+    include_prefix = "tink/jwt",
+    deps = [
+        ":jwt_hmac_parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "//proto:common_cc_proto",
+        "//proto:jwt_hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -423,6 +444,28 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "jwt_hmac_proto_serialization_test",
+    srcs = ["jwt_hmac_proto_serialization_test.cc"],
+    deps = [
+        ":jwt_hmac_parameters",
+        ":jwt_hmac_proto_serialization",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//proto:common_cc_proto",
+        "//proto:jwt_hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],

@@ -41,6 +41,7 @@ cc_test(
     deps = [
         ":config_v0",
         ":key_gen_config_v0",
+        "//proto:tink_cc_proto",
         "//tink:configuration",
         "//tink:key_gen_configuration",
         "//tink:keyset_handle",
@@ -53,7 +54,6 @@ cc_test(
         "//tink/prf:hmac_prf_key_manager",
         "//tink/prf:prf_key_templates",
         "//tink/prf:prf_set",
-        "//proto:tink_cc_proto",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_googletest//:gtest_main",

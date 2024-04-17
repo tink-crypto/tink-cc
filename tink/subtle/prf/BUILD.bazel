@@ -42,10 +42,10 @@ cc_library(
     include_prefix = "tink/subtle/prf",
     deps = [
         ":streaming_prf",
+        "//proto:tink_cc_proto",
         "//tink:input_stream",
         "//tink:primitive_set",
         "//tink:primitive_wrapper",
-        "//proto:tink_cc_proto",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/memory",
@@ -98,9 +98,9 @@ cc_test(
     deps = [
         ":streaming_prf",
         ":streaming_prf_wrapper",
+        "//proto:tink_cc_proto",
         "//tink:input_stream",
         "//tink:primitive_set",
-        "//proto:tink_cc_proto",
         "//tink/util:input_stream_util",
         "//tink/util:istream_input_stream",
         "//tink/util:test_matchers",

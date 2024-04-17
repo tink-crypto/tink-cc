@@ -24,6 +24,7 @@ cc_test(
     deps = [
         ":config_v0",
         ":key_gen_config_v0",
+        "//proto:tink_cc_proto",
         "//tink:configuration",
         "//tink:input_stream",
         "//tink:key_gen_configuration",
@@ -34,7 +35,6 @@ cc_test(
         "//tink/internal:key_gen_configuration_impl",
         "//tink/internal:key_type_info_store",
         "//tink/internal:keyset_wrapper_store",
-        "//proto:tink_cc_proto",
         "//tink/streamingaead:aes_ctr_hmac_streaming_key_manager",
         "//tink/streamingaead:aes_gcm_hkdf_streaming_key_manager",
         "//tink/streamingaead:streaming_aead_key_templates",

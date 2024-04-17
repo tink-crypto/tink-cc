@@ -21,6 +21,7 @@
 #include "tink/config/tink_fips.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
 #include "tink/jwt/internal/jwt_mac_wrapper.h"
+#include "tink/jwt/jwt_hmac_proto_serialization.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
 #include "proto/config.pb.h"
@@ -33,13 +34,22 @@ util::Status JwtMacRegister() {
   // Register primitive wrapper.
   auto status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<jwt_internal::JwtMacWrapper>());
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
 
   // Register key managers which utilize the FIPS validated BoringCrypto
   // implementations.
   status = Registry::RegisterKeyTypeManager(
       absl::make_unique<jwt_internal::JwtHmacKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = RegisterJwtHmacProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
 
   if (IsFipsModeEnabled()) {
     return util::OkStatus();

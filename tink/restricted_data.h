@@ -18,6 +18,7 @@
 #define TINK_RESTRICTED_DATA_H_
 
 #include <cstdint>
+#include <utility>
 
 #include "absl/strings/string_view.h"
 #include "tink/secret_key_access_token.h"
@@ -47,6 +48,11 @@ class RestrictedData {
   // a `token` requires access to `InsecureSecretKeyAccess::Get()`.
   explicit RestrictedData(absl::string_view secret, SecretKeyAccessToken token)
       : secret_(util::SecretDataFromStringView(secret)) {}
+
+  // Creates a new RestrictedData object that wraps `secret`. Note that creating
+  // a `token` requires access to `InsecureSecretKeyAccess::Get()`.
+  explicit RestrictedData(util::SecretData secret, SecretKeyAccessToken token)
+      : secret_(std::move(secret)) {}
 
   // Creates a new RestrictedData object that wraps a secret containing
   // `num_random_bytes`. The program will terminate if `num_random_bytes` is a

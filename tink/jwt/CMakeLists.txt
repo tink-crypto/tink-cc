@@ -283,6 +283,19 @@ tink_cc_library(
     tink::core::private_key
 )
 
+tink_cc_library(
+  NAME jwt_ecdsa_parameters
+  SRCS
+    jwt_ecdsa_parameters.cc
+    jwt_ecdsa_parameters.h
+  DEPS
+    tink::jwt::jwt_signature_parameters
+    absl::status
+    tink::core::parameters
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -504,4 +517,16 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::jwt_hmac_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME jwt_ecdsa_parameters_test
+  SRCS
+    jwt_ecdsa_parameters_test.cc
+  DEPS
+    tink::jwt::jwt_ecdsa_parameters
+    gmock
+    absl::status
+    tink::util::statusor
+    tink::util::test_matchers
 )

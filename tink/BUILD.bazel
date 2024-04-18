@@ -1,5 +1,5 @@
 load("//:template_rule.bzl", "template_rule")
-load("//:version.bzl", "TINK_CC_VERSION_LABEL")
+load("//:version.bzl", "TINK_VERSION_LABEL")
 
 package(default_visibility = ["//:__subpackages__"])
 
@@ -459,7 +459,7 @@ template_rule(
     src = "version.h.templ",
     out = "version.h",
     substitutions = {
-        "@TINK_CC_VERSION_LABEL@": "%s" % TINK_CC_VERSION_LABEL,
+        "@TINK_VERSION_LABEL@": "%s" % TINK_VERSION_LABEL,
     },
 )
 

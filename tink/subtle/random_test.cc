@@ -66,11 +66,12 @@ TEST(RandomTest, MultipleGeneratedRandomStringAreUnique) {
 
 TEST(RandomTest, MultipleGeneratedSecretDataAreUnique) {
   constexpr int kNumRandomItems = 32;
-  absl::flat_hash_set<util::SecretData> random_keys;
+  absl::flat_hash_set<std::string> random_keys;
   for (int i = 0; i < kNumRandomItems; i++) {
     util::SecretData key = Random::GetRandomKeyBytes(16);
     EXPECT_THAT(key, SizeIs(16));
-    random_keys.insert(key);
+    // Convert and store as string to avoid SecretData equality and hashing.
+    random_keys.insert(std::string(util::SecretDataAsStringView(key)));
   }
   EXPECT_THAT(random_keys, SizeIs(kNumRandomItems));
 }

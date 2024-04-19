@@ -1182,6 +1182,7 @@ tink_cc_library(
     tink::core::secret_key_access_token
     absl::status
     absl::strings
+    tink::internal::call_with_core_dump_protection
     tink::util::secret_data
     tink::util::secret_proto
     tink::util::status

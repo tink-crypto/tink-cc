@@ -137,8 +137,8 @@ if (NOT TINK_USE_INSTALLED_PROTOBUF)
 
   http_archive(
     NAME com_google_protobuf
-    URL https://github.com/protocolbuffers/protobuf/releases/download/v25.1/protobuf-25.1.zip
-    SHA256 5c86c077b0794c3e9bb30cac872cf883043febfb0f992137f0a8b1c3d534617c
+    URL https://github.com/protocolbuffers/protobuf/releases/download/v26.1/protobuf-26.1.zip
+    SHA256 e15c272392df84ae95797759c685a9225fe5e88838bab3e0650c29239bdfccdd
   )
 else()
   find_package(Protobuf REQUIRED CONFIG)

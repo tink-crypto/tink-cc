@@ -18,6 +18,19 @@ def tink_cc_deps():
         ],
     )
 
+    # Same as the one loaded by @com_google_protobuf [1]. This is needed to call
+    # `py_repositories()` in tink_cc_deps_init, which avoids failures such as [2].
+    #
+    # [1] https://github.com/protocolbuffers/protobuf/blob/v26.1/protobuf_deps.bzl#L96
+    # [2] https://github.com/bazelbuild/rules_python/issues/1560
+    maybe(
+        http_archive,
+        name = "rules_python",
+        sha256 = "9d04041ac92a0985e344235f5d946f71ac543f1b1565f2cdbc9a2aaee8adf55b",
+        strip_prefix = "rules_python-0.26.0",
+        url = "https://github.com/bazelbuild/rules_python/releases/download/0.26.0/rules_python-0.26.0.tar.gz",
+    )
+
     # -------------------------------------------------------------------------
     # Protobuf.
     # -------------------------------------------------------------------------
@@ -27,13 +40,13 @@ def tink_cc_deps():
     #   * @com_google_protobuf//:cc_toolchain
     #   * @com_google_protobuf//:java_toolchain
     # This statement defines the @com_google_protobuf repo.
-    # Release X.25.1 from 2023-11-15.
+    # Release X.26.1 from 2024-03-26.
     maybe(
         http_archive,
         name = "com_google_protobuf",
-        sha256 = "5c86c077b0794c3e9bb30cac872cf883043febfb0f992137f0a8b1c3d534617c",
-        strip_prefix = "protobuf-25.1",
-        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v25.1/protobuf-25.1.zip"],
+        sha256 = "e15c272392df84ae95797759c685a9225fe5e88838bab3e0650c29239bdfccdd",
+        strip_prefix = "protobuf-26.1",
+        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v26.1/protobuf-26.1.zip"],
     )
 
     # -------------------------------------------------------------------------

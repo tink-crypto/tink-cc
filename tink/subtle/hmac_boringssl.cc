@@ -27,6 +27,7 @@
 #include "openssl/crypto.h"
 #include "openssl/evp.h"
 #include "openssl/hmac.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/util.h"
@@ -71,9 +72,11 @@ util::StatusOr<std::string> HmacBoringSsl::ComputeMac(
 
   uint8_t buf[EVP_MAX_MD_SIZE];
   unsigned int out_len;
-  const uint8_t* res = HMAC(md_, key_.data(), key_.size(),
-                            reinterpret_cast<const uint8_t*>(data.data()),
-                            data.size(), buf, &out_len);
+  const uint8_t* res = internal::CallWithCoreDumpProtection([&]() {
+    return HMAC(md_, key_.data(), key_.size(),
+                reinterpret_cast<const uint8_t*>(data.data()), data.size(), buf,
+                &out_len);
+  });
   if (res == nullptr) {
     // TODO(bleichen): We expect that BoringSSL supports the
     //   hashes that we use. Maybe we should have a status that indicates
@@ -96,9 +99,11 @@ util::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
   }
   uint8_t buf[EVP_MAX_MD_SIZE];
   unsigned int out_len;
-  const uint8_t* res = HMAC(md_, key_.data(), key_.size(),
-                            reinterpret_cast<const uint8_t*>(data.data()),
-                            data.size(), buf, &out_len);
+  const uint8_t* res = internal::CallWithCoreDumpProtection([&]() {
+    return HMAC(md_, key_.data(), key_.size(),
+                reinterpret_cast<const uint8_t*>(data.data()), data.size(), buf,
+                &out_len);
+  });
   if (res == nullptr) {
     return util::Status(absl::StatusCode::kInternal,
                         "BoringSSL failed to compute HMAC");

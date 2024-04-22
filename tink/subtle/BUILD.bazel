@@ -212,6 +212,7 @@ cc_library(
     deps = [
         ":common_enums",
         "//tink:mac",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:fips_utils",
         "//tink/internal:md_util",
         "//tink/internal:util",

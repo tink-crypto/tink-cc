@@ -202,6 +202,7 @@ tink_cc_library(
     absl::strings
     crypto
     tink::core::mac
+    tink::internal::call_with_core_dump_protection
     tink::internal::fips_utils
     tink::internal::md_util
     tink::internal::util

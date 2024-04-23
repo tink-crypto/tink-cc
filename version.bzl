@@ -1,2 +1,2 @@
 """Version of the current release of Tink C++."""
-TINK_CC_VERSION_LABEL = "2.1.2"
+TINK_CC_VERSION_LABEL = "2.1.3"

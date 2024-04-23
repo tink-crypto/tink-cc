@@ -321,6 +321,31 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "jwt_ecdsa_public_key",
+    srcs = ["jwt_ecdsa_public_key.cc"],
+    hdrs = ["jwt_ecdsa_public_key.h"],
+    include_prefix = "tink/jwt",
+    deps = [
+        ":jwt_ecdsa_parameters",
+        ":jwt_signature_public_key",
+        "//tink:ec_point",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink/internal:ec_util",
+        "//tink/internal:ssl_unique_ptr",
+        "//tink/subtle:common_enums",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:endian",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -557,6 +582,26 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "jwt_ecdsa_public_key_test",
+    srcs = ["jwt_ecdsa_public_key_test.cc"],
+    deps = [
+        ":jwt_ecdsa_parameters",
+        ":jwt_ecdsa_public_key",
+        "//tink:big_integer",
+        "//tink:ec_point",
+        "//tink:partial_key_access",
+        "//tink/internal:ec_util",
+        "//tink/subtle:common_enums",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -1,7 +1,7 @@
 # NOTE: With MSVC versions before 3.18 may not set /std:c11 consistently.
 cmake_minimum_required(VERSION 3.13)
 
-project(Tink VERSION 2.1.2 LANGUAGES CXX)
+project(Tink VERSION 2.1.3 LANGUAGES CXX)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

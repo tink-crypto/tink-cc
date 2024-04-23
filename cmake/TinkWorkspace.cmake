@@ -95,12 +95,11 @@ endif()
 # defined.
 if (NOT TARGET crypto)
   if (NOT TINK_USE_SYSTEM_OPENSSL)
-    # Commit from 2023-09-08.
-    # TODO(b/319145660): Use a later version once we can force /std:c11 on MSVC.
+    # Commit from 2024-01-26.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/archive/667d54c96acda029523c5bf425e8eb9079dbe94a.zip
-      SHA256 21b2086e9242b87415767fd6d2d13bd0481e2eb3c336c7ffa24b1f3d7afb09ae
+      URL https://github.com/google/boringssl/archive/22d349c4596e81425ec88f82fab47063a9a2bac6.zip
+      SHA256 81090761a78bf9a666dbc56915131138688a5f948515354597865fde4f3ac3a7
       CMAKE_SUBDIR src
     )
     # BoringSSL targets do not carry include directory info, this fixes it.

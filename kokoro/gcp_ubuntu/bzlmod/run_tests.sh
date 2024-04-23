@@ -43,8 +43,10 @@ if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
 fi
 
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_bazel_tests.sh .
+  ./kokoro/testutils/run_bazel_tests.sh  -b "--enable_bzlmod" \
+  -t "--enable_bzlmod" .
 
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_bazel_tests.sh examples
+  ./kokoro/testutils/run_bazel_tests.sh  -b "--enable_bzlmod" \
+  -t "--enable_bzlmod" examples
 

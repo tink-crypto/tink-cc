@@ -38,6 +38,7 @@ namespace {
 using ::crypto::tink::internal::CreateHpkeTestParams;
 using ::crypto::tink::internal::DefaultHpkeTestParams;
 using ::crypto::tink::internal::HpkeTestParams;
+using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
@@ -120,7 +121,7 @@ TEST_P(HpkeContextTest, Export) {
           (*recipient_hpke_context)->Export(exporter_context, secret_length);
       ASSERT_THAT(recipient_secret, IsOk());
 
-      EXPECT_THAT(*sender_secret, Eq(*recipient_secret));
+      EXPECT_THAT(*sender_secret, EqualsSecretData(*recipient_secret));
     }
   }
 }

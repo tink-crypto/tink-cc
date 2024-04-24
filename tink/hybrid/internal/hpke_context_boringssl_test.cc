@@ -35,6 +35,7 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
@@ -92,8 +93,9 @@ TEST_P(HpkeContextBoringSslTest, SenderExport) {
   for (int i = 0; i < params->exported_contexts.size(); ++i) {
     util::StatusOr<util::SecretData> sender_secret =
         sender_hpke_context->context->Export(params->exported_contexts[i], 32);
-    ASSERT_THAT(sender_secret, IsOkAndHolds(util::SecretDataFromStringView(
-                            params->exported_values[i])));
+    ASSERT_THAT(sender_secret,
+                IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
+                    params->exported_values[i]))));
   }
 }
 
@@ -112,8 +114,9 @@ TEST_P(HpkeContextBoringSslTest, RecipientExport) {
   for (int i = 0; i < params->exported_contexts.size(); ++i) {
     util::StatusOr<util::SecretData> recipient_secret =
         (*recipient_hpke_context)->Export(params->exported_contexts[i], 32);
-    ASSERT_THAT(recipient_secret, IsOkAndHolds(util::SecretDataFromStringView(
-                            params->exported_values[i])));
+    ASSERT_THAT(recipient_secret,
+                IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
+                    params->exported_values[i]))));
   }
 }
 

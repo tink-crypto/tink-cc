@@ -25,6 +25,7 @@
 #include <vector>  // IWYU pragma: keep
 
 #include "absl/strings/string_view.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data_internal.h"
 
 namespace crypto {
@@ -56,6 +57,14 @@ struct SanitizingDeleter {
 //   const util::SecretData key_;
 // }
 using SecretData = std::vector<uint8_t, internal::SanitizingAllocator<uint8_t>>;
+
+// Constant-time comparison for SecretData
+// SecretDataEquals should be used instead of regular operator== in most cases.
+inline bool SecretDataEquals(const SecretData& lhs, const SecretData& rhs) {
+  return lhs.size() == rhs.size() &&
+         ::crypto::tink::internal::SafeCryptoMemEquals(lhs.data(), rhs.data(),
+                                                       lhs.size());
+}
 
 // Stores secret (sensitive) object and makes sure it's marked as such and
 // destroyed in a safe way.

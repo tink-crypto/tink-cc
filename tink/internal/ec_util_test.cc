@@ -57,6 +57,7 @@ namespace {
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::crypto::tink::subtle::WycheproofUtil;
+using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
@@ -129,7 +130,7 @@ using EcUtilNewEcKeyWithSeed = TestWithParam<subtle::EllipticCurveType>;
 
 // Matcher for the equality of two EcKeys.
 Matcher<EcKey> EqualsEcKey(const EcKey& expected) {
-  return AllOf(Field(&EcKey::priv, Eq(expected.priv)),
+  return AllOf(Field(&EcKey::priv, EqualsSecretData(expected.priv)),
                Field(&EcKey::pub_x, Eq(expected.pub_x)),
                Field(&EcKey::pub_y, Eq(expected.pub_y)),
                Field(&EcKey::curve, Eq(expected.curve)));
@@ -379,8 +380,8 @@ TEST_P(X25519SharedSecretTest, ComputeX25519SharedSecret) {
   ASSERT_THAT(ssl_pub_key, Not(IsNull()));
 
   EXPECT_THAT(ComputeX25519SharedSecret(ssl_priv_key.get(), ssl_pub_key.get()),
-              IsOkAndHolds(util::SecretDataFromStringView(
-                  test_vector.expected_shared_secret)));
+              IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
+                  test_vector.expected_shared_secret))));
 }
 
 INSTANTIATE_TEST_SUITE_P(X25519SharedSecretTests, X25519SharedSecretTest,
@@ -859,8 +860,9 @@ TEST_P(EcUtilComputeEcdhSharedSecretTest, ComputeEcdhSharedSecretWycheproof) {
   if (params.result == "invalid") {
     EXPECT_THAT(shared_secret, Not(IsOk()));
   } else {
-    EXPECT_THAT(shared_secret, IsOkAndHolds(util::SecretDataFromStringView(
-                                   params.expected_shared_bytes)));
+    EXPECT_THAT(shared_secret,
+                IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
+                    params.expected_shared_bytes))));
   }
 }
 

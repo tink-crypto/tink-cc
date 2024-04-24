@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -170,6 +171,17 @@ MATCHER_P(EqualsKey, key, "is equals to the expected key") {
                    << key.output_prefix_type() << key.key_data().type_url()
                    << ", " << key.key_data().key_material_type() << ", "
                    << key.key_data().value();
+  return false;
+}
+
+MATCHER_P(EqualsSecretData, data, "is equal to the expected secret data") {
+  if (::crypto::tink::util::SecretDataEquals(arg, data)) {
+    return true;
+  }
+  *result_listener << "Expected: "
+                   << ::crypto::tink::util::SecretDataAsStringView(arg);
+  *result_listener << "\nActual: "
+                   << ::crypto::tink::util::SecretDataAsStringView(data);
   return false;
 }
 

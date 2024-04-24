@@ -42,6 +42,7 @@ cc_library(
     include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
+        "//tink/internal:safe_stringops",
         ":secret_data_internal",
         "@com_google_absl//absl/strings",
     ],
@@ -282,6 +283,7 @@ cc_library(
     include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
+        ":secret_data",
         ":status",
         ":statusor",
         "@com_google_absl//absl/status",

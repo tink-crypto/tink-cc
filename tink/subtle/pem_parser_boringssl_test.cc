@@ -51,6 +51,7 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
@@ -679,7 +680,7 @@ TEST(PemParserEcTest, NewKeyWriteAndReadPrivateKeySuccess) {
 
   EXPECT_EQ((*parsed_ec_key)->pub_x, ec_key->pub_x);
   EXPECT_EQ((*parsed_ec_key)->pub_y, ec_key->pub_y);
-  EXPECT_EQ((*parsed_ec_key)->priv, ec_key->priv);
+  EXPECT_THAT((*parsed_ec_key)->priv, EqualsSecretData(ec_key->priv));
   EXPECT_EQ((*parsed_ec_key)->curve, ec_key->curve);
 }
 

@@ -45,6 +45,7 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::IsEmpty;
@@ -188,12 +189,15 @@ TEST(RsaUtilTest, GeneratesDifferentPrivateKeys) {
       // The only field that should be equal.
       EXPECT_EQ(private_keys[i].e, private_keys[j].e);
       EXPECT_NE(private_keys[i].n, private_keys[j].n);
-      EXPECT_NE(private_keys[i].d, private_keys[j].d);
-      EXPECT_NE(private_keys[i].p, private_keys[j].p);
-      EXPECT_NE(private_keys[i].q, private_keys[j].q);
-      EXPECT_NE(private_keys[i].dp, private_keys[j].dp);
-      EXPECT_NE(private_keys[i].dq, private_keys[j].dq);
-      EXPECT_NE(private_keys[i].crt, private_keys[j].crt);
+      EXPECT_THAT(private_keys[i].d, Not(EqualsSecretData(private_keys[j].d)));
+      EXPECT_THAT(private_keys[i].p, Not(EqualsSecretData(private_keys[j].p)));
+      EXPECT_THAT(private_keys[i].q, Not(EqualsSecretData(private_keys[j].q)));
+      EXPECT_THAT(private_keys[i].dp,
+                  Not(EqualsSecretData(private_keys[j].dp)));
+      EXPECT_THAT(private_keys[i].dq,
+                  Not(EqualsSecretData(private_keys[j].dq)));
+      EXPECT_THAT(private_keys[i].crt,
+                  Not(EqualsSecretData(private_keys[j].crt)));
     }
   }
 }

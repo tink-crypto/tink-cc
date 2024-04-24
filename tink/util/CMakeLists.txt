@@ -217,6 +217,7 @@ tink_cc_library(
   SRCS
     test_matchers.h
   DEPS
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     gmock
@@ -473,6 +474,7 @@ tink_cc_library(
   DEPS
     tink::util::secret_data_internal
     absl::strings
+    tink::internal::safe_stringops
 )
 
 tink_cc_test(

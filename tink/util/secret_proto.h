@@ -24,6 +24,7 @@
 #include "google/protobuf/arena.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -57,7 +58,10 @@ class SecretProto {
  public:
   static StatusOr<SecretProto<T>> ParseFromSecretData(const SecretData& data) {
     SecretProto<T> proto;
-    if (!proto->ParseFromArray(data.data(), data.size())) {
+    bool parsed = crypto::tink::internal::CallWithCoreDumpProtection([&] {
+      return proto->ParseFromArray(data.data(), data.size());
+    });
+    if (!parsed) {
       return Status(absl::StatusCode::kInternal, "Could not parse proto");
     }
     return proto;
@@ -72,7 +76,9 @@ class SecretProto {
   explicit SecretProto(const T& value) { *value_ = value; }
 
   SecretProto& operator=(const SecretProto& other) {
-    *value_ = *other.value_;
+    crypto::tink::internal::CallWithCoreDumpProtection([&] {
+      *value_ = *other.value_;
+    });
     return *this;
   }
 
@@ -94,7 +100,10 @@ class SecretProto {
 
   StatusOr<SecretData> SerializeAsSecretData() const {
     SecretData data(value_->ByteSizeLong());
-    if (!value_->SerializeToArray(data.data(), data.size())) {
+    bool serialized = crypto::tink::internal::CallWithCoreDumpProtection([&] {
+      return value_->SerializeToArray(data.data(), data.size());
+    });
+    if (!serialized) {
       return Status(absl::StatusCode::kInternal, "Could not serialize proto");
     }
     return data;

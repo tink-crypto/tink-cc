@@ -57,6 +57,7 @@ cc_library(
         ":secret_data",
         ":status",
         ":statusor",
+        "//tink/internal:call_with_core_dump_protection",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_protobuf//:protobuf",

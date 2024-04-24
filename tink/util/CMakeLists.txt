@@ -498,6 +498,7 @@ tink_cc_library(
     protobuf::libprotobuf
     absl::memory
     absl::status
+    tink::internal::call_with_core_dump_protection
 )
 
 tink_cc_test(

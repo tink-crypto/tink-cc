@@ -16,25 +16,19 @@
 
 #include "tink/experimental/pqcrypto/signature/internal/slh_dsa_sign_boringssl.h"
 
-#include <cstdint>
 #include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/types/optional.h"
 #define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
 #include "openssl/experimental/spx.h"
 #undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
+#include "tink/experimental/pqcrypto/signature/internal/slh_dsa_test_util.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
-#include "tink/restricted_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -49,45 +43,14 @@ using ::crypto::tink::test::StatusIs;
 using crypto::tink::util::Status;
 using ::crypto::tink::util::StatusOr;
 
-// Generates a new SLH-DSA-SHA2-128s private key.
-util::StatusOr<SlhDsaPrivateKey> NewSlhDsaPrivateKey() {
-  std::string public_key_bytes;
-  public_key_bytes.resize(SPX_PUBLIC_KEY_BYTES);
-  std::string private_key_bytes;
-  private_key_bytes.resize(SPX_SECRET_KEY_BYTES);
-
-  SPX_generate_key(reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-                   reinterpret_cast<uint8_t*>(private_key_bytes.data()));
-
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kNoPrefix);
-  if (!parameters.ok()) {
-    return parameters.status();
-  }
-
-  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
-      *parameters, public_key_bytes,
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
-  if (!public_key.ok()) {
-    return public_key.status();
-  }
-
-  return SlhDsaPrivateKey::Create(
-      *public_key,
-      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
-}
-
 TEST(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = NewSlhDsaPrivateKey();
+  util::StatusOr<SlhDsaPrivateKey> private_key =
+      CreateSlhDsa128Sha2SmallSignaturePrivateKeyRaw();
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
@@ -111,7 +74,8 @@ TEST(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = NewSlhDsaPrivateKey();
+  util::StatusOr<SlhDsaPrivateKey> private_key =
+      CreateSlhDsa128Sha2SmallSignaturePrivateKeyRaw();
   ASSERT_THAT(private_key, IsOk());
 
   // Create a signer based on the private key.
@@ -140,7 +104,8 @@ TEST(SlhDsaSignBoringSslTest, FipsMode) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = NewSlhDsaPrivateKey();
+  util::StatusOr<SlhDsaPrivateKey> private_key =
+      CreateSlhDsa128Sha2SmallSignaturePrivateKeyRaw();
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.

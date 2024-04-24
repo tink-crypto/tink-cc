@@ -784,7 +784,6 @@ cc_library(
         ":secret_key_access_token",
         "//tink/subtle:random",
         "//tink/util:secret_data",
-        "@boringssl//:crypto",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings:string_view",
     ],

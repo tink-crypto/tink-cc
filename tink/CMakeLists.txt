@@ -736,7 +736,6 @@ tink_cc_library(
     tink::core::secret_key_access_token
     absl::check
     absl::string_view
-    crypto
     tink::subtle::random
     tink::util::secret_data
 )

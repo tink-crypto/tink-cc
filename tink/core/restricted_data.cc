@@ -20,7 +20,6 @@
 #include <iostream>
 
 #include "absl/log/check.h"
-#include "openssl/crypto.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 
@@ -32,14 +31,6 @@ RestrictedData::RestrictedData(int64_t num_random_bytes) {
       << "Cannot generate a negative number of random bytes.\n";
   secret_ = util::SecretDataFromStringView(
       subtle::Random::GetRandomBytes(num_random_bytes));
-}
-
-bool RestrictedData::operator==(const RestrictedData& other) const {
-  if (secret_.size() != other.secret_.size()) {
-    return false;
-  }
-  return CRYPTO_memcmp(secret_.data(), other.secret_.data(), secret_.size()) ==
-         0;
 }
 
 }  // namespace tink

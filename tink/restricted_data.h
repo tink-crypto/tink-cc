@@ -68,7 +68,9 @@ class RestrictedData {
   int64_t size() const { return secret_.size(); }
 
   // Constant-time comparison operators.
-  bool operator==(const RestrictedData& other) const;
+  bool operator==(const RestrictedData& other) const {
+    return util::SecretDataEquals(secret_, other.secret_);
+  }
   bool operator!=(const RestrictedData& other) const {
     return !(*this == other);
   }

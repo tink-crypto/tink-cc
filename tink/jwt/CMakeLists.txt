@@ -320,6 +320,32 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME jwt_ecdsa_private_key
+  SRCS
+    jwt_ecdsa_private_key.cc
+    jwt_ecdsa_private_key.h
+  DEPS
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_public_key
+    tink::jwt::jwt_signature_private_key
+    absl::status
+    absl::strings
+    crypto
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_big_integer
+    tink::internal::bn_util
+    tink::internal::ec_util
+    tink::internal::err_util
+    tink::internal::ssl_unique_ptr
+    tink::subtle::common_enums
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -571,6 +597,30 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::ec_util
     tink::subtle::common_enums
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME jwt_ecdsa_private_key_test
+  SRCS
+    jwt_ecdsa_private_key_test.cc
+  DEPS
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_ecdsa_public_key
+    gmock
+    absl::status
+    absl::optional
+    crypto
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_big_integer
+    tink::internal::ec_util
+    tink::subtle::common_enums
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
 )

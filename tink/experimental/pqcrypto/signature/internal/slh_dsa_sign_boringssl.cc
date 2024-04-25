@@ -24,11 +24,11 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
-#include "tink/insecure_secret_key_access.h"
 #define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
 #include "openssl/experimental/spx.h"
 #undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
@@ -51,10 +51,13 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> SlhDsaSignBoringSsl::New(
 
 util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
     absl::string_view data) const {
-  std::string signature;
-  subtle::ResizeStringUninitialized(&signature, SPX_SIGNATURE_BYTES);
+  // The signature will be prepended with the output prefix for TINK keys.
+  std::string signature(private_key_.GetOutputPrefix());
+  subtle::ResizeStringUninitialized(
+      &signature, SPX_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
 
-  SPX_sign(reinterpret_cast<uint8_t *>(signature.data()),
+  SPX_sign(reinterpret_cast<uint8_t *>(signature.data() +
+                                       private_key_.GetOutputPrefix().size()),
            reinterpret_cast<const uint8_t *>(
                private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
                    .GetSecret(InsecureSecretKeyAccess::Get())

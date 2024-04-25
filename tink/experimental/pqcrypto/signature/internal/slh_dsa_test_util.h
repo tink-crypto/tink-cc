@@ -17,6 +17,8 @@
 #ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_TEST_UTIL_H_
 #define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_TEST_UTIL_H_
 
+#include "absl/types/optional.h"
+#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
 #include "tink/util/statusor.h"
 
@@ -26,8 +28,8 @@ namespace internal {
 
 // Generates a new SLH-DSA-SHA2-128s private key using the BoringSSL
 // implementation.
-util::StatusOr<SlhDsaPrivateKey>
-CreateSlhDsa128Sha2SmallSignaturePrivateKeyRaw();
+util::StatusOr<SlhDsaPrivateKey> CreateSlhDsa128Sha2SmallSignaturePrivateKey(
+    SlhDsaParameters::Variant variant, absl::optional<int> id_requirement);
 
 }  // namespace internal
 }  // namespace tink

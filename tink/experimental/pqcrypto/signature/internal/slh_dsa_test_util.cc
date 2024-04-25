@@ -36,8 +36,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<SlhDsaPrivateKey>
-CreateSlhDsa128Sha2SmallSignaturePrivateKeyRaw() {
+util::StatusOr<SlhDsaPrivateKey> CreateSlhDsa128Sha2SmallSignaturePrivateKey(
+    SlhDsaParameters::Variant variant, absl::optional<int> id_requirement) {
   uint8_t public_key_bytes[SPX_PUBLIC_KEY_BYTES];
   uint8_t private_key_bytes[SPX_SECRET_KEY_BYTES];
 
@@ -46,8 +46,7 @@ CreateSlhDsa128Sha2SmallSignaturePrivateKeyRaw() {
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
-      SlhDsaParameters::SignatureType::kSmallSignature,
-      SlhDsaParameters::Variant::kNoPrefix);
+      SlhDsaParameters::SignatureType::kSmallSignature, variant);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -56,7 +55,7 @@ CreateSlhDsa128Sha2SmallSignaturePrivateKeyRaw() {
       *parameters,
       absl::string_view(reinterpret_cast<char*>(public_key_bytes),
                         SPX_PUBLIC_KEY_BYTES),
-      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+      id_requirement, GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }

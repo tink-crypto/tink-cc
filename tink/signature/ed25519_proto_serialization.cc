@@ -19,6 +19,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
@@ -35,6 +36,7 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/ed25519.pb.h"
@@ -44,6 +46,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::Ed25519KeyFormat;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
@@ -179,13 +182,14 @@ util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
-  google::crypto::tink::Ed25519PrivateKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  absl::StatusOr<SecretProto<google::crypto::tink::Ed25519PrivateKey>>
+      proto_key = SecretProto<google::crypto::tink::Ed25519PrivateKey>::
+          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse Ed25519PrivateKey proto");
   }
-  if (proto_key.version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -203,14 +207,14 @@ util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
   }
 
   util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
-      *parameters, proto_key.public_key().key_value(),
+      *parameters, (*proto_key)->public_key().key_value(),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
   return Ed25519PrivateKey::Create(
-      *public_key, RestrictedData(proto_key.key_value(), *token),
+      *public_key, RestrictedData((*proto_key)->key_value(), *token),
       GetPartialKeyAccess());
 }
 

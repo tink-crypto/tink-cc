@@ -20,6 +20,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
@@ -38,6 +39,7 @@
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
@@ -48,6 +50,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
@@ -235,23 +238,24 @@ util::StatusOr<RsaSsaPkcs1PrivateKey> ParsePrivateKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
-  google::crypto::tink::RsaSsaPkcs1PrivateKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  absl::StatusOr<SecretProto<google::crypto::tink::RsaSsaPkcs1PrivateKey>>
+      proto_key = SecretProto<google::crypto::tink::RsaSsaPkcs1PrivateKey>::
+          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse RsaSsaPkcs1PrivateKey proto");
   }
-  if (proto_key.version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
-  BigInteger modulus(proto_key.public_key().n());
+  BigInteger modulus((*proto_key)->public_key().n());
   int modulus_size_in_bits = modulus.SizeInBytes() * 8;
 
   util::StatusOr<RsaSsaPkcs1Parameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key.public_key().params(),
-      modulus_size_in_bits, BigInteger(proto_key.public_key().e()));
+      serialization.GetOutputPrefixType(), (*proto_key)->public_key().params(),
+      modulus_size_in_bits, BigInteger((*proto_key)->public_key().e()));
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -266,12 +270,12 @@ util::StatusOr<RsaSsaPkcs1PrivateKey> ParsePrivateKey(
 
   return RsaSsaPkcs1PrivateKey::Builder()
       .SetPublicKey(*public_key)
-      .SetPrimeP(RestrictedBigInteger(proto_key.p(), *token))
-      .SetPrimeQ(RestrictedBigInteger(proto_key.q(), *token))
-      .SetPrimeExponentP(RestrictedBigInteger(proto_key.dp(), *token))
-      .SetPrimeExponentQ(RestrictedBigInteger(proto_key.dq(), *token))
-      .SetPrivateExponent(RestrictedBigInteger(proto_key.d(), *token))
-      .SetCrtCoefficient(RestrictedBigInteger(proto_key.crt(), *token))
+      .SetPrimeP(RestrictedBigInteger((*proto_key)->p(), *token))
+      .SetPrimeQ(RestrictedBigInteger((*proto_key)->q(), *token))
+      .SetPrimeExponentP(RestrictedBigInteger((*proto_key)->dp(), *token))
+      .SetPrimeExponentQ(RestrictedBigInteger((*proto_key)->dq(), *token))
+      .SetPrivateExponent(RestrictedBigInteger((*proto_key)->d(), *token))
+      .SetCrtCoefficient(RestrictedBigInteger((*proto_key)->crt(), *token))
       .Build(GetPartialKeyAccess());
 }
 

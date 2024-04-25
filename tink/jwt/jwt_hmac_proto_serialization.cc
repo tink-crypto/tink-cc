@@ -19,6 +19,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_parser.h"
@@ -33,6 +34,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
@@ -43,6 +45,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::JwtHmacAlgorithm;
 using ::google::crypto::tink::JwtHmacKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
@@ -201,22 +204,22 @@ util::StatusOr<JwtHmacKey> ParseKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing JwtHmacKey.");
   }
-
-  google::crypto::tink::JwtHmacKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  absl::StatusOr<SecretProto<google::crypto::tink::JwtHmacKey>> proto_key =
+      SecretProto<google::crypto::tink::JwtHmacKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse JwtHmacKey proto.");
   }
-  if (proto_key.version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsing JwtHmacKey failed: only version 0 is accepted.");
   }
 
   util::StatusOr<JwtHmacParameters> parameters = ToParameters(
-      proto_key.key_value().length(), serialization.GetOutputPrefixType(),
-      proto_key.algorithm(), proto_key.has_custom_kid());
+      (*proto_key)->key_value().length(), serialization.GetOutputPrefixType(),
+      (*proto_key)->algorithm(), (*proto_key)->has_custom_kid());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -224,12 +227,12 @@ util::StatusOr<JwtHmacKey> ParseKey(
   JwtHmacKey::Builder builder =
       JwtHmacKey::Builder()
           .SetParameters(*parameters)
-          .SetKeyBytes(RestrictedData(proto_key.key_value(), *token));
+          .SetKeyBytes(RestrictedData((*proto_key)->key_value(), *token));
   if (serialization.IdRequirement().has_value()) {
     builder.SetIdRequirement(*serialization.IdRequirement());
   }
-  if (proto_key.has_custom_kid()) {
-    builder.SetCustomKid(proto_key.custom_kid().value());
+  if ((*proto_key)->has_custom_kid()) {
+    builder.SetCustomKid((*proto_key)->custom_kid().value());
   }
   return builder.Build(GetPartialKeyAccess());
 }

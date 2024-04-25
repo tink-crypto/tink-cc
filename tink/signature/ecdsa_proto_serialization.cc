@@ -15,9 +15,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/signature/ecdsa_proto_serialization.h"
+
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
@@ -38,6 +40,7 @@
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
@@ -48,6 +51,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaParams;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
@@ -343,13 +347,14 @@ util::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
-  google::crypto::tink::EcdsaPrivateKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  absl::StatusOr<SecretProto<google::crypto::tink::EcdsaPrivateKey>> proto_key =
+      SecretProto<google::crypto::tink::EcdsaPrivateKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse EcdsaPrivateKey proto");
   }
-  if (proto_key.version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -361,19 +366,19 @@ util::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
   }
 
   util::StatusOr<EcdsaParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key.public_key().params());
+      serialization.GetOutputPrefixType(), (*proto_key)->public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  EcPoint public_point(BigInteger(proto_key.public_key().x()),
-                       BigInteger(proto_key.public_key().y()));
+  EcPoint public_point(BigInteger((*proto_key)->public_key().x()),
+                       BigInteger((*proto_key)->public_key().y()));
   util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, public_point, serialization.IdRequirement(),
       GetPartialKeyAccess());
 
   RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(proto_key.key_value(), *token);
+      RestrictedBigInteger((*proto_key)->key_value(), *token);
   return EcdsaPrivateKey::Create(*public_key, private_key_value,
                                  GetPartialKeyAccess());
 }

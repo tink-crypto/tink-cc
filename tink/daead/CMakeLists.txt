@@ -170,6 +170,7 @@ tink_cc_library(
     tink::daead::aes_siv_parameters
     absl::core_headers
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::partial_key_access
@@ -182,6 +183,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::aes_siv_cc_proto

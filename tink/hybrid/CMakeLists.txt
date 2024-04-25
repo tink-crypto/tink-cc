@@ -376,6 +376,7 @@ tink_cc_library(
     tink::hybrid::hpke_public_key
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::insecure_secret_key_access
@@ -389,6 +390,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::hpke_cc_proto
@@ -532,6 +534,7 @@ tink_cc_library(
     tink::hybrid::ecies_public_key
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     crypto
@@ -550,6 +553,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::aes_ctr_cc_proto

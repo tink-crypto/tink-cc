@@ -68,7 +68,7 @@ util::StatusOr<AesGcmParameters::Variant> ToVariant(
     OutputPrefixType output_prefix_type) {
   switch (output_prefix_type) {
     case OutputPrefixType::LEGACY:
-       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
+      ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
     case OutputPrefixType::CRUNCHY:
       return AesGcmParameters::Variant::kCrunchy;
     case OutputPrefixType::RAW:
@@ -171,13 +171,14 @@ util::StatusOr<AesGcmKey> ParseKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
-  SecretProto<google::crypto::tink::AesGcmKey> proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key->ParseFromString(restricted_data.GetSecret(*token))) {
+  util::StatusOr<SecretProto<google::crypto::tink::AesGcmKey>> proto_key =
+      SecretProto<google::crypto::tink::AesGcmKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse AesGcmKey proto");
   }
-  if (proto_key->version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -191,14 +192,14 @@ util::StatusOr<AesGcmKey> ParseKey(
   util::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetVariant(*variant)
-          .SetKeySizeInBytes(proto_key->key_value().length())
+          .SetKeySizeInBytes((*proto_key)->key_value().length())
           .SetIvSizeInBytes(12)
           .SetTagSizeInBytes(16)
           .Build();
   if (!parameters.ok()) return parameters.status();
 
   return AesGcmKey::Create(
-      *parameters, RestrictedData(proto_key->key_value(), *token),
+      *parameters, RestrictedData((*proto_key)->key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

@@ -19,6 +19,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_parser.h"
@@ -33,6 +34,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
@@ -43,6 +45,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::HmacKeyFormat;
 using ::google::crypto::tink::HmacParams;
@@ -197,13 +200,14 @@ util::StatusOr<HmacKey> ParseKey(
                         "SecretKeyAccess is required");
   }
 
-  google::crypto::tink::HmacKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  absl::StatusOr<SecretProto<google::crypto::tink::HmacKey>> proto_key =
+      SecretProto<google::crypto::tink::HmacKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse HmacKey proto");
   }
-  if (proto_key.version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -212,16 +216,16 @@ util::StatusOr<HmacKey> ParseKey(
       ToVariant(serialization.GetOutputPrefixType());
   if (!variant.ok()) return variant.status();
   util::StatusOr<HmacParameters::HashType> hash_type =
-      ToHashType(proto_key.params().hash());
+      ToHashType((*proto_key)->params().hash());
   if (!hash_type.ok()) return hash_type.status();
 
   util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
-      proto_key.key_value().length(), proto_key.params().tag_size(), *hash_type,
-      *variant);
+      (*proto_key)->key_value().length(), (*proto_key)->params().tag_size(),
+      *hash_type, *variant);
   if (!parameters.ok()) return parameters.status();
 
   return HmacKey::Create(*parameters,
-                         RestrictedData(proto_key.key_value(), *token),
+                         RestrictedData((*proto_key)->key_value(), *token),
                          serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

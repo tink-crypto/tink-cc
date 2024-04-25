@@ -226,6 +226,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::aes_cmac_cc_proto
@@ -279,6 +280,7 @@ tink_cc_library(
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::partial_key_access
@@ -291,6 +293,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::common_cc_proto

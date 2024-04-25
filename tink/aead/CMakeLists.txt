@@ -469,6 +469,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::aes_gcm_siv_cc_proto
@@ -618,6 +619,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -678,6 +680,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::chacha20_poly1305_cc_proto

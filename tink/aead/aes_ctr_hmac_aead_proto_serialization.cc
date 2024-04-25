@@ -246,21 +246,22 @@ util::StatusOr<AesCtrHmacAeadKey> ParseKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
-  SecretProto<google::crypto::tink::AesCtrHmacAeadKey> proto_key;
-  RestrictedData restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key->ParseFromString(restricted_data.GetSecret(*token))) {
+  util::StatusOr<SecretProto<google::crypto::tink::AesCtrHmacAeadKey>>
+      proto_key = SecretProto<google::crypto::tink::AesCtrHmacAeadKey>::
+          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse AesCtrHmacAeadKey proto");
   }
-  if (proto_key->version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
-  if (proto_key->aes_ctr_key().version() != 0) {
+  if ((*proto_key)->aes_ctr_key().version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys inner AES CTR keys are accepted.");
   }
-  if (proto_key->hmac_key().version() != 0) {
+  if ((*proto_key)->hmac_key().version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys inner HMAC keys are accepted.");
   }
@@ -272,17 +273,17 @@ util::StatusOr<AesCtrHmacAeadKey> ParseKey(
   }
 
   util::StatusOr<AesCtrHmacAeadParameters::HashType> hash_type =
-      ToHashType(proto_key->hmac_key().params().hash());
+      ToHashType((*proto_key)->hmac_key().params().hash());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   util::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(proto_key->aes_ctr_key().key_value().size())
-          .SetHmacKeySizeInBytes(proto_key->hmac_key().key_value().size())
-          .SetIvSizeInBytes(proto_key->aes_ctr_key().params().iv_size())
-          .SetTagSizeInBytes(proto_key->hmac_key().params().tag_size())
+          .SetAesKeySizeInBytes((*proto_key)->aes_ctr_key().key_value().size())
+          .SetHmacKeySizeInBytes((*proto_key)->hmac_key().key_value().size())
+          .SetIvSizeInBytes((*proto_key)->aes_ctr_key().params().iv_size())
+          .SetTagSizeInBytes((*proto_key)->hmac_key().params().tag_size())
           .SetHashType(*hash_type)
           .SetVariant(*variant)
           .Build();
@@ -291,9 +292,9 @@ util::StatusOr<AesCtrHmacAeadKey> ParseKey(
   return AesCtrHmacAeadKey::Builder()
       .SetParameters(*parameters)
       .SetAesKeyBytes(
-          RestrictedData(proto_key->aes_ctr_key().key_value(), *token))
+          RestrictedData((*proto_key)->aes_ctr_key().key_value(), *token))
       .SetHmacKeyBytes(
-          RestrictedData(proto_key->hmac_key().key_value(), *token))
+          RestrictedData((*proto_key)->hmac_key().key_value(), *token))
       .SetIdRequirement(serialization.IdRequirement())
       .Build(GetPartialKeyAccess());
 }

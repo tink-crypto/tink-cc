@@ -17,6 +17,7 @@
 #include "tink/aead/aes_gcm_siv_proto_serialization.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
@@ -34,6 +35,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/aes_gcm_siv.pb.h"
@@ -43,6 +45,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::AesGcmSivKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
 
@@ -146,13 +149,14 @@ util::StatusOr<AesGcmSivKey> ParseKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesGcmSivKey.");
   }
-  google::crypto::tink::AesGcmSivKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  util::StatusOr<SecretProto<google::crypto::tink::AesGcmSivKey>> proto_key =
+      SecretProto<google::crypto::tink::AesGcmSivKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse AesGcmSivKey proto");
   }
-  if (proto_key.version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -164,13 +168,13 @@ util::StatusOr<AesGcmSivKey> ParseKey(
   }
 
   util::StatusOr<AesGcmSivParameters> parameters =
-      AesGcmSivParameters::Create(proto_key.key_value().length(), *variant);
+      AesGcmSivParameters::Create((*proto_key)->key_value().length(), *variant);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return AesGcmSivKey::Create(
-      *parameters, RestrictedData(proto_key.key_value(), *token),
+      *parameters, RestrictedData((*proto_key)->key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -201,8 +205,9 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(proto_key.SerializeAsString(), *token);
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
-      *output_prefix_type, key.GetIdRequirement());
+      kTypeUrl, std::move(restricted_output),
+      google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 AesGcmSivProtoParametersParserImpl* AesGcmSivProtoParametersParser() {

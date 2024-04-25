@@ -171,13 +171,14 @@ util::StatusOr<AesEaxKey> ParseKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
-  SecretProto<google::crypto::tink::AesEaxKey> proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key->ParseFromString(restricted_data.GetSecret(*token))) {
+  util::StatusOr<SecretProto<google::crypto::tink::AesEaxKey>> proto_key =
+      SecretProto<google::crypto::tink::AesEaxKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse AesEaxKey proto");
   }
-  if (proto_key->version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -189,15 +190,15 @@ util::StatusOr<AesEaxKey> ParseKey(
   util::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(*variant)
-          .SetKeySizeInBytes(proto_key->key_value().length())
-          .SetIvSizeInBytes(proto_key->params().iv_size())
+          .SetKeySizeInBytes((*proto_key)->key_value().length())
+          .SetIvSizeInBytes((*proto_key)->params().iv_size())
           // Legacy AES-EAX key proto format assumes 16-byte tags.
           .SetTagSizeInBytes(16)
           .Build();
   if (!parameters.ok()) return parameters.status();
 
   return AesEaxKey::Create(
-      *parameters, RestrictedData(proto_key->key_value(), *token),
+      *parameters, RestrictedData((*proto_key)->key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

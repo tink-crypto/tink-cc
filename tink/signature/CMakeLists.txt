@@ -511,6 +511,7 @@ tink_cc_library(
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::insecure_secret_key_access
@@ -524,6 +525,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::ed25519_cc_proto
@@ -627,6 +629,7 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_public_key
     absl::core_headers
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::big_integer
@@ -642,6 +645,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::common_cc_proto
@@ -725,6 +729,7 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_public_key
     absl::core_headers
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::big_integer
@@ -740,6 +745,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::common_cc_proto
@@ -824,6 +830,7 @@ tink_cc_library(
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::big_integer
@@ -841,6 +848,7 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::common_cc_proto

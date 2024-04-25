@@ -20,6 +20,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/hybrid/hpke_parameters.h"
@@ -36,6 +37,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/hpke.pb.h"
@@ -45,6 +47,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
@@ -313,13 +316,14 @@ util::StatusOr<HpkePrivateKey> ParsePrivateKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
-  google::crypto::tink::HpkePrivateKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  absl::StatusOr<SecretProto<google::crypto::tink::HpkePrivateKey>> proto_key =
+      SecretProto<google::crypto::tink::HpkePrivateKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse HpkePrivateKey proto");
   }
-  if (proto_key.version() != 0) {
+  if ((*proto_key)->version() != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -331,21 +335,21 @@ util::StatusOr<HpkePrivateKey> ParsePrivateKey(
   }
 
   util::StatusOr<HpkeParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key.public_key().params());
+      serialization.GetOutputPrefixType(), (*proto_key)->public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, proto_key.public_key().public_key(),
+      *parameters, (*proto_key)->public_key().public_key(),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
-  return HpkePrivateKey::Create(*public_key,
-                                RestrictedData(proto_key.private_key(), *token),
-                                GetPartialKeyAccess());
+  return HpkePrivateKey::Create(
+      *public_key, RestrictedData((*proto_key)->private_key(), *token),
+      GetPartialKeyAccess());
 }
 
 util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(

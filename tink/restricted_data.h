@@ -64,6 +64,9 @@ class RestrictedData {
   absl::string_view GetSecret(SecretKeyAccessToken token) const {
     return util::SecretDataAsStringView(secret_);
   }
+  const util::SecretData& Get(SecretKeyAccessToken token) const {
+    return secret_;
+  }
 
   int64_t size() const { return secret_.size(); }
 

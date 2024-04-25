@@ -1,0 +1,35 @@
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "kem_parameters",
+    hdrs = ["kem_parameters.h"],
+    include_prefix = "tink/experimental/kem",
+    deps = ["//tink:parameters"],
+)
+
+cc_library(
+    name = "kem_private_key",
+    hdrs = ["kem_private_key.h"],
+    include_prefix = "tink/experimental/kem",
+    deps = [
+        ":kem_parameters",
+        ":kem_public_key",
+        "//tink:key",
+        "//tink:private_key",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_library(
+    name = "kem_public_key",
+    hdrs = ["kem_public_key.h"],
+    include_prefix = "tink/experimental/kem",
+    deps = [
+        ":kem_parameters",
+        "//tink:key",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)

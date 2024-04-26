@@ -1,5 +1,7 @@
 tink_module(proto)
 
+add_subdirectory(experimental/pqcrypto)
+
 tink_cc_proto(
   NAME common_cc_proto
   SRCS common.proto

@@ -1,6 +1,10 @@
-# package containing useful functions for hybrid encryption PQC primitives
+package(default_visibility = ["//:__subpackages__"])
 
 licenses(["notice"])
+
+# ----------------------------------------
+# proto_library rules.
+# ----------------------------------------
 
 proto_library(
     name = "cecpq2_aead_hkdf_proto",
@@ -12,4 +16,14 @@ proto_library(
         "//proto:common_proto",
         "//proto:tink_proto",
     ],
+)
+
+# ----------------------------------------
+# cc_proto_library rules.
+# ----------------------------------------
+
+cc_proto_library(
+    name = "cecpq2_aead_hkdf_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = [":cecpq2_aead_hkdf_proto"],
 )

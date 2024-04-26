@@ -1,0 +1,223 @@
+tink_cc_library(
+  NAME cecpq2_aead_hkdf_dem_helper
+  SRCS
+    cecpq2_aead_hkdf_dem_helper.cc
+    cecpq2_aead_hkdf_dem_helper.h
+  DEPS
+    absl::memory
+    absl::status
+    absl::string_view
+    tink::core::aead
+    tink::core::deterministic_aead
+    tink::core::registry
+    tink::daead::subtle::aead_or_daead
+    tink::internal::registry_impl
+    tink::util::errors
+    tink::util::istream_input_stream
+    tink::util::protobuf_helper
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME cecpq2_aead_hkdf_dem_helper_test
+  SRCS
+    cecpq2_aead_hkdf_dem_helper_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_dem_helper
+    gmock
+    absl::memory
+    absl::status
+    absl::string_view
+    tink::core::registry
+    tink::aead::aes_gcm_key_manager
+    tink::aead::xchacha20_poly1305_key_manager
+    tink::config::tink_config
+    tink::daead::aes_siv_key_manager
+    tink::daead::subtle::aead_or_daead
+    tink::util::secret_data
+    tink::util::status
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_siv_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+)
+
+tink_cc_library(
+  NAME cecpq2_aead_hkdf_private_key_manager
+  SRCS
+    cecpq2_aead_hkdf_private_key_manager.cc
+    cecpq2_aead_hkdf_private_key_manager.h
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_dem_helper
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
+    absl::memory
+    absl::status
+    absl::strings
+    crypto
+    tink::core::key_type_manager
+    tink::core::private_key_type_manager
+    tink::core::template_util
+    tink::core::hybrid_decrypt
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_aead_hkdf_hybrid_decrypt
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_subtle_boringssl_util
+    tink::subtle::common_enums
+    tink::subtle::random
+    tink::subtle::subtle_util
+    tink::util::enums
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::util::validation
+    tink::proto::tink_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)
+
+tink_cc_test(
+  NAME cecpq2_aead_hkdf_private_key_manager_test
+  SRCS
+    cecpq2_aead_hkdf_private_key_manager_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_private_key_manager
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
+    gmock
+    absl::memory
+    absl::status
+    tink::core::hybrid_decrypt
+    tink::core::registry
+    tink::aead::aead_key_templates
+    tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::aead::aes_gcm_key_manager
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_aead_hkdf_hybrid_encrypt
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::aes_eax_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)
+
+tink_cc_library(
+  NAME cecpq2_aead_hkdf_public_key_manager
+  SRCS
+    cecpq2_aead_hkdf_public_key_manager.cc
+    cecpq2_aead_hkdf_public_key_manager.h
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_dem_helper
+    absl::memory
+    absl::status
+    absl::strings
+    tink::core::key_type_manager
+    tink::core::template_util
+    tink::core::hybrid_encrypt
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_aead_hkdf_hybrid_encrypt
+    tink::util::enums
+    tink::util::errors
+    tink::util::protobuf_helper
+    tink::util::status
+    tink::util::statusor
+    tink::util::validation
+    tink::proto::common_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)
+
+tink_cc_test(
+  NAME cecpq2_aead_hkdf_public_key_manager_test
+  SRCS
+    cecpq2_aead_hkdf_public_key_manager_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_private_key_manager
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
+    gmock
+    absl::status
+    tink::core::hybrid_encrypt
+    tink::core::registry
+    tink::aead::aead_key_templates
+    tink::aead::aes_gcm_key_manager
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::aes_eax_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)
+
+tink_cc_library(
+  NAME cecpq2_hybrid_config
+  SRCS
+    cecpq2_hybrid_config.cc
+    cecpq2_hybrid_config.h
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_private_key_manager
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
+    absl::core_headers
+    absl::memory
+    tink::core::registry
+    tink::aead::aead_config
+    tink::config::tink_fips
+    tink::hybrid::hybrid_decrypt_wrapper
+    tink::hybrid::hybrid_encrypt_wrapper
+    tink::util::status
+)
+
+tink_cc_test(
+  NAME cecpq2_hybrid_config_test
+  SRCS
+    cecpq2_hybrid_config_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_private_key_manager
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
+    tink::experimental::pqcrypto::kem::cecpq2_hybrid_config
+    tink::experimental::pqcrypto::kem::cecpq2_hybrid_key_templates
+    gmock
+    absl::memory
+    absl::status
+    absl::strings
+    tink::core::crypto_format
+    tink::core::hybrid_decrypt
+    tink::core::hybrid_encrypt
+    tink::core::keyset_handle
+    tink::core::primitive_set
+    tink::core::registry
+    tink::config::tink_fips
+    tink::util::status
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME cecpq2_hybrid_key_templates
+  SRCS
+    cecpq2_hybrid_key_templates.cc
+    cecpq2_hybrid_key_templates.h
+  DEPS
+    absl::strings
+    tink::aead::aead_key_templates
+    tink::daead::deterministic_aead_key_templates
+    tink::proto::common_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)
+
+tink_cc_test(
+  NAME cecpq2_hybrid_key_templates_test
+  SRCS
+    cecpq2_hybrid_key_templates_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_private_key_manager
+    tink::experimental::pqcrypto::kem::cecpq2_hybrid_config
+    tink::experimental::pqcrypto::kem::cecpq2_hybrid_key_templates
+    gmock
+    tink::util::test_matchers
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)

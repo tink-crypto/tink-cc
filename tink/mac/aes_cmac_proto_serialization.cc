@@ -17,6 +17,7 @@
 #include "tink/mac/aes_cmac_proto_serialization.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -33,6 +34,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -43,6 +45,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::AesCmacKeyFormat;
 using ::google::crypto::tink::AesCmacParams;
@@ -187,17 +190,21 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
 
   AesCmacParams proto_params;
   proto_params.set_tag_size(key.GetParameters().CryptographicTagSizeInBytes());
-  google::crypto::tink::AesCmacKey proto_key;
-  *proto_key.mutable_params() = proto_params;
-  proto_key.set_version(0);
-  proto_key.set_key_value(restricted_input->GetSecret(*token));
+  SecretProto<google::crypto::tink::AesCmacKey> proto_key;
+  *proto_key->mutable_params() = std::move(proto_params);
+  proto_key->set_version(0);
+  proto_key->set_key_value(restricted_input->GetSecret(*token));
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
+  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
   RestrictedData restricted_output =
-      RestrictedData(proto_key.SerializeAsString(), *token);
+      RestrictedData(*std::move(serialized_key), *token);
   return internal::ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
       *output_prefix_type, key.GetIdRequirement());

@@ -34,7 +34,7 @@ namespace internal {
 class SlhDsaSignBoringSsl : public PublicKeySign {
  public:
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
+      crypto::tink::internal::FipsCompatibility::kNotFips;
 
   static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const SlhDsaPrivateKey& private_key);

@@ -95,6 +95,24 @@ TEST(SecretDataTest, SecretDataCopy) {
   EXPECT_THAT(data_copy, ElementsAreArray(kContents));
 }
 
+TEST(SecretDataTest, SecretDataEqualsTrue) {
+  SecretData d1 = SecretDataFromStringView("abc");
+  SecretData d2 = SecretDataFromStringView("abc");
+  EXPECT_THAT(SecretDataEquals(d1, d2), Eq(true));
+}
+
+TEST(SecretDataTest, SecretDataEqualsFalse) {
+  SecretData d1 = SecretDataFromStringView("abc");
+  SecretData d2 = SecretDataFromStringView("1234");
+  EXPECT_THAT(SecretDataEquals(d1, d2), Eq(false));
+}
+
+TEST(SecretDataTest, SecretDataEqualsFalseSize) {
+  SecretData d1 = SecretDataFromStringView("abc");
+  SecretData d2 = SecretDataFromStringView("ab");
+  EXPECT_THAT(SecretDataEquals(d1, d2), Eq(false));
+}
+
 TEST(SecretValueTest, DefaultConstructor) {
   SecretValue<int> s;
   EXPECT_THAT(s.value(), Eq(0));

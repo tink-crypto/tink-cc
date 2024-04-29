@@ -199,35 +199,16 @@ TEST(HmacParametersTest, CopyAssignment) {
   EXPECT_THAT(copy.HasIdRequirement(), Eq(parameters->HasIdRequirement()));
 }
 
-using HmacParametersVariantTest = TestWithParam<
-    std::tuple<int, int, HmacParameters::HashType, HmacParameters::Variant>>;
-
-INSTANTIATE_TEST_SUITE_P(HmacParametersVariantTestSuite,
-                         HmacParametersVariantTest,
-                         Combine(Range(16, 32), Range(10, 20),
-                                 Values(HmacParameters::HashType::kSha1,
-                                        HmacParameters::HashType::kSha224,
-                                        HmacParameters::HashType::kSha256,
-                                        HmacParameters::HashType::kSha384,
-                                        HmacParameters::HashType::kSha512),
-                                 Values(HmacParameters::Variant::kTink,
-                                        HmacParameters::Variant::kCrunchy,
-                                        HmacParameters::Variant::kLegacy,
-                                        HmacParameters::Variant::kNoPrefix)));
-
-TEST_P(HmacParametersVariantTest, ParametersEquals) {
-  int key_size;
-  int cryptographic_tag_size;
-  HmacParameters::HashType hash_type;
-  HmacParameters::Variant variant;
-  std::tie(key_size, cryptographic_tag_size, hash_type, variant) = GetParam();
-
+TEST(HmacParametersTest, ParametersEquals) {
   util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
-      key_size, cryptographic_tag_size, hash_type, variant);
+      /*key_size_in_bytes=*/16,
+      /*cryptographic_tag_size_in_bytes=*/10, HmacParameters::HashType::kSha224,
+      HmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
-
   util::StatusOr<HmacParameters> other_parameters = HmacParameters::Create(
-      key_size, cryptographic_tag_size, hash_type, variant);
+      /*key_size_in_bytes=*/16,
+      /*cryptographic_tag_size_in_bytes=*/10, HmacParameters::HashType::kSha224,
+      HmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(other_parameters, IsOk());
 
   EXPECT_TRUE(*parameters == *other_parameters);

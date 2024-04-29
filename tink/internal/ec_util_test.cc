@@ -250,10 +250,10 @@ TEST(EcUtilTest, X25519KeyFromRandomPrivateKey) {
   util::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
   ASSERT_THAT(x25519_key, IsOk());
 
-  absl::Span<uint8_t> pkey_span =
-      absl::MakeSpan((*x25519_key)->private_key, X25519KeyPrivKeySize());
   util::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
-      X25519KeyFromPrivateKey({pkey_span.begin(), pkey_span.end()});
+      X25519KeyFromPrivateKey(util::SecretDataFromStringView(absl::string_view(
+          reinterpret_cast<const char*>((*x25519_key)->private_key),
+          X25519KeyPrivKeySize())));
   ASSERT_THAT(roundtrip_key, IsOk());
   EXPECT_THAT(
       absl::MakeSpan((*x25519_key)->private_key, X25519KeyPrivKeySize()),

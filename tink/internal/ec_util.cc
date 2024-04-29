@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
@@ -439,8 +440,10 @@ EcKey EcKeyFromX25519Key(const X25519Key *x25519_key) {
   ec_key.pub_x =
       std::string(reinterpret_cast<const char *>(x25519_key->public_value),
                   X25519KeyPubKeySize());
-  ec_key.priv = util::SecretData(std::begin(x25519_key->private_key),
-                                 std::end(x25519_key->private_key));
+  ec_key.priv = util::SecretDataFromStringView(
+      absl::string_view(reinterpret_cast<const char *>(x25519_key->private_key),
+                        std::distance(std::begin(x25519_key->private_key),
+                                      std::end(x25519_key->private_key))));
   return ec_key;
 }
 

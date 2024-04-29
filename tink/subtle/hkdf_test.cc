@@ -22,6 +22,7 @@
 
 #include "gtest/gtest.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/string_view.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -135,7 +136,8 @@ TEST_F(HkdfTest, ComputeEciesHkdfSecretData) {
   for (const TestVector& test : test_vector) {
     std::string ikm = absl::HexStringToBytes(test.ikm_hex);
     std::string kem_bytes = ikm.substr(0, ikm.size() / 2);
-    util::SecretData shared_secret(ikm.begin() + ikm.size() / 2, ikm.end());
+    util::SecretData shared_secret = util::SecretDataFromStringView(
+        absl::string_view(ikm).substr(ikm.size() / 2));
     auto hkdf_or = Hkdf::ComputeEciesHkdfSymmetricKey(
         test.hash_type, kem_bytes, shared_secret,
         absl::HexStringToBytes(test.salt_hex),

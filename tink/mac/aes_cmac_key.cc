@@ -38,7 +38,7 @@ namespace crypto {
 namespace tink {
 
 util::StatusOr<AesCmacKey> AesCmacKey::Create(
-    const AesCmacParameters& parameters, const RestrictedData& key_bytes,
+    const AesCmacParameters& parameters, RestrictedData key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.KeySizeInBytes() != key_bytes.size()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -61,7 +61,7 @@ util::StatusOr<AesCmacKey> AesCmacKey::Create(
   if (!output_prefix.ok()) {
     return output_prefix.status();
   }
-  return AesCmacKey(parameters, key_bytes, id_requirement,
+  return AesCmacKey(parameters, std::move(key_bytes), id_requirement,
                     *std::move(output_prefix));
 }
 

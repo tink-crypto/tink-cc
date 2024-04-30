@@ -95,11 +95,11 @@ endif()
 # defined.
 if (NOT TARGET crypto)
   if (NOT TINK_USE_SYSTEM_OPENSSL)
-    # Commit from 2024-01-26.
+    # Commit from 2024-04-11.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/archive/22d349c4596e81425ec88f82fab47063a9a2bac6.zip
-      SHA256 81090761a78bf9a666dbc56915131138688a5f948515354597865fde4f3ac3a7
+      URL https://github.com/google/boringssl/archive/07fa2780386fbbc001937fabf116c1fe4ddd2705.zip
+      SHA256 7042eac2edf6daaf2c82ca514293869f1e1a237111247aed77aee0d31a2d42f2
       CMAKE_SUBDIR src
     )
     # BoringSSL targets do not carry include directory info, this fixes it.

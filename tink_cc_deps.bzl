@@ -64,13 +64,13 @@ def tink_cc_deps():
     # -------------------------------------------------------------------------
     # BoringSSL.
     # -------------------------------------------------------------------------
-    # Commit from 2024-01-26.
+    # Commit from 2024-04-11.
     maybe(
         http_archive,
         name = "boringssl",
-        sha256 = "81090761a78bf9a666dbc56915131138688a5f948515354597865fde4f3ac3a7",
-        strip_prefix = "boringssl-22d349c4596e81425ec88f82fab47063a9a2bac6",
-        url = "https://github.com/google/boringssl/archive/22d349c4596e81425ec88f82fab47063a9a2bac6.zip",
+        sha256 = "7042eac2edf6daaf2c82ca514293869f1e1a237111247aed77aee0d31a2d42f2",
+        strip_prefix = "boringssl-07fa2780386fbbc001937fabf116c1fe4ddd2705",
+        url = "https://github.com/google/boringssl/archive/07fa2780386fbbc001937fabf116c1fe4ddd2705.zip",
     )
 
     # -------------------------------------------------------------------------

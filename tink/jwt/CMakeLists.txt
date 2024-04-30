@@ -667,6 +667,7 @@ tink_cc_test(
     jwt_ecdsa_proto_serialization_test.cc
   DEPS
     tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_ecdsa_public_key
     gmock
@@ -680,6 +681,7 @@ tink_cc_test(
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access
+    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::internal::ec_util
     tink::internal::mutable_serialization_registry
@@ -687,6 +689,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::subtle::common_enums
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto

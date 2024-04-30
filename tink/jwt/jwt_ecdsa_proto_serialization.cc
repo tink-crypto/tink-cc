@@ -34,8 +34,10 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
+#include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/status.h"
@@ -63,6 +65,12 @@ using JwtEcdsaProtoPublicKeyParserImpl =
     internal::KeyParserImpl<internal::ProtoKeySerialization, JwtEcdsaPublicKey>;
 using JwtEcdsaProtoPublicKeySerializerImpl =
     internal::KeySerializerImpl<JwtEcdsaPublicKey,
+                                internal::ProtoKeySerialization>;
+using JwtEcdsaProtoPrivateKeyParserImpl =
+    internal::KeyParserImpl<internal::ProtoKeySerialization,
+                            JwtEcdsaPrivateKey>;
+using JwtEcdsaProtoPrivateKeySerializerImpl =
+    internal::KeySerializerImpl<JwtEcdsaPrivateKey,
                                 internal::ProtoKeySerialization>;
 
 const absl::string_view kPublicTypeUrl =
@@ -323,6 +331,97 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
       *output_prefix_type, key.GetIdRequirement());
 }
 
+util::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
+    const internal::ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return util::Status(absl::StatusCode::kPermissionDenied,
+                        "SecretKeyAccess is required");
+  }
+  if (serialization.TypeUrl() != kPrivateTypeUrl) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Wrong type URL when parsing JwtEcdsaPrivateKey.");
+  }
+
+  google::crypto::tink::JwtEcdsaPrivateKey proto_key;
+  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
+  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Failed to parse JwtEcdsaPrivateKey proto");
+  }
+  if (proto_key.version() != 0) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Parsing JwtEcdsaPrivateKey failed: only version 0 is accepted.");
+  }
+  if (!proto_key.has_public_key()) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "JwtEcdsaPrivateKey proto is missing public key.");
+  }
+
+  util::StatusOr<JwtEcdsaParameters> parameters = ToParameters(
+      serialization.GetOutputPrefixType(), proto_key.public_key().algorithm(),
+      proto_key.public_key().has_custom_kid());
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  util::StatusOr<JwtEcdsaPublicKey> public_key = ToPublicKey(
+      *parameters, proto_key.public_key(), serialization.IdRequirement());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(proto_key.key_value(), *token);
+  return JwtEcdsaPrivateKey::Create(*public_key, private_key_value,
+                                    GetPartialKeyAccess());
+}
+
+util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+    const JwtEcdsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return util::Status(absl::StatusCode::kPermissionDenied,
+                        "SecretKeyAccess is required");
+  }
+
+  util::StatusOr<google::crypto::tink::JwtEcdsaPublicKey> proto_public_key =
+      ToProtoPublicKey(key.GetPublicKey());
+  if (!proto_public_key.ok()) {
+    return proto_public_key.status();
+  }
+
+  util::StatusOr<RestrictedBigInteger> restricted_input =
+      key.GetPrivateKeyValue(GetPartialKeyAccess());
+  if (!restricted_input.ok()) {
+    return restricted_input.status();
+  }
+
+  util::StatusOr<int> enc_length =
+      GetEncodingLength(key.GetPublicKey().GetParameters().GetAlgorithm());
+  if (!enc_length.ok()) {
+    return enc_length.status();
+  }
+
+  google::crypto::tink::JwtEcdsaPrivateKey proto_private_key;
+  proto_private_key.set_version(0);
+  *proto_private_key.mutable_public_key() = std::move(*proto_public_key);
+  proto_private_key.set_key_value(*internal::GetValueOfFixedLength(
+      restricted_input->GetSecret(*token), *enc_length));
+
+  util::StatusOr<OutputPrefixType> output_prefix_type =
+      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
+
+  RestrictedData restricted_output =
+      RestrictedData(proto_private_key.SerializeAsString(), *token);
+  return internal::ProtoKeySerialization::Create(
+      kPrivateTypeUrl, std::move(restricted_output),
+      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
+}
+
 JwtEcdsaProtoParametersParserImpl& JwtEcdsaProtoParametersParser() {
   static auto* parser =
       new JwtEcdsaProtoParametersParserImpl(kPrivateTypeUrl, ParseParameters);
@@ -344,6 +443,18 @@ JwtEcdsaProtoPublicKeyParserImpl& JwtEcdsaProtoPublicKeyParser() {
 JwtEcdsaProtoPublicKeySerializerImpl& JwtEcdsaProtoPublicKeySerializer() {
   static auto* serializer =
       new JwtEcdsaProtoPublicKeySerializerImpl(SerializePublicKey);
+  return *serializer;
+}
+
+JwtEcdsaProtoPrivateKeyParserImpl& JwtEcdsaProtoPrivateKeyParser() {
+  static auto* parser =
+      new JwtEcdsaProtoPrivateKeyParserImpl(kPrivateTypeUrl, ParsePrivateKey);
+  return *parser;
+}
+
+JwtEcdsaProtoPrivateKeySerializerImpl& JwtEcdsaProtoPrivateKeySerializer() {
+  static auto* serializer =
+      new JwtEcdsaProtoPrivateKeySerializerImpl(SerializePrivateKey);
   return *serializer;
 }
 
@@ -370,8 +481,20 @@ util::Status RegisterJwtEcdsaProtoSerialization() {
     return status;
   }
 
+  status = internal::MutableSerializationRegistry::GlobalInstance()
+               .RegisterKeySerializer(&JwtEcdsaProtoPublicKeySerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = internal::MutableSerializationRegistry::GlobalInstance()
+               .RegisterKeyParser(&JwtEcdsaProtoPrivateKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
   return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(&JwtEcdsaProtoPublicKeySerializer());
+      .RegisterKeySerializer(&JwtEcdsaProtoPrivateKeySerializer());
 }
 
 }  // namespace tink

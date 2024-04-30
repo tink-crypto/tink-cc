@@ -34,12 +34,15 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
+#include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
@@ -619,6 +622,486 @@ TEST_F(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithCustomKid) {
   EXPECT_THAT(proto_key.algorithm(), Eq(JwtEcdsaAlgorithm::ES256));
   ASSERT_THAT(proto_key.has_custom_kid(), IsTrue());
   EXPECT_THAT(proto_key.custom_kid().value(), Eq(*key->GetKid()));
+}
+
+TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutCustomKid) {
+  TestCase test_case = GetParam();
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(test_case.proto_algorithm);
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
+          test_case.output_prefix_type, test_case.id);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key, IsOk());
+  EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(),
+              test_case.id.has_value());
+  EXPECT_THAT((*parsed_key)->GetIdRequirement(), Eq(test_case.id));
+
+  util::StatusOr<JwtEcdsaParameters> expected_parameters =
+      JwtEcdsaParameters::Create(test_case.strategy, test_case.algorithm);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  EcPoint public_point =
+      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  JwtEcdsaPublicKey::Builder builder = JwtEcdsaPublicKey::Builder()
+                                           .SetParameters(*expected_parameters)
+                                           .SetPublicPoint(public_point);
+  if (test_case.id.has_value()) {
+    builder.SetIdRequirement(*test_case.id);
+  }
+  util::StatusOr<JwtEcdsaPublicKey> expected_public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  util::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
+      JwtEcdsaPrivateKey::Create(
+          *expected_public_key,
+          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                               InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess());
+  ASSERT_THAT(expected_private_key, IsOk());
+  EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithCustomKid) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+  public_key_proto.mutable_custom_kid()->set_value("custom_kid");
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::RAW,
+                                              /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key, IsOk());
+  EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(), IsFalse());
+  EXPECT_THAT((*parsed_key)->GetIdRequirement(), Eq(absl::nullopt));
+
+  util::StatusOr<JwtEcdsaParameters> expected_parameters =
+      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
+                                 JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  EcPoint public_point =
+      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  util::StatusOr<JwtEcdsaPublicKey> expected_public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*expected_parameters)
+          .SetPublicPoint(public_point)
+          .SetCustomKid(public_key_proto.custom_kid().value())
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(expected_public_key, IsOk());
+
+  util::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
+      JwtEcdsaPrivateKey::Create(
+          *expected_public_key,
+          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                               InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess());
+  ASSERT_THAT(expected_private_key, IsOk());
+  EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest,
+       ParsePrivateKeyWithInvalidSerialization) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  RestrictedData serialized_key =
+      RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
+          OutputPrefixType::RAW, /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Failed to parse JwtEcdsaPrivateKey proto")));
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(1);  // Invalid version number.
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::RAW,
+                                              /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Parsing JwtEcdsaPrivateKey failed: only "
+                                 "version 0 is accepted")));
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutPublicKey) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::RAW,
+                                              /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      key.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("JwtEcdsaPrivateKey proto is missing public key")));
+}
+
+TEST_P(JwtEcdsaParsePrefixTest, ParsePrivateKeyWithInvalidPrefix) {
+  OutputPrefixType invalid_output_prefix_type = GetParam();
+  internal::MutableSerializationRegistry::GlobalInstance().Reset();
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              invalid_output_prefix_type,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      key.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Invalid OutputPrefixType for JwtEcdsaKeyFormat")));
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithUnknownAlgorithm) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES_UNKNOWN);
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::RAW,
+                                              /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Could not determine JwtEcdsaAlgorithm")));
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutSecretKeyAccess) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+
+  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::RAW,
+                                              /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, /*token=*/absl::nullopt);
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
+                                     HasSubstr("SecretKeyAccess is required")));
+}
+
+TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithoutCustomKid) {
+  TestCase test_case = GetParam();
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<JwtEcdsaParameters> parameters =
+      JwtEcdsaParameters::Create(test_case.strategy, test_case.algorithm);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  JwtEcdsaPublicKey::Builder builder = JwtEcdsaPublicKey::Builder()
+                                           .SetParameters(*parameters)
+                                           .SetPublicPoint(public_point);
+  if (test_case.id.has_value()) {
+    builder.SetIdRequirement(*test_case.id);
+  }
+  util::StatusOr<JwtEcdsaPublicKey> public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  util::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+      *public_key,
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const internal::ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const internal::ProtoKeySerialization*>(
+          serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(proto_serialization->KeyMaterialType(),
+              Eq(KeyData::ASYMMETRIC_PRIVATE));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
+
+  google::crypto::tink::JwtEcdsaPrivateKey proto_key;
+  ASSERT_THAT(proto_key.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  EXPECT_THAT(proto_key.version(), Eq(0));
+  EXPECT_THAT(proto_key.key_value(),
+              Eq(absl::StrCat(std::string("\x00", 1),
+                              util::SecretDataAsStringView(ec_key->priv))));
+  EXPECT_THAT(proto_key.public_key().x(),
+              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_x)));
+  EXPECT_THAT(proto_key.public_key().y(),
+              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_y)));
+  EXPECT_THAT(proto_key.public_key().algorithm(),
+              Eq(test_case.proto_algorithm));
+  EXPECT_THAT(proto_key.public_key().has_custom_kid(), IsFalse());
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithCustomKid) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<JwtEcdsaParameters> parameters =
+      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
+                                 JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  util::StatusOr<JwtEcdsaPublicKey> public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicPoint(public_point)
+          .SetCustomKid("custom_kid")
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  util::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+      *public_key,
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const internal::ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const internal::ProtoKeySerialization*>(
+          serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(proto_serialization->KeyMaterialType(),
+              Eq(KeyData::ASYMMETRIC_PRIVATE));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+              Eq(OutputPrefixType::RAW));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+
+  google::crypto::tink::JwtEcdsaPrivateKey proto_key;
+  ASSERT_THAT(proto_key.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  EXPECT_THAT(proto_key.version(), Eq(0));
+  EXPECT_THAT(proto_key.key_value(),
+              Eq(absl::StrCat(std::string("\x00", 1),
+                              util::SecretDataAsStringView(ec_key->priv))));
+  EXPECT_THAT(proto_key.public_key().x(),
+              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_x)));
+  EXPECT_THAT(proto_key.public_key().y(),
+              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_y)));
+  EXPECT_THAT(proto_key.public_key().algorithm(), Eq(JwtEcdsaAlgorithm::ES256));
+  ASSERT_THAT(proto_key.public_key().has_custom_kid(), IsTrue());
+  EXPECT_THAT(proto_key.public_key().custom_kid().value(),
+              Eq(*public_key->GetKid()));
+}
+
+TEST_F(JwtEcdsaProtoSerializationTest,
+       SerializePrivateKeyWithoutSecretKeyAccess) {
+  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<JwtEcdsaParameters> parameters =
+      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
+                                 JwtEcdsaParameters::Algorithm::kEs256);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  util::StatusOr<JwtEcdsaPublicKey> public_key =
+      JwtEcdsaPublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetPublicPoint(public_point)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  util::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+      *public_key,
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *private_key, /*token=*/absl::nullopt);
+  ASSERT_THAT(serialization.status(),
+              StatusIs(absl::StatusCode::kPermissionDenied,
+                       HasSubstr("SecretKeyAccess is required")));
 }
 
 }  // namespace

@@ -221,3 +221,112 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::cecpq2_aead_hkdf_cc_proto
 )
+
+tink_cc_library(
+  NAME ml_kem_parameters
+  SRCS
+    ml_kem_parameters.cc
+    ml_kem_parameters.h
+  DEPS
+    absl::status
+    tink::core::parameters
+    tink::experimental::kem::kem_parameters
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME ml_kem_parameters_test
+  SRCS
+    ml_kem_parameters_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    gmock
+    absl::status
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME ml_kem_private_key
+  SRCS
+    ml_kem_private_key.cc
+    ml_kem_private_key.h
+  DEPS
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    absl::core_headers
+    absl::memory
+    absl::status
+    absl::strings
+    absl::string_view
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::experimental::kem::kem_private_key
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_library(
+  NAME ml_kem_public_key
+  SRCS
+    ml_kem_public_key.cc
+    ml_kem_public_key.h
+  DEPS
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    absl::core_headers
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::experimental::kem::kem_public_key
+    tink::subtle::subtle_util
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME ml_kem_private_key_test
+  SRCS
+    ml_kem_private_key_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    gmock
+    absl::status
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME ml_kem_public_key_test
+  SRCS
+    ml_kem_public_key_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    gmock
+    absl::status
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+)

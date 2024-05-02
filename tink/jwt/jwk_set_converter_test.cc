@@ -846,16 +846,9 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256WithSmallXFails) {
     "use":"sig","alg":"ES256","key_ops":["verify"]}],
     "kid":"EhuduQ"
   })";
-  // The keys in the keyset are validated when the primitive is generated.
-  // So JwkSetToPublicKeysetHandle succeeds, but GetPrimitive fails.
   util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
-  ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
-      (*public_handle)
-          ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
-              ConfigGlobalRegistry());
-  EXPECT_THAT(verify, Not(IsOk()));
+  EXPECT_THAT(public_handle, Not(IsOk()));
 }
 
 TEST_F(JwkSetToPublicKeysetHandleTest, Es256WithSmallYFails) {
@@ -868,16 +861,9 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256WithSmallYFails) {
     "use":"sig","alg":"ES256","key_ops":["verify"]}],
     "kid":"EhuduQ"
   })";
-  // The keys in the keyset are validated when the primitive is generated.
-  // So JwkSetToPublicKeysetHandle succeeds, but GetPrimitive fails.
   util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
-  ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
-      (*public_handle)
-          ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
-              ConfigGlobalRegistry());
-  EXPECT_THAT(verify, Not(IsOk()));
+  EXPECT_THAT(public_handle, Not(IsOk()));
 }
 
 TEST_F(JwkSetToPublicKeysetHandleTest, Es256CorrectlySetsKid) {
@@ -1142,34 +1128,6 @@ TEST(JwkSetFromPublicKeysetHandleTest,
       << differences;
 }
 
-TEST(JwkSetFromPublicKeysetHandleTest, WithLegacyOutputPrefixFails) {
-  std::string public_keyset_with_bad_output_prefix = R"({
-      "primaryKeyId": 303799737,
-      "key": [
-          {
-              "keyId": 303799737,
-              "status": "ENABLED",
-              "outputPrefixType": "LEGACY",
-              "keyData": {
-                  "typeUrl": "type.googleapis.com/google.crypto.tink.JwtEcdsaPublicKey",
-                  "keyMaterialType": "ASYMMETRIC_PUBLIC",
-                  "value": "IiDuhGJiGeaQ/qeqt1daC2xZRarm4VEsmSHJUWJY9EHbvxogwO6uIxh8SkKOO8VjZXNRTteRcwCPE4/4JElKyaa0fcQQAQ=="
-              }
-          }
-      ]
-  })";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
-      JsonKeysetReader::New(public_keyset_with_bad_output_prefix);
-  ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
-      CleartextKeysetHandle::Read(std::move(*reader));
-  ASSERT_THAT(keyset_handle, IsOk());
-
-  util::StatusOr<std::string> jwk_set =
-      JwkSetFromPublicKeysetHandle(**keyset_handle);
-  EXPECT_THAT(jwk_set, Not(IsOk()));
-}
-
 TEST(JwkSetFromPublicKeysetHandleTest, WithInvalidKeyMaterialTypeFails) {
   std::string public_keyset_with_invalid_key_material_type = R"({
       "primaryKeyId": 303799737,
@@ -1216,34 +1174,6 @@ TEST(JwkSetFromPublicKeysetHandleTest, WithUnknownTypeUrlFails) {
   })";
   util::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(public_keyset_with_invalid_key_material_type);
-  ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
-      CleartextKeysetHandle::Read(std::move(*reader));
-  ASSERT_THAT(keyset_handle, IsOk());
-
-  util::StatusOr<std::string> jwk_set =
-      JwkSetFromPublicKeysetHandle(**keyset_handle);
-  EXPECT_THAT(jwk_set, Not(IsOk()));
-}
-
-TEST(JwkSetFromPublicKeysetHandleTest, EcdsaWithUnknownAlgorithmFails) {
-  std::string public_keyset_with_unknown_algorithm = R"({
-  "primaryKeyId": 303799737,
-  "key": [
-    {
-      "keyData": {
-        "typeUrl": "type.googleapis.com/google.crypto.tink.JwtEcdsaPublicKey",
-        "value": "IiDuhGJiGeaQ/qeqt1daC2xZRarm4VEsmSHJUWJY9EHbvxogwO6uIxh8SkKOO8VjZXNRTteRcwCPE4/4JElKyaa0fcQ=",
-        "keyMaterialType": "ASYMMETRIC_PUBLIC"
-      },
-      "status": "ENABLED",
-      "keyId": 303799737,
-      "outputPrefixType": "TINK"
-    }
-  ]
-})";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
-      JsonKeysetReader::New(public_keyset_with_unknown_algorithm);
   ASSERT_THAT(reader, IsOk());
   util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));

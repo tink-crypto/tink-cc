@@ -27,6 +27,7 @@
 #include "tink/jwt/internal/jwt_rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
+#include "tink/jwt/jwt_ecdsa_proto_serialization.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
 #include "proto/config.pb.h"
@@ -39,10 +40,20 @@ util::Status JwtSignatureRegister() {
   // Register primitive wrappers.
   auto status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<jwt_internal::JwtPublicKeySignWrapper>());
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
+
   status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<jwt_internal::JwtPublicKeyVerifyWrapper>());
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = RegisterJwtEcdsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
 
   // Register key managers which utilize FIPS validated BoringCrypto
   // implementations.
@@ -50,17 +61,23 @@ util::Status JwtSignatureRegister() {
   status = Registry::RegisterAsymmetricKeyManagers(
       absl::make_unique<jwt_internal::JwtEcdsaSignKeyManager>(),
       absl::make_unique<jwt_internal::JwtEcdsaVerifyKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
   // RSA SSA PKCS1
   status = Registry::RegisterAsymmetricKeyManagers(
       absl::make_unique<jwt_internal::JwtRsaSsaPkcs1SignKeyManager>(),
       absl::make_unique<jwt_internal::JwtRsaSsaPkcs1VerifyKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
   // RSA SSA PSS
   status = Registry::RegisterAsymmetricKeyManagers(
       absl::make_unique<jwt_internal::JwtRsaSsaPssSignKeyManager>(),
       absl::make_unique<jwt_internal::JwtRsaSsaPssVerifyKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
 
   if (IsFipsModeEnabled()) {
     return util::OkStatus();

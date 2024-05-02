@@ -138,6 +138,7 @@ tink_cc_library(
     jwt_signature_config.cc
     jwt_signature_config.h
   DEPS
+    tink::jwt::jwt_ecdsa_proto_serialization
     absl::core_headers
     absl::memory
     tink::core::registry
@@ -504,15 +505,34 @@ tink_cc_test(
   SRCS
     jwt_signature_config_test.cc
   DEPS
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_key_templates
     tink::jwt::jwt_signature_config
     gmock
+    absl::status
+    absl::optional
     crypto
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
     tink::core::keyset_handle
+    tink::core::partial_key_access
     tink::core::registry
+    tink::core::restricted_big_integer
+    tink::core::restricted_data
     tink::config::global_registry
+    tink::internal::ec_util
     tink::internal::fips_utils
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::subtle::common_enums
+    tink::util::secret_data
+    tink::util::statusor
     tink::util::test_matchers
+    tink::proto::jwt_ecdsa_cc_proto
 )
 
 tink_cc_test(

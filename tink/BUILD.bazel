@@ -703,6 +703,8 @@ cc_library(
         ":core/key_type_manager",
         ":core/private_key_type_manager",
         ":key_manager",
+        "//tink/internal:call_with_core_dump_protection",
+        "//tink/util:secret_proto",
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:validation",

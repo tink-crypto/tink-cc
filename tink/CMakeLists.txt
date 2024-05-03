@@ -655,6 +655,8 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::string_view
+    tink::internal::call_with_core_dump_protection
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::util::validation

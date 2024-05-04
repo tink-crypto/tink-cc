@@ -474,6 +474,7 @@ tink_cc_library(
   DEPS
     tink::util::secret_data_internal
     absl::strings
+    tink::internal::dfsan_forwarders
     tink::internal::safe_stringops
 )
 

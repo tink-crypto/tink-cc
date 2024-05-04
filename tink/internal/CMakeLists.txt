@@ -1276,6 +1276,14 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME dfsan_forwarders
+  SRCS
+    dfsan_forwarders.h
+  DEPS
+    absl::base
+)
+
 tink_cc_test(
   NAME bn_encoding_util_test
   SRCS

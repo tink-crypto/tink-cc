@@ -1344,3 +1344,9 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "dfsan_forwarders",
+    hdrs = ["dfsan_forwarders.h"],
+    deps = ["@com_google_absl//absl/base"],
+)

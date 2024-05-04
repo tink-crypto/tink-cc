@@ -25,6 +25,7 @@
 #include <vector>  // IWYU pragma: keep
 
 #include "absl/strings/string_view.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data_internal.h"
 
@@ -61,9 +62,16 @@ using SecretData = std::vector<uint8_t, internal::SanitizingAllocator<uint8_t>>;
 // Constant-time comparison for SecretData
 // SecretDataEquals should be used instead of regular operator== in most cases.
 inline bool SecretDataEquals(const SecretData& lhs, const SecretData& rhs) {
-  return lhs.size() == rhs.size() &&
-         ::crypto::tink::internal::SafeCryptoMemEquals(lhs.data(), rhs.data(),
-                                                       lhs.size());
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
+  bool result = ::crypto::tink::internal::SafeCryptoMemEquals(
+      lhs.data(), rhs.data(), lhs.size());
+  // We clear any labels from the output because we assume that we have a
+  // high entropy secret in both SecretData instances and hence the leakage
+  // is negligible.
+  ::crypto::tink::internal::CutAllFlows(result);
+  return result;
 }
 
 // Stores secret (sensitive) object and makes sure it's marked as such and

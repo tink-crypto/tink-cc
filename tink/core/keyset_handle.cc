@@ -402,8 +402,11 @@ util::StatusOr<std::unique_ptr<Keyset::Key>> ExtractPublicKey(
     return key_data.status();
   }
 
-  auto public_key = absl::make_unique<Keyset::Key>(key);
-  public_key->mutable_key_data()->Swap(key_data->get());
+  auto public_key = absl::make_unique<Keyset::Key>();
+  public_key->set_key_id(key.key_id());
+  public_key->set_status(key.status());
+  public_key->set_output_prefix_type(key.output_prefix_type());
+  *public_key->mutable_key_data() = std::move(**key_data);
   return std::move(public_key);
 }
 

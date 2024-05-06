@@ -784,6 +784,7 @@ tink_cc_library(
     tink::core::secret_key_access_token
     absl::string_view
     crypto
+    tink::internal::call_with_core_dump_protection
     tink::util::secret_data
 )
 

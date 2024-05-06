@@ -835,6 +835,7 @@ cc_library(
     include_prefix = "tink",
     deps = [
         ":secret_key_access_token",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/util:secret_data",
         "@boringssl//:crypto",
         "@com_google_absl//absl/strings:string_view",

@@ -15,10 +15,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/restricted_big_integer.h"
+
+#include <cstddef>
 #include <string>
 
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
@@ -27,13 +30,15 @@ namespace tink {
 
 RestrictedBigInteger::RestrictedBigInteger(absl::string_view secret_big_integer,
                                            SecretKeyAccessToken token) {
-  int padding_pos = secret_big_integer.find_first_not_of('\0');
-  if (padding_pos != std::string::npos) {
-    secret_ =
-        util::SecretDataFromStringView(secret_big_integer.substr(padding_pos));
-  } else {
-    secret_ = util::SecretDataFromStringView("");
-  }
+  internal::CallWithCoreDumpProtection([&] {
+    size_t padding_pos = secret_big_integer.find_first_not_of('\0');
+    if (padding_pos != std::string::npos) {
+      secret_ = util::SecretDataFromStringView(
+          secret_big_integer.substr(padding_pos));
+    } else {
+      secret_ = util::SecretDataFromStringView("");
+    }
+  });
 }
 
 bool RestrictedBigInteger::operator==(const RestrictedBigInteger& other) const {

@@ -26,7 +26,6 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data_internal.h"
 
@@ -66,13 +65,8 @@ inline bool SecretDataEquals(const SecretData& lhs, const SecretData& rhs) {
   if (lhs.size() != rhs.size()) {
     return false;
   }
-  bool result = ::crypto::tink::internal::SafeCryptoMemEquals(
-      lhs.data(), rhs.data(), lhs.size());
-  // We clear any labels from the output because we assume that we have a
-  // high entropy secret in both SecretData instances and hence the leakage
-  // is negligible.
-  ::crypto::tink::internal::CutAllFlows(result);
-  return result;
+  return ::crypto::tink::internal::SafeCryptoMemEquals(lhs.data(), rhs.data(),
+                                                       lhs.size());
 }
 
 // Stores secret (sensitive) object and makes sure it's marked as such and

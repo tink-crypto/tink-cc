@@ -25,6 +25,7 @@
 #include <vector>  // IWYU pragma: keep
 
 #include "absl/strings/string_view.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data_internal.h"
@@ -155,11 +156,13 @@ class SecretValue {
       : ptr_(MakeSecretUniquePtr<T>(std::move(t))) {}
 
   SecretValue(const SecretValue& other) {
-    ptr_ = MakeSecretUniquePtr<T>(*other.ptr_);
+    crypto::tink::internal::CallWithCoreDumpProtection(
+        [&]() { ptr_ = MakeSecretUniquePtr<T>(*other.ptr_); });
   }
 
   SecretValue& operator=(const SecretValue& other) {
-    *ptr_ = *other.ptr_;
+    crypto::tink::internal::CallWithCoreDumpProtection(
+        [&]() { *ptr_ = *other.ptr_; });
     return *this;
   }
 

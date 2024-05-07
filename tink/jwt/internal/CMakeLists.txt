@@ -101,9 +101,10 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
-    tink::core::cc
     tink::core::key_manager_impl
+    tink::core::keyset_handle
     tink::core::mac
+    tink::core::registry
     tink::config::global_registry
     tink::mac::mac_config
     tink::util::istream_input_stream

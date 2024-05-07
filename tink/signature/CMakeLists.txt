@@ -1257,7 +1257,10 @@ tink_cc_test(
     gmock
     absl::status
     absl::strings
-    tink::core::cc
+    tink::core::keyset_handle
+    tink::core::keyset_reader
+    tink::core::public_key_sign
+    tink::core::public_key_verify
     tink::internal::rsa_util
     tink::internal::ssl_util
     tink::subtle::pem_parser_boringssl

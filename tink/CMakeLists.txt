@@ -825,14 +825,16 @@ tink_cc_test(
   SRCS
     core/binary_keyset_writer_test.cc
   DEPS
+    tink::core::aead
     tink::core::binary_keyset_writer
-    tink::core::cc
     tink::core::insecure_secret_key_access
+    tink::core::keyset_handle
     tink::core::proto_keyset_format
     gmock
     absl::memory
     absl::status
     tink::aead::aead_config
+    tink::aead::aead_key_templates
     tink::config::global_registry
     tink::util::secret_data
     tink::util::statusor
@@ -893,20 +895,24 @@ tink_cc_test(
   SRCS
     core/keyset_handle_test.cc
   DEPS
+    tink::core::aead
     tink::core::binary_keyset_reader
-    tink::core::cc
+    tink::core::binary_keyset_writer
     tink::core::cleartext_keyset_handle
     tink::core::configuration
     tink::core::key_manager_impl
     tink::core::key_type_manager
     tink::core::template_util
+    tink::core::input_stream
     tink::core::json_keyset_reader
     tink::core::json_keyset_writer
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::keyset_reader
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::core::registry
     gmock
     absl::flat_hash_map
     absl::memory

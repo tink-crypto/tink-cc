@@ -28,7 +28,7 @@
 #include "absl/status/status.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
-#include "tink/aead_key_templates.h"
+#include "tink/aead/aead_key_templates.h"
 #include "tink/config/global_registry.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/keyset_handle.h"

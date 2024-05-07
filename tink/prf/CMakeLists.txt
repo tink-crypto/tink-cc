@@ -296,7 +296,8 @@ tink_cc_test(
     gmock
     absl::status
     crypto
-    tink::core::cc
+    tink::core::keyset_handle
+    tink::core::registry
     tink::config::global_registry
     tink::internal::fips_utils
     tink::util::status

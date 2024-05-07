@@ -158,12 +158,13 @@ tink_cc_test(
     tink::config::tink_config
     gmock
     absl::status
-    tink::core::cc
     tink::core::aead
     tink::core::deterministic_aead
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
     tink::core::mac
+    tink::core::public_key_sign
+    tink::core::public_key_verify
     tink::core::registry
     tink::core::streaming_aead
     tink::aead::aes_gcm_key_manager

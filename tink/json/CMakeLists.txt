@@ -1,0 +1,73 @@
+tink_module(json)
+
+tink_cc_library(
+  NAME json_keyset_reader
+  SRCS
+    json_keyset_reader.cc
+    json_keyset_reader.h
+  DEPS
+    absl::memory
+    absl::status
+    absl::strings
+    absl::string_view
+    rapidjson
+    tink::core::keyset_reader
+    tink::util::enums
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME json_keyset_writer
+  SRCS
+    json_keyset_writer.cc
+    json_keyset_writer.h
+  DEPS
+    absl::status
+    absl::strings
+    absl::string_view
+    rapidjson
+    tink::core::keyset_writer
+    tink::util::enums
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME json_keyset_reader_test
+  SRCS
+    json_keyset_reader_test.cc
+  DEPS
+    tink::json::json_keyset_reader
+    gmock
+    absl::status
+    absl::strings
+    tink::core::keyset_reader
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::aes_eax_cc_proto
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME json_keyset_writer_test
+  SRCS
+    json_keyset_writer_test.cc
+  DEPS
+    tink::json::json_keyset_writer
+    gmock
+    absl::status
+    absl::strings
+    rapidjson
+    tink::core::json_keyset_reader
+    tink::util::protobuf_helper
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::aes_eax_cc_proto
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::tink_cc_proto
+)

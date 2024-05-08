@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/json_keyset_writer.h"
+#include "tink/json/json_keyset_writer.h"
 
 #include <memory>
 #include <ostream>

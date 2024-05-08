@@ -17,41 +17,6 @@
 #ifndef TINK_JSON_KEYSET_WRITER_H_
 #define TINK_JSON_KEYSET_WRITER_H_
 
-#include <memory>
-#include <ostream>
-#include <utility>
-
-#include "absl/strings/string_view.h"
-#include "tink/keyset_writer.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/tink.pb.h"
-
-namespace crypto {
-namespace tink {
-
-// A KeysetWriter that can write to some destination cleartext
-// or encrypted keysets in proto JSON wire format, cf.
-// https://developers.google.com/protocol-buffers/docs/encoding
-class JsonKeysetWriter : public KeysetWriter {
- public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<JsonKeysetWriter>> New(
-      std::unique_ptr<std::ostream> destination_stream);
-
-  crypto::tink::util::Status
-  Write(const google::crypto::tink::Keyset& keyset) override;;
-
-  crypto::tink::util::Status
-  Write(const google::crypto::tink::EncryptedKeyset& encrypted_keyset) override;
-
- private:
-  explicit JsonKeysetWriter(std::unique_ptr<std::ostream> destination_stream)
-      : destination_stream_(std::move(destination_stream)) {}
-
-  std::unique_ptr<std::ostream> destination_stream_;
-};
-
-}  // namespace tink
-}  // namespace crypto
+#include "tink/json/json_keyset_writer.h"
 
 #endif  // TINK_JSON_KEYSET_WRITER_H_

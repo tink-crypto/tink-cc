@@ -5,6 +5,7 @@ add_subdirectory(hybrid)
 add_subdirectory(internal)
 add_subdirectory(mac)
 add_subdirectory(monitoring)
+add_subdirectory(json)
 add_subdirectory(jwt)
 add_subdirectory(keyderivation)
 add_subdirectory(prf)
@@ -334,36 +335,17 @@ tink_cc_library(
 tink_cc_library(
   NAME json_keyset_reader
   SRCS
-    core/json_keyset_reader.cc
     json_keyset_reader.h
   DEPS
-    tink::core::keyset_reader
-    absl::memory
-    absl::status
-    absl::strings
-    rapidjson
-    tink::util::enums
-    tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
+    tink::json::json_keyset_reader
 )
 
 tink_cc_library(
   NAME json_keyset_writer
   SRCS
-    core/json_keyset_writer.cc
     json_keyset_writer.h
   DEPS
-    tink::core::keyset_writer
-    absl::status
-    absl::strings
-    rapidjson
-    tink::util::enums
-    tink::util::errors
-    tink::util::protobuf_helper
-    tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
+    tink::json::json_keyset_writer
 )
 
 tink_cc_library(
@@ -840,43 +822,6 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME json_keyset_reader_test
-  SRCS
-    core/json_keyset_reader_test.cc
-  DEPS
-    tink::core::json_keyset_reader
-    tink::core::keyset_reader
-    gmock
-    absl::status
-    absl::strings
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::aes_eax_cc_proto
-    tink::proto::aes_gcm_cc_proto
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_test(
-  NAME json_keyset_writer_test
-  SRCS
-    core/json_keyset_writer_test.cc
-  DEPS
-    tink::core::json_keyset_reader
-    tink::core::json_keyset_writer
-    gmock
-    absl::status
-    absl::strings
-    rapidjson
-    tink::util::protobuf_helper
-    tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::aes_eax_cc_proto
-    tink::proto::aes_gcm_cc_proto
     tink::proto::tink_cc_proto
 )
 

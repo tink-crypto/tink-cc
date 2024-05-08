@@ -1,0 +1,75 @@
+cc_library(
+    name = "json_keyset_reader",
+    srcs = ["json_keyset_reader.cc"],
+    hdrs = ["json_keyset_reader.h"],
+    include_prefix = "tink/json",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink:keyset_reader",
+        "//tink/util:enums",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@rapidjson",
+    ],
+)
+
+cc_library(
+    name = "json_keyset_writer",
+    srcs = ["json_keyset_writer.cc"],
+    hdrs = ["json_keyset_writer.h"],
+    include_prefix = "tink/json",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink:keyset_writer",
+        "//tink/util:enums",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@rapidjson",
+    ],
+)
+
+cc_test(
+    name = "json_keyset_reader_test",
+    srcs = ["json_keyset_reader_test.cc"],
+    deps = [
+        ":json_keyset_reader",
+        "//proto:aes_eax_cc_proto",
+        "//proto:aes_gcm_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:keyset_reader",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "json_keyset_writer_test",
+    srcs = ["json_keyset_writer_test.cc"],
+    deps = [
+        ":json_keyset_writer",
+        "//proto:aes_eax_cc_proto",
+        "//proto:aes_gcm_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:json_keyset_reader",
+        "//tink/util:protobuf_helper",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+        "@rapidjson",
+    ],
+)

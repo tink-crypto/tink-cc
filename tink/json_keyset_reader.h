@@ -17,47 +17,6 @@
 #ifndef TINK_JSON_KEYSET_READER_H_
 #define TINK_JSON_KEYSET_READER_H_
 
-#include <istream>
-#include <memory>
-#include <string>
-#include <utility>
-
-#include "absl/strings/string_view.h"
-#include "tink/keyset_reader.h"
-#include "tink/util/statusor.h"
-#include "proto/tink.pb.h"
-
-namespace crypto {
-namespace tink {
-
-// A KeysetReader that can read from some source cleartext or
-// encrypted keysets in proto JSON wire format, cf.
-// https://developers.google.com/protocol-buffers/docs/encoding
-class JsonKeysetReader : public KeysetReader {
- public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetReader>> New(
-      std::unique_ptr<std::istream> keyset_stream);
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetReader>> New(
-      absl::string_view serialized_keyset);
-
-  crypto::tink::util::StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
-  Read() override;
-
-  crypto::tink::util::StatusOr<
-    std::unique_ptr<google::crypto::tink::EncryptedKeyset>>
-  ReadEncrypted() override;
-
- private:
-  explicit JsonKeysetReader(std::unique_ptr<std::istream> keyset_stream)
-      : serialized_keyset_(""), keyset_stream_(std::move(keyset_stream)) {}
-  explicit JsonKeysetReader(absl::string_view serialized_keyset)
-      : serialized_keyset_(serialized_keyset), keyset_stream_(nullptr) {}
-
-  std::string serialized_keyset_;
-  std::unique_ptr<std::istream> keyset_stream_;
-};
-
-}  // namespace tink
-}  // namespace crypto
+#include "tink/json/json_keyset_reader.h"
 
 #endif  // TINK_JSON_KEYSET_READER_H_

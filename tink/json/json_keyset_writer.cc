@@ -14,12 +14,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/json_keyset_writer.h"
+#include "tink/json/json_keyset_writer.h"
 
-#include <istream>
 #include <memory>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <utility>
 
@@ -31,8 +29,6 @@
 #include "include/rapidjson/rapidjson.h"
 #include "include/rapidjson/stringbuffer.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"

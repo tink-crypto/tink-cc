@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/json_keyset_reader.h"
+#include "tink/json/json_keyset_reader.h"
 
 #include <iostream>
 #include <istream>

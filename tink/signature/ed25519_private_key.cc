@@ -43,8 +43,8 @@ util::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
   }
   // Confirm that private key and public key are a valid Ed25519 key pair.
   util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
-      internal::NewEd25519Key(util::SecretDataFromStringView(
-          private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get())));
+      internal::NewEd25519Key(
+          private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
   absl::string_view expected_public_key = public_key.GetPublicKeyBytes(token);
   if (CRYPTO_memcmp(expected_public_key.data(), (*key_pair)->public_key.data(),
                     32) != 0) {

@@ -174,8 +174,8 @@ util::Status ValidateKeyPair(const HpkePublicKey& public_key,
                              PartialKeyAccessToken token) {
   HpkeParameters::KemId kem_id = public_key.GetParameters().GetKemId();
   absl::string_view public_key_bytes = public_key.GetPublicKeyBytes(token);
-  util::SecretData secret = util::SecretDataFromStringView(
-      private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get()));
+  const util::SecretData& secret =
+      private_key_bytes.Get(InsecureSecretKeyAccess::Get());
 
   if (IsNistKem(kem_id)) {
     util::StatusOr<subtle::EllipticCurveType> curve =

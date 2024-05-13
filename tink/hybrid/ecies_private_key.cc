@@ -130,8 +130,8 @@ util::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
                                    const RestrictedData& private_key_bytes,
                                    PartialKeyAccessToken token) {
   util::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
-      internal::X25519KeyFromPrivateKey(util::SecretDataFromStringView(
-          private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get())));
+      internal::X25519KeyFromPrivateKey(
+          private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
   if (!x25519_key.ok()) {
     return x25519_key.status();
   }

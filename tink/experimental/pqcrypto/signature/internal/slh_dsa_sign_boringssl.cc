@@ -58,10 +58,9 @@ util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
 
   SPX_sign(reinterpret_cast<uint8_t *>(signature.data() +
                                        private_key_.GetOutputPrefix().size()),
-           reinterpret_cast<const uint8_t *>(
-               private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
-                   .GetSecret(InsecureSecretKeyAccess::Get())
-                   .data()),
+           private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
+               .Get(InsecureSecretKeyAccess::Get())
+               .data(),
            reinterpret_cast<const uint8_t *>(data.data()), data.size(),
            /*randomized=*/1);
 

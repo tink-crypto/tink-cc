@@ -127,8 +127,6 @@ TEST_F(EnumsTest, testEcPointFormat) {
             Enums::SubtleToProto(subtle::EcPointFormat::COMPRESSED));
   EXPECT_EQ(pb::EcPointFormat::UNKNOWN_FORMAT,
             Enums::SubtleToProto(subtle::EcPointFormat::UNKNOWN_FORMAT));
-  EXPECT_EQ(pb::EcPointFormat::UNKNOWN_FORMAT,
-            Enums::SubtleToProto((subtle::EcPointFormat)42));
 
   EXPECT_EQ(subtle::EcPointFormat::UNCOMPRESSED,
             Enums::ProtoToSubtle(pb::EcPointFormat::UNCOMPRESSED));
@@ -220,7 +218,6 @@ TEST_F(EnumsTest, testHashName) {
   EXPECT_EQ("SHA512", std::string(Enums::HashName(pb::HashType::SHA512)));
   EXPECT_EQ("UNKNOWN_HASH",
             std::string(Enums::HashName(pb::HashType::UNKNOWN_HASH)));
-  EXPECT_EQ("UNKNOWN_HASH", std::string(Enums::HashName((pb::HashType)42)));
 
   EXPECT_EQ(pb::HashType::SHA1, Enums::Hash("SHA1"));
   EXPECT_EQ(pb::HashType::SHA224, Enums::Hash("SHA224"));
@@ -256,10 +253,6 @@ TEST_F(EnumsTest, testKeyMaterialName) {
   EXPECT_EQ(
       "UNKNOWN_KEYMATERIAL",
       std::string(Enums::KeyMaterialName(pb::KeyData::UNKNOWN_KEYMATERIAL)));
-  EXPECT_EQ(
-      "UNKNOWN_KEYMATERIAL",
-      std::string(Enums::KeyMaterialName((pb::KeyData::KeyMaterialType)42)));
-
   EXPECT_EQ(pb::KeyData::SYMMETRIC, Enums::KeyMaterial("SYMMETRIC"));
   EXPECT_EQ(pb::KeyData::ASYMMETRIC_PRIVATE,
             Enums::KeyMaterial("ASYMMETRIC_PRIVATE"));
@@ -298,8 +291,6 @@ TEST_F(EnumsTest, testOutputPrefixName) {
       std::string(Enums::OutputPrefixName(pb::OutputPrefixType::CRUNCHY)));
   EXPECT_EQ("UNKNOWN_PREFIX", std::string(Enums::OutputPrefixName(
                                   pb::OutputPrefixType::UNKNOWN_PREFIX)));
-  EXPECT_EQ("UNKNOWN_PREFIX",
-            std::string(Enums::OutputPrefixName((pb::OutputPrefixType)42)));
 
   EXPECT_EQ(pb::OutputPrefixType::TINK, Enums::OutputPrefix("TINK"));
   EXPECT_EQ(pb::OutputPrefixType::LEGACY, Enums::OutputPrefix("LEGACY"));

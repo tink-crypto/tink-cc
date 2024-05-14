@@ -473,7 +473,8 @@ tink_cc_library(
     secret_data.h
   DEPS
     tink::util::secret_data_internal
-    absl::strings
+    absl::span
+    absl::string_view
     tink::internal::dfsan_forwarders
     tink::internal::safe_stringops
 )

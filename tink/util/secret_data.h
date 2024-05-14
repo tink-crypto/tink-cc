@@ -25,6 +25,7 @@
 #include <vector>  // IWYU pragma: keep
 
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data_internal.h"
@@ -135,6 +136,11 @@ inline absl::string_view SecretDataAsStringView(const SecretData& secret) {
 
 inline SecretData SecretDataFromStringView(absl::string_view secret) {
   return {secret.begin(), secret.end()};
+}
+
+inline SecretData SecretDataFromSpan(absl::Span<const uint8_t> span) {
+  return SecretDataFromStringView(absl::string_view(
+      reinterpret_cast<const char*>(span.data()), span.size()));
 }
 
 // The same as SecretUniquePtr, but with value semantics.

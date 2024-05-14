@@ -27,11 +27,10 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/cleartext_keyset_handle.h"
-#include "tink/json_keyset_reader.h"
-#include "tink/json_keyset_writer.h"
+#include "tink/json/json_keyset_reader.h"
+#include "tink/json/json_keyset_writer.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
-#include "tink/keyset_writer.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 

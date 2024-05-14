@@ -486,10 +486,10 @@ tink_cc_test(
     absl::strings
     crypto
     tink::core::cleartext_keyset_handle
-    tink::core::json_keyset_reader
     tink::core::keyset_handle
     tink::core::keyset_reader
     tink::config::global_registry
+    tink::json::json_keyset_reader
     tink::jwt::internal::json_util
     tink::util::status
     tink::util::statusor

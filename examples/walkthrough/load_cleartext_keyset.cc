@@ -23,7 +23,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
-#include "tink/json_keyset_reader.h"
+#include "tink/json/json_keyset_reader.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/util/statusor.h"

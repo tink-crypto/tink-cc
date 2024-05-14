@@ -29,7 +29,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
-#include "tink/json_keyset_reader.h"
+#include "tink/json/json_keyset_reader.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/jwt_public_key_verify.h"

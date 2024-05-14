@@ -845,12 +845,9 @@ tink_cc_test(
     tink::core::binary_keyset_writer
     tink::core::cleartext_keyset_handle
     tink::core::configuration
-    tink::core::key_manager_impl
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
-    tink::core::json_keyset_reader
-    tink::core::json_keyset_writer
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
@@ -874,6 +871,8 @@ tink_cc_test(
     tink::internal::configuration_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
+    tink::json::json_keyset_reader
+    tink::json::json_keyset_writer
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::signature_key_templates

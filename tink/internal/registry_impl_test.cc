@@ -175,7 +175,7 @@ class TestAeadKeyManager : public KeyManager<Aead> {
 // insecure, as it does nothing except provide access to the key.
 class AeadVariant {
  public:
-  explicit AeadVariant(std::string s) : s_(s) {}
+  explicit AeadVariant(absl::string_view s) : s_(s) {}
 
   std::string get() { return s_; }
 
@@ -847,7 +847,7 @@ std::string AddAesGcmKey(uint32_t key_id, OutputPrefixType output_prefix_type,
   key_data.set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
   test::AddKeyData(key_data, key_id, output_prefix_type, key_status_type,
                    &modified_keyset);
-  return key.key_value();
+  return std::string(key.key_value());
 }
 
 // Tests that wrapping of a keyset works in the usual case.

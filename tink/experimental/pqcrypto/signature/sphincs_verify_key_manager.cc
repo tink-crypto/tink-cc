@@ -17,6 +17,7 @@
 #include "tink/experimental/pqcrypto/signature/sphincs_verify_key_manager.h"
 
 #include <memory>
+#include <string>
 
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
@@ -55,8 +56,8 @@ SphincsVerifyKeyManager::PublicKeyVerifyFactory::Create(
           EnumsPqcrypto::ProtoToSubtle(public_key.params().sig_length_type()),
       .private_key_size = public_key.params().key_size()};
 
-  SphincsPublicKeyPqclean sphincs_public_key_pqclean(public_key.key_value(),
-                                                     sphincs_params_pqclean);
+  SphincsPublicKeyPqclean sphincs_public_key_pqclean(
+      std::string(public_key.key_value()), sphincs_params_pqclean);
 
   return subtle::SphincsVerify::New(sphincs_public_key_pqclean);
 }

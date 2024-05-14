@@ -167,7 +167,7 @@ TEST(AesSivKeyManagerTest, DeriveKeyWrongVersion) {
 
 TEST(AesSivKeyManagerTest, ValidateKey) {
   AesSivKey key;
-  *key.mutable_key_value() = std::string(64, 'a');
+  key.set_key_value(std::string(64, 'a'));
   key.set_version(0);
   EXPECT_THAT(AesSivKeyManager().ValidateKey(key), IsOk());
 }
@@ -176,18 +176,18 @@ TEST(AesSivKeyManagerTest, ValidateKeyStringLength) {
   AesSivKey key;
     key.set_version(0);
   for (int i = 0 ; i < 64; ++i) {
-    *key.mutable_key_value() = std::string(i, 'a');
+    key.set_key_value(std::string(i, 'a'));
     EXPECT_THAT(AesSivKeyManager().ValidateKey(key), Not(IsOk()));
   }
   for (int i = 65 ; i <= 200; ++i) {
-    *key.mutable_key_value() = std::string(i, 'a');
+    key.set_key_value(std::string(i, 'a'));
     EXPECT_THAT(AesSivKeyManager().ValidateKey(key), Not(IsOk()));
   }
 }
 
 TEST(AesSivKeyManagerTest, ValidateKeyVersion) {
   AesSivKey key;
-  *key.mutable_key_value() = std::string(64, 'a');
+  key.set_key_value(std::string(64, 'a'));
   key.set_version(1);
   EXPECT_THAT(AesSivKeyManager().ValidateKey(key), Not(IsOk()));
 }

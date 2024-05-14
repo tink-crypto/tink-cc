@@ -137,7 +137,7 @@ TEST_P(FalconSignKeyManagerTest, CreateKeyAlwaysNew) {
     StatusOr<FalconPrivateKey> private_key =
         FalconSignKeyManager().CreateKey(*key_format);
     ASSERT_THAT(private_key, IsOk());
-    keys.insert(private_key->key_value());
+    keys.insert(std::string(private_key->key_value()));
   }
   EXPECT_THAT(keys, SizeIs(num_tests));
 }

@@ -51,7 +51,7 @@ message SlhDsaPublicKey {
   // Required.
   uint32 version = 1;
   // Required.
-  bytes key_value = 2;
+  bytes key_value = 2;  // Placeholder for ctype.
   // Required
   SlhDsaParams params = 3;
 }
@@ -61,7 +61,7 @@ message SlhDsaPrivateKey {
   // Required.
   uint32 version = 1;
   // Required.
-  bytes key_value = 2;
+  bytes key_value = 2;  // Placeholder for ctype.
   // Required. The corresponding public key.
   SlhDsaPublicKey public_key = 3;
 }

@@ -207,6 +207,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::string_view
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream

@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/configuration.h"
 #include "tink/core/key_manager_impl.h"
@@ -70,7 +71,7 @@ using ::google::crypto::tink::RsaSsaPssPublicKey;
 
 class FakePrimitive {
  public:
-  explicit FakePrimitive(std::string s) : s_(s) {}
+  explicit FakePrimitive(absl::string_view s) : s_(s) {}
   std::string get() { return s_; }
 
  private:
@@ -79,7 +80,7 @@ class FakePrimitive {
 
 class FakePrimitive2 {
  public:
-  explicit FakePrimitive2(std::string s) : s_(s) {}
+  explicit FakePrimitive2(absl::string_view s) : s_(s) {}
   std::string get() { return s_ + "2"; }
 
  private:
@@ -169,7 +170,7 @@ std::string AddAesGcmKeyToKeyset(Keyset& keyset, uint32_t key_id,
   key_data.set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
   test::AddKeyData(key_data, key_id, output_prefix_type, key_status_type,
                    &keyset);
-  return key.key_value();
+  return std::string(key.key_value());
 }
 
 TEST(ConfigurationImplTest, AddPrimitiveWrapper) {

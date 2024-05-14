@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
@@ -51,7 +52,7 @@ using ::google::crypto::tink::OutputPrefixType;
 
 class FakePrimitive {
  public:
-  explicit FakePrimitive(std::string s) : s_(s) {}
+  explicit FakePrimitive(absl::string_view s) : s_(s) {}
   std::string get() { return s_; }
 
  private:

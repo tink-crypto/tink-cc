@@ -43,7 +43,7 @@ message DilithiumPublicKey {
   // Required.
   uint32 version = 1;
   // Required.
-  bytes key_value = 2;
+  bytes key_value = 2;  // Placeholder for ctype.
   // Required
   DilithiumParams params = 3;
 }
@@ -53,7 +53,7 @@ message DilithiumPrivateKey {
   // Required.
   uint32 version = 1;
   // Required.
-  bytes key_value = 2;
+  bytes key_value = 2;  // Placeholder for ctype.
   // The corresponding public key.
   DilithiumPublicKey public_key = 3;
 }

@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/subtle/random.h"
@@ -57,7 +58,7 @@ using ::testing::SizeIs;
 // insecure, as it does nothing except provide access to the key.
 class AeadVariant {
  public:
-  explicit AeadVariant(std::string s) : s_(s) {}
+  explicit AeadVariant(absl::string_view s) : s_(s) {}
 
   std::string get() { return s_; }
 

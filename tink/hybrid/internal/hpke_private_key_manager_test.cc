@@ -151,7 +151,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP256KeySucceeds) {
     util::StatusOr<HpkePrivateKey> key =
         HpkePrivateKeyManager().CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
-    private_keys.insert(key->private_key());
+    private_keys.insert(std::string(key->private_key()));
     public_keys.insert(key->public_key().public_key());
   }
   EXPECT_THAT(private_keys.size(), Eq(number_of_keys));
@@ -184,7 +184,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP384KeySucceeds) {
     util::StatusOr<HpkePrivateKey> key =
         HpkePrivateKeyManager().CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
-    private_keys.insert(key->private_key());
+    private_keys.insert(std::string(key->private_key()));
     public_keys.insert(key->public_key().public_key());
   }
   EXPECT_THAT(private_keys.size(), Eq(number_of_keys));
@@ -217,7 +217,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP521KeySucceeds) {
     util::StatusOr<HpkePrivateKey> key =
         HpkePrivateKeyManager().CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
-    private_keys.insert(key->private_key());
+    private_keys.insert(std::string(key->private_key()));
     public_keys.insert(key->public_key().public_key());
   }
   EXPECT_THAT(private_keys.size(), Eq(number_of_keys));

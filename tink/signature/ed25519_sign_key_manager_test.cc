@@ -95,7 +95,7 @@ TEST(Ed25519SignKeyManagerTest, CreateKeyAlwaysNew) {
     StatusOr<Ed25519PrivateKey> key_or =
         Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
     ASSERT_THAT(key_or, IsOk());
-    keys.insert(key_or.value().key_value());
+    keys.insert(std::string(key_or.value().key_value()));
   }
   EXPECT_THAT(keys, SizeIs(num_tests));
 }

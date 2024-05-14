@@ -1034,6 +1034,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::string_view
     tink::subtle::subtle
     tink::util::secret_data
     tink::util::status
@@ -1052,6 +1053,7 @@ tink_cc_test(
     tink::core::key_manager_impl
     gmock
     absl::status
+    absl::string_view
     tink::subtle::subtle
     tink::util::input_stream_util
     tink::util::istream_input_stream

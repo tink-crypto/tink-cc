@@ -213,7 +213,7 @@ TEST_P(SphincsSignKeyManagerTest, CreateKeyAlwaysNew) {
     StatusOr<SphincsPrivateKey> private_key =
         SphincsSignKeyManager().CreateKey(*key_format);
     ASSERT_THAT(private_key, IsOk());
-    keys.insert(private_key->key_value());
+    keys.insert(std::string(private_key->key_value()));
   }
   EXPECT_THAT(keys, SizeIs(num_tests));
 }
@@ -264,7 +264,8 @@ TEST_P(SphincsSignKeyManagerTest, CreateValid) {
       .private_key_size = test_case.private_key_size};
 
   SphincsPublicKeyPqclean sphincs_public_key_pqclean(
-      private_key->public_key().key_value(), sphincs_params_pqclean);
+      std::string(private_key->public_key().key_value()),
+      sphincs_params_pqclean);
 
   util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       subtle::SphincsVerify::New(sphincs_public_key_pqclean);

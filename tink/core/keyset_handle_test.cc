@@ -1052,7 +1052,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithConfigFips1402FailsWithNonFipsHandle) {
 
   Keyset keyset;
   AesGcmSivKey key_proto;
-  *key_proto.mutable_key_value() = subtle::Random::GetRandomBytes(16);
+  key_proto.set_key_value(subtle::Random::GetRandomBytes(16));
   test::AddTinkKey(AeadKeyTemplates::Aes256GcmSiv().type_url(), /*key_id=*/13,
                    key_proto, KeyStatusType::ENABLED, KeyData::SYMMETRIC,
                    &keyset);

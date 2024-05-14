@@ -59,7 +59,7 @@ message SphincsPublicKey {
   // Required.
   uint32 version = 1;
   // Required.
-  bytes key_value = 2;
+  bytes key_value = 2;  // Placeholder for ctype.
   // Required
   SphincsParams params = 3;
 }
@@ -69,7 +69,7 @@ message SphincsPrivateKey {
   // Required.
   uint32 version = 1;
   // Required.
-  bytes key_value = 2;
+  bytes key_value = 2;  // Placeholder for ctype.
   // The corresponding public key.
   SphincsPublicKey public_key = 3;
 }

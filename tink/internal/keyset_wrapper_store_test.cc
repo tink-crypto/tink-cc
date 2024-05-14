@@ -26,6 +26,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
@@ -61,7 +62,7 @@ using ::testing::Eq;
 
 class FakePrimitive {
  public:
-  explicit FakePrimitive(std::string s) : s_(s) {}
+  explicit FakePrimitive(absl::string_view s) : s_(s) {}
   std::string get() { return s_; }
 
  private:
@@ -148,7 +149,7 @@ std::string AddAesGcmKeyToKeyset(Keyset& keyset, uint32_t key_id,
   key_data.set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
   test::AddKeyData(key_data, key_id, output_prefix_type, key_status_type,
                    &keyset);
-  return key.key_value();
+  return std::string(key.key_value());
 }
 
 // Returns the function that relies on `registry` to transform `key_data` into

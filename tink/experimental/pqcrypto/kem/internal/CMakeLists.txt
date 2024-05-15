@@ -1,0 +1,124 @@
+tink_cc_library(
+  NAME ml_kem_decapsulate_boringssl
+  SRCS
+    ml_kem_decapsulate_boringssl.cc
+    ml_kem_decapsulate_boringssl.h
+  DEPS
+    absl::memory
+    absl::status
+    absl::strings
+    absl::string_view
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    tink::internal::fips_utils
+    tink::kem::internal::raw_kem_decapsulate
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME ml_kem_decapsulate_boringssl_test
+  SRCS
+    ml_kem_decapsulate_boringssl_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::ml_kem_decapsulate_boringssl
+    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_boringssl
+    tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    gmock
+    absl::status
+    absl::strings
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    tink::internal::fips_utils
+    tink::kem::internal::raw_kem_decapsulate
+    tink::kem::internal::raw_kem_encapsulate
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+)
+
+tink_cc_library(
+  NAME ml_kem_encapsulate_boringssl
+  SRCS
+    ml_kem_encapsulate_boringssl.cc
+    ml_kem_encapsulate_boringssl.h
+  DEPS
+    absl::memory
+    absl::status
+    absl::string_view
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    tink::internal::fips_utils
+    tink::kem::internal::raw_kem_encapsulate
+    tink::subtle::subtle_util
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME ml_kem_encapsulate_boringssl_test
+  SRCS
+    ml_kem_encapsulate_boringssl_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_boringssl
+    tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    gmock
+    absl::status
+    crypto
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::internal::fips_utils
+    tink::kem::internal::raw_kem_encapsulate
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME ml_kem_test_util
+  SRCS
+    ml_kem_test_util.cc
+    ml_kem_test_util.h
+  DEPS
+    absl::status
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+  TESTONLY
+)
+
+tink_cc_test(
+  NAME ml_kem_test_util_test
+  SRCS
+    ml_kem_test_util_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    gmock
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::util::statusor
+    tink::util::test_matchers
+)

@@ -130,8 +130,9 @@ TEST(Ed25519PrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
                                /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
+  (*key_pair)->private_key.resize(31);
   RestrictedData private_key_bytes = RestrictedData(
-      (*key_pair)->private_key.substr(0, 31), InsecureSecretKeyAccess::Get());
+      (*key_pair)->private_key, InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(Ed25519PrivateKey::Create(*public_key, private_key_bytes,
                                         GetPartialKeyAccess())

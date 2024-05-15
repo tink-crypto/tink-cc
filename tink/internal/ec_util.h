@@ -55,7 +55,7 @@ struct X25519Key {
 
 struct Ed25519Key {
   std::string public_key;
-  std::string private_key;
+  util::SecretData private_key;
 };
 
 // EcKey.

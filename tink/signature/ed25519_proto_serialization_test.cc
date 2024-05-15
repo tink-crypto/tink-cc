@@ -37,6 +37,7 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/subtle/random.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/ed25519.pb.h"
@@ -337,7 +338,8 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePrivateKey) {
   google::crypto::tink::Ed25519PrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value((*key_pair)->private_key);
+  private_key_proto.set_key_value(
+      util::SecretDataAsStringView((*key_pair)->private_key));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -409,7 +411,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   google::crypto::tink::Ed25519PrivateKey private_key_proto;
   private_key_proto.set_version(1);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value((*key_pair)->private_key);
+  private_key_proto.set_key_value(
+      util::SecretDataAsStringView((*key_pair)->private_key));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -441,7 +444,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   google::crypto::tink::Ed25519PrivateKey private_key_proto;
   private_key_proto.set_version(0);
   *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value((*key_pair)->private_key);
+  private_key_proto.set_key_value(
+      util::SecretDataAsStringView((*key_pair)->private_key));
 
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
@@ -508,7 +512,8 @@ TEST_P(Ed25519ProtoSerializationTest, SerializePrivateKey) {
                       InsecureSecretKeyAccess::Get())),
               IsTrue());
   EXPECT_THAT(proto_key.version(), Eq(0));
-  EXPECT_THAT(proto_key.key_value(), Eq((*key_pair)->private_key));
+  EXPECT_THAT(proto_key.key_value(),
+              Eq(util::SecretDataAsStringView((*key_pair)->private_key)));
   EXPECT_THAT(proto_key.has_public_key(), IsTrue());
   EXPECT_THAT(proto_key.public_key().version(), Eq(0));
   EXPECT_THAT(proto_key.public_key().key_value(), Eq((*key_pair)->public_key));

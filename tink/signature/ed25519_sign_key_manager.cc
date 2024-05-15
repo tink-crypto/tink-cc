@@ -55,7 +55,8 @@ StatusOr<Ed25519PrivateKey> Ed25519SignKeyManager::CreateKey(
 
   Ed25519PrivateKey ed25519_private_key;
   ed25519_private_key.set_version(get_version());
-  ed25519_private_key.set_key_value((*key)->private_key);
+  ed25519_private_key.set_key_value(
+      util::SecretDataAsStringView((*key)->private_key));
 
   // Build Ed25519PublicKey.
   auto ed25519_public_key = ed25519_private_key.mutable_public_key();
@@ -106,7 +107,8 @@ StatusOr<Ed25519PrivateKey> Ed25519SignKeyManager::DeriveKey(
 
   Ed25519PrivateKey ed25519_private_key;
   ed25519_private_key.set_version(get_version());
-  ed25519_private_key.set_key_value((*key)->private_key);
+  ed25519_private_key.set_key_value(
+      util::SecretDataAsStringView((*key)->private_key));
 
   // Build Ed25519PublicKey.
   auto ed25519_public_key = ed25519_private_key.mutable_public_key();

@@ -53,8 +53,11 @@ class SubtleUtilBoringSSL {
       internal::EcKey;
   using X25519Key ABSL_DEPRECATED(
       "Use of this type is dicouraged outside Tink.") = internal::X25519Key;
-  using Ed25519Key ABSL_DEPRECATED(
-      "Use of this type is dicouraged outside Tink.") = internal::Ed25519Key;
+  struct ABSL_DEPRECATED("Use of this type is dicouraged outside Tink.")
+      Ed25519Key {
+    std::string public_key;
+    std::string private_key;
+  };
   using RsaPublicKey ABSL_DEPRECATED(
       "Use of this type is dicouraged outside Tink.") = internal::RsaPublicKey;
   using RsaSsaPssParams ABSL_DEPRECATED(
@@ -166,23 +169,32 @@ class SubtleUtilBoringSSL {
   // Returns a new ED25519 key.
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
   static inline std::unique_ptr<Ed25519Key> GetNewEd25519Key() {
-    util::StatusOr<std::unique_ptr<Ed25519Key>> key = internal::NewEd25519Key();
+    util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
+        internal::NewEd25519Key();
     if (!key.ok()) {
       return nullptr;
     }
-    return *std::move(key);
+    Ed25519Key subtle_key;
+    subtle_key.public_key = (*key)->public_key;
+    subtle_key.private_key =
+        std::string(util::SecretDataAsStringView((*key)->private_key));
+    return std::make_unique<Ed25519Key>(std::move(subtle_key));
   }
 
   // Returns a new ED25519 key generated from a 32-byte secret seed.
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
   static inline std::unique_ptr<Ed25519Key> GetNewEd25519KeyFromSeed(
       const util::SecretData &secret_seed) {
-    util::StatusOr<std::unique_ptr<Ed25519Key>> key =
+    util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
         internal::NewEd25519Key(secret_seed);
     if (!key.ok()) {
       return nullptr;
     }
-    return *std::move(key);
+    Ed25519Key subtle_key;
+    subtle_key.public_key = (*key)->public_key;
+    subtle_key.private_key =
+        std::string(util::SecretDataAsStringView((*key)->private_key));
+    return std::make_unique<Ed25519Key>(std::move(subtle_key));
   }
 
   // Returns BoringSSL's EC_POINT constructed from curve type, point format and

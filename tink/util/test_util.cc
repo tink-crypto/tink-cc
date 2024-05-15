@@ -341,7 +341,8 @@ Ed25519PrivateKey GetEd25519TestPrivateKey() {
   auto test_key = internal::NewEd25519Key().value();
   Ed25519PrivateKey ed25519_key;
   ed25519_key.set_version(0);
-  ed25519_key.set_key_value(test_key->private_key);
+  ed25519_key.set_key_value(
+      util::SecretDataAsStringView(test_key->private_key));
 
   auto public_key = ed25519_key.mutable_public_key();
   public_key->set_version(0);

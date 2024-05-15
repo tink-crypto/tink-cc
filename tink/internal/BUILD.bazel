@@ -196,6 +196,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":bn_util",
+        ":call_with_core_dump_protection",
         ":err_util",
         ":fips_utils",
         ":ssl_unique_ptr",

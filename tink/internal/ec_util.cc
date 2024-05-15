@@ -30,6 +30,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/bn.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -229,7 +230,10 @@ util::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
                                     absl::Span<uint8_t> priv_key,
                                     absl::Span<uint8_t> pub_key) {
   size_t len = priv_key.size();
-  if (EVP_PKEY_get_raw_private_key(&evp_key, priv_key.data(), &len) != 1) {
+  bool created = internal::CallWithCoreDumpProtection([&] {
+    return EVP_PKEY_get_raw_private_key(&evp_key, priv_key.data(), &len) != -1;
+  });
+  if (!created) {
     return util::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_get_raw_private_key failed");
   }
@@ -474,9 +478,9 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   }
 
   auto key = absl::make_unique<Ed25519Key>();
-  subtle::ResizeStringUninitialized(&key->private_key, Ed25519KeyPrivKeySize());
+  key->private_key.resize(Ed25519KeyPrivKeySize());
   subtle::ResizeStringUninitialized(&key->public_key, Ed25519KeyPubKeySize());
-  uint8_t *priv_key_ptr = reinterpret_cast<uint8_t *>(&key->private_key[0]);
+  uint8_t *priv_key_ptr = key->private_key.data();
   uint8_t *pub_key_ptr = reinterpret_cast<uint8_t *>(&key->public_key[0]);
   // The EVP_PKEY interface returns only the first 32 bytes of the private key.
   util::Status res = SslNewKeyPairFromEcKey(

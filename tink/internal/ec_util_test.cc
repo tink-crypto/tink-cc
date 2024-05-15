@@ -84,14 +84,15 @@ TEST(EcUtilTest, NewEd25519KeyWithWycheproofTestVectors) {
 
   // For this test we are only interested in Ed25519 keys.
   for (const auto& test_group : (*test_vectors)["testGroups"].GetArray()) {
-    std::string private_key = WycheproofUtil::GetBytes(test_group["key"]["sk"]);
+    util::SecretData private_key = util::SecretDataFromStringView(
+        WycheproofUtil::GetBytes(test_group["key"]["sk"]));
     std::string public_key = WycheproofUtil::GetBytes(test_group["key"]["pk"]);
 
     util::StatusOr<std::unique_ptr<Ed25519Key>> key =
-        NewEd25519Key(util::SecretDataFromStringView(private_key));
+        NewEd25519Key(private_key);
     ASSERT_THAT(key, IsOk());
     EXPECT_EQ((*key)->public_key, public_key);
-    EXPECT_EQ((*key)->private_key, private_key);
+    EXPECT_TRUE(util::SecretDataEquals((*key)->private_key, private_key));
   }
 }
 

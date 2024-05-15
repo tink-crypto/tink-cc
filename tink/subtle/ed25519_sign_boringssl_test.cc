@@ -62,8 +62,11 @@ util::StatusOr<Ed25519KeyPair> NewKeyPair() {
     return key.status();
   }
 
-  return {{(*key)->public_key, util::SecretDataFromStringView(absl::StrCat(
-                                   (*key)->private_key, (*key)->public_key))}};
+  util::SecretData key_pair = (*key)->private_key;
+  key_pair.insert(key_pair.end(), (*key)->public_key.begin(),
+                  (*key)->public_key.end());
+
+  return {{(*key)->public_key, key_pair}};
 }
 
 TEST_F(Ed25519SignBoringSslTest, testBasicSign) {

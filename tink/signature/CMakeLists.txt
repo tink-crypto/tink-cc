@@ -1359,6 +1359,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::subtle::random
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::ed25519_cc_proto

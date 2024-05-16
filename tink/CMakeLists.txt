@@ -660,6 +660,8 @@ tink_cc_library(
 
 add_library(tink::core::secret_key_access_testonly ALIAS tink_internal_core_secret_key_access)
 
+add_library(tink::core::cleartext_keyset_handle_testonly ALIAS tink_internal_core_cleartext_keyset_handle)
+
 tink_cc_library(
   NAME parameters
   SRCS
@@ -843,7 +845,7 @@ tink_cc_test(
     tink::core::aead
     tink::core::binary_keyset_reader
     tink::core::binary_keyset_writer
-    tink::core::cleartext_keyset_handle
+    tink::core::cleartext_keyset_handle_testonly
     tink::core::configuration
     tink::core::key_type_manager
     tink::core::template_util

@@ -14,6 +14,13 @@ alias(
     visibility = ["//visibility:public"],
 )
 
+alias(
+    name = "cleartext_keyset_handle_testonly",
+    testonly = 1,
+    actual = ":cleartext_keyset_handle",
+    visibility = ["//visibility:public"],
+)
+
 cc_library(
     name = "tink_cc",
     hdrs = [
@@ -895,7 +902,7 @@ cc_test(
         ":aead",
         ":binary_keyset_reader",
         ":binary_keyset_writer",
-        ":cleartext_keyset_handle",
+        ":cleartext_keyset_handle_testonly",
         ":configuration",
         ":core/key_type_manager",
         ":core/template_util",

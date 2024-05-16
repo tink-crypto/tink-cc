@@ -1,0 +1,26 @@
+package(default_visibility = ["//:__subpackages__"])
+
+licenses(["notice"])
+
+cc_library(
+    name = "kem_decapsulate",
+    hdrs = ["kem_decapsulate.h"],
+    include_prefix = "tink/kem",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:keyset_handle",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "kem_encapsulate",
+    hdrs = ["kem_encapsulate.h"],
+    include_prefix = "tink/kem",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:keyset_handle",
+        "//tink/util:statusor",
+    ],
+)

@@ -428,6 +428,7 @@ cc_library(
     hdrs = ["config_v0.h"],
     include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/hybrid/internal:config_v0",
@@ -441,6 +442,7 @@ cc_library(
     hdrs = ["key_gen_config_v0.h"],
     include_prefix = "tink/hybrid",
     tags = ["requires_boringcrypto_update"],
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/hybrid/internal:key_gen_config_v0",

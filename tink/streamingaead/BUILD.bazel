@@ -210,6 +210,7 @@ cc_library(
     srcs = ["config_v0.cc"],
     hdrs = ["config_v0.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/streamingaead/internal:config_v0",
@@ -222,6 +223,7 @@ cc_library(
     srcs = ["key_gen_config_v0.cc"],
     hdrs = ["key_gen_config_v0.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/streamingaead/internal:key_gen_config_v0",

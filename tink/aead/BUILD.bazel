@@ -512,6 +512,7 @@ cc_library(
     srcs = ["config_v0.cc"],
     hdrs = ["config_v0.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/aead/internal:config_v0",
@@ -524,6 +525,7 @@ cc_library(
     srcs = ["key_gen_config_v0.cc"],
     hdrs = ["key_gen_config_v0.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/aead/internal:key_gen_config_v0",

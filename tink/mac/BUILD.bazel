@@ -323,6 +323,7 @@ cc_library(
     srcs = ["config_v0.cc"],
     hdrs = ["config_v0.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:configuration",
         "//tink/mac/internal:config_v0",
@@ -335,6 +336,7 @@ cc_library(
     srcs = ["key_gen_config_v0.cc"],
     hdrs = ["key_gen_config_v0.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = [
         "//tink:key_gen_configuration",
         "//tink/mac/internal:key_gen_config_v0",

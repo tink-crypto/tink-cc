@@ -337,20 +337,6 @@ EcdsaPrivateKey GetEcdsaTestPrivateKey(
   return ecdsa_key;
 }
 
-Ed25519PrivateKey GetEd25519TestPrivateKey() {
-  auto test_key = internal::NewEd25519Key().value();
-  Ed25519PrivateKey ed25519_key;
-  ed25519_key.set_version(0);
-  ed25519_key.set_key_value(
-      util::SecretDataAsStringView(test_key->private_key));
-
-  auto public_key = ed25519_key.mutable_public_key();
-  public_key->set_version(0);
-  public_key->set_key_value(test_key->public_key);
-
-  return ed25519_key;
-}
-
 util::Status ZTestUniformString(absl::string_view bytes) {
   double expected = bytes.size() * 8.0 / 2.0;
   double stddev = std::sqrt(static_cast<double>(bytes.size()) * 8.0 / 4.0);

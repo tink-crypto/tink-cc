@@ -31,9 +31,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::testing::Combine;
 using ::testing::Eq;
-using ::testing::Range;
 using ::testing::TestWithParam;
 using ::testing::Values;
 

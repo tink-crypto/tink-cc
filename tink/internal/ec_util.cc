@@ -507,7 +507,7 @@ util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
   // Curve25519 public key is x, not (x,y).
   std::copy_n(ec_key.pub_x.begin(), X25519KeyPubKeySize(),
               std::begin(x25519_key->public_value));
-  std::copy_n(ec_key.priv.begin(), X25519KeyPrivKeySize(),
+  std::copy_n(ec_key.priv.data(), X25519KeyPrivKeySize(),
               std::begin(x25519_key->private_key));
   return std::move(x25519_key);
 }

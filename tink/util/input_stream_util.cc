@@ -30,6 +30,15 @@ namespace crypto {
 namespace tink {
 
 namespace {
+template <typename Container>
+char* GetOutputBuffer(Container& container, int num_bytes_read) {
+  return reinterpret_cast<char*>(container.data()) + num_bytes_read;
+}
+template <>
+char* GetOutputBuffer(std::string& container, int num_bytes_read) {
+  return &container[0] + num_bytes_read;
+}
+
 template <typename Result>
 util::StatusOr<Result> ReadBytesFromStreamImpl(int num_bytes,
                                                InputStream* input_stream) {
@@ -49,7 +58,7 @@ util::StatusOr<Result> ReadBytesFromStreamImpl(int num_bytes,
         std::min(num_bytes - num_bytes_read, num_bytes_in_chunk);
     absl::c_copy(absl::MakeSpan(reinterpret_cast<const char*>(buffer),
                                 num_bytes_to_copy),
-                 result.begin() + num_bytes_read);
+                 GetOutputBuffer(result, num_bytes_read));
     input_stream->BackUp(num_bytes_in_chunk - num_bytes_to_copy);
     num_bytes_read += num_bytes_to_copy;
   }

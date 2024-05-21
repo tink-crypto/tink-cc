@@ -228,17 +228,19 @@ tink_cc_test(
   DATA
     wycheproof::testvectors
   DEPS
-    tink::subtle::aes_gcm_boringssl
-    tink::subtle::wycheproof_util
-    tink::aead::cord_aead
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_util
-    tink::util::test_matchers
+    tink::aead::internal::cord_aes_gcm_boringssl
+    gmock
     absl::strings
     absl::cord
+    crypto
     rapidjson
+    tink::core::aead
+    tink::aead::cord_aead
+    tink::subtle::aes_gcm_boringssl
+    tink::subtle::wycheproof_util
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
 )
 
 tink_cc_test(

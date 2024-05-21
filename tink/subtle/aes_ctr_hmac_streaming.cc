@@ -70,10 +70,12 @@ static util::Status DeriveKeys(const util::SecretData& ikm, HashType hkdf_algo,
                                        derived_key_material_size);
   if (!hkdf_result.ok()) return hkdf_result.status();
   util::SecretData key_material = std::move(hkdf_result.value());
-  *key_value =
-      util::SecretData(key_material.begin(), key_material.begin() + key_size);
+  absl::string_view key_material_view =
+      util::SecretDataAsStringView(key_material);
   *hmac_key_value =
-      util::SecretData(key_material.begin() + key_size, key_material.end());
+      util::SecretDataFromStringView(key_material_view.substr(key_size));
+  *key_value =
+      util::SecretDataFromStringView(key_material_view.substr(0, key_size));
   return util::OkStatus();
 }
 

@@ -114,15 +114,15 @@ TEST(AesSivBoringSslTest, testEncryptDecryptKeySizes) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::SecretData keymaterial =
-      util::SecretDataFromStringView(test::HexDecodeOrDie(
-          "198371900187498172316311acf81d238ff7619873a61983d619c87b63a1987f"
-          "987131819803719b847126381cd763871638aa71638176328761287361231321"
-          "812731321de508761437195ff231765aa4913219873ac6918639816312130011"
-          "abc900bba11400187984719827431246bbab1231eb4145215ff7141436616beb"
-          "9817298148712fed3aab61000ff123313e"));
+  std::string keymaterial = test::HexDecodeOrDie(
+      "198371900187498172316311acf81d238ff7619873a61983d619c87b63a1987f"
+      "987131819803719b847126381cd763871638aa71638176328761287361231321"
+      "812731321de508761437195ff231765aa4913219873ac6918639816312130011"
+      "abc900bba11400187984719827431246bbab1231eb4145215ff7141436616beb"
+      "9817298148712fed3aab61000ff123313e");
   for (int keysize = 0; keysize < keymaterial.size(); ++keysize) {
-    util::SecretData key(&keymaterial[0], &keymaterial[keysize]);
+    util::SecretData key = util::SecretDataFromStringView(
+        absl::string_view(keymaterial).substr(0, keysize));
     auto cipher = AesSivBoringSsl::New(key);
     if (keysize == 64) {
       EXPECT_TRUE(cipher.ok());

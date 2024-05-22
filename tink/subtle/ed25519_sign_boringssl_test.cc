@@ -17,6 +17,7 @@
 #include "tink/subtle/ed25519_sign_boringssl.h"
 
 #include <cstddef>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -63,8 +64,9 @@ util::StatusOr<Ed25519KeyPair> NewKeyPair() {
   }
 
   util::SecretData key_pair = (*key)->private_key;
-  key_pair.insert(key_pair.end(), (*key)->public_key.begin(),
-                  (*key)->public_key.end());
+  key_pair.resize(key_pair.size() + (*key)->public_key.size());
+  memcpy(key_pair.data() + (*key)->private_key.size(),
+         (*key)->public_key.data(), (*key)->public_key.size());
 
   return {{(*key)->public_key, key_pair}};
 }

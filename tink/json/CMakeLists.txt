@@ -58,13 +58,12 @@ tink_cc_test(
   SRCS
     json_keyset_writer_test.cc
   DEPS
+    tink::json::json_keyset_reader
     tink::json::json_keyset_writer
     gmock
     absl::status
     absl::strings
     rapidjson
-    tink::core::json_keyset_reader
-    tink::util::protobuf_helper
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_eax_cc_proto

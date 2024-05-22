@@ -59,12 +59,11 @@ cc_test(
     name = "json_keyset_writer_test",
     srcs = ["json_keyset_writer_test.cc"],
     deps = [
+        ":json_keyset_reader",
         ":json_keyset_writer",
         "//proto:aes_eax_cc_proto",
         "//proto:aes_gcm_cc_proto",
         "//proto:tink_cc_proto",
-        "//tink:json_keyset_reader",
-        "//tink/util:protobuf_helper",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@com_google_absl//absl/status",

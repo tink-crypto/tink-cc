@@ -17,18 +17,13 @@
 #include "walkthrough/write_keyset.h"
 
 // [START tink_walkthrough_write_keyset]
-#include <fstream>
 #include <memory>
 #include <ostream>
 #include <utility>
 
-#include "absl/status/status.h"
-#include "absl/strings/string_view.h"
 #include "tink/aead.h"
-#include "tink/json_keyset_writer.h"
+#include "tink/json/json_keyset_writer.h"
 #include "tink/keyset_handle.h"
-#include "tink/kms_client.h"
-#include "tink/kms_clients.h"
 #include "tink/util/status.h"
 
 namespace tink_walkthrough {

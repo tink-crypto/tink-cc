@@ -14,8 +14,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_ENCAPSULATE_BORINGSSL_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_ENCAPSULATE_BORINGSSL_H_
+#ifndef TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_ENCAPSULATE_BORINGSSL_H_
+#define TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_ENCAPSULATE_BORINGSSL_H_
 
 #include <memory>
 
@@ -34,4 +34,4 @@ util::StatusOr<std::unique_ptr<RawKemEncapsulate>> NewMlKemEncapsulateBoringSsl(
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_ENCAPSULATE_BORINGSSL_H_
+#endif  // TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_ENCAPSULATE_BORINGSSL_H_

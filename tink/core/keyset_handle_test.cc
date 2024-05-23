@@ -49,8 +49,6 @@
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/key_gen_configuration_impl.h"
-#include "tink/json/json_keyset_reader.h"
-#include "tink/json/json_keyset_writer.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_reader.h"
@@ -376,129 +374,6 @@ TEST_F(KeysetHandleTest, ReadEncryptedWithAnnotations) {
   EXPECT_EQ(generated_annotations, kAnnotations);
   // This is needed to cleanup mocks.
   Registry::Reset();
-}
-
-TEST_F(KeysetHandleTest, ReadEncryptedKeysetJson) {
-  Keyset keyset;
-  Keyset::Key key;
-  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
-             KeyData::SYMMETRIC, &keyset);
-  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
-            KeyData::SYMMETRIC, &keyset);
-  keyset.set_primary_key_id(42);
-
-  {  // Good encrypted keyset.
-    DummyAead aead("dummy aead 42");
-    std::string keyset_ciphertext =
-        aead.Encrypt(keyset.SerializeAsString(), /* associated_data= */ "")
-            .value();
-    EncryptedKeyset encrypted_keyset;
-    encrypted_keyset.set_encrypted_keyset(keyset_ciphertext);
-    auto* keyset_info = encrypted_keyset.mutable_keyset_info();
-    keyset_info->set_primary_key_id(42);
-    auto* key_info = keyset_info->add_key_info();
-    key_info->set_key_id(42);
-    key_info->set_type_url("dummy key type");
-    key_info->set_output_prefix_type(OutputPrefixType::TINK);
-    key_info->set_status(KeyStatusType::ENABLED);
-    std::stringbuf buffer;
-    std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
-    auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-    ASSERT_TRUE(writer_result.ok()) << writer_result.status();
-    auto status = writer_result.value()->Write(encrypted_keyset);
-    EXPECT_TRUE(status.ok()) << status;
-    std::string json_serialized_encrypted_keyset = buffer.str();
-    EXPECT_TRUE(status.ok()) << status;
-    auto reader = std::move(
-        JsonKeysetReader::New(json_serialized_encrypted_keyset).value());
-    auto result = KeysetHandle::Read(std::move(reader), aead);
-    EXPECT_TRUE(result.ok()) << result.status();
-    auto handle = std::move(result.value());
-    EXPECT_EQ(keyset.SerializeAsString(),
-              TestKeysetHandle::GetKeyset(*handle).SerializeAsString());
-  }
-
-  {  // AEAD does not match the ciphertext
-    DummyAead aead("dummy aead 42");
-    std::string keyset_ciphertext =
-        aead.Encrypt(keyset.SerializeAsString(), /* associated_data= */ "")
-            .value();
-    EncryptedKeyset encrypted_keyset;
-    encrypted_keyset.set_encrypted_keyset(keyset_ciphertext);
-    auto reader = std::move(
-        JsonKeysetReader::New(encrypted_keyset.SerializeAsString()).value());
-    DummyAead wrong_aead("wrong aead");
-    auto result = KeysetHandle::Read(std::move(reader), wrong_aead);
-    EXPECT_FALSE(result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
-  }
-
-  {  // Ciphertext does not contain actual keyset.
-    DummyAead aead("dummy aead 42");
-    std::string keyset_ciphertext =
-        aead.Encrypt("not a serialized keyset", /* associated_data= */ "")
-            .value();
-    EncryptedKeyset encrypted_keyset;
-    encrypted_keyset.set_encrypted_keyset(keyset_ciphertext);
-    auto reader = std::move(
-        JsonKeysetReader::New(encrypted_keyset.SerializeAsString()).value());
-    auto result = KeysetHandle::Read(std::move(reader), aead);
-    EXPECT_FALSE(result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
-  }
-
-  {  // Wrong ciphertext of encrypted keyset.
-    DummyAead aead("dummy aead 42");
-    std::string keyset_ciphertext = "totally wrong ciphertext";
-    EncryptedKeyset encrypted_keyset;
-    encrypted_keyset.set_encrypted_keyset(keyset_ciphertext);
-    auto reader = std::move(
-        JsonKeysetReader::New(encrypted_keyset.SerializeAsString()).value());
-    auto result = KeysetHandle::Read(std::move(reader), aead);
-    EXPECT_FALSE(result.ok());
-    EXPECT_EQ(absl::StatusCode::kInvalidArgument, result.status().code());
-  }
-}
-
-TEST_F(KeysetHandleTest, WriteEncryptedKeyset_Json) {
-  // Prepare a valid keyset handle
-  Keyset keyset;
-  Keyset::Key key;
-  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
-             KeyData::SYMMETRIC, &keyset);
-  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
-            KeyData::SYMMETRIC, &keyset);
-  keyset.set_primary_key_id(42);
-  auto reader =
-      std::move(BinaryKeysetReader::New(keyset.SerializeAsString()).value());
-  auto keyset_handle =
-      std::move(CleartextKeysetHandle::Read(std::move(reader)).value());
-
-  // Prepare a keyset writer.
-  DummyAead aead("dummy aead 42");
-  std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
-  auto writer =
-      std::move(JsonKeysetWriter::New(std::move(destination_stream)).value());
-
-  // Write the keyset handle and check the result.
-  auto status = keyset_handle->Write(writer.get(), aead);
-  EXPECT_TRUE(status.ok()) << status;
-  auto reader_result = JsonKeysetReader::New(buffer.str());
-  EXPECT_TRUE(reader_result.ok()) << reader_result.status();
-  auto read_encrypted_result = reader_result.value()->ReadEncrypted();
-  EXPECT_TRUE(read_encrypted_result.ok()) << read_encrypted_result.status();
-  auto encrypted_keyset = std::move(read_encrypted_result.value());
-  auto decrypt_result = aead.Decrypt(encrypted_keyset->encrypted_keyset(),
-                                     /* associated_data= */ "");
-  EXPECT_TRUE(decrypt_result.status().ok()) << decrypt_result.status();
-  auto decrypted = decrypt_result.value();
-  EXPECT_EQ(decrypted, keyset.SerializeAsString());
-
-  // Try writing to a null-writer.
-  status = keyset_handle->Write(nullptr, aead);
-  EXPECT_FALSE(status.ok());
-  EXPECT_EQ(absl::StatusCode::kInvalidArgument, status.code());
 }
 
 TEST_F(KeysetHandleTest, ReadEncryptedKeysetWithAssociatedDataGoodKeyset) {

@@ -64,9 +64,19 @@ tink_cc_test(
     absl::status
     absl::strings
     rapidjson
+    tink::core::binary_keyset_reader
+    tink::core::cleartext_keyset_handle
+    tink::core::keyset_handle
+    tink::core::keyset_reader
+    tink::core::keyset_writer
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_keyset_handle
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_eax_cc_proto
     tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_gcm_siv_cc_proto
+    tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )

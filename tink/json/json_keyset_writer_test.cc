@@ -26,15 +26,26 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
+#include "absl/strings/string_view.h"
 #include "absl/strings/substitute.h"
 #include "include/rapidjson/document.h"
 #include "include/rapidjson/error/en.h"
 #include "include/rapidjson/rapidjson.h"
+#include "tink/binary_keyset_reader.h"
+#include "tink/cleartext_keyset_handle.h"
 #include "tink/json/json_keyset_reader.h"
+#include "tink/keyset_handle.h"
+#include "tink/keyset_reader.h"
+#include "tink/keyset_writer.h"
+#include "tink/util/status.h"
+#include "tink/util/statusor.h"
+#include "tink/util/test_keyset_handle.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm.pb.h"
+#include "proto/aes_gcm_siv.pb.h"
+#include "proto/ecdsa.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -42,6 +53,7 @@ namespace tink {
 
 using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
+using ::crypto::tink::test::DummyAead;
 using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::AesEaxKey;
 using ::google::crypto::tink::AesGcmKey;
@@ -51,6 +63,7 @@ using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::HasSubstr;
+using ::testing::Not;
 
 namespace {
 
@@ -258,6 +271,223 @@ TEST_F(JsonKeysetWriterTest, WriteLargeKeyId) {
   ASSERT_THAT(writer->Write(keyset), IsOk());
   EXPECT_THAT(buffer.str(), HasSubstr("\"primaryKeyId\": 4123456789"));
   EXPECT_THAT(buffer.str(), HasSubstr("\"keyId\": 4123456789"));
+}
+
+TEST_F(JsonKeysetWriterTest, ReadValidEncryptedKeyset) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  DummyAead aead("dummy aead 42");
+  util::StatusOr<std::string> keyset_ciphertext =
+      aead.Encrypt(keyset.SerializeAsString(), /*associated_data=*/"");
+  ASSERT_THAT(keyset_ciphertext.status(), IsOk());
+
+  EncryptedKeyset encrypted_keyset;
+  encrypted_keyset.set_encrypted_keyset(*keyset_ciphertext);
+  auto* keyset_info = encrypted_keyset.mutable_keyset_info();
+  keyset_info->set_primary_key_id(42);
+  auto* key_info = keyset_info->add_key_info();
+  key_info->set_key_id(42);
+  key_info->set_type_url("dummy key type");
+  key_info->set_output_prefix_type(OutputPrefixType::TINK);
+  key_info->set_status(KeyStatusType::ENABLED);
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  util::Status status = (*writer)->Write(encrypted_keyset);
+  ASSERT_THAT(status, IsOk());
+  std::string json_serialized_encrypted_keyset = buffer.str();
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(json_serialized_encrypted_keyset);
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::Read(*std::move(reader), aead);
+  ASSERT_THAT(handle, IsOk());
+  EXPECT_EQ(keyset.SerializeAsString(),
+            TestKeysetHandle::GetKeyset(**handle).SerializeAsString());
+}
+
+TEST_F(JsonKeysetWriterTest, ReadValidEncryptedKeysetWithoutKeysetInfo) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  DummyAead aead("dummy aead 42");
+  util::StatusOr<std::string> keyset_ciphertext =
+      aead.Encrypt(keyset.SerializeAsString(), /*associated_data=*/"");
+  ASSERT_THAT(keyset_ciphertext.status(), IsOk());
+
+  EncryptedKeyset encrypted_keyset;
+  encrypted_keyset.set_encrypted_keyset(*keyset_ciphertext);
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  util::Status status = (*writer)->Write(encrypted_keyset);
+  ASSERT_THAT(status, IsOk());
+  std::string json_serialized_encrypted_keyset = buffer.str();
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(json_serialized_encrypted_keyset);
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::Read(*std::move(reader), aead);
+  ASSERT_THAT(handle, IsOk());
+  EXPECT_EQ(keyset.SerializeAsString(),
+            TestKeysetHandle::GetKeyset(**handle).SerializeAsString());
+}
+
+TEST_F(JsonKeysetWriterTest, WrongAeadCannotReadEncryptedKeyset) {
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
+  DummyAead aead("dummy aead 42");
+  util::StatusOr<std::string> keyset_ciphertext =
+      aead.Encrypt(keyset.SerializeAsString(), /*associated_data=*/"");
+  ASSERT_THAT(keyset_ciphertext, IsOk());
+  EncryptedKeyset encrypted_keyset;
+  encrypted_keyset.set_encrypted_keyset(*keyset_ciphertext);
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  util::Status status = (*writer)->Write(encrypted_keyset);
+  ASSERT_THAT(status, IsOk());
+  std::string json_serialized_encrypted_keyset = buffer.str();
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(json_serialized_encrypted_keyset);
+  ASSERT_THAT(reader, IsOk());
+  DummyAead wrong_aead("wrong aead");
+  util::StatusOr<std::unique_ptr<KeysetHandle>> decrypted_keyset =
+      KeysetHandle::Read(*std::move(reader), wrong_aead);
+  ASSERT_THAT(decrypted_keyset.status(), Not(IsOk()));
+}
+
+TEST_F(JsonKeysetWriterTest, CiphertextDoesNotContainKeyset) {
+  DummyAead aead("dummy aead 42");
+  util::StatusOr<std::string> keyset_ciphertext =
+      aead.Encrypt("not a serialized keyset", /*associated_data=*/"");
+  ASSERT_THAT(keyset_ciphertext, IsOk());
+  EncryptedKeyset encrypted_keyset;
+  encrypted_keyset.set_encrypted_keyset(*keyset_ciphertext);
+
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  util::Status status = (*writer)->Write(encrypted_keyset);
+  ASSERT_THAT(status, IsOk());
+  std::string json_serialized_encrypted_keyset = buffer.str();
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(json_serialized_encrypted_keyset);
+  util::StatusOr<std::unique_ptr<KeysetHandle>> decrypted_keyset =
+      KeysetHandle::Read(*std::move(reader), aead);
+  ASSERT_THAT(decrypted_keyset.status(), Not(IsOk()));
+}
+
+TEST_F(JsonKeysetWriterTest, InvalidCiphertextInEncryptedKeyset) {
+  DummyAead aead("dummy aead 42");
+  std::string keyset_ciphertext = "totally wrong ciphertext";
+  EncryptedKeyset encrypted_keyset;
+  encrypted_keyset.set_encrypted_keyset(keyset_ciphertext);
+
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer, IsOk());
+  util::Status status = (*writer)->Write(encrypted_keyset);
+  ASSERT_THAT(status, IsOk());
+  std::string json_serialized_encrypted_keyset = buffer.str();
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(json_serialized_encrypted_keyset);
+  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset =
+      KeysetHandle::Read(*std::move(reader), aead);
+  EXPECT_THAT(keyset.status(), Not(IsOk()));
+}
+
+TEST_F(JsonKeysetWriterTest, WriteEncryptedKeyset) {
+  // Prepare a valid keyset handle
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      BinaryKeysetReader::New(keyset.SerializeAsString());
+  ASSERT_THAT(reader.status(), IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+      CleartextKeysetHandle::Read(*std::move(reader));
+  ASSERT_THAT(keyset_handle.status(), IsOk());
+
+  // Prepare a keyset writer.
+  DummyAead aead("dummy aead 42");
+  std::stringbuf buffer;
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
+  util::StatusOr<std::unique_ptr<KeysetWriter>> writer =
+      JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_THAT(writer.status(), IsOk());
+
+  // Write the keyset handle and check the result.
+  ASSERT_THAT((*keyset_handle)->Write(writer->get(), aead), IsOk());
+  util::StatusOr<std::unique_ptr<KeysetReader>> json_reader =
+      JsonKeysetReader::New(buffer.str());
+  ASSERT_THAT(json_reader.status(), IsOk());
+  util::StatusOr<std::unique_ptr<google::crypto::tink::EncryptedKeyset>>
+      read_encrypted_result = (*json_reader)->ReadEncrypted();
+  ASSERT_THAT(read_encrypted_result.status(), IsOk());
+
+  util::StatusOr<std::string> decrypted_keyset =
+      aead.Decrypt((*read_encrypted_result)->encrypted_keyset(),
+                   /*associated_data=*/"");
+  ASSERT_THAT(decrypted_keyset.status(), IsOk());
+  ASSERT_THAT(*decrypted_keyset, keyset.SerializeAsString());
+}
+
+TEST_F(JsonKeysetWriterTest, WriteEncryptedKeysetWithNullWriter) {
+  // Prepare a valid keyset handle
+  Keyset keyset;
+  Keyset::Key key;
+  AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
+             KeyData::SYMMETRIC, &keyset);
+  AddRawKey("some_other_key_type", 711, key, KeyStatusType::ENABLED,
+            KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      BinaryKeysetReader::New(keyset.SerializeAsString());
+  ASSERT_THAT(reader.status(), IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+      CleartextKeysetHandle::Read(*std::move(reader));
+  ASSERT_THAT(keyset_handle.status(), IsOk());
+
+  DummyAead aead("dummy aead 42");
+
+  util::Status write_status = (*keyset_handle)->Write(nullptr, aead);
+  EXPECT_THAT(write_status, Not(IsOk()));
 }
 
 }  // namespace

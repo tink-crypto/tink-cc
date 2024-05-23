@@ -873,8 +873,6 @@ tink_cc_test(
     tink::internal::configuration_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
-    tink::json::json_keyset_reader
-    tink::json::json_keyset_writer
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::signature_key_templates

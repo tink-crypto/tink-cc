@@ -66,7 +66,7 @@ StatusOr<JwtEcdsaPrivateKey> RawJwtEcdsaSignKeyManager::CreateKey(
   JwtEcdsaPrivateKey jwt_ecdsa_private_key;
   jwt_ecdsa_private_key.set_version(get_version());
   jwt_ecdsa_private_key.set_key_value(
-      std::string(util::SecretDataAsStringView(ec_key->priv)));
+      util::SecretDataAsStringView(ec_key->priv));
   auto jwt_ecdsa_public_key = jwt_ecdsa_private_key.mutable_public_key();
   jwt_ecdsa_public_key->set_version(get_version());
   jwt_ecdsa_public_key->set_x(ec_key->pub_x);

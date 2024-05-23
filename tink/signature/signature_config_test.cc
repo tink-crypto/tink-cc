@@ -65,6 +65,9 @@
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_private_key.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
@@ -74,11 +77,13 @@
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
+#include "tink/subtle/random.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/common.pb.h"
+#include "proto/ed25519.pb.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
 
@@ -900,6 +905,168 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
                       *private_key, KeyStatus::kEnabled, /*is_primary=*/true))
                   .Build(),
               IsOk());
+}
+
+TEST_F(SignatureConfigTest, Ed25519ProtoParamsSerializationRegistered) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  util::StatusOr<internal::ProtoParametersSerialization>
+      proto_params_serialization =
+          internal::ProtoParametersSerialization::Create(
+              SignatureKeyTemplates::Ed25519());
+  ASSERT_THAT(proto_params_serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *proto_params_serialization);
+  ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<internal::ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialized_params.status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *proto_params_serialization);
+  ASSERT_THAT(parsed_params2, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<internal::ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialized_params2, IsOk());
+}
+
+TEST_F(SignatureConfigTest, Ed25519ProtoPublicKeySerializationRegistered) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  const std::string raw_key = subtle::Random::GetRandomBytes(32);
+
+  google::crypto::tink::Ed25519PublicKey key_proto;
+  key_proto.set_version(0);
+  key_proto.set_key_value(raw_key);
+
+  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.Ed25519PublicKey",
+          RestrictedData(key_proto.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK,
+          /*id_requirement=*/123);
+  ASSERT_THAT(proto_key_serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *proto_key_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  util::StatusOr<Ed25519PublicKey> key =
+      Ed25519PublicKey::Create(*params, raw_key,
+                               /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *proto_key_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key2, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_key2, IsOk());
+}
+
+TEST_F(SignatureConfigTest, Ed25519ProtoPrivateKeySerializationRegistered) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  google::crypto::tink::Ed25519PublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_key_value((*key_pair)->public_key);
+
+  google::crypto::tink::Ed25519PrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_key_value(
+      util::SecretDataAsStringView((*key_pair)->private_key));
+  *private_key_proto.mutable_public_key() = public_key_proto;
+
+  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
+          RestrictedData(private_key_proto.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
+          /*id_requirement=*/123);
+  ASSERT_THAT(proto_key_serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *proto_key_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  util::StatusOr<Ed25519PublicKey> public_key =
+      Ed25519PublicKey::Create(*params, (*key_pair)->public_key,
+                               /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_key.status(), StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *proto_key_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key2, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialized_key2, IsOk());
 }
 
 }  // namespace

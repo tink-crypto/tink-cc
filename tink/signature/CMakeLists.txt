@@ -352,6 +352,7 @@ tink_cc_library(
   DEPS
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_proto_serialization
     tink::signature::ed25519_sign_key_manager
     tink::signature::ed25519_verify_key_manager
     tink::signature::public_key_sign_wrapper
@@ -1160,6 +1161,9 @@ tink_cc_test(
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_public_key
     tink::signature::key_gen_config_v0
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
@@ -1204,12 +1208,14 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
+    tink::subtle::random
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
+    tink::proto::ed25519_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto

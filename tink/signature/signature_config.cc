@@ -22,6 +22,7 @@
 #include "tink/registry.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/public_key_sign_wrapper.h"
@@ -88,6 +89,9 @@ util::Status SignatureConfig::Register() {
   status = Registry::RegisterAsymmetricKeyManagers(
       absl::make_unique<Ed25519SignKeyManager>(),
       absl::make_unique<Ed25519VerifyKeyManager>(), true);
+  if (!status.ok()) return status;
+
+  status = RegisterEd25519ProtoSerialization();
   if (!status.ok()) return status;
 
   return util::OkStatus();

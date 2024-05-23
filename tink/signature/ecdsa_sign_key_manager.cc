@@ -60,8 +60,7 @@ StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::CreateKey(
   // Build EcdsaPrivateKey.
   EcdsaPrivateKey ecdsa_private_key;
   ecdsa_private_key.set_version(get_version());
-  ecdsa_private_key.set_key_value(
-      std::string(util::SecretDataAsStringView(ec_key.priv)));
+  ecdsa_private_key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
   auto ecdsa_public_key = ecdsa_private_key.mutable_public_key();
   ecdsa_public_key->set_version(get_version());
   ecdsa_public_key->set_x(ec_key.pub_x);
@@ -130,8 +129,7 @@ StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::DeriveKey(
   // Build EcdsaPrivateKey.
   EcdsaPrivateKey ecdsa_private_key;
   ecdsa_private_key.set_version(get_version());
-  ecdsa_private_key.set_key_value(
-      std::string(util::SecretDataAsStringView(ec_key->priv)));
+  ecdsa_private_key.set_key_value(util::SecretDataAsStringView(ec_key->priv));
   EcdsaPublicKey* ecdsa_public_key = ecdsa_private_key.mutable_public_key();
   ecdsa_public_key->set_version(get_version());
   ecdsa_public_key->set_x(ec_key->pub_x);

@@ -239,8 +239,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   google::crypto::tink::Ed25519PublicKey proto_key;
   proto_key.set_version(0);
   // OSS proto library complains if input is not converted to a string.
-  proto_key.set_key_value(
-      std::string(key.GetPublicKeyBytes(GetPartialKeyAccess())));
+  proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -271,14 +270,13 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   proto_public_key.set_version(0);
   // OSS proto library complains if input is not converted to a string.
   proto_public_key.set_key_value(
-      std::string(key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess())));
+      key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
 
   google::crypto::tink::Ed25519PrivateKey proto_private_key;
   proto_private_key.set_version(0);
   *proto_private_key.mutable_public_key() = proto_public_key;
   // OSS proto library complains if input is not converted to a string.
-  proto_private_key.set_key_value(
-      std::string(restricted_input->GetSecret(*token)));
+  proto_private_key.set_key_value(restricted_input->GetSecret(*token));
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());

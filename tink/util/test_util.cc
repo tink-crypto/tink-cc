@@ -211,8 +211,7 @@ EciesAeadHkdfPrivateKey GetEciesAeadHkdfTestKey(
   auto test_key = internal::NewEcKey(Enums::ProtoToSubtle(curve_type)).value();
   EciesAeadHkdfPrivateKey ecies_key;
   ecies_key.set_version(0);
-  ecies_key.set_key_value(
-      std::string(util::SecretDataAsStringView(test_key.priv)));
+  ecies_key.set_key_value(util::SecretDataAsStringView(test_key.priv));
   auto public_key = ecies_key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_x(test_key.pub_x);
@@ -324,8 +323,7 @@ EcdsaPrivateKey GetEcdsaTestPrivateKey(
   auto test_key = internal::NewEcKey(Enums::ProtoToSubtle(curve_type)).value();
   EcdsaPrivateKey ecdsa_key;
   ecdsa_key.set_version(0);
-  ecdsa_key.set_key_value(
-      std::string(util::SecretDataAsStringView(test_key.priv)));
+  ecdsa_key.set_key_value(util::SecretDataAsStringView(test_key.priv));
   auto public_key = ecdsa_key.mutable_public_key();
   public_key->set_version(0);
   public_key->set_x(test_key.pub_x);

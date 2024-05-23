@@ -51,6 +51,7 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
+using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
 using ::testing::Not;
 
@@ -414,6 +415,111 @@ TEST_F(JsonKeysetReaderTest, parseRecursiveJsonStringFails) {
   ASSERT_THAT(reader, IsOk());
   util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
   EXPECT_THAT(keyset, Not(IsOk()));
+}
+
+TEST_F(JsonKeysetReaderTest, ReadRejectsKeysetsWithoutPrimaryKeyId) {
+  std::string keyset_without_primary = R"(
+      {
+         "key":[
+            {
+               "keyData":{
+                  "typeUrl":"type.googleapis.com/google.crypto.tink.AesGcmKey",
+                  "keyMaterialType":"SYMMETRIC",
+                  "value": "GiBWyUfGgYk3RTRhj/LIUzSudIWlyjCftCOypTr0jCNSLg=="
+               },
+               "outputPrefixType":"TINK",
+               "keyId": 42,
+               "status":"ENABLED"
+            }
+         ]
+      })";
+  StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(keyset_without_primary);
+  ASSERT_THAT(reader, IsOk());
+  StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
+      keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, Not(IsOk()));
+}
+
+TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidStatus) {
+  std::string keyset_with_invalid_status = R"(
+      {
+         "primaryKeyId":42,
+         "key":[
+            {
+               "keyData":{
+                  "typeUrl":"type.googleapis.com/google.crypto.tink.AesGcmKey",
+                  "keyMaterialType":"SYMMETRIC",
+                  "value": "GiBWyUfGgYk3RTRhj/LIUzSudIWlyjCftCOypTr0jCNSLg=="
+               },
+               "outputPrefixType":"TINK",
+               "keyId": 42,
+               "status":"INVALID"
+            }
+         ]
+      })";
+  StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(keyset_with_invalid_status);
+  ASSERT_THAT(reader, IsOk());
+  StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
+      keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, IsOk());
+  EXPECT_THAT((*keyset)->key(0).status(), Eq(KeyStatusType::UNKNOWN_STATUS));
+}
+
+TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidOutputPrefixType) {
+  std::string keyset_with_invalid_prefix_type = R"(
+      {
+         "primaryKeyId":42,
+         "key":[
+            {
+               "keyData":{
+                  "typeUrl":"type.googleapis.com/google.crypto.tink.AesGcmKey",
+                  "keyMaterialType":"SYMMETRIC",
+                  "value": "GiBWyUfGgYk3RTRhj/LIUzSudIWlyjCftCOypTr0jCNSLg=="
+               },
+               "outputPrefixType":"INVALID",
+               "keyId": 42,
+               "status":"ENABLED"
+            }
+         ]
+      })";
+  StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(keyset_with_invalid_prefix_type);
+  ASSERT_THAT(reader, IsOk());
+  StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
+      keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, IsOk());
+  EXPECT_THAT((*keyset)->key(0).output_prefix_type(),
+              Eq(OutputPrefixType::UNKNOWN_PREFIX));
+}
+
+
+TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidKeyMaterialType) {
+  std::string keyset_with_invalid_prefix_type = R"(
+      {
+         "primaryKeyId":42,
+         "key":[
+            {
+               "keyData":{
+                  "typeUrl":"type.googleapis.com/google.crypto.tink.AesGcmKey",
+                  "keyMaterialType":"INVALID",
+                  "value": "GiBWyUfGgYk3RTRhj/LIUzSudIWlyjCftCOypTr0jCNSLg=="
+               },
+               "outputPrefixType":"TINK",
+               "keyId": 42,
+               "status":"ENABLED"
+            }
+         ]
+      })";
+  StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(keyset_with_invalid_prefix_type);
+  ASSERT_THAT(reader, IsOk());
+  StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
+      keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, IsOk());
+  EXPECT_THAT((*keyset)->key(0).key_data().key_material_type(),
+              Eq(::google::crypto::tink::KeyData::UNKNOWN_KEYMATERIAL));
 }
 
 }  // namespace

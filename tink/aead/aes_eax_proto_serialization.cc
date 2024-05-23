@@ -25,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_eax_key.h"
 #include "tink/aead/aes_eax_parameters.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -217,7 +218,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
 
   SecretProto<google::crypto::tink::AesEaxKey> proto_key;
   proto_key->set_version(0);
-  proto_key->set_key_value(restricted_input->GetSecret(*token));
+  internal::CallWithCoreDumpProtection(
+      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
   *proto_key->mutable_params() = *params;
 
   util::StatusOr<OutputPrefixType> output_prefix_type =

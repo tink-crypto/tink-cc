@@ -818,6 +818,7 @@ tink_cc_library(
     keyset_handle_builder_entry.cc
     keyset_handle_builder_entry.h
   DEPS
+    tink::internal::call_with_core_dump_protection
     tink::internal::key_status_util
     tink::internal::legacy_proto_key
     tink::internal::legacy_proto_parameters

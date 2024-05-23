@@ -30,6 +30,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/keyset_handle_builder_entry.h"
 #include "tink/key.h"
 #include "tink/key_status.h"
@@ -189,7 +190,7 @@ util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build() {
         entry.CreateKeysetKey(*id);
     if (!key.ok()) return key.status();
 
-    *keyset->add_key() = **key;
+    internal::CallWithCoreDumpProtection([&]() { *keyset->add_key() = **key; });
     if (entry.IsPrimary()) {
       if (primary_id.has_value()) {
         return util::Status(

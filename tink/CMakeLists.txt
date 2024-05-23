@@ -481,6 +481,7 @@ tink_cc_library(
     absl::strings
     absl::str_format
     absl::optional
+    tink::internal::call_with_core_dump_protection
     tink::internal::keyset_handle_builder_entry
     tink::subtle::random
     tink::util::secret_proto

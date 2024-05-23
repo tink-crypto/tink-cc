@@ -68,7 +68,9 @@ SerializeKeysetToProtoKeysetFormat(const KeysetHandle& keyset_handle,
   const google::crypto::tink::Keyset& keyset =
       CleartextKeysetHandle::GetKeyset(keyset_handle);
   util::SecretData result(keyset.ByteSizeLong());
-  if (!keyset.SerializeToArray(result.data(), result.size())) {
+  bool serialized = internal::CallWithCoreDumpProtection(
+      [&]() { return keyset.SerializeToArray(result.data(), result.size()); });
+  if (!serialized) {
     return util::Status(absl::StatusCode::kInternal,
                         "Failed to serialize keyset");
   }

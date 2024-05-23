@@ -23,6 +23,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_status_util.h"
 #include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/legacy_proto_parameters.h"
@@ -58,8 +59,10 @@ SecretProto<Keyset::Key> ToKeysetKey(
   key->set_output_prefix_type(serialization.GetOutputPrefixType());
   KeyData* key_data = key->mutable_key_data();
   key_data->set_type_url(std::string(serialization.TypeUrl()));
-  key_data->set_value(serialization.SerializedKeyProto().GetSecret(
-      InsecureSecretKeyAccess::Get()));
+  internal::CallWithCoreDumpProtection([&]() {
+    key_data->set_value(serialization.SerializedKeyProto().GetSecret(
+        InsecureSecretKeyAccess::Get()));
+  });
   key_data->set_key_material_type(serialization.KeyMaterialType());
   return key;
 }

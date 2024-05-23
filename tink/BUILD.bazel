@@ -517,6 +517,7 @@ cc_library(
         ":keyset_handle",
         ":parameters",
         "//proto:tink_cc_proto",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:keyset_handle_builder_entry",
         "//tink/subtle:random",
         "//tink/util:secret_proto",

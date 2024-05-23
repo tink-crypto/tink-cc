@@ -24,6 +24,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -218,7 +219,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
 
   SecretProto<google::crypto::tink::AesGcmKey> proto_key;
   proto_key->set_version(0);
-  proto_key->set_key_value(restricted_input->GetSecret(*token));
+  internal::CallWithCoreDumpProtection(
+      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());

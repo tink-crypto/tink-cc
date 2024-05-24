@@ -23,7 +23,7 @@ IF EXIST %KOKORO_ARTIFACTS_DIR%\git\tink_cc (
 IF "%TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET%"=="" (
   SET CACHE_FLAGS=
 ) ELSE (
-  SET CACHE_FLAGS="--remote_cache=https://storage.googleapis.com/%TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET%/bazel/windows --google_credentials=%TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY%"
+  SET CACHE_FLAGS=--remote_cache=https://storage.googleapis.com/%TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET%/bazel/windows --google_credentials=%TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY%
 )
 
 CD !WORKSPACE_DIR!

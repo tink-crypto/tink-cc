@@ -51,13 +51,10 @@ TEST(SecretUniqueptrTest, Alignment) {
 
 #endif
 
-TEST(SecretDataTest, OneByOneInsertion) {
+TEST(SecretDataTest, SecretDataFromSpan) {
   constexpr unsigned char kContents[] = {41, 42, 64, 12, 41, 0,
                                          52, 56, 6,  12, 127, 13};
-  SecretData data;
-  for (unsigned char c : kContents) {
-    data.push_back(c);
-  }
+  SecretData data = SecretDataFromSpan(kContents);
   EXPECT_THAT(data, ElementsAreArray(kContents));
 }
 
@@ -87,10 +84,7 @@ TEST(SecretDataTest, StringViewFromSecretData) {
 TEST(SecretDataTest, SecretDataCopy) {
   constexpr unsigned char kContents[] = {41, 42, 64, 12, 41, 0,
                                          52, 56, 6,  12, 127, 13};
-  SecretData data;
-  for (unsigned char c : kContents) {
-    data.push_back(c);
-  }
+  SecretData data = SecretDataFromSpan(kContents);
   SecretData data_copy = data;
   EXPECT_THAT(data_copy, ElementsAreArray(kContents));
 }

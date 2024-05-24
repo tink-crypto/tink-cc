@@ -37,6 +37,16 @@ if [[ -n "${CONTAINER_IMAGE}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
+CACHE_FLAGS=()
+if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
+  cp "${TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY}" ./cache_key
+  CACHE_FLAGS+=(
+    "--remote_cache=https://storage.googleapis.com/${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET}/bazel/${TINK_CC_BASE_IMAGE_HASH}"
+    "--google_credentials=cache_key"
+  )
+fi
+readonly CACHE_FLAGS
+
 # Run build and tests with the BoringSSL FIPS module
 # Prepare the workspace to use BoringCrypto which is in
 # third_party/boringssl_fips; insert the local_repository instruction below
@@ -56,16 +66,17 @@ EOM
 printf -v INSERT_TEXT '\\n%s' "${LOCAL_FIPS_REPOSITORY[@]//$'\n'/}"
 sed -i.bak "/${APPEND_AFTER}/a \\${INSERT_TEXT}" WORKSPACE
 
-cat <<'EOF' > _do_run_test.sh
+cat <<EOF > _do_run_test.sh
 set -euo pipefail
 
 readonly BAZEL_FLAGS=(
   --//tink/config:use_only_fips=True
   --build_tag_filters=fips,-requires_boringcrypto_update
+  ${CACHE_FLAGS[@]}
 )
 
-bazelisk build "${BAZEL_FLAGS[@]}" -- ...
-bazelisk test "${BAZEL_FLAGS[@]}" \
+bazelisk build "\${BAZEL_FLAGS[@]}" -- ...
+bazelisk test "\${BAZEL_FLAGS[@]}" \
   --build_tests_only \
   --test_output=errors \
   --test_tag_filters=fips,-requires_boringcrypto_update -- ...

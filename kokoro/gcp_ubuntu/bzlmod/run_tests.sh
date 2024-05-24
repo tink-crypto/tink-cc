@@ -42,11 +42,20 @@ if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
-  ./kokoro/testutils/run_bazel_tests.sh  -b "--enable_bzlmod" \
-  -t "--enable_bzlmod" .
+CACHE_FLAGS=()
+if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
+  cp "${TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY}" ./cache_key
+  CACHE_FLAGS+=(
+    -c "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET}/bazel/${TINK_CC_BASE_IMAGE_HASH}"
+  )
+fi
+readonly CACHE_FLAGS
 
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_bazel_tests.sh  -b "--enable_bzlmod" \
-  -t "--enable_bzlmod" examples
+  -t "--enable_bzlmod" "${CACHE_FLAGS[@]}" .
+
+./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+  ./kokoro/testutils/run_bazel_tests.sh  -b "--enable_bzlmod" \
+  -t "--enable_bzlmod" "${CACHE_FLAGS[@]}" examples
 

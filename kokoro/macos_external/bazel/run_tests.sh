@@ -22,5 +22,12 @@ if [[ -n "${KOKORO_ROOT:-}" ]]; then
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
-./kokoro/testutils/run_bazel_tests.sh .
-./kokoro/testutils/run_bazel_tests.sh "examples"
+CACHE_FLAGS=""
+if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
+  cp "${TINK_REMOTE_BAZEL_CACHE_SERVICE_KEY}" ./cache_key
+  CACHE_FLAGS="-c ${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET}/bazel/macos"
+fi
+readonly CACHE_FLAGS
+
+./kokoro/testutils/run_bazel_tests.sh ${CACHE_FLAGS} .
+./kokoro/testutils/run_bazel_tests.sh ${CACHE_FLAGS} "examples"

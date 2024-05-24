@@ -238,7 +238,6 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const Ed25519PublicKey& key, absl::optional<SecretKeyAccessToken> token) {
   google::crypto::tink::Ed25519PublicKey proto_key;
   proto_key.set_version(0);
-  // OSS proto library complains if input is not converted to a string.
   proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
@@ -268,14 +267,12 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
 
   google::crypto::tink::Ed25519PublicKey proto_public_key;
   proto_public_key.set_version(0);
-  // OSS proto library complains if input is not converted to a string.
   proto_public_key.set_key_value(
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
 
   google::crypto::tink::Ed25519PrivateKey proto_private_key;
   proto_private_key.set_version(0);
   *proto_private_key.mutable_public_key() = proto_public_key;
-  // OSS proto library complains if input is not converted to a string.
   proto_private_key.set_key_value(restricted_input->GetSecret(*token));
 
   util::StatusOr<OutputPrefixType> output_prefix_type =

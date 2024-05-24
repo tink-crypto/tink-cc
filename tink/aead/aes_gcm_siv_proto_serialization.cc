@@ -193,7 +193,6 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
 
   google::crypto::tink::AesGcmSivKey proto_key;
   proto_key.set_version(0);
-  // OSS proto library complains if input is not converted to a string.
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 
   util::StatusOr<OutputPrefixType> output_prefix_type =

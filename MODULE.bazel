@@ -13,21 +13,64 @@
 # limitations under the License.
 
 """Tink C++ Bazel Module definition."""
+
 module(
     name = "tink_cc",
     version = "2.2.0",
 )
 
-bazel_dep(name = "rules_cc", version = "0.0.9")
-bazel_dep(name = "rules_proto", version = "6.0.0-rc3")
-bazel_dep(name = "platforms", version = "0.0.9")
-bazel_dep(name = "bazel_skylib", version = "1.5.0")
-bazel_dep(name = "googletest", version = "1.14.0.bcr.1", repo_name = "com_google_googletest")
-bazel_dep(name = "protobuf", version = "26.0.bcr.1", repo_name = "com_google_protobuf")
-# TODO: Align with the version declared in tink_cc_deps.bzl.
-bazel_dep(name = "boringssl", version = "0.0.0-20240126-22d349c")
-bazel_dep(name = "rapidjson", version = "1.1.0")
-bazel_dep(name = "abseil-cpp", version = "20230802.1", repo_name="com_google_absl")
+bazel_dep(
+    name = "rules_cc",
+    version = "0.0.9",
+)
 
-wycheproof_extension = use_extension("//:extensions.bzl", "wycheproof_extension")
+bazel_dep(
+    name = "rules_proto",
+    version = "6.0.0",
+)
+
+bazel_dep(
+    name = "platforms",
+    version = "0.0.10",
+)
+
+bazel_dep(
+    name = "bazel_skylib",
+    version = "1.6.1",
+)
+
+bazel_dep(
+    name = "googletest",
+    version = "1.14.0.bcr.1",
+    repo_name = "com_google_googletest",
+)
+
+bazel_dep(
+    name = "protobuf",
+    version = "26.0.bcr.1",
+    repo_name = "com_google_protobuf",
+)
+
+bazel_dep(
+    name = "boringssl",
+    version = "0.0.0-20240530-2db0eb3",
+)
+
+bazel_dep(
+    name = "rapidjson",
+    version = "1.1.0",
+)
+
+bazel_dep(
+    name = "abseil-cpp",
+    version = "20230802.1",
+    repo_name = "com_google_absl",
+)
+
+wycheproof_extension = use_extension(
+    "//:extensions.bzl",
+    "wycheproof_extension",
+    dev_dependency = True,
+)
+
 use_repo(wycheproof_extension, "wycheproof")

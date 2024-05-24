@@ -1,3 +1,5 @@
+# NOTE: This WORKSPACE file for Tink C++ is deprecated in favor of MODULE.bazel.
+
 workspace(name = "tink_cc")
 
 # Use this repository if you want to build the FIPS module for BoringSSL

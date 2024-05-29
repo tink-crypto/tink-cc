@@ -25,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_siv_key.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -35,6 +36,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -45,6 +47,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::AesGcmSivKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
@@ -191,9 +194,10 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return restricted_input.status();
   }
 
-  google::crypto::tink::AesGcmSivKey proto_key;
-  proto_key.set_version(0);
-  proto_key.set_key_value(restricted_input->GetSecret(*token));
+  SecretProto<google::crypto::tink::AesGcmSivKey> proto_key;
+  proto_key->set_version(0);
+  internal::CallWithCoreDumpProtection(
+      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -201,8 +205,12 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return output_prefix_type.status();
   }
 
+  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
   RestrictedData restricted_output =
-      RestrictedData(proto_key.SerializeAsString(), *token);
+      RestrictedData(*std::move(serialized_key), *token);
   return internal::ProtoKeySerialization::Create(
       kTypeUrl, std::move(restricted_output),
       google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,

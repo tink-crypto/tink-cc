@@ -252,10 +252,13 @@ tink_cc_library(
     absl::optional
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring_util
+    tink::internal::registry_impl
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
+    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -273,17 +276,24 @@ tink_cc_test(
     tink::jwt::internal::jwt_mac_wrapper
     protobuf::libprotobuf
     gmock
+    absl::flat_hash_map
     absl::memory
+    absl::status
     absl::strings
+    absl::optional
     tink::core::cleartext_keyset_handle
     tink::core::keyset_manager
     tink::core::primitive_set
     tink::core::registry
     tink::config::global_registry
+    tink::internal::registry_impl
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
+    tink::mac::failing_mac
+    tink::monitoring::monitoring
+    tink::monitoring::monitoring_client_mocks
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

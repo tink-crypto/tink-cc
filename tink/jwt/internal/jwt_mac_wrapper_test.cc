@@ -25,12 +25,16 @@
 #include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/internal/jwt_format.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
@@ -40,6 +44,9 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/keyset_manager.h"
+#include "tink/mac/failing_mac.h"
+#include "tink/monitoring/monitoring.h"
+#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
@@ -60,11 +67,22 @@ namespace jwt_internal {
 namespace {
 
 using ::crypto::tink::CleartextKeysetHandle;
+using ::crypto::tink::test::DummyMac;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::google::crypto::tink::Keyset;
+using ::google::crypto::tink::KeysetInfo;
+using ::google::crypto::tink::KeyStatusType;
+using ::google::crypto::tink::OutputPrefixType;
+using ::testing::_;
+using ::testing::ByMove;
 using ::testing::Eq;
+using ::testing::IsNull;
+using ::testing::NiceMock;
 using ::testing::Not;
+using ::testing::NotNull;
+using ::testing::Return;
+using ::testing::Test;
 
 KeyTemplate createTemplate(OutputPrefixType output_prefix) {
   KeyTemplate key_template;
@@ -335,6 +353,296 @@ TEST_F(JwtMacWrapperTest, KeyRotation) {
     EXPECT_THAT((*jwt_mac4)->VerifyMacAndDecode(*compact4, *validator).status(),
                 IsOk());
   }
+}
+
+KeysetInfo::KeyInfo PopulateKeyInfo(uint32_t key_id,
+                                    OutputPrefixType out_prefix_type,
+                                    KeyStatusType status) {
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(out_prefix_type);
+  key_info.set_key_id(key_id);
+  key_info.set_status(status);
+  return key_info;
+}
+
+// Creates a test keyset info object.
+KeysetInfo CreateTestKeysetInfo() {
+  KeysetInfo keyset_info;
+  *keyset_info.add_key_info() =
+      PopulateKeyInfo(/*key_id=*/1234543, OutputPrefixType::TINK,
+                      /*status=*/KeyStatusType::ENABLED);
+  *keyset_info.add_key_info() =
+      PopulateKeyInfo(/*key_id=*/726329, OutputPrefixType::RAW,
+                      /*status=*/KeyStatusType::ENABLED);
+  *keyset_info.add_key_info() =
+      PopulateKeyInfo(/*key_id=*/7213743, OutputPrefixType::TINK,
+                      /*status=*/KeyStatusType::ENABLED);
+  return keyset_info;
+}
+
+// Tests for the monitoring behavior.
+class JwtMacSetWrapperWithMonitoringTest : public Test {
+ protected:
+  // Perform some common initialization: reset the global registry, set expected
+  // calls for the mock monitoring factory and the returned clients.
+  void SetUp() override {
+    Registry::Reset();
+
+    // Setup mocks for catching Monitoring calls.
+    auto monitoring_client_factory =
+        absl::make_unique<MockMonitoringClientFactory>();
+    auto compute_monitoring_client =
+        absl::make_unique<NiceMock<MockMonitoringClient>>();
+    compute_monitoring_client_ = compute_monitoring_client.get();
+    auto verify_monitoring_client =
+        absl::make_unique<NiceMock<MockMonitoringClient>>();
+    verify_monitoring_client_ = verify_monitoring_client.get();
+
+    // Monitoring tests expect that the client factory will create the
+    // corresponding MockMonitoringClients.
+    EXPECT_CALL(*monitoring_client_factory, New(_))
+        .WillOnce(
+            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+                std::move(compute_monitoring_client)))))
+        .WillOnce(
+            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+                std::move(verify_monitoring_client)))));
+
+    ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
+                    .RegisterMonitoringClientFactory(
+                        std::move(monitoring_client_factory)),
+                IsOk());
+    ASSERT_THAT(
+        internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory(),
+        Not(IsNull()));
+  }
+
+  // Cleanup the registry to avoid mock leaks.
+  ~JwtMacSetWrapperWithMonitoringTest() override { Registry::Reset(); }
+
+  MockMonitoringClient* compute_monitoring_client_;
+  MockMonitoringClient* verify_monitoring_client_;
+};
+
+// Tests that successful ComputeMac operations are logged.
+TEST_F(JwtMacSetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringComputeSuccess) {
+  // Create a primitive set and fill it with some entries
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+  const absl::flat_hash_map<std::string, std::string> annotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+  auto jwt_mac_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     absl::make_unique<DummyMac>("mac0"),
+                                     "jwtmac0", absl::nullopt),
+                                 keyset_info.key_info(0))
+                  .status(),
+              IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     absl::make_unique<DummyMac>("mac1"),
+                                     "jwtmac1", absl::nullopt),
+                                 keyset_info.key_info(1))
+                  .status(),
+              IsOk());
+  // Set the last as primary.
+  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+      jwt_mac_primitive_set->AddPrimitive(
+          absl::make_unique<JwtMacImpl>(absl::make_unique<DummyMac>("mac2"),
+                                        "jwtmac2", absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last.status(), IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+  // Record the ID of the primary key.
+  const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
+
+  // Create a JWT and compute an authentication tag
+  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+  ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
+
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .WithoutExpiration()
+                                       .Build();
+
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  // Check that calling ComputeMac triggers a Log() call.
+  EXPECT_CALL(*compute_monitoring_client_, Log(primary_key_id, 1));
+  EXPECT_THAT((*jwt_mac)->ComputeMacAndEncode(*raw_jwt).status(), IsOk());
+}
+
+// Test that successful VerifyMac operations are logged.
+TEST_F(JwtMacSetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringVerifySuccess) {
+  // Create a primitive set and fill it with some entries
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+  const absl::flat_hash_map<std::string, std::string> annotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+  auto jwt_mac_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     absl::make_unique<DummyMac>("mac0"),
+                                     "jwtmac0", absl::nullopt),
+                                 keyset_info.key_info(0))
+                  .status(),
+              IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     absl::make_unique<DummyMac>("mac1"),
+                                     "jwtmac1", absl::nullopt),
+                                 keyset_info.key_info(1))
+                  .status(),
+              IsOk());
+  // Set the last as primary.
+  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+      jwt_mac_primitive_set->AddPrimitive(
+          absl::make_unique<JwtMacImpl>(absl::make_unique<DummyMac>("mac2"),
+                                        "jwtmac2", absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last.status(), IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+
+  // Record the ID of the primary key.
+  const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
+
+  // Create a MAC, compute a Mac and verify it.
+  util::StatusOr<std::unique_ptr<JwtMac>> mac =
+      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+  ASSERT_THAT(mac, IsOkAndHolds(NotNull()));
+
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .WithoutExpiration()
+                                       .Build();
+
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  // Check that calling VerifyMac triggers a Log() call.
+  util::StatusOr<std::string> compact = (*mac)->ComputeMacAndEncode(*raw_jwt);
+  EXPECT_THAT(compact.status(), IsOk());
+
+  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectTypeHeader("typeHeader")
+                                               .AllowMissingExpiration()
+                                               .Build();
+  ASSERT_THAT(validator, IsOk());
+
+  // In the log expect the size of the message without the non-raw prefix.
+  EXPECT_CALL(*verify_monitoring_client_, Log(primary_key_id, 1));
+  EXPECT_THAT((*mac)->VerifyMacAndDecode(*compact, *validator), IsOk());
+}
+
+TEST_F(JwtMacSetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringComputeFailures) {
+  // Create a primitive set and fill it with some entries.
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+  const absl::flat_hash_map<std::string, std::string> annotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+
+  auto jwt_mac_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     CreateAlwaysFailingMac("mac0"), "jwtmac0",
+                                     absl::nullopt),
+                                 keyset_info.key_info(0))
+                  .status(),
+              IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     CreateAlwaysFailingMac("mac1"), "jwtmac1",
+                                     absl::nullopt),
+                                 keyset_info.key_info(1))
+                  .status(),
+              IsOk());
+  // Set the last as primary.
+  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+      jwt_mac_primitive_set->AddPrimitive(
+          absl::make_unique<JwtMacImpl>(CreateAlwaysFailingMac("mac2"),
+                                        "jwtmac2", absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last.status(), IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+
+  // Create a JWT and compute an authentication tag
+  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+  ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
+
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .WithoutExpiration()
+                                       .Build();
+
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  // Check that calling ComputeMac triggers a LogFailure() call.
+  EXPECT_CALL(*compute_monitoring_client_, LogFailure());
+  EXPECT_FALSE((*jwt_mac)->ComputeMacAndEncode(*raw_jwt).status().ok());
+}
+
+// Test that monitoring logs verify failures correctly.
+TEST_F(JwtMacSetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringVerifyFailures) {
+  // Create a primitive set and fill it with some entries.
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+  const absl::flat_hash_map<std::string, std::string> annotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+
+  auto jwt_mac_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     CreateAlwaysFailingMac("mac0"), "jwtmac0",
+                                     absl::nullopt),
+                                 keyset_info.key_info(0))
+                  .status(),
+              IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
+                                     CreateAlwaysFailingMac("mac1"), "jwtmac1",
+                                     absl::nullopt),
+                                 keyset_info.key_info(1))
+                  .status(),
+              IsOk());
+  // Set the last as primary.
+  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+      jwt_mac_primitive_set->AddPrimitive(
+          absl::make_unique<JwtMacImpl>(CreateAlwaysFailingMac("mac2"),
+                                        "jwtmac2", absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last.status(), IsOk());
+  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+
+  // Create a JWT and verify it
+  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+  ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
+
+  constexpr absl::string_view invalid_compact = "something is wrong here";
+
+  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectTypeHeader("typeHeader")
+                                               .AllowMissingExpiration()
+                                               .Build();
+  ASSERT_THAT(validator, IsOk());
+
+  // Check that calling VerifyMac triggers a LogFailure() call.
+  EXPECT_CALL(*verify_monitoring_client_, LogFailure());
+  EXPECT_FALSE(
+      (*jwt_mac)->VerifyMacAndDecode(invalid_compact, *validator).ok());
 }
 
 }  // namespace

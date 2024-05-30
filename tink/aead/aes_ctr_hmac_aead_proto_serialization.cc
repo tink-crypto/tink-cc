@@ -23,6 +23,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -318,10 +319,12 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return restricted_hmac_input.status();
   }
 
-  SecretProto<google::crypto::tink::AesCtrKey> aes_ctr_proto_key;
-  aes_ctr_proto_key->set_version(0);
-  aes_ctr_proto_key->set_key_value(restricted_aes_input->GetSecret(*token));
-  aes_ctr_proto_key->mutable_params()->set_iv_size(
+  SecretProto<google::crypto::tink::AesCtrHmacAeadKey>
+      aes_ctr_hmac_aead_proto_key;
+  google::crypto::tink::AesCtrKey& aes_ctr_proto_key =
+      *aes_ctr_hmac_aead_proto_key->mutable_aes_ctr_key();
+  aes_ctr_proto_key.set_version(0);
+  aes_ctr_proto_key.mutable_params()->set_iv_size(
       key.GetParameters().GetIvSizeInBytes());
 
   util::StatusOr<HmacParams> hmac_params =
@@ -330,16 +333,16 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return hmac_params.status();
   }
 
-  SecretProto<google::crypto::tink::HmacKey> hmac_proto_key;
-  hmac_proto_key->set_version(0);
-  hmac_proto_key->set_key_value(restricted_hmac_input->GetSecret(*token));
-  *hmac_proto_key->mutable_params() = *hmac_params;
+  google::crypto::tink::HmacKey& hmac_proto_key =
+      *aes_ctr_hmac_aead_proto_key->mutable_hmac_key();
+  hmac_proto_key.set_version(0);
+  *hmac_proto_key.mutable_params() = *hmac_params;
+  internal::CallWithCoreDumpProtection([&]() {
+    aes_ctr_proto_key.set_key_value(restricted_aes_input->GetSecret(*token));
+    hmac_proto_key.set_key_value(restricted_hmac_input->GetSecret(*token));
+  });
 
-  SecretProto<google::crypto::tink::AesCtrHmacAeadKey>
-      aes_ctr_hmac_aead_proto_key;
   aes_ctr_hmac_aead_proto_key->set_version(0);
-  *aes_ctr_hmac_aead_proto_key->mutable_aes_ctr_key() = *aes_ctr_proto_key;
-  *aes_ctr_hmac_aead_proto_key->mutable_hmac_key() = *hmac_proto_key;
 
   util::StatusOr<SecretData> serialized_proto =
       aes_ctr_hmac_aead_proto_key.SerializeAsSecretData();

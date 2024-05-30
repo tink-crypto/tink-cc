@@ -67,7 +67,6 @@ using crypto::tink::util::Status;
 using google::crypto::tink::AesGcmKeyFormat;
 using google::crypto::tink::EcdsaPrivateKey;
 using google::crypto::tink::EciesAeadHkdfPrivateKey;
-using google::crypto::tink::Ed25519PrivateKey;
 using google::crypto::tink::Keyset;
 using google::crypto::tink::OutputPrefixType;
 

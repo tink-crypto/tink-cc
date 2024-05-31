@@ -352,3 +352,30 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME cord_utils
+  SRCS
+    cord_utils.cc
+    cord_utils.h
+  DEPS
+    absl::nullability
+    absl::check
+    absl::cord
+    absl::string_view
+    absl::span
+)
+
+tink_cc_test(
+  NAME cord_utils_test
+  SRCS
+    cord_utils_test.cc
+  DEPS
+    tink::aead::internal::cord_utils
+    gmock
+    absl::strings
+    absl::cord
+    absl::string_view
+    absl::span
+    tink::subtle::random
+)

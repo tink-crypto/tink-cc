@@ -143,6 +143,10 @@ KeysetHandleBuilder& KeysetHandleBuilder::RemoveEntry(int index) {
 util::Status KeysetHandleBuilder::CheckIdAssignments() {
   // We only want random id entries after fixed id entries. Otherwise, we might
   // randomly pick an id that is later specified as a fixed id.
+  if (entries_.empty()) {
+    return util::Status(absl::StatusCode::kFailedPrecondition,
+                        "Cannot build empty keyset.");
+  }
   for (int i = 0; i < entries_.size() - 1; ++i) {
     if (entries_[i].HasRandomId() && !entries_[i + 1].HasRandomId()) {
       return util::Status(absl::StatusCode::kFailedPrecondition,

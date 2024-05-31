@@ -150,15 +150,15 @@ EciesAeadHkdfDemHelper::GetAeadOrDaead(
       aes_ctr_key->mutable_params()->set_iv_size(
           key_params_.aes_ctr_key_iv_size_in_bytes);
       aes_ctr_key->set_key_value(
-          std::string(util::SecretDataAsStringView(symmetric_key_value)
-                          .substr(0, key_params_.aes_ctr_key_size_in_bytes)));
+          util::SecretDataAsStringView(symmetric_key_value)
+              .substr(0, key_params_.aes_ctr_key_size_in_bytes));
       auto hmac_key = key.mutable_hmac_key();
       hmac_key->mutable_params()->set_tag_size(
           key_params_.hmac_key_tag_size_in_bytes);
       hmac_key->mutable_params()->set_hash(key_params_.hmac_key_hash);
       hmac_key->set_key_value(
-          std::string(util::SecretDataAsStringView(symmetric_key_value)
-                          .substr(key_params_.aes_ctr_key_size_in_bytes)));
+          util::SecretDataAsStringView(symmetric_key_value)
+              .substr(key_params_.aes_ctr_key_size_in_bytes));
       return Wrap(AesCtrHmacAeadKeyManager().GetPrimitive<Aead>(key));
     }
     case XCHACHA20_POLY1305_KEY:

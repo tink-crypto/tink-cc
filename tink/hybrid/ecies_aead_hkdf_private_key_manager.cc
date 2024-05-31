@@ -67,8 +67,7 @@ StatusOr<EciesAeadHkdfPrivateKey> EciesAeadHkdfPrivateKeyManager::CreateKey(
   // Build EciesAeadHkdfPrivateKey.
   EciesAeadHkdfPrivateKey ecies_private_key;
   ecies_private_key.set_version(get_version());
-  ecies_private_key.set_key_value(
-      std::string(util::SecretDataAsStringView(ec_key->priv)));
+  ecies_private_key.set_key_value(util::SecretDataAsStringView(ec_key->priv));
   auto ecies_public_key = ecies_private_key.mutable_public_key();
   ecies_public_key->set_version(get_version());
   ecies_public_key->set_x(ec_key->pub_x);

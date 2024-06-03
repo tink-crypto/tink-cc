@@ -155,11 +155,12 @@ tink_cc_test(
     absl::status
     absl::optional
     tink::core::input_stream
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
+    tink::core::parameters
     tink::core::partial_key_access
     tink::core::registry
     tink::core::restricted_data

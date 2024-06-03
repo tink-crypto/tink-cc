@@ -152,6 +152,7 @@ cc_test(
         "//tink:partial_key_access_token",
         "//tink:registry",
         "//tink:restricted_data",
+        "//tink/aead:aead_config",
         "//tink/aead:aes_gcm_key",
         "//tink/aead:aes_gcm_parameters",
         "//tink/aead:aes_gcm_proto_serialization",

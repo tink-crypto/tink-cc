@@ -27,6 +27,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/aead/aead_config.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
@@ -124,27 +125,21 @@ std::unique_ptr<AesGcmKey> CreateAesGcmKey(int key_size,
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   return {
       /*AesGcm KeysetHandle*/ {
-          {
-              CreateAesGcmKey(
-                  /*key_size=*/16,
-                  /*variant=*/AesGcmParameters::Variant::kTink,
-                  /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
-                  /*id_requirement=*/1010101),
-          },
-          {
-              CreateAesGcmKey(
-                  /*key_size=*/32,
-                  /*variant=*/AesGcmParameters::Variant::kCrunchy,
-                  /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
-                  /*id_requirement=*/2020202),
-          },
-          {
-              CreateAesGcmKey(
-                  /*key_size=*/16,
-                  /*variant=*/AesGcmParameters::Variant::kNoPrefix,
-                  /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
-                  /*id_requirement=*/absl::nullopt),
-          },
+          CreateAesGcmKey(
+              /*key_size=*/16,
+              /*variant=*/AesGcmParameters::Variant::kTink,
+              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
+              /*id_requirement=*/1010101),
+          CreateAesGcmKey(
+              /*key_size=*/32,
+              /*variant=*/AesGcmParameters::Variant::kCrunchy,
+              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
+              /*id_requirement=*/2020202),
+          CreateAesGcmKey(
+              /*key_size=*/16,
+              /*variant=*/AesGcmParameters::Variant::kNoPrefix,
+              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
+              /*id_requirement=*/absl::nullopt),
       },
   };
 }
@@ -192,12 +187,33 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
   return TestKeysetHandle::GetKeysetHandle(keyset);
 }
 
-using KeysetDeriverTest = TestWithParam<std::vector<std::shared_ptr<Key>>>;
+class KeysetDeriverTest
+    : public TestWithParam<std::vector<std::shared_ptr<Key>>> {
+  void TearDown() override {
+    Registry::Reset();
+    internal::MutableSerializationRegistry::GlobalInstance().Reset();
+  }
+};
 
 INSTANTIATE_TEST_SUITE_P(KeysetDeriverTests, KeysetDeriverTest,
                          ValuesIn(TestVectors()));
 
-TEST_P(KeysetDeriverTest, DeriveKeyset) {
+TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
+  std::vector<std::shared_ptr<Key>> derived_keys = GetParam();
+
+  // Create KeysetDeriver KeysetHandle with the Parameters in `derived_keys`.
+
+  // Proto serialization is required to convert the Parameters in `derived_keys`
+  // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
+  ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      CreatePrfBasedDeriverHandle(derived_keys);
+  ASSERT_THAT(handle, IsOk());
+  ASSERT_THAT((*handle)->size(), Eq(derived_keys.size()));
+
+  // TODO(b/314831964): Remove once KeysetDeriver does not depend on the global
+  // registry.
   ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
                   absl::make_unique<KeysetDeriverWrapper>()),
               IsOk());
@@ -205,23 +221,63 @@ TEST_P(KeysetDeriverTest, DeriveKeyset) {
       Registry::RegisterKeyTypeManager(
           absl::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
       IsOk());
-  ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
 
+  // Create primitive.
+  util::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
+      (*handle)->GetPrimitive<KeysetDeriver>(ConfigGlobalRegistry());
+  ASSERT_THAT(deriver, IsOk());
+
+  // Ensure key derivation does not use the global registry.
+  Registry::Reset();
+
+  // Derive KeysetHandle using the non-global ParametersToKeyDeriver map.
+  util::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
+      (*deriver)->DeriveKeyset(SaltFromRfcVector());
+  ASSERT_THAT(derived_handle, IsOk());
+  ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));
+  for (int i = 0; i < derived_keys.size(); i++) {
+    EXPECT_THAT(*(**derived_handle)[i].GetKey(),
+                Eq(std::ref(*derived_keys[i])));
+  }
+}
+
+TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   std::vector<std::shared_ptr<Key>> derived_keys = GetParam();
+
+  // Create KeysetDeriver KeysetHandle with the Parameters in `derived_keys`.
+
+  // Proto serialization is required to convert the Parameters in `derived_keys`
+  // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
+  ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
   ASSERT_THAT(handle, IsOk());
   ASSERT_THAT((*handle)->size(), Eq(derived_keys.size()));
+
+  ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
+                  absl::make_unique<KeysetDeriverWrapper>()),
+              IsOk());
+  ASSERT_THAT(
+      Registry::RegisterKeyTypeManager(
+          absl::make_unique<internal::PrfBasedDeriverKeyManager>(), true),
+      IsOk());
+  // When key managers are in the global registry, PrfBasedDeriverKeyManager
+  // uses them to derive keys instead of the non-global ParametersToKeyDeriver
+  // map. We register here since GetPrimitive validates `handle` by deriving an
+  // unused KeysetHandle, which requires use of the key managers.
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+
+  // Create primitive.
   util::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
       (*handle)->GetPrimitive<KeysetDeriver>(ConfigGlobalRegistry());
   ASSERT_THAT(deriver, IsOk());
 
+  // Derive KeysetHandle using the global registry.
   util::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
       (*deriver)->DeriveKeyset(SaltFromRfcVector());
   ASSERT_THAT(derived_handle, IsOk());
   ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));
-
   for (int i = 0; i < derived_keys.size(); i++) {
     EXPECT_THAT(*(**derived_handle)[i].GetKey(),
                 Eq(std::ref(*derived_keys[i])));

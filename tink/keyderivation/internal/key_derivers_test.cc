@@ -16,10 +16,12 @@
 
 #include "tink/keyderivation/internal/key_derivers.h"
 
+#include <functional>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -41,6 +43,7 @@
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_handle_builder.h"
+#include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
 #include "tink/registry.h"
@@ -67,59 +70,60 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::AesGcmKeyFormat;
-using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HkdfPrfKey;
-using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::NotNull;
-using ::testing::SizeIs;
 using ::testing::Test;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
-class KeyDeriversTest : public Test {
- protected:
-  void SetUp() override {
-    util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
-        subtle::HkdfStreamingPrf::New(
-            subtle::HashType::SHA256,
-            util::SecretDataFromStringView(subtle::Random::GetRandomBytes(32)),
-            "salty");
-    ASSERT_THAT(streaming_prf, IsOk());
-    randomness_ = (*streaming_prf)->ComputePrf("input");
-  }
-  std::unique_ptr<InputStream> randomness_;
-};
+using KeyDeriversTest = TestWithParam<std::shared_ptr<Parameters>>;
 
-TEST_F(KeyDeriversTest, DeriveKey) {
-  int key_size = 16;
-  util::StatusOr<AesGcmParameters> params =
-      AesGcmParameters::Builder()
-          .SetKeySizeInBytes(key_size)
-          .SetIvSizeInBytes(12)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
-      DeriveKey(*params, randomness_.get());
-  ASSERT_THAT(generic_key, IsOk());
+INSTANTIATE_TEST_SUITE_P(
+    KeyDeriversTests, KeyDeriversTest,
+    ValuesIn(std::vector<std::shared_ptr<Parameters>>{
+        std::make_unique<AesGcmParameters>(
+            AesGcmParameters::Builder()
+                .SetKeySizeInBytes(16)
+                .SetIvSizeInBytes(12)
+                .SetTagSizeInBytes(16)
+                .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+                .Build()
+                .value()),
+    }));
 
-  const AesGcmKey* key =
-      dynamic_cast<const AesGcmKey*>(&**std::move(generic_key));
-  ASSERT_THAT(key, NotNull());
-  EXPECT_THAT(key->GetIdRequirement(), Eq(absl::nullopt));
-  EXPECT_THAT(key->GetOutputPrefix(), Eq(""));
-  EXPECT_THAT(key->GetKeyBytes(GetPartialKeyAccess()), SizeIs(key_size));
+TEST_P(KeyDeriversTest, DeriveKey) {
+  util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
+      subtle::HkdfStreamingPrf::New(
+          subtle::HashType::SHA256,
+          util::SecretDataFromStringView(subtle::Random::GetRandomBytes(32)),
+          "salty");
+  ASSERT_THAT(streaming_prf, IsOk());
+  std::unique_ptr<InputStream> randomness =
+      (*streaming_prf)->ComputePrf("input");
+
+  std::shared_ptr<Parameters> params = GetParam();
+  util::StatusOr<std::shared_ptr<Key>> key =
+      DeriveKey(*params, randomness.get());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT((*key)->GetParameters(), Eq(std::ref(*params)));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
 
   KeysetHandleBuilder::Entry entry =
-      KeysetHandleBuilder::Entry::CreateFromCopyableKey(*key,
-                                                        KeyStatus::kEnabled,
-                                                        /*is_primary=*/true);
+      KeysetHandleBuilder::Entry::CreateFromKey(*key, KeyStatus::kEnabled,
+                                                /*is_primary=*/true);
   EXPECT_THAT(KeysetHandleBuilder().AddEntry(std::move(entry)).Build(), IsOk());
 }
 
-TEST_F(KeyDeriversTest, MissingKeyDeriverFn) {
+TEST_P(KeyDeriversTest, InsufficientRandomness) {
+  util::IstreamInputStream insufficient_randomness{
+      absl::make_unique<std::stringstream>("0123456789")};
+  util::StatusOr<std::unique_ptr<Key>> key =
+      DeriveKey(*GetParam().get(), &insufficient_randomness);
+  ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kOutOfRange));
+}
+
+TEST(MissingKeyDeriversTest, MissingKeyDeriver) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
   util::StatusOr<AesEaxParameters> params =
       AesEaxParameters::Builder()
@@ -129,24 +133,18 @@ TEST_F(KeyDeriversTest, MissingKeyDeriverFn) {
           .SetVariant(AesEaxParameters::Variant::kNoPrefix)
           .Build();
   ASSERT_THAT(params, IsOk());
-  EXPECT_THAT(DeriveKey(*params, randomness_.get()).status(),
-              StatusIs(absl::StatusCode::kUnimplemented));
-}
 
-TEST_F(KeyDeriversTest, InsufficientRandomness) {
-  util::StatusOr<AesGcmParameters> params =
-      AesGcmParameters::Builder()
-          .SetKeySizeInBytes(16)
-          .SetIvSizeInBytes(12)
-          .SetTagSizeInBytes(16)
-          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(params, IsOk());
-  util::IstreamInputStream insufficient_randomness{
-      absl::make_unique<std::stringstream>("0123456789")};
-  util::StatusOr<std::unique_ptr<Key>> key =
-      DeriveKey(*params, &insufficient_randomness);
-  ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kOutOfRange));
+  util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
+      subtle::HkdfStreamingPrf::New(
+          subtle::HashType::SHA256,
+          util::SecretDataFromStringView(subtle::Random::GetRandomBytes(32)),
+          "salty");
+  ASSERT_THAT(streaming_prf, IsOk());
+  std::unique_ptr<InputStream> randomness =
+      (*streaming_prf)->ComputePrf("input");
+
+  EXPECT_THAT(DeriveKey(*params, randomness.get()).status(),
+              StatusIs(absl::StatusCode::kUnimplemented));
 }
 
 // Test vector from https://tools.ietf.org/html/rfc5869#appendix-A.2.
@@ -158,9 +156,9 @@ class KeyDeriversRfcVectorTest : public Test {
                     absl::make_unique<HkdfPrfKeyManager>(), true),
                 IsOk());
 
-    HkdfPrfKey prf_key;
+    google::crypto::tink::HkdfPrfKey prf_key;
     prf_key.set_version(0);
-    prf_key.mutable_params()->set_hash(HashType::SHA256);
+    prf_key.mutable_params()->set_hash(google::crypto::tink::HashType::SHA256);
     prf_key.mutable_params()->set_salt(
         test::HexDecodeOrDie("606162636465666768696a6b6c6d6e6f"
                              "707172737475767778797a7b7c7d7e7f"
@@ -173,7 +171,8 @@ class KeyDeriversRfcVectorTest : public Test {
                              "202122232425262728292a2b2c2d2e2f"
                              "303132333435363738393a3b3c3d3e3f"
                              "404142434445464748494a4b4c4d4e4f"));
-    KeyData key_data = test::AsKeyData(prf_key, KeyData::SYMMETRIC);
+    google::crypto::tink::KeyData key_data =
+        test::AsKeyData(prf_key, google::crypto::tink::KeyData::SYMMETRIC);
 
     util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
         Registry::GetPrimitive<StreamingPrf>(key_data);
@@ -230,7 +229,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  AesGcmKeyFormat key_format;
+  google::crypto::tink::AesGcmKeyFormat key_format;
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());

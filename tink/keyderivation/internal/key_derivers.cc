@@ -76,10 +76,11 @@ util::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
 
 const KeyDeriverFnMap& ParametersToKeyDeriver() {
   static const KeyDeriverFnMap* instance = [] {
-    CHECK_OK(RegisterAesGcmProtoSerialization());
-
     static KeyDeriverFnMap* m = new KeyDeriverFnMap();
+
+    CHECK_OK(RegisterAesGcmProtoSerialization());
     m->insert({std::type_index(typeid(AesGcmParameters)), DeriveAesGcmKey});
+
     return m;
   }();
   return *instance;

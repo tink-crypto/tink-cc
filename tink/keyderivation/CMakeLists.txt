@@ -149,6 +149,7 @@ tink_cc_test(
     tink::core::partial_key_access_token
     tink::core::registry
     tink::core::restricted_data
+    tink::aead::aead_config
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization

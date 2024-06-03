@@ -46,6 +46,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+namespace {
+
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
@@ -79,7 +81,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithGlobalRegistry(
   return CleartextKeysetHandle::GetKeysetHandle(keyset);
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithHardCodedMap(
+util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
     const KeyTemplate& key_template, InputStream& randomness) {
   // Fill placeholders OutputPrefixType::RAW and KeyStatus::kEnabled.
   // Tink users interact with this keyset only after it has been processed by
@@ -121,7 +123,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeysetHandle(
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       DeriveWithGlobalRegistry(key_template, randomness);
   if (!handle.ok()) {
-    return DeriveWithHardCodedMap(key_template, randomness);
+    return DeriveWithParametersMap(key_template, randomness);
   }
   return *std::move(handle);
 }
@@ -144,6 +146,8 @@ util::StatusOr<std::unique_ptr<StreamingPrf>> GetUnwrappedStreamingPrf(
   }
   return (*info)->GetPrimitive<StreamingPrf>(prf_key);
 }
+
+}  // namespace
 
 util::StatusOr<std::unique_ptr<KeysetDeriver>> PrfBasedDeriver::New(
     const KeyData& prf_key, const KeyTemplate& key_template) {

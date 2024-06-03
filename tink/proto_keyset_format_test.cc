@@ -49,6 +49,7 @@ using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::testing::Eq;
 using ::testing::Not;
+using ::testing::SizeIs;
 
 class SerializeKeysetToProtoKeysetFormatTest : public ::testing::Test {
  protected:
@@ -95,12 +96,10 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParseSingleKey) {
   util::StatusOr<KeysetHandle> parsed_handle = ParseKeysetFromProtoKeysetFormat(
       SecretDataAsStringView(*serialization), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_handle, IsOk());
-  ASSERT_THAT(handle->size(), Eq(1));
-  ASSERT_THAT(parsed_handle->size(), Eq(1));
+  ASSERT_THAT(*handle, SizeIs(1));
+  ASSERT_THAT(*parsed_handle, SizeIs(1));
 
-  EXPECT_TRUE(*(*handle)[0].GetKey() == *(*parsed_handle)[0].GetKey());
-  EXPECT_TRUE((*handle)[0].GetId() == (*parsed_handle)[0].GetId());
-  EXPECT_TRUE((*handle)[0].GetStatus() == (*parsed_handle)[0].GetStatus());
+  EXPECT_THAT((*handle)[0], Eq((*parsed_handle)[0]));
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParseMultipleKeys) {
@@ -130,20 +129,12 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParseMultipleKeys) {
   util::StatusOr<KeysetHandle> parsed_handle = ParseKeysetFromProtoKeysetFormat(
       SecretDataAsStringView(*serialization), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_handle, IsOk());
-  ASSERT_THAT(handle->size(), Eq(3));
-  ASSERT_THAT(parsed_handle->size(), Eq(3));
+  ASSERT_THAT(*handle, SizeIs(3));
+  ASSERT_THAT(*parsed_handle, SizeIs(3));
 
-  EXPECT_TRUE(*(*handle)[0].GetKey() == *(*parsed_handle)[0].GetKey());
-  EXPECT_TRUE((*handle)[0].GetId() == (*parsed_handle)[0].GetId());
-  EXPECT_TRUE((*handle)[0].GetStatus() == (*parsed_handle)[0].GetStatus());
-
-  EXPECT_TRUE(*(*handle)[1].GetKey() == *(*parsed_handle)[1].GetKey());
-  EXPECT_TRUE((*handle)[1].GetId() == (*parsed_handle)[1].GetId());
-  EXPECT_TRUE((*handle)[1].GetStatus() == (*parsed_handle)[1].GetStatus());
-
-  EXPECT_TRUE(*(*handle)[2].GetKey() == *(*parsed_handle)[2].GetKey());
-  EXPECT_TRUE((*handle)[2].GetId() == (*parsed_handle)[2].GetId());
-  EXPECT_TRUE((*handle)[2].GetStatus() == (*parsed_handle)[2].GetStatus());
+  EXPECT_THAT((*handle)[0], Eq((*parsed_handle)[0]));
+  EXPECT_THAT((*handle)[1], Eq((*parsed_handle)[1]));
+  EXPECT_THAT((*handle)[2], Eq((*parsed_handle)[2]));
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeNoAccessFails) {
@@ -249,31 +240,16 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParsePublicKey) {
       ParseKeysetWithoutSecretFromProtoKeysetFormat(*serialization2);
   ASSERT_THAT(parsed_handle4, IsOk());
 
-  ASSERT_THAT((*public_handle)->size(), Eq(1));
-  ASSERT_THAT(parsed_handle1->size(), Eq(1));
-  ASSERT_THAT(parsed_handle2->size(), Eq(1));
-  ASSERT_THAT(parsed_handle3->size(), Eq(1));
-  ASSERT_THAT(parsed_handle4->size(), Eq(1));
+  ASSERT_THAT(**public_handle, SizeIs(1));
+  ASSERT_THAT(*parsed_handle1, SizeIs(1));
+  ASSERT_THAT(*parsed_handle2, SizeIs(1));
+  ASSERT_THAT(*parsed_handle3, SizeIs(1));
+  ASSERT_THAT(*parsed_handle4, SizeIs(1));
 
-  // TODO(b/277791403): Replace with KeysetHandle::Entry equality checks.
-  EXPECT_TRUE(*(**public_handle)[0].GetKey() == *(*parsed_handle1)[0].GetKey());
-  EXPECT_TRUE(*(**public_handle)[0].GetKey() == *(*parsed_handle2)[0].GetKey());
-  EXPECT_TRUE(*(**public_handle)[0].GetKey() == *(*parsed_handle3)[0].GetKey());
-  EXPECT_TRUE(*(**public_handle)[0].GetKey() == *(*parsed_handle4)[0].GetKey());
-
-  EXPECT_TRUE((**public_handle)[0].GetId() == (*parsed_handle1)[0].GetId());
-  EXPECT_TRUE((**public_handle)[0].GetId() == (*parsed_handle2)[0].GetId());
-  EXPECT_TRUE((**public_handle)[0].GetId() == (*parsed_handle3)[0].GetId());
-  EXPECT_TRUE((**public_handle)[0].GetId() == (*parsed_handle4)[0].GetId());
-
-  EXPECT_TRUE((**public_handle)[0].GetStatus() ==
-              (*parsed_handle1)[0].GetStatus());
-  EXPECT_TRUE((**public_handle)[0].GetStatus() ==
-              (*parsed_handle2)[0].GetStatus());
-  EXPECT_TRUE((**public_handle)[0].GetStatus() ==
-              (*parsed_handle3)[0].GetStatus());
-  EXPECT_TRUE((**public_handle)[0].GetStatus() ==
-              (*parsed_handle4)[0].GetStatus());
+  EXPECT_THAT((**public_handle)[0], Eq((*parsed_handle1)[0]));
+  EXPECT_THAT((**public_handle)[0], Eq((*parsed_handle2)[0]));
+  EXPECT_THAT((**public_handle)[0], Eq((*parsed_handle3)[0]));
+  EXPECT_THAT((**public_handle)[0], Eq((*parsed_handle4)[0]));
 }
 
 

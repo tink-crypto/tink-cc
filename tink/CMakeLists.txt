@@ -856,10 +856,13 @@ tink_cc_test(
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
+    tink::core::keyset_handle_builder
     tink::core::keyset_reader
+    tink::core::partial_key_access
     tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::registry
+    tink::core::restricted_data
     gmock
     absl::flat_hash_map
     absl::memory
@@ -869,6 +872,8 @@ tink_cc_test(
     tink::aead::aead_key_templates
     tink::aead::aead_wrapper
     tink::aead::aes_gcm_key_manager
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
     tink::config::fips_140_2
     tink::config::global_registry
     tink::config::key_gen_fips_140_2

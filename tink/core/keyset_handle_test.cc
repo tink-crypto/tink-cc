@@ -35,6 +35,8 @@
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/binary_keyset_reader.h"
 #include "tink/binary_keyset_writer.h"
 #include "tink/cleartext_keyset_handle.h"
@@ -51,10 +53,13 @@
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
+#include "tink/keyset_handle_builder.h"
 #include "tink/keyset_reader.h"
+#include "tink/partial_key_access.h"
 #include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/registry.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
@@ -1291,6 +1296,182 @@ TEST_F(KeysetHandleTest, GetEntryFromMultipleKeyKeyset) {
   EXPECT_THAT(entry2.IsPrimary(), IsFalse());
   EXPECT_THAT(entry2.GetKey()->GetIdRequirement(), Eq(absl::nullopt));
   EXPECT_THAT(entry2.GetKey()->GetParameters().HasIdRequirement(), IsFalse());
+}
+
+TEST_F(KeysetHandleTest, IdenticalEntriesAreEqual) {
+  RestrictedData key_bytes(32);
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kNoPrefix, key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  KeysetHandleBuilder::Entry builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  builder_entry.SetFixedId(123);
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder().AddEntry(std::move(builder_entry)).Build();
+  ASSERT_THAT(handle.status(), IsOk());
+  ASSERT_THAT(handle->Validate(), IsOk());
+
+  KeysetHandleBuilder::Entry other_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  other_builder_entry.SetFixedId(123);
+  util::StatusOr<KeysetHandle> other_handle =
+      KeysetHandleBuilder().AddEntry(std::move(other_builder_entry)).Build();
+  ASSERT_THAT(other_handle.status(), IsOk());
+  ASSERT_THAT(other_handle->Validate(), IsOk());
+
+  EXPECT_THAT((*handle)[0] == (*other_handle)[0], IsTrue());
+  EXPECT_THAT((*handle)[0] != (*other_handle)[0], IsFalse());
+}
+
+TEST_F(KeysetHandleTest, EntriesWithDifferentKeysAreNotEqual) {
+  RestrictedData key_bytes(32);
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kNoPrefix, key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData other_key_bytes(32);
+  util::StatusOr<XChaCha20Poly1305Key> other_key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kNoPrefix, other_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  KeysetHandleBuilder::Entry builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  builder_entry.SetFixedId(123);
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder().AddEntry(std::move(builder_entry)).Build();
+  ASSERT_THAT(handle.status(), IsOk());
+  ASSERT_THAT(handle->Validate(), IsOk());
+
+  KeysetHandleBuilder::Entry other_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *other_key, KeyStatus::kEnabled, /*is_primary=*/true);
+  other_builder_entry.SetFixedId(123);
+  util::StatusOr<KeysetHandle> other_handle =
+      KeysetHandleBuilder().AddEntry(std::move(other_builder_entry)).Build();
+  ASSERT_THAT(other_handle.status(), IsOk());
+  ASSERT_THAT(other_handle->Validate(), IsOk());
+
+  EXPECT_THAT((*handle)[0] != (*other_handle)[0], IsTrue());
+  EXPECT_THAT((*handle)[0] == (*other_handle)[0], IsFalse());
+}
+
+TEST_F(KeysetHandleTest, EntriesWithDifferentIdsAreNotEqual) {
+  RestrictedData key_bytes(32);
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kNoPrefix, key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  KeysetHandleBuilder::Entry builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  builder_entry.SetFixedId(123);
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder().AddEntry(std::move(builder_entry)).Build();
+  ASSERT_THAT(handle.status(), IsOk());
+  ASSERT_THAT(handle->Validate(), IsOk());
+
+  KeysetHandleBuilder::Entry other_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  other_builder_entry.SetFixedId(456);
+  util::StatusOr<KeysetHandle> other_handle =
+      KeysetHandleBuilder().AddEntry(std::move(other_builder_entry)).Build();
+  ASSERT_THAT(other_handle.status(), IsOk());
+  ASSERT_THAT(other_handle->Validate(), IsOk());
+
+  EXPECT_THAT((*handle)[0] != (*other_handle)[0], IsTrue());
+  EXPECT_THAT((*handle)[0] == (*other_handle)[0], IsFalse());
+}
+
+TEST_F(KeysetHandleTest, EntriesWithDifferentStatusesAreNotEqual) {
+  RestrictedData key_bytes(32);
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kNoPrefix, key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  KeysetHandleBuilder::Entry primary_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  primary_builder_entry.SetFixedId(123);
+  KeysetHandleBuilder::Entry builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/false);
+  builder_entry.SetFixedId(456);
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(std::move(primary_builder_entry))
+          .AddEntry(std::move(builder_entry))
+          .Build();
+  ASSERT_THAT(handle.status(), IsOk());
+  ASSERT_THAT(handle->Validate(), IsOk());
+
+  KeysetHandleBuilder::Entry other_primary_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  other_primary_builder_entry.SetFixedId(123);
+  // Primary keys must be enabled, so we need to compare non-primary keys.
+  KeysetHandleBuilder::Entry other_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kDisabled, /*is_primary=*/false);
+  other_builder_entry.SetFixedId(456);
+  util::StatusOr<KeysetHandle> other_handle =
+      KeysetHandleBuilder()
+          .AddEntry(std::move(other_primary_builder_entry))
+          .AddEntry(std::move(other_builder_entry))
+          .Build();
+  ASSERT_THAT(other_handle.status(), IsOk());
+  ASSERT_THAT(other_handle->Validate(), IsOk());
+
+  EXPECT_THAT((*handle)[1] != (*other_handle)[1], IsTrue());
+  EXPECT_THAT((*handle)[1] == (*other_handle)[1], IsFalse());
+}
+
+TEST_F(KeysetHandleTest, PrimaryAndNonPrimaryEntriesAreNotEqual) {
+  RestrictedData key_bytes(32);
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kNoPrefix, key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  KeysetHandleBuilder::Entry builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  builder_entry.SetFixedId(123);
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder().AddEntry(std::move(builder_entry)).Build();
+  ASSERT_THAT(handle.status(), IsOk());
+  ASSERT_THAT(handle->Validate(), IsOk());
+  ASSERT_THAT((*handle)[0].IsPrimary(), IsTrue());
+
+  KeysetHandleBuilder::Entry other_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/false);
+  other_builder_entry.SetFixedId(123);
+  // Need primary entry for the keyset to build.
+  KeysetHandleBuilder::Entry primary_builder_entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+          *key, KeyStatus::kEnabled, /*is_primary=*/true);
+  primary_builder_entry.SetFixedId(456);
+  util::StatusOr<KeysetHandle> other_handle =
+      KeysetHandleBuilder()
+          .AddEntry(std::move(primary_builder_entry))
+          .AddEntry(std::move(other_builder_entry))
+          .Build();
+  ASSERT_THAT(other_handle.status(), IsOk());
+  ASSERT_THAT(other_handle->Validate(), IsOk());
+  ASSERT_THAT((*other_handle)[1].IsPrimary(), IsFalse());
+
+  EXPECT_THAT((*handle)[0] != (*other_handle)[1], IsTrue());
+  EXPECT_THAT((*handle)[0] == (*other_handle)[1], IsFalse());
 }
 
 TEST_F(KeysetHandleDeathTest, EntryWithIndexOutOfBoundsCrashes) {

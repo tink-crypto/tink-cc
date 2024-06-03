@@ -79,6 +79,11 @@ class KeysetHandle {
     // accepts keysets which have no entry marked as primary).
     bool IsPrimary() const { return is_primary_; }
 
+    // Returns true if all `Entry` object fields have identical values.
+    // Otherwise, returns false.
+    bool operator==(const Entry& other) const;
+    bool operator!=(const Entry& other) const { return !(*this == other); }
+
    private:
     friend class KeysetHandle;
     friend class KeysetHandleBuilder;

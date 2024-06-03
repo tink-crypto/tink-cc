@@ -125,6 +125,11 @@ util::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
 
 }  // anonymous namespace
 
+bool KeysetHandle::Entry::operator==(const Entry& other) const {
+  return status_ == other.status_ && id_ == other.id_ &&
+         is_primary_ == other.is_primary_ && *key_ == *other.key_;
+}
+
 util::Status KeysetHandle::ValidateAt(int index) const {
   const Keyset::Key& proto_key = keyset_->key(index);
   OutputPrefixType output_prefix_type = proto_key.output_prefix_type();

@@ -714,6 +714,8 @@ tink_cc_library(
     tink::core::secret_key_access_token
 )
 
+add_library(tink::core::insecure_secret_key_access_testonly ALIAS tink_internal_core_insecure_secret_key_access)
+
 tink_cc_library(
   NAME restricted_data
   SRCS
@@ -812,7 +814,7 @@ tink_cc_test(
   DEPS
     tink::core::aead
     tink::core::binary_keyset_writer
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::keyset_handle
     tink::core::proto_keyset_format
     gmock
@@ -898,7 +900,7 @@ tink_cc_test(
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
@@ -1117,7 +1119,7 @@ tink_cc_test(
   SRCS
     core/restricted_data_test.cc
   DEPS
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::restricted_data
     gmock
     tink::subtle::random
@@ -1150,7 +1152,7 @@ tink_cc_test(
   SRCS
     proto_keyset_format_test.cc
   DEPS
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
@@ -1185,7 +1187,7 @@ tink_cc_test(
   SRCS
     core/restricted_big_integer_test.cc
   DEPS
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::restricted_big_integer
     gmock
     absl::strings

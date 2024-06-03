@@ -21,6 +21,13 @@ alias(
     visibility = ["//visibility:public"],
 )
 
+alias(
+    name = "insecure_secret_key_access_testonly",
+    testonly = 1,
+    actual = ":insecure_secret_key_access",
+    visibility = ["//visibility:public"],
+)
+
 cc_library(
     name = "tink_cc",
     hdrs = [
@@ -867,7 +874,7 @@ cc_test(
     deps = [
         ":aead",
         ":binary_keyset_writer",
-        ":insecure_secret_key_access",
+        ":insecure_secret_key_access_testonly",
         ":keyset_handle",
         ":proto_keyset_format",
         "//proto:tink_cc_proto",
@@ -955,7 +962,7 @@ cc_test(
         ":core/key_type_manager",
         ":core/template_util",
         ":input_stream",
-        ":insecure_secret_key_access",
+        ":insecure_secret_key_access_testonly",
         ":key_status",
         ":keyset_handle",
         ":keyset_handle_builder",
@@ -1179,7 +1186,7 @@ cc_test(
     name = "core/restricted_data_test",
     srcs = ["core/restricted_data_test.cc"],
     deps = [
-        ":insecure_secret_key_access",
+        ":insecure_secret_key_access_testonly",
         ":restricted_data",
         "//tink/subtle:random",
         "//tink/util:secret_data",
@@ -1214,7 +1221,7 @@ cc_test(
     name = "proto_keyset_format_test",
     srcs = ["proto_keyset_format_test.cc"],
     deps = [
-        ":insecure_secret_key_access",
+        ":insecure_secret_key_access_testonly",
         ":key_status",
         ":keyset_handle",
         ":keyset_handle_builder",
@@ -1249,7 +1256,7 @@ cc_test(
     name = "core/restricted_big_integer_test",
     srcs = ["core/restricted_big_integer_test.cc"],
     deps = [
-        ":insecure_secret_key_access",
+        ":insecure_secret_key_access_testonly",
         ":restricted_big_integer",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",

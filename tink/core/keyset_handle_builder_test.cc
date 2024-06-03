@@ -78,6 +78,7 @@ using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::_;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::SizeIs;
@@ -842,6 +843,12 @@ TEST_F(KeysetHandleBuilderTest, BuildTwiceFails) {
   EXPECT_THAT(builder.Build(), IsOk());
   EXPECT_THAT(builder.Build().status(),
               StatusIs(absl::StatusCode::kFailedPrecondition));
+}
+
+TEST_F(KeysetHandleBuilderTest, BuildEmptyKeysetHandleFails) {
+  EXPECT_THAT(KeysetHandleBuilder().Build().status(),
+              StatusIs(absl::StatusCode::kFailedPrecondition,
+                       HasSubstr("Cannot build empty keyset.")));
 }
 
 TEST_F(KeysetHandleBuilderTest, UsePrimitivesFromSplitKeyset) {

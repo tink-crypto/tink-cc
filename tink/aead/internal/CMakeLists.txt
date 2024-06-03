@@ -56,10 +56,12 @@ tink_cc_library(
     cord_aes_gcm_boringssl.h
   DEPS
     tink::aead::internal::aead_util
+    tink::aead::internal::cord_utils
     absl::memory
     absl::status
     absl::cord
     absl::string_view
+    absl::span
     crypto
     tink::aead::cord_aead
     tink::internal::ssl_unique_ptr

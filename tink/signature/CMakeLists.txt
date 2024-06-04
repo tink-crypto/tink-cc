@@ -379,6 +379,7 @@ tink_cc_library(
     signature_pem_keyset_reader.cc
     signature_pem_keyset_reader.h
   DEPS
+    tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
@@ -1255,6 +1256,7 @@ tink_cc_test(
   SRCS
     signature_pem_keyset_reader_test.cc
   DEPS
+    tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager

@@ -30,6 +30,7 @@
 #include "tink/internal/ec_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/keyset_reader.h"
+#include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
@@ -51,6 +52,7 @@ namespace crypto {
 namespace tink {
 
 using ::google::crypto::tink::EcdsaParams;
+using ::google::crypto::tink::EcdsaPrivateKey;
 using ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::EncryptedKeyset;
@@ -145,6 +147,34 @@ Keyset::Key NewKeysetKey(uint32_t key_id, absl::string_view key_type,
   return key;
 }
 
+// Construct a new ECDSA key proto from a subtle ECDSA private key
+// `private_key_subtle`. The key is assigned version `key_version` and
+// key parameters `parameters`.
+util::StatusOr<EcdsaPrivateKey> NewEcdsaPrivateKey(
+    const internal::EcKey& private_key_subtle, uint32_t key_version,
+    const PemKeyParams& parameters) {
+  EcdsaPrivateKey private_key_proto;
+
+  // ECDSA private key parameters.
+  private_key_proto.set_version(key_version);
+  private_key_proto.set_key_value(
+      util::SecretDataAsStringView(private_key_subtle.priv));
+
+  // Inner ECDSA public key.
+  EcdsaPublicKey* public_key_proto = private_key_proto.mutable_public_key();
+  public_key_proto->set_x(private_key_subtle.pub_x);
+  public_key_proto->set_y(private_key_subtle.pub_y);
+
+  // ECDSA public key parameters.
+  util::Status set_parameter_status =
+      SetEcdsaParameters(parameters, public_key_proto->mutable_params());
+  if (!set_parameter_status.ok()) {
+    return set_parameter_status;
+  }
+
+  return private_key_proto;
+}
+
 // Construct a new RSASSA-PSS key proto from a subtle RSA private key
 // `private_key_subtle`; the key is assigned version `key_version` and
 // key paramters `parameters`.
@@ -220,8 +250,30 @@ RsaSsaPkcs1PrivateKey NewRsaSsaPkcs1PrivateKey(
   return private_key_proto;
 }
 
+// Adds the PEM-encoded ECDSA private key `pem_key` to `keyset`.
+util::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
+  util::StatusOr<std::unique_ptr<internal::EcKey>> private_key_subtle =
+      subtle::PemParser::ParseEcPrivateKey(pem_key.serialized_key);
+  if (!private_key_subtle.ok()) return private_key_subtle.status();
+
+  EcdsaSignKeyManager key_manager;
+  util::StatusOr<EcdsaPrivateKey> private_key_proto = NewEcdsaPrivateKey(
+      **private_key_subtle, key_manager.get_version(), pem_key.parameters);
+  if (!private_key_proto.ok()) return private_key_proto.status();
+
+  util::Status key_validation_status =
+      key_manager.ValidateKey(*private_key_proto);
+  if (!key_validation_status.ok()) return key_validation_status;
+
+  *keyset.add_key() = NewKeysetKey(
+      GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
+      key_manager.key_material_type(), private_key_proto->SerializeAsString());
+
+  return util::OkStatus();
+}
+
 // Adds the PEM-encoded private key `pem_key` to `keyset`.
-util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset* keyset) {
+util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
   // Try to parse the PEM RSA private key.
   auto private_key_subtle_or =
       subtle::PemParser::ParseRsaPrivateKey(pem_key.serialized_key);
@@ -250,8 +302,8 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset* keyset) {
       auto key_validation_status = key_manager.ValidateKey(private_key_proto);
       if (!key_validation_status.ok()) return key_validation_status;
 
-      *keyset->add_key() =
-          NewKeysetKey(GenerateUnusedKeyId(*keyset), key_manager.get_key_type(),
+      *keyset.add_key() =
+          NewKeysetKey(GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
                        key_manager.key_material_type(),
                        private_key_proto.SerializeAsString());
       break;
@@ -265,8 +317,8 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset* keyset) {
       auto key_validation_status = key_manager.ValidateKey(private_key_proto);
       if (!key_validation_status.ok()) return key_validation_status;
 
-      *keyset->add_key() =
-          NewKeysetKey(GenerateUnusedKeyId(*keyset), key_manager.get_key_type(),
+      *keyset.add_key() =
+          NewKeysetKey(GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
                        key_manager.key_material_type(),
                        private_key_proto.SerializeAsString());
 
@@ -282,7 +334,7 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset* keyset) {
 }
 // Parses a given PEM-encoded ECDSA public key `pem_key`, and adds it to the
 // keyset `keyset`.
-util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset* keyset) {
+util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   // Parse the PEM string into a ECDSA public key.
   auto public_key_subtle_or =
       subtle::PemParser::ParseEcPublicKey(pem_key.serialized_key);
@@ -307,8 +359,8 @@ util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset* keyset) {
   auto key_validation_status = key_manager.ValidateKey(ecdsa_key);
   if (!key_validation_status.ok()) return key_validation_status;
 
-  *keyset->add_key() = NewKeysetKey(
-      GenerateUnusedKeyId(*keyset), key_manager.get_key_type(),
+  *keyset.add_key() = NewKeysetKey(
+      GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
       key_manager.key_material_type(), ecdsa_key.SerializeAsString());
 
   return util::OkStatus();
@@ -316,7 +368,7 @@ util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset* keyset) {
 
 // Parses a given PEM-encoded RSA public key `pem_key`, and adds it to the
 // keyset `keyset`.
-util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset* keyset) {
+util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   // Parse the PEM string into a RSA public key.
   auto public_key_subtle_or =
       subtle::PemParser::ParseRsaPublicKey(pem_key.serialized_key);
@@ -353,8 +405,8 @@ util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset* keyset) {
       auto key_validation_status = key_manager.ValidateKey(public_key_proto);
       if (!key_validation_status.ok()) return key_validation_status;
 
-      *keyset->add_key() =
-          NewKeysetKey(GenerateUnusedKeyId(*keyset), key_manager.get_key_type(),
+      *keyset.add_key() =
+          NewKeysetKey(GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
                        key_manager.key_material_type(),
                        public_key_proto.SerializeAsString());
 
@@ -377,8 +429,8 @@ util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset* keyset) {
       auto key_validation_status = key_manager.ValidateKey(public_key_proto);
       if (!key_validation_status.ok()) return key_validation_status;
 
-      *keyset->add_key() =
-          NewKeysetKey(GenerateUnusedKeyId(*keyset), key_manager.get_key_type(),
+      *keyset.add_key() =
+          NewKeysetKey(GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
                        key_manager.key_material_type(),
                        public_key_proto.SerializeAsString());
       break;
@@ -429,13 +481,15 @@ util::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
     // Parse and add the new key to the keyset.
     switch (pem_key.parameters.key_type) {
       case PemKeyType::PEM_RSA: {
-        auto add_rsassa_pss_status = AddRsaSsaPrivateKey(pem_key, keyset.get());
+        auto add_rsassa_pss_status = AddRsaSsaPrivateKey(pem_key, *keyset);
         if (!add_rsassa_pss_status.ok()) return add_rsassa_pss_status;
         break;
       }
-      default:
-        return util::Status(absl::StatusCode::kUnimplemented,
-                            "EC Keys Parsing unimplemented");
+      case PemKeyType::PEM_EC: {
+        auto add_ecdsa_status = AddEcdsaPrivateKey(pem_key, *keyset);
+        if (!add_ecdsa_status.ok()) return add_ecdsa_status;
+        break;
+      }
     }
   }
 
@@ -456,12 +510,12 @@ util::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
     // Parse and add the new key to the keyset.
     switch (pem_key.parameters.key_type) {
       case PemKeyType::PEM_RSA: {
-        auto add_rsassa_pss_status = AddRsaSsaPublicKey(pem_key, keyset.get());
+        auto add_rsassa_pss_status = AddRsaSsaPublicKey(pem_key, *keyset);
         if (!add_rsassa_pss_status.ok()) return add_rsassa_pss_status;
         break;
       }
       case PemKeyType::PEM_EC:
-        auto add_ecdsa_status = AddEcdsaPublicKey(pem_key, keyset.get());
+        auto add_ecdsa_status = AddEcdsaPublicKey(pem_key, *keyset);
         if (!add_ecdsa_status.ok()) return add_ecdsa_status;
     }
   }

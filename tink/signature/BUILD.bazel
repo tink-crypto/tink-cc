@@ -396,6 +396,7 @@ cc_library(
     hdrs = ["signature_pem_keyset_reader.h"],
     include_prefix = "tink/signature",
     deps = [
+        ":ecdsa_sign_key_manager",
         ":ecdsa_verify_key_manager",
         ":rsa_ssa_pkcs1_sign_key_manager",
         ":rsa_ssa_pkcs1_verify_key_manager",
@@ -1310,6 +1311,7 @@ cc_test(
     size = "large",
     srcs = ["signature_pem_keyset_reader_test.cc"],
     deps = [
+        ":ecdsa_sign_key_manager",
         ":ecdsa_verify_key_manager",
         ":rsa_ssa_pss_sign_key_manager",
         ":rsa_ssa_pss_verify_key_manager",

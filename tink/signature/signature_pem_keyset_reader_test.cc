@@ -33,6 +33,7 @@
 #include "tink/keyset_reader.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
@@ -55,6 +56,7 @@ namespace {
 using ::crypto::tink::test::EqualsKey;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::EcdsaPrivateKey;
 using ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
 using ::google::crypto::tink::EllipticCurveType;
@@ -69,15 +71,27 @@ using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
 
+constexpr absl::string_view kEcdsaP256PrivateKey =
+    "-----BEGIN PRIVATE KEY-----\n"
+    "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgx5oKGNLy+C0ibH2L\n"
+    "H35Jr91rDpPtYETna5as8QqOTuyhRANCAATpqcaVqa2D905YgGTK0qvlIUJdvrqz\n"
+    "v/UKB4nvbqKXC7qkmhvvEdTR4HJQr0U9d7kvF4IPyHqZDlwGTeCVKefX\n"
+    "-----END PRIVATE KEY-----\n";
+
+constexpr absl::string_view kEcdsaP256PrivateKeyD =
+    "c79a0a18d2f2f82d226c7d8b1f7e49afdd6b0e93ed6044e76b96acf10a8e4eec";
+
 constexpr absl::string_view kEcdsaP256PublicKey =
     "-----BEGIN PUBLIC KEY-----\n"
-    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE1M5IlCiYLvNDGG65DmoErfQTZjWa\n"
-    "UI/nrGayg/BmQa4f9db4zQRCc5IwErn3JtlLDAxQ8fXUoy99klswBEMZ/A==\n"
+    "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6anGlamtg/dOWIBkytKr5SFCXb66\n"
+    "s7/1CgeJ726ilwu6pJob7xHU0eByUK9FPXe5LxeCD8h6mQ5cBk3glSnn1w==\n"
     "-----END PUBLIC KEY-----\n";
+
 constexpr absl::string_view kEcdsaP256PublicKeyX =
-    "d4ce489428982ef343186eb90e6a04adf41366359a508fe7ac66b283f06641ae";
+    "e9a9c695a9ad83f74e588064cad2abe521425dbebab3bff50a0789ef6ea2970b";
+
 constexpr absl::string_view kEcdsaP256PublicKeyY =
-    "1ff5d6f8cd044273923012b9f726d94b0c0c50f1f5d4a32f7d925b30044319fc";
+    "baa49a1bef11d4d1e07250af453d77b92f17820fc87a990e5c064de09529e7d7";
 
 constexpr absl::string_view kEcdsaP384PublicKey =
     "-----BEGIN PUBLIC KEY-----"
@@ -157,6 +171,19 @@ EcdsaPublicKey GetExpectedEcdsaPublicKeyProto(EcdsaSignatureEncoding encoding) {
   public_key_proto.mutable_params()->set_encoding(encoding);
 
   return public_key_proto;
+}
+
+EcdsaPrivateKey GetExpectedEcdsaPrivateKeyProto(
+    EcdsaSignatureEncoding encoding) {
+  EcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_key_value(
+      absl::HexStringToBytes(kEcdsaP256PrivateKeyD));
+
+  EcdsaPublicKey public_key = GetExpectedEcdsaPublicKeyProto(encoding);
+  private_key_proto.mutable_public_key()->Swap(&public_key);
+
+  return private_key_proto;
 }
 
 // Helper function that creates an RsaSsaPssPublicKey from the given PEM encoded
@@ -239,6 +266,68 @@ PemKey CreatePemKey(absl::string_view serialized_key,
       /*parameters=*/{key_type, algorithm, key_size_in_bits, hash_type},
   };
   return pem_key;
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+
+  builder.Add(CreatePemKey(kEcdsaP256PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA256));
+  builder.Add(CreatePemKey(kRsaPrivateKey2048, PemKeyType::PEM_RSA,
+                           PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
+                           HashType::SHA384));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  ASSERT_THAT(keyset, IsOk());
+
+  EXPECT_THAT((*keyset)->key(), SizeIs(2));
+  EXPECT_EQ((*keyset)->primary_key_id(), (*keyset)->key(0).key_id());
+  EXPECT_THAT((*keyset)->key(0).key_id(), Not(Eq((*keyset)->key(1).key_id())));
+
+  // Key manager to validate key type and key material type.
+  EcdsaSignKeyManager ecdsa_sign_key_manager;
+
+  // Build the expected primary key.
+  Keyset::Key expected_key1;
+  // ID is randomly generated, so we simply copy the primary key ID.
+  expected_key1.set_key_id((*keyset)->primary_key_id());
+  expected_key1.set_status(KeyStatusType::ENABLED);
+  expected_key1.set_output_prefix_type(OutputPrefixType::RAW);
+  // Populate the expected primary key KeyData.
+  KeyData* expected_keydata1 = expected_key1.mutable_key_data();
+  expected_keydata1->set_type_url(ecdsa_sign_key_manager.get_key_type());
+  expected_keydata1->set_key_material_type(
+      ecdsa_sign_key_manager.key_material_type());
+  util::StatusOr<EcdsaPrivateKey> ecdsa_private_key1 =
+      GetExpectedEcdsaPrivateKeyProto(EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(ecdsa_private_key1, IsOk());
+  expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
+  EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
+
+  // Key manager to validate key type and key material type.
+  RsaSsaPssSignKeyManager rsa_sign_key_manager;
+
+  // Build the expected second key.
+  Keyset::Key expected_key2;
+  // ID is randomly generated, so we simply copy the one from the second key.
+  expected_key2.set_key_id((*keyset)->key(1).key_id());
+  expected_key2.set_status(KeyStatusType::ENABLED);
+  expected_key2.set_output_prefix_type(OutputPrefixType::RAW);
+  // Populate the expected second key KeyData.
+  KeyData* expected_keydata2 = expected_key2.mutable_key_data();
+  expected_keydata2->set_type_url(rsa_sign_key_manager.get_key_type());
+  expected_keydata2->set_key_material_type(
+      rsa_sign_key_manager.key_material_type());
+  util::StatusOr<RsaSsaPssPrivateKey> rsa_pss_private_key2 =
+      GetRsaSsaPssPrivateKeyProto(kRsaPrivateKey2048, HashType::SHA384,
+                                  rsa_sign_key_manager.get_version());
+  ASSERT_THAT(rsa_pss_private_key2, IsOk());
+  expected_keydata2->set_value(rsa_pss_private_key2->SerializeAsString());
+  EXPECT_THAT((*keyset)->key(1), EqualsKey(expected_key2));
 }
 
 // Verify check on PEM array size not zero before creating a reader.
@@ -547,6 +636,76 @@ TEST(SignaturePemKeysetReaderTest, ReadECDSACorrectPublicKey) {
       GetExpectedEcdsaPublicKeyProto(
           EcdsaSignatureEncoding::DER).SerializeAsString());
   EXPECT_THAT(keyset->key(1), EqualsKey(expected_secondary));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+
+  builder.Add(CreatePemKey(kEcdsaP256PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA256));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  ASSERT_THAT(keyset, IsOk());
+
+  EXPECT_THAT((*keyset)->key(), SizeIs(1));
+  EXPECT_EQ((*keyset)->primary_key_id(), (*keyset)->key(0).key_id());
+
+  // Key manager to validate key type and key material type.
+  EcdsaSignKeyManager ecdsa_sign_key_manager;
+
+  // Build the expected primary key.
+  Keyset::Key expected_key1;
+  // ID is randomly generated, so we simply copy the primary key ID.
+  expected_key1.set_key_id((*keyset)->primary_key_id());
+  expected_key1.set_status(KeyStatusType::ENABLED);
+  expected_key1.set_output_prefix_type(OutputPrefixType::RAW);
+  // Populate the expected primary key KeyData.
+  KeyData* expected_keydata1 = expected_key1.mutable_key_data();
+  expected_keydata1->set_type_url(ecdsa_sign_key_manager.get_key_type());
+  expected_keydata1->set_key_material_type(
+      ecdsa_sign_key_manager.key_material_type());
+  util::StatusOr<EcdsaPrivateKey> ecdsa_private_key1 =
+      GetExpectedEcdsaPrivateKeyProto(EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(ecdsa_private_key1, IsOk());
+  expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
+  EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
+}
+
+// Expects an INVLID_ARGUMENT when passing a public key to a
+// PublicKeySignPemKeysetReader.
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaPrivateKeyKeyTypeMismatch) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+  builder.Add(CreatePemKey(kEcdsaP256PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA256));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> keyset_reader = builder.Build();
+  ASSERT_THAT(keyset_reader, IsOk());
+
+  EXPECT_THAT((*keyset_reader)->Read().status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+// Expects an INVLID_ARGUMENT when passing a private key to a
+// PublicKeyVerifyPemKeysetReader.
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaPublicKeyKeyTypeMismatch) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kEcdsaP256PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA256));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> keyset_reader = builder.Build();
+  ASSERT_THAT(keyset_reader, IsOk());
+
+  EXPECT_THAT((*keyset_reader)->Read().status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(SignaturePemKeysetReaderTest, ReadECDSAWrongHashType) {

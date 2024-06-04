@@ -22,6 +22,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
+#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/input_stream.h"
 #include "tink/internal/configuration_impl.h"
@@ -129,7 +130,12 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeysetHandle(
 }
 
 util::Status RegisterProtoSerializations() {
-  return RegisterAesGcmProtoSerialization();
+  // AEAD.
+  util::Status status = RegisterAesGcmProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  return RegisterXChaCha20Poly1305ProtoSerialization();
 }
 
 util::StatusOr<std::unique_ptr<StreamingPrf>> GetUnwrappedStreamingPrf(

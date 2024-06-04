@@ -34,6 +34,10 @@
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/aead/xchacha20_poly1305_key_manager.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -62,6 +66,7 @@
 #include "proto/common.pb.h"
 #include "proto/hkdf_prf.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/xchacha20_poly1305.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -82,6 +87,7 @@ using KeyDeriversTest = TestWithParam<std::shared_ptr<Parameters>>;
 INSTANTIATE_TEST_SUITE_P(
     KeyDeriversTests, KeyDeriversTest,
     ValuesIn(std::vector<std::shared_ptr<Parameters>>{
+        // AEAD.
         std::make_unique<AesGcmParameters>(
             AesGcmParameters::Builder()
                 .SetKeySizeInBytes(16)
@@ -89,6 +95,10 @@ INSTANTIATE_TEST_SUITE_P(
                 .SetTagSizeInBytes(16)
                 .SetVariant(AesGcmParameters::Variant::kNoPrefix)
                 .Build()
+                .value()),
+        std::make_unique<XChaCha20Poly1305Parameters>(
+            XChaCha20Poly1305Parameters::Create(
+                XChaCha20Poly1305Parameters::Variant::kNoPrefix)
                 .value()),
     }));
 
@@ -236,6 +246,46 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
   util::StatusOr<google::crypto::tink::AesGcmKey> proto_key =
       AesGcmKeyManager().DeriveKey(key_format,
                                    same_randomness_from_rfc_vector_.get());
+  ASSERT_THAT(proto_key, IsOk());
+  std::string proto_key_bytes = test::HexEncode(proto_key->key_value());
+  ASSERT_THAT(proto_key_bytes, Eq(derived_key_value_));
+
+  EXPECT_THAT(key_bytes, Eq(proto_key_bytes));
+}
+
+TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
+  // Derive key with hard-coded map.
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+  util::StatusOr<std::unique_ptr<Key>> generic_key =
+      DeriveKey(*params, randomness_from_rfc_vector_.get());
+  ASSERT_THAT(generic_key, IsOk());
+  const XChaCha20Poly1305Key* key =
+      dynamic_cast<const XChaCha20Poly1305Key*>(&**std::move(generic_key));
+  ASSERT_THAT(key, NotNull());
+  std::string key_bytes =
+      test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
+                          .GetSecret(InsecureSecretKeyAccess::Get()));
+  ASSERT_THAT(key_bytes, Eq(derived_key_value_));
+
+  // Derive key with XChaCha20Poly1305KeyManager.
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialization, IsOk());
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  google::crypto::tink::XChaCha20Poly1305KeyFormat key_format;
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
+  util::StatusOr<google::crypto::tink::XChaCha20Poly1305Key> proto_key =
+      XChaCha20Poly1305KeyManager().DeriveKey(
+          key_format, same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
   std::string proto_key_bytes = test::HexEncode(proto_key->key_value());
   ASSERT_THAT(proto_key_bytes, Eq(derived_key_value_));

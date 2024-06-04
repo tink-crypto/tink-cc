@@ -32,6 +32,9 @@
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
@@ -48,9 +51,15 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+namespace {
+
+constexpr int kXChaCha20Poly1305KeyLen = 32;
+
 using KeyDeriverFn = absl::AnyInvocable<util::StatusOr<std::unique_ptr<Key>>(
     const Parameters&, InputStream*) const>;
 using KeyDeriverFnMap = absl::flat_hash_map<std::type_index, KeyDeriverFn>;
+
+// AEAD.
 
 util::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
     const Parameters& generic_params, InputStream* randomness) {
@@ -74,17 +83,47 @@ util::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
   return absl::make_unique<AesGcmKey>(*key);
 }
 
+util::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
+DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
+                           InputStream* randomness) {
+  const XChaCha20Poly1305Parameters* params =
+      dynamic_cast<const XChaCha20Poly1305Parameters*>(&generic_params);
+  if (params == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Parameters is not XChaCha20Poly1305Parameters.");
+  }
+  util::StatusOr<std::string> randomness_str =
+      ReadBytesFromStream(kXChaCha20Poly1305KeyLen, randomness);
+  if (!randomness_str.ok()) {
+    return randomness_str.status();
+  }
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      params->GetVariant(),
+      RestrictedData(*randomness_str, InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<XChaCha20Poly1305Key>(*key);
+}
+
 const KeyDeriverFnMap& ParametersToKeyDeriver() {
   static const KeyDeriverFnMap* instance = [] {
     static KeyDeriverFnMap* m = new KeyDeriverFnMap();
 
+    // AEAD.
     CHECK_OK(RegisterAesGcmProtoSerialization());
     m->insert({std::type_index(typeid(AesGcmParameters)), DeriveAesGcmKey});
+    CHECK_OK(RegisterXChaCha20Poly1305ProtoSerialization());
+    m->insert({std::type_index(typeid(XChaCha20Poly1305Parameters)),
+               DeriveXChaCha20Poly1305Key});
 
     return m;
   }();
   return *instance;
 }
+
+}  // namespace
 
 util::StatusOr<std::unique_ptr<Key>> DeriveKey(const Parameters& params,
                                                InputStream* randomness) {

@@ -153,6 +153,9 @@ tink_cc_test(
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_proto_serialization
     tink::config::global_registry
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization

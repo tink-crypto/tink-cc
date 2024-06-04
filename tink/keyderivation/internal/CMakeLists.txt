@@ -18,6 +18,7 @@ tink_cc_library(
     tink::core::keyset_handle_builder
     tink::core::parameters
     tink::aead::aes_gcm_proto_serialization
+    tink::aead::xchacha20_poly1305_proto_serialization
     tink::internal::configuration_impl
     tink::internal::key_type_info_store
     tink::internal::mutable_serialization_registry
@@ -137,6 +138,9 @@ tink_cc_library(
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_proto_serialization
     tink::util::input_stream_util
     tink::util::status
     tink::util::statusor
@@ -171,6 +175,10 @@ tink_cc_test(
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_key_manager
+    tink::aead::xchacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_proto_serialization
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
@@ -188,6 +196,7 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
 )
 
 tink_cc_library(

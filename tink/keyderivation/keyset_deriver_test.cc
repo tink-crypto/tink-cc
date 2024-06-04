@@ -31,6 +31,9 @@
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/config/global_registry.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -122,9 +125,21 @@ std::unique_ptr<AesGcmKey> CreateAesGcmKey(int key_size,
           .value());
 }
 
+std::unique_ptr<XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key(
+    XChaCha20Poly1305Parameters::Variant variant, absl::string_view secret,
+    absl::optional<int> id_requirement) {
+  return std::make_unique<XChaCha20Poly1305Key>(
+      XChaCha20Poly1305Key::Create(
+          variant,
+          RestrictedData(test::HexDecodeOrDie(secret),
+                         InsecureSecretKeyAccess::Get()),
+          id_requirement, GetPartialKeyAccess())
+          .value());
+}
+
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   return {
-      /*AesGcm KeysetHandle*/ {
+      /*AEAD KeysetHandle*/ {
           CreateAesGcmKey(
               /*key_size=*/16,
               /*variant=*/AesGcmParameters::Variant::kTink,
@@ -139,6 +154,18 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
               /*key_size=*/16,
               /*variant=*/AesGcmParameters::Variant::kNoPrefix,
               /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
+              /*id_requirement=*/absl::nullopt),
+          CreateXChaCha20Poly1305Key(
+              /*variant=*/XChaCha20Poly1305Parameters::Variant::kTink,
+              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
+              /*id_requirement=*/3030303),
+          CreateXChaCha20Poly1305Key(
+              /*variant=*/XChaCha20Poly1305Parameters::Variant::kCrunchy,
+              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
+              /*id_requirement=*/4040404),
+          CreateXChaCha20Poly1305Key(
+              /*variant=*/XChaCha20Poly1305Parameters::Variant::kNoPrefix,
+              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
               /*id_requirement=*/absl::nullopt),
       },
   };
@@ -205,7 +232,9 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
 
   // Proto serialization is required to convert the Parameters in `derived_keys`
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
+  // AEAD.
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
@@ -248,7 +277,9 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
 
   // Proto serialization is required to convert the Parameters in `derived_keys`
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
+  // AEAD.
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);

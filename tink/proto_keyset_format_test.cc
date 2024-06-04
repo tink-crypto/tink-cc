@@ -25,14 +25,12 @@
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_config.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/legacy_proto_parameters.h"
-#include "tink/internal/proto_parameters_serialization.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_handle_builder.h"
 #include "tink/mac.h"
-#include "tink/mac/mac_key_templates.h"
-#include "tink/signature/signature_key_templates.h"
+#include "tink/mac/aes_cmac_parameters.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -42,8 +40,6 @@ namespace tink {
 
 namespace {
 
-using ::crypto::tink::internal::LegacyProtoParameters;
-using ::crypto::tink::internal::ProtoParametersSerialization;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
@@ -59,25 +55,14 @@ class SerializeKeysetToProtoKeysetFormatTest : public ::testing::Test {
   }
 };
 
-util::StatusOr<LegacyProtoParameters> CmacParameters() {
-  util::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(MacKeyTemplates::AesCmac());
-  if (!serialization.ok()) return serialization.status();
-
-  return LegacyProtoParameters(*serialization);
-}
-
-util::StatusOr<LegacyProtoParameters> EcdsaParameters() {
-  util::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(SignatureKeyTemplates::EcdsaP256());
-  if (!serialization.ok()) return serialization.status();
-
-  return LegacyProtoParameters(*serialization);
+util::StatusOr<AesCmacParameters> CmacParameters() {
+  return AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                   /*cryptographic_tag_size_in_bytes=*/16,
+                                   AesCmacParameters::Variant::kNoPrefix);
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParseSingleKey) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
-      CmacParameters();
+  util::StatusOr<AesCmacParameters> parameters = CmacParameters();
   ASSERT_THAT(parameters, IsOk());
 
   util::StatusOr<KeysetHandle> handle =
@@ -103,8 +88,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParseSingleKey) {
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParseMultipleKeys) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
-      CmacParameters();
+  util::StatusOr<AesCmacParameters> parameters = CmacParameters();
   ASSERT_THAT(parameters, IsOk());
 
   util::StatusOr<KeysetHandle> handle =
@@ -138,8 +122,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParseMultipleKeys) {
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeNoAccessFails) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
-      CmacParameters();
+  util::StatusOr<AesCmacParameters> parameters = CmacParameters();
   ASSERT_THAT(parameters, IsOk());
 
   util::StatusOr<KeysetHandle> handle =
@@ -156,8 +139,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeNoAccessFails) {
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, ParseNoAccessFails) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
-      CmacParameters();
+  util::StatusOr<AesCmacParameters> parameters = CmacParameters();
   ASSERT_THAT(parameters, IsOk());
 
   util::StatusOr<KeysetHandle> handle =
@@ -200,8 +182,8 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, TestVector) {
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParsePublicKey) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
-      EcdsaParameters();
+  util::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
   util::StatusOr<KeysetHandle> handle =

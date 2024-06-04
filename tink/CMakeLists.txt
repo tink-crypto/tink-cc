@@ -1167,10 +1167,8 @@ tink_cc_test(
     absl::strings
     tink::config::global_registry
     tink::config::tink_config
-    tink::internal::legacy_proto_parameters
-    tink::internal::proto_parameters_serialization
-    tink::mac::mac_key_templates
-    tink::signature::signature_key_templates
+    tink::mac::aes_cmac_parameters
+    tink::signature::ed25519_parameters
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers

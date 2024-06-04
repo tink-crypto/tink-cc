@@ -23,6 +23,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
 #include "openssl/experimental/kyber.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/key.h"

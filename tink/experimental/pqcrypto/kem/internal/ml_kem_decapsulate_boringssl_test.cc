@@ -24,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
 #include "openssl/experimental/kyber.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_encapsulate_boringssl.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"

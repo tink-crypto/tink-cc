@@ -28,6 +28,7 @@
 #include "absl/types/optional.h"
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
+#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
 #include "openssl/experimental/kyber.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"

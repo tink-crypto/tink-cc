@@ -46,7 +46,7 @@ using ::google::crypto::tink::OutputPrefixType;
 
 namespace {
 
-constexpr absl::string_view kPrimitive = "jwt_mac";
+constexpr absl::string_view kPrimitive = "jwtmac";
 constexpr absl::string_view kComputeApi = "compute";
 constexpr absl::string_view kVerifyApi = "verify";
 constexpr int kReportedJwtSize =

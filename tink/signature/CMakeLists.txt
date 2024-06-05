@@ -402,6 +402,7 @@ tink_cc_library(
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
+  PUBLIC
 )
 
 tink_cc_library(

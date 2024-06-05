@@ -395,6 +395,7 @@ cc_library(
     srcs = ["signature_pem_keyset_reader.cc"],
     hdrs = ["signature_pem_keyset_reader.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":ecdsa_sign_key_manager",
         ":ecdsa_verify_key_manager",

@@ -288,8 +288,9 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   EXPECT_EQ((*keyset)->primary_key_id(), (*keyset)->key(0).key_id());
   EXPECT_THAT((*keyset)->key(0).key_id(), Not(Eq((*keyset)->key(1).key_id())));
 
-  // Key manager to validate key type and key material type.
+  // Key managers to validate key type and key material type.
   EcdsaSignKeyManager ecdsa_sign_key_manager;
+  RsaSsaPssSignKeyManager rsa_sign_key_manager;
 
   // Build the expected primary key.
   Keyset::Key expected_key1;
@@ -308,9 +309,6 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
   EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
 
-  // Key manager to validate key type and key material type.
-  RsaSsaPssSignKeyManager rsa_sign_key_manager;
-
   // Build the expected second key.
   Keyset::Key expected_key2;
   // ID is randomly generated, so we simply copy the one from the second key.
@@ -328,6 +326,67 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   ASSERT_THAT(rsa_pss_private_key2, IsOk());
   expected_keydata2->set_value(rsa_pss_private_key2->SerializeAsString());
   EXPECT_THAT((*keyset)->key(1), EqualsKey(expected_key2));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadCorrectPublicKeyWithMultipleKeyTypes) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kRsaPublicKey2048, PemKeyType::PEM_RSA,
+                           PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
+                           HashType::SHA384));
+  builder.Add(CreatePemKey(kEcdsaP256PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_DER, /*key_size_in_bits=*/256,
+                           HashType::SHA256));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  ASSERT_THAT(keyset, IsOk());
+
+  EXPECT_THAT((*keyset)->key(), SizeIs(2));
+  EXPECT_EQ((*keyset)->primary_key_id(), (*keyset)->key(0).key_id());
+  EXPECT_THAT((*keyset)->key(0).key_id(), Not(Eq((*keyset)->key(1).key_id())));
+
+  // Key managers to validate key type and key material type.
+  RsaSsaPssVerifyKeyManager verify_key_manager;
+  EcdsaVerifyKeyManager key_manager;
+
+  // Build the expected primary key.
+  Keyset::Key expected_key1;
+  // ID is randomly generated, so we simply copy the primary key ID.
+  expected_key1.set_key_id((*keyset)->primary_key_id());
+  expected_key1.set_status(KeyStatusType::ENABLED);
+  expected_key1.set_output_prefix_type(OutputPrefixType::RAW);
+  // Populate the expected primary key KeyData.
+  KeyData* expected_keydata1 = expected_key1.mutable_key_data();
+  expected_keydata1->set_type_url(verify_key_manager.get_key_type());
+  expected_keydata1->set_key_material_type(
+      verify_key_manager.key_material_type());
+
+  util::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_pub_key =
+      GetRsaSsaPssPublicKeyProto(kRsaPublicKey2048, HashType::SHA384,
+                                 verify_key_manager.get_version());
+  ASSERT_THAT(rsa_ssa_pss_pub_key, IsOk());
+  expected_keydata1->set_value(rsa_ssa_pss_pub_key->SerializeAsString());
+  EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
+
+  // Build the expected secondary key.
+  Keyset::Key expected_secondary;
+  // ID is randomly generated, so we simply copy the primary key ID.
+  expected_secondary.set_key_id((*keyset)->key(1).key_id());
+  expected_secondary.set_status(KeyStatusType::ENABLED);
+  expected_secondary.set_output_prefix_type(OutputPrefixType::RAW);
+
+  // Populate the expected secondary key KeyData.
+  KeyData* expected_secondary_data = expected_secondary.mutable_key_data();
+  expected_secondary_data->set_type_url(key_manager.get_key_type());
+  expected_secondary_data->set_key_material_type(
+      key_manager.key_material_type());
+  expected_secondary_data->set_value(
+      GetExpectedEcdsaPublicKeyProto(EcdsaSignatureEncoding::DER)
+          .SerializeAsString());
+  EXPECT_THAT((*keyset)->key(1), EqualsKey(expected_secondary));
 }
 
 // Verify check on PEM array size not zero before creating a reader.
@@ -356,7 +415,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEncryptedUnsupported) {
               StatusIs(absl::StatusCode::kUnimplemented));
 }
 
-// Verify parsing works correctly on valid inputs.
+// Verify parsing works correctly on valid input.
 TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPublicKey) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
@@ -364,9 +423,6 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPublicKey) {
   builder.Add(CreatePemKey(kRsaPublicKey2048, PemKeyType::PEM_RSA,
                            PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
                            HashType::SHA384));
-  builder.Add(CreatePemKey(kRsaPublicKey2048, PemKeyType::PEM_RSA,
-                           PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
-                           HashType::SHA256));
 
   auto keyset_reader_or = builder.Build();
   ASSERT_THAT(keyset_reader_or, IsOk());
@@ -379,9 +435,8 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPublicKey) {
 
   // Key manager to validate key type and key material type.
   RsaSsaPssVerifyKeyManager verify_key_manager;
-  EXPECT_THAT(keyset->key(), SizeIs(2));
+  EXPECT_THAT(keyset->key(), SizeIs(1));
   EXPECT_EQ(keyset->primary_key_id(), keyset->key(0).key_id());
-  EXPECT_THAT(keyset->key(0).key_id(), Not(Eq(keyset->key(1).key_id())));
 
   // Build the expectedi primary key.
   Keyset::Key expected_key1;
@@ -401,26 +456,6 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPublicKey) {
   ASSERT_THAT(rsa_ssa_pss_pub_key, IsOk());
   expected_keydata1->set_value(rsa_ssa_pss_pub_key->SerializeAsString());
   EXPECT_THAT(keyset->key(0), EqualsKey(expected_key1));
-
-  // Build the expected second key.
-  Keyset::Key expected_key2;
-  // ID is randomly generated, so we simply copy the secondary key ID.
-  expected_key2.set_key_id(keyset->key(1).key_id());
-  expected_key2.set_status(KeyStatusType::ENABLED);
-  expected_key2.set_output_prefix_type(OutputPrefixType::RAW);
-  // Populate the expected second key KeyData.
-  KeyData* expected_keydata2 = expected_key2.mutable_key_data();
-  expected_keydata2->set_type_url(verify_key_manager.get_key_type());
-  expected_keydata2->set_key_material_type(
-      verify_key_manager.key_material_type());
-
-  util::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_pub_key2 =
-      GetRsaSsaPssPublicKeyProto(kRsaPublicKey2048, HashType::SHA256,
-                                 verify_key_manager.get_version());
-  ASSERT_THAT(rsa_ssa_pss_pub_key2, IsOk());
-  expected_keydata2->set_value(rsa_ssa_pss_pub_key2->SerializeAsString());
-
-  EXPECT_THAT(keyset->key(1), EqualsKey(expected_key2));
 }
 
 TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
@@ -430,9 +465,6 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
   builder.Add(CreatePemKey(kRsaPrivateKey2048, PemKeyType::PEM_RSA,
                            PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
                            HashType::SHA256));
-  builder.Add(CreatePemKey(kRsaPrivateKey2048, PemKeyType::PEM_RSA,
-                           PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
-                           HashType::SHA384));
 
   auto keyset_reader_or = builder.Build();
   ASSERT_THAT(keyset_reader_or, IsOk());
@@ -443,9 +475,8 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
   ASSERT_THAT(keyset_or, IsOk());
   std::unique_ptr<Keyset> keyset = std::move(keyset_or).value();
 
-  EXPECT_THAT(keyset->key(), SizeIs(2));
+  EXPECT_THAT(keyset->key(), SizeIs(1));
   EXPECT_EQ(keyset->primary_key_id(), keyset->key(0).key_id());
-  EXPECT_THAT(keyset->key(0).key_id(), Not(Eq(keyset->key(1).key_id())));
 
   // Key manager to validate key type and key material type.
   RsaSsaPssSignKeyManager sign_key_manager;
@@ -467,24 +498,6 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
   ASSERT_THAT(rsa_pss_private_key1, IsOk());
   expected_keydata1->set_value(rsa_pss_private_key1->SerializeAsString());
   EXPECT_THAT(keyset->key(0), EqualsKey(expected_key1));
-
-  // Build the expected second key.
-  Keyset::Key expected_key2;
-  // ID is randomly generated, so we simply copy the one from the second key.
-  expected_key2.set_key_id(keyset->key(1).key_id());
-  expected_key2.set_status(KeyStatusType::ENABLED);
-  expected_key2.set_output_prefix_type(OutputPrefixType::RAW);
-  // Populate the expected second key KeyData.
-  KeyData* expected_keydata2 = expected_key2.mutable_key_data();
-  expected_keydata2->set_type_url(sign_key_manager.get_key_type());
-  expected_keydata2->set_key_material_type(
-      sign_key_manager.key_material_type());
-  util::StatusOr<RsaSsaPssPrivateKey> rsa_pss_private_key2 =
-      GetRsaSsaPssPrivateKeyProto(kRsaPrivateKey2048, HashType::SHA384,
-                                  sign_key_manager.get_version());
-  ASSERT_THAT(rsa_pss_private_key2, IsOk());
-  expected_keydata2->set_value(rsa_pss_private_key2->SerializeAsString());
-  EXPECT_THAT(keyset->key(1), EqualsKey(expected_key2));
 }
 
 // Expects an INVLID_ARGUMENT when passing a public key to a
@@ -587,10 +600,6 @@ TEST(SignaturePemKeysetReaderTest, ReadECDSACorrectPublicKey) {
                            PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
                            HashType::SHA256));
 
-  builder.Add(CreatePemKey(kEcdsaP256PublicKey, PemKeyType::PEM_EC,
-                           PemAlgorithm::ECDSA_DER, /*key_size_in_bits=*/256,
-                           HashType::SHA256));
-
   auto reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
 
@@ -598,11 +607,11 @@ TEST(SignaturePemKeysetReaderTest, ReadECDSACorrectPublicKey) {
   ASSERT_THAT(keyset_read, IsOk());
   std::unique_ptr<Keyset> keyset = std::move(keyset_read).value();
 
+  EXPECT_THAT(keyset->key(), SizeIs(1));
+  EXPECT_THAT(keyset->primary_key_id(), keyset->key(0).key_id());
+
   // Key manager to validate key type and key material type.
   EcdsaVerifyKeyManager key_manager;
-  EXPECT_THAT(keyset->key(), SizeIs(2));
-  EXPECT_THAT(keyset->primary_key_id(), keyset->key(0).key_id());
-  EXPECT_THAT(keyset->key(0).key_id(), Not(Eq(keyset->key(1).key_id())));
 
   // Build the expected primary key.
   Keyset::Key expected_primary;
@@ -619,23 +628,6 @@ TEST(SignaturePemKeysetReaderTest, ReadECDSACorrectPublicKey) {
       GetExpectedEcdsaPublicKeyProto(
           EcdsaSignatureEncoding::IEEE_P1363).SerializeAsString());
   EXPECT_THAT(keyset->key(0), EqualsKey(expected_primary));
-
-  // Build the expected secondary key.
-  Keyset::Key expected_secondary;
-  // ID is randomly generated, so we simply copy the primary key ID.
-  expected_secondary.set_key_id(keyset->key(1).key_id());
-  expected_secondary.set_status(KeyStatusType::ENABLED);
-  expected_secondary.set_output_prefix_type(OutputPrefixType::RAW);
-
-  // Populate the expected secondary key KeyData.
-  KeyData* expected_secondary_data = expected_secondary.mutable_key_data();
-  expected_secondary_data->set_type_url(key_manager.get_key_type());
-  expected_secondary_data->set_key_material_type(
-      key_manager.key_material_type());
-  expected_secondary_data->set_value(
-      GetExpectedEcdsaPublicKeyProto(
-          EcdsaSignatureEncoding::DER).SerializeAsString());
-  EXPECT_THAT(keyset->key(1), EqualsKey(expected_secondary));
 }
 
 TEST(SignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {

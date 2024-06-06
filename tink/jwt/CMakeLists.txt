@@ -383,6 +383,28 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME jwt_rsa_ssa_pkcs1_parameters
+  SRCS
+    jwt_rsa_ssa_pkcs1_parameters.cc
+    jwt_rsa_ssa_pkcs1_parameters.h
+  DEPS
+    tink::jwt::jwt_signature_parameters
+    absl::flat_hash_set
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::big_integer
+    tink::core::parameters
+    tink::internal::bn_util
+    tink::internal::rsa_util
+    tink::internal::ssl_unique_ptr
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -715,4 +737,20 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME jwt_rsa_ssa_pkcs1_parameters_test
+  SRCS
+    jwt_rsa_ssa_pkcs1_parameters_test.cc
+  DEPS
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    gmock
+    absl::status
+    crypto
+    tink::core::big_integer
+    tink::internal::bn_util
+    tink::internal::ssl_unique_ptr
+    tink::util::statusor
+    tink::util::test_matchers
 )

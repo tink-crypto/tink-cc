@@ -405,6 +405,27 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME jwt_rsa_ssa_pkcs1_public_key
+  SRCS
+    jwt_rsa_ssa_pkcs1_public_key.cc
+    jwt_rsa_ssa_pkcs1_public_key.h
+  DEPS
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_signature_public_key
+    absl::endian
+    absl::status
+    absl::strings
+    absl::str_format
+    absl::string_view
+    absl::optional
+    tink::core::big_integer
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -751,6 +772,25 @@ tink_cc_test(
     tink::core::big_integer
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME jwt_rsa_ssa_pkcs1_public_key_test
+  SRCS
+    jwt_rsa_ssa_pkcs1_public_key_test.cc
+  DEPS
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_public_key
+    gmock
+    absl::check
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::big_integer
+    tink::core::partial_key_access
     tink::util::statusor
     tink::util::test_matchers
 )

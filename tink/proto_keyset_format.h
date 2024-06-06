@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "tink/aead.h"
 #include "tink/keyset_handle.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
@@ -51,7 +52,20 @@ crypto::tink::util::StatusOr<KeysetHandle>
 ParseKeysetWithoutSecretFromProtoKeysetFormat(
     absl::string_view serialized_keyset);
 
+// Serializes `keyset_handle` into a ciphertext encrypted with
+// `keyset_encryption_aead` and `associated_data`.
+crypto::tink::util::StatusOr<std::string>
+SerializeKeysetToEncryptedKeysetFormat(const KeysetHandle& keyset_handle,
+                                       const Aead& keyset_encryption_aead,
+                                       absl::string_view associated_data);
+
+// Parses `encrypted_keyset` into a keyset handle by decrypting with
+// `keyset_encryption_aead` and `associated_data`.
+crypto::tink::util::StatusOr<KeysetHandle> ParseKeysetFromEncryptedKeysetFormat(
+    absl::string_view encrypted_keyset, const Aead& keyset_encryption_aead,
+    absl::string_view associated_data);
 
 }  // namespace tink
 }  // namespace crypto
+
 #endif  // TINK_PROTO_KEYSET_FORMAT_H_

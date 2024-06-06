@@ -25,13 +25,16 @@
 #include <utility>
 #include <vector>
 
+#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/aead.h"
 #include "tink/binary_keyset_reader.h"
 #include "tink/binary_keyset_writer.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/keyset_handle.h"
+#include "tink/keyset_reader.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
@@ -42,9 +45,9 @@
 namespace crypto {
 namespace tink {
 
-crypto::tink::util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
+util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     absl::string_view serialized_keyset, SecretKeyAccessToken token) {
-  crypto::tink::util::SecretProto<google::crypto::tink::Keyset> keyset_proto;
+  util::SecretProto<google::crypto::tink::Keyset> keyset_proto;
   bool parsed = internal::CallWithCoreDumpProtection(
       [&]() { return keyset_proto->ParseFromString(serialized_keyset); });
   if (!parsed) {
@@ -62,9 +65,8 @@ crypto::tink::util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
   return KeysetHandle(std::move(keyset_proto), *entries);
 }
 
-crypto::tink::util::StatusOr<util::SecretData>
-SerializeKeysetToProtoKeysetFormat(const KeysetHandle& keyset_handle,
-                                   SecretKeyAccessToken token) {
+util::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
+    const KeysetHandle& keyset_handle, SecretKeyAccessToken token) {
   const google::crypto::tink::Keyset& keyset =
       CleartextKeysetHandle::GetKeyset(keyset_handle);
   util::SecretData result(keyset.ByteSizeLong());
@@ -77,34 +79,65 @@ SerializeKeysetToProtoKeysetFormat(const KeysetHandle& keyset_handle,
   return result;
 }
 
-crypto::tink::util::StatusOr<KeysetHandle>
-ParseKeysetWithoutSecretFromProtoKeysetFormat(
+util::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(
     absl::string_view serialized_keyset) {
   std::string keyset_copy = std::string(serialized_keyset);
-  crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>> result =
-    KeysetHandle::ReadNoSecret(keyset_copy);
+  util::StatusOr<std::unique_ptr<KeysetHandle>> result =
+      KeysetHandle::ReadNoSecret(keyset_copy);
   if (!result.ok()) {
     return result.status();
   }
   return std::move(**result);
 }
 
-crypto::tink::util::StatusOr<std::string>
-SerializeKeysetWithoutSecretToProtoKeysetFormat(
+util::StatusOr<std::string> SerializeKeysetWithoutSecretToProtoKeysetFormat(
     const KeysetHandle& keyset_handle) {
   std::stringbuf string_buf(std::ios_base::out);
-  crypto::tink::util::StatusOr<std::unique_ptr<BinaryKeysetWriter>>
-      keyset_writer = BinaryKeysetWriter::New(
-          std::make_unique<std::ostream>(&string_buf));
+  util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> keyset_writer =
+      BinaryKeysetWriter::New(std::make_unique<std::ostream>(&string_buf));
   if (!keyset_writer.ok()) {
     return keyset_writer.status();
   }
-  crypto::tink::util::Status status =
-      keyset_handle.WriteNoSecret(keyset_writer->get());
+  util::Status status = keyset_handle.WriteNoSecret(keyset_writer->get());
   if (!status.ok()) {
     return status;
   }
   return string_buf.str();
+}
+
+util::StatusOr<KeysetHandle> ParseKeysetFromEncryptedKeysetFormat(
+    absl::string_view encrypted_keyset, const Aead& keyset_encryption_aead,
+    absl::string_view associated_data) {
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      BinaryKeysetReader::New(encrypted_keyset);
+  if (!reader.ok()) {
+    return reader.status();
+  }
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::ReadWithAssociatedData(
+          std::move(*reader), keyset_encryption_aead, associated_data);
+  if (!handle.ok()) {
+    return handle.status();
+  }
+  return std::move(**handle);
+}
+
+util::StatusOr<std::string> SerializeKeysetToEncryptedKeysetFormat(
+    const KeysetHandle& keyset_handle, const Aead& keyset_encryption_aead,
+    absl::string_view associated_data) {
+  std::stringbuf encrypted_keyset;
+  util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
+      BinaryKeysetWriter::New(
+          absl::make_unique<std::ostream>(&encrypted_keyset));
+  if (!writer.ok()) {
+    return writer.status();
+  }
+  util::Status status = keyset_handle.WriteWithAssociatedData(
+      writer->get(), keyset_encryption_aead, associated_data);
+  if (!status.ok()) {
+    return status;
+  }
+  return encrypted_keyset.str();
 }
 
 }  // namespace tink

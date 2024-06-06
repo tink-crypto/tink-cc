@@ -1137,11 +1137,14 @@ tink_cc_library(
     proto_keyset_format.cc
     proto_keyset_format.h
   DEPS
+    tink::core::aead
     tink::core::binary_keyset_reader
     tink::core::binary_keyset_writer
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
+    tink::core::keyset_reader
     tink::core::secret_key_access_token
+    absl::memory
     absl::status
     absl::strings
     tink::internal::call_with_core_dump_protection
@@ -1157,14 +1160,20 @@ tink_cc_test(
   SRCS
     proto_keyset_format_test.cc
   DEPS
+    tink::core::aead
+    tink::core::binary_keyset_reader
+    tink::core::binary_keyset_writer
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
+    tink::core::keyset_reader
     tink::core::mac
     tink::core::proto_keyset_format
     gmock
+    absl::memory
     absl::strings
+    tink::aead::aes_gcm_parameters
     tink::config::global_registry
     tink::config::tink_config
     tink::mac::aes_cmac_parameters

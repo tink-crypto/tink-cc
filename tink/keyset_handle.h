@@ -23,11 +23,9 @@
 #include <utility>
 #include <vector>
 
-#include "absl/base/attributes.h"
 #include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
-#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/config/global_registry.h"
@@ -156,6 +154,11 @@ class KeysetHandle {
   // Returns a KeysetHandle containing one new key generated according to
   // `key_template` using `config`. When specified, the keyset is annotated
   // for monitoring with `monitoring_annotations`.
+  //
+  // `config` is the corresponding :key_gen_config_v0 for your primitive. For
+  // example, use //tink/aead:key_gen_config_v0 for AEAD. If a single
+  // GenerateNew call handles multiple primitives, use
+  // //tink//config:key_gen_v0.
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
   GenerateNew(const google::crypto::tink::KeyTemplate& key_template,
               const crypto::tink::KeyGenConfiguration& config,
@@ -226,6 +229,10 @@ class KeysetHandle {
 
   // Creates a wrapped primitive using this keyset handle and config, which
   // stores necessary primitive wrappers and key type managers.
+  //
+  // `config` is the corresponding :config_v0 for your primitive. For example,
+  // use //tink/aead:config_v0 for AEAD. If a single GenerateNew call handles
+  // multiple primitives, use //tink//config:v0.
   template <class P>
   crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const Configuration& config) const;
@@ -268,9 +275,8 @@ class KeysetHandle {
   explicit KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset)
       : keyset_(std::move(keyset)) {}
   // Creates a handle that contains the given `keyset` and `entries`.
-  KeysetHandle(
-      util::SecretProto<google::crypto::tink::Keyset> keyset,
-      const std::vector<std::shared_ptr<const Entry>>& entries)
+  KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset,
+               const std::vector<std::shared_ptr<const Entry>>& entries)
       : keyset_(std::move(keyset)), entries_(entries) {}
   // Creates a handle that contains the given `keyset` and
   // `monitoring_annotations`.

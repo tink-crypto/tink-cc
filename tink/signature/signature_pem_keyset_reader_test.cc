@@ -71,6 +71,9 @@ using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
 
+// Generated with:
+// openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-256 \
+//   -out private-key.pem
 constexpr absl::string_view kEcdsaP256PrivateKey =
     "-----BEGIN PRIVATE KEY-----\n"
     "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgx5oKGNLy+C0ibH2L\n"
@@ -78,21 +81,34 @@ constexpr absl::string_view kEcdsaP256PrivateKey =
     "v/UKB4nvbqKXC7qkmhvvEdTR4HJQr0U9d7kvF4IPyHqZDlwGTeCVKefX\n"
     "-----END PRIVATE KEY-----\n";
 
+// Extracted from:
+// openssl asn1parse -in private-key.pem -strparse 29
 constexpr absl::string_view kEcdsaP256PrivateKeyD =
     "c79a0a18d2f2f82d226c7d8b1f7e49afdd6b0e93ed6044e76b96acf10a8e4eec";
 
+// Generated with:
+// openssl pkey -pubout -in private-key.pem -out public-key.pem
 constexpr absl::string_view kEcdsaP256PublicKey =
     "-----BEGIN PUBLIC KEY-----\n"
     "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6anGlamtg/dOWIBkytKr5SFCXb66\n"
     "s7/1CgeJ726ilwu6pJob7xHU0eByUK9FPXe5LxeCD8h6mQ5cBk3glSnn1w==\n"
     "-----END PUBLIC KEY-----\n";
 
+// Extracted from:
+// openssl asn1parse -in public-key.pem -dump
+//
+// The X and Y values are embedded within the dumped 66 byte hex-encoded BIT
+// STRING value. Discard the first two bytes, X is the next 32 bytes, Y is the
+// remaining 32 bytes.
 constexpr absl::string_view kEcdsaP256PublicKeyX =
     "e9a9c695a9ad83f74e588064cad2abe521425dbebab3bff50a0789ef6ea2970b";
 
 constexpr absl::string_view kEcdsaP256PublicKeyY =
     "baa49a1bef11d4d1e07250af453d77b92f17820fc87a990e5c064de09529e7d7";
 
+// Generated with:
+// openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-384 \
+//   | openssl pkey -pubout
 constexpr absl::string_view kEcdsaP384PublicKey =
     "-----BEGIN PUBLIC KEY-----"
     "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAESbGnhTcoHIGYTgAJLwTCLGEMrCq6ej3p"
@@ -100,17 +116,24 @@ constexpr absl::string_view kEcdsaP384PublicKey =
     "MSHtbVybpk2rZWptJeAYsBxNOrPxc4mJ"
     "-----END PUBLIC KEY-----";
 
+// Generated with:
+// openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp256k1 \
+//   | openssl pkey -pubout
 constexpr absl::string_view kSecp256k1PublicKey =
     "-----BEGIN PUBLIC KEY-----\n"
     "MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEuDj/ROW8F3vyEYnQdmCC/J2EMiaIf8l2\n"
     "A3EQC37iCm/wyddb+6ezGmvKGXRJbutW3jVwcZVdg8Sxutqgshgy6Q==\n"
     "-----END PUBLIC KEY-----";
 
+// Generated with:
+// openssl genpkey -algorithm ed25519 | openssl pkey -pubout
 constexpr absl::string_view kEd25519PublicKey =
     "-----BEGIN PUBLIC KEY-----\n"
     "MCowBQYDK2VwAyEAfU0Of2FTpptiQrUiq77mhf2kQg+INLEIw72uNp71Sfo=\n"
     "-----END PUBLIC KEY-----\n";
 
+// Generated with:
+// openssl pkey -pubout -in private-key.pem
 constexpr absl::string_view kRsaPublicKey2048 =
     "-----BEGIN PUBLIC KEY-----\n"
     "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAsll1i7Arx1tosXYSyb9o\n"
@@ -122,6 +145,9 @@ constexpr absl::string_view kRsaPublicKey2048 =
     "hQIDAQAB\n"
     "-----END PUBLIC KEY-----\n";
 
+// Generated with:
+// openssl genpkey -quiet -algorithm rsa -pkeyopt rsa_keygen_bits:1024 \
+//   | openssl pkey -pubout
 constexpr absl::string_view kRsaPublicKey1024 =
     "-----BEGIN PUBLIC KEY-----\n"
     "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC+lQMh614+1PINuxuGg8ks1DOD\n"
@@ -130,6 +156,9 @@ constexpr absl::string_view kRsaPublicKey1024 =
     "pj37y294RWqIWhm1rwIDAQAB\n"
     "-----END PUBLIC KEY-----\n";
 
+// Generated with:
+// openssl genpkey -quiet -algorithm rsa -pkeyopt rsa_keygen_bits:2048 \
+//   -out private-key.pem
 constexpr absl::string_view kRsaPrivateKey2048 =
     "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIIEpAIBAAKCAQEAsll1i7Arx1tosXYSyb9oxfoFlYozTGHhZ7wgvMdXV8Em6JIQ\n"

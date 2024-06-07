@@ -29,6 +29,9 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/aead/aes_ctr_hmac_aead_key.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
@@ -107,6 +110,51 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
   return absl::make_unique<XChaCha20Poly1305Key>(*key);
 }
 
+// To ensure the resulting key provides key commitment, derive the AES key
+// first, then the HMAC key.
+//
+// Consider the following scenario:
+//   - Derive the HMAC key before the AES key from the keystream.
+//   - Brute force the raw key material so the 32nd byte of the keystream is 0.
+//   - Give party A a key with this raw key material with HMAC key size 32 bytes
+//     and AES key size 16 bytes.
+//   - Give party B a key with this raw key material with HMAC key size 31 bytes
+//     and AES key size 16 bytes.
+//   - HMAC pads its key with zeroes, so both parties will end up with the same
+//     HMAC key, but different AES keys (offset by 1 byte).
+util::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
+    const Parameters& generic_params, InputStream* randomness) {
+  const AesCtrHmacAeadParameters* params =
+      dynamic_cast<const AesCtrHmacAeadParameters*>(&generic_params);
+  if (params == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Parameters is not AesCtrHmacAeadParameters.");
+  }
+  util::StatusOr<std::string> aes_key_bytes =
+      ReadBytesFromStream(params->GetAesKeySizeInBytes(), randomness);
+  if (!aes_key_bytes.ok()) {
+    return aes_key_bytes.status();
+  }
+  util::StatusOr<std::string> hmac_key_bytes =
+      ReadBytesFromStream(params->GetHmacKeySizeInBytes(), randomness);
+  if (!hmac_key_bytes.ok()) {
+    return hmac_key_bytes.status();
+  }
+  util::StatusOr<AesCtrHmacAeadKey> key =
+      AesCtrHmacAeadKey::Builder()
+          .SetParameters(*params)
+          .SetAesKeyBytes(
+              RestrictedData(*aes_key_bytes, InsecureSecretKeyAccess::Get()))
+          .SetHmacKeyBytes(
+              RestrictedData(*hmac_key_bytes, InsecureSecretKeyAccess::Get()))
+          .SetIdRequirement(absl::nullopt)
+          .Build(GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<AesCtrHmacAeadKey>(*key);
+}
+
 const KeyDeriverFnMap& ParametersToKeyDeriver() {
   static const KeyDeriverFnMap* instance = [] {
     static KeyDeriverFnMap* m = new KeyDeriverFnMap();
@@ -117,6 +165,9 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     CHECK_OK(RegisterXChaCha20Poly1305ProtoSerialization());
     m->insert({std::type_index(typeid(XChaCha20Poly1305Parameters)),
                DeriveXChaCha20Poly1305Key});
+    CHECK_OK(RegisterAesCtrHmacAeadProtoSerialization());
+    m->insert({std::type_index(typeid(AesCtrHmacAeadParameters)),
+               DeriveAesCtrHmacAeadKey});
 
     return m;
   }();

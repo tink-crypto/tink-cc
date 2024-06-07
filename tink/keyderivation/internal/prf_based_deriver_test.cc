@@ -142,12 +142,6 @@ TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholders) {
 }
 
 TEST_F(PrfBasedDeriverTest, DeriveKeysetPlaceholdersWithGlobalRegistry) {
-  Registry::Reset();
-  ASSERT_THAT(PrfBasedDeriver::New(valid_prf_key_data_,
-                                   AeadKeyTemplates::Aes128CtrHmacSha256())
-                  .status(),
-              StatusIs(absl::StatusCode::kNotFound));
-
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
                   absl::make_unique<AesCtrHmacAeadKeyManager>(), true),
               IsOk());

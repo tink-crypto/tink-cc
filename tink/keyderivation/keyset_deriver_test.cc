@@ -28,6 +28,9 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aead_config.h"
+#include "tink/aead/aes_ctr_hmac_aead_key.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
@@ -137,6 +140,32 @@ std::unique_ptr<XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key(
           .value());
 }
 
+std::unique_ptr<AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey(
+    int aes_key_size, int tag_size, AesCtrHmacAeadParameters::Variant variant,
+    absl::string_view aes_secret, absl::string_view hmac_secret,
+    absl::optional<int> id_requirement) {
+  AesCtrHmacAeadParameters params =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(aes_key_size)
+          .SetHmacKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(tag_size)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(variant)
+          .Build()
+          .value();
+  return std::make_unique<AesCtrHmacAeadKey>(
+      AesCtrHmacAeadKey::Builder()
+          .SetParameters(params)
+          .SetAesKeyBytes(RestrictedData(test::HexDecodeOrDie(aes_secret),
+                                         InsecureSecretKeyAccess::Get()))
+          .SetHmacKeyBytes(RestrictedData(test::HexDecodeOrDie(hmac_secret),
+                                          InsecureSecretKeyAccess::Get()))
+          .SetIdRequirement(id_requirement)
+          .Build(GetPartialKeyAccess())
+          .value());
+}
+
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   return {
       /*AEAD KeysetHandle*/ {
@@ -166,6 +195,24 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
           CreateXChaCha20Poly1305Key(
               /*variant=*/XChaCha20Poly1305Parameters::Variant::kNoPrefix,
               /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
+              /*id_requirement=*/absl::nullopt),
+          CreateAesCtrHmacAeadKey(
+              /*aes_key_size=*/16, /*tag_size=*/16,
+              AesCtrHmacAeadParameters::Variant::kTink,
+              /*aes_secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
+              /*hmac_secret=*/kOutputKeyMaterialFromRfcVector.substr(32, 64),
+              /*id_requirement=*/5050505),
+          CreateAesCtrHmacAeadKey(
+              /*aes_key_size=*/32, /*tag_size=*/32,
+              AesCtrHmacAeadParameters::Variant::kCrunchy,
+              /*aes_secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
+              /*hmac_secret=*/kOutputKeyMaterialFromRfcVector.substr(64, 64),
+              /*id_requirement=*/6060606),
+          CreateAesCtrHmacAeadKey(
+              /*aes_key_size=*/16, /*tag_size=*/16,
+              AesCtrHmacAeadParameters::Variant::kNoPrefix,
+              /*aes_secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
+              /*hmac_secret=*/kOutputKeyMaterialFromRfcVector.substr(32, 64),
               /*id_requirement=*/absl::nullopt),
       },
   };
@@ -235,6 +282,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   // AEAD.
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
@@ -280,6 +328,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   // AEAD.
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);

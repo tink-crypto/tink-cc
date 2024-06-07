@@ -21,6 +21,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/cleartext_keyset_handle.h"
@@ -135,7 +136,11 @@ util::Status RegisterProtoSerializations() {
   if (!status.ok()) {
     return status;
   }
-  return RegisterXChaCha20Poly1305ProtoSerialization();
+  status = RegisterXChaCha20Poly1305ProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  return RegisterAesCtrHmacAeadProtoSerialization();
 }
 
 util::StatusOr<std::unique_ptr<StreamingPrf>> GetUnwrappedStreamingPrf(

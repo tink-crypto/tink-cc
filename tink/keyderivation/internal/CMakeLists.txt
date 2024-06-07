@@ -17,6 +17,7 @@ tink_cc_library(
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
     tink::core::parameters
+    tink::aead::aes_ctr_hmac_aead_proto_serialization
     tink::aead::aes_gcm_proto_serialization
     tink::aead::xchacha20_poly1305_proto_serialization
     tink::internal::configuration_impl
@@ -135,6 +136,9 @@ tink_cc_library(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::aead::aes_ctr_hmac_aead_key
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::aead::aes_ctr_hmac_aead_proto_serialization
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization
@@ -169,6 +173,10 @@ tink_cc_test(
     tink::core::registry
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::aead::aes_ctr_hmac_aead_key
+    tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::aead::aes_ctr_hmac_aead_proto_serialization
     tink::aead::aes_eax_parameters
     tink::aead::aes_eax_proto_serialization
     tink::aead::aes_gcm_key
@@ -192,9 +200,12 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
+    tink::proto::aes_ctr_cc_proto
+    tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
+    tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )

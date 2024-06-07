@@ -52,7 +52,7 @@ namespace {
 constexpr int kMinKeySizeInBytes = 16;
 constexpr int kMinIvSizeInBytes = 12;
 constexpr int kMinTagSizeInBytes = 10;
-}
+}  // namespace
 
 using ::crypto::tink::util::Enums;
 using ::crypto::tink::util::Status;
@@ -180,15 +180,18 @@ Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
   return HmacKeyManager().ValidateKeyFormat(key_format.hmac_key_format());
 }
 
-// To ensure the resulting key can provide key commitment, the AES-CTR key must
-// be derived first, then the HMAC key. This avoids situation where it's
-// possible to brute force raw key material so that the 32th byte of the
-// keystream is a 0 Give party A a key with this raw key material, saying that
-// the size of the HMAC key is 32 bytes and the size of the AES key is 16 bytes.
-// Give party B a key with this raw key material, saying that the size of the
-// HMAC key is 31 bytes and the size of the AES key is 16 bytes. Since HMAC will
-// pad the key with zeroes, this leads to both parties using the same HMAC key,
-// but a different AES key (offset by 1 byte)
+// To ensure the resulting key provides key commitment, derive the AES key
+// first, then the HMAC key.
+//
+// Consider the following scenario:
+//   - Derive the HMAC key before the AES key from the keystream.
+//   - Brute force the raw key material so the 32nd byte of the keystream is 0.
+//   - Give party A a key with this raw key material with HMAC key size 32 bytes
+//     and AES key size 16 bytes.
+//   - Give party B a key with this raw key material with HMAC key size 31 bytes
+//     and AES key size 16 bytes.
+//   - HMAC pads its key with zeroes, so both parties will end up with the same
+//     HMAC key, but different AES keys (offset by 1 byte).
 StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKeyManager::DeriveKey(
     const AesCtrHmacAeadKeyFormat& key_format,
     InputStream* input_stream) const {

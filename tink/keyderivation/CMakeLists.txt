@@ -150,6 +150,9 @@ tink_cc_test(
     tink::core::registry
     tink::core::restricted_data
     tink::aead::aead_config
+    tink::aead::aes_ctr_hmac_aead_key
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::aead::aes_ctr_hmac_aead_proto_serialization
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_proto_serialization

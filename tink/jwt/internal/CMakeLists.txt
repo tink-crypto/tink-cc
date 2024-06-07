@@ -781,10 +781,14 @@ tink_cc_library(
     tink::jwt::internal::jwt_public_key_sign_internal
     absl::memory
     absl::status
+    absl::string_view
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring_util
+    tink::internal::registry_impl
     tink::jwt::jwt_public_key_sign
     tink::jwt::raw_jwt
+    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -804,9 +808,12 @@ tink_cc_library(
     absl::optional
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring_util
+    tink::internal::registry_impl
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_validator
     tink::jwt::verified_jwt
+    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -821,23 +828,31 @@ tink_cc_test(
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
     tink::jwt::internal::jwt_format
+    tink::jwt::internal::jwt_public_key_sign_impl
     tink::jwt::internal::jwt_public_key_sign_internal
     tink::jwt::internal::jwt_public_key_sign_wrapper
+    tink::jwt::internal::jwt_public_key_verify_internal
     tink::jwt::internal::jwt_public_key_verify_wrapper
     protobuf::libprotobuf
     gmock
+    absl::flat_hash_map
     absl::memory
     absl::strings
+    absl::optional
     tink::core::cleartext_keyset_handle
     tink::core::keyset_manager
     tink::core::primitive_set
     tink::core::registry
     tink::config::global_registry
+    tink::internal::registry_impl
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
+    tink::monitoring::monitoring
+    tink::monitoring::monitoring_client_mocks
+    tink::signature::failing_signature
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

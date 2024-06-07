@@ -24,11 +24,14 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/monitoring_util.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/jwt_format.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/jwt_public_key_verify.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/verified_jwt.h"
+#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -42,11 +45,17 @@ using google::crypto::tink::OutputPrefixType;
 
 namespace {
 
+constexpr absl::string_view kPrimitive = "jwtverify";
+constexpr absl::string_view kVerifyApi = "verify";
+constexpr int kReportedJwtSize = 1;
+
 class JwtPublicKeyVerifySetWrapper : public JwtPublicKeyVerify {
  public:
   explicit JwtPublicKeyVerifySetWrapper(
-      std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set)
-      : jwt_verify_set_(std::move(jwt_verify_set)) {}
+      std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set,
+      std::unique_ptr<MonitoringClient> monitoring_verify_client = nullptr)
+      : jwt_verify_set_(std::move(jwt_verify_set)),
+        monitoring_verify_client_(std::move(monitoring_verify_client)) {}
 
   crypto::tink::util::StatusOr<crypto::tink::VerifiedJwt> VerifyAndDecode(
       absl::string_view compact,
@@ -56,6 +65,7 @@ class JwtPublicKeyVerifySetWrapper : public JwtPublicKeyVerify {
 
  private:
   std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set_;
+  std::unique_ptr<MonitoringClient> monitoring_verify_client_;
 };
 
 util::Status Validate(
@@ -86,12 +96,18 @@ JwtPublicKeyVerifySetWrapper::VerifyAndDecode(
     util::StatusOr<VerifiedJwt> verified_jwt =
         jwt_verify.VerifyAndDecodeWithKid(compact, validator, kid);
     if (verified_jwt.ok()) {
+      if (monitoring_verify_client_ != nullptr) {
+        monitoring_verify_client_->Log(entry->get_key_id(), kReportedJwtSize);
+      }
       return verified_jwt;
     } else if (verified_jwt.status().code() !=
                absl::StatusCode::kUnauthenticated) {
       // errors that are not the result of a signature verification
       interesting_status = verified_jwt.status();
     }
+  }
+  if (monitoring_verify_client_ != nullptr) {
+    monitoring_verify_client_->LogFailure();
   }
   if (interesting_status.has_value()) {
     return *std::move(interesting_status);
@@ -108,9 +124,31 @@ JwtPublicKeyVerifyWrapper::Wrap(
     const {
   util::Status status = Validate(jwt_verify_set.get());
   if (!status.ok()) return status;
+  MonitoringClientFactory* const monitoring_factory =
+      internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
+
+  // Monitoring is not enabled. Create a wrapper without monitoring clients.
+  if (monitoring_factory == nullptr) {
+    return {absl::make_unique<JwtPublicKeyVerifySetWrapper>(
+        std::move(jwt_verify_set))};
+  }
+
+  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+      internal::MonitoringKeySetInfoFromPrimitiveSet(*jwt_verify_set);
+  if (!keyset_info.ok()) {
+    return keyset_info.status();
+  }
+
+  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
+      monitoring_factory->New(
+          MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
+  if (!monitoring_verify_client.ok()) {
+    return monitoring_verify_client.status();
+  }
+
   std::unique_ptr<JwtPublicKeyVerify> jwt_verify =
       absl::make_unique<JwtPublicKeyVerifySetWrapper>(
-          std::move(jwt_verify_set));
+          std::move(jwt_verify_set), std::move(*monitoring_verify_client));
   return std::move(jwt_verify);
 }
 

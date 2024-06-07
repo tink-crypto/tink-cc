@@ -23,18 +23,23 @@
 #include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
 #include "tink/jwt/internal/jwt_format.h"
+#include "tink/jwt/internal/jwt_public_key_sign_impl.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/internal/jwt_public_key_sign_wrapper.h"
+#include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/internal/jwt_public_key_verify_wrapper.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/jwt_public_key_verify.h"
@@ -42,9 +47,11 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/keyset_manager.h"
+#include "tink/monitoring/monitoring.h"
+#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
-#include "tink/util/status.h"
+#include "tink/signature/failing_signature.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -66,8 +73,19 @@ namespace tink {
 namespace jwt_internal {
 namespace {
 
-using ::crypto::tink::test::IsOk;
-using ::testing::Eq;
+using ::crypto::tink::test::DummyPublicKeySign;
+using ::crypto::tink::test::DummyPublicKeyVerify;
+using ::crypto::tink::test::IsOkAndHolds;
+using ::google::crypto::tink::KeysetInfo;
+using ::google::crypto::tink::KeyStatusType;
+using ::google::crypto::tink::OutputPrefixType;
+using ::testing::_;
+using ::testing::ByMove;
+using ::testing::IsNull;
+using ::testing::NotNull;
+using ::testing::Return;
+using ::testing::StrictMock;
+using ::testing::Test;
 
 KeyTemplate CreateTemplate(OutputPrefixType output_prefix) {
   KeyTemplate key_template;
@@ -105,9 +123,11 @@ class JwtPublicKeyWrappersTest : public ::testing::Test {
  protected:
   void SetUp() override {
     ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-        absl::make_unique<JwtPublicKeySignWrapper>()), IsOk());
+                    absl::make_unique<JwtPublicKeySignWrapper>()),
+                IsOk());
     ASSERT_THAT(Registry::RegisterPrimitiveWrapper(
-        absl::make_unique<JwtPublicKeyVerifyWrapper>()), IsOk());
+                    absl::make_unique<JwtPublicKeyVerifyWrapper>()),
+                IsOk());
     ASSERT_THAT(Registry::RegisterAsymmetricKeyManagers(
                     absl::make_unique<JwtEcdsaSignKeyManager>(),
                     absl::make_unique<JwtEcdsaVerifyKeyManager>(), true),
@@ -405,6 +425,299 @@ TEST_F(JwtPublicKeyWrappersTest, KeyRotation) {
     EXPECT_THAT((*jwt_verify4)->VerifyAndDecode(*compact4, *validator).status(),
                 IsOk());
   }
+}
+
+KeysetInfo::KeyInfo PopulateKeyInfo(uint32_t key_id,
+                                    OutputPrefixType out_prefix_type,
+                                    KeyStatusType status) {
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(out_prefix_type);
+  key_info.set_key_id(key_id);
+  key_info.set_status(status);
+  return key_info;
+}
+
+// Creates a test keyset info object.
+KeysetInfo CreateTestKeysetInfo() {
+  KeysetInfo keyset_info;
+  *keyset_info.add_key_info() =
+      PopulateKeyInfo(/*key_id=*/1234543, OutputPrefixType::TINK,
+                      /*status=*/KeyStatusType::ENABLED);
+  *keyset_info.add_key_info() =
+      PopulateKeyInfo(/*key_id=*/726329, OutputPrefixType::RAW,
+                      /*status=*/KeyStatusType::ENABLED);
+  *keyset_info.add_key_info() =
+      PopulateKeyInfo(/*key_id=*/7213743, OutputPrefixType::TINK,
+                      /*status=*/KeyStatusType::ENABLED);
+  return keyset_info;
+}
+
+// Tests for the monitoring behavior.
+class JwtPublicKeySetWrapperWithMonitoringTest : public Test {
+ protected:
+  // Perform some common initialization: reset the global registry, set expected
+  // calls for the mock monitoring factory and the returned clients.
+  void SetUp() override {
+    Registry::Reset();
+
+    // Setup mocks for catching Monitoring calls.
+    auto monitoring_client_factory =
+        absl::make_unique<MockMonitoringClientFactory>();
+    auto monitoring_client =
+        absl::make_unique<StrictMock<MockMonitoringClient>>();
+    monitoring_client_ = monitoring_client.get();
+
+    // Monitoring tests expect that the client factory will create the
+    // corresponding MockMonitoringClients.
+    EXPECT_CALL(*monitoring_client_factory, New(_))
+        .WillOnce(
+            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+                std::move(monitoring_client)))));
+
+    ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
+                    .RegisterMonitoringClientFactory(
+                        std::move(monitoring_client_factory)),
+                IsOk());
+    ASSERT_THAT(
+        internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory(),
+        Not(IsNull()));
+  }
+
+  // Cleanup the registry to avoid mock leaks.
+  ~JwtPublicKeySetWrapperWithMonitoringTest() override { Registry::Reset(); }
+
+  MockMonitoringClient* monitoring_client_;
+};
+
+// Test that successful sign operations are logged.
+TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringSignSuccess) {
+  // Create a primitive set and fill it with some entries
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+  const absl::flat_hash_map<std::string, std::string> kAnnotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+  auto public_key_sign_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>(kAnnotations);
+  ASSERT_THAT(
+      public_key_sign_primitive_set
+          ->AddPrimitive(absl::make_unique<JwtPublicKeySignImpl>(
+                             absl::make_unique<DummyPublicKeySign>("sign0"),
+                             "jwtsign0", absl::nullopt),
+                         keyset_info.key_info(0))
+          .status(),
+      IsOk());
+  ASSERT_THAT(
+      public_key_sign_primitive_set
+          ->AddPrimitive(absl::make_unique<JwtPublicKeySignImpl>(
+                             absl::make_unique<DummyPublicKeySign>("sign1"),
+                             "jwtsign1", absl::nullopt),
+                         keyset_info.key_info(1))
+          .status(),
+      IsOk());
+  // Set the last as primary.
+  util::StatusOr<
+      PrimitiveSet<JwtPublicKeySignInternal>::Entry<JwtPublicKeySignInternal>*>
+      last = public_key_sign_primitive_set->AddPrimitive(
+          absl::make_unique<JwtPublicKeySignImpl>(
+              absl::make_unique<DummyPublicKeySign>("sign2"), "jwtsign2",
+              absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last, IsOk());
+  ASSERT_THAT(public_key_sign_primitive_set->set_primary(*last), IsOk());
+
+  // Record the ID of the primary key.
+  const uint32_t kPrimaryKeyId = keyset_info.key_info(2).key_id();
+
+  // Create a PublicKeySign primitive and sign some data.
+  util::StatusOr<std::unique_ptr<JwtPublicKeySign>> public_key_sign =
+      JwtPublicKeySignWrapper().Wrap(std::move(public_key_sign_primitive_set));
+  ASSERT_THAT(public_key_sign, IsOkAndHolds(NotNull()));
+
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .WithoutExpiration()
+                                       .Build();
+
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  // Check that calling Sign triggers a Log() call.
+  EXPECT_CALL(*monitoring_client_, Log(kPrimaryKeyId, 1));
+  EXPECT_THAT((*public_key_sign)->SignAndEncode(*raw_jwt), IsOk());
+}
+
+TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringSignFailures) {
+  // Create a primitive set and fill it with some entries
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+
+  const absl::flat_hash_map<std::string, std::string> kAnnotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+  auto public_key_sign_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>(kAnnotations);
+  ASSERT_THAT(public_key_sign_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtPublicKeySignImpl>(
+                                     CreateAlwaysFailingPublicKeySign("sign0"),
+                                     "jwtsign0", absl::nullopt),
+                                 keyset_info.key_info(0))
+                  .status(),
+              IsOk());
+  ASSERT_THAT(public_key_sign_primitive_set
+                  ->AddPrimitive(absl::make_unique<JwtPublicKeySignImpl>(
+                                     CreateAlwaysFailingPublicKeySign("sign1"),
+                                     "jwtsign1", absl::nullopt),
+                                 keyset_info.key_info(1))
+                  .status(),
+              IsOk());
+  // Set the last as primary.
+  util::StatusOr<
+      PrimitiveSet<JwtPublicKeySignInternal>::Entry<JwtPublicKeySignInternal>*>
+      last = public_key_sign_primitive_set->AddPrimitive(
+          absl::make_unique<JwtPublicKeySignImpl>(
+              CreateAlwaysFailingPublicKeySign("sign2"), "jwtsign2",
+              absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last, IsOk());
+  ASSERT_THAT(public_key_sign_primitive_set->set_primary(*last), IsOk());
+
+  // Create a PublicKeySign primitive and sign some data.
+  util::StatusOr<std::unique_ptr<JwtPublicKeySign>> public_key_sign =
+      JwtPublicKeySignWrapper().Wrap(std::move(public_key_sign_primitive_set));
+  ASSERT_THAT(public_key_sign, IsOkAndHolds(NotNull()));
+
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .WithoutExpiration()
+                                       .Build();
+
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  // Check that calling Sign triggers a LogFailure() call.
+  EXPECT_CALL(*monitoring_client_, LogFailure());
+  EXPECT_FALSE((*public_key_sign)->SignAndEncode(*raw_jwt).ok());
+}
+
+// Test that successful verify operations are logged.
+TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringVerifySuccess) {
+  // Create a primitive set and fill it with some entries
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+  const absl::flat_hash_map<std::string, std::string> kAnnotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+  auto public_key_verify_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(kAnnotations);
+  ASSERT_THAT(
+      public_key_verify_primitive_set
+          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+                             absl::make_unique<DummyPublicKeyVerify>("verify0"),
+                             "jwtverify0", absl::nullopt),
+                         keyset_info.key_info(0))
+          .status(),
+      IsOk());
+  ASSERT_THAT(
+      public_key_verify_primitive_set
+          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+                             absl::make_unique<DummyPublicKeyVerify>("verify1"),
+                             "jwtverify1", absl::nullopt),
+                         keyset_info.key_info(1))
+          .status(),
+      IsOk());
+  // Set the last as primary.
+  util::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>::Entry<
+      JwtPublicKeyVerifyInternal>*>
+      last = public_key_verify_primitive_set->AddPrimitive(
+          absl::make_unique<JwtPublicKeyVerifyImpl>(
+              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2",
+              absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last, IsOk());
+  ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
+
+  // Record the ID of the primary key.
+  const uint32_t kPrimaryKeyId = keyset_info.key_info(2).key_id();
+
+  // Create a PublicKeyVerify primitive and verify some data.
+  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> public_key_verify =
+      JwtPublicKeyVerifyWrapper().Wrap(
+          std::move(public_key_verify_primitive_set));
+  ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
+
+  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectTypeHeader("typeHeader")
+                                               .AllowMissingExpiration()
+                                               .Build();
+
+  constexpr absl::string_view compact =
+      "eyJ0eXAiOiJ0eXBlSGVhZGVyIiwiYWxnIjoiand0dmVyaWZ5MiIsImtpZCI6IkFHNFNydyJ9"
+      ".eyJqdGkiOiJpZDEyMyJ9."
+      "MTc6OTM6RHVtbXlTaWduOnZlcmlmeTJleUowZVhBaU9pSjBlWEJsU0dWaFpHVnlJaXdpWVd4"
+      "bklqb2lhbmQwZG1WeWFXWjVNaUlzSW10cFpDSTZJa0ZITkZOeWR5SjkuZXlKcWRHa2lPaUpw"
+      "WkRFeU15Sjk";
+
+  // Check that calling Sign triggers a Log() call.
+  EXPECT_CALL(*monitoring_client_, Log(kPrimaryKeyId, 1));
+  EXPECT_THAT((*public_key_verify)->VerifyAndDecode(compact, *validator),
+              IsOk());
+}
+
+// Test that successful verify operations are logged.
+TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
+       WrapKeysetWithMonitoringVerifyFailure) {
+  // Create a primitive set and fill it with some entries
+  KeysetInfo keyset_info = CreateTestKeysetInfo();
+  const absl::flat_hash_map<std::string, std::string> kAnnotations = {
+      {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
+  auto public_key_verify_primitive_set =
+      absl::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(kAnnotations);
+  ASSERT_THAT(
+      public_key_verify_primitive_set
+          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+                             absl::make_unique<DummyPublicKeyVerify>("verify0"),
+                             "jwtverify0", absl::nullopt),
+                         keyset_info.key_info(0))
+          .status(),
+      IsOk());
+  ASSERT_THAT(
+      public_key_verify_primitive_set
+          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+                             absl::make_unique<DummyPublicKeyVerify>("verify1"),
+                             "jwtverify1", absl::nullopt),
+                         keyset_info.key_info(1))
+          .status(),
+      IsOk());
+  // Set the last as primary.
+  util::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>::Entry<
+      JwtPublicKeyVerifyInternal>*>
+      last = public_key_verify_primitive_set->AddPrimitive(
+          absl::make_unique<JwtPublicKeyVerifyImpl>(
+              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2",
+              absl::nullopt),
+          keyset_info.key_info(2));
+  ASSERT_THAT(last, IsOk());
+  ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
+
+  // Create a PublicKeyVerify primitive and verify some data.
+  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> public_key_verify =
+      JwtPublicKeyVerifyWrapper().Wrap(
+          std::move(public_key_verify_primitive_set));
+  ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
+
+  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectTypeHeader("typeHeader")
+                                               .AllowMissingExpiration()
+                                               .Build();
+
+  constexpr absl::string_view compact =
+      "eyJ0eXAiOiJ0eXBlSGVhZGVyIiwiYWxnIjoiand0dmVyaWZ5MiIsImtpZCI6IkFHNFNydyJ9"
+      ".eyJqdGkiOiJpZDEyMyJ9."
+      "MTc6OTM6RHVtbXlTaWduOnZlcmlmeTJleUowZVhBaU9pSjBlWEJsU0dWaFpHVnlJaXdpWVd4"
+      "bklqb2lhbmQwZG1WeWFXWjVNaUlzSW10cFpDSTZJa0ZITkZOeWR5SjkuZXlKcWRHa2lPaUpw"
+      "XXXXXXXXXXX";  // Wrong signature
+
+  // Check that calling Sign triggers a Log() call.
+  EXPECT_CALL(*monitoring_client_, LogFailure());
+  EXPECT_FALSE((*public_key_verify)->VerifyAndDecode(compact, *validator).ok());
 }
 
 }  // namespace

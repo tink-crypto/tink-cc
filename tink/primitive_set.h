@@ -78,11 +78,10 @@ class PrimitiveSet {
         return util::Status(absl::StatusCode::kInvalidArgument,
                             "The primitive must be non-null.");
       }
-      std::string identifier = identifier_result.value();
-      return absl::WrapUnique(new Entry(std::move(primitive), identifier,
-                                        key_info.status(), key_info.key_id(),
-                                        key_info.output_prefix_type(),
-                                        key_info.type_url()));
+      return absl::WrapUnique(
+          new Entry(std::move(primitive), identifier_result.value(),
+                    key_info.status(), key_info.key_id(),
+                    key_info.output_prefix_type(), key_info.type_url()));
     }
 
     P2& get_primitive() const { return *primitive_; }

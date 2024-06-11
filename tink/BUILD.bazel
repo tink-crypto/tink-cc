@@ -1201,7 +1201,7 @@ cc_test(
 
 cc_library(
     name = "proto_keyset_format",
-    srcs = ["proto_keyset_format.cc"],
+    srcs = ["core/proto_keyset_format.cc"],
     hdrs = ["proto_keyset_format.h"],
     include_prefix = "tink",
     visibility = ["//visibility:public"],
@@ -1227,7 +1227,7 @@ cc_library(
 
 cc_test(
     name = "proto_keyset_format_test",
-    srcs = ["proto_keyset_format_test.cc"],
+    srcs = ["core/proto_keyset_format_test.cc"],
     deps = [
         ":aead",
         ":binary_keyset_reader",

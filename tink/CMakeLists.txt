@@ -1134,7 +1134,7 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_keyset_format
   SRCS
-    proto_keyset_format.cc
+    core/proto_keyset_format.cc
     proto_keyset_format.h
   DEPS
     tink::core::aead
@@ -1158,7 +1158,7 @@ tink_cc_library(
 tink_cc_test(
   NAME proto_keyset_format_test
   SRCS
-    proto_keyset_format_test.cc
+    core/proto_keyset_format_test.cc
   DEPS
     tink::core::aead
     tink::core::binary_keyset_reader

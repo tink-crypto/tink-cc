@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/internal/aes_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
@@ -78,26 +79,30 @@ util::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
   // the new memory.
   iv_block.resize(kBlockSize, '\0');
 
-  int ret =
-      EVP_EncryptInit_ex(ctx.get(), cipher_, nullptr /* engine */, key_.data(),
-                         reinterpret_cast<const uint8_t*>(&iv_block[0]));
-  if (ret != 1) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "could not initialize ctx");
-  }
-  ResizeStringUninitialized(&ciphertext, iv_size_ + plaintext.size());
-  int len;
-  ret = EVP_EncryptUpdate(
-      ctx.get(), reinterpret_cast<uint8_t*>(&ciphertext[iv_size_]), &len,
-      reinterpret_cast<const uint8_t*>(plaintext.data()), plaintext.size());
-  if (ret != 1) {
-    return util::Status(absl::StatusCode::kInternal, "encryption failed");
-  }
-  if (len != plaintext.size()) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "incorrect ciphertext size");
-  }
-  return ciphertext;
+  return internal::CallWithCoreDumpProtection(
+      [&]() -> util::StatusOr<std::string> {
+        int ret = EVP_EncryptInit_ex(
+            ctx.get(), cipher_, nullptr /* engine */, key_.data(),
+            reinterpret_cast<const uint8_t*>(&iv_block[0]));
+        if (ret != 1) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "could not initialize ctx");
+        }
+        ResizeStringUninitialized(&ciphertext, iv_size_ + plaintext.size());
+        int len;
+        ret = EVP_EncryptUpdate(
+            ctx.get(), reinterpret_cast<uint8_t*>(&ciphertext[iv_size_]), &len,
+            reinterpret_cast<const uint8_t*>(plaintext.data()),
+            plaintext.size());
+        if (ret != 1) {
+          return util::Status(absl::StatusCode::kInternal, "encryption failed");
+        }
+        if (len != plaintext.size()) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "incorrect ciphertext size");
+        }
+        return ciphertext;
+      });
 }
 
 util::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
@@ -116,32 +121,36 @@ util::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
   // Initialise key and IV
   std::string iv_block = std::string(ciphertext.substr(0, iv_size_));
   iv_block.resize(kBlockSize, '\0');
-  int ret = EVP_DecryptInit_ex(ctx.get(), cipher_, nullptr /* engine */,
+  return internal::CallWithCoreDumpProtection(
+      [&]() -> util::StatusOr<std::string> {
+        int ret =
+            EVP_DecryptInit_ex(ctx.get(), cipher_, nullptr /* engine */,
                                reinterpret_cast<const uint8_t*>(key_.data()),
                                reinterpret_cast<const uint8_t*>(&iv_block[0]));
-  if (ret != 1) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "could not initialize key or iv");
-  }
+        if (ret != 1) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "could not initialize key or iv");
+        }
 
-  size_t plaintext_size = ciphertext.size() - iv_size_;
-  std::string plaintext;
-  ResizeStringUninitialized(&plaintext, plaintext_size);
-  size_t read = iv_size_;
-  int len;
-  ret = EVP_DecryptUpdate(
-      ctx.get(), reinterpret_cast<uint8_t*>(&plaintext[0]), &len,
-      reinterpret_cast<const uint8_t*>(&ciphertext.data()[read]),
-      plaintext_size);
-  if (ret != 1) {
-    return util::Status(absl::StatusCode::kInternal, "decryption failed");
-  }
+        size_t plaintext_size = ciphertext.size() - iv_size_;
+        std::string plaintext;
+        ResizeStringUninitialized(&plaintext, plaintext_size);
+        size_t read = iv_size_;
+        int len;
+        ret = EVP_DecryptUpdate(
+            ctx.get(), reinterpret_cast<uint8_t*>(&plaintext[0]), &len,
+            reinterpret_cast<const uint8_t*>(&ciphertext.data()[read]),
+            plaintext_size);
+        if (ret != 1) {
+          return util::Status(absl::StatusCode::kInternal, "decryption failed");
+        }
 
-  if (len != plaintext_size) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "incorrect plaintext size");
-  }
-  return plaintext;
+        if (len != plaintext_size) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "incorrect plaintext size");
+        }
+        return plaintext;
+      });
 }
 
 }  // namespace subtle

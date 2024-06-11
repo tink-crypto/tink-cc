@@ -30,6 +30,7 @@
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/key_manager.h"
 #include "tink/util/constants.h"
 #include "tink/util/errors.h"
@@ -188,7 +189,9 @@ class KeyManagerImpl<
                        key_data.type_url());
     }
     crypto::tink::util::SecretProto<KeyProto> key_proto;
-    if (!key_proto->ParseFromString(key_data.value())) {
+    bool parsed = CallWithCoreDumpProtection(
+        [&]() -> bool { return key_proto->ParseFromString(key_data.value()); });
+    if (!parsed) {
       return ToStatusF(absl::StatusCode::kInvalidArgument,
                        "Could not parse key_data.value as key type '%s'.",
                        key_data.type_url());

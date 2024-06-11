@@ -608,6 +608,7 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
+    tink::internal::call_with_core_dump_protection
     tink::util::constants
     tink::util::errors
     tink::util::secret_proto

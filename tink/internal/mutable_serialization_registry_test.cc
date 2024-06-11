@@ -30,6 +30,7 @@
 #include "tink/internal/parameters_parser.h"
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_test_util.h"
 #include "tink/key.h"
@@ -75,6 +76,32 @@ TEST(MutableSerializationRegistryTest, ParseParameters) {
   EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
   EXPECT_THAT(std::type_index(typeid(**id_params)),
               std::type_index(typeid(IdParams)));
+}
+
+TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
+  MutableSerializationRegistry registry;
+  ParametersParserImpl<IdParamsSerialization, IdParams> parser(kIdTypeUrl,
+                                                               ParseIdParams);
+  ASSERT_THAT(registry.RegisterParametersParser(&parser), IsOk());
+
+  // Parse parameters with registered parameters parser.
+  util::StatusOr<std::unique_ptr<Parameters>> id_params =
+      registry.ParseParameters(IdParamsSerialization());
+  ASSERT_THAT(id_params, IsOk());
+  EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
+  EXPECT_THAT(std::type_index(typeid(**id_params)),
+              std::type_index(typeid(IdParams)));
+
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create("type_url", OutputPrefixType::TINK,
+                                           "serialized_proto");
+  ASSERT_THAT(serialization, IsOk());
+
+  // Fall back to legacy proto parameters.
+  util::StatusOr<std::unique_ptr<Parameters>> proto_parameters =
+      registry.ParseParametersWithLegacyFallback(*serialization);
+  ASSERT_THAT(proto_parameters, IsOk());
+  EXPECT_THAT((*proto_parameters)->HasIdRequirement(), IsTrue());
 }
 
 TEST(MutableSerializationRegistryTest, ParseParametersWithoutRegistration) {

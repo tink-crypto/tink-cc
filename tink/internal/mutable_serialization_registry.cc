@@ -27,9 +27,11 @@
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/legacy_proto_key.h"
+#include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/parameters_parser.h"
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
@@ -95,6 +97,27 @@ MutableSerializationRegistry::ParseParameters(
   return registry_.ParseParameters(serialization);
 }
 
+util::StatusOr<std::unique_ptr<Parameters>>
+MutableSerializationRegistry::ParseParametersWithLegacyFallback(
+    const Serialization& serialization) {
+  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+      ParseParameters(serialization);
+  if (parameters.status().code() == absl::StatusCode::kNotFound) {
+    const ProtoParametersSerialization* proto_serialization =
+        dynamic_cast<const ProtoParametersSerialization*>(&serialization);
+    if (proto_serialization == nullptr) {
+      return util::Status(
+          absl::StatusCode::kInternal,
+          "Failed to convert serialization to ProtoParametersSerialization.");
+    }
+    return {absl::make_unique<LegacyProtoParameters>(*proto_serialization)};
+  }
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+  return parameters;
+}
+
 util::StatusOr<std::unique_ptr<Key>> MutableSerializationRegistry::ParseKey(
     const Serialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
@@ -109,9 +132,16 @@ MutableSerializationRegistry::ParseKeyWithLegacyFallback(
   if (key.status().code() == absl::StatusCode::kNotFound) {
     const ProtoKeySerialization* proto_serialization =
         dynamic_cast<const ProtoKeySerialization*>(&serialization);
+    if (proto_serialization == nullptr) {
+      return util::Status(
+          absl::StatusCode::kInternal,
+          "Failed to convert serialization to ProtoKeySerialization.");
+    }
     util::StatusOr<LegacyProtoKey> proto_key = internal::LegacyProtoKey::Create(
         *proto_serialization, InsecureSecretKeyAccess::Get());
-    if (!proto_key.ok()) return proto_key.status();
+    if (!proto_key.ok()) {
+      return proto_key.status();
+    }
     return {absl::make_unique<LegacyProtoKey>(*proto_key)};
   }
   if (!key.ok()) return key.status();

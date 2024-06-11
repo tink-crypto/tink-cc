@@ -933,9 +933,11 @@ tink_cc_library(
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::legacy_proto_key
+    tink::internal::legacy_proto_parameters
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
     absl::core_headers
@@ -962,6 +964,7 @@ tink_cc_test(
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_test_util
     gmock

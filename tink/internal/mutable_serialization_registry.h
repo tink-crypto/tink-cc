@@ -71,6 +71,11 @@ class MutableSerializationRegistry {
   util::StatusOr<std::unique_ptr<Parameters>> ParseParameters(
       const Serialization& serialization) ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
+  // Similar to `ParseParameters` but falls back to legacy proto parameters
+  // serialization if the corresponding parameters parser is not found.
+  util::StatusOr<std::unique_ptr<Parameters>> ParseParametersWithLegacyFallback(
+      const Serialization& serialization);
+
   // Serializes `parameters` into a `Serialization` instance.
   template <typename SerializationT>
   util::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(

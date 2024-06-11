@@ -945,7 +945,6 @@ tink_cc_library(
     absl::status
     absl::synchronization
     absl::optional
-    tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
     tink::core::secret_key_access_token

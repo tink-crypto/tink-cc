@@ -23,7 +23,6 @@
 #include "absl/status/status.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/legacy_proto_key.h"
@@ -138,7 +137,7 @@ MutableSerializationRegistry::ParseKeyWithLegacyFallback(
           "Failed to convert serialization to ProtoKeySerialization.");
     }
     util::StatusOr<LegacyProtoKey> proto_key = internal::LegacyProtoKey::Create(
-        *proto_serialization, InsecureSecretKeyAccess::Get());
+        *proto_serialization, token);
     if (!proto_key.ok()) {
       return proto_key.status();
     }

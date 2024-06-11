@@ -986,7 +986,6 @@ cc_library(
         ":proto_parameters_serialization",
         ":serialization",
         ":serialization_registry",
-        "//tink:insecure_secret_key_access",
         "//tink:key",
         "//tink:parameters",
         "//tink:secret_key_access_token",

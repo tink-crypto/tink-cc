@@ -448,6 +448,41 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME jwt_rsa_ssa_pkcs1_proto_serialization
+  SRCS
+    jwt_rsa_ssa_pkcs1_proto_serialization.cc
+    jwt_rsa_ssa_pkcs1_proto_serialization.h
+  DEPS
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_private_key
+    tink::jwt::jwt_rsa_ssa_pkcs1_public_key
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::big_integer
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_big_integer
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::call_with_core_dump_protection
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::util::secret_data
+    tink::util::secret_proto
+    tink::util::status
+    tink::util::statusor
+    tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
+    tink::proto::tink_cc_proto
+)
+
 # tests
 
 tink_cc_test(
@@ -840,4 +875,39 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::util::statusor
     tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME jwt_rsa_ssa_pkcs1_proto_serialization_test
+  SRCS
+    jwt_rsa_ssa_pkcs1_proto_serialization_test.cc
+  DEPS
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_private_key
+    tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
+    tink::jwt::jwt_rsa_ssa_pkcs1_public_key
+    gmock
+    absl::check
+    absl::status
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::big_integer
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_big_integer
+    tink::core::restricted_data
+    tink::internal::bn_util
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::ssl_unique_ptr
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::common_cc_proto
+    tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
+    tink::proto::tink_cc_proto
 )

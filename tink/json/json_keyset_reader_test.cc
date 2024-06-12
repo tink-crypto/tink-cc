@@ -522,6 +522,66 @@ TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidKeyMaterialType) {
               Eq(::google::crypto::tink::KeyData::UNKNOWN_KEYMATERIAL));
 }
 
+TEST_F(JsonKeysetReaderTest, ReadKeysetsWithKeyNotArray) {
+  const std::string keyset_with_key_not_array = R"(
+      {
+         "primaryKeyId":42,
+         "key":
+            {
+               "keyData":{
+                  "typeUrl":"type.googleapis.com/google.crypto.tink.AesGcmKey",
+                  "keyMaterialType":"SYMMETRIC",
+                  "value": "GiBWyUfGgYk3RTRhj/LIUzSudIWlyjCftCOypTr0jCNSLg=="
+               },
+               "outputPrefixType":"TINK",
+               "keyId": 42,
+               "status":"ENABLED"
+            }
+      })";
+  StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(keyset_with_key_not_array);
+  ASSERT_THAT(reader, IsOk());
+  StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
+      keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, Not(IsOk()));
+}
+
+TEST_F(JsonKeysetReaderTest, ReadKeysetsWithKeyEntryIsNotObject) {
+  const std::string keyset_with_key_not_array = R"(
+      {
+         "primaryKeyId":42,
+         "key":[true]
+      })";
+  StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(keyset_with_key_not_array);
+  ASSERT_THAT(reader, IsOk());
+  StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
+      keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, Not(IsOk()));
+}
+
+TEST_F(JsonKeysetReaderTest, ReadKeysetsWithKeyDataIsNotObject) {
+  std::string keyset_with_keydata_not_object = R"(
+      {
+         "primaryKeyId":42,
+         "key":[
+            {
+               "keyData":true,
+               "outputPrefixType":"TINK",
+               "keyId": 42,
+               "status":"ENABLED"
+            }
+         ]
+      })";
+  StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(keyset_with_keydata_not_object);
+  ASSERT_THAT(reader, IsOk());
+  StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
+      keyset = (*reader)->Read();
+  EXPECT_THAT(keyset, Not(IsOk()));
+}
+
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

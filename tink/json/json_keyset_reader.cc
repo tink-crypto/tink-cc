@@ -146,9 +146,10 @@ util::Status ValidateKeyset(const rapidjson::Document& json_doc) {
 }
 
 util::Status ValidateKey(const rapidjson::Value& json_value) {
-  if (!json_value.HasMember("keyData") || !json_value["keyData"].IsObject() ||
-      !json_value.HasMember("status") || !json_value["status"].IsString() ||
-      !json_value.HasMember("keyId") || !json_value["keyId"].IsUint() ||
+  if (!json_value.IsObject() || !json_value.HasMember("keyData") ||
+      !json_value["keyData"].IsObject() || !json_value.HasMember("status") ||
+      !json_value["status"].IsString() || !json_value.HasMember("keyId") ||
+      !json_value["keyId"].IsUint() ||
       !json_value.HasMember("outputPrefixType") ||
       !json_value["outputPrefixType"].IsString()) {
     return util::Status(absl::StatusCode::kInvalidArgument, "Invalid JSON Key");

@@ -784,6 +784,47 @@ tink_cc_library(
     tink::core::big_integer
 )
 
+tink_cc_library(
+  NAME proto_parameters_format
+  SRCS
+    core/proto_parameters_format.cc
+    proto_parameters_format.h
+  DEPS
+    tink::core::parameters
+    absl::status
+    absl::strings
+    tink::internal::legacy_proto_parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_library(
+  NAME proto_keyset_format
+  SRCS
+    core/proto_keyset_format.cc
+    proto_keyset_format.h
+  DEPS
+    tink::core::aead
+    tink::core::binary_keyset_reader
+    tink::core::binary_keyset_writer
+    tink::core::cleartext_keyset_handle
+    tink::core::keyset_handle
+    tink::core::keyset_reader
+    tink::core::secret_key_access_token
+    absl::memory
+    absl::status
+    absl::strings
+    tink::internal::call_with_core_dump_protection
+    tink::util::secret_data
+    tink::util::secret_proto
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+)
+
 # tests
 
 tink_cc_test(
@@ -1132,30 +1173,6 @@ tink_cc_test(
     tink::util::secret_data
 )
 
-tink_cc_library(
-  NAME proto_keyset_format
-  SRCS
-    core/proto_keyset_format.cc
-    proto_keyset_format.h
-  DEPS
-    tink::core::aead
-    tink::core::binary_keyset_reader
-    tink::core::binary_keyset_writer
-    tink::core::cleartext_keyset_handle
-    tink::core::keyset_handle
-    tink::core::keyset_reader
-    tink::core::secret_key_access_token
-    absl::memory
-    absl::status
-    absl::strings
-    tink::internal::call_with_core_dump_protection
-    tink::util::secret_data
-    tink::util::secret_proto
-    tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
-)
-
 tink_cc_test(
   NAME proto_keyset_format_test
   SRCS
@@ -1216,4 +1233,23 @@ tink_cc_test(
     tink::core::ec_point
     gmock
     tink::subtle::random
+)
+
+tink_cc_test(
+  NAME proto_parameters_format_test
+  SRCS
+    core/proto_parameters_format_test.cc
+  DEPS
+    tink::core::parameters
+    tink::core::proto_parameters_format
+    gmock
+    absl::status
+    tink::internal::legacy_proto_parameters
+    tink::internal::proto_parameters_serialization
+    tink::mac::aes_cmac_parameters
+    tink::mac::aes_cmac_proto_serialization
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::aes_cmac_cc_proto
+    tink::proto::tink_cc_proto
 )

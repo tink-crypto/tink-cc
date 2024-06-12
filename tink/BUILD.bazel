@@ -842,6 +842,51 @@ cc_library(
     deps = [":big_integer"],
 )
 
+cc_library(
+    name = "proto_parameters_format",
+    srcs = ["core/proto_parameters_format.cc"],
+    hdrs = ["proto_parameters_format.h"],
+    include_prefix = "tink",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":parameters",
+        "//tink/internal:legacy_proto_parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "proto_keyset_format",
+    srcs = ["core/proto_keyset_format.cc"],
+    hdrs = ["proto_keyset_format.h"],
+    include_prefix = "tink",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":aead",
+        ":binary_keyset_reader",
+        ":binary_keyset_writer",
+        ":cleartext_keyset_handle",
+        ":keyset_handle",
+        ":keyset_reader",
+        ":secret_key_access_token",
+        "//proto:tink_cc_proto",
+        "//tink/internal:call_with_core_dump_protection",
+        "//tink/util:secret_data",
+        "//tink/util:secret_proto",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -1200,32 +1245,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "proto_keyset_format",
-    srcs = ["core/proto_keyset_format.cc"],
-    hdrs = ["proto_keyset_format.h"],
-    include_prefix = "tink",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":aead",
-        ":binary_keyset_reader",
-        ":binary_keyset_writer",
-        ":cleartext_keyset_handle",
-        ":keyset_handle",
-        ":keyset_reader",
-        ":secret_key_access_token",
-        "//proto:tink_cc_proto",
-        "//tink/internal:call_with_core_dump_protection",
-        "//tink/util:secret_data",
-        "//tink/util:secret_proto",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-    ],
-)
-
 cc_test(
     name = "proto_keyset_format_test",
     srcs = ["core/proto_keyset_format_test.cc"],
@@ -1284,6 +1303,25 @@ cc_test(
         ":big_integer",
         ":ec_point",
         "//tink/subtle:random",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "proto_parameters_format_test",
+    srcs = ["core/proto_parameters_format_test.cc"],
+    deps = [
+        ":parameters",
+        ":proto_parameters_format",
+        "//proto:aes_cmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/internal:legacy_proto_parameters",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/mac:aes_cmac_parameters",
+        "//tink/mac:aes_cmac_proto_serialization",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
 )

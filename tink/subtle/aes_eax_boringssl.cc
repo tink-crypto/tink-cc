@@ -35,6 +35,7 @@
 #include "tink/aead.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/random.h"
@@ -247,6 +248,10 @@ crypto::tink::util::StatusOr<std::string> AesEaxBoringSsl::Encrypt(
   ResizeStringUninitialized(&ciphertext, ciphertext_size);
   return internal::CallWithCoreDumpProtection(
       [&]() -> util::StatusOr<std::string> {
+        // The ciphertext region is allowed to leak: this never fails and
+        // the ciphertext can afterwards be given to the adversary.
+        crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
+            ciphertext.data(), ciphertext.size());
         const std::string nonce = Random::GetRandomBytes(nonce_size_);
         const Block N = Omac(nonce, 0);
         const Block H = Omac(associated_data, 1);
@@ -263,6 +268,10 @@ crypto::tink::util::StatusOr<std::string> AesEaxBoringSsl::Encrypt(
         absl::c_copy(nonce, ciphertext.begin());
         std::copy_n(mac.begin(), kTagSize,
                     &ciphertext[ciphertext_size - kTagSize]);
+        // Declassify the ciphertext: this is now safe to give to the adversary.
+        // (Note: we currently do not propagate labels of the associated data).
+        crypto::tink::internal::DfsanClearLabel(ciphertext.data(),
+                                                ciphertext_size);
         return ciphertext;
       });
 }

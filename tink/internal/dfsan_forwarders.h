@@ -17,10 +17,12 @@
 #ifndef TINK_INTERNAL_DFSAN_FORWARDERS_H_
 #define TINK_INTERNAL_DFSAN_FORWARDERS_H_
 
+#include <cstddef>
+
 #include "absl/base/config.h"
 
 #if ABSL_HAVE_FEATURE(dataflow_sanitizer)
-#include <sanitizer/dfsan_interface.h>
+#error Tink does not support DFSan in Open Source -- please file an issue with your use case
 #endif
 
 namespace crypto {
@@ -34,10 +36,24 @@ void CutAllFlows(T& t) {
   dfsan_set_label(dfsan_label{0}, &t, sizeof(t));
 }
 
+inline void DfsanClearLabel(const void* ptr, size_t size) {
+  dfsan_set_label(dfsan_label{0}, const_cast<void*>(ptr), size);
+}
+
+using dfsan::ScopedAssumeRegionCoreDumpSafe;
+
 #else
 
 template <typename T>
 inline void CutAllFlows(T& t) {}
+
+inline void DfsanClearLabel(const void* ptr, size_t size) {}
+
+class ScopedAssumeRegionCoreDumpSafe {
+ public:
+  ScopedAssumeRegionCoreDumpSafe(const void* ptr, size_t size) {}
+  ~ScopedAssumeRegionCoreDumpSafe() = default;
+};
 
 #endif
 

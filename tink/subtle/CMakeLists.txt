@@ -483,6 +483,7 @@ tink_cc_library(
     tink::core::aead
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::util
     tink::util::errors

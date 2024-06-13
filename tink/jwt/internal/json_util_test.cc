@@ -69,6 +69,26 @@ TEST(JsonUtil, ParseThenSerializeListOk) {
               IsOkAndHolds(R"(["hello","world",42,true])"));
 }
 
+TEST(JsonUtil, ParseListWithTailingCommaWorks) {
+  // This is not allowed in the spec: https://www.json.org/json-en.html
+  util::StatusOr<ListValue> proto =
+      JsonStringToProtoList(R"(["hello", "world",])");
+  EXPECT_TRUE(proto.ok());
+  ASSERT_THAT(ProtoListToJsonString(*proto),
+              IsOkAndHolds(R"(["hello","world"])"));
+}
+
+TEST(JsonUtil, ParseStructWithTailingCommaWorks) {
+  // This is not allowed in the spec: https://www.json.org/json-en.html
+  util::StatusOr<Struct> proto =
+      JsonStringToProtoStruct(R"({"some_key":false,})");
+  ASSERT_THAT(proto, IsOk());
+
+  ASSERT_THAT(ProtoStructToJsonString(*proto),
+              IsOkAndHolds(R"({"some_key":false})"));
+}
+
+
 TEST(JsonUtil, ParseInvalidStructTokenNotOk) {
   util::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":false)");

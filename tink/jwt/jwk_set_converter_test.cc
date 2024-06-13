@@ -25,6 +25,7 @@
 #include "google/protobuf/util/message_differencer.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
@@ -53,9 +54,11 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
+using ::crypto::tink::test::StatusIs;
 using ::google::protobuf::Struct;
 using ::google::protobuf::util::MessageDifferencer;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::Not;
 
 constexpr absl::string_view kRs256PrivateKey = R"( {
@@ -656,23 +659,16 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Rs256WithSmallModulusGetPrimitiveFails) {
        "kid":"DfpE4Q"
       }]
     })";
-  // The keys in the keyset are validated when the primitive is generated.
-  // So JwkSetToPublicKeysetHandle succeeds, but GetPrimitive fails.
   util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
-  ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
-      (*public_handle)
-          ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
-              ConfigGlobalRegistry());
-  EXPECT_THAT(verify, Not(IsOk()));
+  ASSERT_THAT(public_handle, Not(IsOk()));
 }
 
 TEST_F(JwkSetToPublicKeysetHandleTest, Rs256CorrectlySetsKid) {
   std::string jwt_set = R"(
     {"keys":[
       {"kty":"RSA",
-       "n":"AQAB",
+       "n":"vmUOa62TYrxj7N8rZVAzoEdSnmsRQaNWBMAdB8adGa8n4ycGiYWoGv0uZWc8vH2jn6l3Pa_72bb2IHf3-KD2UaTwLk1x3yShXybEoS5ZF9bemzrn2ohNixGoN7Ofj7wPb61Z-F1Nv53nq308z-RI1WeyIH-9HjuIcuUxaWY0VevsXzCehMJP5g7kVzyl55bYcRi28didkVazrzVgNG35yNNMEL32oW1Vfvvp7hfQHtxSwkFOPzJgzIPHbJFbxALGrrgXHsoq7UtDQdS9vvoEp4_JzQhCtnCEKahgkTwOWyT96OlRGYiPJSFHWTujy1Qnd6OKc8LGEspAX4oD6Zl-YQ",
        "e":"AQAB",
        "use":"sig",
        "alg":"RS256",
@@ -697,7 +693,7 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Rs256WithoutOptionalFieldsSucceeds) {
   std::string jwt_set = R"(
     {"keys":[
       {"kty":"RSA",
-       "n":"AQAB",
+       "n":"vmUOa62TYrxj7N8rZVAzoEdSnmsRQaNWBMAdB8adGa8n4ycGiYWoGv0uZWc8vH2jn6l3Pa_72bb2IHf3-KD2UaTwLk1x3yShXybEoS5ZF9bemzrn2ohNixGoN7Ofj7wPb61Z-F1Nv53nq308z-RI1WeyIH-9HjuIcuUxaWY0VevsXzCehMJP5g7kVzyl55bYcRi28didkVazrzVgNG35yNNMEL32oW1Vfvvp7hfQHtxSwkFOPzJgzIPHbJFbxALGrrgXHsoq7UtDQdS9vvoEp4_JzQhCtnCEKahgkTwOWyT96OlRGYiPJSFHWTujy1Qnd6OKc8LGEspAX4oD6Zl-YQ",
        "e":"AQAB",
        "alg":"RS256",
       }]
@@ -1285,11 +1281,10 @@ TEST(JwkSetFromPublicKeysetHandleTest,
   ASSERT_THAT(reader, IsOk());
   util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
-  ASSERT_THAT(keyset_handle, IsOk());
-
-  util::StatusOr<std::string> jwk_set =
-      JwkSetFromPublicKeysetHandle(**keyset_handle);
-  EXPECT_THAT(jwk_set, Not(IsOk()));
+  ASSERT_THAT(
+      keyset_handle.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Could not determine JwtRsaSsaPkcs1Algorithm")));
 }
 
 }  // namespace

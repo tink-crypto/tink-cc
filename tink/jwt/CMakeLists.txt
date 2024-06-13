@@ -139,6 +139,7 @@ tink_cc_library(
     jwt_signature_config.h
   DEPS
     tink::jwt::jwt_ecdsa_proto_serialization
+    tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
     absl::core_headers
     absl::memory
     tink::core::registry
@@ -583,6 +584,7 @@ tink_cc_test(
     tink::jwt::verified_jwt
     protobuf::libprotobuf
     gmock
+    absl::status
     absl::strings
     crypto
     tink::core::cleartext_keyset_handle
@@ -609,9 +611,15 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_key_templates
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_private_key
+    tink::jwt::jwt_rsa_ssa_pkcs1_public_key
     tink::jwt::jwt_signature_config
     gmock
+    absl::check
     absl::status
+    absl::strings
+    absl::string_view
     absl::optional
     crypto
     tink::core::big_integer
@@ -633,6 +641,7 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_ecdsa_cc_proto
+    tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
 )
 
 tink_cc_test(

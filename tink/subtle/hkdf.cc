@@ -129,8 +129,8 @@ util::StatusOr<util::SecretData> Hkdf::ComputeEciesHkdfSymmetricKey(
     const util::SecretData &shared_secret, absl::string_view salt,
     absl::string_view info, size_t out_len) {
   util::SecretData ikm(kem_bytes.size() + shared_secret.size());
-  absl::c_copy(kem_bytes, ikm.begin());
-  absl::c_copy(shared_secret, ikm.begin() + kem_bytes.size());
+  absl::c_copy(kem_bytes, ikm.data());
+  absl::c_copy(shared_secret, ikm.data() + kem_bytes.size());
   return Hkdf::ComputeHkdf(hash, ikm, salt, info, out_len);
 }
 

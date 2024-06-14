@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/bn.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
@@ -75,14 +76,30 @@ util::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
     return util::Status(absl::StatusCode::kInvalidArgument, "BIGNUM is NULL");
   }
   util::SecretData secret_data(len);
-  util::Status res = BignumToBinaryPadded(
-      absl::MakeSpan(reinterpret_cast<char *>(secret_data.data()),
-                     secret_data.size()),
-      bn);
+  util::Status res = internal::CallWithCoreDumpProtection([&] {
+    return BignumToBinaryPadded(
+        absl::MakeSpan(reinterpret_cast<char *>(secret_data.data()),
+                       secret_data.size()),
+        bn);
+  });
   if (!res.ok()) {
     return res;
   }
   return secret_data;
+}
+
+util::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
+    const util::SecretData &bigendian_bn_str) {
+  internal::SslUniquePtr<BIGNUM> bn(internal::CallWithCoreDumpProtection([&] {
+    return BN_bin2bn(
+        reinterpret_cast<const unsigned char *>(bigendian_bn_str.data()),
+        bigendian_bn_str.size(), /*ret=*/nullptr);
+  }));
+  if (bn.get() == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "BIGNUM allocation failed");
+  }
+  return std::move(bn);
 }
 
 util::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(

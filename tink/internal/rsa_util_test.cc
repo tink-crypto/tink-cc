@@ -123,19 +123,19 @@ TEST(RsaUtilTest, KeyIsWellFormed) {
       internal::StringToBignum(private_key.n);
   ASSERT_THAT(n, IsOk());
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> d =
-      internal::StringToBignum(util::SecretDataAsStringView(private_key.d));
+      internal::SecretDataToBignum(private_key.d);
   ASSERT_THAT(d, IsOk());
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> p =
-      internal::StringToBignum(util::SecretDataAsStringView(private_key.p));
+      internal::SecretDataToBignum(private_key.p);
   ASSERT_THAT(p, IsOk());
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> q =
-      internal::StringToBignum(util::SecretDataAsStringView(private_key.q));
+      internal::SecretDataToBignum(private_key.q);
   ASSERT_THAT(q, IsOk());
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> dp =
-      internal::StringToBignum(util::SecretDataAsStringView(private_key.dp));
+      internal::SecretDataToBignum(private_key.dp);
   ASSERT_THAT(dp, IsOk());
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> dq =
-      internal::StringToBignum(util::SecretDataAsStringView(private_key.dq));
+      internal::SecretDataToBignum(private_key.dq);
   ASSERT_THAT(dq, IsOk());
   internal::SslUniquePtr<BN_CTX> ctx(BN_CTX_new());
 
@@ -255,7 +255,10 @@ void ExpectBignumEquals(const BIGNUM* bn, absl::string_view data) {
 
 // Checks if a BIGNUM is equal to a SecretData value.
 void ExpectBignumEquals(const BIGNUM* bn, const util::SecretData& data) {
-  internal::ExpectBignumEquals(bn, util::SecretDataAsStringView(data));
+  util::StatusOr<util::SecretData> converted =
+      internal::BignumToSecretData(bn, BN_num_bytes(bn));
+  ASSERT_THAT(converted, IsOk());
+  EXPECT_TRUE(util::SecretDataEquals(*converted, data));
 }
 
 TEST(RsaUtilTest, GetRsaModAndExponents) {

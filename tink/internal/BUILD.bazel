@@ -153,6 +153,7 @@ cc_library(
     hdrs = ["bn_util.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":call_with_core_dump_protection",
         ":ssl_unique_ptr",
         "//tink/subtle:subtle_util",
         "//tink/util:secret_data",

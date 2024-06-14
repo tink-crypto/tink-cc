@@ -160,6 +160,7 @@ tink_cc_library(
     bn_util.cc
     bn_util.h
   DEPS
+    tink::internal::call_with_core_dump_protection
     tink::internal::ssl_unique_ptr
     absl::status
     absl::strings

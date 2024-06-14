@@ -131,7 +131,7 @@ util::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
   }
 
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_key =
-      internal::StringToBignum(util::SecretDataAsStringView(private_key_bytes));
+      internal::SecretDataToBignum(private_key_bytes);
   if (!priv_key.ok()) {
     return priv_key.status();
   }

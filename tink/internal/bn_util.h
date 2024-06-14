@@ -51,6 +51,9 @@ crypto::tink::util::StatusOr<std::string> BignumToString(const BIGNUM* bn,
 crypto::tink::util::StatusOr<crypto::tink::util::SecretData> BignumToSecretData(
     const BIGNUM* bn, size_t len);
 
+util::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
+    const util::SecretData& bigendian_bn_str);
+
 // Returns an OpenSSL/BoringSSL BIGNUM constructed from a bigendian string
 // representation `bigendian_bn_str`.
 crypto::tink::util::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(

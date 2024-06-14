@@ -209,7 +209,7 @@ util::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa) {
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(key.e);
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> d =
-      internal::StringToBignum(util::SecretDataAsStringView(key.d));
+      internal::SecretDataToBignum(key.d);
   if (!n.ok()) {
     return n.status();
   }
@@ -233,9 +233,9 @@ util::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa) {
 
 util::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa) {
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> p =
-      internal::StringToBignum(util::SecretDataAsStringView(key.p));
+      internal::SecretDataToBignum(key.p);
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> q =
-      internal::StringToBignum(util::SecretDataAsStringView(key.q));
+      internal::SecretDataToBignum(key.q);
   if (!p.ok()) {
     return p.status();
   }
@@ -254,11 +254,11 @@ util::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa) {
 
 util::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa) {
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> dp =
-      internal::StringToBignum(util::SecretDataAsStringView(key.dp));
+      internal::SecretDataToBignum(key.dp);
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> dq =
-      internal::StringToBignum(util::SecretDataAsStringView(key.dq));
+      internal::SecretDataToBignum(key.dq);
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> crt =
-      internal::StringToBignum(util::SecretDataAsStringView(key.crt));
+      internal::SecretDataToBignum(key.crt);
   if (!dp.ok()) {
     return dp.status();
   }

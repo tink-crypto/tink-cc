@@ -17,6 +17,7 @@
 #include "tink/aead/aes_eax_proto_serialization.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
@@ -228,11 +229,10 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   util::StatusOr<SecretData> serialized_proto =
       proto_key.SerializeAsSecretData();
   if (!serialized_proto.ok()) return serialized_proto.status();
-  RestrictedData restricted_output =
-      RestrictedData(SecretDataAsStringView(*serialized_proto), *token);
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
-      *output_prefix_type, key.GetIdRequirement());
+      kTypeUrl, RestrictedData(*std::move(serialized_proto), *token),
+      google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 AesEaxProtoParametersParserImpl* AesEaxProtoParametersParser() {

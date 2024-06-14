@@ -23,7 +23,6 @@
 #include "gtest/gtest.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -64,12 +63,10 @@ TEST(RestrictedDataTest, Equals) {
 }
 
 TEST(RestrictedDataTest, NotEquals) {
-  RestrictedData data(
-      util::SecretDataAsStringView(Random::GetRandomKeyBytes(32)),
-      InsecureSecretKeyAccess::Get());
-  RestrictedData diff_data(
-      util::SecretDataAsStringView(Random::GetRandomKeyBytes(32)),
-      InsecureSecretKeyAccess::Get());
+  RestrictedData data(Random::GetRandomKeyBytes(32),
+                      InsecureSecretKeyAccess::Get());
+  RestrictedData diff_data(Random::GetRandomKeyBytes(32),
+                           InsecureSecretKeyAccess::Get());
 
   EXPECT_TRUE(data != diff_data);
   EXPECT_TRUE(diff_data != data);

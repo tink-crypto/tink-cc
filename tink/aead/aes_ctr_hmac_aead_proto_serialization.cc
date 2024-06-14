@@ -16,6 +16,8 @@
 
 #include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
 
+#include <utility>
+
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -347,16 +349,14 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   util::StatusOr<SecretData> serialized_proto =
       aes_ctr_hmac_aead_proto_key.SerializeAsSecretData();
   if (!serialized_proto.ok()) return serialized_proto.status();
-  RestrictedData restricted_output =
-      RestrictedData(SecretDataAsStringView(*serialized_proto), *token);
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyData::SYMMETRIC, *output_prefix_type,
-      key.GetIdRequirement());
+      kTypeUrl, RestrictedData(*std::move(serialized_proto), *token),
+      KeyData::SYMMETRIC, *output_prefix_type, key.GetIdRequirement());
 }
 
 AesCtrHmacAeadProtoParametersParserImpl& AesCtrHmacAeadProtoParametersParser() {

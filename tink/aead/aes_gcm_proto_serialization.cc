@@ -17,6 +17,7 @@
 #include "tink/aead/aes_gcm_proto_serialization.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
@@ -230,11 +231,10 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }
-  RestrictedData restricted_output =
-      RestrictedData(util::SecretDataAsStringView(*serialized_key), *token);
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
-      *output_prefix_type, key.GetIdRequirement());
+      kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
+      google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 AesGcmProtoParametersParserImpl* AesGcmProtoParametersParser() {

@@ -114,9 +114,8 @@ TEST_P(HpkePrivateKeyTest, CreateNistCurvePrivateKey) {
                             test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  RestrictedData private_key_bytes =
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
-                     InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_bytes(ec_key->priv,
+                                   InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, private_key_bytes, GetPartialKeyAccess());
@@ -197,9 +196,8 @@ TEST_P(HpkePrivateKeyTest, CreateMismatchedNistCurveKeyPairFails) {
   util::StatusOr<internal::EcKey> ec_key2 = internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key2, IsOk());
 
-  RestrictedData private_key_bytes2 =
-      RestrictedData(util::SecretDataAsStringView(ec_key2->priv),
-                     InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_bytes2(ec_key2->priv,
+                                    InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(HpkePrivateKey::Create(*public_key1, private_key_bytes2,
                                      GetPartialKeyAccess())
@@ -257,11 +255,10 @@ TEST_P(HpkePrivateKeyTest, CreateNistPrivateKeyWithInvalidKeyLengthFails) {
                             test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  absl::string_view private_key_input =
-      util::SecretDataAsStringView(ec_key->priv);
-  RestrictedData expanded_private_key_bytes = RestrictedData(
-      absl::StrCat(absl::HexStringToBytes("00"), private_key_input),
-      InsecureSecretKeyAccess::Get());
+  util::SecretData private_key_input = ec_key->priv;
+  private_key_input.resize(private_key_input.size() + 1);
+  RestrictedData expanded_private_key_bytes(private_key_input,
+                                            InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(HpkePrivateKey::Create(*public_key, expanded_private_key_bytes,
                                      GetPartialKeyAccess())
@@ -324,9 +321,8 @@ TEST_P(HpkePrivateKeyTest, NistCurvePrivateKeyEquals) {
       test_case.curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
   ASSERT_THAT(public_key_bytes, IsOk());
 
-  RestrictedData private_key_bytes =
-      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
-                     InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_bytes(ec_key->priv,
+                                   InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key =
       HpkePublicKey::Create(*params, *public_key_bytes,

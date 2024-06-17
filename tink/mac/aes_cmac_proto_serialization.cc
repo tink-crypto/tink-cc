@@ -22,6 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -193,7 +194,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   SecretProto<google::crypto::tink::AesCmacKey> proto_key;
   *proto_key->mutable_params() = std::move(proto_params);
   proto_key->set_version(0);
-  proto_key->set_key_value(restricted_input->GetSecret(*token));
+  internal::CallWithCoreDumpProtection(
+      [&] { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());

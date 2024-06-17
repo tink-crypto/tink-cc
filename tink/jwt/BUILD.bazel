@@ -516,6 +516,29 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "jwt_rsa_ssa_pss_parameters",
+    srcs = ["jwt_rsa_ssa_pss_parameters.cc"],
+    hdrs = ["jwt_rsa_ssa_pss_parameters.h"],
+    include_prefix = "tink/jwt",
+    deps = [
+        ":jwt_signature_parameters",
+        "//tink:big_integer",
+        "//tink:parameters",
+        "//tink/internal:bn_util",
+        "//tink/internal:rsa_util",
+        "//tink/internal:ssl_unique_ptr",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/container:flat_hash_set",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -954,6 +977,22 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "jwt_rsa_ssa_pss_parameters_test",
+    srcs = ["jwt_rsa_ssa_pss_parameters_test.cc"],
+    deps = [
+        ":jwt_rsa_ssa_pss_parameters",
+        "//tink:big_integer",
+        "//tink/internal:bn_util",
+        "//tink/internal:ssl_unique_ptr",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
 )

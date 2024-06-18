@@ -140,6 +140,7 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
+    tink::jwt::jwt_rsa_ssa_pss_proto_serialization
     absl::core_headers
     absl::memory
     tink::core::registry
@@ -714,6 +715,9 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
+    tink::jwt::jwt_rsa_ssa_pss_parameters
+    tink::jwt::jwt_rsa_ssa_pss_private_key
+    tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::jwt_signature_config
     gmock
     absl::check
@@ -742,6 +746,7 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
+    tink::proto::jwt_rsa_ssa_pss_cc_proto
 )
 
 tink_cc_test(

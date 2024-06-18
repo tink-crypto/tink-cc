@@ -29,6 +29,7 @@
 #include "tink/jwt/internal/jwt_rsa_ssa_pss_verify_key_manager.h"
 #include "tink/jwt/jwt_ecdsa_proto_serialization.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_proto_serialization.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_proto_serialization.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
 #include "proto/config.pb.h"
@@ -57,6 +58,11 @@ util::Status JwtSignatureRegister() {
   }
 
   status = RegisterJwtRsaSsaPkcs1ProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = RegisterJwtRsaSsaPssProtoSerialization();
   if (!status.ok()) {
     return status;
   }

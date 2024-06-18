@@ -29,6 +29,7 @@
 #include "openssl/evp.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
@@ -85,8 +86,10 @@ util::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
     return cipher.status();
   }
   size_t len = 0;
+
   const uint8_t* data_ptr = reinterpret_cast<const uint8_t*>(data.data());
   uint8_t* result_ptr = reinterpret_cast<uint8_t*>(&result[0]);
+  internal::ScopedAssumeRegionCoreDumpSafe scoped(result_ptr, kMaxTagSize);
   bool res = internal::CallWithCoreDumpProtection([&]() {
     if (CMAC_Init(context.get(), key_.data(), key_.size(), *cipher, nullptr) <=
             0 ||
@@ -94,12 +97,16 @@ util::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
         CMAC_Final(context.get(), result_ptr, &len) == 0) {
       return false;
     }
-    result.resize(tag_size_);
     return true;
   });
   if (!res) {
     return util::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
   }
+  // Declassify the tag. Safe because it is in a std::string anyhow and can
+  // be given to the adversary (though the core dump could expose longer tags
+  // than the user will).
+  crypto::tink::internal::DfsanClearLabel(result_ptr, kMaxTagSize);
+  result.resize(tag_size_);
   return result;
 }
 

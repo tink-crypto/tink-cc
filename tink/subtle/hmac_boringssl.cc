@@ -28,6 +28,7 @@
 #include "openssl/evp.h"
 #include "openssl/hmac.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/util.h"
@@ -72,11 +73,23 @@ util::StatusOr<std::string> HmacBoringSsl::ComputeMac(
 
   uint8_t buf[EVP_MAX_MD_SIZE];
   unsigned int out_len;
+  // We assume that the buffer can be leaked safely in core dumps. This is ok
+  // because we are in ComputeMac and hence we can assume that the MAC will be
+  // published after this method anyways. In addition, we can expect that
+  // BoringSSL will not use the buffer as a scratch pad to write sensitive data
+  // (as this would be slow).
+  internal::ScopedAssumeRegionCoreDumpSafe scoped =
+      internal::ScopedAssumeRegionCoreDumpSafe(buf, EVP_MAX_MD_SIZE);
+
   const uint8_t* res = internal::CallWithCoreDumpProtection([&]() {
     return HMAC(md_, key_.data(), key_.size(),
                 reinterpret_cast<const uint8_t*>(data.data()), data.size(), buf,
                 &out_len);
   });
+  // Declassify the tag. Safe because it is in a std::string anyhow and can
+  // be given to the adversary (though the core can expose longer tags
+  // than the user will).
+  crypto::tink::internal::DfsanClearLabel(buf, EVP_MAX_MD_SIZE);
   if (res == nullptr) {
     // TODO(bleichen): We expect that BoringSSL supports the
     //   hashes that we use. Maybe we should have a status that indicates

@@ -181,6 +181,7 @@ tink_cc_library(
     tink::core::mac
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::internal::util
@@ -203,6 +204,7 @@ tink_cc_library(
     crypto
     tink::core::mac
     tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::md_util
     tink::internal::util

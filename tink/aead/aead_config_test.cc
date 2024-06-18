@@ -18,6 +18,7 @@
 
 #include <list>
 #include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -33,6 +34,8 @@
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_siv_key.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/chacha20_poly1305_key.h"
+#include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/key_gen_config_v0.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
@@ -59,6 +62,7 @@
 #include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/aes_gcm_siv.pb.h"
+#include "proto/chacha20_poly1305.pb.h"
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
@@ -475,7 +479,7 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  // TODO: b/325507124 - Rewrite tests using parameters proto format API.
+  // TODO: b/347926425 - Rewrite tests using parameters proto format API.
   util::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
@@ -562,7 +566,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  // TODO: b/325507124 - Rewrite tests using parameters proto format API.
+  // TODO: b/347926425 - Rewrite tests using parameters proto format API.
   util::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
@@ -666,6 +670,99 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
                   .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
                       *key, KeyStatus::kEnabled, /*is_primary=*/true))
                   .Build(),
+              IsOk());
+}
+
+TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoParamsSerializationRegistered) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  KeyTemplate key_template;
+  key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.ChaCha20Poly1305Key");
+  key_template.set_output_prefix_type(OutputPrefixType::TINK);
+
+  // TODO: b/347926425 - Rewrite tests using parameters proto format API.
+  util::StatusOr<internal::ProtoParametersSerialization>
+      proto_params_serialization =
+          internal::ProtoParametersSerialization::Create(key_template);
+  ASSERT_THAT(proto_params_serialization, IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .ParseParameters(*proto_params_serialization)
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<ChaCha20Poly1305Parameters> params =
+      ChaCha20Poly1305Parameters::Create(
+          ChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<internal::ProtoParametersSerialization>(*params)
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *proto_params_serialization),
+      IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<internal::ProtoParametersSerialization>(*params),
+      IsOk());
+}
+
+TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoKeySerializationRegistered) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  std::string key_bytes = subtle::Random::GetRandomBytes(32);
+  google::crypto::tink::ChaCha20Poly1305Key key_proto;
+  key_proto.set_version(0);
+  key_proto.set_key_value(key_bytes);
+
+  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.ChaCha20Poly1305Key",
+          RestrictedData(key_proto.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+  ASSERT_THAT(proto_key_serialization, IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .ParseKey(*proto_key_serialization, InsecureSecretKeyAccess::Get())
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kTink,
+      RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      *key, InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+                  *proto_key_serialization, InsecureSecretKeyAccess::Get()),
+              IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      *key, InsecureSecretKeyAccess::Get()),
               IsOk());
 }
 

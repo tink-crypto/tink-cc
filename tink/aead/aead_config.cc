@@ -27,6 +27,7 @@
 #include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
 #include "tink/aead/aes_gcm_siv_proto_serialization.h"
+#include "tink/aead/chacha20_poly1305_proto_serialization.h"
 #include "tink/aead/kms_aead_key_manager.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
@@ -122,6 +123,11 @@ util::Status AeadConfig::Register() {
   }
 
   status = RegisterXChaCha20Poly1305ProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = RegisterChaCha20Poly1305ProtoSerialization();
   if (!status.ok()) {
     return status;
   }

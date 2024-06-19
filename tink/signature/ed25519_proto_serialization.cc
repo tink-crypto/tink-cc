@@ -17,12 +17,14 @@
 #include "tink/signature/ed25519_proto_serialization.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -36,6 +38,7 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -270,10 +273,13 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   proto_public_key.set_key_value(
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
 
-  google::crypto::tink::Ed25519PrivateKey proto_private_key;
-  proto_private_key.set_version(0);
-  *proto_private_key.mutable_public_key() = proto_public_key;
-  proto_private_key.set_key_value(restricted_input->GetSecret(*token));
+  SecretProto<google::crypto::tink::Ed25519PrivateKey> proto_private_key;
+  proto_private_key->set_version(0);
+  *proto_private_key->mutable_public_key() = proto_public_key;
+  internal::CallWithCoreDumpProtection([&] {
+    proto_private_key->set_key_value(
+        util::SecretDataAsStringView(restricted_input->Get(*token)));
+  });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
@@ -281,11 +287,15 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output =
-      RestrictedData(proto_private_key.SerializeAsString(), *token);
+  util::StatusOr<util::SecretData> proto_private_key_secret_data =
+      proto_private_key.SerializeAsSecretData();
+  if (!proto_private_key_secret_data.ok()) {
+    return proto_private_key_secret_data.status();
+  }
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, restricted_output, KeyData::ASYMMETRIC_PRIVATE,
-      *output_prefix_type, key.GetIdRequirement());
+      kPrivateTypeUrl,
+      RestrictedData(*std::move(proto_private_key_secret_data), *token),
+      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
 }
 
 Ed25519ProtoParametersParserImpl* Ed25519ProtoParametersParser() {

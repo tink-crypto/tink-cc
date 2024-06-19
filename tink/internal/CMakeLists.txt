@@ -138,9 +138,11 @@ tink_cc_library(
   DEPS
     tink::internal::bn_util
     tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::err_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
+    absl::config
     absl::memory
     absl::status
     absl::strings

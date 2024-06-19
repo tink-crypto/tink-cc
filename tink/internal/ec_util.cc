@@ -24,6 +24,7 @@
 #include <utility>
 #include <vector>
 
+#include "absl/base/config.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -31,6 +32,7 @@
 #include "absl/types/span.h"
 #include "openssl/bn.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -469,24 +471,34 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   // In BoringSSL this calls ED25519_keypair_from_seed. Accessing the public key
   // with EVP_PKEY_get_raw_public_key returns the last 32 bytes of the private
   // key stored by BoringSSL.
-  SslUniquePtr<EVP_PKEY> priv_key(EVP_PKEY_new_raw_private_key(
-      SslEvpPkeyType::kEd25519Key, nullptr, secret_seed.data(),
-      Ed25519KeyPrivKeySize()));
-  if (priv_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "EVP_PKEY_new_raw_private_key failed");
-  }
-
   auto key = absl::make_unique<Ed25519Key>();
   key->private_key.resize(Ed25519KeyPrivKeySize());
   subtle::ResizeStringUninitialized(&key->public_key, Ed25519KeyPubKeySize());
   uint8_t *priv_key_ptr = key->private_key.data();
   uint8_t *pub_key_ptr = reinterpret_cast<uint8_t *>(&key->public_key[0]);
-  // The EVP_PKEY interface returns only the first 32 bytes of the private key.
-  util::Status res = SslNewKeyPairFromEcKey(
-      SslEvpPkeyType::kEd25519Key, *priv_key,
-      absl::MakeSpan(priv_key_ptr, Ed25519KeyPrivKeySize()),
-      absl::MakeSpan(pub_key_ptr, Ed25519KeyPubKeySize()));
+
+  // While the public key depends on the private key, it is safe to leak it.
+  ScopedAssumeRegionCoreDumpSafe scope(pub_key_ptr, Ed25519KeyPubKeySize());
+  util::Status res = internal::CallWithCoreDumpProtection([&]() {
+    SslUniquePtr<EVP_PKEY> priv_key =
+        SslUniquePtr<EVP_PKEY>(EVP_PKEY_new_raw_private_key(
+            SslEvpPkeyType::kEd25519Key, nullptr, secret_seed.data(),
+            Ed25519KeyPrivKeySize()));
+    if (priv_key == nullptr) {
+      return util::Status(absl::StatusCode::kInternal,
+                          "EVP_PKEY_new_raw_private_key failed");
+    }
+
+    // The EVP_PKEY interface returns only the first 32 bytes of the private
+    // key.
+    util::Status res = SslNewKeyPairFromEcKey(
+        SslEvpPkeyType::kEd25519Key, *priv_key,
+        absl::MakeSpan(priv_key_ptr, Ed25519KeyPrivKeySize()),
+        absl::MakeSpan(pub_key_ptr, Ed25519KeyPubKeySize()));
+    return res;
+  });
+  // Safe to declassify the public key.
+  crypto::tink::internal::DfsanClearLabel(pub_key_ptr, Ed25519KeyPubKeySize());
   if (!res.ok()) {
     return res;
   }

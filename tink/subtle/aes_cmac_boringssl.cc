@@ -31,6 +31,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/mac.h"
@@ -51,6 +52,33 @@ namespace subtle {
 static constexpr size_t kSmallKeySize = 16;
 static constexpr size_t kBigKeySize = 32;
 static constexpr size_t kMaxTagSize = 16;
+
+namespace {
+
+// Computes the CMAC of `data` using `key` and writes the result to
+// `tag_ptr[0..kMaxTagSize-1]`.
+bool ComputeMacInternal(const util::SecretData& key, uint8_t* tag_ptr,
+                        absl::string_view data) {
+  internal::SslUniquePtr<CMAC_CTX> context(CMAC_CTX_new());
+  util::StatusOr<const EVP_CIPHER*> cipher =
+      internal::GetAesCbcCipherForKeySize(key.size());
+  if (!cipher.ok()) {
+    return false;
+  }
+  const uint8_t* data_ptr = reinterpret_cast<const uint8_t*>(data.data());
+  size_t len = 0;
+  return internal::CallWithCoreDumpProtection([&]() {
+    if (CMAC_Init(context.get(), key.data(), key.size(), *cipher, nullptr) <=
+            0 ||
+        CMAC_Update(context.get(), data_ptr, data.size()) <= 0 ||
+        CMAC_Final(context.get(), tag_ptr, &len) == 0) {
+      return false;
+    }
+    return true;
+  });
+}
+
+}  // namespace
 
 // static
 util::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(util::SecretData key,
@@ -79,27 +107,9 @@ util::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
 
   std::string result;
   ResizeStringUninitialized(&result, kMaxTagSize);
-  internal::SslUniquePtr<CMAC_CTX> context(CMAC_CTX_new());
-  util::StatusOr<const EVP_CIPHER*> cipher =
-      internal::GetAesCbcCipherForKeySize(key_.size());
-  if (!cipher.ok()) {
-    return cipher.status();
-  }
-  size_t len = 0;
-
-  const uint8_t* data_ptr = reinterpret_cast<const uint8_t*>(data.data());
   uint8_t* result_ptr = reinterpret_cast<uint8_t*>(&result[0]);
   internal::ScopedAssumeRegionCoreDumpSafe scoped(result_ptr, kMaxTagSize);
-  bool res = internal::CallWithCoreDumpProtection([&]() {
-    if (CMAC_Init(context.get(), key_.data(), key_.size(), *cipher, nullptr) <=
-            0 ||
-        CMAC_Update(context.get(), data_ptr, data.size()) <= 0 ||
-        CMAC_Final(context.get(), result_ptr, &len) == 0) {
-      return false;
-    }
-    return true;
-  });
-  if (!res) {
+  if (!ComputeMacInternal(key_, result_ptr, data)) {
     return util::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
   }
   // Declassify the tag. Safe because it is in a std::string anyhow and can
@@ -117,15 +127,20 @@ util::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
                      "Incorrect tag size: expected %d, found %d", tag_size_,
                      mac.size());
   }
-  return internal::CallWithCoreDumpProtection([&]() {
-    util::StatusOr<std::string> computed_mac = ComputeMac(data);
-    if (!computed_mac.ok()) return computed_mac.status();
-    if (CRYPTO_memcmp(computed_mac->data(), mac.data(), tag_size_) != 0) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "CMAC verification failed");
-    }
-    return util::OkStatus();
-  });
+  util::SecretData computed_mac;
+  computed_mac.resize(kMaxTagSize);
+
+  if (!ComputeMacInternal(key_, computed_mac.data(), data)) {
+    return util::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
+  }
+  computed_mac.resize(tag_size_);
+
+  if (!internal::SafeCryptoMemEquals(computed_mac.data(), mac.data(),
+                                     tag_size_)) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "CMAC verification failed");
+  }
+  return util::OkStatus();
 }
 
 }  // namespace subtle

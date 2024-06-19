@@ -31,6 +31,7 @@
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/internal/util.h"
 #include "tink/mac.h"
 #include "tink/subtle/common_enums.h"
@@ -110,18 +111,19 @@ util::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "incorrect tag size");
   }
-  uint8_t buf[EVP_MAX_MD_SIZE];
+  util::SecretData buf;
+  buf.resize(EVP_MAX_MD_SIZE);
   unsigned int out_len;
   const uint8_t* res = internal::CallWithCoreDumpProtection([&]() {
     return HMAC(md_, key_.data(), key_.size(),
-                reinterpret_cast<const uint8_t*>(data.data()), data.size(), buf,
-                &out_len);
+                reinterpret_cast<const uint8_t*>(data.data()), data.size(),
+                buf.data(), &out_len);
   });
   if (res == nullptr) {
     return util::Status(absl::StatusCode::kInternal,
                         "BoringSSL failed to compute HMAC");
   }
-  if (CRYPTO_memcmp(buf, mac.data(), tag_size_) != 0) {
+  if (!internal::SafeCryptoMemEquals(buf.data(), mac.data(), tag_size_)) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "verification failed");
   }

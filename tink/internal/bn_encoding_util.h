@@ -21,6 +21,9 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "tink/restricted_big_integer.h"
+#include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -32,6 +35,10 @@ namespace internal {
 // Returns an error if the `length` is too short.
 crypto::tink::util::StatusOr<std::string> GetValueOfFixedLength(
     absl::string_view big_integer_encoding, int length);
+
+crypto::tink::util::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
+    const RestrictedBigInteger& big_integer, int length,
+    SecretKeyAccessToken token);
 
 }  // namespace internal
 }  // namespace tink

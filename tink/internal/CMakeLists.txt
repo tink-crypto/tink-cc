@@ -1277,11 +1277,15 @@ tink_cc_library(
     bn_encoding_util.cc
     bn_encoding_util.h
   DEPS
+    tink::internal::safe_stringops
     absl::status
     absl::strings
     absl::str_format
     absl::string_view
     crypto
+    tink::core::restricted_big_integer
+    tink::core::secret_key_access_token
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
 )
@@ -1304,6 +1308,9 @@ tink_cc_test(
     absl::status
     absl::strings
     tink::core::big_integer
+    tink::core::insecure_secret_key_access
+    tink::core::restricted_big_integer
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
 )

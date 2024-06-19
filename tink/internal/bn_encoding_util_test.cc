@@ -27,6 +27,9 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/big_integer.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/restricted_big_integer.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -35,8 +38,10 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::SizeIs;
 
@@ -109,6 +114,52 @@ TEST(BnEncodingUtilTest, CreateBigIntegerObjectOfFixedLength) {
 
   BigInteger same_big_integer(*big_integer_bytes_fixed_length);
   EXPECT_THAT(big_integer, Eq(same_big_integer));
+}
+
+TEST(BnEncodingUtilTest, GetSecretValueOfFixedLength) {
+  std::vector<std::string> bn_str = {"0000000000000000", "0000000000000001",
+                                     "1000000000000000", "ffffffffffffffff",
+                                     "0fffffffffffffff", "00ffffffffffffff"};
+  for (const std::string& s : bn_str) {
+    const std::string bn_bytes = absl::HexStringToBytes(s);
+    RestrictedBigInteger bn_bytes_restricted(
+        bn_bytes, InsecureSecretKeyAccess::Get());
+    util::StatusOr<util::SecretData> bn_bytes_fixed_length =
+        GetSecretValueOfFixedLength(bn_bytes_restricted, 10,
+                                    InsecureSecretKeyAccess::Get());
+
+    EXPECT_THAT(bn_bytes_fixed_length,
+                IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
+                    absl::HexStringToBytes(absl::StrCat("0000", s))))));
+  }
+}
+
+TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthIntegerTooBig) {
+  std::string bn_str = "0fffffffffffffff";
+  const std::string bn_bytes = absl::HexStringToBytes(bn_str);
+
+    RestrictedBigInteger bn_bytes_restricted(
+        bn_bytes, InsecureSecretKeyAccess::Get());
+  util::StatusOr<util::SecretData> bn_bytes_fixed_length =
+      GetSecretValueOfFixedLength(bn_bytes_restricted, 2,
+                                  InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(bn_bytes_fixed_length.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthSameLength) {
+  std::string bn_str = "0fffffffffffffff";
+  const std::string bn_bytes = absl::HexStringToBytes(bn_str);
+    RestrictedBigInteger bn_bytes_restricted(
+        bn_bytes, InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<util::SecretData> bn_bytes_fixed_length =
+      GetSecretValueOfFixedLength(bn_bytes_restricted, 8,
+                                  InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(
+      bn_bytes_fixed_length,
+      IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(bn_bytes))));
 }
 
 }  // namespace

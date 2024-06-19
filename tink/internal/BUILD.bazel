@@ -1331,6 +1331,10 @@ cc_library(
     hdrs = ["bn_encoding_util.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":safe_stringops",
+        "//tink:restricted_big_integer",
+        "//tink:secret_key_access_token",
+        "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
         "@boringssl//:crypto",
@@ -1347,6 +1351,9 @@ cc_test(
     deps = [
         ":bn_encoding_util",
         "//tink:big_integer",
+        "//tink:insecure_secret_key_access",
+        "//tink:restricted_big_integer",
+        "//tink/util:secret_data",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

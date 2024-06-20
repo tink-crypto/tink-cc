@@ -26,6 +26,7 @@
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_encoding_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -40,6 +41,7 @@
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -490,23 +492,33 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
           .GetValue(),
       enc_length.value()));
 
-  google::crypto::tink::EcdsaPrivateKey proto_private_key;
-  proto_private_key.set_version(0);
-  *proto_private_key.mutable_public_key() = proto_public_key;
-  proto_private_key.set_key_value(*internal::GetValueOfFixedLength(
-      restricted_input->GetSecret(*token), *enc_length));
-
+  SecretProto<google::crypto::tink::EcdsaPrivateKey> proto_private_key;
+  proto_private_key->set_version(0);
+  *proto_private_key->mutable_public_key() = proto_public_key;
+  util::StatusOr<util::SecretData> fixed_length_key =
+      internal::GetSecretValueOfFixedLength(*restricted_input, *enc_length,
+                                            *token);
+  if (!fixed_length_key.ok()) {
+    return fixed_length_key.status();
+  }
+  internal::CallWithCoreDumpProtection([&] {
+    proto_private_key->set_key_value(
+        util::SecretDataAsStringView(*fixed_length_key));
+  });
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output =
-      RestrictedData(proto_private_key.SerializeAsString(), *token);
+  util::StatusOr<util::SecretData> serialized_proto =
+      proto_private_key.SerializeAsSecretData();
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, restricted_output, KeyData::ASYMMETRIC_PRIVATE,
-      *output_prefix_type, key.GetIdRequirement());
+      kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
+      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
 }
 
 EcdsaProtoParametersParserImpl& EcdsaProtoParametersParser() {

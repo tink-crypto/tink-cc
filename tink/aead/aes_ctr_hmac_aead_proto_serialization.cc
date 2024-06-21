@@ -51,7 +51,6 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using ::google::crypto::tink::AesCtrKeyFormat;

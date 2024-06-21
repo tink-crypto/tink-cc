@@ -213,6 +213,9 @@ util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build() {
   keyset->set_primary_key_id(*primary_id);
   util::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
       entries = KeysetHandle::GetEntriesFromKeyset(*keyset);
+  if (!entries.ok()) {
+    return entries.status();
+  }
   return KeysetHandle(std::move(keyset), *std::move(entries),
                       monitoring_annotations_);
 }

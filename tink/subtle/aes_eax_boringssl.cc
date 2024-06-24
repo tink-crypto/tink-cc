@@ -305,10 +305,28 @@ crypto::tink::util::StatusOr<std::string> AesEaxBoringSsl::Decrypt(
         }
         std::string plaintext;
         ResizeStringUninitialized(&plaintext, out_size);
+        // The plaintext region is allowed to leak. In successful decryptions,
+        // the adversary can already get the plaintext via core dumps (since
+        // the API specifies that the plaintext is in a std::string, so this is
+        // the users responsibility). Hence, this gives adversaries access to
+        // data which is stored *during* the computation, and data which would
+        // be erased because the tag is wrong. Since EAX is a counter mode, this
+        // means that the adversary can potentially obtain key streams for IVs
+        // for which he does either not know a valid tag (which seems useless if
+        // he didn't see a valid ciphertext) or without querying the actual
+        // ciphertext (which does not seem useful). Hence, we declare this to be
+        // sufficiently safe at the moment.
+        char* plaintext_start = &plaintext[0];
+        crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
+            plaintext_start, out_size);
         util::Status res = CtrCrypt(N, encrypted, absl::MakeSpan(plaintext));
         if (!res.ok()) {
           return res;
         }
+        // Declassify the plaintext: this is now safe to give to the adversary
+        // (since the API specifies that the plaintext is in a std::string which
+        // can leak so the user is responsible for this).
+        crypto::tink::internal::DfsanClearLabel(plaintext_start, out_size);
         return plaintext;
       });
 }

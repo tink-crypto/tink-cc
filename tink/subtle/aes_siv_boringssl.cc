@@ -33,6 +33,7 @@
 #include "tink/aead/internal/aead_util.h"
 #include "tink/deterministic_aead.h"
 #include "tink/internal/aes_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/errors.h"
@@ -45,11 +46,15 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using crypto::tink::internal::CallWithCoreDumpProtection;
+
 crypto::tink::util::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
     absl::Span<const uint8_t> key) {
   util::SecretUniquePtr<AES_KEY> aes_key = util::MakeSecretUniquePtr<AES_KEY>();
-  if (AES_set_encrypt_key(reinterpret_cast<const uint8_t*>(key.data()),
-                          8 * key.size(), aes_key.get()) != 0) {
+  if (CallWithCoreDumpProtection([&]() {
+        return AES_set_encrypt_key(reinterpret_cast<const uint8_t*>(key.data()),
+                                   8 * key.size(), aes_key.get());
+      }) != 0) {
     return util::Status(absl::StatusCode::kInternal,
                         "could not initialize aes key");
   }
@@ -96,18 +101,19 @@ util::SecretData AesSivBoringSsl::ComputeCmacK2() const {
 
 void AesSivBoringSsl::EncryptBlock(const uint8_t in[kBlockSize],
                                    uint8_t out[kBlockSize]) const {
-  AES_encrypt(in, out, k1_.get());
+  CallWithCoreDumpProtection([&] { AES_encrypt(in, out, k1_.get()); });
 }
 
 // static
 void AesSivBoringSsl::MultiplyByX(uint8_t block[kBlockSize]) {
   // Carry over 0x87 if msb is 1 0x00 if msb is 0.
-  uint8_t carry = 0x87 & -(block[0] >> 7);
-  for (size_t i = 0; i < kBlockSize - 1; ++i) {
-    block[i] = (block[i] << 1) | (block[i + 1] >> 7);
-  }
-  block[kBlockSize - 1] =
-      (block[kBlockSize - 1] << 1) ^ carry;
+  CallWithCoreDumpProtection([&] {
+    uint8_t carry = 0x87 & -(block[0] >> 7);
+    for (size_t i = 0; i < kBlockSize - 1; ++i) {
+      block[i] = (block[i] << 1) | (block[i + 1] >> 7);
+    }
+    block[kBlockSize - 1] = (block[kBlockSize - 1] << 1) ^ carry;
+  });
 }
 
 // static

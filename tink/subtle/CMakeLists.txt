@@ -588,6 +588,7 @@ tink_cc_library(
     tink::core::deterministic_aead
     tink::aead::internal::aead_util
     tink::internal::aes_util
+    tink::internal::call_with_core_dump_protection
     tink::internal::fips_utils
     tink::util::errors
     tink::util::secret_data

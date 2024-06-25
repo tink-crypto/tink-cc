@@ -25,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_key.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -35,6 +36,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -179,20 +181,24 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required");
   }
 
-  google::crypto::tink::AesSivKey proto_key;
-  proto_key.set_version(0);
-  // OSS proto library complains if input is not converted to a string.
-  proto_key.set_key_value(restricted_input->GetSecret(*token));
+  SecretProto<google::crypto::tink::AesSivKey> proto_key;
+  proto_key->set_version(0);
 
+  internal::CallWithCoreDumpProtection(
+      [&] { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  RestrictedData restricted_output =
-      RestrictedData(proto_key.SerializeAsString(), *token);
+  util::StatusOr<util::SecretData> serialized_proto =
+      proto_key.SerializeAsSecretData();
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
-      *output_prefix_type, key.GetIdRequirement());
+      kTypeUrl, RestrictedData(*serialized_proto, *token),
+      google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 AesSivProtoParametersParserImpl* AesSivProtoParametersParser() {

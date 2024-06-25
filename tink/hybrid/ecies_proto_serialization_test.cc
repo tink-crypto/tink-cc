@@ -1553,6 +1553,8 @@ TEST_F(EciesProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
 
 // TODO: b/330508549 - Remove test after existing keys are updated/removed.
 TEST(AeadDemTypeUrlExceptionTest, ParseWithInvalidUrl) {
+  ASSERT_THAT(RegisterEciesProtoSerialization(), IsOk());
+
   const std::string invalid_aead_dem_type_url =
       "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305KeyFormat";
   XChaCha20Poly1305KeyFormat format;

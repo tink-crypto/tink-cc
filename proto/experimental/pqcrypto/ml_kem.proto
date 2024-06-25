@@ -15,6 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 // Protos for Module-Lattice Key Encapsulation Mechanism algorithm (ML-KEM).
+// See https://csrc.nist.gov/pubs/fips/203/ipd.
 syntax = "proto3";
 
 package google.crypto.tink;
@@ -30,6 +31,8 @@ message MlKemParams {
 }
 
 message MlKemKeyFormat {
+  // Required.
+  uint32 version = 1;
   // Required.
   MlKemParams params = 2;
 }

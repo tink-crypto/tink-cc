@@ -12,3 +12,9 @@ cc_proto_library(
     visibility = ["//visibility:public"],
     deps = ["//proto/experimental/pqcrypto:cecpq2_aead_hkdf_proto"],
 )
+
+cc_proto_library(
+    name = "ml_kem_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//proto/experimental/pqcrypto:ml_kem_proto"],
+)

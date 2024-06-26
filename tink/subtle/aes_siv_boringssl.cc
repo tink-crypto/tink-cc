@@ -47,6 +47,7 @@ namespace subtle {
 namespace {
 
 using crypto::tink::internal::CallWithCoreDumpProtection;
+using crypto::tink::internal::SafeCryptoMemEquals;
 
 crypto::tink::util::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
     absl::Span<const uint8_t> key) {
@@ -88,32 +89,32 @@ AesSivBoringSsl::New(const util::SecretData& key) {
 
 util::SecretData AesSivBoringSsl::ComputeCmacK1() const {
   util::SecretData cmac_k1(kBlockSize, 0);
-  EncryptBlock(cmac_k1.data(), cmac_k1.data());
-  MultiplyByX(cmac_k1.data());
+  CallWithCoreDumpProtection([&]() {
+    EncryptBlock(cmac_k1.data(), cmac_k1.data());
+    MultiplyByX(cmac_k1.data());
+  });
   return cmac_k1;
 }
 
 util::SecretData AesSivBoringSsl::ComputeCmacK2() const {
   util::SecretData cmac_k2(cmac_k1_);
-  MultiplyByX(cmac_k2.data());
+  CallWithCoreDumpProtection([&]() { MultiplyByX(cmac_k2.data()); });
   return cmac_k2;
 }
 
 void AesSivBoringSsl::EncryptBlock(const uint8_t in[kBlockSize],
                                    uint8_t out[kBlockSize]) const {
-  CallWithCoreDumpProtection([&] { AES_encrypt(in, out, k1_.get()); });
+  AES_encrypt(in, out, k1_.get());
 }
 
 // static
 void AesSivBoringSsl::MultiplyByX(uint8_t block[kBlockSize]) {
   // Carry over 0x87 if msb is 1 0x00 if msb is 0.
-  CallWithCoreDumpProtection([&] {
-    uint8_t carry = 0x87 & -(block[0] >> 7);
-    for (size_t i = 0; i < kBlockSize - 1; ++i) {
-      block[i] = (block[i] << 1) | (block[i + 1] >> 7);
-    }
-    block[kBlockSize - 1] = (block[kBlockSize - 1] << 1) ^ carry;
-  });
+  uint8_t carry = 0x87 & -(block[0] >> 7);
+  for (size_t i = 0; i < kBlockSize - 1; ++i) {
+    block[i] = (block[i] << 1) | (block[i + 1] >> 7);
+  }
+  block[kBlockSize - 1] = (block[kBlockSize - 1] << 1) ^ carry;
 }
 
 // static
@@ -181,7 +182,7 @@ void AesSivBoringSsl::CmacLong(absl::Span<const uint8_t> data,
 
 void AesSivBoringSsl::S2v(absl::Span<const uint8_t> aad,
                           absl::Span<const uint8_t> msg,
-                          uint8_t siv[kBlockSize]) const {
+                          uint8_t* siv) const {
   // This stuff could be precomputed.
   uint8_t block[kBlockSize];
   std::fill(std::begin(block), std::end(block), 0);
@@ -218,19 +219,21 @@ util::Status AesSivBoringSsl::AesCtrCrypt(absl::string_view in,
 util::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
     absl::string_view plaintext, absl::string_view associated_data) const {
   uint8_t siv[kBlockSize];
-  S2v(absl::MakeSpan(reinterpret_cast<const uint8_t*>(associated_data.data()),
-                     associated_data.size()),
-      absl::MakeSpan(reinterpret_cast<const uint8_t*>(plaintext.data()),
-                     plaintext.size()),
-      siv);
+  CallWithCoreDumpProtection([&]() {
+    S2v(absl::MakeSpan(reinterpret_cast<const uint8_t*>(associated_data.data()),
+                       associated_data.size()),
+        absl::MakeSpan(reinterpret_cast<const uint8_t*>(plaintext.data()),
+                       plaintext.size()),
+        siv);
+  });
   size_t ciphertext_size = plaintext.size() + kBlockSize;
-
   std::string ciphertext;
   ResizeStringUninitialized(&ciphertext, ciphertext_size);
   std::copy(std::begin(siv), std::end(siv), ciphertext.begin());
-  util::Status res =
-      AesCtrCrypt(plaintext, siv, k2_.get(),
-                  absl::MakeSpan(ciphertext).subspan(kBlockSize));
+  util::Status res = CallWithCoreDumpProtection([&]() {
+    return AesCtrCrypt(plaintext, siv, k2_.get(),
+                absl::MakeSpan(ciphertext).subspan(kBlockSize));
+  });
   if (!res.ok()) {
     return res;
   }
@@ -247,19 +250,25 @@ util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
   std::string plaintext;
   ResizeStringUninitialized(&plaintext, plaintext_size);
   const uint8_t* siv = reinterpret_cast<const uint8_t*>(&ciphertext[0]);
-  util::Status res = AesCtrCrypt(ciphertext.substr(kBlockSize), siv, k2_.get(),
-                                 absl::MakeSpan(plaintext));
+  util::Status res = CallWithCoreDumpProtection([&]() {
+    return AesCtrCrypt(ciphertext.substr(kBlockSize), siv, k2_.get(),
+                       absl::MakeSpan(plaintext));
+  });
   if (!res.ok()) {
     return res;
   }
 
-  uint8_t s2v[kBlockSize];
+  util::SecretData s2v(kBlockSize);
+
+  CallWithCoreDumpProtection([&]() {
   S2v(absl::MakeSpan(reinterpret_cast<const uint8_t*>(associated_data.data()),
                      associated_data.size()),
       absl::MakeSpan(reinterpret_cast<const uint8_t*>(plaintext.data()),
                      plaintext_size),
-      s2v);
-  if (CRYPTO_memcmp(siv, s2v, kBlockSize) != 0) {
+      s2v.data());
+  });
+
+  if (!SafeCryptoMemEquals(siv, s2v.data(), kBlockSize)) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "invalid ciphertext");
   }

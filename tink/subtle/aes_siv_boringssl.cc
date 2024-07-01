@@ -34,6 +34,7 @@
 #include "tink/deterministic_aead.h"
 #include "tink/internal/aes_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/errors.h"
@@ -218,25 +219,32 @@ util::Status AesSivBoringSsl::AesCtrCrypt(absl::string_view in,
 
 util::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
     absl::string_view plaintext, absl::string_view associated_data) const {
-  uint8_t siv[kBlockSize];
+  size_t ciphertext_size = plaintext.size() + kBlockSize;
+  std::string ciphertext;
+  ResizeStringUninitialized(&ciphertext, ciphertext_size);
+  uint8_t* siv_ptr = reinterpret_cast<uint8_t*>(&ciphertext[0]);
+  // The ciphertext will be leaked in a std::string anyhow -- this is known to
+  // the user, so we can assume it isn't sensitive.
+  internal::ScopedAssumeRegionCoreDumpSafe ciphertextscope(&ciphertext[0],
+                                                           ciphertext_size);
+
   CallWithCoreDumpProtection([&]() {
     S2v(absl::MakeSpan(reinterpret_cast<const uint8_t*>(associated_data.data()),
                        associated_data.size()),
         absl::MakeSpan(reinterpret_cast<const uint8_t*>(plaintext.data()),
                        plaintext.size()),
-        siv);
+        siv_ptr);
   });
-  size_t ciphertext_size = plaintext.size() + kBlockSize;
-  std::string ciphertext;
-  ResizeStringUninitialized(&ciphertext, ciphertext_size);
-  std::copy(std::begin(siv), std::end(siv), ciphertext.begin());
   util::Status res = CallWithCoreDumpProtection([&]() {
-    return AesCtrCrypt(plaintext, siv, k2_.get(),
-                absl::MakeSpan(ciphertext).subspan(kBlockSize));
+    return AesCtrCrypt(plaintext, siv_ptr, k2_.get(),
+                       absl::MakeSpan(ciphertext).subspan(kBlockSize));
   });
   if (!res.ok()) {
     return res;
   }
+  // Declassify the ciphertext: this is now safe to give to the adversary.
+  // (Note: we currently do not propagate labels of the associated data).
+  crypto::tink::internal::DfsanClearLabel(&ciphertext[0], ciphertext_size);
   return ciphertext;
 }
 
@@ -249,6 +257,17 @@ util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
   size_t plaintext_size = ciphertext.size() - kBlockSize;
   std::string plaintext;
   ResizeStringUninitialized(&plaintext, plaintext_size);
+  // The plaintext region is allowed to leak. In succesful decryptions, the
+  // adversary can already get the plaintext via core dumps (since the API
+  // specifies that the plaintext is in a std::string, so this is the users
+  // responsibility). Hence, this gives adversaries access to data which is
+  // stored *during* the computation, and data which would be erased because the
+  // tag is wrong. Since AES SIV is a counter mode, this means that the
+  // adversary can potentially obtain key streams for IVs for which he does
+  // either not know a valid tag (which seems useless if he didn't see a valid
+  // ciphertext) or without querying the actual ciphertext (which does not seem
+  // useful). Hence, we declare this to be sufficiently safe at the moment.
+  internal::ScopedAssumeRegionCoreDumpSafe scope(&plaintext[0], plaintext_size);
   const uint8_t* siv = reinterpret_cast<const uint8_t*>(&ciphertext[0]);
   util::Status res = CallWithCoreDumpProtection([&]() {
     return AesCtrCrypt(ciphertext.substr(kBlockSize), siv, k2_.get(),
@@ -260,6 +279,8 @@ util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
 
   util::SecretData s2v(kBlockSize);
 
+  // Note that we very much need to protect the calculation of the IV even when
+  // the plaintext may be leaked.
   CallWithCoreDumpProtection([&]() {
   S2v(absl::MakeSpan(reinterpret_cast<const uint8_t*>(associated_data.data()),
                      associated_data.size()),
@@ -272,6 +293,10 @@ util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "invalid ciphertext");
   }
+  // Declassify the plaintext: this is now safe to give to the adversary
+  // (since the API specifies that the plaintext is in a std::string which
+  // can leak so the user is responsible for this).
+  crypto::tink::internal::DfsanClearLabel(&plaintext[0], plaintext_size);
   return plaintext;
 }
 

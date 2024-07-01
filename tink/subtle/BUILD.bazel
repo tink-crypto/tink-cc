@@ -618,6 +618,7 @@ cc_library(
         "//tink/aead/internal:aead_util",
         "//tink/internal:aes_util",
         "//tink/internal:call_with_core_dump_protection",
+        "//tink/internal:dfsan_forwarders",
         "//tink/internal:fips_utils",
         "//tink/util:errors",
         "//tink/util:secret_data",

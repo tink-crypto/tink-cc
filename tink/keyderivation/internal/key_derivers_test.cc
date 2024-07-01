@@ -95,6 +95,16 @@ INSTANTIATE_TEST_SUITE_P(
     KeyDeriversTests, KeyDeriversTest,
     ValuesIn(std::vector<std::shared_ptr<Parameters>>{
         // AEAD.
+        std::make_unique<AesCtrHmacAeadParameters>(
+            AesCtrHmacAeadParameters::Builder()
+                .SetAesKeySizeInBytes(16)
+                .SetHmacKeySizeInBytes(32)
+                .SetIvSizeInBytes(16)
+                .SetTagSizeInBytes(16)
+                .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+                .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
+                .Build()
+                .value()),
         std::make_unique<AesGcmParameters>(
             AesGcmParameters::Builder()
                 .SetKeySizeInBytes(16)
@@ -106,16 +116,6 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_unique<XChaCha20Poly1305Parameters>(
             XChaCha20Poly1305Parameters::Create(
                 XChaCha20Poly1305Parameters::Variant::kNoPrefix)
-                .value()),
-        std::make_unique<AesCtrHmacAeadParameters>(
-            AesCtrHmacAeadParameters::Builder()
-                .SetAesKeySizeInBytes(16)
-                .SetHmacKeySizeInBytes(32)
-                .SetIvSizeInBytes(16)
-                .SetTagSizeInBytes(16)
-                .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-                .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
-                .Build()
                 .value()),
     }));
 
@@ -227,6 +227,58 @@ class KeyDeriversRfcVectorTest : public Test {
       "59045a99cac7827271cb41c65e590e09";
 };
 
+TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
+  // Derive key with Parameters map.
+  util::StatusOr<AesCtrHmacAeadParameters> params =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(16)
+          .SetHmacKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+  util::StatusOr<std::unique_ptr<Key>> generic_key =
+      DeriveKey(*params, randomness_from_rfc_vector_.get());
+  ASSERT_THAT(generic_key, IsOk());
+  const AesCtrHmacAeadKey* key =
+      dynamic_cast<const AesCtrHmacAeadKey*>(&**std::move(generic_key));
+  ASSERT_THAT(key, NotNull());
+  std::string expected_aes_key_bytes =
+      derived_key_value_.substr(0, 2 * params->GetAesKeySizeInBytes());
+  std::string expected_hmac_key_bytes = derived_key_value_.substr(
+      2 * params->GetAesKeySizeInBytes(), 2 * params->GetHmacKeySizeInBytes());
+  ASSERT_THAT(test::HexEncode(key->GetAesKeyBytes(GetPartialKeyAccess())
+                                  .GetSecret(InsecureSecretKeyAccess::Get())),
+              Eq(expected_aes_key_bytes));
+  ASSERT_THAT(test::HexEncode(key->GetHmacKeyBytes(GetPartialKeyAccess())
+                                  .GetSecret(InsecureSecretKeyAccess::Get())),
+              Eq(expected_hmac_key_bytes));
+
+  // Derive key with AesCtrHmacAeadKeyManager.
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialization, IsOk());
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
+  util::StatusOr<google::crypto::tink::AesCtrHmacAeadKey> proto_key =
+      AesCtrHmacAeadKeyManager().DeriveKey(
+          key_format, same_randomness_from_rfc_vector_.get());
+  ASSERT_THAT(proto_key, IsOk());
+  EXPECT_THAT(test::HexEncode(proto_key->aes_ctr_key().key_value()),
+              Eq(expected_aes_key_bytes));
+  EXPECT_THAT(test::HexEncode(proto_key->hmac_key().key_value()),
+              Eq(expected_hmac_key_bytes));
+}
+
 TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
   // Derive key with hard-coded map.
   util::StatusOr<AesGcmParameters> params =
@@ -304,58 +356,6 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
           key_format, same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
   EXPECT_THAT(test::HexEncode(proto_key->key_value()), Eq(key_bytes));
-}
-
-TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
-  // Derive key with Parameters map.
-  util::StatusOr<AesCtrHmacAeadParameters> params =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(16)
-          .SetHmacKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(16)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
-          .Build();
-  ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
-      DeriveKey(*params, randomness_from_rfc_vector_.get());
-  ASSERT_THAT(generic_key, IsOk());
-  const AesCtrHmacAeadKey* key =
-      dynamic_cast<const AesCtrHmacAeadKey*>(&**std::move(generic_key));
-  ASSERT_THAT(key, NotNull());
-  std::string expected_aes_key_bytes =
-      derived_key_value_.substr(0, 2 * params->GetAesKeySizeInBytes());
-  std::string expected_hmac_key_bytes = derived_key_value_.substr(
-      2 * params->GetAesKeySizeInBytes(), 2 * params->GetHmacKeySizeInBytes());
-  ASSERT_THAT(test::HexEncode(key->GetAesKeyBytes(GetPartialKeyAccess())
-                                  .GetSecret(InsecureSecretKeyAccess::Get())),
-              Eq(expected_aes_key_bytes));
-  ASSERT_THAT(test::HexEncode(key->GetHmacKeyBytes(GetPartialKeyAccess())
-                                  .GetSecret(InsecureSecretKeyAccess::Get())),
-              Eq(expected_hmac_key_bytes));
-
-  // Derive key with AesCtrHmacAeadKeyManager.
-  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
-          .SerializeParameters<ProtoParametersSerialization>(*params);
-  ASSERT_THAT(serialization, IsOk());
-  const ProtoParametersSerialization* proto_serialization =
-      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
-  ASSERT_THAT(proto_serialization, NotNull());
-  google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
-  ASSERT_THAT(
-      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
-  util::StatusOr<google::crypto::tink::AesCtrHmacAeadKey> proto_key =
-      AesCtrHmacAeadKeyManager().DeriveKey(
-          key_format, same_randomness_from_rfc_vector_.get());
-  ASSERT_THAT(proto_key, IsOk());
-  EXPECT_THAT(test::HexEncode(proto_key->aes_ctr_key().key_value()),
-              Eq(expected_aes_key_bytes));
-  EXPECT_THAT(test::HexEncode(proto_key->hmac_key().key_value()),
-              Eq(expected_hmac_key_bytes));
 }
 
 }  // namespace

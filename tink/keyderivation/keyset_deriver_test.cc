@@ -74,14 +74,14 @@ using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
 // Hex values from HKDF RFC https://tools.ietf.org/html/rfc5869#appendix-A.2.
-static constexpr absl::string_view kOutputKeyMaterialFromRfcVector =
+static constexpr absl::string_view kOkmFromRfc =
     "b11e398dc80327a1c8e7f78c596a4934"
     "4f012eda2d4efad8a050cc4c19afa97c"
     "59045a99cac7827271cb41c65e590e09"
     "da3275600c2f09b8367793a9aca3db71"
     "cc30c58179ec3e87c14c01d5c1f3434f";
 
-KeyData PrfKeyFromRfcVector() {
+KeyData PrfKeyFromRfc() {
   google::crypto::tink::HkdfPrfKey prf_key;
   prf_key.set_version(0);
   prf_key.mutable_params()->set_hash(HashType::SHA256);
@@ -100,13 +100,39 @@ KeyData PrfKeyFromRfcVector() {
   return test::AsKeyData(prf_key, KeyData::SYMMETRIC);
 }
 
-std::string SaltFromRfcVector() {
+std::string SaltFromRfc() {
   return test::HexDecodeOrDie(
       "b0b1b2b3b4b5b6b7b8b9babbbcbdbebf"
       "c0c1c2c3c4c5c6c7c8c9cacbcccdcecf"
       "d0d1d2d3d4d5d6d7d8d9dadbdcdddedf"
       "e0e1e2e3e4e5e6e7e8e9eaebecedeeef"
       "f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff");
+}
+
+std::unique_ptr<AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey(
+    int aes_key_size, int tag_size, AesCtrHmacAeadParameters::Variant variant,
+    absl::string_view aes_secret, absl::string_view hmac_secret,
+    absl::optional<int> id_requirement) {
+  AesCtrHmacAeadParameters params =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(aes_key_size)
+          .SetHmacKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(tag_size)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(variant)
+          .Build()
+          .value();
+  return std::make_unique<AesCtrHmacAeadKey>(
+      AesCtrHmacAeadKey::Builder()
+          .SetParameters(params)
+          .SetAesKeyBytes(RestrictedData(test::HexDecodeOrDie(aes_secret),
+                                         InsecureSecretKeyAccess::Get()))
+          .SetHmacKeyBytes(RestrictedData(test::HexDecodeOrDie(hmac_secret),
+                                          InsecureSecretKeyAccess::Get()))
+          .SetIdRequirement(id_requirement)
+          .Build(GetPartialKeyAccess())
+          .value());
 }
 
 std::unique_ptr<AesGcmKey> CreateAesGcmKey(int key_size,
@@ -140,80 +166,45 @@ std::unique_ptr<XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key(
           .value());
 }
 
-std::unique_ptr<AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey(
-    int aes_key_size, int tag_size, AesCtrHmacAeadParameters::Variant variant,
-    absl::string_view aes_secret, absl::string_view hmac_secret,
-    absl::optional<int> id_requirement) {
-  AesCtrHmacAeadParameters params =
-      AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(aes_key_size)
-          .SetHmacKeySizeInBytes(32)
-          .SetIvSizeInBytes(16)
-          .SetTagSizeInBytes(tag_size)
-          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
-          .SetVariant(variant)
-          .Build()
-          .value();
-  return std::make_unique<AesCtrHmacAeadKey>(
-      AesCtrHmacAeadKey::Builder()
-          .SetParameters(params)
-          .SetAesKeyBytes(RestrictedData(test::HexDecodeOrDie(aes_secret),
-                                         InsecureSecretKeyAccess::Get()))
-          .SetHmacKeyBytes(RestrictedData(test::HexDecodeOrDie(hmac_secret),
-                                          InsecureSecretKeyAccess::Get()))
-          .SetIdRequirement(id_requirement)
-          .Build(GetPartialKeyAccess())
-          .value());
-}
-
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   return {
       /*AEAD KeysetHandle*/ {
-          CreateAesGcmKey(
-              /*key_size=*/16,
-              /*variant=*/AesGcmParameters::Variant::kTink,
-              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
-              /*id_requirement=*/1010101),
-          CreateAesGcmKey(
-              /*key_size=*/32,
-              /*variant=*/AesGcmParameters::Variant::kCrunchy,
-              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
-              /*id_requirement=*/2020202),
-          CreateAesGcmKey(
-              /*key_size=*/16,
-              /*variant=*/AesGcmParameters::Variant::kNoPrefix,
-              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
-              /*id_requirement=*/absl::nullopt),
-          CreateXChaCha20Poly1305Key(
-              /*variant=*/XChaCha20Poly1305Parameters::Variant::kTink,
-              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
-              /*id_requirement=*/3030303),
-          CreateXChaCha20Poly1305Key(
-              /*variant=*/XChaCha20Poly1305Parameters::Variant::kCrunchy,
-              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
-              /*id_requirement=*/4040404),
-          CreateXChaCha20Poly1305Key(
-              /*variant=*/XChaCha20Poly1305Parameters::Variant::kNoPrefix,
-              /*secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
-              /*id_requirement=*/absl::nullopt),
           CreateAesCtrHmacAeadKey(
               /*aes_key_size=*/16, /*tag_size=*/16,
               AesCtrHmacAeadParameters::Variant::kTink,
-              /*aes_secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
-              /*hmac_secret=*/kOutputKeyMaterialFromRfcVector.substr(32, 64),
-              /*id_requirement=*/5050505),
+              /*aes_secret=*/kOkmFromRfc.substr(0, 32),
+              /*hmac_secret=*/kOkmFromRfc.substr(32, 64),
+              /*id_requirement=*/1010101),
           CreateAesCtrHmacAeadKey(
               /*aes_key_size=*/32, /*tag_size=*/32,
               AesCtrHmacAeadParameters::Variant::kCrunchy,
-              /*aes_secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 64),
-              /*hmac_secret=*/kOutputKeyMaterialFromRfcVector.substr(64, 64),
-              /*id_requirement=*/6060606),
+              /*aes_secret=*/kOkmFromRfc.substr(0, 64),
+              /*hmac_secret=*/kOkmFromRfc.substr(64, 64),
+              /*id_requirement=*/2020202),
           CreateAesCtrHmacAeadKey(
               /*aes_key_size=*/16, /*tag_size=*/16,
               AesCtrHmacAeadParameters::Variant::kNoPrefix,
-              /*aes_secret=*/kOutputKeyMaterialFromRfcVector.substr(0, 32),
-              /*hmac_secret=*/kOutputKeyMaterialFromRfcVector.substr(32, 64),
+              /*aes_secret=*/kOkmFromRfc.substr(0, 32),
+              /*hmac_secret=*/kOkmFromRfc.substr(32, 64),
               /*id_requirement=*/absl::nullopt),
+          CreateAesGcmKey(
+              /*key_size=*/16, AesGcmParameters::Variant::kTink,
+              kOkmFromRfc.substr(0, 32), /*id_requirement=*/3030303),
+          CreateAesGcmKey(
+              /*key_size=*/32, AesGcmParameters::Variant::kCrunchy,
+              kOkmFromRfc.substr(0, 64), /*id_requirement=*/4040404),
+          CreateAesGcmKey(
+              /*key_size=*/16, AesGcmParameters::Variant::kNoPrefix,
+              kOkmFromRfc.substr(0, 32), /*id_requirement=*/absl::nullopt),
+          CreateXChaCha20Poly1305Key(
+              XChaCha20Poly1305Parameters::Variant::kTink,
+              kOkmFromRfc.substr(0, 64), /*id_requirement=*/5050505),
+          CreateXChaCha20Poly1305Key(
+              XChaCha20Poly1305Parameters::Variant::kCrunchy,
+              kOkmFromRfc.substr(0, 64), /*id_requirement=*/6060606),
+          CreateXChaCha20Poly1305Key(
+              XChaCha20Poly1305Parameters::Variant::kNoPrefix,
+              kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
       },
   };
 }
@@ -244,7 +235,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
     // Create PrfBasedDeriverKey.
     google::crypto::tink::PrfBasedDeriverKey deriver_key;
     deriver_key.set_version(0);
-    *deriver_key.mutable_prf_key() = PrfKeyFromRfcVector();
+    *deriver_key.mutable_prf_key() = PrfKeyFromRfc();
     *deriver_key.mutable_params()->mutable_derived_key_template() =
         derived_key_template;
 
@@ -280,9 +271,9 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   // Proto serialization is required to convert the Parameters in `derived_keys`
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
   // AEAD.
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
@@ -309,7 +300,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
 
   // Derive KeysetHandle using the non-global ParametersToKeyDeriver map.
   util::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
-      (*deriver)->DeriveKeyset(SaltFromRfcVector());
+      (*deriver)->DeriveKeyset(SaltFromRfc());
   ASSERT_THAT(derived_handle, IsOk());
   ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));
   for (int i = 0; i < derived_keys.size(); i++) {
@@ -326,9 +317,9 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   // Proto serialization is required to convert the Parameters in `derived_keys`
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
   // AEAD.
+  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
@@ -355,7 +346,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
 
   // Derive KeysetHandle using the global registry.
   util::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
-      (*deriver)->DeriveKeyset(SaltFromRfcVector());
+      (*deriver)->DeriveKeyset(SaltFromRfc());
   ASSERT_THAT(derived_handle, IsOk());
   ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));
   for (int i = 0; i < derived_keys.size(); i++) {

@@ -41,6 +41,9 @@
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
+#include "tink/mac/hmac_key.h"
+#include "tink/mac/hmac_parameters.h"
+#include "tink/mac/hmac_proto_serialization.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -156,6 +159,28 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
   return absl::make_unique<XChaCha20Poly1305Key>(*key);
 }
 
+util::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
+    const Parameters& generic_params, InputStream* randomness) {
+  const HmacParameters* params =
+      dynamic_cast<const HmacParameters*>(&generic_params);
+  if (params == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Parameters is not HmacParameters.");
+  }
+  util::StatusOr<std::string> randomness_str =
+      ReadBytesFromStream(params->KeySizeInBytes(), randomness);
+  if (!randomness_str.ok()) {
+    return randomness_str.status();
+  }
+  util::StatusOr<HmacKey> key = HmacKey::Create(
+      *params, RestrictedData(*randomness_str, InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<HmacKey>(*key);
+}
+
 const KeyDeriverFnMap& ParametersToKeyDeriver() {
   static const KeyDeriverFnMap* instance = [] {
     static KeyDeriverFnMap* m = new KeyDeriverFnMap();
@@ -169,6 +194,10 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     m->insert({std::type_index(typeid(AesGcmParameters)), DeriveAesGcmKey});
     m->insert({std::type_index(typeid(XChaCha20Poly1305Parameters)),
                DeriveXChaCha20Poly1305Key});
+
+    // MAC.
+    CHECK_OK(RegisterHmacProtoSerialization());
+    m->insert({std::type_index(typeid(HmacParameters)), DeriveHmacKey});
 
     return m;
   }();

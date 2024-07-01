@@ -51,6 +51,7 @@
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_handle_builder.h"
+#include "tink/mac/hmac_parameters.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
@@ -116,6 +117,13 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_unique<XChaCha20Poly1305Parameters>(
             XChaCha20Poly1305Parameters::Create(
                 XChaCha20Poly1305Parameters::Variant::kNoPrefix)
+                .value()),
+        // MAC.
+        std::make_unique<HmacParameters>(
+            HmacParameters::Create(/*key_size_in_bytes=*/16,
+                                   /*cryptographic_tag_size_in_bytes=*/10,
+                                   HmacParameters::HashType::kSha256,
+                                   HmacParameters::Variant::kNoPrefix)
                 .value()),
     }));
 

@@ -145,6 +145,9 @@ tink_cc_library(
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
+    tink::mac::hmac_proto_serialization
     tink::util::input_stream_util
     tink::util::status
     tink::util::statusor
@@ -190,6 +193,7 @@ tink_cc_test(
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::mac::hmac_parameters
     tink::prf::hkdf_prf_key_manager
     tink::subtle::common_enums
     tink::subtle::random

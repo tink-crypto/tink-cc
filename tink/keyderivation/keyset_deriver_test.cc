@@ -46,6 +46,9 @@
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
 #include "tink/keyderivation/keyset_deriver_wrapper.h"
 #include "tink/keyset_handle.h"
+#include "tink/mac/hmac_key.h"
+#include "tink/mac/hmac_parameters.h"
+#include "tink/mac/hmac_proto_serialization.h"
 #include "tink/partial_key_access.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/registry.h"
@@ -166,6 +169,23 @@ std::unique_ptr<XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key(
           .value());
 }
 
+std::unique_ptr<HmacKey> CreateHmacKey(int key_size, int cryptographic_tag_size,
+                                       HmacParameters::HashType hash_type,
+                                       HmacParameters::Variant variant,
+                                       absl::string_view secret,
+                                       absl::optional<int> id_requirement) {
+  HmacParameters params =
+      HmacParameters::Create(key_size, cryptographic_tag_size, hash_type,
+                             variant)
+          .value();
+  return std::make_unique<HmacKey>(
+      HmacKey::Create(params,
+                      RestrictedData(test::HexDecodeOrDie(secret),
+                                     InsecureSecretKeyAccess::Get()),
+                      id_requirement, GetPartialKeyAccess())
+          .value());
+}
+
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   return {
       /*AEAD KeysetHandle*/ {
@@ -205,6 +225,23 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
           CreateXChaCha20Poly1305Key(
               XChaCha20Poly1305Parameters::Variant::kNoPrefix,
               kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
+      },
+      /*MAC KeysetHandle*/
+      {
+          CreateHmacKey(
+              /*key_size=*/16, /*cryptographic_tag_size=*/10,
+              HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink,
+              kOkmFromRfc.substr(0, 32), /*id_requirement=*/1010101),
+          CreateHmacKey(
+              /*key_size=*/24, /*cryptographic_tag_size=*/16,
+              HmacParameters::HashType::kSha384,
+              HmacParameters::Variant::kCrunchy, kOkmFromRfc.substr(0, 48),
+              /*id_requirement=*/2020202),
+          CreateHmacKey(
+              /*key_size=*/32, /*cryptographic_tag_size=*/32,
+              HmacParameters::HashType::kSha512,
+              HmacParameters::Variant::kNoPrefix, kOkmFromRfc.substr(0, 64),
+              /*id_requirement=*/absl::nullopt),
       },
   };
 }
@@ -270,10 +307,10 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
 
   // Proto serialization is required to convert the Parameters in `derived_keys`
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
-  // AEAD.
   ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
@@ -316,10 +353,10 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
 
   // Proto serialization is required to convert the Parameters in `derived_keys`
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
-  // AEAD.
   ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);

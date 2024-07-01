@@ -164,6 +164,9 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::keyderivation::internal::prf_based_deriver_key_manager
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
+    tink::mac::hmac_proto_serialization
     tink::util::status
     tink::util::statusor
     tink::util::test_keyset_handle

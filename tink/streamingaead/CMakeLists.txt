@@ -215,6 +215,24 @@ tink_cc_library(
     tink::streamingaead::internal::key_gen_config_v0
 )
 
+tink_cc_library(
+  NAME streaming_aead_parameters
+  SRCS
+    streaming_aead_parameters.h
+  DEPS
+    tink::core::parameters
+)
+
+tink_cc_library(
+  NAME streaming_aead_key
+  SRCS
+    streaming_aead_key.h
+  DEPS
+    tink::streamingaead::streaming_aead_parameters
+    absl::optional
+    tink::core::key
+)
+
 # tests
 
 tink_cc_test(

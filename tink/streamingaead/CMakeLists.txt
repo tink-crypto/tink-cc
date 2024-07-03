@@ -233,6 +233,21 @@ tink_cc_library(
     tink::core::key
 )
 
+tink_cc_library(
+  NAME aes_ctr_hmac_streaming_parameters
+  SRCS
+    aes_ctr_hmac_streaming_parameters.cc
+    aes_ctr_hmac_streaming_parameters.h
+  DEPS
+    tink::streamingaead::streaming_aead_parameters
+    absl::status
+    absl::strings
+    absl::optional
+    tink::core::parameters
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -490,4 +505,16 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME aes_ctr_hmac_streaming_parameters_test
+  SRCS
+    aes_ctr_hmac_streaming_parameters_test.cc
+  DEPS
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
+    gmock
+    absl::status
+    tink::util::statusor
+    tink::util::test_matchers
 )

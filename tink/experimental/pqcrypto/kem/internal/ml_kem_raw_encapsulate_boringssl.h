@@ -14,24 +14,24 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_DECAPSULATE_BORINGSSL_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_DECAPSULATE_BORINGSSL_H_
+#ifndef TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_RAW_ENCAPSULATE_BORINGSSL_H_
+#define TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_RAW_ENCAPSULATE_BORINGSSL_H_
 
 #include <memory>
 
-#include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
-#include "tink/kem/internal/raw_kem_decapsulate.h"
+#include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
+#include "tink/kem/internal/raw_kem_encapsulate.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<std::unique_ptr<RawKemDecapsulate>> NewMlKemDecapsulateBoringSsl(
-    MlKemPrivateKey recipient_key);
+util::StatusOr<std::unique_ptr<RawKemEncapsulate>>
+NewMlKemRawEncapsulateBoringSsl(MlKemPublicKey recipient_key);
 
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_DECAPSULATE_BORINGSSL_H_
+#endif  // TINK_EXPERIMENTAL_PQCRYPTO_KEM_INTERNAL_ML_KEM_RAW_ENCAPSULATE_BORINGSSL_H_

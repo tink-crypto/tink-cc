@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/kem/internal/ml_kem_decapsulate_boringssl.h"
+#include "tink/experimental/pqcrypto/kem/internal/ml_kem_raw_decapsulate_boringssl.h"
 
 #include <memory>
 #include <string>
@@ -26,7 +26,7 @@
 #include "absl/strings/string_view.h"
 #define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
 #include "openssl/experimental/kyber.h"
-#include "tink/experimental/pqcrypto/kem/internal/ml_kem_encapsulate_boringssl.h"
+#include "tink/experimental/pqcrypto/kem/internal/ml_kem_raw_encapsulate_boringssl.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
@@ -52,7 +52,7 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::HasSubstr;
 
-TEST(MlKemDecapsulateBoringSslTest, EncapsulateDecapsulateWorks) {
+TEST(MlKemRawDecapsulateBoringSslTest, EncapsulateDecapsulateWorks) {
   util::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -62,7 +62,7 @@ TEST(MlKemDecapsulateBoringSslTest, EncapsulateDecapsulateWorks) {
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
-      NewMlKemEncapsulateBoringSsl(private_key->GetPublicKey());
+      NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
   util::StatusOr<RawKemEncapsulation> encapsulation =
@@ -70,7 +70,7 @@ TEST(MlKemDecapsulateBoringSslTest, EncapsulateDecapsulateWorks) {
   ASSERT_THAT(encapsulation, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
-      NewMlKemDecapsulateBoringSsl(*private_key);
+      NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
   util::StatusOr<RestrictedData> shared_secret =
@@ -80,7 +80,7 @@ TEST(MlKemDecapsulateBoringSslTest, EncapsulateDecapsulateWorks) {
   ASSERT_EQ(*shared_secret, encapsulation->shared_secret);
 }
 
-TEST(MlKemDecapsulateBoringSslTest, WrongCiphertextYieldsWrongSharedSecret) {
+TEST(MlKemRawDecapsulateBoringSslTest, WrongCiphertextYieldsWrongSharedSecret) {
   util::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -90,7 +90,7 @@ TEST(MlKemDecapsulateBoringSslTest, WrongCiphertextYieldsWrongSharedSecret) {
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
-      NewMlKemEncapsulateBoringSsl(private_key->GetPublicKey());
+      NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
   util::StatusOr<RawKemEncapsulation> encapsulation =
@@ -98,7 +98,7 @@ TEST(MlKemDecapsulateBoringSslTest, WrongCiphertextYieldsWrongSharedSecret) {
   ASSERT_THAT(encapsulation, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
-      NewMlKemDecapsulateBoringSsl(*private_key);
+      NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
   util::StatusOr<RestrictedData> shared_secret =
@@ -110,7 +110,8 @@ TEST(MlKemDecapsulateBoringSslTest, WrongCiphertextYieldsWrongSharedSecret) {
   ASSERT_NE(*shared_secret, encapsulation->shared_secret);
 }
 
-TEST(MlKemDecapsulateBoringSslTest, DecapsulateWithModifiedOutputPrefixFails) {
+TEST(MlKemRawDecapsulateBoringSslTest,
+     DecapsulateWithModifiedOutputPrefixFails) {
   util::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -120,7 +121,7 @@ TEST(MlKemDecapsulateBoringSslTest, DecapsulateWithModifiedOutputPrefixFails) {
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
-      NewMlKemEncapsulateBoringSsl(private_key->GetPublicKey());
+      NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
   util::StatusOr<RawKemEncapsulation> encapsulation =
@@ -128,7 +129,7 @@ TEST(MlKemDecapsulateBoringSslTest, DecapsulateWithModifiedOutputPrefixFails) {
   ASSERT_THAT(encapsulation, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
-      NewMlKemDecapsulateBoringSsl(*private_key);
+      NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
   // Invalidate one byte of the output prefix.
@@ -138,7 +139,7 @@ TEST(MlKemDecapsulateBoringSslTest, DecapsulateWithModifiedOutputPrefixFails) {
                        HasSubstr("invalid output prefix")));
 }
 
-TEST(MlKemDecapsulateBoringSslTest, FipsMode) {
+TEST(MlKemRawDecapsulateBoringSslTest, FipsMode) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
@@ -152,12 +153,12 @@ TEST(MlKemDecapsulateBoringSslTest, FipsMode) {
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new decapsulator.
-  EXPECT_THAT(NewMlKemDecapsulateBoringSsl(*private_key).status(),
+  EXPECT_THAT(NewMlKemRawDecapsulateBoringSsl(*private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 
 // Test vector based on the round 3 version.
-TEST(MlKemDecapsulateBoringSslTest, TestVectorEncapsulateDecapsulate) {
+TEST(MlKemRawDecapsulateBoringSslTest, TestVectorEncapsulateDecapsulate) {
   constexpr absl::string_view kHexPublicKey =
       "A72C2D9C843EE9F8313ECC7F86D6294D59159D9A879A542E260922ADF999051CC45200C9"
       "FFDB60449C49465979272367C083A7D6267A3ED7A7FD47957C219327F7CA73A4007E1627"
@@ -312,7 +313,7 @@ TEST(MlKemDecapsulateBoringSslTest, TestVectorEncapsulateDecapsulate) {
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
-      NewMlKemDecapsulateBoringSsl(*private_key);
+      NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
   std::string ciphertext_bytes =

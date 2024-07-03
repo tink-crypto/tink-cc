@@ -1,8 +1,8 @@
 tink_cc_library(
-  NAME ml_kem_decapsulate_boringssl
+  NAME ml_kem_raw_decapsulate_boringssl
   SRCS
-    ml_kem_decapsulate_boringssl.cc
-    ml_kem_decapsulate_boringssl.h
+    ml_kem_raw_decapsulate_boringssl.cc
+    ml_kem_raw_decapsulate_boringssl.h
   DEPS
     absl::memory
     absl::status
@@ -23,18 +23,19 @@ tink_cc_library(
 )
 
 tink_cc_test(
-  NAME ml_kem_decapsulate_boringssl_test
+  NAME ml_kem_raw_decapsulate_boringssl_test
   SRCS
-    ml_kem_decapsulate_boringssl_test.cc
+    ml_kem_raw_decapsulate_boringssl_test.cc
   DEPS
-    tink::experimental::pqcrypto::kem::internal::ml_kem_decapsulate_boringssl
-    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_boringssl
+    tink::experimental::pqcrypto::kem::internal::ml_kem_raw_decapsulate_boringssl
+    tink::experimental::pqcrypto::kem::internal::ml_kem_raw_encapsulate_boringssl
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     gmock
     absl::status
     absl::strings
+    absl::string_view
     crypto
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::experimental::pqcrypto::kem::ml_kem_parameters
@@ -50,10 +51,10 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME ml_kem_encapsulate_boringssl
+  NAME ml_kem_raw_encapsulate_boringssl
   SRCS
-    ml_kem_encapsulate_boringssl.cc
-    ml_kem_encapsulate_boringssl.h
+    ml_kem_raw_encapsulate_boringssl.cc
+    ml_kem_raw_encapsulate_boringssl.h
   DEPS
     absl::memory
     absl::status
@@ -72,11 +73,11 @@ tink_cc_library(
 )
 
 tink_cc_test(
-  NAME ml_kem_encapsulate_boringssl_test
+  NAME ml_kem_raw_encapsulate_boringssl_test
   SRCS
-    ml_kem_encapsulate_boringssl_test.cc
+    ml_kem_raw_encapsulate_boringssl_test.cc
   DEPS
-    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_boringssl
+    tink::experimental::pqcrypto::kem::internal::ml_kem_raw_encapsulate_boringssl
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     gmock
     absl::status
@@ -98,7 +99,7 @@ tink_cc_library(
     absl::status
     absl::optional
     crypto
-    tink::core::insecure_secret_key_access
+    tink::core::insecure_secret_key_access_testonly
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::experimental::pqcrypto::kem::ml_kem_parameters

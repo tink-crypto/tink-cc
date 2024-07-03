@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/kem/internal/ml_kem_encapsulate_boringssl.h"
+#include "tink/experimental/pqcrypto/kem/internal/ml_kem_raw_encapsulate_boringssl.h"
 
 #include <memory>
 
@@ -39,7 +39,7 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 
-TEST(MlKemEncapsulateBoringSslTest, EncapsulationLengthsAreCorrect) {
+TEST(MlKemRawEncapsulateBoringSslTest, EncapsulationLengthsAreCorrect) {
   util::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -49,7 +49,7 @@ TEST(MlKemEncapsulateBoringSslTest, EncapsulationLengthsAreCorrect) {
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
-      NewMlKemEncapsulateBoringSsl(private_key->GetPublicKey());
+      NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
   util::StatusOr<RawKemEncapsulation> kem_encasulation =
@@ -61,7 +61,7 @@ TEST(MlKemEncapsulateBoringSslTest, EncapsulationLengthsAreCorrect) {
   EXPECT_EQ(kem_encasulation->shared_secret.size(), KYBER_SHARED_SECRET_BYTES);
 }
 
-TEST(MlKemEncapsulateBoringSslTest, EncapsulationIsNonDeterministic) {
+TEST(MlKemRawEncapsulateBoringSslTest, EncapsulationIsNonDeterministic) {
   util::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
@@ -71,7 +71,7 @@ TEST(MlKemEncapsulateBoringSslTest, EncapsulationIsNonDeterministic) {
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
-      NewMlKemEncapsulateBoringSsl(private_key->GetPublicKey());
+      NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
   util::StatusOr<RawKemEncapsulation> kem_encasulation1 =
@@ -86,7 +86,7 @@ TEST(MlKemEncapsulateBoringSslTest, EncapsulationIsNonDeterministic) {
   EXPECT_NE(kem_encasulation1->shared_secret, kem_encasulation2->shared_secret);
 }
 
-TEST(MlKemEncapsulateBoringSslTest, FipsMode) {
+TEST(MlKemRawEncapsulateBoringSslTest, FipsMode) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
@@ -101,7 +101,7 @@ TEST(MlKemEncapsulateBoringSslTest, FipsMode) {
 
   // Create a new encapsulator.
   EXPECT_THAT(
-      NewMlKemEncapsulateBoringSsl(private_key->GetPublicKey()).status(),
+      NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey()).status(),
       StatusIs(absl::StatusCode::kInternal));
 }
 

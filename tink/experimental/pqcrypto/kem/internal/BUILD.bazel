@@ -3,9 +3,9 @@ package(default_visibility = ["//:__subpackages__"])
 licenses(["notice"])
 
 cc_library(
-    name = "ml_kem_decapsulate_boringssl",
-    srcs = ["ml_kem_decapsulate_boringssl.cc"],
-    hdrs = ["ml_kem_decapsulate_boringssl.h"],
+    name = "ml_kem_raw_decapsulate_boringssl",
+    srcs = ["ml_kem_raw_decapsulate_boringssl.cc"],
+    hdrs = ["ml_kem_raw_decapsulate_boringssl.h"],
     include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
         "//tink:insecure_secret_key_access",
@@ -28,13 +28,13 @@ cc_library(
 )
 
 cc_test(
-    name = "ml_kem_decapsulate_boringssl_test",
-    srcs = ["ml_kem_decapsulate_boringssl_test.cc"],
+    name = "ml_kem_raw_decapsulate_boringssl_test",
+    srcs = ["ml_kem_raw_decapsulate_boringssl_test.cc"],
     deps = [
-        ":ml_kem_decapsulate_boringssl",
-        ":ml_kem_encapsulate_boringssl",
+        ":ml_kem_raw_decapsulate_boringssl",
+        ":ml_kem_raw_encapsulate_boringssl",
         ":ml_kem_test_util",
-        "//tink:insecure_secret_key_access",
+        "//tink:insecure_secret_key_access_testonly",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/experimental/pqcrypto/kem:ml_kem_parameters",
@@ -50,14 +50,15 @@ cc_test(
         "@boringssl//:crypto",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )
 
 cc_library(
-    name = "ml_kem_encapsulate_boringssl",
-    srcs = ["ml_kem_encapsulate_boringssl.cc"],
-    hdrs = ["ml_kem_encapsulate_boringssl.h"],
+    name = "ml_kem_raw_encapsulate_boringssl",
+    srcs = ["ml_kem_raw_encapsulate_boringssl.cc"],
+    hdrs = ["ml_kem_raw_encapsulate_boringssl.h"],
     include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
         "//tink:insecure_secret_key_access",
@@ -78,10 +79,10 @@ cc_library(
 )
 
 cc_test(
-    name = "ml_kem_encapsulate_boringssl_test",
-    srcs = ["ml_kem_encapsulate_boringssl_test.cc"],
+    name = "ml_kem_raw_encapsulate_boringssl_test",
+    srcs = ["ml_kem_raw_encapsulate_boringssl_test.cc"],
     deps = [
-        ":ml_kem_encapsulate_boringssl",
+        ":ml_kem_raw_encapsulate_boringssl",
         ":ml_kem_test_util",
         "//tink/experimental/pqcrypto/kem:ml_kem_parameters",
         "//tink/experimental/pqcrypto/kem:ml_kem_private_key",
@@ -102,7 +103,7 @@ cc_library(
     hdrs = ["ml_kem_test_util.h"],
     include_prefix = "tink/experimental/pqcrypto/kem/internal",
     deps = [
-        "//tink:insecure_secret_key_access",
+        "//tink:insecure_secret_key_access_testonly",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/experimental/pqcrypto/kem:ml_kem_parameters",

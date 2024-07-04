@@ -37,11 +37,15 @@
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/aead/xchacha20_poly1305_proto_serialization.h"
+#include "tink/big_integer.h"
 #include "tink/config/global_registry.h"
+#include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/ec_util.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/ssl_util.h"
 #include "tink/key.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
 #include "tink/keyderivation/keyset_deriver_wrapper.h"
@@ -52,7 +56,14 @@
 #include "tink/partial_key_access.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/registry.h"
+#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
+#include "tink/signature/ecdsa_public_key.h"
+#include "tink/subtle/common_enums.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_keyset_handle.h"
@@ -186,64 +197,139 @@ std::unique_ptr<HmacKey> CreateHmacKey(int key_size, int cryptographic_tag_size,
           .value());
 }
 
-std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
+std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
+    crypto::tink::subtle::EllipticCurveType proto_curve_type,
+    EcdsaParameters::CurveType curve_type, EcdsaParameters::HashType hash_type,
+    EcdsaParameters::SignatureEncoding signature_encoding,
+    EcdsaParameters::Variant variant, absl::string_view secret_seed,
+    absl::optional<int> id_requirement) {
+  internal::EcKey ec_key =
+      internal::NewEcKey(
+          proto_curve_type,
+          util::SecretDataFromStringView(test::HexDecodeOrDie(secret_seed)))
+          .value();
+
+  EcPoint public_point(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y));
+  EcdsaPublicKey public_key =
+      EcdsaPublicKey::Create(EcdsaParameters::Builder()
+                                 .SetCurveType(curve_type)
+                                 .SetHashType(hash_type)
+                                 .SetSignatureEncoding(signature_encoding)
+                                 .SetVariant(variant)
+                                 .Build()
+                                 .value(),
+                             public_point, id_requirement,
+                             GetPartialKeyAccess())
+          .value();
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key.priv),
+                           InsecureSecretKeyAccess::Get());
+
+  return std::make_unique<EcdsaPrivateKey>(
+      EcdsaPrivateKey::Create(public_key, private_key_value,
+                              GetPartialKeyAccess())
+          .value());
+}
+
+// TODO: b/314831964 - Add Variant:kLegacy test cases.
+std::vector<std::shared_ptr<Key>> AeadTestVector() {
   return {
-      /*AEAD KeysetHandle*/ {
-          CreateAesCtrHmacAeadKey(
-              /*aes_key_size=*/16, /*tag_size=*/16,
-              AesCtrHmacAeadParameters::Variant::kTink,
-              /*aes_secret=*/kOkmFromRfc.substr(0, 32),
-              /*hmac_secret=*/kOkmFromRfc.substr(32, 64),
-              /*id_requirement=*/1010101),
-          CreateAesCtrHmacAeadKey(
-              /*aes_key_size=*/32, /*tag_size=*/32,
-              AesCtrHmacAeadParameters::Variant::kCrunchy,
-              /*aes_secret=*/kOkmFromRfc.substr(0, 64),
-              /*hmac_secret=*/kOkmFromRfc.substr(64, 64),
-              /*id_requirement=*/2020202),
-          CreateAesCtrHmacAeadKey(
-              /*aes_key_size=*/16, /*tag_size=*/16,
-              AesCtrHmacAeadParameters::Variant::kNoPrefix,
-              /*aes_secret=*/kOkmFromRfc.substr(0, 32),
-              /*hmac_secret=*/kOkmFromRfc.substr(32, 64),
-              /*id_requirement=*/absl::nullopt),
-          CreateAesGcmKey(
-              /*key_size=*/16, AesGcmParameters::Variant::kTink,
-              kOkmFromRfc.substr(0, 32), /*id_requirement=*/3030303),
-          CreateAesGcmKey(
-              /*key_size=*/32, AesGcmParameters::Variant::kCrunchy,
-              kOkmFromRfc.substr(0, 64), /*id_requirement=*/4040404),
-          CreateAesGcmKey(
-              /*key_size=*/16, AesGcmParameters::Variant::kNoPrefix,
-              kOkmFromRfc.substr(0, 32), /*id_requirement=*/absl::nullopt),
-          CreateXChaCha20Poly1305Key(
-              XChaCha20Poly1305Parameters::Variant::kTink,
-              kOkmFromRfc.substr(0, 64), /*id_requirement=*/5050505),
-          CreateXChaCha20Poly1305Key(
-              XChaCha20Poly1305Parameters::Variant::kCrunchy,
-              kOkmFromRfc.substr(0, 64), /*id_requirement=*/6060606),
-          CreateXChaCha20Poly1305Key(
-              XChaCha20Poly1305Parameters::Variant::kNoPrefix,
-              kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
-      },
-      /*MAC KeysetHandle*/
-      {
-          CreateHmacKey(
-              /*key_size=*/16, /*cryptographic_tag_size=*/10,
-              HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink,
-              kOkmFromRfc.substr(0, 32), /*id_requirement=*/1010101),
-          CreateHmacKey(
-              /*key_size=*/24, /*cryptographic_tag_size=*/16,
-              HmacParameters::HashType::kSha384,
-              HmacParameters::Variant::kCrunchy, kOkmFromRfc.substr(0, 48),
-              /*id_requirement=*/2020202),
-          CreateHmacKey(
-              /*key_size=*/32, /*cryptographic_tag_size=*/32,
-              HmacParameters::HashType::kSha512,
-              HmacParameters::Variant::kNoPrefix, kOkmFromRfc.substr(0, 64),
-              /*id_requirement=*/absl::nullopt),
-      },
+      CreateAesCtrHmacAeadKey(/*aes_key_size=*/16, /*tag_size=*/16,
+                              AesCtrHmacAeadParameters::Variant::kTink,
+                              /*aes_secret=*/kOkmFromRfc.substr(0, 32),
+                              /*hmac_secret=*/kOkmFromRfc.substr(32, 64),
+                              /*id_requirement=*/1010101),
+      CreateAesCtrHmacAeadKey(/*aes_key_size=*/32, /*tag_size=*/32,
+                              AesCtrHmacAeadParameters::Variant::kCrunchy,
+                              /*aes_secret=*/kOkmFromRfc.substr(0, 64),
+                              /*hmac_secret=*/kOkmFromRfc.substr(64, 64),
+                              /*id_requirement=*/2020202),
+      CreateAesCtrHmacAeadKey(/*aes_key_size=*/16, /*tag_size=*/16,
+                              AesCtrHmacAeadParameters::Variant::kNoPrefix,
+                              /*aes_secret=*/kOkmFromRfc.substr(0, 32),
+                              /*hmac_secret=*/kOkmFromRfc.substr(32, 64),
+                              /*id_requirement=*/absl::nullopt),
+      CreateAesGcmKey(/*key_size=*/16, AesGcmParameters::Variant::kTink,
+                      kOkmFromRfc.substr(0, 32), /*id_requirement=*/3030303),
+      CreateAesGcmKey(/*key_size=*/32, AesGcmParameters::Variant::kCrunchy,
+                      kOkmFromRfc.substr(0, 64), /*id_requirement=*/4040404),
+      CreateAesGcmKey(/*key_size=*/16, AesGcmParameters::Variant::kNoPrefix,
+                      kOkmFromRfc.substr(0, 32),
+                      /*id_requirement=*/absl::nullopt),
+      CreateXChaCha20Poly1305Key(XChaCha20Poly1305Parameters::Variant::kTink,
+                                 kOkmFromRfc.substr(0, 64),
+                                 /*id_requirement=*/5050505),
+      CreateXChaCha20Poly1305Key(XChaCha20Poly1305Parameters::Variant::kCrunchy,
+                                 kOkmFromRfc.substr(0, 64),
+                                 /*id_requirement=*/6060606),
+      CreateXChaCha20Poly1305Key(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix,
+          kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
   };
+}
+
+std::vector<std::shared_ptr<Key>> MacTestVector() {
+  return {
+      CreateHmacKey(/*key_size=*/16, /*cryptographic_tag_size=*/10,
+                    HmacParameters::HashType::kSha256,
+                    HmacParameters::Variant::kTink, kOkmFromRfc.substr(0, 32),
+                    /*id_requirement=*/1010101),
+      CreateHmacKey(/*key_size=*/24, /*cryptographic_tag_size=*/16,
+                    HmacParameters::HashType::kSha384,
+                    HmacParameters::Variant::kCrunchy,
+                    kOkmFromRfc.substr(0, 48), /*id_requirement=*/2020202),
+      CreateHmacKey(
+          /*key_size=*/32, /*cryptographic_tag_size=*/32,
+          HmacParameters::HashType::kSha512, HmacParameters::Variant::kNoPrefix,
+          kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
+  };
+}
+
+std::vector<std::shared_ptr<Key>> SignatureTestVector() {
+  return {
+      CreateEcdsaPrivateKey(subtle::EllipticCurveType::NIST_P256,
+                            EcdsaParameters::CurveType::kNistP256,
+                            EcdsaParameters::HashType::kSha256,
+                            EcdsaParameters::SignatureEncoding::kDer,
+                            EcdsaParameters::Variant::kTink,
+                            kOkmFromRfc.substr(0, 32),
+                            /*id_requirement=*/1010101),
+      CreateEcdsaPrivateKey(subtle::EllipticCurveType::NIST_P384,
+                            EcdsaParameters::CurveType::kNistP384,
+                            EcdsaParameters::HashType::kSha384,
+                            EcdsaParameters::SignatureEncoding::kDer,
+                            EcdsaParameters::Variant::kCrunchy,
+                            kOkmFromRfc.substr(0, 48),
+                            /*id_requirement=*/2020202),
+      CreateEcdsaPrivateKey(subtle::EllipticCurveType::NIST_P384,
+                            EcdsaParameters::CurveType::kNistP384,
+                            EcdsaParameters::HashType::kSha384,
+                            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+                            EcdsaParameters::Variant::kLegacy,
+                            kOkmFromRfc.substr(0, 48),
+                            /*id_requirement=*/3030303),
+      CreateEcdsaPrivateKey(subtle::EllipticCurveType::NIST_P521,
+                            EcdsaParameters::CurveType::kNistP521,
+                            EcdsaParameters::HashType::kSha512,
+                            EcdsaParameters::SignatureEncoding::kIeeeP1363,
+                            EcdsaParameters::Variant::kNoPrefix,
+                            kOkmFromRfc.substr(0, 64),
+                            /*id_requirement=*/absl::nullopt),
+  };
+}
+
+std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
+  std::vector<std::vector<std::shared_ptr<Key>>> vectors;
+  vectors.push_back(AeadTestVector());
+  vectors.push_back(MacTestVector());
+
+  // Deriving EC keys with secret seed is not implemented in OpenSSL.
+  if (internal::IsBoringSsl()) {
+    vectors.push_back(SignatureTestVector());
+  }
+
+  return vectors;
 }
 
 util::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
@@ -311,6 +397,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
@@ -357,6 +444,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);

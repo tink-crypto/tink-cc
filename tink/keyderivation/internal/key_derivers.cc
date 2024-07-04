@@ -38,16 +38,26 @@
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/aead/xchacha20_poly1305_proto_serialization.h"
+#include "tink/big_integer.h"
+#include "tink/ec_point.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/ec_util.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/mac/hmac_proto_serialization.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
+#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
+#include "tink/signature/ecdsa_public_key.h"
+#include "tink/subtle/common_enums.h"
 #include "tink/util/input_stream_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/aes_gcm.pb.h"
@@ -181,6 +191,64 @@ util::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
   return absl::make_unique<HmacKey>(*key);
 }
 
+util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
+    const Parameters& generic_params, InputStream* randomness) {
+  const EcdsaParameters* params =
+      dynamic_cast<const EcdsaParameters*>(&generic_params);
+  if (params == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Parameters is not EcdsaParameters.");
+  }
+
+  subtle::EllipticCurveType curve_type;
+  int num_rand_bytes = 0;
+  switch (params->GetCurveType()) {
+    case EcdsaParameters::CurveType::kNistP256:
+      curve_type = subtle::EllipticCurveType::NIST_P256;
+      num_rand_bytes = 16;
+      break;
+    case EcdsaParameters::CurveType::kNistP384:
+      curve_type = subtle::EllipticCurveType::NIST_P384;
+      num_rand_bytes = 24;
+      break;
+    case EcdsaParameters::CurveType::kNistP521:
+      curve_type = subtle::EllipticCurveType::NIST_P521;
+      num_rand_bytes = 32;
+      break;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "ECDSA curve does not support key derivation.");
+  }
+  util::StatusOr<util::SecretData> secret_seed =
+      ReadSecretBytesFromStream(num_rand_bytes, randomness);
+  if (!secret_seed.ok()) {
+    return secret_seed.status();
+  }
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(curve_type, *secret_seed);
+  if (!ec_key.ok()) {
+    return ec_key.status();
+  }
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, public_point, /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           InsecureSecretKeyAccess::Get());
+  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  if (!private_key.ok()) {
+    return private_key.status();
+  }
+  return absl::make_unique<EcdsaPrivateKey>(*private_key);
+}
+
 const KeyDeriverFnMap& ParametersToKeyDeriver() {
   static const KeyDeriverFnMap* instance = [] {
     static KeyDeriverFnMap* m = new KeyDeriverFnMap();
@@ -198,6 +266,11 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     // MAC.
     CHECK_OK(RegisterHmacProtoSerialization());
     m->insert({std::type_index(typeid(HmacParameters)), DeriveHmacKey});
+
+    // Signature.
+    CHECK_OK(RegisterEcdsaProtoSerialization());
+    m->insert(
+        {std::type_index(typeid(EcdsaParameters)), DeriveEcdsaPrivateKey});
 
     return m;
   }();

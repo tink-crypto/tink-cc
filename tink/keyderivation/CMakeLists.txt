@@ -142,12 +142,15 @@ tink_cc_test(
     absl::status
     absl::string_view
     absl::optional
+    tink::core::big_integer
+    tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::partial_key_access_token
     tink::core::registry
+    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::aead::aead_config
     tink::aead::aes_ctr_hmac_aead_key
@@ -160,13 +163,21 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
     tink::config::global_registry
+    tink::internal::ec_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::ssl_util
     tink::keyderivation::internal::prf_based_deriver_key_manager
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     tink::mac::hmac_proto_serialization
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_proto_serialization
+    tink::signature::ecdsa_public_key
+    tink::subtle::common_enums
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_keyset_handle

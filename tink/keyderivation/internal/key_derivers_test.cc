@@ -47,6 +47,7 @@
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/ssl_util.h"
 #include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
@@ -58,6 +59,10 @@
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
+#include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/prf/hkdf_streaming_prf.h"
 #include "tink/subtle/prf/streaming_prf.h"
@@ -71,6 +76,7 @@
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/common.pb.h"
+#include "proto/ecdsa.pb.h"
 #include "proto/hkdf_prf.pb.h"
 #include "proto/hmac.pb.h"
 #include "proto/tink.pb.h"
@@ -91,6 +97,16 @@ using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
 using KeyDeriversTest = TestWithParam<std::shared_ptr<Parameters>>;
+
+std::unique_ptr<InputStream> Randomness() {
+  std::unique_ptr<StreamingPrf> streaming_prf =
+      subtle::HkdfStreamingPrf::New(
+          subtle::HashType::SHA256,
+          util::SecretDataFromStringView(subtle::Random::GetRandomBytes(48)),
+          "salty")
+          .value();
+  return streaming_prf->ComputePrf("input");
+}
 
 INSTANTIATE_TEST_SUITE_P(
     KeyDeriversTests, KeyDeriversTest,
@@ -128,18 +144,9 @@ INSTANTIATE_TEST_SUITE_P(
     }));
 
 TEST_P(KeyDeriversTest, DeriveKey) {
-  util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
-      subtle::HkdfStreamingPrf::New(
-          subtle::HashType::SHA256,
-          util::SecretDataFromStringView(subtle::Random::GetRandomBytes(48)),
-          "salty");
-  ASSERT_THAT(streaming_prf, IsOk());
-  std::unique_ptr<InputStream> randomness =
-      (*streaming_prf)->ComputePrf("input");
-
   std::shared_ptr<Parameters> params = GetParam();
   util::StatusOr<std::shared_ptr<Key>> key =
-      DeriveKey(*params, randomness.get());
+      DeriveKey(*params, Randomness().get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetParameters(), Eq(std::ref(*params)));
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
@@ -158,6 +165,41 @@ TEST_P(KeyDeriversTest, InsufficientRandomness) {
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kOutOfRange));
 }
 
+using KeyDeriversBoringSslTest = TestWithParam<std::shared_ptr<Parameters>>;
+
+INSTANTIATE_TEST_SUITE_P(
+    KeyDeriversBoringSslTests, KeyDeriversBoringSslTest,
+    ValuesIn(std::vector<std::shared_ptr<Parameters>>{
+        // Signature.
+        std::make_unique<EcdsaParameters>(
+            EcdsaParameters::Builder()
+                .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+                .SetHashType(EcdsaParameters::HashType::kSha256)
+                .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+                .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+                .Build()
+                .value()),
+    }));
+
+TEST_P(KeyDeriversBoringSslTest, DeriveKey) {
+  if (!IsBoringSsl()) {
+    GTEST_SKIP() << "NewEcKey with seed used by Signature key derivation is "
+                    "not supported by OpenSSL";
+  }
+
+  std::shared_ptr<Parameters> params = GetParam();
+  util::StatusOr<std::shared_ptr<Key>> key =
+      DeriveKey(*params, Randomness().get());
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT((*key)->GetParameters(), Eq(std::ref(*params)));
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
+
+  KeysetHandleBuilder::Entry entry =
+      KeysetHandleBuilder::Entry::CreateFromKey(*key, KeyStatus::kEnabled,
+                                                /*is_primary=*/true);
+  EXPECT_THAT(KeysetHandleBuilder().AddEntry(std::move(entry)).Build(), IsOk());
+}
+
 TEST(MissingKeyDeriversTest, MissingKeyDeriver) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
   util::StatusOr<AesEaxParameters> params =
@@ -169,16 +211,7 @@ TEST(MissingKeyDeriversTest, MissingKeyDeriver) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
-      subtle::HkdfStreamingPrf::New(
-          subtle::HashType::SHA256,
-          util::SecretDataFromStringView(subtle::Random::GetRandomBytes(32)),
-          "salty");
-  ASSERT_THAT(streaming_prf, IsOk());
-  std::unique_ptr<InputStream> randomness =
-      (*streaming_prf)->ComputePrf("input");
-
-  EXPECT_THAT(DeriveKey(*params, randomness.get()).status(),
+  EXPECT_THAT(DeriveKey(*params, Randomness().get()).status(),
               StatusIs(absl::StatusCode::kUnimplemented));
 }
 
@@ -364,6 +397,51 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
           key_format, same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
   EXPECT_THAT(test::HexEncode(proto_key->key_value()), Eq(key_bytes));
+}
+
+TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
+  if (!IsBoringSsl()) {
+    GTEST_SKIP() << "NewEcKey with seed used by Signature key derivation is "
+                    "not supported by OpenSSL";
+  }
+
+  // Derive key with hard-coded map.
+  util::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+  util::StatusOr<std::unique_ptr<Key>> generic_key =
+      DeriveKey(*params, randomness_from_rfc_vector_.get());
+  ASSERT_THAT(generic_key, IsOk());
+  const EcdsaPrivateKey* key =
+      dynamic_cast<const EcdsaPrivateKey*>(&**std::move(generic_key));
+  ASSERT_THAT(key, NotNull());
+  std::string key_value =
+      test::HexEncode(key->GetPrivateKeyValue(GetPartialKeyAccess())
+                          .GetSecret(InsecureSecretKeyAccess::Get()));
+
+  // Derive key with EcdsaSignKeyManager.
+  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialization, IsOk());
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  google::crypto::tink::EcdsaKeyFormat key_format;
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
+  util::StatusOr<google::crypto::tink::EcdsaPrivateKey> proto_key =
+      EcdsaSignKeyManager().DeriveKey(key_format,
+                                      same_randomness_from_rfc_vector_.get());
+  ASSERT_THAT(proto_key, IsOk());
+  EXPECT_THAT(test::HexEncode(proto_key->key_value()), Eq(key_value));
 }
 
 }  // namespace

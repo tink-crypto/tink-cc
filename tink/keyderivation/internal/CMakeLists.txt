@@ -130,11 +130,14 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::optional
+    tink::core::big_integer
+    tink::core::ec_point
     tink::core::input_stream
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access
+    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
@@ -145,10 +148,17 @@ tink_cc_library(
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
+    tink::internal::ec_util
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     tink::mac::hmac_proto_serialization
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_proto_serialization
+    tink::signature::ecdsa_public_key
+    tink::subtle::common_enums
     tink::util::input_stream_util
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::proto::aes_gcm_cc_proto
@@ -193,8 +203,13 @@ tink_cc_test(
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::ssl_util
     tink::mac::hmac_parameters
     tink::prf::hkdf_prf_key_manager
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_proto_serialization
+    tink::signature::ecdsa_sign_key_manager
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::prf::hkdf_streaming_prf
@@ -208,6 +223,7 @@ tink_cc_test(
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
     tink::proto::common_cc_proto
+    tink::proto::ecdsa_cc_proto
     tink::proto::hkdf_prf_cc_proto
     tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto

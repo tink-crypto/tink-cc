@@ -1038,7 +1038,11 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256PrivateKeyFails) {
   EXPECT_THAT(JwkSetToPublicKeysetHandle(jwt_set), Not(IsOk()));
 }
 
-TEST(JwkSetFromPublicKeysetHandleTest,
+class JwkSetFromPublicKeysetHandleTest : public testing::Test {
+  void SetUp() override { ASSERT_THAT(JwtSignatureRegister(), IsOk()); }
+};
+
+TEST_F(JwkSetFromPublicKeysetHandleTest,
      EcdsaWithTinkOutputPrefixSuccessWithKid) {
   std::string public_keyset_with_tink_output_prefix = R"({
       "primaryKeyId": 303799737,
@@ -1081,7 +1085,7 @@ TEST(JwkSetFromPublicKeysetHandleTest,
       << differences;
 }
 
-TEST(JwkSetFromPublicKeysetHandleTest,
+TEST_F(JwkSetFromPublicKeysetHandleTest,
      JwtRsaSsaPkcs1WithTinkOutputPrefixSuccessWithKid) {
   std::string public_keyset_with_tink_output_prefix = R"({
     "primaryKeyId": 1277272603,
@@ -1124,7 +1128,7 @@ TEST(JwkSetFromPublicKeysetHandleTest,
       << differences;
 }
 
-TEST(JwkSetFromPublicKeysetHandleTest, WithInvalidKeyMaterialTypeFails) {
+TEST_F(JwkSetFromPublicKeysetHandleTest, WithInvalidKeyMaterialTypeFails) {
   std::string public_keyset_with_invalid_key_material_type = R"({
       "primaryKeyId": 303799737,
       "key": [
@@ -1152,7 +1156,7 @@ TEST(JwkSetFromPublicKeysetHandleTest, WithInvalidKeyMaterialTypeFails) {
   EXPECT_THAT(jwk_set, Not(IsOk()));
 }
 
-TEST(JwkSetFromPublicKeysetHandleTest, WithUnknownTypeUrlFails) {
+TEST_F(JwkSetFromPublicKeysetHandleTest, WithUnknownTypeUrlFails) {
   std::string public_keyset_with_invalid_key_material_type = R"({
       "primaryKeyId": 303799737,
       "key": [
@@ -1259,7 +1263,7 @@ INSTANTIATE_TEST_SUITE_P(
       return info.param.name;
     });
 
-TEST(JwkSetFromPublicKeysetHandleTest,
+TEST_F(JwkSetFromPublicKeysetHandleTest,
      JwtRsaSsaPkcs1WithUnknownAlgorithmFails) {
   std::string public_keyset_with_unknown_algorithm = R"({
     "primaryKeyId": 1277272603,

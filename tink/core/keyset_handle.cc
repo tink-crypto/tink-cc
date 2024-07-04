@@ -157,7 +157,7 @@ util::Status KeysetHandle::Validate() const {
     util::Status status = ValidateAt(i);
     if (!status.ok()) return status;
 
-    Keyset::Key proto_key = keyset_->key(i);
+    const Keyset::Key& proto_key = keyset_->key(i);
     if (proto_key.key_id() == keyset_->primary_key_id()) {
       ++num_primary;
       if (proto_key.status() != KeyStatusType::ENABLED) {

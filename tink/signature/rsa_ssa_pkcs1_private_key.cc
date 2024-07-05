@@ -17,6 +17,7 @@
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 
 #include "absl/status/status.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -59,70 +60,80 @@ util::Status ValidateKeyPair(
     return e.status();
   }
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> d_bn =
-      internal::StringToBignum(d.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!d_bn.ok()) {
-    return d_bn.status();
-  }
+  return internal::CallWithCoreDumpProtection(
+      [&]() -> absl::Status {
+        util::StatusOr<internal::SslUniquePtr<BIGNUM>> d_bn =
+            internal::StringToBignum(
+                d.GetSecret(InsecureSecretKeyAccess::Get()));
+        if (!d_bn.ok()) {
+          return d_bn.status();
+        }
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> p_bn =
-      internal::StringToBignum(p.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!p_bn.ok()) {
-    return p_bn.status();
-  }
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> q_bn =
-      internal::StringToBignum(q.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!q_bn.ok()) {
-    return q_bn.status();
-  }
+        util::StatusOr<internal::SslUniquePtr<BIGNUM>> p_bn =
+            internal::StringToBignum(
+                p.GetSecret(InsecureSecretKeyAccess::Get()));
+        if (!p_bn.ok()) {
+          return p_bn.status();
+        }
+        util::StatusOr<internal::SslUniquePtr<BIGNUM>> q_bn =
+            internal::StringToBignum(
+                q.GetSecret(InsecureSecretKeyAccess::Get()));
+        if (!q_bn.ok()) {
+          return q_bn.status();
+        }
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> dp_bn =
-      internal::StringToBignum(dp.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!dp_bn.ok()) {
-    return dp_bn.status();
-  }
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> dq_bn =
-      internal::StringToBignum(dq.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!dq_bn.ok()) {
-    return dq_bn.status();
-  }
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> q_inv_bn =
-      internal::StringToBignum(q_inv.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!q_inv_bn.ok()) {
-    return q_inv_bn.status();
-  }
+        util::StatusOr<internal::SslUniquePtr<BIGNUM>> dp_bn =
+            internal::StringToBignum(
+                dp.GetSecret(InsecureSecretKeyAccess::Get()));
+        if (!dp_bn.ok()) {
+          return dp_bn.status();
+        }
+        util::StatusOr<internal::SslUniquePtr<BIGNUM>> dq_bn =
+            internal::StringToBignum(
+                dq.GetSecret(InsecureSecretKeyAccess::Get()));
+        if (!dq_bn.ok()) {
+          return dq_bn.status();
+        }
+        util::StatusOr<internal::SslUniquePtr<BIGNUM>> q_inv_bn =
+            internal::StringToBignum(
+                q_inv.GetSecret(InsecureSecretKeyAccess::Get()));
+        if (!q_inv_bn.ok()) {
+          return q_inv_bn.status();
+        }
 
-  // Build RSA key from the given values.  The RSA object takes ownership of the
-  // given values after the call.
-  if (RSA_set0_key(rsa.get(), n->release(), e->release(), d_bn->release()) !=
-          1 ||
-      RSA_set0_factors(rsa.get(), p_bn->release(), q_bn->release()) != 1 ||
-      RSA_set0_crt_params(rsa.get(), dp_bn->release(), dq_bn->release(),
-                          q_inv_bn->release()) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "Internal RSA key loading error");
-  }
+        // Build RSA key from the given values.  The RSA object takes ownership
+        // of the given values after the call.
+        if (RSA_set0_key(rsa.get(), n->release(), e->release(),
+                         d_bn->release()) != 1 ||
+            RSA_set0_factors(rsa.get(), p_bn->release(), q_bn->release()) !=
+                1 ||
+            RSA_set0_crt_params(rsa.get(), dp_bn->release(), dq_bn->release(),
+                                q_inv_bn->release()) != 1) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "Internal RSA key loading error");
+        }
 
-  // Validate key.
-  int check_key_status = RSA_check_key(rsa.get());
-  if (check_key_status == 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "RSA key pair is not valid");
-  }
+        // Validate key.
+        int check_key_status = RSA_check_key(rsa.get());
+        if (check_key_status == 0) {
+          return util::Status(absl::StatusCode::kInvalidArgument,
+                              "RSA key pair is not valid");
+        }
 
-  if (check_key_status == -1) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "An error ocurred while checking the key");
-  }
+        if (check_key_status == -1) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "An error ocurred while checking the key");
+        }
 
 #ifdef OPENSSL_IS_BORINGSSL
-  if (RSA_check_fips(rsa.get()) == 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "RSA key pair is not valid in FIPS mode");
-  }
+        if (RSA_check_fips(rsa.get()) == 0) {
+          return util::Status(absl::StatusCode::kInvalidArgument,
+                              "RSA key pair is not valid in FIPS mode");
+        }
 #endif
 
-  return util::OkStatus();
+        return util::OkStatus();
+      });
 }
 
 }  // namespace

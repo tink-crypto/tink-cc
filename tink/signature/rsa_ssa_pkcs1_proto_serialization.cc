@@ -25,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -39,6 +40,7 @@
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -297,9 +299,8 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   params.set_hash_type(*hash_type);
   RsaSsaPkcs1KeyFormat proto_key_format;
   proto_key_format.set_modulus_size_in_bits(parameters.GetModulusSizeInBits());
-  // OSS proto library complains if input is not converted to a string.
   proto_key_format.set_public_exponent(
-      std::string(parameters.GetPublicExponent().GetValue()));
+      parameters.GetPublicExponent().GetValue());
   *proto_key_format.mutable_params() = params;
 
   return internal::ProtoParametersSerialization::Create(
@@ -322,11 +323,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   google::crypto::tink::RsaSsaPkcs1PublicKey proto_key;
   proto_key.set_version(0);
   *proto_key.mutable_params() = params;
-  // OSS proto library complains if input is not converted to a string.
-  proto_key.set_n(
-      std::string(key.GetModulus(GetPartialKeyAccess()).GetValue()));
-  proto_key.set_e(
-      std::string(key.GetParameters().GetPublicExponent().GetValue()));
+  proto_key.set_n(key.GetModulus(GetPartialKeyAccess()).GetValue());
+  proto_key.set_e(key.GetParameters().GetPublicExponent().GetValue());
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -361,40 +359,39 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   google::crypto::tink::RsaSsaPkcs1PublicKey proto_public_key;
   proto_public_key.set_version(0);
   *proto_public_key.mutable_params() = params;
-  // OSS proto library complains if input is not converted to a string.
-  proto_public_key.set_n(std::string(
-      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue()));
-  proto_public_key.set_e(std::string(
-      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue()));
+  proto_public_key.set_n(
+      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
+  proto_public_key.set_e(
+      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
 
-  google::crypto::tink::RsaSsaPkcs1PrivateKey proto_private_key;
-  proto_private_key.set_version(0);
-  *proto_private_key.mutable_public_key() = proto_public_key;
-  // OSS proto library complains if input is not converted to a string.
-  proto_private_key.set_p(
-      std::string(key.GetPrimeP(GetPartialKeyAccess()).GetSecret(*token)));
-  proto_private_key.set_q(
-      std::string(key.GetPrimeQ(GetPartialKeyAccess()).GetSecret(*token)));
-  proto_private_key.set_dp(
-      std::string(key.GetPrimeExponentP().GetSecret(*token)));
-  proto_private_key.set_dq(
-      std::string(key.GetPrimeExponentQ().GetSecret(*token)));
-  proto_private_key.set_d(
-      std::string(key.GetPrivateExponent().GetSecret(*token)));
-  proto_private_key.set_crt(
-      std::string(key.GetCrtCoefficient().GetSecret(*token)));
-
+  SecretProto<google::crypto::tink::RsaSsaPkcs1PrivateKey> proto_private_key;
+  proto_private_key->set_version(0);
+  *proto_private_key->mutable_public_key() = proto_public_key;
+  internal::CallWithCoreDumpProtection([&] {
+    proto_private_key->set_p(
+        key.GetPrimeP(GetPartialKeyAccess()).GetSecret(*token));
+    proto_private_key->set_q(
+        key.GetPrimeQ(GetPartialKeyAccess()).GetSecret(*token));
+    proto_private_key->set_dp(key.GetPrimeExponentP().GetSecret(*token));
+    proto_private_key->set_dq(key.GetPrimeExponentQ().GetSecret(*token));
+    proto_private_key->set_d(key.GetPrivateExponent().GetSecret(*token));
+    proto_private_key->set_crt(key.GetCrtCoefficient().GetSecret(*token));
+  });
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output =
-      RestrictedData(proto_private_key.SerializeAsString(), *token);
+  util::StatusOr<util::SecretData> serialized_proto =
+      proto_private_key.SerializeAsSecretData();
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
+
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, restricted_output, KeyData::ASYMMETRIC_PRIVATE,
-      *output_prefix_type, key.GetIdRequirement());
+      kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
+      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
 }
 
 RsaSsaPkcs1ProtoParametersParserImpl* RsaSsaPkcs1ProtoParametersParser() {

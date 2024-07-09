@@ -34,6 +34,7 @@
 #include "openssl/evp.h"
 #include "tink/aead/internal/aead_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
@@ -350,10 +351,20 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
           absl::StrCat("Output buffer too small; expected at least ",
                        min_out_buff_size, " got ", out.size()));
     }
-
-    return internal::CallWithCoreDumpProtection([&]() {
-      return EncryptSensitive(plaintext, associated_data, iv, out);
-    });
+    // The ciphertext will be fine to leak. This assumes that BoringSSL does not
+    // use the memory as scratch pad and writes sensitive data into it.
+    ScopedAssumeRegionCoreDumpSafe scope_object(out.data(), out.size());
+    absl::StatusOr<int64_t> result =
+        internal::CallWithCoreDumpProtection([&]() {
+          return EncryptSensitive(plaintext, associated_data, iv, out);
+        });
+    if (!result.ok()) {
+      return result;
+    }
+    // Declassify the ciphertext: it can depend on the key, but that's
+    // intentional.
+    crypto::tink::internal::DfsanClearLabel(out.data(), out.size());
+    return result;
   }
 
   util::StatusOr<int64_t> EncryptSensitive(absl::string_view plaintext,
@@ -405,9 +416,31 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
                        min_out_buff_size, " got ", out.size()));
     }
 
-    return internal::CallWithCoreDumpProtection([&]() {
-      return DecryptSensitive(ciphertext, associated_data, iv, out);
-    });
+    // We use this for AesGcm, AesGcmSiv, and XChaCha20Poly1305.
+    // The following implies that the plaintext region is allowed to leak. In
+    // successful decryptions, the adversary can already get the plaintext via
+    // core dumps (since the API specifies that the plaintext is in a
+    // std::string, so this is the users responsibility). Hence, this gives
+    // adversaries access to data which is stored *during* the computation, and
+    // data which would be erased because the tag is wrong. Since all algorithms
+    // here are using a key stream which depends only on the IV and the key,
+    // this means that the adversary can potentially obtain key streams for IVs
+    // for which he does either not know a valid tag (which seems useless if he
+    // didn't see a valid ciphertext) or without querying the actual ciphertext
+    // (which does not seem useful), or very long key streams (longer than for
+    // the existing ciphertext). Hence, we declare this to be sufficiently safe
+    // at the moment.
+    ScopedAssumeRegionCoreDumpSafe scope_object(out.data(), out.size());
+    absl::StatusOr<int64_t> result =
+        internal::CallWithCoreDumpProtection([&]() {
+          return DecryptSensitive(ciphertext, associated_data, iv, out);
+        });
+    if (!result.ok()) {
+      return result;
+    }
+    // The plaintext is declassified due to the API allowing it to leak.
+    crypto::tink::internal::DfsanClearLabel(out.data(), out.size());
+    return result;
   }
 
   util::StatusOr<int64_t> DecryptSensitive(absl::string_view ciphertext,

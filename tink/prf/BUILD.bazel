@@ -169,6 +169,67 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "failing_prfset",
+    srcs = ["failing_prfset.cc"],
+    hdrs = ["failing_prfset.h"],
+    include_prefix = "tink/prf",
+    deps = [
+        ":prf_set",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_library(
+    name = "config_v0",
+    srcs = ["config_v0.cc"],
+    hdrs = ["config_v0.h"],
+    include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:configuration",
+        "//tink/prf/internal:config_v0",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
+cc_library(
+    name = "key_gen_config_v0",
+    srcs = ["key_gen_config_v0.cc"],
+    hdrs = ["key_gen_config_v0.h"],
+    include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tink:key_gen_configuration",
+        "//tink/prf/internal:key_gen_config_v0",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
+cc_library(
+    name = "prf_parameters",
+    hdrs = ["prf_parameters.h"],
+    include_prefix = "tink/prf",
+    deps = ["//tink:parameters"],
+)
+
+cc_library(
+    name = "prf_key",
+    hdrs = ["prf_key.h"],
+    include_prefix = "tink/prf",
+    deps = [
+        ":prf_parameters",
+        "//tink:key",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+# tests
+
 cc_test(
     name = "hkdf_prf_key_manager_test",
     srcs = ["hkdf_prf_key_manager_test.cc"],
@@ -319,21 +380,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "failing_prfset",
-    srcs = ["failing_prfset.cc"],
-    hdrs = ["failing_prfset.h"],
-    include_prefix = "tink/prf",
-    deps = [
-        ":prf_set",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-    ],
-)
-
 cc_test(
     name = "failing_prfset_test",
     srcs = ["failing_prfset_test.cc"],
@@ -343,32 +389,6 @@ cc_test(
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "config_v0",
-    srcs = ["config_v0.cc"],
-    hdrs = ["config_v0.h"],
-    include_prefix = "tink/prf",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tink:configuration",
-        "//tink/prf/internal:config_v0",
-        "@com_google_absl//absl/log:check",
-    ],
-)
-
-cc_library(
-    name = "key_gen_config_v0",
-    srcs = ["key_gen_config_v0.cc"],
-    hdrs = ["key_gen_config_v0.h"],
-    include_prefix = "tink/prf",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tink:key_gen_configuration",
-        "//tink/prf/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
     ],
 )
 

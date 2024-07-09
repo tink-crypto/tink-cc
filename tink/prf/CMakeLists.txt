@@ -157,6 +157,62 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME failing_prfset
+  SRCS
+    failing_prfset.cc
+    failing_prfset.h
+  DEPS
+    tink::prf::prf_set
+    absl::memory
+    absl::status
+    absl::strings
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_library(
+  NAME config_v0
+  SRCS
+    config_v0.cc
+    config_v0.h
+  DEPS
+    absl::check
+    tink::core::configuration
+    tink::prf::internal::config_v0
+)
+
+tink_cc_library(
+  NAME key_gen_config_v0
+  SRCS
+    key_gen_config_v0.cc
+    key_gen_config_v0.h
+  DEPS
+    absl::check
+    tink::core::key_gen_configuration
+    tink::prf::internal::key_gen_config_v0
+)
+
+tink_cc_library(
+  NAME prf_key
+  SRCS
+    prf_key.h
+  DEPS
+    tink::prf::prf_parameters
+    absl::optional
+    tink::core::key
+)
+
+tink_cc_library(
+  NAME prf_parameters
+  SRCS
+    prf_parameters.h
+  DEPS
+    tink::core::parameters
+)
+
+# tests
+
 tink_cc_test(
   NAME hkdf_prf_key_manager_test
   SRCS
@@ -306,20 +362,6 @@ tink_cc_test(
     tink::proto::tink_cc_proto
 )
 
-tink_cc_library(
-  NAME failing_prfset
-  SRCS
-    failing_prfset.cc
-    failing_prfset.h
-  DEPS
-    tink::prf::prf_set
-    absl::memory
-    absl::status
-    absl::strings
-    tink::util::status
-    tink::util::statusor
-)
-
 tink_cc_test(
   NAME failing_prfset_test
   SRCS
@@ -330,28 +372,6 @@ tink_cc_test(
     gmock
     absl::status
     tink::util::test_matchers
-)
-
-tink_cc_library(
-  NAME config_v0
-  SRCS
-    config_v0.cc
-    config_v0.h
-  DEPS
-    absl::check
-    tink::core::configuration
-    tink::prf::internal::config_v0
-)
-
-tink_cc_library(
-  NAME key_gen_config_v0
-  SRCS
-    key_gen_config_v0.cc
-    key_gen_config_v0.h
-  DEPS
-    absl::check
-    tink::core::key_gen_configuration
-    tink::prf::internal::key_gen_config_v0
 )
 
 tink_cc_test(

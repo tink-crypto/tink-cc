@@ -265,6 +265,23 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "aes_ctr_hmac_streaming_key",
+    srcs = ["aes_ctr_hmac_streaming_key.cc"],
+    hdrs = ["aes_ctr_hmac_streaming_key.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        ":aes_ctr_hmac_streaming_parameters",
+        ":streaming_aead_key",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -543,6 +560,22 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_ctr_hmac_streaming_key_test",
+    srcs = ["aes_ctr_hmac_streaming_key_test.cc"],
+    deps = [
+        ":aes_ctr_hmac_streaming_key",
+        ":aes_ctr_hmac_streaming_parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

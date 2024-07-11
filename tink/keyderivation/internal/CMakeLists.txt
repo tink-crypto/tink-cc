@@ -148,6 +148,9 @@ tink_cc_library(
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::daead::aes_siv_proto_serialization
     tink::internal::ec_util
     tink::mac::hmac_key
     tink::mac::hmac_parameters
@@ -200,11 +203,18 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_key_manager
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_key_manager
+    tink::daead::aes_siv_parameters
+    tink::daead::aes_siv_proto_serialization
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_util
+    tink::mac::hmac_key
+    tink::mac::hmac_key_manager
     tink::mac::hmac_parameters
+    tink::mac::hmac_proto_serialization
     tink::prf::hkdf_prf_key_manager
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
@@ -222,6 +232,7 @@ tink_cc_test(
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_siv_cc_proto
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::hkdf_prf_cc_proto

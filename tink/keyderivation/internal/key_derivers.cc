@@ -39,6 +39,9 @@
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/big_integer.h"
+#include "tink/daead/aes_siv_key.h"
+#include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/aes_siv_proto_serialization.h"
 #include "tink/ec_point.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
@@ -74,8 +77,6 @@ constexpr int kXChaCha20Poly1305KeyLen = 32;
 using KeyDeriverFn = absl::AnyInvocable<util::StatusOr<std::unique_ptr<Key>>(
     const Parameters&, InputStream*) const>;
 using KeyDeriverFnMap = absl::flat_hash_map<std::type_index, KeyDeriverFn>;
-
-// AEAD.
 
 util::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
     const Parameters& generic_params, InputStream* randomness) {
@@ -167,6 +168,28 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
     return key.status();
   }
   return absl::make_unique<XChaCha20Poly1305Key>(*key);
+}
+
+util::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
+    const Parameters& generic_params, InputStream* randomness) {
+  const AesSivParameters* params =
+      dynamic_cast<const AesSivParameters*>(&generic_params);
+  if (params == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Parameters is not AesSivParameters.");
+  }
+  util::StatusOr<util::SecretData> randomness_str =
+      ReadSecretBytesFromStream(params->KeySizeInBytes(), randomness);
+  if (!randomness_str.ok()) {
+    return randomness_str.status();
+  }
+  util::StatusOr<AesSivKey> key = AesSivKey::Create(
+      *params, RestrictedData(*randomness_str, InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<AesSivKey>(*key);
 }
 
 util::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
@@ -262,6 +285,10 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     m->insert({std::type_index(typeid(AesGcmParameters)), DeriveAesGcmKey});
     m->insert({std::type_index(typeid(XChaCha20Poly1305Parameters)),
                DeriveXChaCha20Poly1305Key});
+
+    // Deterministic AEAD.
+    CHECK_OK(RegisterAesSivProtoSerialization());
+    m->insert({std::type_index(typeid(AesSivParameters)), DeriveAesSivKey});
 
     // MAC.
     CHECK_OK(RegisterHmacProtoSerialization());

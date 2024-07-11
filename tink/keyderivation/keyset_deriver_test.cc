@@ -39,6 +39,9 @@
 #include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/big_integer.h"
 #include "tink/config/global_registry.h"
+#include "tink/daead/aes_siv_key.h"
+#include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/aes_siv_proto_serialization.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
@@ -87,13 +90,15 @@ using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
-// Hex values from HKDF RFC https://tools.ietf.org/html/rfc5869#appendix-A.2.
+// The 82 bytes of the output key material (OKM) from the HKDF RFC
+// https://tools.ietf.org/html/rfc5869#appendix-A.2.
 static constexpr absl::string_view kOkmFromRfc =
     "b11e398dc80327a1c8e7f78c596a4934"
     "4f012eda2d4efad8a050cc4c19afa97c"
     "59045a99cac7827271cb41c65e590e09"
     "da3275600c2f09b8367793a9aca3db71"
-    "cc30c58179ec3e87c14c01d5c1f3434f";
+    "cc30c58179ec3e87c14c01d5c1f3434f"
+    "1d87";
 
 KeyData PrfKeyFromRfc() {
   google::crypto::tink::HkdfPrfKey prf_key;
@@ -232,6 +237,18 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
           .value());
 }
 
+std::unique_ptr<AesSivKey> CreateAesSivKey(int key_size,
+                                           AesSivParameters::Variant variant,
+                                           absl::string_view secret,
+                                           absl::optional<int> id_requirement) {
+  return std::make_unique<AesSivKey>(
+      AesSivKey::Create(AesSivParameters::Create(key_size, variant).value(),
+                        RestrictedData(test::HexDecodeOrDie(secret),
+                                       InsecureSecretKeyAccess::Get()),
+                        id_requirement, GetPartialKeyAccess())
+          .value());
+}
+
 // TODO: b/314831964 - Add Variant:kLegacy test cases.
 std::vector<std::shared_ptr<Key>> AeadTestVector() {
   return {
@@ -266,6 +283,18 @@ std::vector<std::shared_ptr<Key>> AeadTestVector() {
       CreateXChaCha20Poly1305Key(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix,
           kOkmFromRfc.substr(0, 64), /*id_requirement=*/absl::nullopt),
+  };
+}
+
+std::vector<std::shared_ptr<Key>> DaeadTestVector() {
+  return {
+      CreateAesSivKey(/*key_size=*/32, AesSivParameters::Variant::kTink,
+                      kOkmFromRfc.substr(0, 64), /*id_requirement=*/1010101),
+      CreateAesSivKey(/*key_size=*/48, AesSivParameters::Variant::kCrunchy,
+                      kOkmFromRfc.substr(0, 96), /*id_requirement=*/2020202),
+      CreateAesSivKey(/*key_size=*/64, AesSivParameters::Variant::kNoPrefix,
+                      kOkmFromRfc.substr(0, 128),
+                      /*id_requirement=*/absl::nullopt),
   };
 }
 
@@ -322,6 +351,7 @@ std::vector<std::shared_ptr<Key>> SignatureTestVector() {
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   std::vector<std::vector<std::shared_ptr<Key>>> vectors;
   vectors.push_back(AeadTestVector());
+  vectors.push_back(DaeadTestVector());
   vectors.push_back(MacTestVector());
 
   // Deriving EC keys with secret seed is not implemented in OpenSSL.
@@ -395,9 +425,10 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
   ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterAesSivProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
@@ -442,9 +473,10 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   // to a KeyTemplate, which are used to create the KeysetDeriver KeysetHandle.
   ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterAesSivProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);

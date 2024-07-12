@@ -159,6 +159,10 @@ tink_cc_library(
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_public_key
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_proto_serialization
+    tink::signature::ed25519_public_key
     tink::subtle::common_enums
     tink::util::input_stream_util
     tink::util::secret_data
@@ -220,6 +224,10 @@ tink_cc_test(
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_sign_key_manager
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_proto_serialization
+    tink::signature::ed25519_sign_key_manager
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::prf::hkdf_streaming_prf
@@ -235,6 +243,7 @@ tink_cc_test(
     tink::proto::aes_siv_cc_proto
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
+    tink::proto::ed25519_cc_proto
     tink::proto::hkdf_prf_cc_proto
     tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto

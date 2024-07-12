@@ -70,6 +70,10 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_private_key.h"
+#include "tink/signature/ed25519_proto_serialization.h"
+#include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/prf/hkdf_streaming_prf.h"
 #include "tink/subtle/prf/streaming_prf.h"
@@ -85,6 +89,7 @@
 #include "proto/aes_siv.pb.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
+#include "proto/ed25519.pb.h"
 #include "proto/hkdf_prf.pb.h"
 #include "proto/hmac.pb.h"
 #include "proto/tink.pb.h"
@@ -153,6 +158,10 @@ INSTANTIATE_TEST_SUITE_P(
                                    /*cryptographic_tag_size_in_bytes=*/10,
                                    HmacParameters::HashType::kSha256,
                                    HmacParameters::Variant::kNoPrefix)
+                .value()),
+        // Signature.
+        std::make_unique<Ed25519Parameters>(
+            Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix)
                 .value()),
     }));
 
@@ -530,6 +539,41 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
   util::StatusOr<google::crypto::tink::EcdsaPrivateKey> proto_key =
       EcdsaSignKeyManager().DeriveKey(key_format,
                                       same_randomness_from_rfc_vector_.get());
+  ASSERT_THAT(proto_key, IsOk());
+  EXPECT_THAT(test::HexEncode(proto_key->key_value()), Eq(key_value));
+}
+
+TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
+  // Derive key with hard-coded map.
+  util::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+  util::StatusOr<std::unique_ptr<Key>> generic_key =
+      DeriveKey(*params, randomness_from_rfc_vector_.get());
+  ASSERT_THAT(generic_key, IsOk());
+  const Ed25519PrivateKey* key =
+      dynamic_cast<const Ed25519PrivateKey*>(&**std::move(generic_key));
+  ASSERT_THAT(key, NotNull());
+  std::string key_value =
+      test::HexEncode(key->GetPrivateKeyBytes(GetPartialKeyAccess())
+                          .GetSecret(InsecureSecretKeyAccess::Get()));
+
+  // Derive key with Ed25519SignKeyManager.
+  ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialization, IsOk());
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  google::crypto::tink::Ed25519KeyFormat key_format;
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
+  util::StatusOr<google::crypto::tink::Ed25519PrivateKey> proto_key =
+      Ed25519SignKeyManager().DeriveKey(key_format,
+                                        same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
   EXPECT_THAT(test::HexEncode(proto_key->key_value()), Eq(key_value));
 }

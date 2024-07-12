@@ -58,6 +58,10 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_public_key.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_private_key.h"
+#include "tink/signature/ed25519_proto_serialization.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
@@ -72,6 +76,7 @@ namespace internal {
 
 namespace {
 
+constexpr int kEd25519PrivKeyLen = 32;
 constexpr int kXChaCha20Poly1305KeyLen = 32;
 
 using KeyDeriverFn = absl::AnyInvocable<util::StatusOr<std::unique_ptr<Key>>(
@@ -272,6 +277,43 @@ util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
   return absl::make_unique<EcdsaPrivateKey>(*private_key);
 }
 
+util::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
+    const Parameters& generic_params, InputStream* randomness) {
+  const Ed25519Parameters* params =
+      dynamic_cast<const Ed25519Parameters*>(&generic_params);
+  if (params == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Parameters is not Ed25519Parameters.");
+  }
+
+  util::StatusOr<util::SecretData> secret_seed =
+      ReadSecretBytesFromStream(kEd25519PrivKeyLen, randomness);
+  if (!secret_seed.ok()) {
+    return secret_seed.status();
+  }
+  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key(*secret_seed);
+  if (!key_pair.ok()) {
+    return key_pair.status();
+  }
+
+  util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, (*key_pair)->public_key,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+  util::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  if (!private_key.ok()) {
+    return private_key.status();
+  }
+  return absl::make_unique<Ed25519PrivateKey>(*private_key);
+}
+
 const KeyDeriverFnMap& ParametersToKeyDeriver() {
   static const KeyDeriverFnMap* instance = [] {
     static KeyDeriverFnMap* m = new KeyDeriverFnMap();
@@ -298,6 +340,9 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     CHECK_OK(RegisterEcdsaProtoSerialization());
     m->insert(
         {std::type_index(typeid(EcdsaParameters)), DeriveEcdsaPrivateKey});
+    CHECK_OK(RegisterEd25519ProtoSerialization());
+    m->insert(
+        {std::type_index(typeid(Ed25519Parameters)), DeriveEd25519PrivateKey});
 
     return m;
   }();

@@ -179,6 +179,10 @@ tink_cc_test(
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_public_key
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_proto_serialization
+    tink::signature::ed25519_public_key
     tink::subtle::common_enums
     tink::util::secret_data
     tink::util::status

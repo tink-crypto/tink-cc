@@ -65,6 +65,10 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_public_key.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_private_key.h"
+#include "tink/signature/ed25519_proto_serialization.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -185,6 +189,38 @@ std::unique_ptr<XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key(
           .value());
 }
 
+std::unique_ptr<AesSivKey> CreateAesSivKey(int key_size,
+                                           AesSivParameters::Variant variant,
+                                           absl::string_view secret,
+                                           absl::optional<int> id_requirement) {
+  return std::make_unique<AesSivKey>(
+      AesSivKey::Create(AesSivParameters::Create(key_size, variant).value(),
+                        RestrictedData(test::HexDecodeOrDie(secret),
+                                       InsecureSecretKeyAccess::Get()),
+                        id_requirement, GetPartialKeyAccess())
+          .value());
+}
+
+std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
+    Ed25519Parameters::Variant variant, absl::string_view secret_seed,
+    absl::optional<int> id_requirement) {
+  std::unique_ptr<internal::Ed25519Key> key_pair =
+      internal::NewEd25519Key(
+          util::SecretDataFromStringView(test::HexDecodeOrDie(secret_seed)))
+          .value();
+  Ed25519PublicKey public_key =
+      Ed25519PublicKey::Create(Ed25519Parameters::Create(variant).value(),
+                               key_pair->public_key, id_requirement,
+                               GetPartialKeyAccess())
+          .value();
+  RestrictedData private_key_bytes =
+      RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get());
+  return absl::make_unique<Ed25519PrivateKey>(
+      Ed25519PrivateKey::Create(public_key, private_key_bytes,
+                                GetPartialKeyAccess())
+          .value());
+}
+
 std::unique_ptr<HmacKey> CreateHmacKey(int key_size, int cryptographic_tag_size,
                                        HmacParameters::HashType hash_type,
                                        HmacParameters::Variant variant,
@@ -208,13 +244,12 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
     EcdsaParameters::SignatureEncoding signature_encoding,
     EcdsaParameters::Variant variant, absl::string_view secret_seed,
     absl::optional<int> id_requirement) {
-  internal::EcKey ec_key =
+  internal::EcKey key_pair =
       internal::NewEcKey(
           proto_curve_type,
           util::SecretDataFromStringView(test::HexDecodeOrDie(secret_seed)))
           .value();
-
-  EcPoint public_point(BigInteger(ec_key.pub_x), BigInteger(ec_key.pub_y));
+  EcPoint public_point(BigInteger(key_pair.pub_x), BigInteger(key_pair.pub_y));
   EcdsaPublicKey public_key =
       EcdsaPublicKey::Create(EcdsaParameters::Builder()
                                  .SetCurveType(curve_type)
@@ -226,26 +261,12 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
                              public_point, id_requirement,
                              GetPartialKeyAccess())
           .value();
-
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key.priv),
+  RestrictedBigInteger private_key_bytes =
+      RestrictedBigInteger(util::SecretDataAsStringView(key_pair.priv),
                            InsecureSecretKeyAccess::Get());
-
   return std::make_unique<EcdsaPrivateKey>(
-      EcdsaPrivateKey::Create(public_key, private_key_value,
+      EcdsaPrivateKey::Create(public_key, private_key_bytes,
                               GetPartialKeyAccess())
-          .value());
-}
-
-std::unique_ptr<AesSivKey> CreateAesSivKey(int key_size,
-                                           AesSivParameters::Variant variant,
-                                           absl::string_view secret,
-                                           absl::optional<int> id_requirement) {
-  return std::make_unique<AesSivKey>(
-      AesSivKey::Create(AesSivParameters::Create(key_size, variant).value(),
-                        RestrictedData(test::HexDecodeOrDie(secret),
-                                       InsecureSecretKeyAccess::Get()),
-                        id_requirement, GetPartialKeyAccess())
           .value());
 }
 
@@ -298,6 +319,23 @@ std::vector<std::shared_ptr<Key>> DaeadTestVector() {
   };
 }
 
+std::vector<std::shared_ptr<Key>> Ed25519TestVector() {
+  return {
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kTink,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/1010101),
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kCrunchy,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/2020202),
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kLegacy,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/3030303),
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kNoPrefix,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/absl::nullopt),
+  };
+}
+
 std::vector<std::shared_ptr<Key>> MacTestVector() {
   return {
       CreateHmacKey(/*key_size=*/16, /*cryptographic_tag_size=*/10,
@@ -315,7 +353,7 @@ std::vector<std::shared_ptr<Key>> MacTestVector() {
   };
 }
 
-std::vector<std::shared_ptr<Key>> SignatureTestVector() {
+std::vector<std::shared_ptr<Key>> EcdsaTestVector() {
   return {
       CreateEcdsaPrivateKey(subtle::EllipticCurveType::NIST_P256,
                             EcdsaParameters::CurveType::kNistP256,
@@ -352,11 +390,12 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   std::vector<std::vector<std::shared_ptr<Key>>> vectors;
   vectors.push_back(AeadTestVector());
   vectors.push_back(DaeadTestVector());
+  vectors.push_back(Ed25519TestVector());
   vectors.push_back(MacTestVector());
 
   // Deriving EC keys with secret seed is not implemented in OpenSSL.
   if (internal::IsBoringSsl()) {
-    vectors.push_back(SignatureTestVector());
+    vectors.push_back(EcdsaTestVector());
   }
 
   return vectors;
@@ -427,6 +466,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesSivProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 
@@ -475,6 +515,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesSivProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 

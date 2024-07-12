@@ -282,6 +282,29 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "aes_ctr_hmac_streaming_proto_serialization",
+    srcs = ["aes_ctr_hmac_streaming_proto_serialization.cc"],
+    hdrs = ["aes_ctr_hmac_streaming_proto_serialization.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        ":aes_ctr_hmac_streaming_parameters",
+        "//proto:aes_ctr_hmac_streaming_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -575,6 +598,36 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_ctr_hmac_streaming_proto_serialization_test",
+    srcs = ["aes_ctr_hmac_streaming_proto_serialization_test.cc"],
+    deps = [
+        ":aes_ctr_hmac_streaming_key",
+        ":aes_ctr_hmac_streaming_parameters",
+        ":aes_ctr_hmac_streaming_proto_serialization",
+        "//proto:aes_ctr_hmac_streaming_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:key",
+        "//tink:parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_key_serialization",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//tink/subtle:random",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],

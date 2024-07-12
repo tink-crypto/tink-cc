@@ -123,3 +123,112 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME ml_kem_decapsulate_aes_gcm
+  SRCS
+    ml_kem_decapsulate_aes_gcm.cc
+    ml_kem_decapsulate_aes_gcm.h
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::ml_kem_raw_decapsulate_boringssl
+    absl::memory
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::keyset_handle_builder
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::internal::fips_utils
+    tink::kem::kem_decapsulate
+    tink::kem::internal::raw_kem_decapsulate
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME ml_kem_decapsulate_aes_gcm_test
+  SRCS
+    ml_kem_decapsulate_aes_gcm_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::ml_kem_decapsulate_aes_gcm
+    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
+    tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    gmock
+    absl::check
+    absl::status
+    absl::strings
+    crypto
+    tink::core::aead
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::aead_config
+    tink::aead::aes_gcm_parameters
+    tink::config::global_registry
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    tink::internal::fips_utils
+    tink::kem::kem_decapsulate
+    tink::kem::kem_encapsulate
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+)
+
+tink_cc_library(
+  NAME ml_kem_encapsulate_aes_gcm
+  SRCS
+    ml_kem_encapsulate_aes_gcm.cc
+    ml_kem_encapsulate_aes_gcm.h
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::ml_kem_raw_encapsulate_boringssl
+    absl::memory
+    absl::status
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::keyset_handle_builder
+    tink::core::partial_key_access
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_public_key
+    tink::internal::fips_utils
+    tink::kem::kem_encapsulate
+    tink::kem::internal::raw_kem_encapsulate
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME ml_kem_encapsulate_aes_gcm_test
+  SRCS
+    ml_kem_encapsulate_aes_gcm_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
+    tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    gmock
+    absl::check
+    absl::status
+    tink::core::aead
+    tink::core::keyset_handle
+    tink::aead::aead_config
+    tink::aead::aes_gcm_parameters
+    tink::config::global_registry
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::internal::fips_utils
+    tink::kem::kem_encapsulate
+    tink::util::statusor
+    tink::util::test_matchers
+)

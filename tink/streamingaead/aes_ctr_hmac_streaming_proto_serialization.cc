@@ -16,14 +16,28 @@
 
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
 
+#include <utility>
+
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/key_parser.h"
+#include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/parameters_parser.h"
 #include "tink/internal/parameters_serializer.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_key_access_token.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
+#include "tink/util/secret_data.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/aes_ctr_hmac_streaming.pb.h"
@@ -35,8 +49,11 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::AesCtrHmacStreamingKeyFormat;
 using ::google::crypto::tink::AesCtrHmacStreamingParams;
+using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 
 using AesCtrHmacStreamingProtoParametersParserImpl =
@@ -45,6 +62,12 @@ using AesCtrHmacStreamingProtoParametersParserImpl =
 using AesCtrHmacStreamingProtoParametersSerializerImpl =
     internal::ParametersSerializerImpl<AesCtrHmacStreamingParameters,
                                        internal::ProtoParametersSerialization>;
+using AesCtrHmacStreamingProtoKeyParserImpl =
+    internal::KeyParserImpl<internal::ProtoKeySerialization,
+                            AesCtrHmacStreamingKey>;
+using AesCtrHmacStreamingProtoKeySerializerImpl =
+    internal::KeySerializerImpl<AesCtrHmacStreamingKey,
+                                internal::ProtoKeySerialization>;
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCtrHmacStreamingKey";
@@ -172,6 +195,74 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
 }
 
+util::StatusOr<AesCtrHmacStreamingKey> ParseKey(
+    const internal::ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return util::Status(absl::StatusCode::kPermissionDenied,
+                        "SecretKeyAccess is required.");
+  }
+  if (serialization.TypeUrl() != kTypeUrl) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Wrong type URL when parsing AesCtrHmacStreamingKey.");
+  }
+  absl::StatusOr<SecretProto<google::crypto::tink::AesCtrHmacStreamingKey>>
+      proto_key = SecretProto<google::crypto::tink::AesCtrHmacStreamingKey>::
+          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Failed to parse AesCtrHmacStreamingKey proto.");
+  }
+  if ((*proto_key)->version() != 0) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Parsing AesCtrHmacStreamingKey failed: only version 0 is accepted.");
+  }
+
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      FromProtoParams((*proto_key)->params(), (*proto_key)->key_value().size());
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  return AesCtrHmacStreamingKey::Create(
+      *parameters, RestrictedData((*proto_key)->key_value(), *token),
+      GetPartialKeyAccess());
+}
+
+util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+    const AesCtrHmacStreamingKey& key,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return util::Status(absl::StatusCode::kPermissionDenied,
+                        "SecretKeyAccess is required.");
+  }
+  util::StatusOr<RestrictedData> restricted_input =
+      key.GetInitialKeyMaterial(GetPartialKeyAccess());
+  if (!restricted_input.ok()) {
+    return restricted_input.status();
+  }
+  util::StatusOr<AesCtrHmacStreamingParams> proto_params =
+      ToProtoParams(key.GetParameters());
+  if (!proto_params.ok()) {
+    return proto_params.status();
+  }
+
+  SecretProto<google::crypto::tink::AesCtrHmacStreamingKey> proto_key;
+  proto_key->set_version(0);
+  internal::CallWithCoreDumpProtection(
+      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
+  *proto_key->mutable_params() = *proto_params;
+
+  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
+  return internal::ProtoKeySerialization::Create(
+      kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
+      KeyData::SYMMETRIC, OutputPrefixType::RAW, key.GetIdRequirement());
+}
+
 AesCtrHmacStreamingProtoParametersParserImpl*
 AesCtrHmacStreamingProtoParametersParser() {
   static auto* parser = new AesCtrHmacStreamingProtoParametersParserImpl(
@@ -187,6 +278,19 @@ AesCtrHmacStreamingProtoParametersSerializer() {
   return serializer;
 }
 
+AesCtrHmacStreamingProtoKeyParserImpl* AesCtrHmacStreamingProtoKeyParser() {
+  static auto* parser =
+      new AesCtrHmacStreamingProtoKeyParserImpl(kTypeUrl, ParseKey);
+  return parser;
+}
+
+AesCtrHmacStreamingProtoKeySerializerImpl*
+AesCtrHmacStreamingProtoKeySerializer() {
+  static auto* serializer =
+      new AesCtrHmacStreamingProtoKeySerializerImpl(SerializeKey);
+  return serializer;
+}
+
 }  // namespace
 
 util::Status RegisterAesCtrHmacStreamingProtoSerialization() {
@@ -197,9 +301,21 @@ util::Status RegisterAesCtrHmacStreamingProtoSerialization() {
     return status;
   }
 
+  status = internal::MutableSerializationRegistry::GlobalInstance()
+               .RegisterParametersSerializer(
+                   AesCtrHmacStreamingProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = internal::MutableSerializationRegistry::GlobalInstance()
+               .RegisterKeyParser(AesCtrHmacStreamingProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
   return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterParametersSerializer(
-          AesCtrHmacStreamingProtoParametersSerializer());
+      .RegisterKeySerializer(AesCtrHmacStreamingProtoKeySerializer());
 }
 
 }  // namespace tink

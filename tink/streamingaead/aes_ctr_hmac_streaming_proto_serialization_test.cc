@@ -17,16 +17,25 @@
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
 
 #include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
+#include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_ctr_hmac_streaming.pb.h"
@@ -38,12 +47,14 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCtrHmacStreamingKeyFormat;
 using ::google::crypto::tink::AesCtrHmacStreamingParams;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::HmacParams;
+using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -383,6 +394,262 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, SerializeParameters) {
   EXPECT_THAT(format.params().hmac_params().tag_size(), Eq(test_case.tag_size));
   EXPECT_THAT(format.params().hmac_params().hash(),
               Eq(test_case.proto_hmac_hash_type));
+}
+
+TEST_P(AesCtrHmacStreamingProtoSerializationTest, ParseKey) {
+  TestCase test_case = GetParam();
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  HmacParams proto_hmac_params;
+  proto_hmac_params.set_tag_size(test_case.tag_size);
+  proto_hmac_params.set_hash(test_case.proto_hmac_hash_type);
+  AesCtrHmacStreamingParams proto_params;
+  proto_params.set_ciphertext_segment_size(test_case.segment_size);
+  proto_params.set_derived_key_size(test_case.derived_key_size);
+  proto_params.set_hkdf_hash_type(test_case.proto_hkdf_hash_type);
+  *proto_params.mutable_hmac_params() = proto_hmac_params;
+
+  std::string initial_key_material = Random::GetRandomBytes(test_case.key_size);
+  google::crypto::tink::AesCtrHmacStreamingKey key_proto;
+  key_proto.set_version(0);
+  key_proto.set_key_value(initial_key_material);
+  *key_proto.mutable_params() = proto_params;
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
+          /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key, IsOk());
+
+  util::StatusOr<AesCtrHmacStreamingParameters> expected_parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(test_case.key_size)
+          .SetDerivedKeySizeInBytes(test_case.derived_key_size)
+          .SetHkdfHashType(test_case.hkdf_hash_type)
+          .SetHmacHashType(test_case.hmac_hash_type)
+          .SetHmacTagSizeInBytes(test_case.tag_size)
+          .SetCiphertextSegmentSizeInBytes(test_case.segment_size)
+          .Build();
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  util::StatusOr<AesCtrHmacStreamingKey> expected_key =
+      AesCtrHmacStreamingKey::Create(
+          *expected_parameters,
+          RestrictedData(initial_key_material, InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess());
+  ASSERT_THAT(expected_key, IsOk());
+  EXPECT_THAT(**parsed_key, Eq(*expected_key));
+}
+
+TEST_F(AesCtrHmacStreamingProtoSerializationTest,
+       ParseKeyWithInvalidSerializationFails) {
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  RestrictedData serialized_key =
+      RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
+          /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      key.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Failed to parse AesCtrHmacStreamingKey proto")));
+}
+
+TEST_F(AesCtrHmacStreamingProtoSerializationTest,
+       ParseKeyWithInvalidVersionFails) {
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  std::string initial_key_material = Random::GetRandomBytes(32);
+  google::crypto::tink::AesCtrHmacStreamingKey key_proto;
+  key_proto.set_version(1);  // Invalid version number.
+  key_proto.set_key_value(initial_key_material);
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
+          /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Parsing AesCtrHmacStreamingKey failed: only "
+                                 "version 0 is accepted")));
+}
+
+TEST_P(AesCtrHmacStreamingParsePrefixTest,
+       ParseKeyWithNonRawPrefixIgnoresPrefix) {
+  OutputPrefixType ignored_output_prefix_type = GetParam();
+  internal::MutableSerializationRegistry::GlobalInstance().Reset();
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  HmacParams proto_hmac_params;
+  proto_hmac_params.set_tag_size(16);
+  proto_hmac_params.set_hash(HashType::SHA256);
+  AesCtrHmacStreamingParams proto_params;
+  proto_params.set_ciphertext_segment_size(1024 * 1024);
+  proto_params.set_derived_key_size(32);
+  proto_params.set_hkdf_hash_type(HashType::SHA256);
+  *proto_params.mutable_hmac_params() = proto_hmac_params;
+  AesCtrHmacStreamingKeyFormat format;
+  format.set_version(0);
+  format.set_key_size(35);
+  *format.mutable_params() = proto_params;
+  std::string initial_key_material = Random::GetRandomBytes(32);
+  google::crypto::tink::AesCtrHmacStreamingKey key_proto;
+  key_proto.set_version(0);
+  key_proto.set_key_value(initial_key_material);
+  *key_proto.mutable_params() = proto_params;
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyData::SYMMETRIC,
+                                              ignored_output_prefix_type,
+                                              /*id_requirement=*/123);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key, IsOk());
+}
+
+TEST_F(AesCtrHmacStreamingProtoSerializationTest,
+       ParseKeyWithoutSecretKeyAccessFails) {
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  std::string initial_key_material = Random::GetRandomBytes(32);
+  google::crypto::tink::AesCtrHmacStreamingKey key_proto;
+  key_proto.set_version(0);
+  key_proto.set_key_value(initial_key_material);
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
+          /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, /*token=*/absl::nullopt);
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
+                                     HasSubstr("SecretKeyAccess is required")));
+}
+
+TEST_P(AesCtrHmacStreamingProtoSerializationTest, SerializeKey) {
+  TestCase test_case = GetParam();
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(test_case.key_size)
+          .SetDerivedKeySizeInBytes(test_case.derived_key_size)
+          .SetHkdfHashType(test_case.hkdf_hash_type)
+          .SetHmacHashType(test_case.hmac_hash_type)
+          .SetHmacTagSizeInBytes(test_case.tag_size)
+          .SetCiphertextSegmentSizeInBytes(test_case.segment_size)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string initial_key_material = Random::GetRandomBytes(test_case.key_size);
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters,
+      RestrictedData(initial_key_material, InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
+
+  const internal::ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const internal::ProtoKeySerialization*>(
+          serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
+  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+              Eq(OutputPrefixType::RAW));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
+
+  google::crypto::tink::AesCtrHmacStreamingKey proto_key;
+  ASSERT_THAT(proto_key.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  EXPECT_THAT(proto_key.version(), Eq(0));
+  EXPECT_THAT(proto_key.key_value(), Eq(initial_key_material));
+
+  ASSERT_THAT(proto_key.has_params(), IsTrue());
+  EXPECT_THAT(proto_key.params().derived_key_size(),
+              Eq(test_case.derived_key_size));
+  EXPECT_THAT(proto_key.params().ciphertext_segment_size(),
+              Eq(test_case.segment_size));
+  EXPECT_THAT(proto_key.params().hkdf_hash_type(),
+              Eq(test_case.proto_hkdf_hash_type));
+
+  ASSERT_THAT(proto_key.params().has_hmac_params(), IsTrue());
+  EXPECT_THAT(proto_key.params().hmac_params().tag_size(),
+              Eq(test_case.tag_size));
+  EXPECT_THAT(proto_key.params().hmac_params().hash(),
+              Eq(test_case.proto_hmac_hash_type));
+}
+
+TEST_F(AesCtrHmacStreamingProtoSerializationTest,
+       SerializeKeyWithoutSecretKeyAccessFails) {
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(19)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string initial_key_material = Random::GetRandomBytes(19);
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters,
+      RestrictedData(initial_key_material, InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              *key, /*token=*/absl::nullopt);
+  ASSERT_THAT(serialization.status(),
+              StatusIs(absl::StatusCode::kPermissionDenied,
+                       HasSubstr("SecretKeyAccess is required")));
 }
 
 }  // namespace

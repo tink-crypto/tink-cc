@@ -228,6 +228,20 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "aes_cmac_prf_parameters",
+    srcs = ["aes_cmac_prf_parameters.cc"],
+    hdrs = ["aes_cmac_prf_parameters.h"],
+    include_prefix = "tink/prf",
+    deps = [
+        ":prf_parameters",
+        "//tink:parameters",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -404,6 +418,18 @@ cc_test(
         "//tink:keyset_handle",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_cmac_prf_parameters_test",
+    srcs = ["aes_cmac_prf_parameters_test.cc"],
+    deps = [
+        ":aes_cmac_prf_parameters",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
 )

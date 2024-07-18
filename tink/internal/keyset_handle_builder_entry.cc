@@ -16,6 +16,7 @@
 
 #include "tink/internal/keyset_handle_builder_entry.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -166,7 +167,7 @@ void KeysetHandleBuilderEntry::SetRandomId() {
   strategy_.id_requirement = absl::nullopt;
 }
 
-util::StatusOr<SecretProto<Keyset::Key>> KeyEntry::CreateKeysetKey(int id) {
+util::StatusOr<SecretProto<Keyset::Key>> KeyEntry::CreateKeysetKey(int32_t id) {
   util::StatusOr<KeyStatusType> key_status = ToKeyStatusType(key_status_);
   if (!key_status.ok()) return key_status.status();
 
@@ -192,7 +193,7 @@ util::StatusOr<SecretProto<Keyset::Key>> KeyEntry::CreateKeysetKey(int id) {
 }
 
 util::StatusOr<SecretProto<Keyset::Key>> ParametersEntry::CreateKeysetKey(
-    int id) {
+    int32_t id) {
   util::StatusOr<KeyStatusType> key_status = ToKeyStatusType(key_status_);
   if (!key_status.ok()) return key_status.status();
 

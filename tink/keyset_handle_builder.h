@@ -17,6 +17,7 @@
 #ifndef TINK_KEYSET_HANDLE_BUILDER_H_
 #define TINK_KEYSET_HANDLE_BUILDER_H_
 
+#include <cstdint>
 #include <memory>
 #include <set>
 #include <string>
@@ -95,7 +96,7 @@ class KeysetHandleBuilder {
     KeyStatus GetStatus() const { return entry_->GetStatus(); }
 
     // Assigns a fixed id when this keyset is built.
-    void SetFixedId(int id) { entry_->SetFixedId(id); }
+    void SetFixedId(int32_t id) { entry_->SetFixedId(id); }
     // Assigns an unused random id when this keyset is built.
     void SetRandomId() { entry_->SetRandomId(); }
 
@@ -124,7 +125,7 @@ class KeysetHandleBuilder {
 
     crypto::tink::util::StatusOr<
         crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-    CreateKeysetKey(int id) {
+    CreateKeysetKey(int32_t id) {
       return entry_->CreateKeysetKey(id);
     }
 
@@ -162,8 +163,8 @@ class KeysetHandleBuilder {
 
  private:
   // Select the next key id based on the given strategy.
-  crypto::tink::util::StatusOr<int> NextIdFromKeyIdStrategy(
-      internal::KeyIdStrategy strategy, const std::set<int>& ids_so_far);
+  crypto::tink::util::StatusOr<int32_t> NextIdFromKeyIdStrategy(
+      internal::KeyIdStrategy strategy, const std::set<int32_t>& ids_so_far);
 
   // Unset primary flag on all entries.
   void ClearPrimary();

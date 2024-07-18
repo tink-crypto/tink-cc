@@ -16,6 +16,7 @@
 
 #include "tink/keyset_handle_builder.h"
 
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <set>
@@ -49,7 +50,7 @@ namespace {
 using ::google::crypto::tink::Keyset;
 
 void SetBuilderEntryAttributes(KeyStatus status, bool is_primary,
-                               absl::optional<int> id,
+                               absl::optional<int32_t> id,
                                KeysetHandleBuilder::Entry* entry) {
   entry->SetStatus(status);
   if (is_primary) {
@@ -95,8 +96,8 @@ KeysetHandleBuilder::Entry KeysetHandleBuilder::Entry::CreateFromParams(
   return entry;
 }
 
-util::StatusOr<int> KeysetHandleBuilder::NextIdFromKeyIdStrategy(
-    internal::KeyIdStrategy strategy, const std::set<int>& ids_so_far) {
+util::StatusOr<int32_t> KeysetHandleBuilder::NextIdFromKeyIdStrategy(
+    internal::KeyIdStrategy strategy, const std::set<int32_t>& ids_so_far) {
   if (strategy.strategy == internal::KeyIdStrategyEnum::kFixedId) {
     if (!strategy.id_requirement.has_value()) {
       return util::Status(absl::StatusCode::kInvalidArgument,
@@ -177,7 +178,7 @@ util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build() {
   util::Status assigned_ids_status = CheckIdAssignments();
   if (!assigned_ids_status.ok()) return assigned_ids_status;
 
-  std::set<int> ids_so_far;
+  std::set<int32_t> ids_so_far;
   for (KeysetHandleBuilder::Entry& entry : entries_) {
     util::StatusOr<int> id =
         NextIdFromKeyIdStrategy(entry.GetKeyIdStrategy(), ids_so_far);

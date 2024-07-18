@@ -17,6 +17,7 @@
 #ifndef TINK_INTERNAL_KEYSET_HANDLE_BUILDER_ENTRY_H_
 #define TINK_INTERNAL_KEYSET_HANDLE_BUILDER_ENTRY_H_
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 
@@ -79,7 +80,7 @@ class KeysetHandleBuilderEntry {
   // `Key` object or a `Parameters` object.
   virtual crypto::tink::util::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-  CreateKeysetKey(int id) = 0;
+  CreateKeysetKey(int32_t id) = 0;
 
  protected:
   KeyStatus key_status_ = KeyStatus::kDisabled;
@@ -103,7 +104,7 @@ class KeyEntry : public KeysetHandleBuilderEntry {
 
   crypto::tink::util::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-  CreateKeysetKey(int id) override;
+  CreateKeysetKey(int32_t id) override;
 
  private:
   std::shared_ptr<const Key> key_;
@@ -123,7 +124,7 @@ class ParametersEntry : public KeysetHandleBuilderEntry {
 
   crypto::tink::util::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-  CreateKeysetKey(int id) override;
+  CreateKeysetKey(int32_t id) override;
 
  private:
   std::shared_ptr<const Parameters> parameters_;

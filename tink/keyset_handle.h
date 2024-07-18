@@ -71,7 +71,7 @@ class KeysetHandle {
 
     // ID should be unique (though currently Tink still accepts keysets with
     // repeated IDs).
-    int GetId() const { return id_; }
+    int32_t GetId() const { return id_; }
 
     // Should return true for exactly one entry (though currently Tink still
     // accepts keysets which have no entry marked as primary).
@@ -86,7 +86,7 @@ class KeysetHandle {
     friend class KeysetHandle;
     friend class KeysetHandleBuilder;
 
-    Entry(std::shared_ptr<const Key> key, KeyStatus status, int id,
+    Entry(std::shared_ptr<const Key> key, KeyStatus status, int32_t id,
           bool is_primary)
         : key_(std::move(key)),
           status_(status),
@@ -95,7 +95,7 @@ class KeysetHandle {
 
     std::shared_ptr<const Key> key_;
     KeyStatus status_;
-    int id_;
+    int32_t id_;
     bool is_primary_;
   };
 

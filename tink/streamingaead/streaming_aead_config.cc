@@ -21,6 +21,7 @@
 #include "tink/config/tink_fips.h"
 #include "tink/registry.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
 #include "tink/streamingaead/streaming_aead_wrapper.h"
 #include "tink/util/status.h"
@@ -42,11 +43,20 @@ util::Status StreamingAeadConfig::Register() {
 
   status = Registry::RegisterKeyTypeManager(
       absl::make_unique<AesGcmHkdfStreamingKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
 
   status = Registry::RegisterKeyTypeManager(
       absl::make_unique<AesCtrHmacStreamingKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = RegisterAesCtrHmacStreamingProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
 
   return util::OkStatus();
 }

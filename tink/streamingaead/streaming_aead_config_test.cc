@@ -17,7 +17,7 @@
 #include "tink/streamingaead/streaming_aead_config.h"
 
 #include <list>
-#include <sstream>
+#include <memory>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -26,14 +26,29 @@
 #include "absl/status/status.h"
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_fips.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/fips_utils.h"
+#include "tink/internal/legacy_proto_key.h"
+#include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/keyset_handle_builder.h"
+#include "tink/partial_key_access.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
+#include "tink/restricted_data.h"
 #include "tink/streaming_aead.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
+#include "tink/streamingaead/key_gen_config_v0.h"
 #include "tink/streamingaead/streaming_aead_key_templates.h"
+#include "tink/subtle/random.h"
 #include "tink/util/status.h"
+#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
@@ -45,10 +60,15 @@ namespace {
 using ::crypto::tink::test::DummyStreamingAead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::HasSubstr;
+using ::testing::IsNull;
 
 class StreamingAeadConfigTest : public ::testing::Test {
  protected:
-  void SetUp() override { Registry::Reset(); }
+  void SetUp() override {
+    Registry::Reset();
+    internal::MutableSerializationRegistry::GlobalInstance().Reset();
+  }
 };
 
 TEST_F(StreamingAeadConfigTest, Basic) {
@@ -128,6 +148,115 @@ TEST_F(StreamingAeadConfigTest, RegisterNonFipsTemplates) {
             .status(),
         StatusIs(absl::StatusCode::kNotFound));
   }
+}
+
+TEST_F(StreamingAeadConfigTest,
+       AesCtrHmacStreamingProtoParamsSerializationRegistered) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  util::StatusOr<internal::ProtoParametersSerialization>
+      proto_params_serialization =
+          internal::ProtoParametersSerialization::Create(
+              StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB());
+  ASSERT_THAT(proto_params_serialization, IsOk());
+
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .ParseParameters(*proto_params_serialization)
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(32)
+          .SetCiphertextSegmentSizeInBytes(4096)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeParameters<internal::ProtoParametersSerialization>(
+                      *parameters)
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(StreamingAeadConfig::Register(), IsOk());
+
+  EXPECT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *proto_params_serialization),
+      IsOk());
+
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeParameters<internal::ProtoParametersSerialization>(
+                      *parameters),
+              IsOk());
+}
+
+TEST_F(StreamingAeadConfigTest,
+       AesCtrHmacStreamingProtoKeySerializationRegistered) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
+      KeysetHandle::GenerateNew(
+          StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB(),
+          KeyGenConfigStreamingAeadV0());
+  ASSERT_THAT(before_handle, IsOk());
+
+  // Fails to parse this key type, so falls back to legacy proto key.
+  EXPECT_THAT(dynamic_cast<const internal::LegacyProtoKey*>(
+                  (*before_handle)->GetPrimary().GetKey().get()),
+              Not(IsNull()));
+
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(32)
+          .SetCiphertextSegmentSizeInBytes(4096)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters,
+      RestrictedData(subtle::Random::GetRandomBytes(35),
+                     InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(KeysetHandleBuilder()
+                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                      *key, KeyStatus::kEnabled, /*is_primary=*/true))
+                  .Build()
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Failed to serialize")));
+
+  ASSERT_THAT(StreamingAeadConfig::Register(), IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
+      KeysetHandle::GenerateNew(
+          StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB(),
+          KeyGenConfigStreamingAeadV0());
+  ASSERT_THAT(after_handle, IsOk());
+
+  EXPECT_THAT(dynamic_cast<const AesCtrHmacStreamingKey*>(
+                  (*after_handle)->GetPrimary().GetKey().get()),
+              Not(IsNull()));
+
+  EXPECT_THAT(KeysetHandleBuilder()
+                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                      *key, KeyStatus::kEnabled, /*is_primary=*/true))
+                  .Build(),
+              IsOk());
 }
 
 }  // namespace

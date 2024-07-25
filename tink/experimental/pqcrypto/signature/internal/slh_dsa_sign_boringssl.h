@@ -30,27 +30,10 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// Public Key Signing using the SLH-DSA-SHA2-128s implementation from BoringSSL.
-class SlhDsaSignBoringSsl : public PublicKeySign {
- public:
-  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
-      crypto::tink::internal::FipsCompatibility::kNotFips;
-
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
-      const SlhDsaPrivateKey& private_key);
-
-  ~SlhDsaSignBoringSsl() override = default;
-
-  // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
-
- private:
-  explicit SlhDsaSignBoringSsl(const SlhDsaPrivateKey& private_key)
-      : private_key_(private_key) {}
-
-  SlhDsaPrivateKey private_key_;
-};
+// Creates a new PublicKeySign primitive using the SLH-DSA implementation from
+// BoringSSL. Only SLH-DSA-SHA2-128s is currently supported.
+crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>>
+NewSlhDsaSignBoringSsl(const SlhDsaPrivateKey& private_key);
 
 }  // namespace internal
 }  // namespace tink

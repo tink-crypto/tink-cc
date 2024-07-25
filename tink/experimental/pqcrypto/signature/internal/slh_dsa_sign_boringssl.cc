@@ -21,7 +21,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
@@ -39,15 +38,25 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// static
-util::StatusOr<std::unique_ptr<PublicKeySign>> SlhDsaSignBoringSsl::New(
-    const SlhDsaPrivateKey &private_key) {
-  auto status = internal::CheckFipsCompatibility<SlhDsaSignBoringSsl>();
-  if (!status.ok()) {
-    return status;
-  }
-  return {absl::WrapUnique(new SlhDsaSignBoringSsl(std::move(private_key)))};
-}
+namespace {
+
+class SlhDsaSignBoringSsl : public PublicKeySign {
+ public:
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
+      crypto::tink::internal::FipsCompatibility::kNotFips;
+
+  explicit SlhDsaSignBoringSsl(const SlhDsaPrivateKey &private_key)
+      : private_key_(private_key) {}
+
+  ~SlhDsaSignBoringSsl() override = default;
+
+  // Computes the signature for 'data'.
+  crypto::tink::util::StatusOr<std::string> Sign(
+      absl::string_view data) const override;
+
+ private:
+  SlhDsaPrivateKey private_key_;
+};
 
 util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
     absl::string_view data) const {
@@ -65,6 +74,17 @@ util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
            /*randomized=*/1);
 
   return signature;
+}
+
+}  // namespace
+
+util::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
+    const SlhDsaPrivateKey &private_key) {
+  auto status = internal::CheckFipsCompatibility<SlhDsaSignBoringSsl>();
+  if (!status.ok()) {
+    return status;
+  }
+  return {std::make_unique<SlhDsaSignBoringSsl>(std::move(private_key))};
 }
 
 }  // namespace internal

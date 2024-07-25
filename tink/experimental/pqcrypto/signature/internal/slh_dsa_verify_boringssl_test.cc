@@ -76,7 +76,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -106,7 +106,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -136,7 +136,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
   std::string message = "message to be signed";
 
@@ -164,7 +164,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -197,7 +197,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -230,7 +230,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -524,7 +524,7 @@ TEST_P(SlhDsaVerifyBoringSslTest, TestVectorSignVerifyRawWorks) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
   //  Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
@@ -573,7 +573,7 @@ TEST_P(SlhDsaVerifyBoringSslTest, TestVectorSignVerifyTinkWorks) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
   //  Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =

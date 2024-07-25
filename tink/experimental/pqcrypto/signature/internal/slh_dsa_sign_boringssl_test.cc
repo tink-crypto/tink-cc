@@ -75,7 +75,7 @@ TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -104,7 +104,7 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
 
   // Create a signer based on the private key.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      SlhDsaSignBoringSsl::New(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign the same message twice, using the same private key.
@@ -134,7 +134,7 @@ TEST_F(SlhDsaSignBoringSslTest, FipsMode) {
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
-  EXPECT_THAT(SlhDsaSignBoringSsl::New(*private_key).status(),
+  EXPECT_THAT(NewSlhDsaSignBoringSsl(*private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

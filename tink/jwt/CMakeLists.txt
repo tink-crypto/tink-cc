@@ -108,6 +108,7 @@ tink_cc_library(
     tink::util::keyset_util
     tink::util::status
     tink::util::statusor
+    tink::proto::ed25519_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto

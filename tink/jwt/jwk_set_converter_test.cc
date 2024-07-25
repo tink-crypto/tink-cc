@@ -516,6 +516,17 @@ constexpr absl::string_view kEs512JwkWithEncodedSmallCoordinates = R"({
   "y":"APY5ahrhI6aTQW2l5EFkc9uztTxIwVdWRpX4dm2OZ-XXVAaJBT2GpSGhb2hyTYrTGDrB1xYF7rthNUV1BtOEWa0K"}],
 })";
 
+constexpr absl::string_view kEd25519JwkPublicKey = R"({
+  "keys":[{
+  "crv":"Ed25519",
+  "kty":"OKP",
+  "x":"11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+  "kid":"TCGiGw",
+  "alg":"EdDSA",
+  "key_ops":["verify"],
+  "use":"sig"}],
+})";
+
 class JwkSetConverterTest : public testing::TestWithParam<std::string> {
   void SetUp() override { ASSERT_THAT(JwtSignatureRegister(), IsOk()); }
 };
@@ -1289,6 +1300,49 @@ TEST_F(JwkSetFromPublicKeysetHandleTest,
       keyset_handle.status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("Could not determine JwtRsaSsaPkcs1Algorithm")));
+}
+
+TEST_F(JwkSetFromPublicKeysetHandleTest,
+       Ed25519WithTinkOutputPrefixSuccessWithKid) {
+  std::string public_keyset_with_tink_output_prefix = R"({
+    "primaryKeyId": 1277272603,
+    "key": [
+      {
+        "keyData": {
+          "typeUrl": "type.googleapis.com/google.crypto.tink.Ed25519PublicKey",
+          "value": "EiDXWpgBgrEKt9VL/tPJZAc6DuFy89qmIyWvAhpo9wdRGg==",
+          "keyMaterialType": "ASYMMETRIC_PUBLIC"
+        },
+        "status": "ENABLED",
+        "keyId": 1277272603,
+        "outputPrefixType": "TINK"
+      }
+    ]
+  })";
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+      JsonKeysetReader::New(public_keyset_with_tink_output_prefix);
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+      CleartextKeysetHandle::Read(std::move(*reader));
+  ASSERT_THAT(keyset_handle, IsOk());
+
+  util::StatusOr<std::string> jwk_set =
+      JwkSetFromPublicKeysetHandle(**keyset_handle);
+  ASSERT_THAT(jwk_set, IsOk());
+
+  // Check that jwk_set is equalivalent to kEd25519JwkPublicKey.
+  util::StatusOr<google::protobuf::Struct> output_struct =
+      jwt_internal::JsonStringToProtoStruct(*jwk_set);
+  ASSERT_THAT(output_struct, IsOk());
+  util::StatusOr<google::protobuf::Struct> expected_struct =
+      jwt_internal::JsonStringToProtoStruct(kEd25519JwkPublicKey);
+  ASSERT_THAT(expected_struct, IsOk());
+
+  std::string differences;
+  MessageDifferencer message_differencer;
+  message_differencer.ReportDifferencesToString(&differences);
+  EXPECT_TRUE(message_differencer.Compare(*output_struct, *expected_struct))
+      << differences;
 }
 
 }  // namespace

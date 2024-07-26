@@ -25,10 +25,13 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_test_proto.pb.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -39,14 +42,21 @@ namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataAsStringView;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Test;
 
 constexpr int32_t kUint32Field1Tag = 1;
 constexpr int32_t kUint32Field2Tag = 2;
+constexpr int32_t kBytesField1Tag = 3;
+constexpr int32_t kBytesField2Tag = 4;
 constexpr int32_t kUint32FieldWithLargeTag = 536870911;
 
 TEST(ProtoParserTest, SingleUint32Works) {
@@ -60,6 +70,81 @@ TEST(ProtoParserTest, SingleUint32Works) {
               IsOk());
 
   EXPECT_THAT(value, Eq(123));
+}
+
+TEST(ProtoParserTest, SingleBytesFieldStringWorks) {
+  ProtoTestProto proto;
+  proto.set_bytes_field_1("some bytes field");
+
+  std::string value;
+  EXPECT_THAT(ProtoParser()
+                  .AddBytesStringField(kBytesField1Tag, value)
+                  .Parse(proto.SerializeAsString()),
+              IsOk());
+
+  EXPECT_THAT(value, Eq("some bytes field"));
+}
+
+TEST(ProtoParserTest, SingleBytesFieldSecretDataWorks) {
+  ProtoTestProto proto;
+  proto.set_bytes_field_1("some bytes field");
+
+  SecretData value;
+  EXPECT_THAT(ProtoParser()
+                  .AddBytesSecretDataField(kBytesField1Tag, value,
+                                           InsecureSecretKeyAccess::Get())
+                  .Parse(proto.SerializeAsString()),
+              IsOk());
+
+  EXPECT_THAT(SecretDataAsStringView(value), Eq("some bytes field"));
+}
+
+TEST(ProtoParserTest, SingleBytesFieldStringLongDataFails) {
+  ProtoTestProto proto;
+  proto.set_bytes_field_1("some bytes field");
+  std::string serialized_proto = proto.SerializeAsString();
+  serialized_proto.resize(serialized_proto.size() - 1);
+
+  std::string value;
+  EXPECT_THAT(ProtoParser()
+                  .AddBytesStringField(kBytesField1Tag, value)
+                  .Parse(serialized_proto),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("exceeds remaining input")));
+}
+
+TEST(ProtoParserTest, SingleBytesFieldSecretDataTooLongDataFails) {
+  ProtoTestProto proto;
+  proto.set_bytes_field_1("some bytes field");
+  std::string serialized_proto = proto.SerializeAsString();
+  serialized_proto.resize(serialized_proto.size() - 1);
+
+  SecretData value;
+  EXPECT_THAT(ProtoParser()
+                  .AddBytesSecretDataField(kBytesField1Tag, value,
+                                           InsecureSecretKeyAccess::Get())
+                  .Parse(serialized_proto),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("exceeds remaining input")));
+}
+
+TEST(ProtoParserTest, MultipleBytesFieldSecretDataWorks) {
+  ProtoTestProto proto;
+  proto.set_bytes_field_1("some bytes field");
+  proto.set_bytes_field_2("another bytes field");
+
+  SecretData value1;
+  SecretData value2;
+  EXPECT_THAT(ProtoParser()
+                  .AddBytesSecretDataField(kBytesField1Tag, value1,
+                                           InsecureSecretKeyAccess::Get())
+                  .AddBytesSecretDataField(kBytesField2Tag, value2,
+                                           InsecureSecretKeyAccess::Get())
+                  .Parse(proto.SerializeAsString()),
+              IsOk());
+
+  EXPECT_THAT(SecretDataAsStringView(value1), Eq("some bytes field"));
+  EXPECT_THAT(SecretDataAsStringView(value2), Eq("another bytes field"));
 }
 
 TEST(ProtoParserTest, MultipleUint32Work) {
@@ -103,6 +188,8 @@ TEST(ProtoParserTest, MultipleUint32OrderIsIgnored) {
 TEST(ProtoParserTest, EmptyMessageAlwaysWorks) {
   uint32_t value1 = 0;
   uint32_t value2 = 0;
+  std::string value3;
+  SecretData value4;
   EXPECT_THAT(ProtoParser()
                   .AddUint32Field(kUint32Field1Tag, value1)
                   .AddUint32Field(kUint32Field2Tag, value2)
@@ -125,9 +212,18 @@ TEST(ProtoParserTest, FailsIfFieldIsRepeated) {
 
 TEST(ProtoParserTest, ClearsValuesOnParse) {
   uint32_t value1 = 1;
-  EXPECT_THAT(ProtoParser().AddUint32Field(kUint32Field1Tag, value1).Parse(""),
+  SecretData value2 = SecretDataFromStringView("before");
+  std::string value3 = "also before";
+  EXPECT_THAT(ProtoParser()
+                  .AddUint32Field(kUint32Field1Tag, value1)
+                  .AddBytesSecretDataField(kBytesField1Tag, value2,
+                                           InsecureSecretKeyAccess::Get())
+                  .AddBytesStringField(kBytesField2Tag, value3)
+                  .Parse(""),
               IsOk());
   EXPECT_THAT(value1, Eq(0));
+  EXPECT_THAT(SecretDataAsStringView(value2), Eq(""));
+  EXPECT_THAT(value3, IsEmpty());
 }
 
 TEST(ProtoParserTest, VarintUint32Parsing) {

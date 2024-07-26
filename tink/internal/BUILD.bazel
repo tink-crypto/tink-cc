@@ -1407,6 +1407,8 @@ cc_library(
     hdrs = ["proto_parser.h"],
     include_prefix = "tink/internal",
     deps = [
+        "//tink:secret_key_access_token",
+        "//tink/util:secret_data",
         "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -1434,8 +1436,11 @@ cc_test(
     deps = [
         ":proto_parser",
         ":proto_test_cc_proto",
+        "//tink:insecure_secret_key_access",
+        "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",

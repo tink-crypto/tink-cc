@@ -22,6 +22,9 @@ message ProtoTestProto {
   uint32 uint32_field_1 = 1;
   uint32 uint32_field_2 = 2;
 
+  bytes bytes_field_1 = 3;
+  bytes bytes_field_2 = 4;
+
   // Maximal tag number is 2^29 - 1 = 536870911.
   uint32 uint32_field_with_large_tag = 536870911;
 }

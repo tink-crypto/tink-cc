@@ -1359,6 +1359,8 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::variant
+    tink::core::secret_key_access_token
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1369,8 +1371,11 @@ tink_cc_test(
     tink::internal::proto_parser
     tink::internal::proto_test_cc_proto
     gmock
+    absl::status
     absl::statusor
     absl::strings
+    tink::core::insecure_secret_key_access
+    tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
 )

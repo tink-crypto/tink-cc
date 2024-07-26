@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <limits>
+#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -25,10 +26,15 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/variant.h"
+#include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
+
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataFromStringView;
 
 namespace {
 constexpr int kMaxVarintLength = 10;
@@ -85,7 +91,40 @@ ProtoParser& ProtoParser::AddUint32Field(int tag, uint32_t& value) {
     return *this;
   }
   Field field;
-  field.type = ProtoFieldType::UINT32;
+  field.type = ProtoFieldType::kUint32;
+  field.value = &value;
+  auto result = fields_.insert({tag, field});
+  if (!result.second) {
+    permanent_error_ = absl::InvalidArgumentError(
+        absl::StrCat("Tag ", tag, " already exists"));
+    return *this;
+  }
+  return *this;
+}
+
+ProtoParser& ProtoParser::AddBytesStringField(int tag, std::string& value) {
+  if (!permanent_error_.ok()) {
+    return *this;
+  }
+  Field field;
+  field.type = ProtoFieldType::kBytesString;
+  field.value = &value;
+  auto result = fields_.insert({tag, field});
+  if (!result.second) {
+    permanent_error_ = absl::InvalidArgumentError(
+        absl::StrCat("Tag ", tag, " already exists"));
+    return *this;
+  }
+  return *this;
+}
+
+ProtoParser& ProtoParser::AddBytesSecretDataField(int tag, SecretData& value,
+                                                  SecretKeyAccessToken token) {
+  if (!permanent_error_.ok()) {
+    return *this;
+  }
+  Field field;
+  field.type = ProtoFieldType::kBytesSecretData;
   field.value = &value;
   auto result = fields_.insert({tag, field});
   if (!result.second) {
@@ -113,6 +152,12 @@ absl::Status ProtoParser::Parse(absl::string_view input) {
       if (!s.ok()) {
         return s;
       }
+    } else if (wiretype_and_tag->first == WireType::kLengthDelimited) {
+      absl::Status s =
+          ConsumeLengthDelimitedWithTag(input, wiretype_and_tag->second);
+      if (!s.ok()) {
+        return s;
+      }
     } else {
       return absl::InvalidArgumentError(
           absl::StrCat("Unsupported wire type ", wiretype_and_tag->first));
@@ -128,7 +173,7 @@ absl::Status ProtoParser::ConsumeVarintWithTag(absl::string_view& serialized,
     return absl::InternalError(
         absl::StrCat("Tag ", tag, " not found in ConsumeVarintWithTag"));
   }
-  if (it->second.type == ProtoFieldType::UINT32) {
+  if (it->second.type == ProtoFieldType::kUint32) {
     return ConsumeUint32WithField(serialized, it->second);
   }
   return absl::InvalidArgumentError(
@@ -145,11 +190,74 @@ absl::Status ProtoParser::ConsumeUint32WithField(
   return absl::OkStatus();
 }
 
+absl::Status ProtoParser::ConsumeLengthDelimitedWithTag(
+    absl::string_view& serialized, int tag) {
+  auto it = fields_.find(tag);
+  if (it == fields_.end()) {
+    return absl::InternalError(absl::StrCat(
+        "Tag ", tag, " not found in ConsumeLengthDelimitedWithTag"));
+  }
+  if (it->second.type == ProtoFieldType::kBytesString) {
+    return ConsumeBytesToStringWithField(serialized, it->second);
+  }
+  if (it->second.type == ProtoFieldType::kBytesSecretData) {
+    return ConsumeBytesToSecretDataWithField(serialized, it->second);
+  }
+  return absl::InvalidArgumentError(
+      absl::StrCat("Tag ", tag, " of unknown type for LengthDelimited"));
+}
+
+absl::Status ProtoParser::ConsumeBytesToStringWithField(
+    absl::string_view& serialized, const Field& field) {
+  absl::StatusOr<absl::string_view> result_view =
+      ConsumeBytesReturnStringView(serialized);
+  if (!result_view.ok()) {
+    return result_view.status();
+  }
+  *absl::get<std::string*>(field.value) = std::string(*result_view);
+  return absl::OkStatus();
+}
+
+absl::Status ProtoParser::ConsumeBytesToSecretDataWithField(
+    absl::string_view& serialized, const Field& field) {
+  absl::StatusOr<absl::string_view> result_view =
+      ConsumeBytesReturnStringView(serialized);
+  if (!result_view.ok()) {
+    return result_view.status();
+  }
+  *absl::get<SecretData*>(field.value) =
+      SecretDataFromStringView(*result_view);
+  return absl::OkStatus();
+}
+
+absl::StatusOr<absl::string_view> ProtoParser::ConsumeBytesReturnStringView(
+    absl::string_view& serialized) {
+  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
+  if (!result.ok()) {
+    return result.status();
+  }
+  if (*result > serialized.size()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Length ", *result, " exceeds remaining input size ",
+                     serialized.size()));
+  }
+  absl::string_view result_view = serialized.substr(0, *result);
+  serialized.remove_prefix(*result);
+  return result_view;
+}
+
 void ProtoParser::ClearAllFields() {
   for (auto& pair : fields_) {
     switch (pair.second.type) {
-      case ProtoFieldType::UINT32:
+      case ProtoFieldType::kUint32:
         *absl::get<uint32_t*>(pair.second.value) = 0;
+        break;
+      case ProtoFieldType::kBytesString:
+        absl::get<std::string*>(pair.second.value)->clear();
+        break;
+      case ProtoFieldType::kBytesSecretData:
+        absl::get<crypto::tink::util::SecretData*>(pair.second.value)->clear();
+        break;
     }
   }
 }

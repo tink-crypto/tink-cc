@@ -18,6 +18,7 @@
 #define TINK_INTERNAL_PROTO_PARSER_H_
 
 #include <cstdint>
+#include <string>
 #include <utility>
 
 #include "absl/container/btree_map.h"
@@ -25,12 +26,14 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/variant.h"
+#include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-enum class ProtoFieldType { UINT32 };
+enum class ProtoFieldType { kUint32, kBytesString, kBytesSecretData };
 
 // A helper class to parse a serialized proto message.  Suppose for example we
 // have the a proto such as:
@@ -52,7 +55,7 @@ enum class ProtoFieldType { UINT32 };
 // absl::Status s = ProtoParser()
 //     .AddUint32Field(kVersionNumberTag, version_number)
 //     .AddUint32Field(kKeySizeTag, key_size)
-//     .AddBytesField(kKeyTag, key)
+//     .AddBytesSecretDataField(kKeyTag, key, secret_key_access_token)
 //     .Parse(serialized_proto);
 // if (!s.ok()) return s;
 //
@@ -70,6 +73,10 @@ class ProtoParser {
   ProtoParser& operator=(const ProtoParser&) = delete;
 
   ProtoParser& AddUint32Field(int tag, uint32_t& value);
+  ProtoParser& AddBytesStringField(int tag, std::string& value);
+  ProtoParser& AddBytesSecretDataField(
+      int tag, crypto::tink::util::SecretData& value,
+      crypto::tink::SecretKeyAccessToken token);
 
   absl::Status Parse(absl::string_view input);
 
@@ -78,12 +85,25 @@ class ProtoParser {
     ProtoFieldType type;
 
     // field.value.index() == static_cast<int>(field.type)
-    absl::variant<uint32_t*> value;
+    absl::variant<uint32_t*, std::string*, crypto::tink::util::SecretData*>
+        value;
   };
 
+  // Wiretype::kVarint
   absl::Status ConsumeVarintWithTag(absl::string_view& serialized, int tag);
   absl::Status ConsumeUint32WithField(absl::string_view& serialized,
                                       const Field& field);
+
+  // Wiretype::kLengthDelimited
+  absl::Status ConsumeLengthDelimitedWithTag(absl::string_view& serialized,
+                                             int tag);
+  absl::Status ConsumeBytesToStringWithField(absl::string_view& serialized,
+                                             const Field& field);
+  absl::Status ConsumeBytesToSecretDataWithField(absl::string_view& serialized,
+                                                 const Field& field);
+  absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
+      absl::string_view& serialized);
+
   // Overwrites all fields to their default value (in case they are not
   // explicitly set by the input)
   void ClearAllFields();

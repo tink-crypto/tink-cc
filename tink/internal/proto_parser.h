@@ -104,7 +104,7 @@ absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(absl::string_view& serialized);
 // https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/wire_format_lite.h
 // for the names.
 // Exposed for testing only
-enum class WireType {
+enum class WireType : uint8_t {
   kVarint = 0,
   kFixed64 = 1,
   kLengthDelimited = 2,

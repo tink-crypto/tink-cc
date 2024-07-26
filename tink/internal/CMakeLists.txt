@@ -1336,3 +1336,37 @@ tink_cc_test(
     gmock
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME proto_parser
+  SRCS
+    proto_parser.cc
+    proto_parser.h
+  DEPS
+    absl::btree
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::variant
+)
+
+tink_cc_test(
+  NAME proto_parser_test
+  SRCS
+    proto_parser_test.cc
+  DEPS
+    tink::internal::proto_parser
+    tink::internal::proto_test_cc_proto
+    gmock
+    absl::statusor
+    absl::strings
+    tink::util::test_matchers
+    tink::util::test_util
+)
+
+tink_cc_proto(
+  NAME proto_test_cc_proto
+  SRCS proto_test_proto.proto
+)
+

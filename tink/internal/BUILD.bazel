@@ -1390,3 +1390,44 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "proto_parser",
+    srcs = ["proto_parser.cc"],
+    hdrs = ["proto_parser.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "@com_google_absl//absl/container:btree",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:variant",
+    ],
+)
+
+proto_library(
+    name = "proto_test_proto",
+    testonly = 1,
+    srcs = ["proto_test_proto.proto"],
+)
+
+cc_proto_library(
+    name = "proto_test_cc_proto",
+    testonly = 1,
+    deps = [":proto_test_proto"],
+)
+
+cc_test(
+    name = "proto_parser_test",
+    srcs = ["proto_parser_test.cc"],
+    deps = [
+        ":proto_parser",
+        ":proto_test_cc_proto",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

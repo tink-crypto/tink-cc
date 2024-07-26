@@ -1199,9 +1199,13 @@ tink_cc_library(
   DEPS
     tink::internal::key_type_info_store
     absl::status
+    absl::strings
     absl::string_view
+    absl::optional
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::key_manager
+    tink::core::parameters
     tink::util::status
     tink::util::statusor
 )
@@ -1217,18 +1221,24 @@ tink_cc_test(
     absl::memory
     absl::status
     absl::string_view
+    absl::optional
     tink::core::key_manager_impl
     tink::core::key_type_manager
     tink::core::private_key_type_manager
     tink::core::template_util
     tink::core::input_stream
+    tink::core::key
     tink::core::key_gen_configuration
     tink::core::key_manager
     tink::core::keyset_handle
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
+    tink::core::restricted_data
     tink::aead::aead_key_templates
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

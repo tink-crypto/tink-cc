@@ -750,7 +750,13 @@ tink_cc_library(
   SRCS
     key_gen_configuration.h
   DEPS
+    tink::core::key
+    tink::core::parameters
+    absl::flat_hash_map
+    absl::any_invocable
+    absl::optional
     tink::internal::key_type_info_store
+    tink::util::statusor
 )
 
 tink_cc_library(

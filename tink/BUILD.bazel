@@ -807,7 +807,15 @@ cc_library(
     hdrs = ["key_gen_configuration.h"],
     include_prefix = "tink",
     visibility = ["//visibility:public"],
-    deps = ["//tink/internal:key_type_info_store"],
+    deps = [
+        ":key",
+        ":parameters",
+        "//tink/internal:key_type_info_store",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/functional:any_invocable",
+        "@com_google_absl//absl/types:optional",
+    ],
 )
 
 cc_library(

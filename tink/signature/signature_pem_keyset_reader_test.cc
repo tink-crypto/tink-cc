@@ -25,19 +25,19 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/cleartext_keyset_handle.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/config_v0.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
-#include "tink/signature/signature_config.h"
 #include "tink/subtle/pem_parser_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
@@ -529,6 +529,50 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
   EXPECT_THAT(keyset->key(0), EqualsKey(expected_key1));
 }
 
+TEST(SignaturePemKeysetReaderTest, ReadAndUseRsaPemKeys) {
+  for (PemAlgorithm pem_algorithm :
+       {PemAlgorithm::RSASSA_PSS, PemAlgorithm::RSASSA_PKCS1}) {
+    for (HashType hash_type :
+         {HashType::SHA256, HashType::SHA384, HashType::SHA512}) {
+      auto private_keyset_reader_builder = SignaturePemKeysetReaderBuilder(
+          SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+      private_keyset_reader_builder.Add(
+          CreatePemKey(kRsaPrivateKey2048, PemKeyType::PEM_RSA, pem_algorithm,
+                       /*key_size_in_bits=*/2048, hash_type));
+      util::StatusOr<std::unique_ptr<KeysetReader>> private_keyset_reader =
+          private_keyset_reader_builder.Build();
+      ASSERT_THAT(private_keyset_reader, IsOk());
+      util::StatusOr<std::unique_ptr<KeysetHandle>> private_keyset_handle =
+          CleartextKeysetHandle::Read(std::move(*private_keyset_reader));
+
+      auto public_keyset_reader_builder = SignaturePemKeysetReaderBuilder(
+          SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+      public_keyset_reader_builder.Add(
+          CreatePemKey(kRsaPublicKey2048, PemKeyType::PEM_RSA, pem_algorithm,
+                       /*key_size_in_bits=*/2048, hash_type));
+      util::StatusOr<std::unique_ptr<KeysetReader>> public_keyset_reader =
+          public_keyset_reader_builder.Build();
+      ASSERT_THAT(public_keyset_reader, IsOk());
+      util::StatusOr<std::unique_ptr<KeysetHandle>> public_keyset_handle =
+          CleartextKeysetHandle::Read(std::move(*public_keyset_reader));
+
+      util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+          (*private_keyset_handle)
+              ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+      ASSERT_THAT(sign, IsOk());
+      util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+          (*public_keyset_handle)
+              ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+      ASSERT_THAT(verify, IsOk());
+
+      std::string data = "data";
+      util::StatusOr<std::string> signature = (*sign)->Sign(data);
+      ASSERT_THAT(signature, IsOk());
+      EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
+    }
+  }
+}
+
 // Expects an INVLID_ARGUMENT when passing a public key to a
 // PublicKeySignPemKeysetReader.
 TEST(SignaturePemKeysetReaderTest, ReadRsaPrivateKeyKeyTypeMismatch) {
@@ -694,6 +738,47 @@ TEST(SignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {
   ASSERT_THAT(ecdsa_private_key1, IsOk());
   expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
   EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadAndUseEcdsaP256PemKeys) {
+  for (PemAlgorithm pem_algorithm :
+       {PemAlgorithm::ECDSA_DER, PemAlgorithm::ECDSA_IEEE}) {
+    auto private_keyset_reader_builder = SignaturePemKeysetReaderBuilder(
+        SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+    private_keyset_reader_builder.Add(
+        CreatePemKey(kEcdsaP256PrivateKey, PemKeyType::PEM_EC, pem_algorithm,
+                     /*key_size_in_bits=*/256, HashType::SHA256));
+    util::StatusOr<std::unique_ptr<KeysetReader>> private_keyset_reader =
+        private_keyset_reader_builder.Build();
+    ASSERT_THAT(private_keyset_reader, IsOk());
+    util::StatusOr<std::unique_ptr<KeysetHandle>> private_keyset_handle =
+        CleartextKeysetHandle::Read(std::move(*private_keyset_reader));
+
+    auto public_keyset_reader_builder = SignaturePemKeysetReaderBuilder(
+        SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+    public_keyset_reader_builder.Add(
+        CreatePemKey(kEcdsaP256PublicKey, PemKeyType::PEM_EC, pem_algorithm,
+                     /*key_size_in_bits=*/256, HashType::SHA256));
+    util::StatusOr<std::unique_ptr<KeysetReader>> public_keyset_reader =
+        public_keyset_reader_builder.Build();
+    ASSERT_THAT(public_keyset_reader, IsOk());
+    util::StatusOr<std::unique_ptr<KeysetHandle>> public_keyset_handle =
+        CleartextKeysetHandle::Read(std::move(*public_keyset_reader));
+
+    util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+        (*private_keyset_handle)
+            ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+    ASSERT_THAT(sign, IsOk());
+    util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+        (*public_keyset_handle)
+            ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+    ASSERT_THAT(verify, IsOk());
+
+    std::string data = "data";
+    util::StatusOr<std::string> signature = (*sign)->Sign(data);
+    ASSERT_THAT(signature, IsOk());
+    EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
+  }
 }
 
 // Expects an INVLID_ARGUMENT when passing a public key to a

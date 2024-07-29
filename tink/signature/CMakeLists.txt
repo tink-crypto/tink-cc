@@ -1265,15 +1265,16 @@ tink_cc_test(
   SRCS
     signature_pem_keyset_reader_test.cc
   DEPS
+    tink::signature::config_v0
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
-    tink::signature::signature_config
     tink::signature::signature_pem_keyset_reader
     gmock
     absl::status
     absl::strings
+    tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
     tink::core::keyset_reader
     tink::core::public_key_sign

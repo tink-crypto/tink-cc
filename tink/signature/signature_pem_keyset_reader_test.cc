@@ -108,13 +108,53 @@ constexpr absl::string_view kEcdsaP256PublicKeyY =
 
 // Generated with:
 // openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:P-384 \
-//   | openssl pkey -pubout
+//   -out private-key.pem
+constexpr absl::string_view kEcdsaP384PrivateKey =
+    "-----BEGIN PRIVATE KEY-----\n"
+    "MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDAJgNcGVFAYtVGMTm+t\n"
+    "M8qx1hhYQbtMVADtc4V2t5QxJcsEbXRwVigUbZAHM4o/Uw6hZANiAASXyFvUJHrY\n"
+    "APdllv8nQJETEY/IB8Ps2Bp7xrmTBybU0f0lgeyud7rcT05+BZBgPFxlSUwFQNTy\n"
+    "RsbMj+fYOa0wlM6vZnD3UtHesw8uoXhDrenPcyNHOm6eyjwmWIIlM8o=\n"
+    "-----END PRIVATE KEY-----\n";
+
+// Extracted from:
+// openssl asn1parse -in private-key.pem -strparse 24
+constexpr absl::string_view kEcdsaP384PrivateKeyD =
+    "0980d706545018b5518c4e6fad33cab1d6185841bb4c5400ed738576b7943125cb046d7470"
+    "5628146d9007338a3f530e";
+
+// Generated with:
+// openssl pkey -pubout -in private-key.pem -out public-key.pem
 constexpr absl::string_view kEcdsaP384PublicKey =
-    "-----BEGIN PUBLIC KEY-----"
-    "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAESbGnhTcoHIGYTgAJLwTCLGEMrCq6ej3p"
-    "kr9q0iMF0tVFAYdX7YI8ZDM04Y2VsuZC0qhRRFxdoL8NVD6q1f+YY0SDxUnZYEUk"
-    "MSHtbVybpk2rZWptJeAYsBxNOrPxc4mJ"
-    "-----END PUBLIC KEY-----";
+    "-----BEGIN PUBLIC KEY-----\n"
+    "MHYwEAYHKoZIzj0CAQYFK4EEACIDYgAEl8hb1CR62AD3ZZb/J0CRExGPyAfD7Nga\n"
+    "e8a5kwcm1NH9JYHsrne63E9OfgWQYDxcZUlMBUDU8kbGzI/n2DmtMJTOr2Zw91LR\n"
+    "3rMPLqF4Q63pz3MjRzpunso8JliCJTPK\n"
+    "-----END PUBLIC KEY-----\n";
+
+// Extracted from:
+// openssl asn1parse -in public-key.pem -dump
+//
+// The X and Y values are embedded within the dumped 98 byte hex-encoded BIT
+// STRING value. Discard the first two bytes, X is the next 48 bytes, Y is the
+// remaining 48 bytes.
+constexpr absl::string_view kEcdsaP384PublicKeyX =
+    "97c85bd4247ad800f76596ff27409113118fc807c3ecd81a7bc6b9930726d4d1fd2581ecae"
+    "77badc4f4e7e0590603c5c";
+
+constexpr absl::string_view kEcdsaP384PublicKeyY =
+    "65494c0540d4f246c6cc8fe7d839ad3094ceaf6670f752d1deb30f2ea17843ade9cf732347"
+    "3a6e9eca3c2658822533ca";
+
+// Generated with:
+// openssl ecparam -name secp521r1 -genkey -noout | openssl pkey -pubout
+constexpr absl::string_view kEcdsaP512PublicKey =
+    "-----BEGIN PUBLIC KEY-----\n"
+    "MIGbMBAGByqGSM49AgEGBSuBBAAjA4GGAAQAyZbbwf2jgzxh3y2+5eQQ7Q3qYhuK\n"
+    "OvoC0+uW4fyUuIUc7X1v4V0elnfUFX/RFWn5UVOA/KumMROmgRzsPXAUJiABLxsK\n"
+    "l/+survkHdhv29F9mS2vYeIS/9s7M+CwOmyIw5ndFxQocfAjaPohQir/L6NBjNRf\n"
+    "f3zJxgm9UrpLRBqC2dQ=\n"
+    "-----END PUBLIC KEY-----\n";
 
 // Generated with:
 // openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:secp256k1 \
@@ -190,28 +230,64 @@ constexpr absl::string_view kRsaPrivateKey2048 =
 
 // Helper function that creates an EcdsaPublicKey from the given PEM encoded
 // key `pem_encoded_key`, Hash type `hash_type` and key version `key_version`.
-EcdsaPublicKey GetExpectedEcdsaPublicKeyProto(EcdsaSignatureEncoding encoding) {
+util::StatusOr<EcdsaPublicKey> GetExpectedEcdsaPublicKeyProto(
+    EllipticCurveType curve, EcdsaSignatureEncoding encoding) {
   EcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
-  public_key_proto.set_x(absl::HexStringToBytes(kEcdsaP256PublicKeyX));
-  public_key_proto.set_y(absl::HexStringToBytes(kEcdsaP256PublicKeyY));
-  public_key_proto.mutable_params()->set_hash_type(HashType::SHA256);
-  public_key_proto.mutable_params()->set_curve(EllipticCurveType::NIST_P256);
+
+  switch (curve) {
+    case EllipticCurveType::NIST_P256: {
+      public_key_proto.set_x(absl::HexStringToBytes(kEcdsaP256PublicKeyX));
+      public_key_proto.set_y(absl::HexStringToBytes(kEcdsaP256PublicKeyY));
+      public_key_proto.mutable_params()->set_hash_type(HashType::SHA256);
+      break;
+    }
+    case EllipticCurveType::NIST_P384: {
+      public_key_proto.set_x(absl::HexStringToBytes(kEcdsaP384PublicKeyX));
+      public_key_proto.set_y(absl::HexStringToBytes(kEcdsaP384PublicKeyY));
+      public_key_proto.mutable_params()->set_hash_type(HashType::SHA384);
+      break;
+    }
+    default: {
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid curve type.");
+    }
+  }
+
+  public_key_proto.mutable_params()->set_curve(curve);
   public_key_proto.mutable_params()->set_encoding(encoding);
 
   return public_key_proto;
 }
 
-EcdsaPrivateKey GetExpectedEcdsaPrivateKeyProto(
-    EcdsaSignatureEncoding encoding) {
+util::StatusOr<EcdsaPrivateKey> GetExpectedEcdsaPrivateKeyProto(
+    EllipticCurveType curve, EcdsaSignatureEncoding encoding) {
+  util::StatusOr<EcdsaPublicKey> public_key;
   EcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
-  private_key_proto.set_key_value(
-      absl::HexStringToBytes(kEcdsaP256PrivateKeyD));
 
-  EcdsaPublicKey public_key = GetExpectedEcdsaPublicKeyProto(encoding);
-  private_key_proto.mutable_public_key()->Swap(&public_key);
+  switch (curve) {
+    case EllipticCurveType::NIST_P256: {
+      private_key_proto.set_key_value(
+          absl::HexStringToBytes(kEcdsaP256PrivateKeyD));
+      break;
+    }
+    case EllipticCurveType::NIST_P384: {
+      private_key_proto.set_key_value(
+          absl::HexStringToBytes(kEcdsaP384PrivateKeyD));
+      break;
+    }
+    default: {
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid curve type.");
+    }
+  }
 
+  public_key = GetExpectedEcdsaPublicKeyProto(curve, encoding);
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+  private_key_proto.mutable_public_key()->Swap(&*public_key);
   return private_key_proto;
 }
 
@@ -333,7 +409,8 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   expected_keydata1->set_key_material_type(
       ecdsa_sign_key_manager.key_material_type());
   util::StatusOr<EcdsaPrivateKey> ecdsa_private_key1 =
-      GetExpectedEcdsaPrivateKeyProto(EcdsaSignatureEncoding::IEEE_P1363);
+      GetExpectedEcdsaPrivateKeyProto(EllipticCurveType::NIST_P256,
+                                      EcdsaSignatureEncoding::IEEE_P1363);
   ASSERT_THAT(ecdsa_private_key1, IsOk());
   expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
   EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
@@ -412,9 +489,10 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPublicKeyWithMultipleKeyTypes) {
   expected_secondary_data->set_type_url(key_manager.get_key_type());
   expected_secondary_data->set_key_material_type(
       key_manager.key_material_type());
-  expected_secondary_data->set_value(
-      GetExpectedEcdsaPublicKeyProto(EcdsaSignatureEncoding::DER)
-          .SerializeAsString());
+  util::StatusOr<EcdsaPublicKey> pub_key = GetExpectedEcdsaPublicKeyProto(
+      EllipticCurveType::NIST_P256, EcdsaSignatureEncoding::DER);
+  ASSERT_THAT(pub_key, IsOk());
+  expected_secondary_data->set_value(pub_key->SerializeAsString());
   EXPECT_THAT((*keyset)->key(1), EqualsKey(expected_secondary));
 }
 
@@ -665,7 +743,7 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaPublicKeyInvalidHashType) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(SignaturePemKeysetReaderTest, ReadECDSACorrectPublicKey) {
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP256CorrectPublicKey) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
 
@@ -697,13 +775,14 @@ TEST(SignaturePemKeysetReaderTest, ReadECDSACorrectPublicKey) {
   KeyData* expected_primary_data = expected_primary.mutable_key_data();
   expected_primary_data->set_type_url(key_manager.get_key_type());
   expected_primary_data->set_key_material_type(key_manager.key_material_type());
-  expected_primary_data->set_value(
-      GetExpectedEcdsaPublicKeyProto(
-          EcdsaSignatureEncoding::IEEE_P1363).SerializeAsString());
+  util::StatusOr<EcdsaPublicKey> pub_key = GetExpectedEcdsaPublicKeyProto(
+      EllipticCurveType::NIST_P256, EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(pub_key, IsOk());
+  expected_primary_data->set_value(pub_key->SerializeAsString());
   EXPECT_THAT(keyset->key(0), EqualsKey(expected_primary));
 }
 
-TEST(SignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP256CorrectPrivateKey) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
 
@@ -734,7 +813,8 @@ TEST(SignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {
   expected_keydata1->set_key_material_type(
       ecdsa_sign_key_manager.key_material_type());
   util::StatusOr<EcdsaPrivateKey> ecdsa_private_key1 =
-      GetExpectedEcdsaPrivateKeyProto(EcdsaSignatureEncoding::IEEE_P1363);
+      GetExpectedEcdsaPrivateKeyProto(EllipticCurveType::NIST_P256,
+                                      EcdsaSignatureEncoding::IEEE_P1363);
   ASSERT_THAT(ecdsa_private_key1, IsOk());
   expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
   EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
@@ -781,7 +861,84 @@ TEST(SignaturePemKeysetReaderTest, ReadAndUseEcdsaP256PemKeys) {
   }
 }
 
-// Expects an INVLID_ARGUMENT when passing a public key to a
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP384CorrectPublicKey) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kEcdsaP384PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/384,
+                           HashType::SHA384));
+
+  auto reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+
+  auto keyset_read = reader->get()->Read();
+  ASSERT_THAT(keyset_read, IsOk());
+  std::unique_ptr<Keyset> keyset = std::move(keyset_read).value();
+
+  EXPECT_THAT(keyset->key(), SizeIs(1));
+  EXPECT_THAT(keyset->primary_key_id(), keyset->key(0).key_id());
+
+  // Key manager to validate key type and key material type.
+  EcdsaVerifyKeyManager key_manager;
+
+  // Build the expected primary key.
+  Keyset::Key expected_primary;
+  // ID is randomly generated, so we simply copy the primary key ID.
+  expected_primary.set_key_id(keyset->primary_key_id());
+  expected_primary.set_status(KeyStatusType::ENABLED);
+  expected_primary.set_output_prefix_type(OutputPrefixType::RAW);
+
+  // Populate the expected primary key KeyData.
+  KeyData* expected_primary_data = expected_primary.mutable_key_data();
+  expected_primary_data->set_type_url(key_manager.get_key_type());
+  expected_primary_data->set_key_material_type(key_manager.key_material_type());
+  util::StatusOr<EcdsaPublicKey> pub_key = GetExpectedEcdsaPublicKeyProto(
+      EllipticCurveType::NIST_P384, EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(pub_key, IsOk());
+  expected_primary_data->set_value(pub_key->SerializeAsString());
+  EXPECT_THAT(keyset->key(0), EqualsKey(expected_primary));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP384CorrectPrivateKey) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+
+  builder.Add(CreatePemKey(kEcdsaP384PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/384,
+                           HashType::SHA384));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  ASSERT_THAT(keyset, IsOk());
+
+  EXPECT_THAT((*keyset)->key(), SizeIs(1));
+  EXPECT_EQ((*keyset)->primary_key_id(), (*keyset)->key(0).key_id());
+
+  // Key manager to validate key type and key material type.
+  EcdsaSignKeyManager ecdsa_sign_key_manager;
+
+  // Build the expected primary key.
+  Keyset::Key expected_key1;
+  // ID is randomly generated, so we simply copy the primary key ID.
+  expected_key1.set_key_id((*keyset)->primary_key_id());
+  expected_key1.set_status(KeyStatusType::ENABLED);
+  expected_key1.set_output_prefix_type(OutputPrefixType::RAW);
+  // Populate the expected primary key KeyData.
+  KeyData* expected_keydata1 = expected_key1.mutable_key_data();
+  expected_keydata1->set_type_url(ecdsa_sign_key_manager.get_key_type());
+  expected_keydata1->set_key_material_type(
+      ecdsa_sign_key_manager.key_material_type());
+  util::StatusOr<EcdsaPrivateKey> ecdsa_private_key1 =
+      GetExpectedEcdsaPrivateKeyProto(EllipticCurveType::NIST_P384,
+                                      EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(ecdsa_private_key1, IsOk());
+  expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
+  EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key1));
+}
+
+// Expects an INVALID_ARGUMENT when passing a public key to a
 // PublicKeySignPemKeysetReader.
 TEST(SignaturePemKeysetReaderTest, ReadEcdsaPrivateKeyKeyTypeMismatch) {
   auto builder = SignaturePemKeysetReaderBuilder(
@@ -797,7 +954,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEcdsaPrivateKeyKeyTypeMismatch) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-// Expects an INVLID_ARGUMENT when passing a private key to a
+// Expects an INVALID_ARGUMENT when passing a private key to a
 // PublicKeyVerifyPemKeysetReader.
 TEST(SignaturePemKeysetReaderTest, ReadEcdsaPublicKeyKeyTypeMismatch) {
   auto builder = SignaturePemKeysetReaderBuilder(
@@ -814,7 +971,82 @@ TEST(SignaturePemKeysetReaderTest, ReadEcdsaPublicKeyKeyTypeMismatch) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(SignaturePemKeysetReaderTest, ReadECDSAWrongHashType) {
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP256PrivateKeyMismatchedHashType) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+
+  builder.Add(CreatePemKey(kEcdsaP256PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA384));
+
+  auto reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  auto keyset_read = reader->get()->Read();
+  ASSERT_THAT(keyset_read.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP384PrivateKeyMismatchedHashType) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+
+  builder.Add(CreatePemKey(kEcdsaP384PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/384,
+                           HashType::SHA256));
+
+  auto reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  auto keyset_read = reader->get()->Read();
+  ASSERT_THAT(keyset_read.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP256PrivateKeyUnsupportedHashType) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
+
+  builder.Add(CreatePemKey(kEcdsaP256PrivateKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA512));
+
+  auto reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  auto keyset_read = reader->get()->Read();
+  ASSERT_THAT(keyset_read.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP256PublicKeyMismatchedHashType) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kEcdsaP256PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/256,
+                           HashType::SHA384));
+
+  auto reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  auto keyset_read = reader->get()->Read();
+  ASSERT_THAT(keyset_read.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP384PublicKeyMismatchedHashType) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kEcdsaP384PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/384,
+                           HashType::SHA256));
+
+  auto reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+  auto keyset_read = reader->get()->Read();
+  ASSERT_THAT(keyset_read.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(SignaturePemKeysetReaderTest, ReadECDSAPublicKeyUnsupportedHashType) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
 
@@ -903,13 +1135,13 @@ TEST(SignaturePemKeysetReaderTest, ReadSecp256k1ShouldFail) {
   }
 }
 
-TEST(SignaturePemKeysetReaderTest, ReadEcdsaP384ShouldFail) {
+TEST(SignaturePemKeysetReaderTest, ReadEcdsaP512ShouldFail) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
 
-  builder.Add(CreatePemKey(kEcdsaP384PublicKey, PemKeyType::PEM_EC,
-                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/384,
-                           HashType::SHA384));
+  builder.Add(CreatePemKey(kEcdsaP512PublicKey, PemKeyType::PEM_EC,
+                           PemAlgorithm::ECDSA_IEEE, /*key_size_in_bits=*/512,
+                           HashType::SHA512));
 
   auto reader = builder.Build();
   ASSERT_THAT(reader, IsOk());

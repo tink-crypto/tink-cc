@@ -95,16 +95,34 @@ util::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
                         "Null parameters provided");
   }
 
-  if (pem_parameters.hash_type != HashType::SHA256 ||
-      pem_parameters.key_size_in_bits != 256) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Only NIST_P256 ECDSA supported. Parameters should contain "
-        "SHA256 and 256 bit key size.");
+  switch (pem_parameters.hash_type) {
+    case HashType::SHA256: {
+      if (pem_parameters.key_size_in_bits != 256) {
+        return util::Status(
+            absl::StatusCode::kInvalidArgument,
+            "For NIST_P256 ECDSA, the key should be 256 bits long.");
+      }
+      parameters->set_curve(EllipticCurveType::NIST_P256);
+      break;
+    }
+    case HashType::SHA384: {
+      if (pem_parameters.key_size_in_bits != 384) {
+        return util::Status(
+            absl::StatusCode::kInvalidArgument,
+            "For NIST_P384 ECDSA, the key should be 384 bits long.");
+      }
+      parameters->set_curve(EllipticCurveType::NIST_P384);
+      break;
+    }
+    default: {
+      return util::Status(
+          absl::StatusCode::kInvalidArgument,
+          "Only NIST_P256 and NIST_P384 ECDSA are supported. The hash type "
+          "should be SHA256 or SHA384 respectively.");
+    }
   }
 
   parameters->set_hash_type(pem_parameters.hash_type);
-  parameters->set_curve(EllipticCurveType::NIST_P256);
 
   switch (pem_parameters.algorithm) {
     case PemAlgorithm::ECDSA_IEEE: {

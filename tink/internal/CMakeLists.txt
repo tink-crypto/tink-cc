@@ -1326,28 +1326,6 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME tpb_message_descriptor
-  SRCS
-    tpb_message_descriptor.cc
-    tpb_message_descriptor.h
-  DEPS
-    absl::btree
-    absl::status
-    absl::statusor
-    absl::strings
-)
-
-tink_cc_test(
-  NAME tpb_message_descriptor_test
-  SRCS
-    tpb_message_descriptor_test.cc
-  DEPS
-    tink::internal::tpb_message_descriptor
-    gmock
-    tink::util::test_matchers
-)
-
-tink_cc_library(
   NAME proto_parser
   SRCS
     proto_parser.cc

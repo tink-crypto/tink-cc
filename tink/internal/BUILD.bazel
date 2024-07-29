@@ -1379,29 +1379,6 @@ cc_library(
 )
 
 cc_library(
-    name = "tpb_message_descriptor",
-    srcs = ["tpb_message_descriptor.cc"],
-    hdrs = ["tpb_message_descriptor.h"],
-    include_prefix = "tink/internal",
-    deps = [
-        "@com_google_absl//absl/container:btree",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-    ],
-)
-
-cc_test(
-    name = "tpb_message_descriptor_test",
-    srcs = ["tpb_message_descriptor_test.cc"],
-    deps = [
-        ":tpb_message_descriptor",
-        "//tink/util:test_matchers",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "proto_parser",
     srcs = ["proto_parser.cc"],
     hdrs = ["proto_parser.h"],

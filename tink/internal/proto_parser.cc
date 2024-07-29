@@ -52,9 +52,17 @@ absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(
       return absl::InvalidArgumentError("Varint too short");
     }
     uint64_t byte = *serialized.begin();
+    if (i == kMaxVarintLength - 1 && (byte & 0xfe)) {
+      return absl::InvalidArgumentError(
+          "Varint bigger than numeric_limit<uint64_t>::max()");
+    }
     serialized.remove_prefix(1);
     result |= ((byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
+      if (byte == 0 && i != 0) {
+        return absl::InvalidArgumentError(
+            "Varint not in canoncial encoding (ends with 0)");
+      }
       return result;
     }
   }

@@ -27,6 +27,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
@@ -251,10 +252,14 @@ constexpr VarintCase kVarintCases[] = {
     {"00", 0},
     {"01", 1},
     {"7f", 127},
+    {"8001", 128},
     {"a274", 14882},
     {"bef792840b", 2961488830},
     {"80e6eb9cc3c9a449", 41256202580718336ULL},
     {"9ba8f9c2bbd68085a601", 11964378330978735131ULL},
+    {"80808080808080808001", /* 2^63 */ 9223372036854775808ULL },
+    {"feffffffffffffffff01", /* 2^64 - 2*/ 18446744073709551614ULL },
+    {"ffffffffffffffffff01", /* 2^64 - 1*/ 18446744073709551615ULL },
 };
 
 TEST(ProtoParserTest, ConsumeVarintIntoUint64DirectTest) {
@@ -287,8 +292,17 @@ TEST(ProtoParserTest, ConsumeVarintIntoUint32DirectTest) {
 
 constexpr absl::string_view kHexEncodedVarintFailureCases[] = {
     "",
+    // We expect canonical varints: this encodes 0 so should be encoded as "0"
+    "8000",
+    // This encodes 1, so should be encoded as "01".
+    "8100",
     "faab",
     "f0abc99af8b2",
+    // Would encode 2^64 == std::numeric_limits<uint64_t>::max() + 1
+    "80808080808080808002",
+     // Something clearly too big (but the same number of bytes as above)
+    "ffffffffffffffffff08",
+     // Varint with too many bytes.
     "ffffffffffffffffffff01",
 };
 
@@ -407,6 +421,24 @@ TEST(ProtoParserTest, CallingParseTwiceFailsWhenThereIsAnErrorTheFirstTime) {
   ProtoTestProto proto;
   proto.set_uint32_field_1(123);
   EXPECT_THAT(parser.Parse(proto.SerializeAsString()), Not(IsOk()));
+}
+
+// Found by a prototype fuzzer.
+TEST(ProtoParserTest, Regression1) {
+  std::string serialization = HexDecodeOrDie("a20080808080808080808000");
+  uint32_t uint32_field_1;
+  uint32_t uint32_field_2;
+  std::string bytes_field_1;
+  SecretData bytes_field_2;
+
+  EXPECT_THAT(
+      ProtoParser()
+          .AddUint32Field(1, uint32_field_1)
+          .AddUint32Field(2, uint32_field_2)
+          .AddBytesStringField(3, bytes_field_1)
+          .AddBytesSecretDataField(4, bytes_field_2,
+                                   InsecureSecretKeyAccess::Get())
+          .Parse(serialization), Not(IsOk()));
 }
 
 }  // namespace

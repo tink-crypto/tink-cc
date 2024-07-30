@@ -1331,6 +1331,7 @@ tink_cc_library(
     proto_parser.cc
     proto_parser.h
   DEPS
+    tink::internal::proto_parsing_helpers
     absl::btree
     absl::status
     absl::statusor
@@ -1363,3 +1364,26 @@ tink_cc_proto(
   SRCS proto_test_proto.proto
 )
 
+tink_cc_library(
+  NAME proto_parsing_helpers
+  SRCS
+    proto_parsing_helpers.cc
+    proto_parsing_helpers.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::string_view
+)
+
+tink_cc_test(
+  NAME proto_parsing_helpers_test
+  SRCS
+    proto_parsing_helpers_test.cc
+  DEPS
+    tink::internal::proto_parsing_helpers
+    gmock
+    absl::statusor
+    absl::string_view
+    tink::util::test_matchers
+    tink::util::test_util
+)

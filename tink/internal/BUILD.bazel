@@ -1384,6 +1384,7 @@ cc_library(
     hdrs = ["proto_parser.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":proto_parsing_helpers",
         "//tink:secret_key_access_token",
         "//tink/util:secret_data",
         "@com_google_absl//absl/container:btree",
@@ -1420,6 +1421,31 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "proto_parsing_helpers",
+    srcs = ["proto_parsing_helpers.cc"],
+    hdrs = ["proto_parsing_helpers.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "proto_parsing_helpers_test",
+    srcs = ["proto_parsing_helpers_test.cc"],
+    deps = [
+        ":proto_parsing_helpers",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )

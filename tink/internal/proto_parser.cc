@@ -26,6 +26,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/variant.h"
+#include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
@@ -35,64 +36,6 @@ namespace internal {
 
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
-
-namespace {
-constexpr int kMaxVarintLength = 10;
-}
-
-// See https://protobuf.dev/programming-guides/encoding for documentation on
-// the wire format.
-
-// https://protobuf.dev/programming-guides/encoding/#varints
-absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(
-    absl::string_view& serialized) {
-  uint64_t result = 0;
-  for (int i = 0; i < kMaxVarintLength; ++i) {
-    if (serialized.empty()) {
-      return absl::InvalidArgumentError("Varint too short");
-    }
-    uint64_t byte = *serialized.begin();
-    if (i == kMaxVarintLength - 1 && (byte & 0xfe)) {
-      return absl::InvalidArgumentError(
-          "Varint bigger than numeric_limit<uint64_t>::max()");
-    }
-    serialized.remove_prefix(1);
-    result |= ((byte & 0x7F) << (i * 7));
-    if (!(byte & 0x80)) {
-      if (byte == 0 && i != 0) {
-        return absl::InvalidArgumentError(
-            "Varint not in canoncial encoding (ends with 0)");
-      }
-      return result;
-    }
-  }
-  return absl::InvalidArgumentError("Varint too long");
-}
-
-absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(
-    absl::string_view& serialized) {
-  absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
-  if (!result.ok()) {
-    return result.status();
-  }
-  if (*result > std::numeric_limits<uint32_t>::max()) {
-    return absl::InvalidArgumentError(
-        "Parsed value too large to fit in uint32_t");
-  }
-  return *result;
-}
-
-// https://protobuf.dev/programming-guides/encoding/#structure
-absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
-    absl::string_view& serialized) {
-  absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
-  if (!result.ok()) {
-    return result.status();
-  }
-  int tag = *result >> 3;
-  WireType wiretype = static_cast<WireType>(*result & 0x7);
-  return std::make_pair(wiretype, tag);
-}
 
 ProtoParser& ProtoParser::AddUint32Field(int tag, uint32_t& value) {
   if (!permanent_error_.ok()) {

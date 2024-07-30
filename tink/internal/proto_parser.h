@@ -113,30 +113,6 @@ class ProtoParser {
   absl::btree_map<int, Field> fields_;
 };
 
-// Exposed for testing only
-absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(absl::string_view& serialized);
-
-// Exposed for testing only
-absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(absl::string_view& serialized);
-
-// See https://protobuf.dev/programming-guides/encoding/#structure
-// and
-// https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/wire_format_lite.h
-// for the names.
-// Exposed for testing only
-enum class WireType : uint8_t {
-  kVarint = 0,
-  kFixed64 = 1,
-  kLengthDelimited = 2,
-  kStartGroup = 3,
-  kEndGroup = 4,
-  kFixed32 = 5,
-};
-
-// Exposed for testing only
-absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
-    absl::string_view& serialized);
-
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

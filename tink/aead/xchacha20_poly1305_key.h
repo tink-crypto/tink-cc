@@ -17,6 +17,7 @@
 #ifndef TINK_AEAD_XCHACHA20_POLY1305_KEY_H_
 #define TINK_AEAD_XCHACHA20_POLY1305_KEY_H_
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -59,7 +60,7 @@ class XChaCha20Poly1305Key : public AeadKey {
     return parameters_;
   }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 

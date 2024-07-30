@@ -17,6 +17,7 @@
 #ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
 #define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
 
+#include <cstdint>
 #include <string>
 
 #include "absl/base/attributes.h"
@@ -57,7 +58,7 @@ class SlhDsaPublicKey : public SignaturePublicKey {
 
   const SlhDsaParameters& GetParameters() const override { return parameters_; }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 

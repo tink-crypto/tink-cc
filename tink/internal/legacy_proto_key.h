@@ -17,6 +17,7 @@
 #ifndef TINK_INTERNAL_LEGACY_PROTO_KEY_H_
 #define TINK_INTERNAL_LEGACY_PROTO_KEY_H_
 
+#include <cstdint>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -81,7 +82,7 @@ class LegacyProtoKey : public Key {
     return unusable_proto_parameters_;
   }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return serialization_.IdRequirement();
   }
 

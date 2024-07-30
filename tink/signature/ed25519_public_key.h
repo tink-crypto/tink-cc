@@ -17,6 +17,7 @@
 #ifndef TINK_SIGNATURE_ED25519_PUBLIC_KEY_H_
 #define TINK_SIGNATURE_ED25519_PUBLIC_KEY_H_
 
+#include <cstdint>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -55,7 +56,7 @@ class Ed25519PublicKey : public SignaturePublicKey {
     return parameters_;
   }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 

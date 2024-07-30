@@ -17,6 +17,7 @@
 #ifndef TINK_STREAMINGAEAD_STREAMING_AEAD_KEY_H_
 #define TINK_STREAMINGAEAD_STREAMING_AEAD_KEY_H_
 
+#include <cstdint>
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/streamingaead/streaming_aead_parameters.h"
@@ -29,7 +30,7 @@ class StreamingAeadKey : public Key {
  public:
   const StreamingAeadParameters& GetParameters() const override = 0;
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return absl::nullopt;
   }
 

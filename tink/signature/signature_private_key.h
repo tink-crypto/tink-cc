@@ -17,6 +17,7 @@
 #ifndef TINK_SIGNATURE_SIGNATURE_PRIVATE_KEY_H_
 #define TINK_SIGNATURE_SIGNATURE_PRIVATE_KEY_H_
 
+#include <cstdint>
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/key.h"
@@ -44,7 +45,7 @@ class SignaturePrivateKey : public PrivateKey {
     return GetPublicKey().GetOutputPrefix();
   }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return GetPublicKey().GetIdRequirement();
   }
 

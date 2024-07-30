@@ -17,6 +17,7 @@
 #ifndef TINK_EXPERIMENTAL_KEM_KEM_PRIVATE_KEY_H_
 #define TINK_EXPERIMENTAL_KEM_KEM_PRIVATE_KEY_H_
 
+#include <cstdint>
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/experimental/kem/kem_parameters.h"
@@ -46,7 +47,7 @@ class KemPrivateKey : public PrivateKey {
     return GetPublicKey().GetOutputPrefix();
   }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return GetPublicKey().GetIdRequirement();
   }
 

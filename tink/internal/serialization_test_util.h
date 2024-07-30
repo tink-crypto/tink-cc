@@ -17,6 +17,7 @@
 #ifndef TINK_INTERNAL_SERIALIZATION_TEST_UTIL_H_
 #define TINK_INTERNAL_SERIALIZATION_TEST_UTIL_H_
 
+#include <cstdint>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -91,7 +92,7 @@ class NoIdKey : public Key {
  public:
   const Parameters& GetParameters() const override { return params_; }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return absl::nullopt;
   }
 
@@ -121,7 +122,7 @@ class IdKey : public Key {
 
   const Parameters& GetParameters() const override { return params_; }
 
-  absl::optional<int> GetIdRequirement() const override { return id_; }
+  absl::optional<int32_t> GetIdRequirement() const override { return id_; }
 
   bool operator==(const Key& other) const override {
     return params_ == other.GetParameters() && id_ == other.GetIdRequirement();

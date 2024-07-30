@@ -17,6 +17,7 @@
 #ifndef TINK_KEY_H_
 #define TINK_KEY_H_
 
+#include <cstdint>
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
 
@@ -63,7 +64,7 @@ class Key {
   // encoded in big endian format (see the documentation of the key type for
   // details). The key id provides a hint for which specific key was used to
   // generate the ciphertext or signature.
-  virtual absl::optional<int> GetIdRequirement() const = 0;
+  virtual absl::optional<int32_t> GetIdRequirement() const = 0;
 
   // Returns true if all `Key` object fields have identical values, including
   // the bytes for the raw key material.  Otherwise, returns false.

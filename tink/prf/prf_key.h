@@ -17,6 +17,7 @@
 #ifndef TINK_PRF_PRF_KEY_H_
 #define TINK_PRF_PRF_KEY_H_
 
+#include <cstdint>
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/prf/prf_parameters.h"
@@ -29,7 +30,7 @@ class PrfKey : public Key {
  public:
   const PrfParameters& GetParameters() const override = 0;
 
-  absl::optional<int> GetIdRequirement() const final {
+  absl::optional<int32_t> GetIdRequirement() const final {
     return absl::nullopt;
   }
 

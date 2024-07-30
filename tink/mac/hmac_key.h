@@ -17,7 +17,7 @@
 #ifndef TINK_MAC_HMAC_KEY_H_
 #define TINK_MAC_HMAC_KEY_H_
 
-#include <memory>
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -57,7 +57,7 @@ class HmacKey : public MacKey {
 
   const HmacParameters& GetParameters() const override { return parameters_; }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 

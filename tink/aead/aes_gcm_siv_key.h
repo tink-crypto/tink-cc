@@ -17,6 +17,7 @@
 #ifndef TINK_AEAD_AES_GCM_SIV_KEY_H_
 #define TINK_AEAD_AES_GCM_SIV_KEY_H_
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -58,7 +59,7 @@ class AesGcmSivKey : public AeadKey {
     return parameters_;
   }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return id_requirement_;
   }
 

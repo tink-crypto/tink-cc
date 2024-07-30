@@ -17,6 +17,7 @@
 #ifndef TINK_JWT_JWT_SIGNATURE_PRIVATE_KEY_H_
 #define TINK_JWT_JWT_SIGNATURE_PRIVATE_KEY_H_
 
+#include <cstdint>
 #include <string>
 
 #include "absl/types/optional.h"
@@ -37,7 +38,7 @@ class JwtSignaturePrivateKey : public PrivateKey {
     return GetPublicKey().GetKid();
   }
 
-  absl::optional<int> GetIdRequirement() const override {
+  absl::optional<int32_t> GetIdRequirement() const override {
     return GetPublicKey().GetIdRequirement();
   }
 

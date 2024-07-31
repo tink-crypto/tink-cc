@@ -1372,6 +1372,7 @@ tink_cc_library(
   DEPS
     absl::status
     absl::statusor
+    absl::strings
     absl::string_view
 )
 
@@ -1383,6 +1384,7 @@ tink_cc_test(
     tink::internal::proto_parsing_helpers
     gmock
     absl::statusor
+    absl::strings
     absl::string_view
     tink::util::test_matchers
     tink::util::test_util

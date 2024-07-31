@@ -181,22 +181,6 @@ absl::Status ProtoParser::ConsumeBytesToSecretDataWithField(
   return absl::OkStatus();
 }
 
-absl::StatusOr<absl::string_view> ProtoParser::ConsumeBytesReturnStringView(
-    absl::string_view& serialized) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
-  if (!result.ok()) {
-    return result.status();
-  }
-  if (*result > serialized.size()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Length ", *result, " exceeds remaining input size ",
-                     serialized.size()));
-  }
-  absl::string_view result_view = serialized.substr(0, *result);
-  serialized.remove_prefix(*result);
-  return result_view;
-}
-
 void ProtoParser::ClearAllFields() {
   for (auto& pair : fields_) {
     switch (pair.second.type) {

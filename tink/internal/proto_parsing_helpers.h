@@ -26,8 +26,11 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+// Consumes (i.e. reads and removes from the input |serialized|) a Varint
+// and returns it as a uint64_t.
 absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(absl::string_view& serialized);
 
+// Consumes a Varint and returns it as a uint32_t.
 absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(absl::string_view& serialized);
 
 // See https://protobuf.dev/programming-guides/encoding/#structure
@@ -43,7 +46,12 @@ enum class WireType : uint8_t {
   kFixed32 = 5,
 };
 
+// Consumes a wiretype/tag encoding and returns the result.
 absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
+    absl::string_view& serialized);
+
+// Consumes a length delimited field and returns the string_view to the field.
+absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
     absl::string_view& serialized);
 
 }  // namespace internal

@@ -22,6 +22,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 
 namespace crypto {
@@ -84,6 +85,22 @@ absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
   int tag = *result >> 3;
   WireType wiretype = static_cast<WireType>(*result & 0x7);
   return std::make_pair(wiretype, tag);
+}
+
+absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
+    absl::string_view& serialized) {
+  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
+  if (!result.ok()) {
+    return result.status();
+  }
+  if (*result > serialized.size()) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Length ", *result, " exceeds remaining input size ",
+                     serialized.size()));
+  }
+  absl::string_view result_view = serialized.substr(0, *result);
+  serialized.remove_prefix(*result);
+  return result_view;
 }
 
 }  // namespace internal

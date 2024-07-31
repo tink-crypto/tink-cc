@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -36,13 +37,9 @@ namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretDataAsStringView;
-using ::crypto::tink::util::SecretDataFromStringView;
 using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
-using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Test;
@@ -155,6 +152,41 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
     EXPECT_THAT(result->second, Eq(v.tag));
     EXPECT_THAT(bytes_view, IsEmpty());
   }
+}
+
+TEST(ConsumeBytesReturnStringView, ValidInput) {
+  std::string bytes =
+      absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
+  absl::string_view bytes_view = bytes;
+  absl::StatusOr<absl::string_view> result =
+      ConsumeBytesReturnStringView(bytes_view);
+  ASSERT_THAT(result, IsOk());
+  EXPECT_THAT(*result, Eq("1234567890"));
+  EXPECT_THAT(bytes_view, Eq("XYZ"));
+}
+
+
+TEST(ConsumeBytesReturnStringView, EmptyString) {
+  std::string bytes =
+      absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
+  absl::string_view bytes_view = bytes;
+  absl::StatusOr<absl::string_view> result =
+      ConsumeBytesReturnStringView(bytes_view);
+  ASSERT_THAT(result, IsOk());
+  EXPECT_THAT(*result, Eq(""));
+  EXPECT_THAT(bytes_view, Eq("abcde"));
+}
+
+TEST(ConsumeBytesReturnStringView, EmptyWithoutVarint) {
+  absl::string_view bytes_view = "";
+  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view), Not(IsOk()));
+}
+
+TEST(ConsumeBytesReturnStringView, InvalidVarint) {
+  std::string bytes =
+      absl::StrCat(/* 0 bytes */ HexDecodeOrDie("8000"), "abcde");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view), Not(IsOk()));
 }
 
 }  // namespace

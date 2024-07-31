@@ -101,8 +101,6 @@ class ProtoParser {
                                              const Field& field);
   absl::Status ConsumeBytesToSecretDataWithField(absl::string_view& serialized,
                                                  const Field& field);
-  absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
-      absl::string_view& serialized);
 
   // Overwrites all fields to their default value (in case they are not
   // explicitly set by the input)

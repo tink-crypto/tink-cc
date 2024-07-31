@@ -1328,7 +1328,6 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_parser
   SRCS
-    proto_parser.cc
     proto_parser.h
   DEPS
     tink::internal::proto_parsing_helpers

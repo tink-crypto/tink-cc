@@ -1380,7 +1380,6 @@ cc_library(
 
 cc_library(
     name = "proto_parser",
-    srcs = ["proto_parser.cc"],
     hdrs = ["proto_parser.h"],
     include_prefix = "tink/internal",
     deps = [

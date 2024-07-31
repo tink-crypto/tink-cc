@@ -68,7 +68,7 @@ namespace internal {
 // version_number, key_size, and key are set accordingly.
 //
 // If the return value of Parse is an error, variables are in an unspecified
-// state. Parse must not be called twice. Fields can be added in any order.
+// state. Fields can be added in any order.
 template <typename Struct>
 class ProtoParser {
  public:
@@ -90,7 +90,7 @@ class ProtoParser {
         absl::make_unique<SecretDataBytesField<Struct>>(tag, value));
   }
 
-  absl::StatusOr<Struct> Parse(absl::string_view input);
+  absl::StatusOr<Struct> Parse(absl::string_view input) const;
 
  private:
   ProtoParser& AddField(std::unique_ptr<Field<Struct>> field) {
@@ -109,7 +109,7 @@ class ProtoParser {
 
   // Overwrites all fields to their default value (in case they are not
   // explicitly set by the input)
-  void ClearAllFields(Struct& s);
+  void ClearAllFields(Struct& s) const;
 
   absl::Status permanent_error_;
 
@@ -119,11 +119,11 @@ class ProtoParser {
 // Implementation details below ================================================
 
 template <typename Struct>
-absl::StatusOr<Struct> ProtoParser<Struct>::Parse(absl::string_view input) {
+absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
+    absl::string_view input) const {
   if (!permanent_error_.ok()) {
     return permanent_error_;
   }
-  permanent_error_ = absl::FailedPreconditionError("Parse called twice");
   Struct result;
   ClearAllFields(result);
   while (!input.empty()) {
@@ -150,7 +150,7 @@ absl::StatusOr<Struct> ProtoParser<Struct>::Parse(absl::string_view input) {
 }
 
 template <typename Struct>
-void ProtoParser<Struct>::ClearAllFields(Struct& s) {
+void ProtoParser<Struct>::ClearAllFields(Struct& s) const {
   for (auto& pair : fields_) {
     pair.second->ClearMember(s);
   }

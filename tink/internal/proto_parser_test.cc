@@ -290,28 +290,6 @@ TEST(ProtoParserTest, FailsOn5ByteVarintUint32) {
               Not(IsOk()));
 }
 
-TEST(ProtoParserTest, CallingParseTwiceFails) {
-  ProtoTestProto proto;
-  proto.set_uint32_field_1(123);
-
-  ProtoParser<ParsedStruct> parser;
-  parser.AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1);
-  EXPECT_THAT(parser.Parse(proto.SerializeAsString()).status(), IsOk());
-  EXPECT_THAT(parser.Parse(proto.SerializeAsString()).status(), Not(IsOk()));
-}
-
-TEST(ProtoParserTest, CallingParseTwiceFailsWhenThereIsAnErrorTheFirstTime) {
-  ProtoParser<ParsedStruct> parser;
-  parser.AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1);
-  // 08: tag 1, wire type varint -- parsing will expect another varint encoding
-  // a uint32_t.
-  std::string faulty_serialization = test::HexDecodeOrDie("08");
-  EXPECT_THAT(parser.Parse(faulty_serialization).status(), Not(IsOk()));
-  ProtoTestProto proto;
-  proto.set_uint32_field_1(123);
-  EXPECT_THAT(parser.Parse(proto.SerializeAsString()), Not(IsOk()));
-}
-
 // // Found by a prototype fuzzer.
 TEST(ProtoParserTest, Regression1) {
   std::string serialization = HexDecodeOrDie("a20080808080808080808000");

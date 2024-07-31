@@ -18,6 +18,7 @@
 #define TINK_INTERNAL_PROTO_PARSER_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -27,6 +28,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/variant.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
@@ -34,8 +36,6 @@
 namespace crypto {
 namespace tink {
 namespace internal {
-
-enum class ProtoFieldType { kUint32, kBytesString, kBytesSecretData };
 
 // A helper class to parse a serialized proto message.  Suppose for example we
 // have the a proto such as:
@@ -77,37 +77,35 @@ class ProtoParser {
   ProtoParser(const ProtoParser&) = delete;
   ProtoParser& operator=(const ProtoParser&) = delete;
 
-  ProtoParser& AddUint32Field(int tag, uint32_t Struct::*value);
-  ProtoParser& AddBytesStringField(int tag, std::string Struct::*value);
+  ProtoParser& AddUint32Field(int tag, uint32_t Struct::*value) {
+    return AddField(absl::make_unique<Uint32Field<Struct>>(tag, value));
+  }
+  ProtoParser& AddBytesStringField(int tag, std::string Struct::*value) {
+    return AddField(absl::make_unique<StringBytesField<Struct>>(tag, value));
+  }
   ProtoParser& AddBytesSecretDataField(
       int tag, crypto::tink::util::SecretData Struct::*value,
-      crypto::tink::SecretKeyAccessToken token);
+      crypto::tink::SecretKeyAccessToken token) {
+    return AddField(
+        absl::make_unique<SecretDataBytesField<Struct>>(tag, value));
+  }
 
   absl::StatusOr<Struct> Parse(absl::string_view input);
 
  private:
-  struct Field {
-    ProtoFieldType type;
-
-    // field.value.index() == static_cast<int>(field.type)
-    absl::variant<uint32_t Struct::*, std::string Struct::*,
-                  crypto::tink::util::SecretData Struct::*>
-        value;
-  };
-
-  // Wiretype::kVarint
-  absl::Status ConsumeVarintWithTag(absl::string_view& serialized, int tag,
-                                    Struct& s);
-  absl::Status ConsumeUint32WithField(absl::string_view& serialized,
-                                      const Field& field, Struct& s);
-
-  // Wiretype::kLengthDelimited
-  absl::Status ConsumeLengthDelimitedWithTag(absl::string_view& serialized,
-                                             int tag, Struct& s);
-  absl::Status ConsumeBytesToStringWithField(absl::string_view& serialized,
-                                             const Field& field, Struct& s);
-  absl::Status ConsumeBytesToSecretDataWithField(absl::string_view& serialized,
-                                                 const Field& field, Struct& s);
+  ProtoParser& AddField(std::unique_ptr<Field<Struct>> field) {
+    if (!permanent_error_.ok()) {
+      return *this;
+    }
+    int tag = field->GetTag();
+    auto result = fields_.insert({tag, std::move(field)});
+    if (!result.second) {
+      permanent_error_ = absl::InvalidArgumentError(
+          absl::StrCat("Tag ", tag, " already exists"));
+      return *this;
+    }
+    return *this;
+  }
 
   // Overwrites all fields to their default value (in case they are not
   // explicitly set by the input)
@@ -115,64 +113,10 @@ class ProtoParser {
 
   absl::Status permanent_error_;
 
-  absl::btree_map<int, Field> fields_;
+  absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields_;
 };
 
 // Implementation details below ================================================
-
-template <typename Struct>
-ProtoParser<Struct>& ProtoParser<Struct>::AddUint32Field(
-    int tag, uint32_t Struct::*value) {
-  if (!permanent_error_.ok()) {
-    return *this;
-  }
-  Field field;
-  field.type = ProtoFieldType::kUint32;
-  field.value = value;
-  auto result = fields_.insert({tag, field});
-  if (!result.second) {
-    permanent_error_ = absl::InvalidArgumentError(
-        absl::StrCat("Tag ", tag, " already exists"));
-    return *this;
-  }
-  return *this;
-}
-
-template <typename Struct>
-ProtoParser<Struct>& ProtoParser<Struct>::AddBytesStringField(
-    int tag, std::string Struct::*value) {
-  if (!permanent_error_.ok()) {
-    return *this;
-  }
-  Field field;
-  field.type = ProtoFieldType::kBytesString;
-  field.value = value;
-  auto result = fields_.insert({tag, field});
-  if (!result.second) {
-    permanent_error_ = absl::InvalidArgumentError(
-        absl::StrCat("Tag ", tag, " already exists"));
-    return *this;
-  }
-  return *this;
-}
-
-template <typename Struct>
-ProtoParser<Struct>& ProtoParser<Struct>::AddBytesSecretDataField(
-    int tag, util::SecretData Struct::*value, SecretKeyAccessToken token) {
-  if (!permanent_error_.ok()) {
-    return *this;
-  }
-  Field field;
-  field.type = ProtoFieldType::kBytesSecretData;
-  field.value = value;
-  auto result = fields_.insert({tag, field});
-  if (!result.second) {
-    permanent_error_ = absl::InvalidArgumentError(
-        absl::StrCat("Tag ", tag, " already exists"));
-    return *this;
-  }
-  return *this;
-}
 
 template <typename Struct>
 absl::StatusOr<Struct> ProtoParser<Struct>::Parse(absl::string_view input) {
@@ -188,111 +132,27 @@ absl::StatusOr<Struct> ProtoParser<Struct>::Parse(absl::string_view input) {
     if (!wiretype_and_tag.ok()) {
       return wiretype_and_tag.status();
     }
-    if (wiretype_and_tag->first == WireType::kVarint) {
-      absl::Status s =
-          ConsumeVarintWithTag(input, wiretype_and_tag->second, result);
-      if (!s.ok()) {
-        return s;
-      }
-    } else if (wiretype_and_tag->first == WireType::kLengthDelimited) {
-      absl::Status s = ConsumeLengthDelimitedWithTag(
-          input, wiretype_and_tag->second, result);
-      if (!s.ok()) {
-        return s;
-      }
-    } else {
+    auto it = fields_.find(wiretype_and_tag->second);
+    if (it == fields_.end()) {
       return absl::InvalidArgumentError(
-          absl::StrCat("Unsupported wire type ", wiretype_and_tag->first));
+          absl::StrCat("Unknown field ", wiretype_and_tag->second));
+    }
+    if (it->second->GetWireType() != wiretype_and_tag->first) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Wrong wire type in serialization ", wiretype_and_tag->first));
+    }
+    absl::Status status = it->second->ConsumeIntoMember(input, result);
+    if (!status.ok()) {
+      return status;
     }
   }
   return result;
 }
 
 template <typename Struct>
-absl::Status ProtoParser<Struct>::ConsumeVarintWithTag(
-    absl::string_view& serialized, int tag, Struct& s) {
-  auto it = fields_.find(tag);
-  if (it == fields_.end()) {
-    return absl::InternalError(
-        absl::StrCat("Tag ", tag, " not found in ConsumeVarintWithTag"));
-  }
-  if (it->second.type == ProtoFieldType::kUint32) {
-    return ConsumeUint32WithField(serialized, it->second, s);
-  }
-  return absl::InvalidArgumentError(
-      absl::StrCat("Tag ", tag, " of unknown type for Varint"));
-}
-
-template <typename Struct>
-absl::Status ProtoParser<Struct>::ConsumeUint32WithField(
-    absl::string_view& serialized, const ProtoParser::Field& field, Struct& s) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
-  if (!result.ok()) {
-    return result.status();
-  }
-  s.*absl::get<uint32_t Struct::*>(field.value) = *result;
-  return absl::OkStatus();
-}
-
-template <typename Struct>
-absl::Status ProtoParser<Struct>::ConsumeLengthDelimitedWithTag(
-    absl::string_view& serialized, int tag, Struct& s) {
-  auto it = fields_.find(tag);
-  if (it == fields_.end()) {
-    return absl::InternalError(absl::StrCat(
-        "Tag ", tag, " not found in ConsumeLengthDelimitedWithTag"));
-  }
-  if (it->second.type == ProtoFieldType::kBytesString) {
-    return ConsumeBytesToStringWithField(serialized, it->second, s);
-  }
-  if (it->second.type == ProtoFieldType::kBytesSecretData) {
-    return ConsumeBytesToSecretDataWithField(serialized, it->second, s);
-  }
-  return absl::InvalidArgumentError(
-      absl::StrCat("Tag ", tag, " of unknown type for LengthDelimited"));
-}
-
-template <typename Struct>
-absl::Status ProtoParser<Struct>::ConsumeBytesToStringWithField(
-    absl::string_view& serialized, const Field& field, Struct& s) {
-  absl::StatusOr<absl::string_view> result_view =
-      ConsumeBytesReturnStringView(serialized);
-  if (!result_view.ok()) {
-    return result_view.status();
-  }
-  s.*absl::get<std::string Struct::*>(field.value) = std::string(*result_view);
-  return absl::OkStatus();
-}
-
-template <typename Struct>
-absl::Status ProtoParser<Struct>::ConsumeBytesToSecretDataWithField(
-    absl::string_view& serialized, const Field& field, Struct& s) {
-  absl::StatusOr<absl::string_view> result_view =
-      ConsumeBytesReturnStringView(serialized);
-  if (!result_view.ok()) {
-    return result_view.status();
-  }
-  s.*absl::get<util::SecretData Struct::*>(field.value) =
-      util::SecretDataFromStringView(*result_view);
-  return absl::OkStatus();
-}
-
-template <typename Struct>
 void ProtoParser<Struct>::ClearAllFields(Struct& s) {
   for (auto& pair : fields_) {
-    switch (pair.second.type) {
-      case ProtoFieldType::kUint32:
-        s.*absl::get<uint32_t Struct::*>(pair.second.value) = 0;
-        break;
-      case ProtoFieldType::kBytesString:
-        (s.*absl::get<std::string Struct::*>(pair.second.value)).clear();
-        break;
-      case ProtoFieldType::kBytesSecretData:
-        (s.*
-         absl::get<crypto::tink::util::SecretData Struct::*>(pair.second.value))
-            .clear();
-        break;
-    }
+    pair.second->ClearMember(s);
   }
 }
 

@@ -1330,6 +1330,7 @@ tink_cc_library(
   SRCS
     proto_parser.h
   DEPS
+    tink::internal::proto_parser_fields
     tink::internal::proto_parsing_helpers
     absl::btree
     absl::status
@@ -1385,6 +1386,32 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::string_view
+    tink::util::test_matchers
+    tink::util::test_util
+)
+
+tink_cc_library(
+  NAME proto_parser_fields
+  SRCS
+    proto_parser_fields.h
+  DEPS
+    tink::internal::proto_parsing_helpers
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME proto_parser_fields_test
+  SRCS
+    proto_parser_fields_test.cc
+  DEPS
+    tink::internal::proto_parser_fields
+    gmock
+    absl::strings
+    absl::string_view
+    tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
 )

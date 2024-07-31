@@ -16,3 +16,98 @@ tink_cc_library(
     tink::core::restricted_data
     tink::util::statusor
 )
+
+tink_cc_library(
+  NAME kem_decapsulate_wrapper
+  SRCS
+    kem_decapsulate_wrapper.cc
+    kem_decapsulate_wrapper.h
+  DEPS
+    absl::flat_hash_set
+    absl::memory
+    absl::status
+    absl::strings
+    absl::string_view
+    tink::core::crypto_format
+    tink::core::keyset_handle
+    tink::core::primitive_set
+    tink::core::primitive_wrapper
+    tink::kem::kem_decapsulate
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME kem_decapsulate_wrapper_test
+  SRCS
+    kem_decapsulate_wrapper_test.cc
+  DEPS
+    tink::kem::internal::kem_decapsulate_wrapper
+    tink::kem::internal::kem_encapsulate_wrapper
+    gmock
+    absl::check
+    absl::memory
+    absl::status
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::aead
+    tink::core::keyset_handle
+    tink::core::primitive_set
+    tink::aead::aead_config
+    tink::aead::aes_gcm_parameters
+    tink::config::global_registry
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::experimental::pqcrypto::kem::internal::ml_kem_decapsulate_aes_gcm
+    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
+    tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    tink::kem::kem_decapsulate
+    tink::kem::kem_encapsulate
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+)
+
+tink_cc_library(
+  NAME kem_encapsulate_wrapper
+  SRCS
+    kem_encapsulate_wrapper.cc
+    kem_encapsulate_wrapper.h
+  DEPS
+    absl::flat_hash_set
+    absl::memory
+    absl::status
+    absl::string_view
+    tink::core::primitive_set
+    tink::core::primitive_wrapper
+    tink::kem::kem_encapsulate
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME kem_encapsulate_wrapper_test
+  SRCS
+    kem_encapsulate_wrapper_test.cc
+  DEPS
+    tink::kem::internal::kem_encapsulate_wrapper
+    gmock
+    absl::check
+    absl::memory
+    absl::status
+    absl::optional
+    crypto
+    tink::core::primitive_set
+    tink::aead::aead_config
+    tink::aead::aes_gcm_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    tink::experimental::pqcrypto::kem::ml_kem_private_key
+    tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
+    tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    tink::kem::kem_encapsulate
+    tink::util::statusor
+    tink::util::test_matchers
+)

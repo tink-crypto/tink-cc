@@ -19,8 +19,10 @@
 
 #include <cstdint>
 #include <utility>
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 
 namespace crypto {
 namespace tink {
@@ -32,6 +34,9 @@ absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(absl::string_view& serialized);
 
 // Consumes a Varint and returns it as a uint32_t.
 absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(absl::string_view& serialized);
+
+int VarintLength(uint64_t value);
+absl::Status SerializeVarint(uint64_t value, absl::Span<char>& output);
 
 // See https://protobuf.dev/programming-guides/encoding/#structure
 // and

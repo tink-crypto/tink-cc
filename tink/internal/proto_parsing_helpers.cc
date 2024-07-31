@@ -20,10 +20,12 @@
 #include <limits>
 #include <utility>
 
+#include "absl/numeric/bits.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 
 namespace crypto {
 namespace tink {
@@ -73,6 +75,32 @@ absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(
         "Parsed value too large to fit in uint32_t");
   }
   return *result;
+}
+
+int VarintLength(uint64_t value) {
+  int bit_width = absl::bit_width(value);
+  if (bit_width == 0) {
+    return 1;
+  }
+
+  return (bit_width + 6) / 7;
+}
+
+absl::Status SerializeVarint(uint64_t value, absl::Span<char>& output) {
+  int size = VarintLength(value);
+  if (output.size() < size) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Output buffer too small to contain varint of size ", size));
+  }
+  for (int i = 0; i < size; ++i) {
+    uint64_t byte = (value >> (7 * i)) & 0x7f;
+    if (i != size - 1) {
+      byte |= 0x80;
+    }
+    output[i] = byte;
+  }
+  output.remove_prefix(size);
+  return absl::OkStatus();
 }
 
 // https://protobuf.dev/programming-guides/encoding/#structure

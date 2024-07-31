@@ -26,6 +26,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -36,6 +37,7 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
+using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::StatusOr;
@@ -55,6 +57,10 @@ constexpr VarintCase kVarintCases[] = {
     {"7f", 127},
     {"8001", 128},
     {"a274", 14882},
+    {"ff7f", 16383},
+    {"808001", 16384},
+    {"ffff7f", 2097151},
+    {"80808001", 2097152},
     {"bef792840b", 2961488830},
     {"80e6eb9cc3c9a449", 41256202580718336ULL},
     {"9ba8f9c2bbd68085a601", 11964378330978735131ULL},
@@ -88,6 +94,47 @@ TEST(ProtoParserTest, ConsumeVarintIntoUint32DirectTest) {
     } else {
       EXPECT_THAT(result, Not(IsOk()));
     }
+  }
+}
+
+TEST(VarintLength, VarintCases) {
+  for (const VarintCase& v : kVarintCases) {
+    SCOPED_TRACE(v.value);
+    EXPECT_THAT(VarintLength(v.value), Eq(v.hex_encoded_bytes.size()/2));
+  }
+}
+
+TEST(SerializeVarint, VarintCases) {
+  for (const VarintCase& v : kVarintCases) {
+    SCOPED_TRACE(v.value);
+    std::string output;
+    output.resize(VarintLength(v.value));
+    absl::Span<char> output_span = absl::MakeSpan(output);
+    EXPECT_THAT(SerializeVarint(v.value, output_span), IsOk());
+    EXPECT_THAT(HexEncode(output), Eq(v.hex_encoded_bytes));
+    EXPECT_THAT(output_span, IsEmpty());
+  }
+}
+
+TEST(SerializeVarint, LeavesUnusedBytes) {
+  std::string output = "abcdef";
+  absl::Span<char> output_span = absl::MakeSpan(output);
+  // Will overwrite the first two bytes with 0xa274
+  EXPECT_THAT(SerializeVarint(14882, output_span), IsOk());
+  EXPECT_THAT(HexEncode(output),
+              Eq("a27463646566"));
+  std::string expected = "cdef";
+  // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
+  EXPECT_THAT(output_span, Eq(absl::MakeSpan(expected)));
+}
+
+TEST(SerializeVarint, TooSmallOutputBuffer) {
+  std::string output_buffer = "abcdefghijklmnop";
+  for (const VarintCase& v : kVarintCases) {
+    SCOPED_TRACE(v.value);
+    absl::Span<char> output_span = absl::MakeSpan(output_buffer);
+    output_span = output_span.subspan(0, VarintLength(v.value) - 1);
+    EXPECT_THAT(SerializeVarint(v.value, output_span), Not(IsOk()));
   }
 }
 

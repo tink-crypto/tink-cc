@@ -1370,10 +1370,12 @@ tink_cc_library(
     proto_parsing_helpers.cc
     proto_parsing_helpers.h
   DEPS
+    absl::bits
     absl::status
     absl::statusor
     absl::strings
     absl::string_view
+    absl::span
 )
 
 tink_cc_test(
@@ -1386,6 +1388,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::string_view
+    absl::span
     tink::util::test_matchers
     tink::util::test_util
 )

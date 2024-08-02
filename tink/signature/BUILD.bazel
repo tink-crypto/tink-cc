@@ -450,6 +450,7 @@ cc_library(
     name = "signature_public_key",
     hdrs = ["signature_public_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         "//tink:key",

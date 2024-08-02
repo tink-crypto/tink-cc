@@ -436,6 +436,7 @@ tink_cc_library(
     tink::signature::signature_parameters
     absl::strings
     tink::core::key
+  PUBLIC
 )
 
 tink_cc_library(

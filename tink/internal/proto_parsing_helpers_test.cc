@@ -180,13 +180,15 @@ constexpr WireTypeAndTagCase kWireTypeAndTagCases[] = {
     {"78", WireType::kVarint, 15},
     {"8001", WireType::kVarint, 16},
     {"f8ffffff0f", WireType::kVarint, 536870911},
-    // Note: proto only accepts tags up to 2^29-1, so this is the largest tag,
+    // Note: proto only accepts tags up to 2^29-1, so above is the largest tag,
     // but our code currently accepts higher tags.
     {"f8ffffff1f", WireType::kVarint, 1073741823},
     // Note: overflow
     {"f8ffffff7f", WireType::kVarint, -1},
 };
 
+// TODO(b/353879397): This should be better aligned with what the proto library
+// does for invalid tags.
 TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
   for (const WireTypeAndTagCase& v : kWireTypeAndTagCases) {
     SCOPED_TRACE(v.hex_encoded_bytes);
@@ -198,6 +200,24 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
     EXPECT_THAT(result->first, Eq(v.wiretype));
     EXPECT_THAT(result->second, Eq(v.tag));
     EXPECT_THAT(bytes_view, IsEmpty());
+  }
+}
+
+TEST(ProtoParserTest,  SerializeIntoWireTypeAndTagSuccess) {
+  for (const WireTypeAndTagCase& v : kWireTypeAndTagCases) {
+    SCOPED_TRACE(v.hex_encoded_bytes);
+    std::string buffer;
+    buffer.resize(WireTypeAndTagLength(v.wiretype, v.tag));
+    absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+    if (v.tag > 0 && v.tag < /* 2^29 = */ 536870912) {
+      EXPECT_THAT(SerializeWireTypeAndTag(v.wiretype, v.tag, buffer_span),
+                  IsOk());
+      EXPECT_THAT(HexEncode(buffer), Eq(v.hex_encoded_bytes));
+      EXPECT_THAT(buffer_span, IsEmpty());
+    } else {
+      EXPECT_THAT(SerializeWireTypeAndTag(v.wiretype, v.tag, buffer_span),
+                  Not(IsOk()));
+    }
   }
 }
 

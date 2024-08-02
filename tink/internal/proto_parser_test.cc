@@ -42,6 +42,7 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
+using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
@@ -68,6 +69,7 @@ struct ParsedStruct {
   SecretData secret_data_member_2;
 };
 
+// SERIALIZATION TESTS =========================================================
 TEST(ProtoParserTest, SingleUint32Works) {
   ProtoTestProto proto;
   proto.set_uint32_field_1(123);
@@ -290,7 +292,7 @@ TEST(ProtoParserTest, FailsOn5ByteVarintUint32) {
               Not(IsOk()));
 }
 
-// // Found by a prototype fuzzer.
+// Found by a prototype fuzzer.
 TEST(ProtoParserTest, Regression1) {
   std::string serialization = HexDecodeOrDie("a20080808080808080808000");
 
@@ -303,6 +305,148 @@ TEST(ProtoParserTest, Regression1) {
                                    InsecureSecretKeyAccess::Get())
           .Parse(serialization),
       Not(IsOk()));
+}
+
+// SERIALIZATION TESTS =========================================================
+TEST(ProtoParserTest, SerializeUint32Field) {
+  ParsedStruct s;
+  s.uint32_member_1 = 0x7a;
+  absl::StatusOr<std::string> serialized =
+      ProtoParser<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("087a")));
+}
+
+TEST(ProtoParserTest, SerializeIntoSecretData) {
+  ParsedStruct s;
+  s.uint32_member_1 = 0x7a;
+  absl::StatusOr<SecretData> serialized =
+      ProtoParser<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .SerializeIntoSecretData(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(SecretDataAsStringView(*serialized), Eq(HexDecodeOrDie("087a")));
+}
+
+TEST(ProtoParserTest, SerializeTagVariations) {
+  ParsedStruct s;
+  s.uint32_member_1 = 0x7a;
+  for (const std::pair<std::string, uint32_t> pair :
+       std::vector<std::pair<std::string, uint32_t>>{
+           {"087a", 1},
+           {"107a", 2},
+           {"787a", 15},
+           {"80017a", 16},
+           {"f8ffffff0f7a", 536870911}}) {
+    SCOPED_TRACE(pair.first);
+    absl::StatusOr<std::string> serialized =
+        ProtoParser<ParsedStruct>()
+            .AddUint32Field(pair.second, &ParsedStruct::uint32_member_1)
+            .SerializeIntoString(s);
+    ASSERT_THAT(serialized, IsOk());
+    EXPECT_THAT(HexEncode(*serialized), Eq(pair.first));
+  }
+}
+
+TEST(ProtoParserTest, SerializeUint32Variations) {
+  ParsedStruct s;
+  for (const std::pair<std::string, uint32_t> pair :
+       std::vector<std::pair<std::string, uint32_t>>{
+           {"0800", 0x00},
+           {"0801", 0x01},
+           {"087f", 0x7f},
+           {"08ff01", 0xff},
+           {"08a274", 0x3a22},
+           {"08bef792840b", 0xb084bbbe},
+           {"08ffffffff07", 0x7fffffff},
+           {"088080808008", 0x80000000},
+           {"08ffffffff0f", 0xffffffff},
+       }) {
+    SCOPED_TRACE(pair.first);
+    s.uint32_member_1 = pair.second;
+    absl::StatusOr<std::string> serialized =
+        ProtoParser<ParsedStruct>()
+            .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+            .SerializeIntoString(s);
+    ASSERT_THAT(serialized, IsOk());
+    EXPECT_THAT(HexEncode(*serialized), Eq(pair.first));
+  }
+}
+
+TEST(ProtoParserTest, TwoUintFields) {
+  ParsedStruct s;
+  s.uint32_member_1 = 0x10;
+  s.uint32_member_2 = 0xaa;
+  absl::StatusOr<std::string> serialized =
+      ProtoParser<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .AddUint32Field(2, &ParsedStruct::uint32_member_2)
+          .SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(HexEncode(*serialized), Eq("081010aa01"));
+}
+
+TEST(ProtoParserTest, SerializeStringField) {
+  ParsedStruct s;
+  s.string_member_1 = "This is some string data of arbitrary length";
+  absl::StatusOr<std::string> serialized =
+      ProtoParser<ParsedStruct>()
+          .AddBytesStringField(1, &ParsedStruct::string_member_1)
+          .SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(HexEncode(*serialized),
+              Eq(absl::StrCat("0a2c", HexEncode(s.string_member_1))));
+}
+
+TEST(ProtoParserTest, SerializeSecretDataField) {
+  ParsedStruct s;
+  std::string data = "This is some string data of arbitrary length";
+  s.secret_data_member_1 = util::SecretDataFromStringView(data);
+  absl::StatusOr<std::string> serialized =
+      ProtoParser<ParsedStruct>()
+          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1,
+                                   InsecureSecretKeyAccess::Get())
+          .SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(HexEncode(*serialized),
+              Eq(absl::StrCat("0a2c", HexEncode(data))));
+}
+
+TEST(ProtoParserTest, SerializeEmpty) {
+  // TODO(b/339151111): Modify so that empty fields are not serialized.
+  ParsedStruct s;
+  s.uint32_member_1 = 0;
+  s.string_member_1 = "";
+  s.secret_data_member_1 = util::SecretDataFromStringView("");
+  absl::StatusOr<std::string> serialized =
+      ProtoParser<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .AddBytesStringField(2, &ParsedStruct::string_member_1)
+          .AddBytesSecretDataField(3, &ParsedStruct::secret_data_member_1,
+                                   InsecureSecretKeyAccess::Get())
+          .SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(HexEncode(*serialized), Eq("080012001a00"));
+}
+
+TEST(ProtoParserTest, PermanentErrorRespected) {
+    ParsedStruct s;
+    s.uint32_member_1 = 0;
+    s.uint32_member_2 = 0;
+    EXPECT_THAT(
+        ProtoParser<ParsedStruct>()
+            .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+            .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_2)
+            .SerializeIntoString(s),
+        Not(IsOk()));
+    EXPECT_THAT(
+        ProtoParser<ParsedStruct>()
+            .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+            .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_2)
+            .SerializeIntoSecretData(s),
+        Not(IsOk()));
 }
 
 }  // namespace

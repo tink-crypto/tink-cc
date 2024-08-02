@@ -17,6 +17,7 @@
 #ifndef TINK_INTERNAL_PROTO_PARSER_H_
 #define TINK_INTERNAL_PROTO_PARSER_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -27,7 +28,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/variant.h"
+#include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_key_access_token.h"
@@ -92,6 +93,43 @@ class ProtoParser {
 
   absl::StatusOr<Struct> Parse(absl::string_view input) const;
 
+  absl::StatusOr<std::string> SerializeIntoString(const Struct& s) const {
+    if (!permanent_error_.ok()) {
+      return permanent_error_;
+    }
+    size_t size = GetSerializedSize(s);
+    std::string result;
+    result.resize(size);
+    absl::Span<char> output_buffer = absl::MakeSpan(result);
+    absl::Status status = SerializeIntoBuffer(s, output_buffer);
+    if (!status.ok()) {
+      return status;
+    }
+    if (!output_buffer.empty()) {
+      return absl::InternalError("Resulting buffer expected to be empty");
+    }
+    return result;
+  }
+  absl::StatusOr<crypto::tink::util::SecretData> SerializeIntoSecretData(
+      const Struct& s) const {
+    if (!permanent_error_.ok()) {
+      return permanent_error_;
+    }
+    size_t size = GetSerializedSize(s);
+    crypto::tink::util::SecretData result;
+    result.resize(size);
+    absl::Span<char> output_buffer =
+        absl::MakeSpan(reinterpret_cast<char*>(result.data()), result.size());
+    absl::Status status = SerializeIntoBuffer(s, output_buffer);
+    if (!status.ok()) {
+      return status;
+    }
+    if (!output_buffer.empty()) {
+      return absl::InternalError("Resulting buffer expected to be empty");
+    }
+    return result;
+  }
+
  private:
   ProtoParser& AddField(std::unique_ptr<Field<Struct>> field) {
     if (!permanent_error_.ok()) {
@@ -110,6 +148,33 @@ class ProtoParser {
   // Overwrites all fields to their default value (in case they are not
   // explicitly set by the input)
   void ClearAllFields(Struct& s) const;
+  size_t GetSerializedSize(const Struct& s) const {
+    size_t result = 0;
+    for (const auto& pair : fields_) {
+      result += WireTypeAndTagLength(pair.second->GetWireType(), pair.first);
+      result += pair.second->GetSerializedSize(s);
+    }
+    return result;
+  }
+
+  absl::Status SerializeIntoBuffer(const Struct& s,
+                                   absl::Span<char>& out) const {
+    if (!permanent_error_.ok()) {
+      return permanent_error_;
+    }
+    for (const auto& pair : fields_) {
+      absl::Status status = SerializeWireTypeAndTag(pair.second->GetWireType(),
+                                                    pair.first, out);
+      if (!status.ok()) {
+        return status;
+      }
+      status = pair.second->SerializeInto(out, s);
+      if (!status.ok()) {
+        return status;
+      }
+    }
+    return absl::OkStatus();
+  }
 
   absl::Status permanent_error_;
 

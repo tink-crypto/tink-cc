@@ -115,6 +115,24 @@ absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
   return std::make_pair(wiretype, tag);
 }
 
+absl::Status SerializeWireTypeAndTag(WireType wire_type, int tag,
+                                     absl::Span<char>& output) {
+  if (tag <= 0 || tag >= (1<<29)) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Tag ", tag, " is not in range [1, 2^29)"));
+  }
+  uint32_t shifted_tag = static_cast<uint32_t>(tag) << 3;
+  return SerializeVarint(shifted_tag | static_cast<uint32_t>(wire_type),
+                         output);
+}
+
+int WireTypeAndTagLength(WireType wire_type, int tag) {
+  // Result is wrong for negative tags and numbers > 2^29, but the caller will
+  // call SerializeWireTypeAndTag anyhow and notice there.
+  int bit_width = absl::bit_width(static_cast<uint32_t>(tag)) + 3;
+  return (bit_width + 6) / 7;
+}
+
 absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
     absl::string_view& serialized) {
   absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);

@@ -1337,7 +1337,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::string_view
-    absl::variant
+    absl::span
     tink::core::secret_key_access_token
     tink::util::secret_data
 )

@@ -58,6 +58,8 @@ class Field {
   virtual absl::Status ConsumeIntoMember(absl::string_view& serialized,
                                          Struct& values) const = 0;
 
+  // Returns true if the field needs to be serialized (i.e. is not the default).
+  virtual bool RequiresSerialization(const Struct& values) const = 0;
   // Serializes the member into out, and removes the part which was written
   // on from out.
   virtual absl::Status SerializeInto(absl::Span<char>& out,
@@ -93,6 +95,10 @@ class Uint32Field : public Field<Struct> {
     }
     s.*value_ = *result;
     return absl::OkStatus();
+  }
+
+  bool RequiresSerialization(const Struct& values) const override {
+    return values.*value_ != 0;
   }
 
   absl::Status SerializeInto(absl::Span<char>& out,
@@ -136,6 +142,10 @@ class StringBytesField : public Field<Struct> {
     }
     s.*value_ = std::string(*result);
     return absl::OkStatus();
+  }
+
+  bool RequiresSerialization(const Struct& values) const override {
+    return !(values.*value_).empty();
   }
 
   absl::Status SerializeInto(absl::Span<char>& out,
@@ -198,6 +208,10 @@ class SecretDataBytesField : public Field<Struct> {
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
   int GetTag() const override { return tag_; }
+
+  bool RequiresSerialization(const Struct& values) const override {
+    return !(values.*value_).empty();
+  }
 
   absl::Status SerializeInto(absl::Span<char>& out,
                              const Struct& values) const override {

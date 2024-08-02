@@ -151,8 +151,10 @@ class ProtoParser {
   size_t GetSerializedSize(const Struct& s) const {
     size_t result = 0;
     for (const auto& pair : fields_) {
-      result += WireTypeAndTagLength(pair.second->GetWireType(), pair.first);
-      result += pair.second->GetSerializedSize(s);
+      if (pair.second->RequiresSerialization(s)) {
+        result += WireTypeAndTagLength(pair.second->GetWireType(), pair.first);
+        result += pair.second->GetSerializedSize(s);
+      }
     }
     return result;
   }
@@ -163,14 +165,16 @@ class ProtoParser {
       return permanent_error_;
     }
     for (const auto& pair : fields_) {
-      absl::Status status = SerializeWireTypeAndTag(pair.second->GetWireType(),
-                                                    pair.first, out);
-      if (!status.ok()) {
-        return status;
-      }
-      status = pair.second->SerializeInto(out, s);
-      if (!status.ok()) {
-        return status;
+      if (pair.second->RequiresSerialization(s)) {
+        absl::Status status = SerializeWireTypeAndTag(
+            pair.second->GetWireType(), pair.first, out);
+        if (!status.ok()) {
+          return status;
+        }
+        status = pair.second->SerializeInto(out, s);
+        if (!status.ok()) {
+          return status;
+        }
       }
     }
     return absl::OkStatus();

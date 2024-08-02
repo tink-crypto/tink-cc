@@ -180,6 +180,16 @@ TEST(Uint32Field, GetTag) {
   ASSERT_THAT(field2.GetTag(), Eq(kUint32Field2Tag));
 }
 
+TEST(Uint32Field, RequiresSerialization) {
+  Uint32Field<ParsedStruct> field(kUint32Field1Tag,
+                                  &ParsedStruct::uint32_member_1);
+  ParsedStruct s;
+  s.uint32_member_1 = 0;
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
+  s.uint32_member_1 = 1;
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
+}
+
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
   StringBytesField<ParsedStruct> field(kBytesField1Tag,
@@ -287,6 +297,16 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
   EXPECT_THAT(field.SerializeInto(buffer_span, s), Not(IsOk()));
 }
 
+TEST(StringBytesField, RequiresSerialization) {
+  StringBytesField<ParsedStruct> field(kBytesField1Tag,
+                                       &ParsedStruct::string_member_1);
+  ParsedStruct s;
+  s.string_member_1 = "";
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
+  s.string_member_1 = "This is some text";
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
+}
+
 // SecretDataBytesField ========================================================
 TEST(SecretDataBytesField, ClearMemberWorks) {
   SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
@@ -392,6 +412,16 @@ TEST(SecretDataBytesField, SerializeVerySmallBuffer) {
   std::string buffer;
   absl::Span<char> buffer_span = absl::MakeSpan(buffer);
   EXPECT_THAT(field.SerializeInto(buffer_span, s), Not(IsOk()));
+}
+
+TEST(SecretDataBytesField, RequiresSerialization) {
+  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
+                                           &ParsedStruct::secret_data_member_1);
+  ParsedStruct s;
+  s.secret_data_member_1 = SecretDataFromStringView("");
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
+  s.secret_data_member_1 = SecretDataFromStringView("This is some text");
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
 }
 
 }  // namespace

@@ -354,7 +354,7 @@ TEST(ProtoParserTest, SerializeUint32Variations) {
   ParsedStruct s;
   for (const std::pair<std::string, uint32_t> pair :
        std::vector<std::pair<std::string, uint32_t>>{
-           {"0800", 0x00},
+           {"", 0x00},
            {"0801", 0x01},
            {"087f", 0x7f},
            {"08ff01", 0xff},
@@ -428,7 +428,7 @@ TEST(ProtoParserTest, SerializeEmpty) {
                                    InsecureSecretKeyAccess::Get())
           .SerializeIntoString(s);
   ASSERT_THAT(serialized, IsOk());
-  EXPECT_THAT(HexEncode(*serialized), Eq("080012001a00"));
+  EXPECT_THAT(*serialized, Eq(""));
 }
 
 TEST(ProtoParserTest, PermanentErrorRespected) {

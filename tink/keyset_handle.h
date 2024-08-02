@@ -276,24 +276,24 @@ class KeysetHandle {
       : keyset_(std::move(keyset)) {}
   // Creates a handle that contains the given `keyset` and `entries`.
   KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset,
-               const std::vector<std::shared_ptr<const Entry>>& entries)
-      : keyset_(std::move(keyset)), entries_(entries) {}
+               std::vector<std::shared_ptr<const Entry>> entries)
+      : keyset_(std::move(keyset)), entries_(std::move(entries)) {}
   // Creates a handle that contains the given `keyset` and
   // `monitoring_annotations`.
   KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset,
-               const absl::flat_hash_map<std::string, std::string>&
+               absl::flat_hash_map<std::string, std::string>
                    monitoring_annotations)
       : keyset_(std::move(*keyset)),
-        monitoring_annotations_(monitoring_annotations) {}
+        monitoring_annotations_(std::move(monitoring_annotations)) {}
   // Creates a handle that contains the given `keyset`, `entries`, and
   // `monitoring_annotations`.
   KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset,
-               const std::vector<std::shared_ptr<const Entry>>& entries,
-               const absl::flat_hash_map<std::string, std::string>&
+               std::vector<std::shared_ptr<const Entry>> entries,
+               absl::flat_hash_map<std::string, std::string>
                    monitoring_annotations)
       : keyset_(std::move(keyset)),
-        entries_(entries),
-        monitoring_annotations_(monitoring_annotations) {}
+        entries_(std::move(entries)),
+        monitoring_annotations_(std::move(monitoring_annotations)) {}
 
   // Generates a key from `key_template` and adds it `keyset`.
   static crypto::tink::util::StatusOr<uint32_t> AddToKeyset(

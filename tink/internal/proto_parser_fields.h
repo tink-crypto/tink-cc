@@ -17,14 +17,18 @@
 #ifndef TINK_INTERNAL_PROTO_PARSER_FIELDS_H_
 #define TINK_INTERNAL_PROTO_PARSER_FIELDS_H_
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -54,6 +58,13 @@ class Field {
   virtual absl::Status ConsumeIntoMember(absl::string_view& serialized,
                                          Struct& values) const = 0;
 
+  // Serializes the member into out, and removes the part which was written
+  // on from out.
+  virtual absl::Status SerializeInto(absl::Span<char>& out,
+                                     const Struct& values) const = 0;
+  // Returns the required size for SerializeInto.
+  virtual size_t GetSerializedSize(const Struct& values) const = 0;
+
   virtual WireType GetWireType() const = 0;
   virtual int GetTag() const = 0;
 };
@@ -82,6 +93,15 @@ class Uint32Field : public Field<Struct> {
     }
     s.*value_ = *result;
     return absl::OkStatus();
+  }
+
+  absl::Status SerializeInto(absl::Span<char>& out,
+                             const Struct& values) const override {
+    return SerializeVarint(values.*value_, out);
+  }
+
+  size_t GetSerializedSize(const Struct& values) const override {
+    return VarintLength(values.*value_);
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }
@@ -116,6 +136,27 @@ class StringBytesField : public Field<Struct> {
     }
     s.*value_ = std::string(*result);
     return absl::OkStatus();
+  }
+
+  absl::Status SerializeInto(absl::Span<char>& out,
+                             const Struct& values) const override {
+    size_t size = (values.*value_).size();
+    absl::Status s = SerializeVarint(size, out);
+    if (!s.ok()) {
+      return s;
+    }
+    if (out.size() < size) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Output buffer too small: ", out.size(), " < ", size));
+    }
+    memcpy(out.data(), (values.*value_).data(), size);
+    out.remove_prefix(size);
+    return absl::OkStatus();
+  }
+
+  size_t GetSerializedSize(const Struct& values) const override {
+    size_t size = (values.*value_).size();
+    return VarintLength(size) + size;
   }
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
@@ -157,6 +198,27 @@ class SecretDataBytesField : public Field<Struct> {
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
   int GetTag() const override { return tag_; }
+
+  absl::Status SerializeInto(absl::Span<char>& out,
+                             const Struct& values) const override {
+    size_t size = (values.*value_).size();
+    absl::Status s = SerializeVarint(size, out);
+    if (!s.ok()) {
+      return s;
+    }
+    if (out.size() < size) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Output buffer too small: ", out.size(), " < ", size));
+    }
+    SafeMemCopy(out.data(), (values.*value_).data(), size);
+    out.remove_prefix(size);
+    return absl::OkStatus();
+  }
+
+  size_t GetSerializedSize(const Struct& values) const override {
+    size_t size = (values.*value_).size();
+    return VarintLength(size) + size;
+  }
 
  private:
   crypto::tink::util::SecretData Struct::*value_;

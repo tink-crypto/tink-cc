@@ -1461,10 +1461,13 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parsing_helpers",
+        ":safe_stringops",
         "//tink/util:secret_data",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -1478,6 +1481,7 @@ cc_test(
         "//tink/util:test_util",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )

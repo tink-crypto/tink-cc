@@ -1399,9 +1399,12 @@ tink_cc_library(
     proto_parser_fields.h
   DEPS
     tink::internal::proto_parsing_helpers
+    tink::internal::safe_stringops
     absl::status
     absl::statusor
+    absl::strings
     absl::string_view
+    absl::span
     tink::util::secret_data
 )
 
@@ -1414,6 +1417,7 @@ tink_cc_test(
     gmock
     absl::strings
     absl::string_view
+    absl::span
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util

@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "absl/container/btree_map.h"
 #include "absl/status/status.h"
@@ -57,132 +58,84 @@ namespace internal {
 // constexpr int32_t kVersionNumberTag = 1;
 // constexpr int32_t kKeySizeTag = 2;
 // constexpr int32_t kKeyTag = 3;
-// absl::StatusOr<AesGcmKeyStruct> s = ProtoParser()
+// absl::StatusOr<ProtoParser<AesGcmKeyStruct>> parser = ProtoParserBuilder()
 //     .AddUint32Field(kVersionNumberTag, &AesGcmKeyStruct::version_number)
 //     .AddUint32Field(kKeySizeTag, &AesGcmKeyStruct::key_size)
 //     .AddBytesSecretDataField(kKeyTag,
 //                              &AesGcmKeyStruct::key,
 //                              secret_key_access_token)
-//     .Parse(serialized_proto);
+//     .Build();
+// if (!parser.ok()) { /* handle error */ }
 //
-// This will parse the serialized proto and return a struct in which
-// version_number, key_size, and key are set accordingly.
+// Then, to parse a serialized proto, we can do:
+// absl::StatusOr<AesGcmKeyStruct> parsed = parser->Parse(serialized_proto);
+//
+// To serialize a struct back into a string, we can do:
+// absl::StatusOr<std::string> serialized = parser->SerializeIntoString(struct);
 //
 // If the return value of Parse is an error, variables are in an unspecified
 // state. Fields can be added in any order.
 template <typename Struct>
+class ProtoParserBuilder;
+
+template <typename Struct>
 class ProtoParser {
  public:
-  ProtoParser() = default;
-  // Not movable or copyable.
+  // Movable, but not copyable.
   ProtoParser(const ProtoParser&) = delete;
   ProtoParser& operator=(const ProtoParser&) = delete;
-
-  ProtoParser& AddUint32Field(int tag, uint32_t Struct::*value) {
-    return AddField(absl::make_unique<Uint32Field<Struct>>(tag, value));
-  }
-  ProtoParser& AddBytesStringField(int tag, std::string Struct::*value) {
-    return AddField(absl::make_unique<StringBytesField<Struct>>(tag, value));
-  }
-  ProtoParser& AddBytesSecretDataField(
-      int tag, crypto::tink::util::SecretData Struct::*value,
-      crypto::tink::SecretKeyAccessToken token) {
-    return AddField(
-        absl::make_unique<SecretDataBytesField<Struct>>(tag, value));
-  }
+  ProtoParser(ProtoParser&&) noexcept = default;
+  ProtoParser& operator=(ProtoParser&&) noexcept = default;
 
   absl::StatusOr<Struct> Parse(absl::string_view input) const;
 
-  absl::StatusOr<std::string> SerializeIntoString(const Struct& s) const {
-    if (!permanent_error_.ok()) {
-      return permanent_error_;
-    }
-    size_t size = GetSerializedSize(s);
-    std::string result;
-    result.resize(size);
-    absl::Span<char> output_buffer = absl::MakeSpan(result);
-    absl::Status status = SerializeIntoBuffer(s, output_buffer);
-    if (!status.ok()) {
-      return status;
-    }
-    if (!output_buffer.empty()) {
-      return absl::InternalError("Resulting buffer expected to be empty");
-    }
-    return result;
-  }
+  absl::StatusOr<std::string> SerializeIntoString(const Struct& s) const;
   absl::StatusOr<crypto::tink::util::SecretData> SerializeIntoSecretData(
-      const Struct& s) const {
-    if (!permanent_error_.ok()) {
-      return permanent_error_;
-    }
-    size_t size = GetSerializedSize(s);
-    crypto::tink::util::SecretData result;
-    result.resize(size);
-    absl::Span<char> output_buffer =
-        absl::MakeSpan(reinterpret_cast<char*>(result.data()), result.size());
-    absl::Status status = SerializeIntoBuffer(s, output_buffer);
-    if (!status.ok()) {
-      return status;
-    }
-    if (!output_buffer.empty()) {
-      return absl::InternalError("Resulting buffer expected to be empty");
-    }
-    return result;
-  }
+      const Struct& s) const;
 
  private:
-  ProtoParser& AddField(std::unique_ptr<Field<Struct>> field) {
-    if (!permanent_error_.ok()) {
-      return *this;
-    }
-    int tag = field->GetTag();
-    auto result = fields_.insert({tag, std::move(field)});
-    if (!result.second) {
-      permanent_error_ = absl::InvalidArgumentError(
-          absl::StrCat("Tag ", tag, " already exists"));
-      return *this;
-    }
-    return *this;
-  }
+  friend class ProtoParserBuilder<Struct>;
+  explicit ProtoParser(
+      absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields)
+      : fields_(std::move(fields)) {}
 
   // Overwrites all fields to their default value (in case they are not
   // explicitly set by the input)
   void ClearAllFields(Struct& s) const;
-  size_t GetSerializedSize(const Struct& s) const {
-    size_t result = 0;
-    for (const auto& pair : fields_) {
-      if (pair.second->RequiresSerialization(s)) {
-        result += WireTypeAndTagLength(pair.second->GetWireType(), pair.first);
-        result += pair.second->GetSerializedSize(s);
-      }
-    }
-    return result;
-  }
-
+  size_t GetSerializedSize(const Struct& s) const;
   absl::Status SerializeIntoBuffer(const Struct& s,
-                                   absl::Span<char>& out) const {
-    if (!permanent_error_.ok()) {
-      return permanent_error_;
-    }
-    for (const auto& pair : fields_) {
-      if (pair.second->RequiresSerialization(s)) {
-        absl::Status status = SerializeWireTypeAndTag(
-            pair.second->GetWireType(), pair.first, out);
-        if (!status.ok()) {
-          return status;
-        }
-        status = pair.second->SerializeInto(out, s);
-        if (!status.ok()) {
-          return status;
-        }
-      }
-    }
-    return absl::OkStatus();
-  }
-
-  absl::Status permanent_error_;
+                                   absl::Span<char>& out) const;
 
   absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields_;
+};
+
+template <typename Struct>
+class ProtoParserBuilder {
+ public:
+  ProtoParserBuilder() = default;
+  // Not movable or copyable.
+  ProtoParserBuilder(const ProtoParserBuilder&) = delete;
+  ProtoParserBuilder& operator=(const ProtoParserBuilder&) = delete;
+
+  ProtoParserBuilder& AddUint32Field(int tag, uint32_t Struct::*value) {
+    fields_.push_back(absl::make_unique<Uint32Field<Struct>>(tag, value));
+    return *this;
+  }
+  ProtoParserBuilder& AddBytesStringField(int tag, std::string Struct::*value) {
+    fields_.push_back(absl::make_unique<StringBytesField<Struct>>(tag, value));
+    return *this;
+  }
+  ProtoParserBuilder& AddBytesSecretDataField(
+      int tag, crypto::tink::util::SecretData Struct::*value,
+      crypto::tink::SecretKeyAccessToken token) {
+    fields_.push_back(
+        absl::make_unique<SecretDataBytesField<Struct>>(tag, value));
+    return *this;
+  }
+  absl::StatusOr<ProtoParser<Struct>> Build();
+
+ private:
+  std::vector<std::unique_ptr<Field<Struct>>> fields_;
 };
 
 // Implementation details below ================================================
@@ -190,9 +143,6 @@ class ProtoParser {
 template <typename Struct>
 absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
     absl::string_view input) const {
-  if (!permanent_error_.ok()) {
-    return permanent_error_;
-  }
   Struct result;
   ClearAllFields(result);
   while (!input.empty()) {
@@ -219,10 +169,90 @@ absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
 }
 
 template <typename Struct>
+absl::StatusOr<std::string> ProtoParser<Struct>::SerializeIntoString(
+    const Struct& s) const {
+  size_t size = GetSerializedSize(s);
+  std::string result;
+  result.resize(size);
+  absl::Span<char> output_buffer = absl::MakeSpan(result);
+  absl::Status status = SerializeIntoBuffer(s, output_buffer);
+  if (!status.ok()) {
+    return status;
+  }
+  if (!output_buffer.empty()) {
+    return absl::InternalError("Resulting buffer expected to be empty");
+  }
+  return result;
+}
+
+template <typename Struct>
+absl::StatusOr<crypto::tink::util::SecretData>
+ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
+  size_t size = GetSerializedSize(s);
+  crypto::tink::util::SecretData result;
+  result.resize(size);
+  absl::Span<char> output_buffer =
+      absl::MakeSpan(reinterpret_cast<char*>(result.data()), result.size());
+  absl::Status status = SerializeIntoBuffer(s, output_buffer);
+  if (!status.ok()) {
+    return status;
+  }
+  if (!output_buffer.empty()) {
+    return absl::InternalError("Resulting buffer expected to be empty");
+  }
+  return result;
+}
+
+template <typename Struct>
 void ProtoParser<Struct>::ClearAllFields(Struct& s) const {
   for (auto& pair : fields_) {
     pair.second->ClearMember(s);
   }
+}
+
+template <typename Struct>
+size_t ProtoParser<Struct>::GetSerializedSize(const Struct& s) const {
+  size_t result = 0;
+  for (const auto& pair : fields_) {
+    if (pair.second->RequiresSerialization(s)) {
+      result += WireTypeAndTagLength(pair.second->GetWireType(), pair.first);
+      result += pair.second->GetSerializedSize(s);
+    }
+  }
+  return result;
+}
+
+template <typename Struct>
+absl::Status ProtoParser<Struct>::SerializeIntoBuffer(
+    const Struct& s, absl::Span<char>& out) const {
+  for (const auto& pair : fields_) {
+    if (pair.second->RequiresSerialization(s)) {
+      absl::Status status =
+          SerializeWireTypeAndTag(pair.second->GetWireType(), pair.first, out);
+      if (!status.ok()) {
+        return status;
+      }
+      status = pair.second->SerializeInto(out, s);
+      if (!status.ok()) {
+        return status;
+      }
+    }
+  }
+  return absl::OkStatus();
+}
+
+template <typename Struct>
+absl::StatusOr<ProtoParser<Struct>> ProtoParserBuilder<Struct>::Build() {
+  absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields;
+  for (auto& field : fields_) {
+    auto it = fields.find(field->GetTag());
+    if (it != fields.end()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Duplicate field ", field->GetTag()));
+    }
+    fields.emplace(field->GetTag(), std::move(field));
+  }
+  return ProtoParser<Struct>(std::move(fields));
 }
 
 }  // namespace internal

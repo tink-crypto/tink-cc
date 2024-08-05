@@ -47,6 +47,12 @@ class LowLevelParser {
       absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields)
       : fields_(std::move(fields)) {}
 
+  // Not copyable, movable.
+  LowLevelParser(const LowLevelParser&) = delete;
+  LowLevelParser& operator=(const LowLevelParser&) = delete;
+  LowLevelParser(LowLevelParser&&) noexcept = default;
+  LowLevelParser& operator=(LowLevelParser&&) noexcept = default;
+
   // Clears all (known) fields in the struct.
   void ClearAllFields(Struct& values) const {
     for (auto& pair : fields_) {

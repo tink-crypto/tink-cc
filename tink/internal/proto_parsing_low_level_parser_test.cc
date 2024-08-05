@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -140,6 +141,26 @@ TEST(LowLevelParserTest, SerializeIntoMultipleFields) {
   EXPECT_THAT(parser.SerializeInto(serialized_span, s), IsOk());
   EXPECT_THAT(serialized_span.size(), Eq(91));
   EXPECT_THAT(HexEncode(serialized.substr(0, 9)), Eq("087b1a054141414141"));
+}
+
+TEST(LowLevelParserTest, MoveConstructorWorks) {
+  LowLevelParser<ParsedStruct> parser(MakeFields());
+  LowLevelParser<ParsedStruct> parser2(std::move(parser));
+  ParsedStruct s;
+  s.uint32_member_1 = 123;
+  parser2.ClearAllFields(s);
+  EXPECT_THAT(s.uint32_member_1, Eq(0));
+}
+
+TEST(LowLevelParserTest, MoveAssignmentWorks) {
+  LowLevelParser<ParsedStruct> parser(MakeFields());
+  LowLevelParser<ParsedStruct> parser2(
+      (absl::btree_map<int, std::unique_ptr<Field<ParsedStruct>>>()));
+  parser2 = std::move(parser);
+  ParsedStruct s;
+  s.uint32_member_1 = 123;
+  parser2.ClearAllFields(s);
+  EXPECT_THAT(s.uint32_member_1, Eq(0));
 }
 
 }  // namespace

@@ -1331,6 +1331,7 @@ tink_cc_library(
     proto_parser.h
   DEPS
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_message_field
     tink::internal::proto_parsing_helpers
     tink::internal::proto_parsing_low_level_parser
     absl::btree

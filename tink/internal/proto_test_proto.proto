@@ -18,12 +18,18 @@ syntax = "proto3";
 
 package crypto.tink.internal;
 
+message InnerProtoTestProto {
+  uint32 inner_proto_uint32_field = 123456;
+}
+
 message ProtoTestProto {
   uint32 uint32_field_1 = 1;
   uint32 uint32_field_2 = 2;
 
   bytes bytes_field_1 = 3;
   bytes bytes_field_2 = 4;
+
+  InnerProtoTestProto inner_proto_field_1 = 10;
 
   // Maximal tag number is 2^29 - 1 = 536870911.
   uint32 uint32_field_with_large_tag = 536870911;

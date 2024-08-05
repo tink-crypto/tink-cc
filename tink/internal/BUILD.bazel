@@ -1384,6 +1384,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser_fields",
+        ":proto_parser_message_field",
         ":proto_parsing_helpers",
         ":proto_parsing_low_level_parser",
         "//tink:secret_key_access_token",

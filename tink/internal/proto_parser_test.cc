@@ -58,7 +58,12 @@ constexpr int32_t kUint32Field1Tag = 1;
 constexpr int32_t kUint32Field2Tag = 2;
 constexpr int32_t kBytesField1Tag = 3;
 constexpr int32_t kBytesField2Tag = 4;
+constexpr int32_t kInnerMessageField = 10;
 constexpr int32_t kUint32FieldWithLargeTag = 536870911;
+
+struct InnerStruct {
+  uint32_t uint32_member_1;
+};
 
 struct ParsedStruct {
   uint32_t uint32_member_1;
@@ -67,6 +72,7 @@ struct ParsedStruct {
   std::string string_member_2;
   SecretData secret_data_member_1;
   SecretData secret_data_member_2;
+  InnerStruct inner_member_1;
 };
 
 // SERIALIZATION TESTS =========================================================
@@ -218,7 +224,36 @@ TEST(ProtoParserTest, MultipleUint32OrderIsIgnored) {
   EXPECT_THAT(parsed->uint32_member_2, Eq(2));
 }
 
+TEST(ProtoParserTest, ParseMessageField) {
+  ProtoTestProto proto;
+  proto.mutable_inner_proto_field_1()->set_inner_proto_uint32_field(123);
+
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(123456, &InnerStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(inner_parser.status(), IsOk());
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField<InnerStruct>(kInnerMessageField,
+                                        &ParsedStruct::inner_member_1,
+                                        *std::move(inner_parser))
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+
+  absl::StatusOr<ParsedStruct> outer_parsed =
+      parser->Parse(proto.SerializeAsString());
+  ASSERT_THAT(outer_parsed, IsOk());
+  EXPECT_THAT(outer_parsed->inner_member_1.uint32_member_1, Eq(123));
+}
+
 TEST(ProtoParserTest, EmptyMessageAlwaysWorks) {
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(123456, &InnerStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(inner_parser.status(), IsOk());
+
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
           .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
@@ -227,6 +262,9 @@ TEST(ProtoParserTest, EmptyMessageAlwaysWorks) {
           .AddBytesSecretDataField(kBytesField2Tag,
                                    &ParsedStruct::secret_data_member_1,
                                    InsecureSecretKeyAccess::Get())
+          .AddMessageField<InnerStruct>(kInnerMessageField,
+                                        &ParsedStruct::inner_member_1,
+                                        *std::move(inner_parser))
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<ParsedStruct> parsed = parser->Parse("");
@@ -479,18 +517,55 @@ TEST(ProtoParserTest, SerializeSecretDataField) {
               Eq(absl::StrCat("0a2c", HexEncode(data))));
 }
 
+TEST(ProtoParserTest, SerializeMessageField) {
+  ParsedStruct s;
+  // Varint encoding: bef792840b
+  s.inner_member_1.uint32_member_1 = 2961488830;
+
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(123456, &InnerStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(inner_parser.status(), IsOk());
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField<InnerStruct>(kInnerMessageField,
+                                        &ParsedStruct::inner_member_1,
+                                        *std::move(inner_parser))
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(HexEncode(*serialized),
+              Eq(absl::StrCat(/* length delimited field with tag 10*/ "52",
+                              /* length 8 */ "08",
+                              /* varint field with tag 123456 */ "80a43c",
+                              /* uint32_member_1 (varint)*/ "bef792840b")));
+}
+
 TEST(ProtoParserTest, SerializeEmpty) {
-  // TODO(b/339151111): Modify so that empty fields are not serialized.
   ParsedStruct s;
   s.uint32_member_1 = 0;
   s.string_member_1 = "";
   s.secret_data_member_1 = util::SecretDataFromStringView("");
+  s.inner_member_1.uint32_member_1 = 0;
+
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(123456, &InnerStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(inner_parser.status(), IsOk());
+
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
           .AddUint32Field(1, &ParsedStruct::uint32_member_1)
           .AddBytesStringField(2, &ParsedStruct::string_member_1)
           .AddBytesSecretDataField(3, &ParsedStruct::secret_data_member_1,
                                    InsecureSecretKeyAccess::Get())
+          .AddMessageField<InnerStruct>(kInnerMessageField,
+                                        &ParsedStruct::inner_member_1,
+                                        *std::move(inner_parser))
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);

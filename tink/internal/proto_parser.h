@@ -31,11 +31,11 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_message_field.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -95,7 +95,8 @@ class ProtoParser {
       const Struct& s) const;
 
  private:
-  friend class ProtoParserBuilder<Struct>;
+  template <typename AnyStruct>
+  friend class ProtoParserBuilder;
   explicit ProtoParser(
       absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields)
       : low_level_parser_(std::move(fields)) {}
@@ -124,6 +125,14 @@ class ProtoParserBuilder {
       crypto::tink::SecretKeyAccessToken token) {
     fields_.push_back(
         absl::make_unique<SecretDataBytesField<Struct>>(tag, value));
+    return *this;
+  }
+  template <typename InnerStruct>
+  ProtoParserBuilder<Struct>& AddMessageField(
+      int tag, InnerStruct Struct::*value,
+      ProtoParser<InnerStruct> inner_parser) {
+    fields_.push_back(absl::make_unique<MessageField<Struct, InnerStruct>>(
+        tag, value, std::move(inner_parser.low_level_parser_)));
     return *this;
   }
   absl::StatusOr<ProtoParser<Struct>> Build();

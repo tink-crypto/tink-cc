@@ -32,6 +32,7 @@
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
@@ -97,16 +98,9 @@ class ProtoParser {
   friend class ProtoParserBuilder<Struct>;
   explicit ProtoParser(
       absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields)
-      : fields_(std::move(fields)) {}
+      : low_level_parser_(std::move(fields)) {}
 
-  // Overwrites all fields to their default value (in case they are not
-  // explicitly set by the input)
-  void ClearAllFields(Struct& s) const;
-  size_t GetSerializedSize(const Struct& s) const;
-  absl::Status SerializeIntoBuffer(const Struct& s,
-                                   absl::Span<char>& out) const;
-
-  absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields_;
+  LowLevelParser<Struct> low_level_parser_;
 };
 
 template <typename Struct>
@@ -144,26 +138,10 @@ template <typename Struct>
 absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
     absl::string_view input) const {
   Struct result;
-  ClearAllFields(result);
-  while (!input.empty()) {
-    absl::StatusOr<std::pair<WireType, int>> wiretype_and_tag =
-        ConsumeIntoWireTypeAndTag(input);
-    if (!wiretype_and_tag.ok()) {
-      return wiretype_and_tag.status();
-    }
-    auto it = fields_.find(wiretype_and_tag->second);
-    if (it == fields_.end()) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Unknown field ", wiretype_and_tag->second));
-    }
-    if (it->second->GetWireType() != wiretype_and_tag->first) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "Wrong wire type in serialization ", wiretype_and_tag->first));
-    }
-    absl::Status status = it->second->ConsumeIntoMember(input, result);
-    if (!status.ok()) {
-      return status;
-    }
+  low_level_parser_.ClearAllFields(result);
+  absl::Status status = low_level_parser_.ConsumeIntoAllFields(input, result);
+  if (!status.ok()) {
+    return status;
   }
   return result;
 }
@@ -171,11 +149,11 @@ absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
 template <typename Struct>
 absl::StatusOr<std::string> ProtoParser<Struct>::SerializeIntoString(
     const Struct& s) const {
-  size_t size = GetSerializedSize(s);
+  size_t size = low_level_parser_.GetSerializedSize(s);
   std::string result;
   result.resize(size);
   absl::Span<char> output_buffer = absl::MakeSpan(result);
-  absl::Status status = SerializeIntoBuffer(s, output_buffer);
+  absl::Status status = low_level_parser_.SerializeInto(output_buffer, s);
   if (!status.ok()) {
     return status;
   }
@@ -188,12 +166,12 @@ absl::StatusOr<std::string> ProtoParser<Struct>::SerializeIntoString(
 template <typename Struct>
 absl::StatusOr<crypto::tink::util::SecretData>
 ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
-  size_t size = GetSerializedSize(s);
+  size_t size = low_level_parser_.GetSerializedSize(s);
   crypto::tink::util::SecretData result;
   result.resize(size);
   absl::Span<char> output_buffer =
       absl::MakeSpan(reinterpret_cast<char*>(result.data()), result.size());
-  absl::Status status = SerializeIntoBuffer(s, output_buffer);
+  absl::Status status = low_level_parser_.SerializeInto(output_buffer, s);
   if (!status.ok()) {
     return status;
   }
@@ -201,44 +179,6 @@ ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
     return absl::InternalError("Resulting buffer expected to be empty");
   }
   return result;
-}
-
-template <typename Struct>
-void ProtoParser<Struct>::ClearAllFields(Struct& s) const {
-  for (auto& pair : fields_) {
-    pair.second->ClearMember(s);
-  }
-}
-
-template <typename Struct>
-size_t ProtoParser<Struct>::GetSerializedSize(const Struct& s) const {
-  size_t result = 0;
-  for (const auto& pair : fields_) {
-    if (pair.second->RequiresSerialization(s)) {
-      result += WireTypeAndTagLength(pair.second->GetWireType(), pair.first);
-      result += pair.second->GetSerializedSize(s);
-    }
-  }
-  return result;
-}
-
-template <typename Struct>
-absl::Status ProtoParser<Struct>::SerializeIntoBuffer(
-    const Struct& s, absl::Span<char>& out) const {
-  for (const auto& pair : fields_) {
-    if (pair.second->RequiresSerialization(s)) {
-      absl::Status status =
-          SerializeWireTypeAndTag(pair.second->GetWireType(), pair.first, out);
-      if (!status.ok()) {
-        return status;
-      }
-      status = pair.second->SerializeInto(out, s);
-      if (!status.ok()) {
-        return status;
-      }
-    }
-  }
-  return absl::OkStatus();
 }
 
 template <typename Struct>

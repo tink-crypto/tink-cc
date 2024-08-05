@@ -338,6 +338,23 @@ TEST(ProtoParserTest, Regression1) {
   EXPECT_THAT(parser->Parse(serialization).status(), Not(IsOk()));
 }
 
+// Found by the fuzzer -- (Wiretype,Tag) with overflown tag.
+TEST(ProtoParserTest, Regression2) {
+  std::string serialization = HexDecodeOrDie("9080808080efeed90752");
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .AddUint32Field(2, &ParsedStruct::uint32_member_2)
+          .AddBytesStringField(3, &ParsedStruct::string_member_1)
+          .AddBytesSecretDataField(4, &ParsedStruct::secret_data_member_1,
+                                   InsecureSecretKeyAccess::Get())
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  EXPECT_THAT(parser->Parse(serialization).status(), Not(IsOk()));
+}
+
+
 // SERIALIZATION TESTS =========================================================
 TEST(ProtoParserTest, SerializeUint32Field) {
   ParsedStruct s;

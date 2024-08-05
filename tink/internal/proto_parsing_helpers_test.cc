@@ -20,6 +20,7 @@
 #include <limits>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -180,15 +181,8 @@ constexpr WireTypeAndTagCase kWireTypeAndTagCases[] = {
     {"78", WireType::kVarint, 15},
     {"8001", WireType::kVarint, 16},
     {"f8ffffff0f", WireType::kVarint, 536870911},
-    // Note: proto only accepts tags up to 2^29-1, so above is the largest tag,
-    // but our code currently accepts higher tags.
-    {"f8ffffff1f", WireType::kVarint, 1073741823},
-    // Note: overflow
-    {"f8ffffff7f", WireType::kVarint, -1},
 };
 
-// TODO(b/353879397): This should be better aligned with what the proto library
-// does for invalid tags.
 TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
   for (const WireTypeAndTagCase& v : kWireTypeAndTagCases) {
     SCOPED_TRACE(v.hex_encoded_bytes);
@@ -200,6 +194,21 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
     EXPECT_THAT(result->first, Eq(v.wiretype));
     EXPECT_THAT(result->second, Eq(v.tag));
     EXPECT_THAT(bytes_view, IsEmpty());
+  }
+}
+
+constexpr WireTypeAndTagCase kWireTypeAndTagFailureCases[] = {
+    {"f8ffffff1f", WireType::kVarint, 0},
+    {"f8ffffff7f", WireType::kVarint, 0},
+};
+
+TEST(ProtoParserTest, ConsumeIntoWireTypeAndTagFailures) {
+  for (const absl::string_view v :
+       std::vector<absl::string_view>({"f8ffffff1f", "f8ffffff7f"})) {
+    SCOPED_TRACE(v);
+    std::string bytes = HexDecodeOrDie(v);
+    absl::string_view bytes_view = bytes;
+    EXPECT_THAT(ConsumeIntoWireTypeAndTag(bytes_view), Not(IsOk()));
   }
 }
 

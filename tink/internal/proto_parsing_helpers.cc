@@ -106,7 +106,7 @@ absl::Status SerializeVarint(uint64_t value, absl::Span<char>& output) {
 // https://protobuf.dev/programming-guides/encoding/#structure
 absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
     absl::string_view& serialized) {
-  absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
+  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
   if (!result.ok()) {
     return result.status();
   }

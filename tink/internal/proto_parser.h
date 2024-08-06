@@ -98,10 +98,11 @@ class ProtoParser {
   template <typename AnyStruct>
   friend class ProtoParserBuilder;
   explicit ProtoParser(
-      absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields)
+      absl::btree_map<int, std::unique_ptr<proto_parsing::Field<Struct>>>
+          fields)
       : low_level_parser_(std::move(fields)) {}
 
-  LowLevelParser<Struct> low_level_parser_;
+  proto_parsing::LowLevelParser<Struct> low_level_parser_;
 };
 
 template <typename Struct>
@@ -113,32 +114,36 @@ class ProtoParserBuilder {
   ProtoParserBuilder& operator=(const ProtoParserBuilder&) = delete;
 
   ProtoParserBuilder& AddUint32Field(int tag, uint32_t Struct::*value) {
-    fields_.push_back(absl::make_unique<Uint32Field<Struct>>(tag, value));
+    fields_.push_back(
+        absl::make_unique<proto_parsing::Uint32Field<Struct>>(tag, value));
     return *this;
   }
   ProtoParserBuilder& AddBytesStringField(int tag, std::string Struct::*value) {
-    fields_.push_back(absl::make_unique<StringBytesField<Struct>>(tag, value));
+    fields_.push_back(
+        absl::make_unique<proto_parsing::StringBytesField<Struct>>(tag, value));
     return *this;
   }
   ProtoParserBuilder& AddBytesSecretDataField(
       int tag, crypto::tink::util::SecretData Struct::*value,
       crypto::tink::SecretKeyAccessToken token) {
     fields_.push_back(
-        absl::make_unique<SecretDataBytesField<Struct>>(tag, value));
+        absl::make_unique<proto_parsing::SecretDataBytesField<Struct>>(tag,
+                                                                       value));
     return *this;
   }
   template <typename InnerStruct>
   ProtoParserBuilder<Struct>& AddMessageField(
       int tag, InnerStruct Struct::*value,
       ProtoParser<InnerStruct> inner_parser) {
-    fields_.push_back(absl::make_unique<MessageField<Struct, InnerStruct>>(
-        tag, value, std::move(inner_parser.low_level_parser_)));
+    fields_.push_back(
+        absl::make_unique<proto_parsing::MessageField<Struct, InnerStruct>>(
+            tag, value, std::move(inner_parser.low_level_parser_)));
     return *this;
   }
   absl::StatusOr<ProtoParser<Struct>> Build();
 
  private:
-  std::vector<std::unique_ptr<Field<Struct>>> fields_;
+  std::vector<std::unique_ptr<proto_parsing::Field<Struct>>> fields_;
 };
 
 // Implementation details below ================================================
@@ -192,7 +197,7 @@ ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
 
 template <typename Struct>
 absl::StatusOr<ProtoParser<Struct>> ProtoParserBuilder<Struct>::Build() {
-  absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields;
+  absl::btree_map<int, std::unique_ptr<proto_parsing::Field<Struct>>> fields;
   for (auto& field : fields_) {
     auto it = fields.find(field->GetTag());
     if (it != fields.end()) {

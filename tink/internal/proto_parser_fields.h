@@ -34,6 +34,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 
 // Methods to parse a field in a proto message into some member in the struct
 // "Struct".
@@ -239,6 +240,7 @@ class SecretDataBytesField : public Field<Struct> {
   int tag_;
 };
 
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

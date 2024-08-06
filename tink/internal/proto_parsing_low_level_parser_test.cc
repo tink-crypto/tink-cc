@@ -34,6 +34,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 
 struct ParsedStruct {
   uint32_t uint32_member_1;
@@ -165,6 +166,7 @@ TEST(LowLevelParserTest, MoveAssignmentWorks) {
 
 }  // namespace
 
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

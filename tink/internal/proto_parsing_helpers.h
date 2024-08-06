@@ -27,6 +27,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 
 // Consumes (i.e. reads and removes from the input |serialized|) a Varint
 // and returns it as a uint64_t.
@@ -65,6 +66,7 @@ int WireTypeAndTagLength(WireType wire_type, int tag);
 absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
     absl::string_view& serialized);
 
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

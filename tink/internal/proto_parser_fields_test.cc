@@ -33,6 +33,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
@@ -425,6 +426,7 @@ TEST(SecretDataBytesField, RequiresSerialization) {
 }
 
 }  // namespace
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

@@ -30,6 +30,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 
 namespace {
 constexpr int kMaxVarintLength = 10;
@@ -149,6 +150,7 @@ absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
   return result_view;
 }
 
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

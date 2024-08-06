@@ -33,6 +33,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 
 namespace {
 
@@ -218,6 +219,7 @@ TEST(MessageField, RequiresSerialization) {
 
 }  // namespace
 
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

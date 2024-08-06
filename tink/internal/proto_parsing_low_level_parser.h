@@ -34,6 +34,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 
 // A proto message parser/serializer as our main parser, but with an API which
 // requires fewer dependencies and is more low level, so it can be used in
@@ -127,6 +128,7 @@ class LowLevelParser {
   absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields_;
 };
 
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

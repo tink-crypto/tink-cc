@@ -32,6 +32,7 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace proto_parsing {
 
 // A field in OuterStruct of type InnerStruct.
 // class InnerStruct { /* omitted */ };
@@ -96,6 +97,7 @@ class MessageField : public Field<OuterStruct> {
   LowLevelParser<InnerStruct> low_level_parser_;
 };
 
+}  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

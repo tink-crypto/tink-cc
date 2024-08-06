@@ -127,8 +127,8 @@ class KeysetHandle {
   // `monitoring_annotations`; by default, `monitoring_annotations` is empty.
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>> Read(
       std::unique_ptr<KeysetReader> reader, const Aead& master_key_aead,
-      const absl::flat_hash_map<std::string, std::string>&
-          monitoring_annotations = {});
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations =
+          {});
 
   // Creates a KeysetHandle from an encrypted keyset obtained via `reader`
   // using `master_key_aead` to decrypt the keyset, expecting `associated_data`.
@@ -138,7 +138,7 @@ class KeysetHandle {
   ReadWithAssociatedData(std::unique_ptr<KeysetReader> reader,
                          const Aead& master_key_aead,
                          absl::string_view associated_data,
-                         const absl::flat_hash_map<std::string, std::string>&
+                         absl::flat_hash_map<std::string, std::string>
                              monitoring_annotations = {});
 
   // Creates a KeysetHandle from a serialized keyset `serialized_keyset` which
@@ -148,7 +148,7 @@ class KeysetHandle {
   // or envelope encryption keysets.
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
   ReadNoSecret(const std::string& serialized_keyset,
-               const absl::flat_hash_map<std::string, std::string>&
+               absl::flat_hash_map<std::string, std::string>
                    monitoring_annotations = {});
 
   // Returns a KeysetHandle containing one new key generated according to
@@ -160,10 +160,10 @@ class KeysetHandle {
   // GenerateNew call handles multiple primitives, use
   // //tink//config:key_gen_v0.
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GenerateNew(const google::crypto::tink::KeyTemplate& key_template,
-              const crypto::tink::KeyGenConfiguration& config,
-              const absl::flat_hash_map<std::string, std::string>&
-                  monitoring_annotations);
+  GenerateNew(
+      const google::crypto::tink::KeyTemplate& key_template,
+      const crypto::tink::KeyGenConfiguration& config,
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations);
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
   GenerateNew(const google::crypto::tink::KeyTemplate& key_template,
               const crypto::tink::KeyGenConfiguration& config);
@@ -173,11 +173,11 @@ class KeysetHandle {
   //  annotated for monitoring with `monitoring_annotations`.
   ABSL_DEPRECATED("Inline this function's body at its call sites")
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GenerateNew(const google::crypto::tink::KeyTemplate& key_template,
-              const absl::flat_hash_map<std::string, std::string>&
-                  monitoring_annotations) {
+  GenerateNew(
+      const google::crypto::tink::KeyTemplate& key_template,
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
     return GenerateNew(key_template, crypto::tink::KeyGenConfigGlobalRegistry(),
-                       monitoring_annotations);
+                       std::move(monitoring_annotations));
   }
   ABSL_DEPRECATED("Inline this function's body at its call sites")
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>

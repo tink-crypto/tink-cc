@@ -42,8 +42,8 @@ class CleartextKeysetHandle {
   // resulting KeysetHandle, which will be used for monitoring.
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>> Read(
       std::unique_ptr<KeysetReader> reader,
-      const absl::flat_hash_map<std::string, std::string>&
-          monitoring_annotations = {});
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations =
+          {});
 
   // Writes the keyset in the given `keyset_handle` to the `writer` which must
   // be non-null.

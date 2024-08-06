@@ -62,7 +62,7 @@ util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     return util::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
-  return KeysetHandle(std::move(keyset_proto), *entries);
+  return KeysetHandle(std::move(keyset_proto), *std::move(entries));
 }
 
 util::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(

@@ -252,18 +252,17 @@ util::StatusOr<KeysetHandle::Entry> KeysetHandle::CreateEntry(
 
 util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::Read(
     std::unique_ptr<KeysetReader> reader, const Aead& master_key_aead,
-    const absl::flat_hash_map<std::string, std::string>&
-        monitoring_annotations) {
+    absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   return ReadWithAssociatedData(std::move(reader), master_key_aead,
-                                /*associated_data=*/"", monitoring_annotations);
+                                /*associated_data=*/"",
+                                std::move(monitoring_annotations));
 }
 
 util::StatusOr<std::unique_ptr<KeysetHandle>>
 KeysetHandle::ReadWithAssociatedData(
     std::unique_ptr<KeysetReader> reader, const Aead& master_key_aead,
     absl::string_view associated_data,
-    const absl::flat_hash_map<std::string, std::string>&
-        monitoring_annotations) {
+    absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   util::StatusOr<std::unique_ptr<EncryptedKeyset>> enc_keyset_result =
       reader->ReadEncrypted();
   if (!enc_keyset_result.ok()) {
@@ -288,14 +287,14 @@ KeysetHandle::ReadWithAssociatedData(
     return util::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
-  return absl::WrapUnique(new KeysetHandle(*std::move(keyset_result), *entries,
-                                           monitoring_annotations));
+  return absl::WrapUnique(new KeysetHandle(*std::move(keyset_result),
+                                           *std::move(entries),
+                                           std::move(monitoring_annotations)));
 }
 
 util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
     const std::string& serialized_keyset,
-    const absl::flat_hash_map<std::string, std::string>&
-        monitoring_annotations) {
+    absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   util::SecretProto<Keyset> keyset;
   if (!keyset->ParseFromString(serialized_keyset)) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -314,8 +313,9 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
     return util::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
-  return absl::WrapUnique(
-      new KeysetHandle(std::move(keyset), *entries, monitoring_annotations));
+  return absl::WrapUnique(new KeysetHandle(std::move(keyset),
+                                           *std::move(entries),
+                                           std::move(monitoring_annotations)));
 }
 
 util::Status KeysetHandle::Write(KeysetWriter* writer,
@@ -353,10 +353,9 @@ util::Status KeysetHandle::WriteNoSecret(KeysetWriter* writer) const {
 
 util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
     const KeyTemplate& key_template, const KeyGenConfiguration& config,
-    const absl::flat_hash_map<std::string, std::string>&
-        monitoring_annotations) {
-  auto handle = absl::WrapUnique(
-      new KeysetHandle(util::SecretProto<Keyset>(), monitoring_annotations));
+    absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
+  auto handle = absl::WrapUnique(new KeysetHandle(
+      util::SecretProto<Keyset>(), std::move(monitoring_annotations)));
   util::StatusOr<uint32_t> const result =
       handle->AddKey(key_template, /*as_primary=*/true, config);
   if (!result.ok()) {
@@ -434,7 +433,7 @@ KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
                         "Error converting keyset proto into key entries.");
   }
   return absl::WrapUnique<KeysetHandle>(
-      new KeysetHandle(std::move(public_keyset), *entries));
+      new KeysetHandle(std::move(public_keyset), *std::move(entries)));
 }
 
 crypto::tink::util::StatusOr<uint32_t> KeysetHandle::AddToKeyset(

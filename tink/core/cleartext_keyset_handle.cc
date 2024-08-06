@@ -42,8 +42,7 @@ namespace tink {
 // static
 util::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
     std::unique_ptr<KeysetReader> reader,
-    const absl::flat_hash_map<std::string, std::string>&
-        monitoring_annotations) {
+    absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   util::StatusOr<std::unique_ptr<Keyset>> keyset_result = reader->Read();
   if (!keyset_result.ok()) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
@@ -61,7 +60,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
   }
   std::unique_ptr<KeysetHandle> handle(
       new KeysetHandle(util::SecretProto<Keyset>(**keyset_result), *entries,
-                       monitoring_annotations));
+                       std::move(monitoring_annotations)));
   return std::move(handle);
 }
 

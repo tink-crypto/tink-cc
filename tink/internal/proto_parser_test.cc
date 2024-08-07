@@ -51,6 +51,7 @@ using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
+using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Test;
 
@@ -63,6 +64,7 @@ constexpr int32_t kUint32FieldWithLargeTag = 536870911;
 
 struct InnerStruct {
   uint32_t uint32_member_1;
+  uint32_t uint32_member_2;
 };
 
 struct ParsedStruct {
@@ -226,7 +228,7 @@ TEST(ProtoParserTest, MultipleUint32OrderIsIgnored) {
 
 TEST(ProtoParserTest, ParseMessageField) {
   ProtoTestProto proto;
-  proto.mutable_inner_proto_field_1()->set_inner_proto_uint32_field(123);
+  proto.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_3(123);
 
   absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
       ProtoParserBuilder<InnerStruct>()
@@ -358,6 +360,47 @@ TEST(ProtoParserTest, FailsOn5ByteVarintUint32) {
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   EXPECT_THAT(parser->Parse(serialization).status(), Not(IsOk()));
+}
+
+TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessages) {
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(20, &InnerStruct::uint32_member_1)
+          .AddUint32Field(21, &InnerStruct::uint32_member_2)
+          .Build();
+  ASSERT_THAT(inner_parser.status(), IsOk());
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField<InnerStruct>(kInnerMessageField,
+                                        &ParsedStruct::inner_member_1,
+                                        *std::move(inner_parser))
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+
+  ProtoTestProto proto1;
+  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_1(77);
+  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(66);
+
+  ProtoTestProto proto2;
+  proto2.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(55);
+
+  std::string serialized =
+      absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString());
+
+  ProtoTestProto parsed_proto;
+  ASSERT_THAT(parsed_proto.ParseFromString(serialized), IsTrue());
+  // The 77 from the first instance stays
+  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_1(),
+              Eq(77));
+  // The 55 is overwritten
+  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_2(),
+              Eq(55));
+
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse(serialized);
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->inner_member_1.uint32_member_1, Eq(77));
+  EXPECT_THAT(parsed->inner_member_1.uint32_member_2, Eq(55));
 }
 
 // Found by a prototype fuzzer.

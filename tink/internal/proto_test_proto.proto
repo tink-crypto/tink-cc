@@ -19,7 +19,9 @@ syntax = "proto3";
 package crypto.tink.internal;
 
 message InnerProtoTestProto {
-  uint32 inner_proto_uint32_field = 123456;
+  uint32 inner_proto_uint32_field_1 = 20;
+  uint32 inner_proto_uint32_field_2 = 21;
+  uint32 inner_proto_uint32_field_3 = 123456;
 }
 
 message ProtoTestProto {

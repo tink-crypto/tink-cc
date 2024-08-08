@@ -57,7 +57,7 @@ absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
     absl::string_view& serialized);
 
 // Serializes a wiretype/tag into the output. Returns an error if the output
-// buffer is too small or (!0 < tag < 2^29).
+// buffer is too small or tag is not in the range [1, 2^29-1].
 absl::Status SerializeWireTypeAndTag(WireType wire_type, int tag,
                                      absl::Span<char>& output);
 int WireTypeAndTagLength(WireType wire_type, int tag);

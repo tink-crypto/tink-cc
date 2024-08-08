@@ -18,6 +18,7 @@
 #include "absl/memory/memory.h"
 #include "tink/config/tink_fips.h"
 #include "tink/prf/aes_cmac_prf_key_manager.h"
+#include "tink/prf/aes_cmac_prf_proto_serialization.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
 #include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/prf/prf_set_wrapper.h"
@@ -31,24 +32,38 @@ crypto::tink::util::Status PrfConfig::Register() {
   // Register primitive wrapper.
   auto status =
       Registry::RegisterPrimitiveWrapper(absl::make_unique<PrfSetWrapper>());
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
 
   status = Registry::RegisterKeyTypeManager(
       absl::make_unique<HmacPrfKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
 
   // When using FIPS only mode do not register other key managers.
-  if (IsFipsModeEnabled()) return util::OkStatus();
+  if (IsFipsModeEnabled()) {
+    return util::OkStatus();
+  }
 
   status = Registry::RegisterKeyTypeManager(
       absl::make_unique<HkdfPrfKeyManager>(), true);
-  if (!status.ok()) return status;
+  if (!status.ok()) {
+    return status;
+  }
 
   status = Registry::RegisterKeyTypeManager(
       absl::make_unique<AesCmacPrfKeyManager>(), true);
   if (!status.ok()) {
     return status;
   }
+
+  status = RegisterAesCmacPrfProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+
   return util::OkStatus();
 }
 

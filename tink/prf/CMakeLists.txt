@@ -37,6 +37,7 @@ tink_cc_library(
     prf_config.h
   DEPS
     tink::prf::aes_cmac_prf_key_manager
+    tink::prf::aes_cmac_prf_proto_serialization
     tink::prf::hkdf_prf_key_manager
     tink::prf::hmac_prf_key_manager
     tink::prf::prf_set_wrapper
@@ -402,18 +403,32 @@ tink_cc_test(
   SRCS
     prf_config_test.cc
   DEPS
+    tink::prf::aes_cmac_prf_key
+    tink::prf::aes_cmac_prf_parameters
     tink::prf::hmac_prf_key_manager
+    tink::prf::key_gen_config_v0
     tink::prf::prf_config
     tink::prf::prf_key_templates
     tink::prf::prf_set
     gmock
     absl::status
     crypto
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key_status
     tink::core::keyset_handle
+    tink::core::keyset_handle_builder
+    tink::core::partial_key_access
     tink::core::registry
+    tink::core::restricted_data
     tink::config::global_registry
     tink::internal::fips_utils
+    tink::internal::legacy_proto_key
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::subtle::random
     tink::util::status
+    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto

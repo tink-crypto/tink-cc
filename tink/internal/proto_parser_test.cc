@@ -618,12 +618,16 @@ TEST(ProtoParserTest, SerializeEmpty) {
 
 // Varint Parsing special cases ================================================
 
+// Comments give encoding length for values < 128
 enum WeirdEncodingType {
-  kNormal = 1,
-  kPadWithZeros = 2,
-  kAdd2To32 = 3,
-  kAdd2To64 = 4,
-  kAdd2To70 = 5,
+  kNormal = 1,               // Length: 1
+  kPadWithZeros = 2,         // Length: 2
+  kAdd2To32 = 3,             // Length: 5
+  kAdd2To32PadZero = 4,      // Length: 6
+  kAdd2To35 = 5,             // Length: 6
+  kAdd2To64 = 6,             // Length: 10
+  kAdd2To64PadZeros = 7,     // Length: 11
+  kAdd2To70 = 8,             // Length: 11
 };
 
 // Encode the varint in a non-standard way.
@@ -634,8 +638,11 @@ enum WeirdEncodingType {
 // before encoding it (imagining we have uint128_t or such).
 std::string EncodeVarintWeirdly(uint64_t value, WeirdEncodingType t) {
   std::string result;
-  if (t == kAdd2To32) {
+  if (t == kAdd2To32 || t == kAdd2To32PadZero) {
     value = value + (1LL << 32);
+  }
+  if (t == kAdd2To35) {
+    value = value + (1LL << 35);
   }
   int i = 0;
   while (i == 0 || value > 0) {
@@ -644,7 +651,7 @@ std::string EncodeVarintWeirdly(uint64_t value, WeirdEncodingType t) {
     if (i == 0 && t == kAdd2To70) {
       value = value + (1LL << 63);
     }
-    if (i == 0 && t == kAdd2To64) {
+    if (i == 0 && (t == kAdd2To64 || t == kAdd2To64PadZeros)) {
       value = value + (1LL << 57);
     }
     if (value > 0) {
@@ -653,7 +660,7 @@ std::string EncodeVarintWeirdly(uint64_t value, WeirdEncodingType t) {
     result.push_back(byte);
     i++;
   }
-  if (t == kPadWithZeros) {
+  if (t == kPadWithZeros || t == kAdd2To32PadZero || t == kAdd2To64PadZeros) {
     result.back() |= 0x80;
     result.push_back(0x00);
   }
@@ -661,21 +668,27 @@ std::string EncodeVarintWeirdly(uint64_t value, WeirdEncodingType t) {
 }
 
 TEST(EncodeVarintWeirdly, EncodeVarintWeirdlyTest) {
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(0, kNormal)), Eq("00"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(0, kPadWithZeros)), Eq("8000"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(0, kAdd2To32)), Eq("8080808010"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(0, kAdd2To64)),
-              Eq("80808080808080808002"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(0, kAdd2To70)),
-              Eq("8080808080808080808001"));
+  auto encode = [](uint64_t value, WeirdEncodingType t) {
+    return HexEncode (EncodeVarintWeirdly(value, t));
+  };
 
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(1, kNormal)), Eq("01"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(1, kPadWithZeros)), Eq("8100"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(1, kAdd2To32)), Eq("8180808010"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(1, kAdd2To64)),
-              Eq("81808080808080808002"));
-  EXPECT_THAT(HexEncode(EncodeVarintWeirdly(1, kAdd2To70)),
-              Eq("8180808080808080808001"));
+  EXPECT_THAT(encode(0, kNormal),           Eq("00"));
+  EXPECT_THAT(encode(0, kPadWithZeros),     Eq("8000"));
+  EXPECT_THAT(encode(0, kAdd2To32),         Eq("8080808010"));
+  EXPECT_THAT(encode(0, kAdd2To32PadZero),  Eq("808080809000"));
+  EXPECT_THAT(encode(0, kAdd2To35),         Eq("808080808001"));
+  EXPECT_THAT(encode(0, kAdd2To64),         Eq("80808080808080808002"));
+  EXPECT_THAT(encode(0, kAdd2To64PadZeros), Eq("8080808080808080808200"));
+  EXPECT_THAT(encode(0, kAdd2To70),         Eq("8080808080808080808001"));
+
+  EXPECT_THAT(encode(1, kNormal),           Eq("01"));
+  EXPECT_THAT(encode(1, kPadWithZeros),     Eq("8100"));
+  EXPECT_THAT(encode(1, kAdd2To32),         Eq("8180808010"));
+  EXPECT_THAT(encode(1, kAdd2To32PadZero),  Eq("818080809000"));
+  EXPECT_THAT(encode(1, kAdd2To35),         Eq("818080808001"));
+  EXPECT_THAT(encode(1, kAdd2To64),         Eq("81808080808080808002"));
+  EXPECT_THAT(encode(1, kAdd2To64PadZeros), Eq("8180808080808080808200"));
+  EXPECT_THAT(encode(1, kAdd2To70),         Eq("8180808080808080808001"));
 }
 
 TEST(ProtoParserTest, VarintInTagSuccess) {
@@ -701,7 +714,8 @@ TEST(ProtoParserTest, VarintInTagFails) {
   uint64_t field_num_wiretype = 0x08;
 
   std::string field_value = HexDecodeOrDie("01");
-  for (WeirdEncodingType t : {kAdd2To64, kAdd2To70}) {
+  for (WeirdEncodingType t :
+       {kAdd2To32PadZero, kAdd2To35, kAdd2To64, kAdd2To64PadZeros, kAdd2To70}) {
     SCOPED_TRACE(t);
     std::string serialization =
         absl::StrCat(EncodeVarintWeirdly(field_num_wiretype, t), field_value);
@@ -716,7 +730,8 @@ TEST(ProtoParserTest, VarintAsValueNormal) {
   std::string wirtype_and_fieldnum = HexDecodeOrDie("08");
 
   uint32_t value = 1;
-  for (WeirdEncodingType t : {kNormal, kPadWithZeros, kAdd2To32, kAdd2To64}) {
+  for (WeirdEncodingType t : {kNormal, kPadWithZeros, kAdd2To32,
+                              kAdd2To32PadZero, kAdd2To35, kAdd2To64}) {
     SCOPED_TRACE(t);
     std::string serialization =
         absl::StrCat(wirtype_and_fieldnum, EncodeVarintWeirdly(value, t));
@@ -725,16 +740,19 @@ TEST(ProtoParserTest, VarintAsValueNormal) {
   }
 }
 
-TEST(ProtoParserTest, VarintAsValueAddTwoToSeventy) {
+TEST(ProtoParserTest, VarintAsValueFailsWith12Bytes) {
   ProtoTestProto proto_test_proto;
 
   // Field #1, wire type kVarint
   std::string wirtype_and_fieldnum = HexDecodeOrDie("08");
-
   uint32_t value = 1;
-  std::string serialization =
-      absl::StrCat(wirtype_and_fieldnum, EncodeVarintWeirdly(value, kAdd2To70));
-  EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsFalse());
+  std::string field_value = HexDecodeOrDie("01");
+  for (WeirdEncodingType t : {kAdd2To64PadZeros, kAdd2To70}) {
+    SCOPED_TRACE(t);
+    std::string serialization =
+        absl::StrCat(wirtype_and_fieldnum, EncodeVarintWeirdly(value, t));
+    EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsFalse());
+  }
 }
 
 TEST(ProtoParserTest, VarintAsLength) {

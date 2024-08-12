@@ -790,6 +790,26 @@ TEST(ProtoParserTest, VarintAsLengthFailureCases) {
   }
 }
 
+// BuildOrDie ==================================================================
+TEST(ProtoParserTest, BuildOrDieWorksIfNoError) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  (void)parser;
+}
+
+TEST(ProtoParserDeathTest, DiesOnError) {
+  ASSERT_DEATH(
+      {
+        ProtoParserBuilder<ParsedStruct>()
+            .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+            .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_2)
+            .BuildOrDie();
+      },
+      "");
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

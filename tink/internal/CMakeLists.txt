@@ -1335,6 +1335,7 @@ tink_cc_library(
     tink::internal::proto_parsing_helpers
     tink::internal::proto_parsing_low_level_parser
     absl::btree
+    absl::check
     absl::status
     absl::statusor
     absl::strings

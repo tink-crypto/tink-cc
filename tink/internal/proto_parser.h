@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "absl/container/btree_map.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -141,6 +142,7 @@ class ProtoParserBuilder {
     return *this;
   }
   absl::StatusOr<ProtoParser<Struct>> Build();
+  ProtoParser<Struct> BuildOrDie();
 
  private:
   std::vector<std::unique_ptr<proto_parsing::Field<Struct>>> fields_;
@@ -207,6 +209,13 @@ absl::StatusOr<ProtoParser<Struct>> ProtoParserBuilder<Struct>::Build() {
     fields.emplace(field->GetTag(), std::move(field));
   }
   return ProtoParser<Struct>(std::move(fields));
+}
+
+template <typename Struct>
+ProtoParser<Struct> ProtoParserBuilder<Struct>::BuildOrDie() {
+  absl::StatusOr<ProtoParser<Struct>> result = Build();
+  CHECK_OK(result);
+  return *std::move(result);
 }
 
 }  // namespace internal

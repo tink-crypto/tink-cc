@@ -63,9 +63,7 @@ namespace internal {
 // absl::StatusOr<ProtoParser<AesGcmKeyStruct>> parser = ProtoParserBuilder()
 //     .AddUint32Field(kVersionNumberTag, &AesGcmKeyStruct::version_number)
 //     .AddUint32Field(kKeySizeTag, &AesGcmKeyStruct::key_size)
-//     .AddBytesSecretDataField(kKeyTag,
-//                              &AesGcmKeyStruct::key,
-//                              secret_key_access_token)
+//     .AddBytesSecretDataField(kKeyTag, &AesGcmKeyStruct::key)
 //     .Build();
 // if (!parser.ok()) { /* handle error */ }
 //
@@ -125,8 +123,7 @@ class ProtoParserBuilder {
     return *this;
   }
   ProtoParserBuilder& AddBytesSecretDataField(
-      int tag, crypto::tink::util::SecretData Struct::*value,
-      crypto::tink::SecretKeyAccessToken token) {
+      int tag, crypto::tink::util::SecretData Struct::*value) {
     fields_.push_back(
         absl::make_unique<proto_parsing::SecretDataBytesField<Struct>>(tag,
                                                                        value));

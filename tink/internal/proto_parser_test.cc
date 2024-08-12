@@ -117,8 +117,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWorks) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
           .AddBytesSecretDataField(kBytesField1Tag,
-                                   &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+                                   &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<ParsedStruct> parsed =
@@ -153,8 +152,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataTooLongDataFails) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
           .AddBytesSecretDataField(kBytesField1Tag,
-                                   &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+                                   &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   StatusIs(absl::StatusCode::kInvalidArgument,
@@ -169,11 +167,9 @@ TEST(ProtoParserTest, MultipleBytesFieldSecretDataWorks) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
           .AddBytesSecretDataField(kBytesField1Tag,
-                                   &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+                                   &ParsedStruct::secret_data_member_1)
           .AddBytesSecretDataField(kBytesField2Tag,
-                                   &ParsedStruct::secret_data_member_2,
-                                   InsecureSecretKeyAccess::Get())
+                                   &ParsedStruct::secret_data_member_2)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<ParsedStruct> parsed =
@@ -263,8 +259,7 @@ TEST(ProtoParserTest, EmptyMessageAlwaysWorks) {
           .AddUint32Field(kUint32Field2Tag, &ParsedStruct::uint32_member_2)
           .AddBytesStringField(kBytesField1Tag, &ParsedStruct::string_member_1)
           .AddBytesSecretDataField(kBytesField2Tag,
-                                   &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+                                   &ParsedStruct::secret_data_member_1)
           .AddMessageField<InnerStruct>(kInnerMessageField,
                                         &ParsedStruct::inner_member_1,
                                         *std::move(inner_parser))
@@ -413,8 +408,7 @@ TEST(ProtoParserTest, Regression1) {
           .AddUint32Field(1, &ParsedStruct::uint32_member_1)
           .AddUint32Field(2, &ParsedStruct::uint32_member_2)
           .AddBytesStringField(3, &ParsedStruct::string_member_1)
-          .AddBytesSecretDataField(4, &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+          .AddBytesSecretDataField(4, &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   EXPECT_THAT(parser->Parse(serialization).status(), Not(IsOk()));
@@ -429,8 +423,7 @@ TEST(ProtoParserTest, Regression2) {
           .AddUint32Field(1, &ParsedStruct::uint32_member_1)
           .AddUint32Field(2, &ParsedStruct::uint32_member_2)
           .AddBytesStringField(3, &ParsedStruct::string_member_1)
-          .AddBytesSecretDataField(4, &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+          .AddBytesSecretDataField(4, &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   EXPECT_THAT(parser->Parse(serialization).status(), Not(IsOk()));
@@ -550,8 +543,8 @@ TEST(ProtoParserTest, SerializeSecretDataField) {
   s.secret_data_member_1 = util::SecretDataFromStringView(data);
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1
+                                   )
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
@@ -604,8 +597,7 @@ TEST(ProtoParserTest, SerializeEmpty) {
       ProtoParserBuilder<ParsedStruct>()
           .AddUint32Field(1, &ParsedStruct::uint32_member_1)
           .AddBytesStringField(2, &ParsedStruct::string_member_1)
-          .AddBytesSecretDataField(3, &ParsedStruct::secret_data_member_1,
-                                   InsecureSecretKeyAccess::Get())
+          .AddBytesSecretDataField(3, &ParsedStruct::secret_data_member_1)
           .AddMessageField<InnerStruct>(kInnerMessageField,
                                         &ParsedStruct::inner_member_1,
                                         *std::move(inner_parser))

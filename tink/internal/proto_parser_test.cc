@@ -61,7 +61,13 @@ constexpr int32_t kUint32Field2Tag = 2;
 constexpr int32_t kBytesField1Tag = 3;
 constexpr int32_t kBytesField2Tag = 4;
 constexpr int32_t kInnerMessageField = 10;
+constexpr int32_t kEnumField = 111;
 constexpr int32_t kUint32FieldWithLargeTag = 536870911;
+
+enum class MyEnum : uint32_t {
+  kZero = 0,
+  kOne = 1,
+};
 
 struct InnerStruct {
   uint32_t uint32_member_1;
@@ -76,6 +82,7 @@ struct ParsedStruct {
   SecretData secret_data_member_1;
   SecretData secret_data_member_2;
   InnerStruct inner_member_1;
+  MyEnum enum_member;
 };
 
 // SERIALIZATION TESTS =========================================================
@@ -92,6 +99,22 @@ TEST(ProtoParserTest, SingleUint32Works) {
       parser->Parse(proto.SerializeAsString());
   ASSERT_THAT(parsed, IsOk());
   EXPECT_THAT(parsed->uint32_member_1, Eq(123));
+}
+
+TEST(ProtoParserTest, SingleEnumWorks) {
+  ProtoTestProto proto;
+  proto.set_uint32_field_1(1);
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddEnumField(kUint32Field1Tag, &ParsedStruct::enum_member,
+                        [](uint32_t) { return true; })
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<ParsedStruct> parsed =
+      parser->Parse(proto.SerializeAsString());
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->enum_member, Eq(MyEnum::kOne));
 }
 
 TEST(ProtoParserTest, SingleBytesFieldStringWorks) {
@@ -443,6 +466,20 @@ TEST(ProtoParserTest, SerializeUint32Field) {
   EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("087a")));
 }
 
+TEST(ProtoParserTest, SerializeEnumField) {
+  ParsedStruct s;
+  s.enum_member = MyEnum::kOne;
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddEnumField<MyEnum>(1, &ParsedStruct::enum_member,
+                                [](uint32_t) { return true; })
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("0801")));
+}
+
 TEST(ProtoParserTest, SerializeIntoSecretData) {
   ParsedStruct s;
   s.uint32_member_1 = 0x7a;
@@ -586,6 +623,7 @@ TEST(ProtoParserTest, SerializeEmpty) {
   s.string_member_1 = "";
   s.secret_data_member_1 = util::SecretDataFromStringView("");
   s.inner_member_1.uint32_member_1 = 0;
+  s.enum_member = MyEnum::kZero;
 
   absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
       ProtoParserBuilder<InnerStruct>()
@@ -601,6 +639,8 @@ TEST(ProtoParserTest, SerializeEmpty) {
           .AddMessageField<InnerStruct>(kInnerMessageField,
                                         &ParsedStruct::inner_member_1,
                                         *std::move(inner_parser))
+          .AddEnumField<MyEnum>(kEnumField, &ParsedStruct::enum_member,
+                                [](uint32_t) { return true; })
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);

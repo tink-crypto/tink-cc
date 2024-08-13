@@ -25,12 +25,15 @@
 #include <vector>
 
 #include "absl/container/btree_map.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "absl/types/span.h"
+#include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message_field.h"
 #include "tink/internal/proto_parsing_helpers.h"
@@ -115,6 +118,21 @@ class ProtoParserBuilder {
   ProtoParserBuilder& AddUint32Field(int tag, uint32_t Struct::*value) {
     fields_.push_back(
         absl::make_unique<proto_parsing::Uint32Field<Struct>>(tag, value));
+    return *this;
+  }
+
+  // Adds an enum field. Note that in C++ one needs to be careful with casting
+  // to an enum: [expr.static.cast/10] states that one needs to check dcl.enum
+  // to find the correct range of an enum to ensure the static cast is valid.
+  // By [dcl.enum/7&8] for enums without underlying type, only the enums listed
+  // are valid. Hence the user needs to provide "is_valid" to ensure validity
+  // when casting. is_valid(0) needs to be true (as we need a default value).
+  template <typename T>
+  ProtoParserBuilder& AddEnumField(
+      int tag, T Struct::*value,
+      absl::AnyInvocable<bool(uint32_t) const> is_valid) {
+    fields_.push_back(absl::make_unique<proto_parsing::EnumField<Struct, T>>(
+        tag, value, std::move(is_valid)));
     return *this;
   }
   ProtoParserBuilder& AddBytesStringField(int tag, std::string Struct::*value) {

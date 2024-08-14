@@ -23,6 +23,7 @@
 
 #include "absl/types/optional.h"
 #include "tink/key.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/parameters.h"
 #include "tink/util/secret_proto.h"
@@ -80,7 +81,7 @@ class KeysetHandleBuilderEntry {
   // `Key` object or a `Parameters` object.
   virtual crypto::tink::util::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-  CreateKeysetKey(int32_t id) = 0;
+  CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) = 0;
 
  protected:
   KeyStatus key_status_ = KeyStatus::kDisabled;
@@ -104,7 +105,7 @@ class KeyEntry : public KeysetHandleBuilderEntry {
 
   crypto::tink::util::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-  CreateKeysetKey(int32_t id) override;
+  CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) override;
 
  private:
   std::shared_ptr<const Key> key_;
@@ -124,7 +125,7 @@ class ParametersEntry : public KeysetHandleBuilderEntry {
 
   crypto::tink::util::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-  CreateKeysetKey(int32_t id) override;
+  CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) override;
 
  private:
   std::shared_ptr<const Parameters> parameters_;

@@ -471,6 +471,7 @@ tink_cc_library(
     keyset_handle_builder.h
   DEPS
     tink::core::key
+    tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::parameters
@@ -481,6 +482,7 @@ tink_cc_library(
     absl::strings
     absl::str_format
     absl::optional
+    tink::config::global_registry
     tink::internal::call_with_core_dump_protection
     tink::internal::keyset_handle_builder_entry
     tink::subtle::random
@@ -954,6 +956,7 @@ tink_cc_test(
     tink::core::template_util
     tink::core::input_stream
     tink::core::insecure_secret_key_access_testonly
+    tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
@@ -968,9 +971,17 @@ tink_cc_test(
     absl::memory
     absl::status
     absl::strings
+    absl::optional
     tink::aead::aes_gcm_parameters
+    tink::aead::aes_gcm_siv_key
+    tink::aead::aes_gcm_siv_key_manager
+    tink::aead::aes_gcm_siv_parameters
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_key_manager
+    tink::aead::xchacha20_poly1305_parameters
     tink::config::global_registry
     tink::config::tink_config
+    tink::internal::key_gen_configuration_impl
     tink::internal::legacy_proto_key
     tink::internal::legacy_proto_parameters
     tink::internal::proto_key_serialization

@@ -822,7 +822,9 @@ tink_cc_library(
     keyset_handle_builder_entry.h
   DEPS
     tink::internal::call_with_core_dump_protection
+    tink::internal::key_gen_configuration_impl
     tink::internal::key_status_util
+    tink::internal::key_type_info_store
     tink::internal::legacy_proto_key
     tink::internal::legacy_proto_parameters
     tink::internal::mutable_serialization_registry
@@ -834,6 +836,7 @@ tink_cc_library(
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
+    tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::parameters
     tink::core::registry
@@ -850,6 +853,7 @@ tink_cc_test(
   SRCS
     keyset_handle_builder_entry_test.cc
   DEPS
+    tink::internal::key_gen_configuration_impl
     tink::internal::keyset_handle_builder_entry
     tink::internal::legacy_proto_key
     tink::internal::legacy_proto_parameters
@@ -860,20 +864,22 @@ tink_cc_test(
     absl::status
     absl::optional
     tink::core::insecure_secret_key_access
-    tink::core::key
+    tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
     tink::core::keyset_handle_builder
-    tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_key_manager
+    tink::aead::xchacha20_poly1305_parameters
+    tink::config::global_registry
     tink::config::tink_config
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
     tink::mac::mac_key_templates
     tink::util::secret_proto
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto

@@ -28,18 +28,27 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "tink/aead.h"
 #include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/aes_gcm_siv_key.h"
+#include "tink/aead/aes_gcm_siv_key_manager.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/xchacha20_poly1305_key.h"
+#include "tink/aead/xchacha20_poly1305_key_manager.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_config.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac.h"
@@ -83,6 +92,8 @@ using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::SizeIs;
 using ::testing::Test;
+using ::testing::TestWithParam;
+using ::testing::Values;
 
 class KeysetHandleBuilderTest : public Test {
  protected:
@@ -101,6 +112,32 @@ util::StatusOr<internal::LegacyProtoParameters> CreateLegacyProtoParameters(
   if (!serialization.ok()) return serialization.status();
 
   return internal::LegacyProtoParameters(*serialization);
+}
+
+// Creates an XChaCha20Poly1305Key from the given parameters.
+crypto::tink::util::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
+CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
+                           absl::optional<int> id_requirement) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      params.GetVariant(), secret, id_requirement, GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
+}
+
+// Creates an AesGcmSivKey from the given parameters.
+crypto::tink::util::StatusOr<std::unique_ptr<AesGcmSivKey>> CreateAesGcmSivKey(
+    const AesGcmSivParameters& params, absl::optional<int> id_requirement) {
+  RestrictedData secret =
+      RestrictedData(/*num_random_bytes=*/params.KeySizeInBytes());
+  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+      params, secret, id_requirement, GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<crypto::tink::AesGcmSivKey>(*key);
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildWithSingleKey) {
@@ -171,6 +208,205 @@ TEST_F(KeysetHandleBuilderTest, BuildWithMultipleKeys) {
   EXPECT_THAT((*handle)[2].IsPrimary(), IsFalse());
   EXPECT_THAT((*handle)[2].GetKey()->GetParameters().HasIdRequirement(),
               IsTrue());
+}
+
+using KeysetHandleBuilderCustomConfigTest =
+    TestWithParam<XChaCha20Poly1305Parameters::Variant>;
+
+INSTANTIATE_TEST_SUITE_P(
+    KeysetHandleBuilderCustomConfigTestSuite,
+    KeysetHandleBuilderCustomConfigTest,
+    Values(XChaCha20Poly1305Parameters::Variant::kTink,
+           XChaCha20Poly1305Parameters::Variant::kNoPrefix));
+
+TEST_P(KeysetHandleBuilderCustomConfigTest, BuildWithSingleKey) {
+  XChaCha20Poly1305Parameters::Variant variant = GetParam();
+
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(variant);
+  ASSERT_THAT(params.status(), IsOk());
+
+  KeyGenConfiguration key_creator_config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
+                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
+                                               key_creator_config),
+              IsOk());
+
+  KeyGenConfiguration key_manager_config;
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+          absl::make_unique<XChaCha20Poly1305KeyManager>(), key_manager_config),
+      IsOk());
+
+  KeysetHandleBuilder::Entry entry1 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *params, KeyStatus::kEnabled, /*is_primary=*/true,
+          /*id=*/123);
+  util::StatusOr<KeysetHandle> handle1 = KeysetHandleBuilder()
+                                             .AddEntry(std::move(entry1))
+                                             .Build(key_creator_config);
+  ASSERT_THAT(handle1.status(), IsOk());
+
+  EXPECT_THAT(*handle1, SizeIs(1));
+  EXPECT_THAT((*handle1)[0].GetStatus(), Eq(KeyStatus::kEnabled));
+  EXPECT_THAT((*handle1)[0].GetId(), Eq(123));
+  EXPECT_THAT((*handle1)[0].IsPrimary(), IsTrue());
+  EXPECT_THAT((*handle1)[0].GetKey()->GetParameters(), Eq(*params));
+
+  KeysetHandleBuilder::Entry entry2 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *params, KeyStatus::kEnabled, /*is_primary=*/true,
+          /*id=*/123);
+  util::StatusOr<KeysetHandle> handle2 = KeysetHandleBuilder()
+                                             .AddEntry(std::move(entry2))
+                                             .Build(key_manager_config);
+  ASSERT_THAT(handle2.status(), IsOk());
+
+  EXPECT_THAT(*handle2, SizeIs(1));
+  EXPECT_THAT((*handle2)[0].GetStatus(), Eq((*handle1)[0].GetStatus()));
+  EXPECT_THAT((*handle2)[0].GetId(), Eq((*handle1)[0].GetId()));
+  EXPECT_THAT((*handle2)[0].IsPrimary(), Eq((*handle1)[0].IsPrimary()));
+  EXPECT_THAT((*handle2)[0].GetKey()->GetParameters(), Eq((*params)));
+}
+
+TEST(KeysetHandleBuilderCustomConfigTest, BuildWithEmptyConfigFails) {
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(params.status(), IsOk());
+
+  KeyGenConfiguration config;
+
+  KeysetHandleBuilder::Entry entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *params, KeyStatus::kEnabled, /*is_primary=*/true,
+          /*id=*/123);
+
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder().AddEntry(std::move(entry)).Build(config);
+  EXPECT_THAT(handle.status(), StatusIs(absl::StatusCode::kNotFound));
+}
+
+TEST(KeysetHandleBuilderCustomConfigTest,
+     BuildWithMultipleKeysUsingKeyCreators) {
+  util::StatusOr<XChaCha20Poly1305Parameters> xchacha_parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(xchacha_parameters.status(), IsOk());
+
+  util::StatusOr<AesGcmSivParameters> aes_gcm_siv_parameters =
+      AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
+                                  AesGcmSivParameters::Variant::kTink);
+  ASSERT_THAT(aes_gcm_siv_parameters.status(), IsOk());
+
+  KeyGenConfiguration config;
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<
+          XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key, config),
+      IsOk());
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<AesGcmSivParameters>(
+          CreateAesGcmSivKey, config),
+      IsOk());
+
+  KeysetHandleBuilder::Entry entry0 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *xchacha_parameters, KeyStatus::kDestroyed,
+          /*is_primary=*/false,
+          /*id=*/123);
+
+  KeysetHandleBuilder::Entry entry1 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *aes_gcm_siv_parameters, KeyStatus::kEnabled, /*is_primary=*/true,
+          /*id=*/456);
+
+  KeysetHandleBuilder::Entry entry2 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *xchacha_parameters, KeyStatus::kDisabled,
+          /*is_primary=*/false);
+
+  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+                                            .AddEntry(std::move(entry0))
+                                            .AddEntry(std::move(entry1))
+                                            .AddEntry(std::move(entry2))
+                                            .Build(config);
+  ASSERT_THAT(handle.status(), IsOk());
+  EXPECT_THAT(*handle, SizeIs(3));
+
+  EXPECT_THAT((*handle)[0].GetStatus(), Eq(KeyStatus::kDestroyed));
+  EXPECT_THAT((*handle)[0].GetId(), Eq(123));
+  EXPECT_THAT((*handle)[0].IsPrimary(), IsFalse());
+  EXPECT_THAT((*handle)[0].GetKey()->GetParameters(), Eq(*xchacha_parameters));
+
+  EXPECT_THAT((*handle)[1].GetStatus(), Eq(KeyStatus::kEnabled));
+  EXPECT_THAT((*handle)[1].GetId(), Eq(456));
+  EXPECT_THAT((*handle)[1].IsPrimary(), IsTrue());
+  EXPECT_THAT((*handle)[1].GetKey()->GetParameters(),
+              Eq(*aes_gcm_siv_parameters));
+
+  EXPECT_THAT((*handle)[2].GetStatus(), Eq(KeyStatus::kDisabled));
+  EXPECT_THAT((*handle)[2].IsPrimary(), IsFalse());
+  EXPECT_THAT((*handle)[2].GetKey()->GetParameters(), Eq(*xchacha_parameters));
+}
+
+TEST(KeysetHandleBuilderCustomConfigTest,
+     BuildWithMultipleKeysUsingKeyManagers) {
+  util::StatusOr<XChaCha20Poly1305Parameters> xchacha_parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(xchacha_parameters.status(), IsOk());
+
+  util::StatusOr<AesGcmSivParameters> aes_gcm_siv_parameters =
+      AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
+                                  AesGcmSivParameters::Variant::kTink);
+  ASSERT_THAT(aes_gcm_siv_parameters.status(), IsOk());
+
+  KeyGenConfiguration config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+                  absl::make_unique<XChaCha20Poly1305KeyManager>(), config),
+              IsOk());
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+                  absl::make_unique<AesGcmSivKeyManager>(), config),
+              IsOk());
+
+  KeysetHandleBuilder::Entry entry0 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *xchacha_parameters, KeyStatus::kDestroyed,
+          /*is_primary=*/false,
+          /*id=*/123);
+
+  KeysetHandleBuilder::Entry entry1 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *aes_gcm_siv_parameters, KeyStatus::kEnabled, /*is_primary=*/true,
+          /*id=*/456);
+
+  KeysetHandleBuilder::Entry entry2 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *xchacha_parameters, KeyStatus::kDisabled,
+          /*is_primary=*/false);
+
+  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+                                            .AddEntry(std::move(entry0))
+                                            .AddEntry(std::move(entry1))
+                                            .AddEntry(std::move(entry2))
+                                            .Build(config);
+  ASSERT_THAT(handle.status(), IsOk());
+  EXPECT_THAT(*handle, SizeIs(3));
+
+  EXPECT_THAT((*handle)[0].GetStatus(), Eq(KeyStatus::kDestroyed));
+  EXPECT_THAT((*handle)[0].GetId(), Eq(123));
+  EXPECT_THAT((*handle)[0].IsPrimary(), IsFalse());
+  EXPECT_THAT((*handle)[0].GetKey()->GetParameters(), Eq(*xchacha_parameters));
+
+  EXPECT_THAT((*handle)[1].GetStatus(), Eq(KeyStatus::kEnabled));
+  EXPECT_THAT((*handle)[1].GetId(), Eq(456));
+  EXPECT_THAT((*handle)[1].IsPrimary(), IsTrue());
+  EXPECT_THAT((*handle)[1].GetKey()->GetParameters(),
+              Eq(*aes_gcm_siv_parameters));
+
+  EXPECT_THAT((*handle)[2].GetStatus(), Eq(KeyStatus::kDisabled));
+  EXPECT_THAT((*handle)[2].IsPrimary(), IsFalse());
+  EXPECT_THAT((*handle)[2].GetKey()->GetParameters(), Eq(*xchacha_parameters));
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildCopy) {

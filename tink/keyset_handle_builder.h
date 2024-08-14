@@ -26,8 +26,10 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/types/optional.h"
+#include "tink/config/global_registry.h"
 #include "tink/internal/keyset_handle_builder_entry.h"
 #include "tink/key.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
@@ -125,8 +127,8 @@ class KeysetHandleBuilder {
 
     crypto::tink::util::StatusOr<
         crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
-    CreateKeysetKey(int32_t id) {
-      return entry_->CreateKeysetKey(id);
+    CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) {
+      return entry_->CreateKeysetKey(id, config);
     }
 
     std::unique_ptr<internal::KeysetHandleBuilderEntry> entry_;
@@ -159,7 +161,17 @@ class KeysetHandleBuilder {
   // KeysetHandleBuilder object.  Otherwise, the KeysetHandleBuilder::Entry
   // IDs would randomly change for each call to Build(), which would result
   // in incompatible keysets.
-  crypto::tink::util::StatusOr<KeysetHandle> Build();
+  crypto::tink::util::StatusOr<KeysetHandle> Build() {
+    return Build(KeyGenConfigGlobalRegistry());
+  }
+
+  // Does the same as Build() but also takes a `KeyGenConfiguration` object
+  // which is used to generate keys instead of relying on the global registry.
+  //
+  // Falls back to the global registry if the `config` does not provide the
+  // functionality to create the required key type.
+  crypto::tink::util::StatusOr<KeysetHandle> Build(
+      const KeyGenConfiguration& config);
 
  private:
   // Select the next key id based on the given strategy.

@@ -34,6 +34,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/keyset_handle_builder_entry.h"
 #include "tink/key.h"
+#include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
@@ -165,11 +166,11 @@ KeysetHandleBuilder& KeysetHandleBuilder::SetMonitoringAnnotations(
   return *this;
 }
 
-util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build() {
+util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
+    const KeyGenConfiguration& config) {
   if (build_called_) {
-      return util::Status(
-          absl::StatusCode::kFailedPrecondition,
-          "KeysetHandleBuilder::Build may only be called once");
+    return util::Status(absl::StatusCode::kFailedPrecondition,
+                        "KeysetHandleBuilder::Build may only be called once");
   }
   build_called_ = true;
   util::SecretProto<Keyset> keyset;
@@ -192,7 +193,7 @@ util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build() {
     ids_so_far.insert(*id);
 
     util::StatusOr<util::SecretProto<Keyset::Key>> key =
-        entry.CreateKeysetKey(*id);
+        entry.CreateKeysetKey(*id, config);
     if (!key.ok()) return key.status();
 
     internal::CallWithCoreDumpProtection([&]() { *keyset->add_key() = **key; });

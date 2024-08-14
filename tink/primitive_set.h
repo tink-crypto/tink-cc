@@ -157,9 +157,10 @@ class PrimitiveSet {
     if (!entry_or.ok()) return entry_or.status();
 
     std::string identifier = entry_or.value()->get_identifier();
-    primitives[identifier].push_back(std::move(entry_or.value()));
+    auto& primitives_for_identifier = primitives[identifier];
+    primitives_for_identifier.push_back(std::move(entry_or.value()));
 
-    Entry<P>* stored_entry = primitives[identifier].back().get();
+    Entry<P>* stored_entry = primitives_for_identifier.back().get();
     primitives_in_keyset_order.push_back(stored_entry);
     return stored_entry;
   }

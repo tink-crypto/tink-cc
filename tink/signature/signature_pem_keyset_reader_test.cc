@@ -565,6 +565,65 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPublicKey) {
   EXPECT_THAT(keyset->key(0), EqualsKey(expected_key1));
 }
 
+// RSA public key with OID 1.2.840.113549.1.1.11 "sha256WithRSAEncryption"
+// from RFC 4055.
+//
+// Copied from tink-java's PemKeyConverterTest.java.
+constexpr absl::string_view kRsaSha256PublicKey = R"(-----BEGIN PUBLIC KEY-----
+MIIBojANBgkqhkiG9w0BAQsFAAOCAY8AMIIBigKCAYEAoHiH83M3gZawt0jN8xwU
+c1zPoPEXrK/aoh/eS251WTkLg057kunhzJ1J/A/mz7YEKWUrS/mndo9x/EJxym/v
+TkMRkuvcmGML+5TFuvGLTPeIHYRIPkxEwi2xWpYncFoLQqJtbz1gCa7g0qcb7fTU
+sO5rb+wvFuEnfsqjve26QGRzpHbRaI3w+tHaeVUmx+ZBmBtIErBbaS1gxgsr+kJM
+i2IPQNydulnixxDn7nULPhNMH3H0MhBoiv8XqqQc21ZodT8ABrHPlRvFlR9NiaMR
+lphepVwJZsNmK8/k5M008S5K/X5cShMHObEBfWpYOIL9ctsaZ0GHAsiwE1PM91t7
+k/rsDgvjYhHV8r2RDhVSMjcRu+tzhY+JnMHsBj72fYjgxpnVponFIQbwbpYPCdKj
+z4T1O76ipHPt8ubgF2gB0/ocLTWOHlom9kask3luwfrcaZHA7BnJ3ZCyWi3Tv3PS
+zx7qiGf5bKpaLfVJc6yyotoKE2fsdK+7lo9Rd2UjjRdpAgMBAAE=
+-----END PUBLIC KEY-----)";
+
+TEST(SignaturePemKeysetReaderTest, ParseRsaSha256PublicKeyFails) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kRsaSha256PublicKey, PemKeyType::PEM_RSA,
+                           PemAlgorithm::RSASSA_PKCS1,
+                           /*key_size_in_bits=*/2048, HashType::SHA256));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+
+  EXPECT_THAT((*reader)->Read(), Not(IsOk()));
+}
+
+// RSA SSA PSS public key with OID 1.2.840.113549.1.1.10 "id_RSASSA_PSS" from
+// RFC 4055. It has parameters sig hash and mgf1 hash set to SHA256.
+//
+// Copied from tink-java's PemKeyConverterTest.java.
+constexpr absl::string_view kRsaSsaPssPublicKey = R"(-----BEGIN PUBLIC KEY-----
+MIIBUDA7BgkqhkiG9w0BAQowLjANBglghkgBZQMEAgEFADAaBgkqhkiG9w0BAQgw
+DQYJYIZIAWUDBAIBBQACARQDggEPADCCAQoCggEBALE8O9Jpvv6rBFCOeVIXdsA4
+6LhO8xfQBMCjt9Bh5H/bc30jJkGMlDaKsgmzOh8IsFVGx2rBJrlXyOhkpNM1jAiY
+ZC46/+YXzpepQMoWjQsSK+3/GM0U8RDZcLK2DqZb2Kd3LM/E8qK8gbz7hu+OHnc1
+UEst8JT97peDAW5TEk9EmEf2HY19Ok8OQCDzMINVWfBf5HuxgjbQMmOnU+TU3h1e
+Z2axdGbbAzdIPEs8UXs/Eht6z+GlkRI9V23PuNajKl1IIJ3YivzJWX/fCzH6fDhE
+/AhacWV+3bEqUG7McXbu4Qh5Me95YvGigJgAMqpF3gU3xTtltj1G70Le4QSbZ08C
+AwEAAQ==
+-----END PUBLIC KEY-----)";
+
+TEST(SignaturePemKeysetReaderTest, ParseRsaPssPublicKeyFails) {
+  auto builder = SignaturePemKeysetReaderBuilder(
+      SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+
+  builder.Add(CreatePemKey(kRsaSsaPssPublicKey, PemKeyType::PEM_RSA,
+                           PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
+                           HashType::SHA256));
+
+  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  ASSERT_THAT(reader, IsOk());
+
+  EXPECT_THAT((*reader)->Read(), Not(IsOk()));
+}
+
 TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);

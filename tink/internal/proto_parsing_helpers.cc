@@ -113,6 +113,9 @@ absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
   }
   int tag = *result >> 3;
   WireType wiretype = static_cast<WireType>(*result & 0x7);
+  if (tag == 0) {
+    return absl::InvalidArgumentError("Field number 0 disallowed");
+  }
   return std::make_pair(wiretype, tag);
 }
 
@@ -148,6 +151,39 @@ absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
   absl::string_view result_view = serialized.substr(0, *result);
   serialized.remove_prefix(*result);
   return result_view;
+}
+
+absl::Status ConsumeFixed32(absl::string_view& serialized) {
+  if (serialized.size() < 4) {
+    return absl::InvalidArgumentError("Not enough data to read kFixed32");
+  }
+  serialized.remove_prefix(4);
+  return absl::OkStatus();
+}
+
+absl::Status ConsumeFixed64(absl::string_view& serialized) {
+  if (serialized.size() < 8) {
+    return absl::InvalidArgumentError("Not enough data to read kFixed64");
+  }
+  serialized.remove_prefix(8);
+  return absl::OkStatus();
+}
+
+absl::Status SkipField(WireType wire_type, absl::string_view& serialized) {
+  if (wire_type == WireType::kVarint) {
+    return ConsumeVarintIntoUint64(serialized).status();
+  }
+  if (wire_type == WireType::kLengthDelimited) {
+    return ConsumeBytesReturnStringView(serialized).status();
+  }
+  if (wire_type == WireType::kFixed32) {
+    return ConsumeFixed32(serialized);
+  }
+  if (wire_type == WireType::kFixed64) {
+    return ConsumeFixed64(serialized);
+  }
+  return absl::InvalidArgumentError(
+      absl::StrCat("Cannot skip fields of wire type ", wire_type));
 }
 
 }  // namespace proto_parsing

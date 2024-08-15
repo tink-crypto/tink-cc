@@ -198,14 +198,9 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
   }
 }
 
-constexpr WireTypeAndTagCase kWireTypeAndTagFailureCases[] = {
-    {"f8ffffff1f", WireType::kVarint, 0},
-    {"f8ffffff7f", WireType::kVarint, 0},
-};
-
 TEST(ProtoParserTest, ConsumeIntoWireTypeAndTagFailures) {
   for (const absl::string_view v :
-       std::vector<absl::string_view>({"f8ffffff1f", "f8ffffff7f"})) {
+       std::vector<absl::string_view>({"00", "f8ffffff1f", "f8ffffff7f"})) {
     SCOPED_TRACE(v);
     std::string bytes = HexDecodeOrDie(v);
     absl::string_view bytes_view = bytes;
@@ -264,6 +259,88 @@ TEST(ConsumeBytesReturnStringView, InvalidVarint) {
       absl::StrCat(/* 0 bytes */ HexDecodeOrDie("8000"), "abcde");
   absl::string_view bytes_view = bytes;
   ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view), Not(IsOk()));
+}
+
+TEST(ConsumeFixed32, Consumes4Bytes) {
+  std::string bytes = "1234567";
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(ConsumeFixed32(bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq("567"));
+  ASSERT_THAT(ConsumeFixed32(bytes_view), Not(IsOk()));
+}
+
+TEST(ConsumeFixed64, Consumes8Bytes) {
+  std::string bytes = "0abc4abc8abc2ab";
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(ConsumeFixed64(bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq("8abc2ab"));
+  ASSERT_THAT(ConsumeFixed64(bytes_view), Not(IsOk()));
+}
+
+TEST(SkipField, Fixed32) {
+  std::string bytes = "1234567";
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kFixed32, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq("567"));
+  ASSERT_THAT(SkipField(WireType::kFixed32, bytes_view), Not(IsOk()));
+}
+
+TEST(SkipField, Fixed64) {
+  std::string bytes = "0abc4abc8abc2ab";
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kFixed64, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq("8abc2ab"));
+  ASSERT_THAT(SkipField(WireType::kFixed64, bytes_view), Not(IsOk()));
+}
+
+TEST(SkipField, Varint) {
+  std::string bytes = HexDecodeOrDie("08");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq(""));
+  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), Not(IsOk()));
+}
+
+TEST(SkipField, VarintRemainder) {
+  std::string bytes = HexDecodeOrDie("8808aa");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), IsOk());
+  EXPECT_THAT(HexEncode(bytes_view), Eq("aa"));
+}
+
+TEST(SkipField, VarintFail) {
+  std::string bytes = HexDecodeOrDie("888888");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), Not(IsOk()));
+}
+
+TEST(SkipField, LengthEncoded) {
+  std::string bytes =
+      absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kLengthDelimited, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq("XYZ"));
+}
+
+TEST(SkipField, LengthEncodedTooShort) {
+  std::string bytes =
+      absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "123456789");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kLengthDelimited, bytes_view),
+              Not(IsOk()));
+}
+
+TEST(SkipField, StartGroupFails) {
+  std::string bytes = "some bytes";
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kStartGroup, bytes_view),
+              Not(IsOk()));
+}
+TEST(SkipField, EndGroupFalis) {
+  std::string bytes = "some bytes";
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipField(WireType::kEndGroup, bytes_view),
+              Not(IsOk()));
 }
 
 }  // namespace

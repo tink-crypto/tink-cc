@@ -1463,6 +1463,7 @@ tink_cc_test(
     tink::internal::proto_test_cc_proto
     gmock
     absl::btree
+    absl::strings
     absl::string_view
     absl::span
     tink::util::test_matchers

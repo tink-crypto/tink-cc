@@ -422,6 +422,32 @@ TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessages) {
   EXPECT_THAT(parsed->inner_member_1.uint32_member_2, Eq(55));
 }
 
+TEST(ProtoParserTest, SkipUnknownFields) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .AddBytesStringField(kBytesField1Tag, &ParsedStruct::string_member_1)
+          .BuildOrDie();
+
+  ProtoTestProto proto1;
+  proto1.set_uint32_field_1(123);
+  // Unknown field
+  ProtoTestProto proto2;
+  proto2.set_uint32_field_2(555);
+
+  ProtoTestProto proto3;
+  proto3.set_bytes_field_1("foo");
+
+  std::string serialized =
+      absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString(),
+                   proto3.SerializeAsString());
+
+  absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialized);
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->uint32_member_1, Eq(123));
+  EXPECT_THAT(parsed->string_member_1, Eq("foo"));
+}
+
 // Found by a prototype fuzzer.
 TEST(ProtoParserTest, Regression1) {
   std::string serialization = HexDecodeOrDie("a20080808080808080808000");

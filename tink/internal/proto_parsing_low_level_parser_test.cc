@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/btree_map.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
@@ -162,6 +163,36 @@ TEST(LowLevelParserTest, MoveAssignmentWorks) {
   s.uint32_member_1 = 123;
   parser2.ClearAllFields(s);
   EXPECT_THAT(s.uint32_member_1, Eq(0));
+}
+
+TEST(LowLevelParserTest, SkipUnknownField) {
+  absl::btree_map<int, std::unique_ptr<Field<ParsedStruct>>> fields;
+  fields.insert({1, std::make_unique<Uint32Field<ParsedStruct>>(
+                        1, &ParsedStruct::uint32_member_1)});
+  fields.insert({3, std::make_unique<StringBytesField<ParsedStruct>>(
+                        3, &ParsedStruct::string_member_1)});
+
+  ProtoTestProto proto1;
+  proto1.set_uint32_field_1(123);
+  // Unknown field
+  ProtoTestProto proto2;
+  proto2.set_uint32_field_2(555);
+
+  ProtoTestProto proto3;
+  proto3.set_bytes_field_1("foo");
+
+  LowLevelParser<ParsedStruct> parser(std::move(fields));
+  ParsedStruct s;
+  parser.ClearAllFields(s);
+  // Create a message with all 3 fields, serialized in order 1, 2, 3.
+  std::string serialized =
+      absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString(),
+                   proto3.SerializeAsString());
+  absl::string_view serialized_view = serialized;
+  ASSERT_THAT(parser.ConsumeIntoAllFields(serialized_view, s), IsOk());
+  ASSERT_THAT(serialized_view, IsEmpty());
+  EXPECT_THAT(s.uint32_member_1, Eq(123));
+  EXPECT_THAT(s.string_member_1, Eq("foo"));
 }
 
 }  // namespace

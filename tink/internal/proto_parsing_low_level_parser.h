@@ -72,8 +72,11 @@ class LowLevelParser {
       }
       auto it = fields_.find(wiretype_and_tag->second);
       if (it == fields_.end()) {
-        return absl::InvalidArgumentError(
-            absl::StrCat("Unknown field ", wiretype_and_tag->second));
+        absl::Status s = SkipField(wiretype_and_tag->first, serialized);
+        if (!s.ok()) {
+          return s;
+        }
+        continue;
       }
       if (it->second->GetWireType() != wiretype_and_tag->first) {
         return absl::InvalidArgumentError(absl::StrCat(

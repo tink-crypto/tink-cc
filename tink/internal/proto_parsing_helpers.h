@@ -66,6 +66,18 @@ int WireTypeAndTagLength(WireType wire_type, int tag);
 absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
     absl::string_view& serialized);
 
+// Consumes a Fixed32 byte field. Currently returns Status instead of
+// StatusOr<uint32_t> as we never need the value.
+absl::Status ConsumeFixed32(absl::string_view& serialized);
+// Consumes a Fixed64 byte field. Currently returns Status instead of
+// StatusOr<uint64_t> as we never need the value.
+absl::Status ConsumeFixed64(absl::string_view& serialized);
+
+// Skips a field of type "wire_type". Returns non-ok status if this
+// cannot be skipped (e.g. wire_type == kStartGroup/kEndGroup, or too little
+// data in serialized)
+absl::Status SkipField(WireType wire_type, absl::string_view& serialized);
+
 }  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink

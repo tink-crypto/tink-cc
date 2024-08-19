@@ -72,7 +72,12 @@ class LowLevelParser {
       }
       auto it = fields_.find(wiretype_and_tag->second);
       if (it == fields_.end()) {
-        absl::Status s = SkipField(wiretype_and_tag->first, serialized);
+        absl::Status s;
+        if (wiretype_and_tag->first == WireType::kStartGroup) {
+          s = SkipGroup(wiretype_and_tag->second, serialized);
+        } else {
+          s = SkipField(wiretype_and_tag->first, serialized);
+        }
         if (!s.ok()) {
           return s;
         }

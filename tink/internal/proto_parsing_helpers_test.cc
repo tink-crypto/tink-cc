@@ -343,6 +343,87 @@ TEST(SkipField, EndGroupFalis) {
               Not(IsOk()));
 }
 
+/* 3b: start group (field #7): 3 + 7 * 8 = 59 = 0x3b */
+/* 3c:   end group (field #7): 4 + 7 * 8 = 60 = 0x3c */
+/* 43: start group (field #8): 3 + 8 * 8 = 59 = 0x43 */
+/* 44:   end group (field #8): 4 + 8 * 8 = 60 = 0x44 */
+TEST(SkipGroup, BasicWorks) {
+  std::string bytes = HexDecodeOrDie("3c");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq(""));
+}
+
+TEST(SkipGroup, LeftOversAreKept) {
+  std::string bytes = absl::StrCat(HexDecodeOrDie("3c"), "leftover");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq("leftover"));
+}
+
+TEST(SkipGroup, WrongClosingTagFails) {
+  std::string bytes = HexDecodeOrDie("44");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), Not(IsOk()));
+}
+
+TEST(SkipGroup, NestedWorks) {
+  std::string bytes = HexDecodeOrDie("433b3c443c");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq(""));
+}
+
+TEST(SkipGroup, BadNestingFails) {
+  std::string bytes = HexDecodeOrDie("433c44");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), Not(IsOk()));
+}
+
+TEST(SkipGroup, NestedStringFieldWorks) {
+  std::string bytes = HexDecodeOrDie(absl::StrCat(
+      /* kLengthDelimited, tag#1 = */ "0a",
+      /* 10 bytes length encoded */ "0a", "12345678901234567890", "3c"));
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq(""));
+}
+
+TEST(SkipGroup, NestedStringFieldTooShort) {
+  std::string bytes = HexDecodeOrDie(absl::StrCat(
+      /* kLengthDelimited, tag#1 = */ "0a",
+      /* 10 bytes length encoded */ "0a", "1234567812345678", "3c"));
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), Not(IsOk()));
+}
+
+TEST(SkipGroup, NestedVarintFieldWorks) {
+  std::string bytes = HexDecodeOrDie(absl::StrCat(
+      /* kVarint, tag#1 = */ "08",
+      /* Varint value 1 */ "08", "3c"));
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq(""));
+}
+
+TEST(SkipGroup, NestedFixed64FieldWorks) {
+  std::string bytes = HexDecodeOrDie(absl::StrCat(
+      /* kFixed64, tag#1 = */ "09",
+      /* Varint value 1 */ "0011223344556677", "3c"));
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq(""));
+}
+
+TEST(SkipGroup, NestedFixed32FieldWorks) {
+  std::string bytes = HexDecodeOrDie(absl::StrCat(
+      /* kFixed32, tag#1 = */ "0d",
+      /* Varint value 1 */ "00112233", "3c"));
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
+  EXPECT_THAT(bytes_view, Eq(""));
+}
+
 }  // namespace
 
 }  // namespace proto_parsing

@@ -73,10 +73,15 @@ absl::Status ConsumeFixed32(absl::string_view& serialized);
 // StatusOr<uint64_t> as we never need the value.
 absl::Status ConsumeFixed64(absl::string_view& serialized);
 
-// Skips a field of type "wire_type". Returns non-ok status if this
-// cannot be skipped (e.g. wire_type == kStartGroup/kEndGroup, or too little
-// data in serialized)
+// Skips a field of type "wire_type". Returns non-ok status for
+// wire_type == kStartGroup/kEndGroup, or if too little data in serialized.
+// Note: kStartGroup needs to be skipped with SkipGroup.
 absl::Status SkipField(WireType wire_type, absl::string_view& serialized);
+
+// Skips a field of type "kStartGroup". This is a separate method because it
+// needs to be called differently and we want to ensure that there is no
+// recursion to limit stack growth (so SkipField should never call SkipGroup).
+absl::Status SkipGroup(int field_number, absl::string_view& serialized);
 
 }  // namespace proto_parsing
 }  // namespace internal

@@ -485,7 +485,7 @@ TEST(ProtoParserTest, SerializeUint32Field) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
           .AddUint32Field(1, &ParsedStruct::uint32_member_1)
-      .Build();
+          .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
   ASSERT_THAT(serialized, IsOk());
@@ -512,7 +512,7 @@ TEST(ProtoParserTest, SerializeIntoSecretData) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
           .AddUint32Field(1, &ParsedStruct::uint32_member_1)
-      .Build();
+          .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<crypto::tink::util::SecretData> serialized =
       parser->SerializeIntoSecretData(s);
@@ -866,6 +866,106 @@ TEST(ProtoParserDeathTest, DiesOnError) {
             .BuildOrDie();
       },
       "");
+}
+// Skip Group handling =========================================================
+/* 3b: start group (field #7): 3 + 7 * 8 = 59 = 0x3b */
+/* 3c:   end group (field #7): 4 + 7 * 8 = 60 = 0x3c */
+/* 43: start group (field #8): 3 + 8 * 8 = 59 = 0x43 */
+/* 44:   end group (field #8): 4 + 8 * 8 = 60 = 0x44 */
+TEST(ProtoParserTest, GroupSkipTest) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string empty_with_group = HexDecodeOrDie("3b3c");
+
+  EXPECT_TRUE(proto_test_proto.ParseFromString(empty_with_group));
+  EXPECT_THAT(parser.Parse(empty_with_group).status(), IsOk());
+}
+
+TEST(ProtoParserTest, GroupSkipTestWrongEndTag) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string empty_with_group = HexDecodeOrDie("3b44");
+
+  EXPECT_FALSE(proto_test_proto.ParseFromString(empty_with_group));
+  EXPECT_THAT(parser.Parse(empty_with_group), Not(IsOk()));
+}
+
+// In group "7", if a (field#,varint) of the original message is given,
+// it's of course *not* part of the outer message:
+TEST(ProtoParserTest, FieldsInGroupAreIgnored) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string empty_with_group = HexDecodeOrDie("3b08083c");
+
+  EXPECT_TRUE(proto_test_proto.ParseFromString(empty_with_group));
+  EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(0));
+
+  absl::StatusOr<ParsedStruct> parsed_struct = parser.Parse(empty_with_group);
+  ASSERT_THAT(parsed_struct.status(), IsOk());
+  EXPECT_THAT(parsed_struct->uint32_member_1, Eq(0));
+}
+
+TEST(ProtoParserTest, MultinestGroupSkipTest) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string properly_nested_groups = HexDecodeOrDie(
+      absl::StrCat("3b", "43", "44", "3b", "3b", "3c", "3c", "3c"));
+
+  EXPECT_TRUE(proto_test_proto.ParseFromString(properly_nested_groups));
+  EXPECT_THAT(parser.Parse(properly_nested_groups).status(), IsOk());
+}
+
+TEST(ProtoParserTest, GroupNotClosedTest) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string group_not_closed_string = HexDecodeOrDie("3b");
+
+  EXPECT_FALSE(proto_test_proto.ParseFromString(group_not_closed_string));
+  EXPECT_THAT(parser.Parse(group_not_closed_string), Not(IsOk()));
+}
+
+TEST(ProtoParserTest, GroupWronglyNestedSkipTest) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string wrongly_nested = HexDecodeOrDie("3b433c44");
+
+  EXPECT_FALSE(proto_test_proto.ParseFromString(wrongly_nested));
+  EXPECT_THAT(parser.Parse(wrongly_nested), Not(IsOk()));
+}
+
+TEST(ProtoParserTest, GroupSkipTestParseAfter) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string group_then_varintfield1_is5 = HexDecodeOrDie("3b3c0805");
+
+  EXPECT_TRUE(proto_test_proto.ParseFromString(group_then_varintfield1_is5));
+  EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(5));
+
+  absl::StatusOr<ParsedStruct> parsed_struct =
+      parser.Parse(group_then_varintfield1_is5);
+  ASSERT_THAT(parsed_struct.status(), IsOk());
+  EXPECT_THAT(parsed_struct->uint32_member_1, Eq(5));
 }
 
 }  // namespace

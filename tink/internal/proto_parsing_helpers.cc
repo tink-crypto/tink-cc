@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <limits>
 #include <utility>
+#include <vector>
 
 #include "absl/numeric/bits.h"
 #include "absl/status/status.h"
@@ -184,6 +185,40 @@ absl::Status SkipField(WireType wire_type, absl::string_view& serialized) {
   }
   return absl::InvalidArgumentError(
       absl::StrCat("Cannot skip fields of wire type ", wire_type));
+}
+
+absl::Status SkipGroup(int field_number, absl::string_view& serialized) {
+  std::vector<int> field_number_stack;
+  field_number_stack.push_back(field_number);
+
+  while (!field_number_stack.empty()) {
+    absl::StatusOr<std::pair<WireType, int>> wiretype_and_tag =
+        ConsumeIntoWireTypeAndTag(serialized);
+    if (!wiretype_and_tag.ok()) {
+      return wiretype_and_tag.status();
+    }
+    switch (wiretype_and_tag->first) {
+      case WireType::kStartGroup: {
+        field_number_stack.push_back(wiretype_and_tag->second);
+        continue;
+      }
+      case WireType::kEndGroup: {
+        int popped = field_number_stack.back();
+        field_number_stack.pop_back();
+        if (popped != wiretype_and_tag->second) {
+          return absl::InvalidArgumentError("Group tags did not match");
+        }
+        continue;
+      }
+      default: {
+        absl::Status s = SkipField(wiretype_and_tag->first, serialized);
+        if (!s.ok()) {
+          return s;
+        }
+      }
+    }
+  }
+  return absl::OkStatus();
 }
 
 }  // namespace proto_parsing

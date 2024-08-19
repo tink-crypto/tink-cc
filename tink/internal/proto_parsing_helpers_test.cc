@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -41,9 +42,11 @@ namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsEmpty;
 using ::testing::Not;
 using ::testing::Test;
@@ -276,11 +279,32 @@ TEST(ConsumeBytesReturnStringView, EmptyWithoutVarint) {
   ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view), Not(IsOk()));
 }
 
-TEST(ConsumeBytesReturnStringView, InvalidVarint) {
+TEST(ConsumeBytesReturnStringView, PaddedVarint) {
   std::string bytes =
       absl::StrCat(/* 0 bytes */ HexDecodeOrDie("8000"), "abcde");
   absl::string_view bytes_view = bytes;
-  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view), Not(IsOk()));
+  absl::StatusOr<absl::string_view> result =
+      ConsumeBytesReturnStringView(bytes_view);
+  ASSERT_THAT(result, IsOk());
+  ASSERT_THAT(bytes_view, Eq("abcde"));
+}
+
+TEST(ConsumeBytesReturnStringView, VeryPaddedVarint) {
+  std::string bytes =
+      absl::StrCat(/* 0 bytes */ HexDecodeOrDie("808080808000"), "abcde");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("more than 5 bytes")));
+}
+
+TEST(ConsumeBytesReturnStringView, InvalidVarint) {
+  std::string bytes =
+      absl::StrCat(/* 0 bytes */ HexDecodeOrDie("8080808010"), "abcde");
+  absl::string_view bytes_view = bytes;
+  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("declared to be longer than 2^32-1")));
 }
 
 TEST(ConsumeFixed32, Consumes4Bytes) {

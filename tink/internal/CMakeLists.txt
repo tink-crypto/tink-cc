@@ -1397,6 +1397,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parsing_helpers
     gmock
+    absl::status
     absl::statusor
     absl::strings
     absl::string_view

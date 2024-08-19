@@ -140,7 +140,7 @@ TEST(MessageField, InvalidVarint) {
                                                InnerStructFields());
   OuterStruct s;
 
-  std::string bytes = absl::StrCat(HexDecodeOrDie("8000"), "abcde");
+  std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   absl::string_view bytes_view = bytes;
   EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
 }

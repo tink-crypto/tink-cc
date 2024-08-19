@@ -243,7 +243,7 @@ TEST(StringBytesField, InvalidVarint) {
                                        &ParsedStruct::string_member_1);
   ParsedStruct s;
 
-  std::string bytes = absl::StrCat(HexDecodeOrDie("8000"), "abcde");
+  std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   absl::string_view bytes_view = bytes;
   EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
 }
@@ -360,7 +360,7 @@ TEST(SecretDataBytesField, InvalidVarint) {
                                            &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
 
-  std::string bytes = absl::StrCat(HexDecodeOrDie("8000"), "abcde");
+  std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   absl::string_view bytes_view = bytes;
   EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
 }

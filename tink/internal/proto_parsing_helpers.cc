@@ -58,6 +58,32 @@ absl::StatusOr<uint32_t> ConsumeVarintForTag(absl::string_view& serialized) {
   return absl::InvalidArgumentError("Varint too long");
 }
 
+// Consumes a varint for the case where it is used in a length delimited field.
+// The behavior of the proto library is subtly different in each case, and we
+// currently want to follow it closely. In size, we are very strict and do not
+// allow additional bits set.
+absl::StatusOr<uint32_t> ConsumeVarintForSize(absl::string_view& serialized) {
+  uint32_t result = 0;
+  for (int i = 0; i < kMax32BitVarintLength; ++i) {
+    if (serialized.empty()) {
+      return absl::InvalidArgumentError("Varint too short");
+    }
+    uint32_t byte = *serialized.begin();
+    if (i == kMax32BitVarintLength - 1) {
+      if ((byte & 0x7F) > (std::numeric_limits<uint32_t>::max() >> (i * 7))) {
+        return absl::InvalidArgumentError(
+            "Length delimeted field declared to be longer than 2^32-1 bytes");
+      }
+    }
+    serialized.remove_prefix(1);
+    result |= ((byte & 0x7F) << (i * 7));
+    if (!(byte & 0x80)) {
+      return result;
+    }
+  }
+  return absl::InvalidArgumentError("Size varint encoded in more than 5 bytes");
+}
+
 }  // namespace
 
 // See https://protobuf.dev/programming-guides/encoding for documentation on
@@ -163,7 +189,7 @@ int WireTypeAndTagLength(WireType wire_type, int tag) {
 
 absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
     absl::string_view& serialized) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
+  absl::StatusOr<uint32_t> result = ConsumeVarintForSize(serialized);
   if (!result.ok()) {
     return result.status();
   }

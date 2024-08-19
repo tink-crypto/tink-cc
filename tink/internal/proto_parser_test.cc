@@ -830,6 +830,10 @@ TEST(ProtoParserTest, VarintAsValueFailsWith12Bytes) {
 
 TEST(ProtoParserTest, VarintAsLength) {
   ProtoTestProto proto_test_proto;
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesStringField(3, &ParsedStruct::string_member_1)
+          .BuildOrDie();
 
   // Field #3, wire type kLengthDelimited
   std::string wirtype_and_fieldnum = HexDecodeOrDie("1a");
@@ -841,13 +845,22 @@ TEST(ProtoParserTest, VarintAsLength) {
     SCOPED_TRACE(t);
     std::string serialization = absl::StrCat(
         wirtype_and_fieldnum, EncodeVarintWeirdly(length, t), contents);
+
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsTrue());
     EXPECT_THAT(proto_test_proto.bytes_field_1(), Eq(contents));
+
+    absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialization);
+    ASSERT_THAT(parsed, IsOk());
+    EXPECT_THAT(parsed->string_member_1, Eq("A"));
   }
 }
 
 TEST(ProtoParserTest, VarintAsLengthFailureCases) {
   ProtoTestProto proto_test_proto;
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesStringField(3, &ParsedStruct::string_member_1)
+          .BuildOrDie();
 
   // Field #3, wire type kLengthDelimited
   std::string wirtype_and_fieldnum = HexDecodeOrDie("1a");
@@ -860,6 +873,7 @@ TEST(ProtoParserTest, VarintAsLengthFailureCases) {
     std::string serialization = absl::StrCat(
         wirtype_and_fieldnum, EncodeVarintWeirdly(length, t), contents);
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsFalse());
+    EXPECT_THAT(parser.Parse(serialization), Not(IsOk()));
   }
 }
 

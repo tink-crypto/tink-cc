@@ -751,6 +751,11 @@ TEST(EncodeVarintWeirdly, EncodeVarintWeirdlyTest) {
 
 TEST(ProtoParserTest, VarintInTagSuccess) {
   ProtoTestProto proto_test_proto;
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ParsedStruct s;
 
   // Field #1, Wiretype kVarint
   uint64_t field_num_wiretype = 0x08;
@@ -762,11 +767,20 @@ TEST(ProtoParserTest, VarintInTagSuccess) {
         absl::StrCat(EncodeVarintWeirdly(field_num_wiretype, t), field_value);
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsTrue());
     EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(1));
+
+    absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialization);
+    ASSERT_THAT(parsed, IsOk());
+    EXPECT_THAT(parsed->uint32_member_1, Eq(1));
   }
 }
 
 TEST(ProtoParserTest, VarintInTagFails) {
   ProtoTestProto proto_test_proto;
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesStringField(1, &ParsedStruct::string_member_1)
+          .BuildOrDie();
+  ParsedStruct s;
 
   // Field #1, wire type kVarint
   uint64_t field_num_wiretype = 0x08;
@@ -778,6 +792,7 @@ TEST(ProtoParserTest, VarintInTagFails) {
     std::string serialization =
         absl::StrCat(EncodeVarintWeirdly(field_num_wiretype, t), field_value);
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsFalse());
+    EXPECT_THAT(parser.Parse(serialization), Not(IsOk()));
   }
 }
 

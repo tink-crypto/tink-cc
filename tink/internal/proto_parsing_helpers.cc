@@ -34,8 +34,31 @@ namespace internal {
 namespace proto_parsing {
 
 namespace {
-constexpr int kMaxVarintLength = 10;
+
+constexpr int kMax64BitVarintLength = 10;
+constexpr int kMax32BitVarintLength = 5;
+
+// Consumes a varint for the case where it is used in a tag. The behavior of
+// the proto library is subtly different in each case, and we currently want to
+// follow it closely. In tags, we should restrict parsing to size 5 and handle
+// overflows by taking mod 2^32.
+absl::StatusOr<uint32_t> ConsumeVarintForTag(absl::string_view& serialized) {
+  uint32_t result = 0;
+  for (int i = 0; i < kMax32BitVarintLength; ++i) {
+    if (serialized.empty()) {
+      return absl::InvalidArgumentError("Varint too short");
+    }
+    uint32_t byte = *serialized.begin();
+    serialized.remove_prefix(1);
+    result |= ((byte & 0x7F) << (i * 7));
+    if (!(byte & 0x80)) {
+      return result;
+    }
+  }
+  return absl::InvalidArgumentError("Varint too long");
 }
+
+}  // namespace
 
 // See https://protobuf.dev/programming-guides/encoding for documentation on
 // the wire format.
@@ -44,12 +67,12 @@ constexpr int kMaxVarintLength = 10;
 absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(
     absl::string_view& serialized) {
   uint64_t result = 0;
-  for (int i = 0; i < kMaxVarintLength; ++i) {
+  for (int i = 0; i < kMax64BitVarintLength; ++i) {
     if (serialized.empty()) {
       return absl::InvalidArgumentError("Varint too short");
     }
     uint64_t byte = *serialized.begin();
-    if (i == kMaxVarintLength - 1 && (byte & 0xfe)) {
+    if (i == kMax64BitVarintLength - 1 && (byte & 0xfe)) {
       return absl::InvalidArgumentError(
           "Varint bigger than numeric_limit<uint64_t>::max()");
     }
@@ -108,7 +131,7 @@ absl::Status SerializeVarint(uint64_t value, absl::Span<char>& output) {
 // https://protobuf.dev/programming-guides/encoding/#structure
 absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
     absl::string_view& serialized) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
+  absl::StatusOr<uint32_t> result = ConsumeVarintForTag(serialized);
   if (!result.ok()) {
     return result.status();
   }

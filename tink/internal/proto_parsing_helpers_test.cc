@@ -171,21 +171,42 @@ struct WireTypeAndTagCase {
   int tag;
 };
 
-constexpr WireTypeAndTagCase kWireTypeAndTagCases[] = {
-    {"08", WireType::kVarint, 1},
-    {"09", WireType::kFixed64, 1},
-    {"0a", WireType::kLengthDelimited, 1},
-    {"0b", WireType::kStartGroup, 1},
-    {"0c", WireType::kEndGroup, 1},
-    {"0d", WireType::kFixed32, 1},
-    {"10", WireType::kVarint, 2},
-    {"78", WireType::kVarint, 15},
-    {"8001", WireType::kVarint, 16},
-    {"f8ffffff0f", WireType::kVarint, 536870911},
-};
+// Test cases which work for both parsing and serialization.
+std::vector<WireTypeAndTagCase> CanonicalWireTypeAndTagCases() {
+  return {
+      {"08", WireType::kVarint, 1},
+      {"09", WireType::kFixed64, 1},
+      {"0a", WireType::kLengthDelimited, 1},
+      {"0b", WireType::kStartGroup, 1},
+      {"0c", WireType::kEndGroup, 1},
+      {"0d", WireType::kFixed32, 1},
+      {"10", WireType::kVarint, 2},
+      {"78", WireType::kVarint, 15},
+      {"8001", WireType::kVarint, 16},
+      {"f8ffffff0f", WireType::kVarint, 536870911},
+  };
+}
+
+// Test cases which work only for parsing, but not serialization.
+std::vector<WireTypeAndTagCase> CanonicalAndParseableWireTypeAndTagCases() {
+  std::vector<WireTypeAndTagCase> result = CanonicalWireTypeAndTagCases();
+  // Normal 0x08 but with lots of padded zeros
+  result.push_back({"8880808000", WireType::kVarint, 1});
+  // 0x08 + 2^32
+  result.push_back({"8880808010", WireType::kVarint, 1});
+  // 0x08 + 7 * 2^32
+  result.push_back({"8880808070", WireType::kVarint, 1});
+  // 0xf8ffffff0f + 2^32
+  result.push_back({"f8ffffff1f", WireType::kVarint, 536870911});
+  // 0xf8ffffff0f + 7 * 2^32
+  result.push_back({"f8ffffff7f", WireType::kVarint, 536870911});
+  return result;
+}
+
 
 TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
-  for (const WireTypeAndTagCase& v : kWireTypeAndTagCases) {
+  for (const WireTypeAndTagCase& v :
+       CanonicalAndParseableWireTypeAndTagCases()) {
     SCOPED_TRACE(v.hex_encoded_bytes);
     std::string bytes = HexDecodeOrDie(v.hex_encoded_bytes);
     absl::string_view bytes_view = bytes;
@@ -198,9 +219,10 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
   }
 }
 
+
 TEST(ProtoParserTest, ConsumeIntoWireTypeAndTagFailures) {
   for (const absl::string_view v :
-       std::vector<absl::string_view>({"00", "f8ffffff1f", "f8ffffff7f"})) {
+       std::vector<absl::string_view>({"00", "f8ffffffff7f"})) {
     SCOPED_TRACE(v);
     std::string bytes = HexDecodeOrDie(v);
     absl::string_view bytes_view = bytes;
@@ -209,7 +231,7 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndTagFailures) {
 }
 
 TEST(ProtoParserTest,  SerializeIntoWireTypeAndTagSuccess) {
-  for (const WireTypeAndTagCase& v : kWireTypeAndTagCases) {
+  for (const WireTypeAndTagCase& v : CanonicalWireTypeAndTagCases()) {
     SCOPED_TRACE(v.hex_encoded_bytes);
     std::string buffer;
     buffer.resize(WireTypeAndTagLength(v.wiretype, v.tag));

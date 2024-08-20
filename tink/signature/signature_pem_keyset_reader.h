@@ -60,6 +60,11 @@ struct PemKey {
 };
 
 // Base class for parsing PEM-encoded keys (RFC 7468) into a keyset.
+//
+// For RSA public keys, only OID "rsaEncryption" is supported. The OIDs
+// "id-RSASSA-PSS", "sha256WithRSAEncryption",
+// "sha384WithRSAEncryption" and "sha512WithRSAEncryption" are not supported.
+// See RFC 4055 Section 1.2 and Section 5 for a discussion of these OIDs.
 class SignaturePemKeysetReader : public KeysetReader {
  public:
   util::StatusOr<std::unique_ptr<::google::crypto::tink::EncryptedKeyset>>

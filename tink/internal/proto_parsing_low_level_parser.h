@@ -71,7 +71,8 @@ class LowLevelParser {
         return wiretype_and_tag.status();
       }
       auto it = fields_.find(wiretype_and_tag->second);
-      if (it == fields_.end()) {
+      if (it == fields_.end() ||
+          it->second->GetWireType() != wiretype_and_tag->first) {
         absl::Status s;
         if (wiretype_and_tag->first == WireType::kStartGroup) {
           s = SkipGroup(wiretype_and_tag->second, serialized);
@@ -82,10 +83,6 @@ class LowLevelParser {
           return s;
         }
         continue;
-      }
-      if (it->second->GetWireType() != wiretype_and_tag->first) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Wrong wire type in serialization ", wiretype_and_tag->first));
       }
       absl::Status status = it->second->ConsumeIntoMember(serialized, values);
       if (!status.ok()) {

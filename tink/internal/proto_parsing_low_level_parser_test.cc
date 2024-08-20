@@ -53,6 +53,7 @@ absl::btree_map<int, std::unique_ptr<Field<ParsedStruct>>> MakeFields() {
 
 namespace {
 
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
@@ -82,6 +83,18 @@ TEST(LowLevelParserTest, ConsumeIntoFieldsBasic) {
   ASSERT_THAT(serialized_view, IsEmpty());
   EXPECT_THAT(s.uint32_member_1, Eq(123));
   EXPECT_THAT(s.string_member_1, Eq("foo"));
+}
+
+TEST(LowLevelParserTest, ConsumeIntoFieldsWrongWiretypeIgnored) {
+  LowLevelParser<ParsedStruct> parser(MakeFields());
+  ParsedStruct s;
+  parser.ClearAllFields(s);
+  std::string serialized = HexDecodeOrDie(
+      absl::StrCat(/*Wiretype: kVarint, Tag 3*/ "18", /* Varint: 1*/ "08"));
+  absl::string_view serialized_view = serialized;
+  ASSERT_THAT(parser.ConsumeIntoAllFields(serialized_view, s), IsOk());
+  ASSERT_THAT(serialized_view, IsEmpty());
+  EXPECT_THAT(s.string_member_1, Eq(""));
 }
 
 TEST(LowLevelParserTest, RequiresSerializatoin) {

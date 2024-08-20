@@ -98,17 +98,9 @@ absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(
       return absl::InvalidArgumentError("Varint too short");
     }
     uint64_t byte = *serialized.begin();
-    if (i == kMax64BitVarintLength - 1 && (byte & 0xfe)) {
-      return absl::InvalidArgumentError(
-          "Varint bigger than numeric_limit<uint64_t>::max()");
-    }
     serialized.remove_prefix(1);
     result |= ((byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
-      if (byte == 0 && i != 0) {
-        return absl::InvalidArgumentError(
-            "Varint not in canoncial encoding (ends with 0)");
-      }
       return result;
     }
   }
@@ -121,11 +113,8 @@ absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(
   if (!result.ok()) {
     return result.status();
   }
-  if (*result > std::numeric_limits<uint32_t>::max()) {
-    return absl::InvalidArgumentError(
-        "Parsed value too large to fit in uint32_t");
-  }
-  return *result;
+  // Writing static_cast<> isn't needed, but I want to make it explicit.
+  return static_cast<uint32_t>(*result);
 }
 
 int VarintLength(uint64_t value) {

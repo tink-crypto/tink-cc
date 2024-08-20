@@ -56,26 +56,37 @@ struct VarintCase {
   uint64_t value;                       // Parsed value.
 };
 
-constexpr VarintCase kVarintCases[] = {
-    {"00", 0},
-    {"01", 1},
-    {"7f", 127},
-    {"8001", 128},
-    {"a274", 14882},
-    {"ff7f", 16383},
-    {"808001", 16384},
-    {"ffff7f", 2097151},
-    {"80808001", 2097152},
-    {"bef792840b", 2961488830},
-    {"80e6eb9cc3c9a449", 41256202580718336ULL},
-    {"9ba8f9c2bbd68085a601", 11964378330978735131ULL},
-    {"80808080808080808001", /* 2^63 */ 9223372036854775808ULL },
-    {"feffffffffffffffff01", /* 2^64 - 2*/ 18446744073709551614ULL },
-    {"ffffffffffffffffff01", /* 2^64 - 1*/ 18446744073709551615ULL },
-};
+std::vector<VarintCase> VarintFieldParseAndSerializeCases() {
+  return std::vector<VarintCase>({
+      {"00", 0},
+      {"01", 1},
+      {"7f", 127},
+      {"8001", 128},
+      {"a274", 14882},
+      {"ff7f", 16383},
+      {"808001", 16384},
+      {"ffff7f", 2097151},
+      {"80808001", 2097152},
+      {"bef792840b", 2961488830},
+      {"80e6eb9cc3c9a449", 41256202580718336ULL},
+      {"9ba8f9c2bbd68085a601", 11964378330978735131ULL},
+      {"80808080808080808001", /* 2^63 */ 9223372036854775808ULL},
+      {"feffffffffffffffff01", /* 2^64 - 2*/ 18446744073709551614ULL},
+      {"ffffffffffffffffff01", /* 2^64 - 1*/ 18446744073709551615ULL},
+  });
+}
+
+std::vector<VarintCase> VarintFieldParseCases() {
+  std::vector<VarintCase> result = VarintFieldParseAndSerializeCases();
+  result.push_back({"8000", 0});
+  result.push_back({"80808080808080808000", 0});
+  result.push_back({"80818000", 128});
+  result.push_back({"ffffffffffffffffff7f", 18446744073709551615ULL});
+  return result;
+}
 
 TEST(ProtoParserTest, ConsumeVarintIntoUint64DirectTest) {
-  for (const VarintCase& v : kVarintCases) {
+  for (const VarintCase& v : VarintFieldParseCases()) {
     SCOPED_TRACE(v.value);
     std::string bytes = HexDecodeOrDie(v.hex_encoded_bytes);
     absl::string_view bytes_view = bytes;
@@ -87,30 +98,26 @@ TEST(ProtoParserTest, ConsumeVarintIntoUint64DirectTest) {
 }
 
 TEST(ProtoParserTest, ConsumeVarintIntoUint32DirectTest) {
-  for (const VarintCase& v : kVarintCases) {
+  for (const VarintCase& v : VarintFieldParseCases()) {
     SCOPED_TRACE(v.value);
     std::string bytes = HexDecodeOrDie(v.hex_encoded_bytes);
     absl::string_view bytes_view = bytes;
     absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(bytes_view);
-    if (v.value <= std::numeric_limits<uint32_t>::max()) {
-      ASSERT_THAT(result, IsOk());
-      EXPECT_THAT(*result, Eq(v.value));
-      EXPECT_THAT(bytes_view, IsEmpty());
-    } else {
-      EXPECT_THAT(result, Not(IsOk()));
-    }
+    ASSERT_THAT(result, IsOk());
+    EXPECT_THAT(*result, Eq(static_cast<uint32_t>(v.value)));
+    EXPECT_THAT(bytes_view, IsEmpty());
   }
 }
 
 TEST(VarintLength, VarintCases) {
-  for (const VarintCase& v : kVarintCases) {
+  for (const VarintCase& v : VarintFieldParseAndSerializeCases()) {
     SCOPED_TRACE(v.value);
     EXPECT_THAT(VarintLength(v.value), Eq(v.hex_encoded_bytes.size()/2));
   }
 }
 
 TEST(SerializeVarint, VarintCases) {
-  for (const VarintCase& v : kVarintCases) {
+  for (const VarintCase& v : VarintFieldParseAndSerializeCases()) {
     SCOPED_TRACE(v.value);
     std::string output;
     output.resize(VarintLength(v.value));
@@ -135,7 +142,7 @@ TEST(SerializeVarint, LeavesUnusedBytes) {
 
 TEST(SerializeVarint, TooSmallOutputBuffer) {
   std::string output_buffer = "abcdefghijklmnop";
-  for (const VarintCase& v : kVarintCases) {
+  for (const VarintCase& v : VarintFieldParseAndSerializeCases()) {
     SCOPED_TRACE(v.value);
     absl::Span<char> output_span = absl::MakeSpan(output_buffer);
     output_span = output_span.subspan(0, VarintLength(v.value) - 1);
@@ -145,16 +152,6 @@ TEST(SerializeVarint, TooSmallOutputBuffer) {
 
 constexpr absl::string_view kHexEncodedVarintFailureCases[] = {
     "",
-    // We expect canonical varints: this encodes 0 so should be encoded as "0"
-    "8000",
-    // This encodes 1, so should be encoded as "01".
-    "8100",
-    "faab",
-    "f0abc99af8b2",
-    // Would encode 2^64 == std::numeric_limits<uint64_t>::max() + 1
-    "80808080808080808002",
-     // Something clearly too big (but the same number of bytes as above)
-    "ffffffffffffffffff08",
      // Varint with too many bytes.
     "ffffffffffffffffffff01",
 };

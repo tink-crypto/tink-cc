@@ -64,9 +64,21 @@ struct ParsedStruct {
 };
 
 // Uint32Field ==============================================================
-std::vector<std::pair<std::string, uint32_t>> GetUint32TestCases() {
+std::vector<std::pair<std::string, uint32_t>>
+Uint32TestCasesParseAndSerialize() {
   return std::vector<std::pair<std::string, uint32_t>>{
       {"00", 0}, {"01", 1}, {"7f", 127}, {"8001", 128}, {"a274", 14882}};
+}
+
+std::vector<std::pair<std::string, uint32_t>> Uint32TestCasesParseOnly() {
+  std::vector<std::pair<std::string, uint32_t>> result;
+  // Padded up to 10 bytes.
+  result.push_back({"8000", 0});
+  result.push_back({"8100", 1});
+  result.push_back({"fffffffffff100", 4294967295});
+  result.push_back({"80808080808080808000", 0});
+  result.push_back({"ffffffffffffffffff7f", 4294967295});
+  return result;
 }
 
 TEST(Uint32Field, ClearMemberWorks) {
@@ -84,7 +96,8 @@ TEST(Uint32Field, ConsumeIntoMemberSuccessCases) {
   ParsedStruct s;
   s.uint32_member_1 = 999;
 
-  for (std::pair<std::string, uint32_t> test_case : GetUint32TestCases()) {
+  for (std::pair<std::string, uint32_t> test_case :
+       Uint32TestCasesParseOnly()) {
     SCOPED_TRACE(test_case.first);
     std::string serialized = HexDecodeOrDie(test_case.first);
     absl::string_view serialized_view = serialized;
@@ -112,9 +125,7 @@ TEST(Uint32Field, ConsumeIntoMemberFailureCases) {
                                   &ParsedStruct::uint32_member_1);
   ParsedStruct s;
 
-  for (std::string test_case :
-       {"", "8000", "8100", "faab",
-        /* valid uint_64 encoding: */ "ffffffffffffffffff01"}) {
+  for (std::string test_case : {"", "faab"}) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
     absl::string_view serialized_view = serialized;
@@ -127,7 +138,8 @@ TEST(Uint32Field, SerializeVarintSuccessCases) {
                                   &ParsedStruct::uint32_member_1);
   ParsedStruct s;
 
-  for (std::pair<std::string, uint32_t> test_case : GetUint32TestCases()) {
+  for (std::pair<std::string, uint32_t> test_case :
+       Uint32TestCasesParseAndSerialize()) {
     SCOPED_TRACE(test_case.first);
     s.uint32_member_1 = test_case.second;
     ASSERT_THAT(field.GetSerializedSize(s), Eq(test_case.first.size() / 2));
@@ -145,7 +157,8 @@ TEST(Uint32Field, SerializeVarintBufferTooSmall) {
   Uint32Field<ParsedStruct> field(kUint32Field1Tag,
                                   &ParsedStruct::uint32_member_1);
   ParsedStruct s;
-  for (std::pair<std::string, uint32_t> test_case : GetUint32TestCases()) {
+  for (std::pair<std::string, uint32_t> test_case :
+       Uint32TestCasesParseAndSerialize()) {
     SCOPED_TRACE(test_case.first);
     s.uint32_member_1 = test_case.second;
     ASSERT_THAT(field.GetSerializedSize(s), Eq(test_case.first.size() / 2));

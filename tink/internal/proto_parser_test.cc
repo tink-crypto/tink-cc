@@ -368,9 +368,9 @@ TEST(ProtoParserTest, FailsOn11ByteVarint) {
   EXPECT_THAT(parser->Parse(serialization).status(), Not(IsOk()));
 }
 
-TEST(ProtoParserTest, FailsOn5ByteVarintUint32) {
+TEST(ProtoParserTest, SucceedsOn5ByteVarintUint32) {
   // 08: tag 1, wire type varint -- parsing will expect another varint encoding
-  // a uint32_t. (This would work if we parsed it as a Uint64 field)
+  // a uint32_t. We provide a varint which is larger than 2^32.
   std::string serialization = test::HexDecodeOrDie("08ffffffff7f");
   ASSERT_THAT(serialization.size(), Eq(1 + 5));
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
@@ -378,7 +378,9 @@ TEST(ProtoParserTest, FailsOn5ByteVarintUint32) {
           .AddUint32Field(/*tag = */ 1, &ParsedStruct::uint32_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
-  EXPECT_THAT(parser->Parse(serialization).status(), Not(IsOk()));
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse(serialization);
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->uint32_member_1, Eq(4294967295));
 }
 
 TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessages) {
@@ -798,6 +800,10 @@ TEST(ProtoParserTest, VarintInTagFails) {
 
 TEST(ProtoParserTest, VarintAsValueNormal) {
   ProtoTestProto proto_test_proto;
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
 
   // Field #1, wire type kVarint
   std::string wirtype_and_fieldnum = HexDecodeOrDie("08");
@@ -810,11 +816,19 @@ TEST(ProtoParserTest, VarintAsValueNormal) {
         absl::StrCat(wirtype_and_fieldnum, EncodeVarintWeirdly(value, t));
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsTrue());
     EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(value));
+
+    absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialization);
+    ASSERT_THAT(parsed.status(), IsOk());
+    EXPECT_THAT(parsed->uint32_member_1, Eq(value));
   }
 }
 
 TEST(ProtoParserTest, VarintAsValueFailsWith12Bytes) {
   ProtoTestProto proto_test_proto;
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(1, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
 
   // Field #1, wire type kVarint
   std::string wirtype_and_fieldnum = HexDecodeOrDie("08");
@@ -825,6 +839,7 @@ TEST(ProtoParserTest, VarintAsValueFailsWith12Bytes) {
     std::string serialization =
         absl::StrCat(wirtype_and_fieldnum, EncodeVarintWeirdly(value, t));
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsFalse());
+    EXPECT_THAT(parser.Parse(serialization), Not(IsOk()));
   }
 }
 

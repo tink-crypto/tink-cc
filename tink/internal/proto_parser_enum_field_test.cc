@@ -103,8 +103,7 @@ TEST(EnumField, ConsumeIntoMemberFailureCases) {
   ExampleStruct s;
 
   for (std::string test_case :
-       {"", "8000", "8100", "faab",
-        /* valid uint_64 encoding: */ "ffffffffffffffffff01"}) {
+       {"", /* 11 bytes, too long */ "ffffffffffffffffffff01"}) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
     absl::string_view serialized_view = serialized;

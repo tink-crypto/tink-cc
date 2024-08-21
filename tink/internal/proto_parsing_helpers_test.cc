@@ -112,7 +112,7 @@ TEST(ProtoParserTest, ConsumeVarintIntoUint32DirectTest) {
 TEST(VarintLength, VarintCases) {
   for (const VarintCase& v : VarintFieldParseAndSerializeCases()) {
     SCOPED_TRACE(v.value);
-    EXPECT_THAT(VarintLength(v.value), Eq(v.hex_encoded_bytes.size()/2));
+    EXPECT_THAT(VarintLength(v.value), Eq(v.hex_encoded_bytes.size() / 2));
   }
 }
 
@@ -133,8 +133,7 @@ TEST(SerializeVarint, LeavesUnusedBytes) {
   absl::Span<char> output_span = absl::MakeSpan(output);
   // Will overwrite the first two bytes with 0xa274
   EXPECT_THAT(SerializeVarint(14882, output_span), IsOk());
-  EXPECT_THAT(HexEncode(output),
-              Eq("a27463646566"));
+  EXPECT_THAT(HexEncode(output), Eq("a27463646566"));
   std::string expected = "cdef";
   // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
   EXPECT_THAT(output_span, Eq(absl::MakeSpan(expected)));
@@ -152,7 +151,7 @@ TEST(SerializeVarint, TooSmallOutputBuffer) {
 
 constexpr absl::string_view kHexEncodedVarintFailureCases[] = {
     "",
-     // Varint with too many bytes.
+    // Varint with too many bytes.
     "ffffffffffffffffffff01",
 };
 
@@ -165,14 +164,14 @@ TEST(ProtoParserTest, VarintParsingFailure) {
   }
 }
 
-struct WireTypeAndTagCase {
+struct WireTypeAndFieldNumberCase {
   absl::string_view hex_encoded_bytes;  // Encoding
   WireType wiretype;
-  int tag;
+  int field_number;
 };
 
 // Test cases which work for both parsing and serialization.
-std::vector<WireTypeAndTagCase> CanonicalWireTypeAndTagCases() {
+std::vector<WireTypeAndFieldNumberCase> CanonicalWireTypeAndTagCases() {
   return {
       {"08", WireType::kVarint, 1},
       {"09", WireType::kFixed64, 1},
@@ -188,8 +187,10 @@ std::vector<WireTypeAndTagCase> CanonicalWireTypeAndTagCases() {
 }
 
 // Test cases which work only for parsing, but not serialization.
-std::vector<WireTypeAndTagCase> CanonicalAndParseableWireTypeAndTagCases() {
-  std::vector<WireTypeAndTagCase> result = CanonicalWireTypeAndTagCases();
+std::vector<WireTypeAndFieldNumberCase>
+CanonicalAndParseableWireTypeAndTagCases() {
+  std::vector<WireTypeAndFieldNumberCase> result =
+      CanonicalWireTypeAndTagCases();
   // Normal 0x08 but with lots of padded zeros
   result.push_back({"8880808000", WireType::kVarint, 1});
   // 0x08 + 2^32
@@ -203,46 +204,46 @@ std::vector<WireTypeAndTagCase> CanonicalAndParseableWireTypeAndTagCases() {
   return result;
 }
 
-
-TEST(ProtoParserTest, ConsumeIntoWireTypeAndTag) {
-  for (const WireTypeAndTagCase& v :
+TEST(ProtoParserTest, ConsumeIntoWireTypeAndFieldNumber) {
+  for (const WireTypeAndFieldNumberCase& v :
        CanonicalAndParseableWireTypeAndTagCases()) {
     SCOPED_TRACE(v.hex_encoded_bytes);
     std::string bytes = HexDecodeOrDie(v.hex_encoded_bytes);
     absl::string_view bytes_view = bytes;
     absl::StatusOr<std::pair<WireType, int>> result =
-        ConsumeIntoWireTypeAndTag(bytes_view);
+        ConsumeIntoWireTypeAndFieldNumber(bytes_view);
     ASSERT_THAT(result, IsOk());
     EXPECT_THAT(result->first, Eq(v.wiretype));
-    EXPECT_THAT(result->second, Eq(v.tag));
+    EXPECT_THAT(result->second, Eq(v.field_number));
     EXPECT_THAT(bytes_view, IsEmpty());
   }
 }
 
-
-TEST(ProtoParserTest, ConsumeIntoWireTypeAndTagFailures) {
+TEST(ProtoParserTest, ConsumeIntoWireTypeAndFieldNumberFailures) {
   for (const absl::string_view v :
        std::vector<absl::string_view>({"00", "f8ffffffff7f"})) {
     SCOPED_TRACE(v);
     std::string bytes = HexDecodeOrDie(v);
     absl::string_view bytes_view = bytes;
-    EXPECT_THAT(ConsumeIntoWireTypeAndTag(bytes_view), Not(IsOk()));
+    EXPECT_THAT(ConsumeIntoWireTypeAndFieldNumber(bytes_view), Not(IsOk()));
   }
 }
 
-TEST(ProtoParserTest,  SerializeIntoWireTypeAndTagSuccess) {
-  for (const WireTypeAndTagCase& v : CanonicalWireTypeAndTagCases()) {
+TEST(ProtoParserTest, SerializeIntoWireTypeAndTagSuccess) {
+  for (const WireTypeAndFieldNumberCase& v : CanonicalWireTypeAndTagCases()) {
     SCOPED_TRACE(v.hex_encoded_bytes);
     std::string buffer;
-    buffer.resize(WireTypeAndTagLength(v.wiretype, v.tag));
+    buffer.resize(WireTypeAndFieldNumberLength(v.wiretype, v.field_number));
     absl::Span<char> buffer_span = absl::MakeSpan(buffer);
-    if (v.tag > 0 && v.tag < /* 2^29 = */ 536870912) {
-      EXPECT_THAT(SerializeWireTypeAndTag(v.wiretype, v.tag, buffer_span),
+    if (v.field_number > 0 && v.field_number < /* 2^29 = */ 536870912) {
+      EXPECT_THAT(SerializeWireTypeAndFieldNumber(v.wiretype, v.field_number,
+                                                  buffer_span),
                   IsOk());
       EXPECT_THAT(HexEncode(buffer), Eq(v.hex_encoded_bytes));
       EXPECT_THAT(buffer_span, IsEmpty());
     } else {
-      EXPECT_THAT(SerializeWireTypeAndTag(v.wiretype, v.tag, buffer_span),
+      EXPECT_THAT(SerializeWireTypeAndFieldNumber(v.wiretype, v.field_number,
+                                                  buffer_span),
                   Not(IsOk()));
     }
   }
@@ -259,10 +260,8 @@ TEST(ConsumeBytesReturnStringView, ValidInput) {
   EXPECT_THAT(bytes_view, Eq("XYZ"));
 }
 
-
 TEST(ConsumeBytesReturnStringView, EmptyString) {
-  std::string bytes =
-      absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
+  std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
   absl::string_view bytes_view = bytes;
   absl::StatusOr<absl::string_view> result =
       ConsumeBytesReturnStringView(bytes_view);
@@ -369,21 +368,18 @@ TEST(SkipField, LengthEncodedTooShort) {
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "123456789");
   absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kLengthDelimited, bytes_view),
-              Not(IsOk()));
+  ASSERT_THAT(SkipField(WireType::kLengthDelimited, bytes_view), Not(IsOk()));
 }
 
 TEST(SkipField, StartGroupFails) {
   std::string bytes = "some bytes";
   absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kStartGroup, bytes_view),
-              Not(IsOk()));
+  ASSERT_THAT(SkipField(WireType::kStartGroup, bytes_view), Not(IsOk()));
 }
 TEST(SkipField, EndGroupFalis) {
   std::string bytes = "some bytes";
   absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kEndGroup, bytes_view),
-              Not(IsOk()));
+  ASSERT_THAT(SkipField(WireType::kEndGroup, bytes_view), Not(IsOk()));
 }
 
 /* 3b: start group (field #7): 3 + 7 * 8 = 59 = 0x3b */

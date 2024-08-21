@@ -65,19 +65,19 @@ class LowLevelParser {
   absl::Status ConsumeIntoAllFields(absl::string_view& serialized,
                                     Struct& values) const {
     while (!serialized.empty()) {
-      absl::StatusOr<std::pair<WireType, int>> wiretype_and_tag =
-          ConsumeIntoWireTypeAndTag(serialized);
-      if (!wiretype_and_tag.ok()) {
-        return wiretype_and_tag.status();
+      absl::StatusOr<std::pair<WireType, int>> wiretype_and_field_number =
+          ConsumeIntoWireTypeAndFieldNumber(serialized);
+      if (!wiretype_and_field_number.ok()) {
+        return wiretype_and_field_number.status();
       }
-      auto it = fields_.find(wiretype_and_tag->second);
+      auto it = fields_.find(wiretype_and_field_number->second);
       if (it == fields_.end() ||
-          it->second->GetWireType() != wiretype_and_tag->first) {
+          it->second->GetWireType() != wiretype_and_field_number->first) {
         absl::Status s;
-        if (wiretype_and_tag->first == WireType::kStartGroup) {
-          s = SkipGroup(wiretype_and_tag->second, serialized);
+        if (wiretype_and_field_number->first == WireType::kStartGroup) {
+          s = SkipGroup(wiretype_and_field_number->second, serialized);
         } else {
-          s = SkipField(wiretype_and_tag->first, serialized);
+          s = SkipField(wiretype_and_field_number->first, serialized);
         }
         if (!s.ok()) {
           return s;
@@ -103,7 +103,7 @@ class LowLevelParser {
                              const Struct& values) const {
     for (const auto& pair : fields_) {
       if (pair.second->RequiresSerialization(values)) {
-        absl::Status status = SerializeWireTypeAndTag(
+        absl::Status status = SerializeWireTypeAndFieldNumber(
             pair.second->GetWireType(), pair.first, out);
         if (!status.ok()) {
           return status;
@@ -122,7 +122,8 @@ class LowLevelParser {
     size_t result = 0;
     for (const auto& pair : fields_) {
       if (pair.second->RequiresSerialization(values)) {
-        result += WireTypeAndTagLength(pair.second->GetWireType(), pair.first);
+        result += WireTypeAndFieldNumberLength(pair.second->GetWireType(),
+                                               pair.first);
         result += pair.second->GetSerializedSize(values);
       }
     }

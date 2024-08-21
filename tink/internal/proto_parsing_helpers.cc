@@ -144,35 +144,36 @@ absl::Status SerializeVarint(uint64_t value, absl::Span<char>& output) {
 }
 
 // https://protobuf.dev/programming-guides/encoding/#structure
-absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
+absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
     absl::string_view& serialized) {
   absl::StatusOr<uint32_t> result = ConsumeVarintForTag(serialized);
   if (!result.ok()) {
     return result.status();
   }
-  int tag = *result >> 3;
+  int field_number = *result >> 3;
   WireType wiretype = static_cast<WireType>(*result & 0x7);
-  if (tag == 0) {
+  if (field_number == 0) {
     return absl::InvalidArgumentError("Field number 0 disallowed");
   }
-  return std::make_pair(wiretype, tag);
+  return std::make_pair(wiretype, field_number);
 }
 
-absl::Status SerializeWireTypeAndTag(WireType wire_type, int tag,
-                                     absl::Span<char>& output) {
-  if (tag <= 0 || tag >= (1<<29)) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Tag ", tag, " is not in range [1, 2^29)"));
+absl::Status SerializeWireTypeAndFieldNumber(WireType wire_type,
+                                             int field_number,
+                                             absl::Span<char>& output) {
+  if (field_number <= 0 || field_number >= (1<<29)) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Field Number ", field_number, " is not in range [1, 2^29)"));
   }
-  uint32_t shifted_tag = static_cast<uint32_t>(tag) << 3;
-  return SerializeVarint(shifted_tag | static_cast<uint32_t>(wire_type),
+  uint32_t shifted = static_cast<uint32_t>(field_number) << 3;
+  return SerializeVarint(shifted | static_cast<uint32_t>(wire_type),
                          output);
 }
 
-int WireTypeAndTagLength(WireType wire_type, int tag) {
-  // Result is wrong for negative tags and numbers > 2^29, but the caller will
-  // call SerializeWireTypeAndTag anyhow and notice there.
-  int bit_width = absl::bit_width(static_cast<uint32_t>(tag)) + 3;
+int WireTypeAndFieldNumberLength(WireType wire_type, int field_number) {
+  // Result is wrong for negative field_number and field_number > 2^29, but the
+  // caller will call SerializeWireTypeAndFieldNumber anyhow and notice there.
+  int bit_width = absl::bit_width(static_cast<uint32_t>(field_number)) + 3;
   return (bit_width + 6) / 7;
 }
 
@@ -230,26 +231,27 @@ absl::Status SkipGroup(int field_number, absl::string_view& serialized) {
   field_number_stack.push_back(field_number);
 
   while (!field_number_stack.empty()) {
-    absl::StatusOr<std::pair<WireType, int>> wiretype_and_tag =
-        ConsumeIntoWireTypeAndTag(serialized);
-    if (!wiretype_and_tag.ok()) {
-      return wiretype_and_tag.status();
+    absl::StatusOr<std::pair<WireType, int>> wiretype_and_field_number =
+        ConsumeIntoWireTypeAndFieldNumber(serialized);
+    if (!wiretype_and_field_number.ok()) {
+      return wiretype_and_field_number.status();
     }
-    switch (wiretype_and_tag->first) {
+    switch (wiretype_and_field_number->first) {
       case WireType::kStartGroup: {
-        field_number_stack.push_back(wiretype_and_tag->second);
+        field_number_stack.push_back(wiretype_and_field_number->second);
         continue;
       }
       case WireType::kEndGroup: {
         int popped = field_number_stack.back();
         field_number_stack.pop_back();
-        if (popped != wiretype_and_tag->second) {
+        if (popped != wiretype_and_field_number->second) {
           return absl::InvalidArgumentError("Group tags did not match");
         }
         continue;
       }
       default: {
-        absl::Status s = SkipField(wiretype_and_tag->first, serialized);
+        absl::Status s =
+            SkipField(wiretype_and_field_number->first, serialized);
         if (!s.ok()) {
           return s;
         }

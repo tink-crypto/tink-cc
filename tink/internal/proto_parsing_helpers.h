@@ -52,15 +52,16 @@ enum class WireType : uint8_t {
   kFixed32 = 5,
 };
 
-// Consumes a wiretype/tag encoding and returns the result.
-absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndTag(
+// Consumes a wiretype/field number encoding and returns the result.
+absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
     absl::string_view& serialized);
 
-// Serializes a wiretype/tag into the output. Returns an error if the output
-// buffer is too small or tag is not in the range [1, 2^29-1].
-absl::Status SerializeWireTypeAndTag(WireType wire_type, int tag,
-                                     absl::Span<char>& output);
-int WireTypeAndTagLength(WireType wire_type, int tag);
+// Serializes a wiretype/field_number into the output. Returns an error if the
+// output buffer is too small or field_number is not in the range [1, 2^29-1].
+absl::Status SerializeWireTypeAndFieldNumber(WireType wire_type,
+                                             int field_number,
+                                             absl::Span<char>& output);
+int WireTypeAndFieldNumberLength(WireType wire_type, int field_number);
 
 // Consumes a length delimited field and returns the string_view to the field.
 absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(

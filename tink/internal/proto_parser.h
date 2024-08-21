@@ -36,6 +36,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message_field.h"
+#include "tink/internal/proto_parser_presence_fields.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/secret_key_access_token.h"
@@ -118,6 +119,16 @@ class ProtoParserBuilder {
   ProtoParserBuilder& AddUint32Field(int tag, uint32_t Struct::*value) {
     fields_.push_back(
         absl::make_unique<proto_parsing::Uint32Field<Struct>>(tag, value));
+    return *this;
+  }
+
+  // Adds a uint32_t field for which field presence can be detected. See
+  // https://protobuf.dev/programming-guides/field_presence/
+  ProtoParserBuilder& AddOptionalUint32Field(
+      int tag, absl::optional<uint32_t> Struct::*value) {
+    fields_.push_back(
+        absl::make_unique<proto_parsing::Uint32FieldWithPresence<Struct>>(
+            tag, value));
     return *this;
   }
 

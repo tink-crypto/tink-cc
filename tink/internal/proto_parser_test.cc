@@ -30,6 +30,7 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_test_proto.pb.h"
 #include "tink/util/secret_data.h"
@@ -54,6 +55,7 @@ using ::testing::IsEmpty;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::Not;
+using ::testing::Optional;
 using ::testing::Test;
 
 constexpr int32_t kUint32Field1Tag = 1;
@@ -77,6 +79,7 @@ struct InnerStruct {
 struct ParsedStruct {
   uint32_t uint32_member_1;
   uint32_t uint32_member_2;
+  absl::optional<uint32_t> optional_uint32_member_1;
   std::string string_member_1;
   std::string string_member_2;
   SecretData secret_data_member_1;
@@ -99,6 +102,39 @@ TEST(ProtoParserTest, SingleUint32Works) {
       parser->Parse(proto.SerializeAsString());
   ASSERT_THAT(parsed, IsOk());
   EXPECT_THAT(parsed->uint32_member_1, Eq(123));
+}
+
+TEST(ProtoParserTest, OptionalUint32AbsentWorks) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddOptionalUint32Field(1, &ParsedStruct::optional_uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse("");
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->optional_uint32_member_1, Eq(absl::nullopt));
+}
+
+TEST(ProtoParserTest, OptionalUint32DefaultWorks) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddOptionalUint32Field(1, &ParsedStruct::optional_uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse(HexDecodeOrDie("0800"));
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->optional_uint32_member_1, Optional(0));
+}
+
+TEST(ProtoParserTest, OptionalUint32NonZeroWorks) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddOptionalUint32Field(1, &ParsedStruct::optional_uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse(HexDecodeOrDie("0801"));
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->optional_uint32_member_1, Optional(1));
 }
 
 TEST(ProtoParserTest, SingleEnumWorks) {
@@ -492,6 +528,45 @@ TEST(ProtoParserTest, SerializeUint32Field) {
   absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
   ASSERT_THAT(serialized, IsOk());
   EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("087a")));
+}
+
+TEST(ProtoParserTest, SerializeOptionalFieldAbsent) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddOptionalUint32Field(1, &ParsedStruct::optional_uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  ParsedStruct s;
+  s.optional_uint32_member_1 = absl::nullopt;
+  absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("")));
+}
+
+TEST(ProtoParserTest, SerializeOptionalFieldPresent) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddOptionalUint32Field(1, &ParsedStruct::optional_uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  ParsedStruct s;
+  s.optional_uint32_member_1 = 1;
+  absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("0801")));
+}
+
+TEST(ProtoParserTest, SerializeOptionalFieldPresentDefault) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddOptionalUint32Field(1, &ParsedStruct::optional_uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  ParsedStruct s;
+  s.optional_uint32_member_1 = 0;
+  absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("0800")));
 }
 
 TEST(ProtoParserTest, SerializeEnumField) {

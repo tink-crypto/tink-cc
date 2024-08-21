@@ -24,7 +24,10 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/monitoring_util.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/kem/kem_encapsulate.h"
+#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -36,6 +39,9 @@ namespace internal {
 namespace {
 
 using ::google::crypto::tink::OutputPrefixType;
+
+constexpr absl::string_view kPrimitive = "kem_encapsulate";
+constexpr absl::string_view kEncapsulateApi = "encapsulate";
 
 util::Status Validate(PrimitiveSet<KemEncapsulate>* kem_encapsulate_set) {
   if (kem_encapsulate_set == nullptr) {
@@ -66,8 +72,12 @@ util::Status Validate(PrimitiveSet<KemEncapsulate>* kem_encapsulate_set) {
 class KemEncapsulateSetWrapper : public KemEncapsulate {
  public:
   explicit KemEncapsulateSetWrapper(
-      std::unique_ptr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set)
-      : kem_encapsulate_set_(std::move(kem_encapsulate_set)) {}
+      std::unique_ptr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set,
+      std::unique_ptr<MonitoringClient> monitoring_encapsulation_client =
+          nullptr)
+      : kem_encapsulate_set_(std::move(kem_encapsulate_set)),
+        monitoring_encapsulation_client_(
+            std::move(monitoring_encapsulation_client)) {}
 
   util::StatusOr<KemEncapsulation> Encapsulate() const override;
 
@@ -75,10 +85,23 @@ class KemEncapsulateSetWrapper : public KemEncapsulate {
 
  private:
   std::unique_ptr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set_;
+  std::unique_ptr<MonitoringClient> monitoring_encapsulation_client_;
 };
 
 util::StatusOr<KemEncapsulation> KemEncapsulateSetWrapper::Encapsulate() const {
-  return kem_encapsulate_set_->get_primary()->get_primitive().Encapsulate();
+  auto primary = kem_encapsulate_set_->get_primary();
+  util::StatusOr<KemEncapsulation> encapsulation =
+      primary->get_primitive().Encapsulate();
+  if (monitoring_encapsulation_client_ != nullptr) {
+    if (encapsulation.ok()) {
+      monitoring_encapsulation_client_->Log(primary->get_key_id(),
+                                            /* num_bytes_as_input = */ 0);
+    } else {
+      monitoring_encapsulation_client_->LogFailure();
+    }
+  }
+
+  return encapsulation;
 }
 
 }  // anonymous namespace
@@ -90,7 +113,30 @@ util::StatusOr<std::unique_ptr<KemEncapsulate>> KemEncapsulateWrapper::Wrap(
     return status;
   }
 
-  return absl::make_unique<KemEncapsulateSetWrapper>(std::move(primitive_set));
+  MonitoringClientFactory* const monitoring_factory =
+      internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
+
+  // Monitoring is not enabled. Create a wrapper without monitoring clients.
+  if (monitoring_factory == nullptr) {
+    return {
+        absl::make_unique<KemEncapsulateSetWrapper>(std::move(primitive_set))};
+  }
+
+  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+      internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
+  if (!keyset_info.ok()) {
+    return keyset_info.status();
+  }
+
+  util::StatusOr<std::unique_ptr<MonitoringClient>>
+      monitoring_encapsulation_client = monitoring_factory->New(
+          MonitoringContext(kPrimitive, kEncapsulateApi, *keyset_info));
+  if (!monitoring_encapsulation_client.ok()) {
+    return monitoring_encapsulation_client.status();
+  }
+
+  return absl::make_unique<KemEncapsulateSetWrapper>(
+      std::move(primitive_set), *std::move(monitoring_encapsulation_client));
 }
 
 }  // namespace internal

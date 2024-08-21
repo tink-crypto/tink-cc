@@ -26,8 +26,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/monitoring_util.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/kem/kem_decapsulate.h"
 #include "tink/keyset_handle.h"
+#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -39,6 +42,9 @@ namespace internal {
 namespace {
 
 using ::google::crypto::tink::OutputPrefixType;
+
+constexpr absl::string_view kPrimitive = "kem_decapsulate";
+constexpr absl::string_view kDecapsulateApi = "decapsulate";
 
 util::Status Validate(PrimitiveSet<KemDecapsulate>* kem_decapsulate_set) {
   if (kem_decapsulate_set == nullptr) {
@@ -69,8 +75,12 @@ util::Status Validate(PrimitiveSet<KemDecapsulate>* kem_decapsulate_set) {
 class KemDecapsulateSetWrapper : public KemDecapsulate {
  public:
   explicit KemDecapsulateSetWrapper(
-      std::unique_ptr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set)
-      : kem_decapsulate_set_(std::move(kem_decapsulate_set)) {}
+      std::unique_ptr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set,
+      std::unique_ptr<MonitoringClient> monitoring_decapsulation_client =
+          nullptr)
+      : kem_decapsulate_set_(std::move(kem_decapsulate_set)),
+        monitoring_decapsulation_client_(
+            std::move(monitoring_decapsulation_client)) {}
 
   util::StatusOr<KeysetHandle> Decapsulate(
       absl::string_view ciphertext) const override;
@@ -79,12 +89,16 @@ class KemDecapsulateSetWrapper : public KemDecapsulate {
 
  private:
   std::unique_ptr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set_;
+  std::unique_ptr<MonitoringClient> monitoring_decapsulation_client_;
 };
 
 util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
     absl::string_view ciphertext) const {
   // A key ID prefix is currently mandatory, to avoid ambiguity.
   if (ciphertext.length() < CryptoFormat::kNonRawPrefixSize) {
+    if (monitoring_decapsulation_client_ != nullptr) {
+      monitoring_decapsulation_client_->LogFailure();
+    }
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat(
@@ -98,11 +112,17 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
   util::StatusOr<const PrimitiveSet<KemDecapsulate>::Primitives*> primitives =
       kem_decapsulate_set_->get_primitives(prefix);
   if (!primitives.ok() || (*primitives)->empty()) {
+    if (monitoring_decapsulation_client_ != nullptr) {
+      monitoring_decapsulation_client_->LogFailure();
+    }
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "decapsulation failed: no key found for the given ID");
   }
 
   if ((*primitives)->size() > 1) {
+    if (monitoring_decapsulation_client_ != nullptr) {
+      monitoring_decapsulation_client_->LogFailure();
+    }
     return util::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("decapsulation failed: key set contains several keys (",
@@ -112,7 +132,17 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
   const std::unique_ptr<PrimitiveSet<KemDecapsulate>::Entry<KemDecapsulate>>&
       kem_decapsulate_entry = (**primitives).front();
   KemDecapsulate& kem_decapsulate = kem_decapsulate_entry->get_primitive();
-  return kem_decapsulate.Decapsulate(ciphertext);
+  auto keyset_handle = kem_decapsulate.Decapsulate(ciphertext);
+  if (monitoring_decapsulation_client_ != nullptr) {
+    if (keyset_handle.ok()) {
+      monitoring_decapsulation_client_->Log(kem_decapsulate_entry->get_key_id(),
+                                            ciphertext.size());
+    } else {
+      monitoring_decapsulation_client_->LogFailure();
+    }
+  }
+
+  return keyset_handle;
 }
 
 }  // anonymous namespace
@@ -124,7 +154,30 @@ util::StatusOr<std::unique_ptr<KemDecapsulate>> KemDecapsulateWrapper::Wrap(
     return status;
   }
 
-  return absl::make_unique<KemDecapsulateSetWrapper>(std::move(primitive_set));
+  MonitoringClientFactory* const monitoring_factory =
+      internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
+
+  // Monitoring is not enabled. Create a wrapper without monitoring clients.
+  if (monitoring_factory == nullptr) {
+    return {
+        absl::make_unique<KemDecapsulateSetWrapper>(std::move(primitive_set))};
+  }
+
+  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+      internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
+  if (!keyset_info.ok()) {
+    return keyset_info.status();
+  }
+
+  util::StatusOr<std::unique_ptr<MonitoringClient>>
+      monitoring_decapsulation_client = monitoring_factory->New(
+          MonitoringContext(kPrimitive, kDecapsulateApi, *keyset_info));
+  if (!monitoring_decapsulation_client.ok()) {
+    return monitoring_decapsulation_client.status();
+  }
+
+  return absl::make_unique<KemDecapsulateSetWrapper>(
+      std::move(primitive_set), *std::move(monitoring_decapsulation_client));
 }
 
 }  // namespace internal

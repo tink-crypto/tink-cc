@@ -28,6 +28,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
+#include "tink/internal/registry_impl.h"
+#include "tink/registry.h"
 #define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
 #include "openssl/experimental/kyber.h"
 #include "tink/aead.h"
@@ -43,6 +45,8 @@
 #include "tink/kem/kem_decapsulate.h"
 #include "tink/kem/kem_encapsulate.h"
 #include "tink/keyset_handle.h"
+#include "tink/monitoring/monitoring.h"
+#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -60,7 +64,12 @@ using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
+using ::testing::_;
+using ::testing::ByMove;
 using ::testing::HasSubstr;
+using ::testing::IsNull;
+using ::testing::Return;
+using ::testing::StrictMock;
 
 AesGcmParameters CreateAes256GcmParameters() {
   CHECK_OK(AeadConfig::Register());
@@ -179,6 +188,8 @@ class KemDecapsulateWrapperTest : public ::testing::Test {
     kem_decapsulate_set_ = absl::make_unique<PrimitiveSet<KemDecapsulate>>(
         std::move(*kem_decapsulate_set));
   }
+
+  static constexpr uint32_t kPrimaryKeyId = 0x7213743;
 
   std::unique_ptr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set_;
   std::unique_ptr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set_;
@@ -392,6 +403,138 @@ TEST_F(KemDecapsulateWrapperTest, EncapsulateDecapsulate) {
   EXPECT_THAT(
       (*encaps_aead)->Decrypt(*ciphertext2, "bad associated data").status(),
       StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+// Tests with monitoring enabled.
+class KemDecapsulateWrapperTestWithMonitoring
+    : public KemDecapsulateWrapperTest {
+ protected:
+  void SetUp() override {
+    Registry::Reset();
+    KemDecapsulateWrapperTest::SetUp();
+
+    auto monitoring_client_factory =
+        absl::make_unique<MockMonitoringClientFactory>();
+
+    auto encapsulation_monitoring_client =
+        absl::make_unique<StrictMock<MockMonitoringClient>>();
+    encapsulation_monitoring_client_ptr_ =
+        encapsulation_monitoring_client.get();
+
+    auto decapsulation_monitoring_client =
+        absl::make_unique<StrictMock<MockMonitoringClient>>();
+    decapsulation_monitoring_client_ptr_ =
+        decapsulation_monitoring_client.get();
+
+    EXPECT_CALL(*monitoring_client_factory, New(_))
+        .WillOnce(
+            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+                std::move(encapsulation_monitoring_client)))))
+        .WillOnce(
+            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+                std::move(decapsulation_monitoring_client)))));
+
+    ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
+                    .RegisterMonitoringClientFactory(
+                        std::move(monitoring_client_factory)),
+                IsOk());
+    ASSERT_THAT(
+        internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory(),
+        Not(IsNull()));
+  }
+
+  // Cleanup the registry to avoid mock leaks.
+  void TearDown() override { Registry::Reset(); }
+
+  MockMonitoringClient* encapsulation_monitoring_client_ptr_;
+  MockMonitoringClient* decapsulation_monitoring_client_ptr_;
+};
+
+TEST_F(KemDecapsulateWrapperTestWithMonitoring, EncapsulateDecapsulate) {
+  // KEM encapsulate.
+  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+      KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
+  ASSERT_THAT(kem_encapsulate, IsOk());
+
+  // KEM decapsulate.
+  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+      KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
+  ASSERT_THAT(kem_decapsulate, IsOk());
+
+  // Exchange an encapsulation and derive AEAD primitives.
+  EXPECT_CALL(*encapsulation_monitoring_client_ptr_, Log(kPrimaryKeyId, 0));
+  util::StatusOr<KemEncapsulation> encapsulation =
+      (*kem_encapsulate)->Encapsulate();
+  ASSERT_THAT(encapsulation, IsOk());
+
+  EXPECT_CALL(*decapsulation_monitoring_client_ptr_,
+              Log(kPrimaryKeyId, encapsulation->ciphertext.size()));
+  util::StatusOr<KeysetHandle> decapsulation =
+      (*kem_decapsulate)->Decapsulate(encapsulation->ciphertext);
+  ASSERT_THAT(decapsulation, IsOk());
+}
+
+TEST_F(KemDecapsulateWrapperTestWithMonitoring, DecapsulateUnknownKeyID) {
+  // KEM encapsulate.
+  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+      KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
+  ASSERT_THAT(kem_encapsulate, IsOk());
+
+  // KEM decapsulate.
+  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+      KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
+  ASSERT_THAT(kem_decapsulate, IsOk());
+
+  EXPECT_CALL(*decapsulation_monitoring_client_ptr_, LogFailure());
+  util::StatusOr<KeysetHandle> decapsulate =
+      (*kem_decapsulate)->Decapsulate("random_bytes");
+  EXPECT_THAT(
+      decapsulate.status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("decapsulation failed: no key found for the given ID")));
+}
+
+TEST_F(KemDecapsulateWrapperTestWithMonitoring, DecapsulateArbitraryBytes) {
+  // KEM encapsulate.
+  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+      KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
+  ASSERT_THAT(kem_encapsulate, IsOk());
+
+  // KEM decapsulate.
+  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+      KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
+  ASSERT_THAT(kem_decapsulate, IsOk());
+
+  // Decapsulating with the primary key works.
+  EXPECT_CALL(*decapsulation_monitoring_client_ptr_,
+              Log(0x07213743, KYBER_CIPHERTEXT_BYTES + 5));
+  util::StatusOr<KeysetHandle> decapsulate =
+      (*kem_decapsulate)
+          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("07213743"),
+                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+  EXPECT_THAT(decapsulate.status(), IsOk());
+
+  // Decapsulating also works with a non-primary key.
+  EXPECT_CALL(*decapsulation_monitoring_client_ptr_,
+              Log(0x01234543, KYBER_CIPHERTEXT_BYTES + 5));
+  decapsulate =
+      (*kem_decapsulate)
+          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("01234543"),
+                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+  EXPECT_THAT(decapsulate.status(), IsOk());
+
+  // Decapsulating doesn't work with an unknown prefix.
+  EXPECT_CALL(*decapsulation_monitoring_client_ptr_, LogFailure());
+  decapsulate =
+      (*kem_decapsulate)
+          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("01234567"),
+                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+  EXPECT_THAT(
+      decapsulate.status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("decapsulation failed: no key found for the given ID")));
 }
 
 }  // namespace

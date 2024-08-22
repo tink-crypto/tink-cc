@@ -1110,6 +1110,28 @@ TEST(ProtoParserTest, GroupSkipTestParseAfter) {
   EXPECT_THAT(parsed_struct->uint32_member_1, Eq(5));
 }
 
+TEST(ProtoParserTest, SkipGroupLimitLower) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>().BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string thousand_sgroups = std::string(100, 0x3b);
+  std::string thousand_egroups = std::string(100, 0x3c);
+  std::string valid = absl::StrCat(thousand_sgroups, thousand_egroups);
+  EXPECT_TRUE(proto_test_proto.ParseFromString(valid));
+  EXPECT_THAT(parser.Parse(valid), IsOk());
+}
+
+TEST(ProtoParserTest, SkipGroupLimitUpper) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>().BuildOrDie();
+  ProtoTestProto proto_test_proto;
+  std::string thousand_sgroups = std::string(101, 0x3b);
+  std::string thousand_egroups = std::string(101, 0x3c);
+  std::string valid = absl::StrCat(thousand_sgroups, thousand_egroups);
+  EXPECT_FALSE(proto_test_proto.ParseFromString(valid));
+  EXPECT_THAT(parser.Parse(valid), Not(IsOk()));
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

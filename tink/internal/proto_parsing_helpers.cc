@@ -37,6 +37,7 @@ namespace {
 
 constexpr int kMax64BitVarintLength = 10;
 constexpr int kMax32BitVarintLength = 5;
+constexpr int kSkipGroupLimit = 100;
 
 // Consumes a varint for the case where it is used in a tag. The behavior of
 // the proto library is subtly different in each case, and we currently want to
@@ -239,6 +240,9 @@ absl::Status SkipGroup(int field_number, absl::string_view& serialized) {
     switch (wiretype_and_field_number->first) {
       case WireType::kStartGroup: {
         field_number_stack.push_back(wiretype_and_field_number->second);
+        if (field_number_stack.size() > kSkipGroupLimit) {
+          return absl::InvalidArgumentError("Too many SGROUP tags");
+        }
         continue;
       }
       case WireType::kEndGroup: {

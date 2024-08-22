@@ -89,6 +89,29 @@ struct ParsedStruct {
 };
 
 // SERIALIZATION TESTS =========================================================
+TEST(ProtoParserTest, Uint32AbsentWorks) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<ParsedStruct> parsed =
+      parser->Parse("");
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->uint32_member_1, Eq(0));
+}
+
+TEST(ProtoParserTest, Uint32DefaultValueWorks) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse(HexDecodeOrDie("0800"));
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->uint32_member_1, Eq(0));
+}
+
 TEST(ProtoParserTest, SingleUint32Works) {
   ProtoTestProto proto;
   proto.set_uint32_field_1(123);

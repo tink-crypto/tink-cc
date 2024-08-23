@@ -26,6 +26,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -204,6 +205,17 @@ TEST(Uint32Field, RequiresSerialization) {
   EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
 }
 
+TEST(Uint32Field, RequiresSerializationWithAlwaysSerialize) {
+  Uint32Field<ParsedStruct> field(kUint32Field1Tag,
+                                  &ParsedStruct::uint32_member_1,
+                                  ProtoFieldOptions::kAlwaysSerialize);
+  ParsedStruct s;
+  s.uint32_member_1 = 0;
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
+  s.uint32_member_1 = 1;
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
+}
+
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
   StringBytesField<ParsedStruct> field(kBytesField1Tag,
@@ -321,6 +333,17 @@ TEST(StringBytesField, RequiresSerialization) {
   EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
 }
 
+TEST(StringBytesField, RequiresSerializationAlwaysSerialize) {
+  StringBytesField<ParsedStruct> field(kBytesField1Tag,
+                                       &ParsedStruct::string_member_1,
+                                       ProtoFieldOptions::kAlwaysSerialize);
+  ParsedStruct s;
+  s.string_member_1 = "";
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
+  s.string_member_1 = "This is some text";
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
+}
+
 // SecretDataBytesField ========================================================
 TEST(SecretDataBytesField, ClearMemberWorks) {
   SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
@@ -434,6 +457,17 @@ TEST(SecretDataBytesField, RequiresSerialization) {
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("");
   EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
+  s.secret_data_member_1 = SecretDataFromStringView("This is some text");
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
+}
+
+TEST(SecretDataBytesField, RequiresSerializationAlwaysSerialize) {
+  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
+                                           &ParsedStruct::secret_data_member_1,
+                                           ProtoFieldOptions::kAlwaysSerialize);
+  ParsedStruct s;
+  s.secret_data_member_1 = SecretDataFromStringView("");
+  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
   s.secret_data_member_1 = SecretDataFromStringView("This is some text");
   EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
 }

@@ -36,6 +36,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message_field.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_presence_fields.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
@@ -116,9 +117,11 @@ class ProtoParserBuilder {
   ProtoParserBuilder(const ProtoParserBuilder&) = delete;
   ProtoParserBuilder& operator=(const ProtoParserBuilder&) = delete;
 
-  ProtoParserBuilder& AddUint32Field(int tag, uint32_t Struct::*value) {
-    fields_.push_back(
-        absl::make_unique<proto_parsing::Uint32Field<Struct>>(tag, value));
+  ProtoParserBuilder& AddUint32Field(
+      int tag, uint32_t Struct::*value,
+      ProtoFieldOptions options = ProtoFieldOptions::kNone) {
+    fields_.push_back(absl::make_unique<proto_parsing::Uint32Field<Struct>>(
+        tag, value, options));
     return *this;
   }
 
@@ -146,16 +149,20 @@ class ProtoParserBuilder {
         tag, value, std::move(is_valid)));
     return *this;
   }
-  ProtoParserBuilder& AddBytesStringField(int tag, std::string Struct::*value) {
+  ProtoParserBuilder& AddBytesStringField(
+      int tag, std::string Struct::*value,
+      ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(
-        absl::make_unique<proto_parsing::StringBytesField<Struct>>(tag, value));
+        absl::make_unique<proto_parsing::StringBytesField<Struct>>(tag, value,
+                                                                   options));
     return *this;
   }
   ProtoParserBuilder& AddBytesSecretDataField(
-      int tag, crypto::tink::util::SecretData Struct::*value) {
+      int tag, crypto::tink::util::SecretData Struct::*value,
+      ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(
-        absl::make_unique<proto_parsing::SecretDataBytesField<Struct>>(tag,
-                                                                       value));
+        absl::make_unique<proto_parsing::SecretDataBytesField<Struct>>(
+            tag, value, options));
     return *this;
   }
   template <typename InnerStruct>

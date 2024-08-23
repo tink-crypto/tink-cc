@@ -27,6 +27,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data.h"
@@ -77,8 +78,9 @@ class Field {
 template <typename Struct>
 class Uint32Field : public Field<Struct> {
  public:
-  explicit Uint32Field(int tag, uint32_t Struct::*value)
-      : value_(value), tag_(tag) {}
+  explicit Uint32Field(int tag, uint32_t Struct::*value,
+                       ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : value_(value), tag_(tag), options_(options) {}
 
   // Not copyable, not movable.
   Uint32Field(const Uint32Field&) = delete;
@@ -99,7 +101,8 @@ class Uint32Field : public Field<Struct> {
   }
 
   bool RequiresSerialization(const Struct& values) const override {
-    return values.*value_ != 0;
+    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
+           values.*value_ != 0;
   }
 
   absl::Status SerializeInto(absl::Span<char>& out,
@@ -117,6 +120,7 @@ class Uint32Field : public Field<Struct> {
  private:
   uint32_t Struct::*value_;
   int tag_;
+  ProtoFieldOptions options_;
 };
 
 // A field where the member variable is a std::string and the wire type is
@@ -124,8 +128,10 @@ class Uint32Field : public Field<Struct> {
 template <typename Struct>
 class StringBytesField : public Field<Struct> {
  public:
-  explicit StringBytesField(int tag, std::string Struct::*value)
-      : value_(value), tag_(tag) {}
+  explicit StringBytesField(
+      int tag, std::string Struct::*value,
+      ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : value_(value), tag_(tag), options_(options) {}
   // Not copyable and movable.
   StringBytesField(const StringBytesField&) = delete;
   StringBytesField& operator=(const StringBytesField&) = delete;
@@ -146,7 +152,8 @@ class StringBytesField : public Field<Struct> {
   }
 
   bool RequiresSerialization(const Struct& values) const override {
-    return !(values.*value_).empty();
+    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
+           !(values.*value_).empty();
   }
 
   absl::Status SerializeInto(absl::Span<char>& out,
@@ -176,6 +183,7 @@ class StringBytesField : public Field<Struct> {
  private:
   std::string Struct::*value_;
   int tag_;
+  ProtoFieldOptions options_;
 };
 
 // A field where the member variable is a SecretData and the wire type is
@@ -183,9 +191,10 @@ class StringBytesField : public Field<Struct> {
 template <typename Struct>
 class SecretDataBytesField : public Field<Struct> {
  public:
-  explicit SecretDataBytesField(int tag,
-                                crypto::tink::util::SecretData Struct::*value)
-      : value_(value), tag_(tag) {}
+  explicit SecretDataBytesField(
+      int tag, crypto::tink::util::SecretData Struct::*value,
+      ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : value_(value), tag_(tag), options_(options) {}
   // Copyable and movable.
   SecretDataBytesField(const SecretDataBytesField&) = default;
   SecretDataBytesField& operator=(const SecretDataBytesField&) = default;
@@ -211,7 +220,8 @@ class SecretDataBytesField : public Field<Struct> {
   int GetTag() const override { return tag_; }
 
   bool RequiresSerialization(const Struct& values) const override {
-    return !(values.*value_).empty();
+    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
+           !(values.*value_).empty();
   }
 
   absl::Status SerializeInto(absl::Span<char>& out,
@@ -238,6 +248,7 @@ class SecretDataBytesField : public Field<Struct> {
  private:
   crypto::tink::util::SecretData Struct::*value_;
   int tag_;
+  ProtoFieldOptions options_;
 };
 
 }  // namespace proto_parsing

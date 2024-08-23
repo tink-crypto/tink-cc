@@ -1392,6 +1392,7 @@ cc_library(
         ":proto_parser_enum_field",
         ":proto_parser_fields",
         ":proto_parser_message_field",
+        ":proto_parser_options",
         ":proto_parser_presence_fields",
         ":proto_parsing_helpers",
         ":proto_parsing_low_level_parser",
@@ -1426,6 +1427,7 @@ cc_test(
     srcs = ["proto_parser_test.cc"],
     deps = [
         ":proto_parser",
+        ":proto_parser_options",
         ":proto_test_cc_proto",
         "//tink:insecure_secret_key_access",
         "//tink/util:secret_data",
@@ -1475,16 +1477,14 @@ cc_library(
     hdrs = ["proto_parser_fields.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":proto_parser_options",
         ":proto_parsing_helpers",
         ":safe_stringops",
         "//tink/util:secret_data",
-        "@com_google_absl//absl/functional:any_invocable",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
         "@com_google_absl//absl/types:span",
     ],
 )
@@ -1494,6 +1494,7 @@ cc_test(
     srcs = ["proto_parser_fields_test.cc"],
     deps = [
         ":proto_parser_fields",
+        ":proto_parser_options",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
@@ -1631,4 +1632,10 @@ cc_test(
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
+)
+
+cc_library(
+    name = "proto_parser_options",
+    hdrs = ["proto_parser_options.h"],
+    include_prefix = "tink/internal",
 )

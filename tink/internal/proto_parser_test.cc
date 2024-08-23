@@ -32,6 +32,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_test_proto.pb.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -553,6 +554,32 @@ TEST(ProtoParserTest, SerializeUint32Field) {
   EXPECT_THAT(*serialized, Eq(HexDecodeOrDie("087a")));
 }
 
+TEST(ProtoParserTest, Uint32DefaultNotSerialized) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
+          .BuildOrDie();
+  ParsedStruct s;
+  s.uint32_member_1 = 0;
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  ASSERT_THAT(*serialized, Eq(""));
+}
+
+TEST(ProtoParserTest, Uint32AlwaysSerializeWorks) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1,
+                          ProtoFieldOptions::kAlwaysSerialize)
+          .BuildOrDie();
+  ParsedStruct s;
+  s.uint32_member_1 = 0;
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  // 08 = "kVarint Field, Field number 1"
+  ASSERT_THAT(HexEncode(*serialized), Eq("0800"));
+}
+
 TEST(ProtoParserTest, SerializeOptionalFieldAbsent) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -620,7 +647,6 @@ TEST(ProtoParserTest, SerializeIntoSecretData) {
   EXPECT_THAT(SecretDataAsStringView(*serialized),
   Eq(HexDecodeOrDie("087a")));
 }
-
 TEST(ProtoParserTest, SerializeTagVariations) {
   ParsedStruct s;
   s.uint32_member_1 = 0x7a;
@@ -700,20 +726,69 @@ TEST(ProtoParserTest, SerializeStringField) {
               Eq(absl::StrCat("0a2c", HexEncode(s.string_member_1))));
 }
 
+TEST(ProtoParserTest, SerializeStringFieldDefaultNotSerialized) {
+  ParsedStruct s;
+  s.string_member_1 = "";
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesStringField(1, &ParsedStruct::string_member_1)
+          .BuildOrDie();
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  ASSERT_THAT(*serialized, Eq(""));
+}
+
+TEST(ProtoParserTest, SerializeStringFieldAlwaysSerializeWorks) {
+  ParsedStruct s;
+  s.string_member_1 = "";
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesStringField(1, &ParsedStruct::string_member_1,
+                               ProtoFieldOptions::kAlwaysSerialize)
+          .BuildOrDie();
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  ASSERT_THAT(HexEncode(*serialized), Eq("0a00"));
+}
+
 TEST(ProtoParserTest, SerializeSecretDataField) {
   ParsedStruct s;
   std::string data = "This is some string data of arbitrary length";
   s.secret_data_member_1 = util::SecretDataFromStringView(data);
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1
-                                   )
+          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
   ASSERT_THAT(serialized, IsOk());
   EXPECT_THAT(HexEncode(*serialized),
               Eq(absl::StrCat("0a2c", HexEncode(data))));
+}
+
+TEST(ProtoParserTest, SerializeSecretDataFieldDefaultNotSerialized) {
+  ParsedStruct s;
+  s.secret_data_member_1.clear();
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1)
+          .BuildOrDie();
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  ASSERT_THAT(*serialized, Eq(""));
+}
+
+TEST(ProtoParserTest, SerializeSecredDataFieldAlwaysSerializeWorks) {
+  ParsedStruct s;
+  s.secret_data_member_1.clear();
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1,
+                                   ProtoFieldOptions::kAlwaysSerialize)
+          .BuildOrDie();
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  ASSERT_THAT(HexEncode(*serialized), Eq("0a00"));
 }
 
 TEST(ProtoParserTest, SerializeMessageField) {

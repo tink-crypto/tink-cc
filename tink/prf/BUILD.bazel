@@ -304,6 +304,23 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "hmac_prf_key",
+    srcs = ["hmac_prf_key.cc"],
+    hdrs = ["hmac_prf_key.h"],
+    include_prefix = "tink/prf",
+    deps = [
+        ":hmac_prf_parameters",
+        ":prf_key",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -562,6 +579,22 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "hmac_prf_key_test",
+    srcs = ["hmac_prf_key_test.cc"],
+    deps = [
+        ":hmac_prf_key",
+        ":hmac_prf_parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

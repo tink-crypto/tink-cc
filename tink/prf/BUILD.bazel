@@ -321,6 +321,27 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "hmac_prf_proto_serialization",
+    srcs = ["hmac_prf_proto_serialization.cc"],
+    hdrs = ["hmac_prf_proto_serialization.h"],
+    include_prefix = "tink/prf",
+    deps = [
+        ":hmac_prf_parameters",
+        "//proto:common_cc_proto",
+        "//proto:hmac_prf_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -595,6 +616,27 @@ cc_test(
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "hmac_prf_proto_serialization_test",
+    srcs = ["hmac_prf_proto_serialization_test.cc"],
+    deps = [
+        ":hmac_prf_parameters",
+        ":hmac_prf_proto_serialization",
+        "//proto:common_cc_proto",
+        "//proto:hmac_prf_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -177,6 +177,36 @@ TEST(ProtoParserTest, SingleEnumWorks) {
   EXPECT_THAT(parsed->enum_member, Eq(MyEnum::kOne));
 }
 
+TEST(ProtoParserTest, EnumDefaultNotSerialized) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddEnumField(kUint32Field1Tag, &ParsedStruct::enum_member,
+                        [](uint32_t) { return true; })
+          .BuildOrDie();
+  ParsedStruct s;
+  s.enum_member = MyEnum::kZero;
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  ASSERT_THAT(*serialized, Eq(""));
+}
+
+TEST(ProtoParserTest, EnumAlwaysSerializeWorks) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddEnumField(
+              kUint32Field1Tag, &ParsedStruct::enum_member,
+              [](uint32_t) { return true; },
+              ProtoFieldOptions::kAlwaysSerialize)
+          .BuildOrDie();
+  ParsedStruct s;
+  s.enum_member = MyEnum::kZero;
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized.status(), IsOk());
+  // 08 = "kVarint Field, Field number 1"
+  ASSERT_THAT(HexEncode(*serialized), Eq("0800"));
+}
+
+
 TEST(ProtoParserTest, SingleBytesFieldStringWorks) {
   ProtoTestProto proto;
   proto.set_bytes_field_1("some bytes field");

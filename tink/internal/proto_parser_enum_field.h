@@ -30,6 +30,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
 namespace crypto {
@@ -41,8 +42,12 @@ template <typename Struct, typename Enum>
 class EnumField : public Field<Struct> {
  public:
   explicit EnumField(int tag, Enum Struct::*value,
-                     absl::AnyInvocable<bool(uint32_t) const> is_valid)
-      : tag_(tag), value_(value), is_valid_(std::move(is_valid)) {
+                     absl::AnyInvocable<bool(uint32_t) const> is_valid,
+                     ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : tag_(tag),
+        value_(value),
+        is_valid_(std::move(is_valid)),
+        options_(options) {
     static_assert(std::numeric_limits<std::underlying_type_t<Enum>>::max() <=
                       std::numeric_limits<uint32_t>::max(),
                   "Only sizes up to uint32_t are supported as underlying type");
@@ -74,7 +79,8 @@ class EnumField : public Field<Struct> {
   }
 
   bool RequiresSerialization(const Struct& values) const override {
-    return values.*value_ != static_cast<Enum>(0);
+    return (options_ == ProtoFieldOptions::kAlwaysSerialize) ||
+           values.*value_ != static_cast<Enum>(0);
   }
 
   absl::Status SerializeInto(absl::Span<char>& out,
@@ -93,6 +99,7 @@ class EnumField : public Field<Struct> {
   int tag_;
   Enum Struct::*value_;
   absl::AnyInvocable<bool(uint32_t) const> is_valid_;
+  ProtoFieldOptions options_;
 };
 
 }  // namespace proto_parsing

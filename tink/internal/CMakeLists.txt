@@ -1513,6 +1513,7 @@ tink_cc_library(
     proto_parser_enum_field.h
   DEPS
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_options
     tink::internal::proto_parsing_helpers
     absl::any_invocable
     absl::check

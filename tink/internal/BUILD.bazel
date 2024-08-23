@@ -1578,6 +1578,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser_fields",
+        ":proto_parser_options",
         ":proto_parsing_helpers",
         "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/log:check",

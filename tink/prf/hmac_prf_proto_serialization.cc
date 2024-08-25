@@ -15,14 +15,26 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/prf/hmac_prf_proto_serialization.h"
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/key_parser.h"
+#include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/parameters_parser.h"
 #include "tink/internal/parameters_serializer.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/partial_key_access.h"
+#include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_parameters.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
@@ -33,6 +45,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::HmacPrfKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
@@ -43,6 +57,10 @@ using HmacPrfProtoParametersParserImpl =
 using HmacPrfProtoParametersSerializerImpl =
     internal::ParametersSerializerImpl<HmacPrfParameters,
                                        internal::ProtoParametersSerialization>;
+using HmacPrfProtoKeyParserImpl =
+    internal::KeyParserImpl<internal::ProtoKeySerialization, HmacPrfKey>;
+using HmacPrfProtoKeySerializerImpl =
+    internal::KeySerializerImpl<HmacPrfKey, internal::ProtoKeySerialization>;
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.HmacPrfKey";
@@ -134,6 +152,87 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       kTypeUrl, OutputPrefixType::RAW, proto_key_format.SerializeAsString());
 }
 
+util::StatusOr<HmacPrfKey> ParseKey(
+    const internal::ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (serialization.TypeUrl() != kTypeUrl) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Wrong type URL when parsing HmacPrfKey.");
+  }
+  if (!token.has_value()) {
+    return util::Status(absl::StatusCode::kPermissionDenied,
+                        "SecretKeyAccess is required.");
+  }
+  if (serialization.GetOutputPrefixType() != OutputPrefixType::RAW) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Output prefix type must be RAW for HmacPrfKey.");
+  }
+
+  util::StatusOr<SecretProto<google::crypto::tink::HmacPrfKey>> proto_key =
+      SecretProto<google::crypto::tink::HmacPrfKey>::ParseFromSecretData(
+          serialization.SerializedKeyProto().Get(*token));
+  if (!proto_key.ok()) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Failed to parse HmacPrfKey proto");
+  }
+  if ((*proto_key)->version() != 0) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Only version 0 keys are accepted.");
+  }
+
+  util::StatusOr<HmacPrfParameters::HashType> hash_type =
+      ToHashType((*proto_key)->params().hash());
+  if (!hash_type.ok()) {
+    return hash_type.status();
+  }
+
+  util::StatusOr<HmacPrfParameters> parameters =
+      HmacPrfParameters::Create((*proto_key)->key_value().length(), *hash_type);
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  return HmacPrfKey::Create(*parameters,
+                            RestrictedData((*proto_key)->key_value(), *token),
+                            GetPartialKeyAccess());
+}
+
+util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+    const HmacPrfKey& key, absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return util::Status(absl::StatusCode::kPermissionDenied,
+                        "SecretKeyAccess is required.");
+  }
+  util::StatusOr<RestrictedData> restricted_input =
+      key.GetKeyBytes(GetPartialKeyAccess());
+  if (!restricted_input.ok()) {
+    return restricted_input.status();
+  }
+
+  util::StatusOr<HashType> proto_hash_type =
+      ToProtoHashType(key.GetParameters().GetHashType());
+  if (!proto_hash_type.ok()) {
+    return proto_hash_type.status();
+  }
+
+  SecretProto<google::crypto::tink::HmacPrfKey> proto_key;
+  proto_key->set_version(0);
+  proto_key->mutable_params()->set_hash(*proto_hash_type);
+  internal::CallWithCoreDumpProtection(
+      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
+
+  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
+  RestrictedData restricted_output =
+      RestrictedData(*std::move(serialized_key), *token);
+
+  return internal::ProtoKeySerialization::Create(
+      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
+      OutputPrefixType::RAW, key.GetIdRequirement());
+}
+
 HmacPrfProtoParametersParserImpl& HmacPrfProtoParametersParser() {
   static auto* parser =
       new HmacPrfProtoParametersParserImpl(kTypeUrl, ParseParameters);
@@ -143,6 +242,16 @@ HmacPrfProtoParametersParserImpl& HmacPrfProtoParametersParser() {
 HmacPrfProtoParametersSerializerImpl& HmacPrfProtoParametersSerializer() {
   static auto* serializer =
       new HmacPrfProtoParametersSerializerImpl(kTypeUrl, SerializeParameters);
+  return *serializer;
+}
+
+HmacPrfProtoKeyParserImpl& HmacPrfProtoKeyParser() {
+  static auto* parser = new HmacPrfProtoKeyParserImpl(kTypeUrl, ParseKey);
+  return *parser;
+}
+
+HmacPrfProtoKeySerializerImpl& HmacPrfProtoKeySerializer() {
+  static auto* serializer = new HmacPrfProtoKeySerializerImpl(SerializeKey);
   return *serializer;
 }
 
@@ -163,7 +272,14 @@ util::Status RegisterHmacPrfProtoSerialization() {
     return status;
   }
 
-  return status;
+  status = internal::MutableSerializationRegistry::GlobalInstance()
+               .RegisterKeyParser(&HmacPrfProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return internal::MutableSerializationRegistry::GlobalInstance()
+      .RegisterKeySerializer(&HmacPrfProtoKeySerializer());
 }
 
 }  // namespace tink

@@ -19,6 +19,7 @@
 #include "tink/config/tink_fips.h"
 #include "tink/prf/aes_cmac_prf_key_manager.h"
 #include "tink/prf/aes_cmac_prf_proto_serialization.h"
+#include "tink/prf/hmac_prf_proto_serialization.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
 #include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/prf/prf_set_wrapper.h"
@@ -60,6 +61,11 @@ crypto::tink::util::Status PrfConfig::Register() {
   }
 
   status = RegisterAesCmacPrfProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = RegisterHmacPrfProtoSerialization();
   if (!status.ok()) {
     return status;
   }

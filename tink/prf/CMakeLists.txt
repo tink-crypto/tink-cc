@@ -40,6 +40,7 @@ tink_cc_library(
     tink::prf::aes_cmac_prf_proto_serialization
     tink::prf::hkdf_prf_key_manager
     tink::prf::hmac_prf_key_manager
+    tink::prf::hmac_prf_proto_serialization
     tink::prf::prf_set_wrapper
     absl::memory
     tink::core::registry
@@ -466,7 +467,9 @@ tink_cc_test(
   DEPS
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
+    tink::prf::hmac_prf_key
     tink::prf::hmac_prf_key_manager
+    tink::prf::hmac_prf_parameters
     tink::prf::key_gen_config_v0
     tink::prf::prf_config
     tink::prf::prf_key_templates
@@ -488,10 +491,8 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::subtle::random
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
-    tink::util::test_util
     tink::proto::tink_cc_proto
 )
 

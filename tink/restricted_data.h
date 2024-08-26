@@ -38,6 +38,8 @@ namespace tink {
 //         restricted_data.GetSecret(InsecureSecretKeyAccess::Get());
 class RestrictedData {
  public:
+  RestrictedData() = default;
+
   // Copyable and movable.
   RestrictedData(const RestrictedData& other) = default;
   RestrictedData& operator=(const RestrictedData& other) = default;

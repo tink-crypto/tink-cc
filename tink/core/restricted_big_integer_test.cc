@@ -49,6 +49,11 @@ constexpr absl::string_view kHexBigIntPadded =
     "09c8647f5d524c0f2e7620a3416b9623cadc0f097af573261c98c8400aa12af38e43cad84"
     "d";
 
+TEST(RestrictedBigIntegerTest, DefaultConstructor) {
+  RestrictedBigInteger b;
+  EXPECT_THAT(b.SizeInBytes(), Eq(0));
+}
+
 TEST(RestrictedBigIntegerTest, CreateAndGetSecret) {
   const std::string secret_bytes = absl::HexStringToBytes(kHexBigInt);
   RestrictedBigInteger restricted_big_integer(secret_bytes,
@@ -202,10 +207,11 @@ TEST(RestrictedRestrictedBigIntegerTest, MoveConstructor) {
 TEST(RestrictedRestrictedBigIntegerTest, MoveAssignment) {
   RestrictedBigInteger restricted_big_integer(
       absl::HexStringToBytes(kHexBigInt), InsecureSecretKeyAccess::Get());
-  RestrictedBigInteger move = std::move(restricted_big_integer);
+  RestrictedBigInteger moved_to;
+  moved_to = std::move(restricted_big_integer);
 
-  EXPECT_THAT(move.SizeInBytes(), Eq(256));
-  EXPECT_THAT(move.GetSecret(InsecureSecretKeyAccess::Get()),
+  EXPECT_THAT(moved_to.SizeInBytes(), Eq(256));
+  EXPECT_THAT(moved_to.GetSecret(InsecureSecretKeyAccess::Get()),
               Eq(absl::HexStringToBytes(kHexBigInt)));
 }
 

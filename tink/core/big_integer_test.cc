@@ -48,6 +48,14 @@ constexpr absl::string_view kHexBigIntPadded =
     "09c8647f5d524c0f2e7620a3416b9623cadc0f097af573261c98c8400aa12af38e43cad84"
     "d";
 
+TEST(BigIntegerTest, DefaultConstructor) {
+  BigInteger big_integer;
+
+  EXPECT_THAT(big_integer.SizeInBytes(), Eq(0));
+  EXPECT_THAT(big_integer.GetValue(), Eq(""));
+}
+
+
 TEST(BigIntegerTest, CreateAndGet) {
   const std::string big_integer_bytes = absl::HexStringToBytes(kHexBigInt);
   BigInteger big_integer(big_integer_bytes);
@@ -175,7 +183,8 @@ TEST(BigIntegerTest, MoveConstructor) {
 
 TEST(BigIntegerTest, MoveAssignment) {
   BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
-  BigInteger move = std::move(big_integer);
+  BigInteger move;
+  move = std::move(big_integer);
 
   EXPECT_THAT(move.SizeInBytes(), Eq(256));
   EXPECT_THAT(move.GetValue(), Eq(absl::HexStringToBytes(kHexBigInt)));

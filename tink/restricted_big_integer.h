@@ -32,6 +32,8 @@ namespace tink {
 // use secret big integers types for the key material.
 class RestrictedBigInteger {
  public:
+  RestrictedBigInteger() = default;
+
   // Copyable and movable.
   RestrictedBigInteger(const RestrictedBigInteger& other) = default;
   RestrictedBigInteger& operator=(const RestrictedBigInteger& other) = default;

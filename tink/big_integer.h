@@ -31,6 +31,8 @@ namespace tink {
 // material.
 class BigInteger {
  public:
+  BigInteger() = default;
+
   // Copyable and movable.
   BigInteger(const BigInteger& other) = default;
   BigInteger& operator=(const BigInteger& other) = default;

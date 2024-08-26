@@ -31,6 +31,11 @@ using ::crypto::tink::subtle::Random;
 using ::testing::Eq;
 using ::testing::SizeIs;
 
+TEST(RestrictedData, DefaultConstructor) {
+  RestrictedData data;
+  EXPECT_THAT(data.size(), Eq(0));
+}
+
 TEST(RestrictedDataTest, CreateAndGetSecret) {
   const std::string secret = Random::GetRandomBytes(32);
   RestrictedData data(secret, InsecureSecretKeyAccess::Get());
@@ -104,10 +109,11 @@ TEST(RestrictedDataTest, MoveConstructor) {
 TEST(RestrictedDataTest, MoveAssignment) {
   const std::string secret = Random::GetRandomBytes(32);
   RestrictedData data(secret, InsecureSecretKeyAccess::Get());
-  RestrictedData move = std::move(data);
+  RestrictedData moved_to;
+  moved_to = std::move(data);
 
-  EXPECT_THAT(move, SizeIs(32));
-  EXPECT_THAT(move.GetSecret(InsecureSecretKeyAccess::Get()), Eq(secret));
+  EXPECT_THAT(moved_to, SizeIs(32));
+  EXPECT_THAT(moved_to.GetSecret(InsecureSecretKeyAccess::Get()), Eq(secret));
 }
 
 }  // namespace tink

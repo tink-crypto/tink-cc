@@ -37,6 +37,32 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
+// To implement a BytesField storing in a "StringType", one needs to implement
+// the following functions:
+//  * void ClearStringLikeValue(StringType& s);
+//  * void CopyIntoStringLikeValue(string_view from, StringType& to);
+//  * size_t SizeOfStringLikeValue(const StringType& s);
+//  * void SerializeStringLikeValue(const StringType& s, absl::Span<char> o);
+// After this, one can use BytesField<Struct, StringType>.
+
+// Clears the value.
+void ClearStringLikeValue(std::string& s);
+void ClearStringLikeValue(util::SecretData& s);
+
+// Copies the first argument into the second.
+void CopyIntoStringLikeValue(absl::string_view sv, std::string& s);
+void CopyIntoStringLikeValue(absl::string_view sv, util::SecretData& s);
+
+// Returns the size of the string like value.
+size_t SizeOfStringLikeValue(const std::string& s);
+size_t SizeOfStringLikeValue(const util::SecretData& s);
+
+// Serialize the string from the first argument into the second.
+// Behavior in case that first.size() > second.size() is unimportant -- it will
+// never be called like this.
+void SerializeStringLikeValue(const std::string& s, absl::Span<char> o);
+void SerializeStringLikeValue(const util::SecretData& s, absl::Span<char> o);
+
 // Methods to parse a field in a proto message into some member in the struct
 // "Struct".
 //
@@ -123,86 +149,20 @@ class Uint32Field : public Field<Struct> {
   ProtoFieldOptions options_;
 };
 
-// A field where the member variable is a std::string and the wire type is
-// kLengthDelimited.
-template <typename Struct>
-class StringBytesField : public Field<Struct> {
+template <typename Struct, typename StringLike>
+class BytesField : public Field<Struct> {
  public:
-  explicit StringBytesField(
-      int tag, std::string Struct::*value,
-      ProtoFieldOptions options = ProtoFieldOptions::kNone)
+  explicit BytesField(int tag, StringLike Struct::*value,
+                      ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : value_(value), tag_(tag), options_(options) {}
   // Not copyable and movable.
-  StringBytesField(const StringBytesField&) = delete;
-  StringBytesField& operator=(const StringBytesField&) = delete;
-  StringBytesField(StringBytesField&&) noexcept = delete;
-  StringBytesField& operator=(StringBytesField&&) noexcept = delete;
-
-  void ClearMember(Struct& s) const override { s.*value_ = ""; }
-
-  absl::Status ConsumeIntoMember(absl::string_view& serialized,
-                                 Struct& s) const override {
-    absl::StatusOr<absl::string_view> result =
-        ConsumeBytesReturnStringView(serialized);
-    if (!result.ok()) {
-      return result.status();
-    }
-    s.*value_ = std::string(*result);
-    return absl::OkStatus();
-  }
-
-  bool RequiresSerialization(const Struct& values) const override {
-    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
-           !(values.*value_).empty();
-  }
-
-  absl::Status SerializeInto(absl::Span<char>& out,
-                             const Struct& values) const override {
-    size_t size = (values.*value_).size();
-    absl::Status s = SerializeVarint(size, out);
-    if (!s.ok()) {
-      return s;
-    }
-    if (out.size() < size) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Output buffer too small: ", out.size(), " < ", size));
-    }
-    memcpy(out.data(), (values.*value_).data(), size);
-    out.remove_prefix(size);
-    return absl::OkStatus();
-  }
-
-  size_t GetSerializedSize(const Struct& values) const override {
-    size_t size = (values.*value_).size();
-    return VarintLength(size) + size;
-  }
-
-  WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetTag() const override { return tag_; }
-
- private:
-  std::string Struct::*value_;
-  int tag_;
-  ProtoFieldOptions options_;
-};
-
-// A field where the member variable is a SecretData and the wire type is
-// kLengthDelimited.
-template <typename Struct>
-class SecretDataBytesField : public Field<Struct> {
- public:
-  explicit SecretDataBytesField(
-      int tag, crypto::tink::util::SecretData Struct::*value,
-      ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : value_(value), tag_(tag), options_(options) {}
-  // Copyable and movable.
-  SecretDataBytesField(const SecretDataBytesField&) = default;
-  SecretDataBytesField& operator=(const SecretDataBytesField&) = default;
-  SecretDataBytesField(SecretDataBytesField&&) noexcept = default;
-  SecretDataBytesField& operator=(SecretDataBytesField&&) noexcept = default;
+  BytesField(const BytesField&) = delete;
+  BytesField& operator=(const BytesField&) = delete;
+  BytesField(BytesField&&) noexcept = delete;
+  BytesField& operator=(BytesField&&) noexcept = delete;
 
   void ClearMember(Struct& s) const override {
-    s.*value_ = crypto::tink::util::SecretData();
+    ClearStringLikeValue(s.*value_);
   }
 
   absl::Status ConsumeIntoMember(absl::string_view& serialized,
@@ -212,21 +172,18 @@ class SecretDataBytesField : public Field<Struct> {
     if (!result.ok()) {
       return result.status();
     }
-    s.*value_ = crypto::tink::util::SecretDataFromStringView(*result);
+    CopyIntoStringLikeValue(*result, s.*value_);
     return absl::OkStatus();
   }
 
-  WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetTag() const override { return tag_; }
-
   bool RequiresSerialization(const Struct& values) const override {
     return options_ == ProtoFieldOptions::kAlwaysSerialize ||
-           !(values.*value_).empty();
+           SizeOfStringLikeValue(values.*value_) != 0;
   }
 
   absl::Status SerializeInto(absl::Span<char>& out,
                              const Struct& values) const override {
-    size_t size = (values.*value_).size();
+    size_t size = SizeOfStringLikeValue(values.*value_);
     absl::Status s = SerializeVarint(size, out);
     if (!s.ok()) {
       return s;
@@ -235,18 +192,21 @@ class SecretDataBytesField : public Field<Struct> {
       return absl::InvalidArgumentError(
           absl::StrCat("Output buffer too small: ", out.size(), " < ", size));
     }
-    SafeMemCopy(out.data(), (values.*value_).data(), size);
+    SerializeStringLikeValue(values.*value_, out);
     out.remove_prefix(size);
     return absl::OkStatus();
   }
 
   size_t GetSerializedSize(const Struct& values) const override {
-    size_t size = (values.*value_).size();
+    size_t size = SizeOfStringLikeValue(values.*value_);
     return VarintLength(size) + size;
   }
 
+  WireType GetWireType() const override { return WireType::kLengthDelimited; }
+  int GetTag() const override { return tag_; }
+
  private:
-  crypto::tink::util::SecretData Struct::*value_;
+  StringLike Struct::*value_;
   int tag_;
   ProtoFieldOptions options_;
 };

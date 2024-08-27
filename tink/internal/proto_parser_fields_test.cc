@@ -64,6 +64,61 @@ struct ParsedStruct {
   SecretData secret_data_member_2;
 };
 
+// String helpers ===========================================================
+
+TEST(ClearStringLikeValue, String) {
+  std::string s = "hi";
+  ClearStringLikeValue(s);
+  EXPECT_THAT(s, IsEmpty());
+}
+
+TEST(ClearStringLikeValue, SecretData) {
+  SecretData s = SecretDataFromStringView("hi");
+  ClearStringLikeValue(s);
+  EXPECT_THAT(s, IsEmpty());
+}
+
+TEST(CopyIntoStringLikeValue, String) {
+  std::string s = "hi";
+  std::string t;
+  CopyIntoStringLikeValue(s, t);
+  EXPECT_THAT(t, Eq(s));
+}
+
+TEST(CopyIntoStringLikeValue, SecretData) {
+  std::string s = "hi";
+  SecretData t;
+  CopyIntoStringLikeValue(s, t);
+  EXPECT_THAT(SecretDataAsStringView(t), Eq(s));
+}
+
+TEST(SizeOfStringLikeValue, String) {
+  std::string s = "1234567";
+  EXPECT_THAT(SizeOfStringLikeValue(s), Eq(7));
+}
+
+TEST(SizeOfStringLikeValue, SecretData) {
+  SecretData s = SecretDataFromStringView("1234567");
+  EXPECT_THAT(SizeOfStringLikeValue(s), Eq(7));
+}
+
+TEST(SerializeStringLikeValue, String) {
+  std::string s = "1234567";
+  std::string t;
+  t.resize(100);
+  SerializeStringLikeValue(s, absl::MakeSpan(t));
+  EXPECT_THAT(t.substr(0, 7), Eq("1234567"));
+}
+
+TEST(SerializeStringLikeValue, SecretData) {
+  std::string s = "1234567";
+  SecretData t;
+  t.resize(100);
+  SerializeStringLikeValue(
+      s, absl::MakeSpan(reinterpret_cast<char*>(t.data()), t.size()));
+  EXPECT_THAT(SecretDataAsStringView(t).substr(0, 7), Eq("1234567"));
+}
+
 // Uint32Field ==============================================================
 std::vector<std::pair<std::string, uint32_t>>
 Uint32TestCasesParseAndSerialize() {
@@ -218,8 +273,8 @@ TEST(Uint32Field, RequiresSerializationWithAlwaysSerialize) {
 
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "hello";
   field.ClearMember(s);
@@ -227,8 +282,8 @@ TEST(StringBytesField, ClearMemberWorks) {
 }
 
 TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "hello";
 
@@ -241,8 +296,8 @@ TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
 }
 
 TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "hello";
 
@@ -254,8 +309,8 @@ TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
 }
 
 TEST(StringBytesField, EmptyWithoutVarint) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
 
   std::string bytes = "";
@@ -264,8 +319,8 @@ TEST(StringBytesField, EmptyWithoutVarint) {
 }
 
 TEST(StringBytesField, InvalidVarint) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
@@ -274,8 +329,8 @@ TEST(StringBytesField, InvalidVarint) {
 }
 
 TEST(StringBytesField, SerializeEmpty) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "";
   std::string buffer = "a";
@@ -287,8 +342,8 @@ TEST(StringBytesField, SerializeEmpty) {
 }
 
 TEST(StringBytesField, SerializeNonEmpty) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "This is some text";
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
@@ -303,8 +358,8 @@ TEST(StringBytesField, SerializeNonEmpty) {
 }
 
 TEST(StringBytesField, SerializeTooSmallBuffer) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "This is some text";
   std::string buffer = "BUFFERBUFFERBUFF";
@@ -314,8 +369,8 @@ TEST(StringBytesField, SerializeTooSmallBuffer) {
 
 // The buffer won't even hold the varint.
 TEST(StringBytesField, SerializeVerySmallBuffer) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "This is some text";
   std::string buffer;
@@ -324,8 +379,8 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
 }
 
 TEST(StringBytesField, RequiresSerialization) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1);
+  BytesField<ParsedStruct, std::string> field(kBytesField1Tag,
+                                              &ParsedStruct::string_member_1);
   ParsedStruct s;
   s.string_member_1 = "";
   EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
@@ -334,9 +389,9 @@ TEST(StringBytesField, RequiresSerialization) {
 }
 
 TEST(StringBytesField, RequiresSerializationAlwaysSerialize) {
-  StringBytesField<ParsedStruct> field(kBytesField1Tag,
-                                       &ParsedStruct::string_member_1,
-                                       ProtoFieldOptions::kAlwaysSerialize);
+  BytesField<ParsedStruct, std::string> field(
+      kBytesField1Tag, &ParsedStruct::string_member_1,
+      ProtoFieldOptions::kAlwaysSerialize);
   ParsedStruct s;
   s.string_member_1 = "";
   EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
@@ -346,8 +401,8 @@ TEST(StringBytesField, RequiresSerializationAlwaysSerialize) {
 
 // SecretDataBytesField ========================================================
 TEST(SecretDataBytesField, ClearMemberWorks) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("hello");
   field.ClearMember(s);
@@ -355,8 +410,8 @@ TEST(SecretDataBytesField, ClearMemberWorks) {
 }
 
 TEST(SecretDataBytesField, ConsumeIntoMemberSuccessCases) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("hello");
 
@@ -369,8 +424,8 @@ TEST(SecretDataBytesField, ConsumeIntoMemberSuccessCases) {
 }
 
 TEST(SecretDataBytesField, ConsumeIntoMemberEmptyString) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("hello");
 
@@ -382,8 +437,8 @@ TEST(SecretDataBytesField, ConsumeIntoMemberEmptyString) {
 }
 
 TEST(SecretDataBytesField, EmptyWithoutVarint) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
 
   std::string bytes = "";
@@ -392,8 +447,8 @@ TEST(SecretDataBytesField, EmptyWithoutVarint) {
 }
 
 TEST(SecretDataBytesField, InvalidVarint) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
@@ -402,8 +457,8 @@ TEST(SecretDataBytesField, InvalidVarint) {
 }
 
 TEST(SecretDataBytesField, SerializeEmpty) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("");
   std::string buffer = "a";
@@ -415,8 +470,8 @@ TEST(SecretDataBytesField, SerializeEmpty) {
 }
 
 TEST(SecretDataBytesField, SerializeNonEmpty) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("This is some text");
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
@@ -431,8 +486,8 @@ TEST(SecretDataBytesField, SerializeNonEmpty) {
 }
 
 TEST(SecretDataBytesField, SerializeTooSmallBuffer) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("This is some text");
   std::string buffer = "BUFFERBUFFERBUFF";
@@ -442,8 +497,8 @@ TEST(SecretDataBytesField, SerializeTooSmallBuffer) {
 
 // The buffer won't even hold the varint.
 TEST(SecretDataBytesField, SerializeVerySmallBuffer) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("This is some text");
   std::string buffer;
@@ -452,8 +507,8 @@ TEST(SecretDataBytesField, SerializeVerySmallBuffer) {
 }
 
 TEST(SecretDataBytesField, RequiresSerialization) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("");
   EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
@@ -462,9 +517,9 @@ TEST(SecretDataBytesField, RequiresSerialization) {
 }
 
 TEST(SecretDataBytesField, RequiresSerializationAlwaysSerialize) {
-  SecretDataBytesField<ParsedStruct> field(kBytesField1Tag,
-                                           &ParsedStruct::secret_data_member_1,
-                                           ProtoFieldOptions::kAlwaysSerialize);
+  BytesField<ParsedStruct, SecretData> field(
+      kBytesField1Tag, &ParsedStruct::secret_data_member_1,
+      ProtoFieldOptions::kAlwaysSerialize);
   ParsedStruct s;
   s.secret_data_member_1 = SecretDataFromStringView("");
   EXPECT_THAT(field.RequiresSerialization(s), Eq(true));

@@ -154,15 +154,16 @@ class ProtoParserBuilder {
       int tag, std::string Struct::*value,
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(
-        absl::make_unique<proto_parsing::StringBytesField<Struct>>(tag, value,
-                                                                   options));
+        absl::make_unique<proto_parsing::BytesField<Struct, std::string>>(
+            tag, value, options));
     return *this;
   }
   ProtoParserBuilder& AddBytesSecretDataField(
       int tag, crypto::tink::util::SecretData Struct::*value,
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(
-        absl::make_unique<proto_parsing::SecretDataBytesField<Struct>>(
+        absl::make_unique<
+            proto_parsing::BytesField<Struct, crypto::tink::util::SecretData>>(
             tag, value, options));
     return *this;
   }

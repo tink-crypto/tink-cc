@@ -1474,6 +1474,7 @@ cc_test(
 
 cc_library(
     name = "proto_parser_fields",
+    srcs = ["proto_parser_fields.cc"],
     hdrs = ["proto_parser_fields.h"],
     include_prefix = "tink/internal",
     deps = [

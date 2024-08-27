@@ -1413,6 +1413,7 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_parser_fields
   SRCS
+    proto_parser_fields.cc
     proto_parser_fields.h
   DEPS
     tink::internal::proto_parser_options

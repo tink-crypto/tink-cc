@@ -46,7 +46,7 @@ absl::btree_map<int, std::unique_ptr<Field<ParsedStruct>>> MakeFields() {
   absl::btree_map<int, std::unique_ptr<Field<ParsedStruct>>> fields;
   fields.insert({1, std::make_unique<Uint32Field<ParsedStruct>>(
                         1, &ParsedStruct::uint32_member_1)});
-  fields.insert({3, std::make_unique<StringBytesField<ParsedStruct>>(
+  fields.insert({3, std::make_unique<BytesField<ParsedStruct, std::string>>(
                         3, &ParsedStruct::string_member_1)});
   return fields;
 }
@@ -182,7 +182,7 @@ TEST(LowLevelParserTest, SkipUnknownField) {
   absl::btree_map<int, std::unique_ptr<Field<ParsedStruct>>> fields;
   fields.insert({1, std::make_unique<Uint32Field<ParsedStruct>>(
                         1, &ParsedStruct::uint32_member_1)});
-  fields.insert({3, std::make_unique<StringBytesField<ParsedStruct>>(
+  fields.insert({3, std::make_unique<BytesField<ParsedStruct, std::string>>(
                         3, &ParsedStruct::string_member_1)});
 
   ProtoTestProto proto1;

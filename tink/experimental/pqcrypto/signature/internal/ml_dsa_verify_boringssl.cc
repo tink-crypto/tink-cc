@@ -25,8 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_DILITHIUM
-#include "openssl/experimental/dilithium.h"
+#include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/internal/fips_utils.h"
@@ -53,12 +52,12 @@ class MlDsaVerifyBoringSsl : public PublicKeyVerify {
 
   explicit MlDsaVerifyBoringSsl(
       MlDsaPublicKey public_key,
-      std::unique_ptr<DILITHIUM_public_key> boringssl_public_key)
+      std::unique_ptr<MLDSA65_public_key> boringssl_public_key)
       : public_key_(std::move(public_key)),
         boringssl_public_key_(std::move(boringssl_public_key)) {}
 
   MlDsaPublicKey public_key_;
-  std::unique_ptr<DILITHIUM_public_key> boringssl_public_key_;
+  std::unique_ptr<MLDSA65_public_key> boringssl_public_key_;
 };
 
 util::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
@@ -80,8 +79,8 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
   CBS cbs;
   CBS_init(&cbs, reinterpret_cast<const uint8_t *>(public_key_bytes.data()),
            public_key_bytes.size());
-  auto boringssl_public_key = std::make_unique<DILITHIUM_public_key>();
-  if (!DILITHIUM_parse_public_key(boringssl_public_key.get(), &cbs)) {
+  auto boringssl_public_key = std::make_unique<MLDSA65_public_key>();
+  if (!MLDSA65_parse_public_key(boringssl_public_key.get(), &cbs)) {
     return util::Status(absl::StatusCode::kInternal,
                         "Invalid ML-DSA public key");
   }
@@ -94,7 +93,7 @@ util::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
                                           absl::string_view data) const {
   size_t output_prefix_size = public_key_.GetOutputPrefix().size();
 
-  if (signature.size() != DILITHIUM_SIGNATURE_BYTES + output_prefix_size) {
+  if (signature.size() != MLDSA65_SIGNATURE_BYTES + output_prefix_size) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Verification failed: incorrect signature length for ML-DSA");
@@ -105,11 +104,13 @@ util::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
                         "Verification failed: invalid output prefix");
   }
 
-  if (1 != DILITHIUM_verify(boringssl_public_key_.get(),
-                            reinterpret_cast<const uint8_t *>(
-                                signature.data() + output_prefix_size),
-                            reinterpret_cast<const uint8_t *>(data.data()),
-                            data.size())) {
+  if (1 != MLDSA65_verify(boringssl_public_key_.get(),
+                          reinterpret_cast<const uint8_t *>(signature.data() +
+                                                            output_prefix_size),
+                          MLDSA65_SIGNATURE_BYTES,
+                          reinterpret_cast<const uint8_t *>(data.data()),
+                          data.size(), /* context = */ nullptr,
+                          /* context_len = */ 0)) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid");
   }

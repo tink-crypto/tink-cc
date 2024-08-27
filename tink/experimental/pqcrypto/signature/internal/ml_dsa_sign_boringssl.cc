@@ -24,10 +24,7 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "openssl/base.h"
-#include "openssl/bytestring.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_DILITHIUM
-#include "openssl/experimental/dilithium.h"
+#include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/insecure_secret_key_access.h"
@@ -58,12 +55,12 @@ class MlDsaSignBoringSsl : public PublicKeySign {
 
   explicit MlDsaSignBoringSsl(
       MlDsaPrivateKey private_key,
-      util::SecretUniquePtr<DILITHIUM_private_key> boringssl_private_key)
+      util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key)
       : private_key_(std::move(private_key)),
         boringssl_private_key_(std::move(boringssl_private_key)) {}
 
   MlDsaPrivateKey private_key_;
-  util::SecretUniquePtr<DILITHIUM_private_key> boringssl_private_key_;
+  util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key_;
 };
 
 crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>>
@@ -79,18 +76,17 @@ MlDsaSignBoringSsl::New(const MlDsaPrivateKey& private_key) {
                         "Only ML-DSA-65 is supported");
   }
 
-  absl::string_view private_key_bytes =
-      private_key.GetPrivateKeyBytes(GetPartialKeyAccess())
+  absl::string_view private_seed_bytes =
+      private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
 
-  CBS cbs;
-  CBS_init(&cbs, reinterpret_cast<const uint8_t*>(private_key_bytes.data()),
-           private_key_bytes.size());
-  auto boringssl_private_key =
-      util::MakeSecretUniquePtr<DILITHIUM_private_key>();
-  if (!DILITHIUM_parse_private_key(boringssl_private_key.get(), &cbs)) {
+  auto boringssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
+  if (!MLDSA65_private_key_from_seed(
+          boringssl_private_key.get(),
+          reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
+          private_seed_bytes.size())) {
     return util::Status(absl::StatusCode::kInternal,
-                        "Invalid ML-DSA private key.");
+                        "Failed to expand ML-DSA private key from seed.");
   }
 
   return absl::make_unique<MlDsaSignBoringSsl>(
@@ -102,12 +98,17 @@ util::StatusOr<std::string> MlDsaSignBoringSsl::Sign(
   std::string signature(private_key_.GetOutputPrefix());
   subtle::ResizeStringUninitialized(
       &signature,
-      DILITHIUM_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
+      MLDSA65_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
 
-  DILITHIUM_sign(reinterpret_cast<uint8_t*>(
-                     signature.data() + private_key_.GetOutputPrefix().size()),
-                 boringssl_private_key_.get(),
-                 reinterpret_cast<const uint8_t*>(data.data()), data.size());
+  if (!MLDSA65_sign(
+          reinterpret_cast<uint8_t*>(signature.data() +
+                                     private_key_.GetOutputPrefix().size()),
+          boringssl_private_key_.get(),
+          reinterpret_cast<const uint8_t*>(data.data()), data.size(),
+          /* context = */ nullptr, /* context_len = */ 0)) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Failed to generate ML-DSA signature.");
+  }
 
   return signature;
 }

@@ -21,11 +21,11 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_DILITHIUM
-#include "openssl/experimental/dilithium.h"
+#include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/util/secret_data.h"
@@ -63,11 +63,13 @@ using MlDsaPublicKeyTest = TestWithParam<TestCase>;
 
 std::string GeneratePublicKey() {
   std::string public_key_bytes;
-  public_key_bytes.resize(DILITHIUM_PUBLIC_KEY_BYTES);
-  auto bssl_private_key = util::MakeSecretUniquePtr<DILITHIUM_private_key>();
+  public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
+  util::SecretData private_seed_bytes(MLDSA_SEED_BYTES);
+  auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
 
-  DILITHIUM_generate_key(reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
-                         bssl_private_key.get());
+  CHECK_EQ(1, MLDSA65_generate_key(
+                  reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+                  private_seed_bytes.data(), bssl_private_key.get()));
 
   return public_key_bytes;
 }
@@ -102,13 +104,12 @@ TEST_P(MlDsaPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
   std::string public_key_bytes = GeneratePublicKey();
   EXPECT_THAT(
       MlDsaPublicKey::Create(
-          *parameters,
-          public_key_bytes.substr(0, DILITHIUM_PUBLIC_KEY_BYTES - 1),
+          *parameters, public_key_bytes.substr(0, MLDSA65_PUBLIC_KEY_BYTES - 1),
           test_case.id_requirement, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat("Invalid ML-DSA public key size. Only ",
-                                      DILITHIUM_PUBLIC_KEY_BYTES,
+                                      MLDSA65_PUBLIC_KEY_BYTES,
                                       "-byte keys are currently supported."))));
 
   public_key_bytes.push_back(0);
@@ -118,7 +119,7 @@ TEST_P(MlDsaPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat("Invalid ML-DSA public key size. Only ",
-                                      DILITHIUM_PUBLIC_KEY_BYTES,
+                                      MLDSA65_PUBLIC_KEY_BYTES,
                                       "-byte keys are currently supported."))));
 }
 

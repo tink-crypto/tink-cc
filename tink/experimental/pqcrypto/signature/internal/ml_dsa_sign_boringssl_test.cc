@@ -23,8 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_DILITHIUM
-#include "openssl/experimental/dilithium.h"
+#include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/internal/ml_dsa_test_util.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
@@ -86,7 +85,7 @@ TEST_P(MlDsaSignBoringSslTest, SignatureLengthIsCorrect) {
 
   EXPECT_NE(*signature, message);
   EXPECT_EQ((*signature).size(),
-            test_case.output_prefix.size() + DILITHIUM_SIGNATURE_BYTES);
+            test_case.output_prefix.size() + MLDSA65_SIGNATURE_BYTES);
   EXPECT_EQ(test_case.output_prefix,
             (*signature).substr(0, test_case.output_prefix.size()));
 }
@@ -118,8 +117,8 @@ TEST(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   ASSERT_THAT(second_signature, IsOk());
 
   // Check the signatures' sizes.
-  EXPECT_EQ((*first_signature).size(), DILITHIUM_SIGNATURE_BYTES);
-  EXPECT_EQ((*second_signature).size(), DILITHIUM_SIGNATURE_BYTES);
+  EXPECT_EQ((*first_signature).size(), MLDSA65_SIGNATURE_BYTES);
+  EXPECT_EQ((*second_signature).size(), MLDSA65_SIGNATURE_BYTES);
 
   EXPECT_NE(*first_signature, *second_signature);
 }

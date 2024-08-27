@@ -51,7 +51,8 @@ message MlDsaPublicKey {
 message MlDsaPrivateKey {
   // Required.
   uint32 version = 1;
-  // Required.
+  // Required. Note that this contains the seed used to generate the private
+  // key, not the private key itself.
   bytes key_value = 2;
   // The corresponding public key.
   MlDsaPublicKey public_key = 3;

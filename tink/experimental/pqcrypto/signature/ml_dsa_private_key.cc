@@ -16,16 +16,25 @@
 
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <string>
+
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_DILITHIUM
-#include "openssl/experimental/dilithium.h"
+#include "openssl/base.h"
+#include "openssl/bytestring.h"
+#include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
+#include "tink/partial_key_access.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -33,13 +42,13 @@ namespace crypto {
 namespace tink {
 
 util::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
-    const MlDsaPublicKey& public_key, const RestrictedData& private_key_bytes,
+    const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-  if (private_key_bytes.size() != DILITHIUM_PRIVATE_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        absl::StrCat("Invalid ML-DSA private key size. Only ",
-                                     DILITHIUM_PRIVATE_KEY_BYTES,
-                                     "-byte keys are currently supported."));
+  if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Invalid ML-DSA private seed size. The seed must be ",
+                     MLDSA_SEED_BYTES, " bytes."));
   }
 
   if (public_key.GetParameters().GetInstance() !=
@@ -49,10 +58,42 @@ util::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
                         "currently supported.");
   }
 
-  // TODO(guillaumee): Add a DILITHIUM_public_from_private() function and
-  // confirm that the private key and public key are a valid ML-DSA key pair.
+  absl::string_view private_seed_view =
+      private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get());
+  auto boringssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
+  if (!MLDSA65_private_key_from_seed(
+          boringssl_private_key.get(),
+          reinterpret_cast<const uint8_t*>(private_seed_view.data()),
+          private_seed_view.size())) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Failed to create ML-DSA private key from seed.");
+  }
 
-  return MlDsaPrivateKey(public_key, private_key_bytes);
+  auto boringssl_public_key = std::make_unique<MLDSA65_public_key>();
+  if (!MLDSA65_public_from_private(boringssl_public_key.get(),
+                                   boringssl_private_key.get())) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Failed to get ML-DSA public key from private key.");
+  }
+
+  CBB cbb;
+  size_t size;
+  std::string public_key_bytes;
+  public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
+  if (!CBB_init_fixed(&cbb, reinterpret_cast<uint8_t*>(public_key_bytes.data()),
+                      MLDSA65_PUBLIC_KEY_BYTES) ||
+      !MLDSA65_marshal_public_key(&cbb, boringssl_public_key.get()) ||
+      !CBB_finish(&cbb, nullptr, &size) || size != MLDSA65_PUBLIC_KEY_BYTES) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Failed to serialize ML-DSA public key.");
+  }
+
+  if (public_key.GetPublicKeyBytes(GetPartialKeyAccess()) != public_key_bytes) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "ML-DSA public key doesn't match the private key.");
+  }
+
+  return MlDsaPrivateKey(public_key, private_seed_bytes);
 }
 
 bool MlDsaPrivateKey::operator==(const Key& other) const {
@@ -61,7 +102,7 @@ bool MlDsaPrivateKey::operator==(const Key& other) const {
     return false;
   }
   return public_key_ == that->public_key_ &&
-         private_key_bytes_ == that->private_key_bytes_;
+         private_seed_bytes_ == that->private_seed_bytes_;
 }
 
 }  // namespace tink

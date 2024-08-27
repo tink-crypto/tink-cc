@@ -16,28 +16,23 @@
 
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 
-#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#include "openssl/base.h"
-#include "openssl/boringssl/src/include/openssl/base.h"
-#include "openssl/bytestring.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_DILITHIUM
-#include "openssl/experimental/dilithium.h"
+#include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -70,32 +65,22 @@ INSTANTIATE_TEST_SUITE_P(
 
 struct KeyPair {
   std::string public_key_bytes;
-  RestrictedData private_key_bytes;
+  RestrictedData private_seed_bytes;
 };
 
 util::StatusOr<KeyPair> GenerateKeyPair() {
   std::string public_key_bytes;
-  public_key_bytes.resize(DILITHIUM_PUBLIC_KEY_BYTES);
-  auto bssl_private_key = util::MakeSecretUniquePtr<DILITHIUM_private_key>();
+  public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
+  util::SecretData private_seed_bytes(MLDSA_SEED_BYTES);
+  auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
 
-  DILITHIUM_generate_key(reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
-                         bssl_private_key.get());
-
-  CBB cbb;
-  size_t size;
-  util::SecretData private_key_bytes(DILITHIUM_PRIVATE_KEY_BYTES);
-  if (!CBB_init_fixed(&cbb, private_key_bytes.data(),
-                      DILITHIUM_PRIVATE_KEY_BYTES) ||
-      !DILITHIUM_marshal_private_key(&cbb, bssl_private_key.get()) ||
-      !CBB_finish(&cbb, nullptr, &size) ||
-      size != DILITHIUM_PRIVATE_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to serialize ML-DSA private key");
-  }
+  CHECK_EQ(1, MLDSA65_generate_key(
+                  reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                  private_seed_bytes.data(), bssl_private_key.get()));
 
   return KeyPair{
       public_key_bytes,
-      RestrictedData(std::move(private_key_bytes),
+      RestrictedData(std::move(private_seed_bytes),
                      InsecureSecretKeyAccess::Get()),
   };
 }
@@ -116,15 +101,15 @@ TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
   ASSERT_THAT(public_key, IsOk());
 
   util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   EXPECT_THAT(private_key->GetParameters(), Eq(*parameters));
   EXPECT_THAT(private_key->GetIdRequirement(), Eq(test_case.id_requirement));
   EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
   EXPECT_THAT(private_key->GetOutputPrefix(), Eq(test_case.output_prefix));
-  EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
-              Eq(key_pair->private_key_bytes));
+  EXPECT_THAT(private_key->GetPrivateSeedBytes(GetPartialKeyAccess()),
+              Eq(key_pair->private_seed_bytes));
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
@@ -142,32 +127,57 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  RestrictedData private_key_bytes = RestrictedData(
-      key_pair->private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get())
-          .substr(DILITHIUM_PRIVATE_KEY_BYTES - 1),
+  RestrictedData private_seed_bytes = RestrictedData(
+      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+          .substr(MLDSA_SEED_BYTES - 1),
       InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
-      MlDsaPrivateKey::Create(*public_key, private_key_bytes,
+      MlDsaPrivateKey::Create(*public_key, private_seed_bytes,
                               GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(absl::StrCat("Invalid ML-DSA private key size. Only ",
-                                      DILITHIUM_PRIVATE_KEY_BYTES,
-                                      "-byte keys are currently supported."))));
+               HasSubstr(absl::StrCat(
+                   "Invalid ML-DSA private seed size. The seed must be ",
+                   MLDSA_SEED_BYTES, " bytes."))));
 
-  std::string longer_private_key_bytes(
-      key_pair->private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get()));
-  longer_private_key_bytes.push_back(0);
-  private_key_bytes =
-      RestrictedData(longer_private_key_bytes, InsecureSecretKeyAccess::Get());
+  std::string longer_private_seed_bytes(
+      key_pair->private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get()));
+  longer_private_seed_bytes.push_back(0);
+  private_seed_bytes =
+      RestrictedData(longer_private_seed_bytes, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
-      MlDsaPrivateKey::Create(*public_key, private_key_bytes,
+      MlDsaPrivateKey::Create(*public_key, private_seed_bytes,
                               GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr(absl::StrCat("Invalid ML-DSA private key size. Only ",
-                                      DILITHIUM_PRIVATE_KEY_BYTES,
-                                      "-byte keys are currently supported."))));
+               HasSubstr(absl::StrCat(
+                   "Invalid ML-DSA private seed size. The seed must be ",
+                   MLDSA_SEED_BYTES, " bytes."))));
+}
+
+TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
+  TestCase test_case = GetParam();
+
+  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
+  ASSERT_THAT(key_pair1, IsOk());
+  util::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
+  ASSERT_THAT(key_pair2, IsOk());
+
+  util::StatusOr<MlDsaPublicKey> public_key1 =
+      MlDsaPublicKey::Create(*parameters, key_pair1->public_key_bytes,
+                             test_case.id_requirement, GetPartialKeyAccess());
+  ASSERT_THAT(public_key1, IsOk());
+
+  EXPECT_THAT(
+      MlDsaPrivateKey::Create(*public_key1, key_pair2->private_seed_bytes,
+                              GetPartialKeyAccess())
+          .status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("ML-DSA public key doesn't match the private key")));
 }
 
 TEST_P(MlDsaPrivateKeyTest, KeyEquals) {
@@ -186,11 +196,11 @@ TEST_P(MlDsaPrivateKeyTest, KeyEquals) {
   ASSERT_THAT(public_key, IsOk());
 
   util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
-      *public_key, key_pair->private_key_bytes, GetPartialKeyAccess());
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
   EXPECT_TRUE(*private_key == *other_private_key);
@@ -215,7 +225,7 @@ TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
   ASSERT_THAT(public_key1, IsOk());
 
   util::StatusOr<MlDsaPrivateKey> private_key1 = MlDsaPrivateKey::Create(
-      *public_key1, key_pair1->private_key_bytes, GetPartialKeyAccess());
+      *public_key1, key_pair1->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key1, IsOk());
 
   util::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
@@ -227,7 +237,7 @@ TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
   ASSERT_THAT(public_key2, IsOk());
 
   util::StatusOr<MlDsaPrivateKey> private_key2 = MlDsaPrivateKey::Create(
-      *public_key2, key_pair2->private_key_bytes, GetPartialKeyAccess());
+      *public_key2, key_pair2->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key2, IsOk());
 
   EXPECT_TRUE(*private_key1 != *private_key2);
@@ -255,11 +265,11 @@ TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
   ASSERT_THAT(public_key456, IsOk());
 
   util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
-      *public_key123, key_pair->private_key_bytes, GetPartialKeyAccess());
+      *public_key123, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
-      *public_key456, key_pair->private_key_bytes, GetPartialKeyAccess());
+      *public_key456, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
   EXPECT_TRUE(*private_key != *other_private_key);

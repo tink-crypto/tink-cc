@@ -22,8 +22,7 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_DILITHIUM
-#include "openssl/experimental/dilithium.h"
+#include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/key.h"
 #include "tink/subtle/subtle_util.h"
@@ -77,10 +76,10 @@ util::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
                         "currently supported.");
   }
 
-  if (public_key_bytes.size() != DILITHIUM_PUBLIC_KEY_BYTES) {
+  if (public_key_bytes.size() != MLDSA65_PUBLIC_KEY_BYTES) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Invalid ML-DSA public key size. Only ",
-                                     DILITHIUM_PUBLIC_KEY_BYTES,
+                                     MLDSA65_PUBLIC_KEY_BYTES,
                                      "-byte keys are currently supported."));
   }
 

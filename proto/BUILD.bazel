@@ -123,6 +123,12 @@ proto_library(
 )
 
 proto_library(
+    name = "x_aes_gcm_proto",
+    srcs = ["x_aes_gcm.proto"],
+    visibility = ["//visibility:public"],
+)
+
+proto_library(
     name = "aes_ctr_hmac_streaming_proto",
     srcs = ["aes_ctr_hmac_streaming.proto"],
     visibility = ["//visibility:public"],
@@ -289,6 +295,12 @@ cc_proto_library(
     name = "aes_gcm_cc_proto",
     visibility = ["//visibility:public"],
     deps = [":aes_gcm_proto"],
+)
+
+cc_proto_library(
+    name = "x_aes_gcm_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = [":x_aes_gcm_proto"],
 )
 
 cc_proto_library(

@@ -120,6 +120,12 @@ tink_cc_proto(
 )
 
 tink_cc_proto(
+  NAME x_aes_gcm_cc_proto
+  SRCS x_aes_gcm.proto
+)
+
+
+tink_cc_proto(
   NAME kms_aead_cc_proto
   SRCS kms_aead.proto
 )

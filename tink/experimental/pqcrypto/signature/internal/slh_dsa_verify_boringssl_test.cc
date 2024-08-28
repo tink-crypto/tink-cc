@@ -25,8 +25,11 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
+#define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "openssl/experimental/spx.h"
+#undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
 #include "tink/experimental/pqcrypto/signature/internal/slh_dsa_sign_boringssl.h"
-#include "tink/experimental/pqcrypto/signature/internal/slh_dsa_test_util.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
@@ -68,15 +71,20 @@ TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kNoPrefix,
-          /*id_requirement=*/absl::nullopt);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -86,7 +94,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
 
   //  Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
@@ -98,15 +106,21 @@ TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kTink,
-          /*id_requirement=*/0x02030400);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters,
+                      /*id_requirement=*/0x02030400);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -116,7 +130,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
 
   //  Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
@@ -128,21 +142,26 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kNoPrefix,
-          /*id_requirement=*/absl::nullopt);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
   std::string message = "message to be signed";
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Verify with different signature.
@@ -156,15 +175,20 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kNoPrefix,
-          /*id_requirement=*/absl::nullopt);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -174,7 +198,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Invalidate one byte of the output prefix.
@@ -189,15 +213,21 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kTink,
-          /*id_requirement=*/0x02030400);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters,
+                      /*id_requirement=*/0x02030400);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -207,7 +237,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Invalidate one byte of the output prefix.
@@ -222,15 +252,20 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips is false.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kNoPrefix,
-          /*id_requirement=*/absl::nullopt);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -240,7 +275,7 @@ TEST_F(SlhDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"),
@@ -598,15 +633,21 @@ TEST_F(SlhDsaVerifyBoringSslTest, FipsMode) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kNoPrefix,
-          /*id_requirement=*/absl::nullopt);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
-  EXPECT_THAT(NewSlhDsaVerifyBoringSsl(private_key->GetPublicKey()).status(),
-              StatusIs(absl::StatusCode::kInternal));
+  EXPECT_THAT(
+      NewSlhDsaVerifyBoringSsl(private_key.value()->GetPublicKey()).status(),
+      StatusIs(absl::StatusCode::kInternal));
 }
 
 }  // namespace

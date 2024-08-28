@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_KEY_CREATORS_H_
+#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_KEY_CREATORS_H_
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_TEST_UTIL_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_TEST_UTIL_H_
+#include <memory>
 
 #include "absl/types/optional.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
@@ -26,13 +27,14 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// Generates a new SLH-DSA-SHA2-128s private key using the BoringSSL
-// implementation.
-util::StatusOr<SlhDsaPrivateKey> CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-    SlhDsaParameters::Variant variant, absl::optional<int> id_requirement);
+// Creates a new SLH-DSA private key from `parameters`. If `id_requirement` is
+// set, the key will have the specified ID requirement. Otherwise, the key will
+// have no ID requirement.
+util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
+    const SlhDsaParameters& params, absl::optional<int> id_requirement);
 
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_TEST_UTIL_H_
+#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_KEY_CREATORS_H_

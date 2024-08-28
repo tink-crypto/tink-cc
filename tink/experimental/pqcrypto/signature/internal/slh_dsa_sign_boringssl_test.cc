@@ -26,7 +26,7 @@
 #define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
 #include "openssl/experimental/spx.h"
 #undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "tink/experimental/pqcrypto/signature/internal/slh_dsa_test_util.h"
+#include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
 #include "tink/internal/fips_utils.h"
@@ -68,14 +68,19 @@ TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   }
 
   TestCase test_case = GetParam();
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(test_case.variant,
-                                                  test_case.id_requirement);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -97,14 +102,20 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kNoPrefix, absl::nullopt);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a signer based on the private key.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewSlhDsaSignBoringSsl(*private_key);
+      NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign the same message twice, using the same private key.
@@ -128,13 +139,19 @@ TEST_F(SlhDsaSignBoringSslTest, FipsMode) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key =
-      CreateSlhDsa128Sha2SmallSignaturePrivateKey(
-          SlhDsaParameters::Variant::kNoPrefix, absl::nullopt);
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+      CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
-  EXPECT_THAT(NewSlhDsaSignBoringSsl(*private_key).status(),
+  EXPECT_THAT(NewSlhDsaSignBoringSsl(*private_key.value()).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

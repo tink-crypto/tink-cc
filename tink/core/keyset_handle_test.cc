@@ -53,7 +53,6 @@
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/keyset_reader.h"
 #include "tink/partial_key_access.h"
 #include "tink/primitive_set.h"
@@ -102,6 +101,8 @@ using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::SizeIs;
+using ::testing::TestWithParam;
+using ::testing::Values;
 
 namespace {
 
@@ -201,6 +202,19 @@ Keyset GetPublicTestKeyset() {
             KeyData::REMOTE, &keyset);
   keyset.set_primary_key_id(42);
   return keyset;
+}
+
+// Creates an XChaCha20Poly1305Key from the given parameters.
+crypto::tink::util::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
+CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
+                           absl::optional<int> id_requirement) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      params.GetVariant(), secret, id_requirement, GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
 }
 
 TEST_F(KeysetHandleTest, DefaultCtor) {
@@ -621,7 +635,7 @@ TEST_F(KeysetHandleTest, GenerateNewWithAnnotations) {
   }
 }
 
-TEST_F(KeysetHandleTest, GenerateNewErrors) {
+TEST_F(KeysetHandleTest, GenerateNewInvalidKeyTemplateFails) {
   KeyTemplate templ;
   templ.set_type_url("type.googleapis.com/some.unknown.KeyType");
   templ.set_output_prefix_type(OutputPrefixType::TINK);
@@ -630,6 +644,112 @@ TEST_F(KeysetHandleTest, GenerateNewErrors) {
       KeysetHandle::GenerateNew(templ, KeyGenConfigGlobalRegistry());
   EXPECT_FALSE(handle_result.ok());
   EXPECT_EQ(absl::StatusCode::kNotFound, handle_result.status().code());
+}
+
+using KeysetHandleGenerateNewFromParametersTest =
+    TestWithParam<XChaCha20Poly1305Parameters::Variant>;
+
+INSTANTIATE_TEST_SUITE_P(
+    KeysetHandleGenerateNewFromParametersTestSuite,
+    KeysetHandleGenerateNewFromParametersTest,
+    Values(XChaCha20Poly1305Parameters::Variant::kTink,
+           XChaCha20Poly1305Parameters::Variant::kNoPrefix));
+
+TEST_P(KeysetHandleGenerateNewFromParametersTest,
+       GenerateNewFromParametersWorks) {
+  XChaCha20Poly1305Parameters::Variant variant = GetParam();
+
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(variant);
+
+  KeyGenConfiguration config;
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<
+          XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key, config),
+      IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*params, config);
+  EXPECT_THAT(handle.status(), IsOk());
+  EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
+}
+
+TEST(KeysetHandleGenerateNewFromParametersTest,
+     GenerateNewFromParametersEmptyKeyGenConfigFails) {
+  Registry::Reset();
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+
+  KeyGenConfiguration config;
+  EXPECT_THAT(
+      KeysetHandle::GenerateNewFromParameters<XChaCha20Poly1305Parameters>(
+          *params, config)
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
+}
+
+TEST(KeysetHandleGenerateNewFromParametersTest,
+     GenerateNewFromParametersWithAnnotations) {
+  const absl::flat_hash_map<std::string, std::string> kAnnotations = {
+      {"key1", "value1"}, {"key2", "value2"}};
+
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+
+  KeyGenConfiguration config;
+  ASSERT_THAT(
+      internal::KeyGenConfigurationImpl::AddKeyCreator<
+          XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key, config),
+      IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*params, config, kAnnotations);
+  ASSERT_THAT(handle, IsOk());
+
+  auto primitive_wrapper = absl::make_unique<MockAeadPrimitiveWrapper>();
+  absl::flat_hash_map<std::string, std::string> generated_annotations;
+  EXPECT_CALL(*primitive_wrapper, Wrap(_))
+      .WillOnce(
+          [&generated_annotations](
+              std::unique_ptr<PrimitiveSet<Aead>> generated_primitive_set) {
+            generated_annotations = generated_primitive_set->get_annotations();
+            std::unique_ptr<Aead> aead = absl::make_unique<DummyAead>("");
+            return aead;
+          });
+
+  // TODO (b/352504713): Remove this once `GetPrimitive` is no longer dependent
+  // on the global registry / key managers.
+  Registry::Reset();
+  ASSERT_THAT(Registry::RegisterPrimitiveWrapper(std::move(primitive_wrapper)),
+              IsOk());
+  ASSERT_THAT(
+      Registry::RegisterKeyTypeManager(
+          absl::make_unique<FakeAeadKeyManager>(
+              "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key"),
+          /*new_key_allowed=*/true),
+      IsOk());
+
+  EXPECT_THAT(
+      (*handle)->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry()),
+      IsOk());
+  EXPECT_EQ(generated_annotations, kAnnotations);
+
+  // This is needed to cleanup mocks.
+  Registry::Reset();
+}
+
+TEST(KeysetHandleGenerateNewFromParametersTest,
+     GenerateNewFromParametersWithGlobalRegistryConfigFails) {
+  Registry::Reset();
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+
+  EXPECT_THAT(
+      KeysetHandle::GenerateNewFromParameters<XChaCha20Poly1305Parameters>(
+          *params, KeyGenConfigGlobalRegistry())
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST_F(KeysetHandleTest, UnknownPrefixIsInvalid) {
@@ -963,7 +1083,8 @@ TEST_F(KeysetHandleTest, GetPrimitiveNullptrKeyManager) {
 // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
 TEST_F(KeysetHandleTest, GetPrimitiveCustomKeyManager) {
-  auto handle_result = KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
+  auto handle_result =
+  KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                                  KeyGenConfigGlobalRegistry());
   ASSERT_TRUE(handle_result.ok()) << handle_result.status();
   std::unique_ptr<KeysetHandle> handle = std::move(handle_result.value());

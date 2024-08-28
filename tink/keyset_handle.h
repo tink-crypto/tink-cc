@@ -21,6 +21,7 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -171,6 +172,25 @@ class KeysetHandle {
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
   GenerateNew(const google::crypto::tink::KeyTemplate& key_template,
               const crypto::tink::KeyGenConfiguration& config);
+
+  // Returns a KeysetHandle containing one new key generated according to
+  // `parameters` using `config`. When specified, the keyset is annotated
+  // for monitoring with `monitoring_annotations`.
+  //
+  // This will only work for key types, whose key creation functions have been
+  // added to `config` using
+  // `crypto::tink::internal::KeyGenConfigurationImpl::AddKeyCreator`. Note that
+  // `AddKeyCreator` function is currently restricted.
+  template <typename P>
+  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+  GenerateNewFromParameters(
+      const P& parameters, const crypto::tink::KeyGenConfiguration& config,
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations);
+
+  template <typename P>
+  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+  GenerateNewFromParameters(const P& parameters,
+                            const crypto::tink::KeyGenConfiguration& config);
 
   // Returns a KeysetHandle containing one new key generated according to
   // `key_template` using the global registry. When specified, the keyset is
@@ -557,6 +577,44 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
     return wrapper.status();
   }
   return (*wrapper)->Wrap(*keyset_, monitoring_annotations_);
+}
+
+// Returns a KeysetHandle containing one new key generated according to
+// `parameters` using `config`. When specified, the keyset is annotated
+// for monitoring with `monitoring_annotations`.
+//
+// This will only work for key types, whose key creation functions have been
+// added to `config` using `AddKeyCreator`.
+template <typename P>
+crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+KeysetHandle::GenerateNewFromParameters(
+    const P& parameters, const crypto::tink::KeyGenConfiguration& config,
+    absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
+  // Check that `parameters` is a valid type.
+  static_assert(std::is_base_of<Parameters, P>::value, "");
+
+  KeysetHandleBuilder::Entry entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          parameters, KeyStatus::kEnabled,
+          /*is_primary=*/true,
+          /*id=*/absl::nullopt);
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(std::move(entry))
+          .SetMonitoringAnnotations(monitoring_annotations)
+          .Build(config);
+  if (!handle.ok()) {
+    return handle.status();
+  }
+  return std::make_unique<KeysetHandle>(std::move(*handle));
+}
+
+template <typename P>
+crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+KeysetHandle::GenerateNewFromParameters(
+    const P& parameters, const crypto::tink::KeyGenConfiguration& config) {
+  return GenerateNewFromParameters(parameters, config,
+                                   /*monitoring_annotations=*/{});
 }
 
 // TINK-PENDING-REMOVAL-IN-3.0.0-START

@@ -19,6 +19,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -27,11 +28,13 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "tink/aead.h"
 #include "tink/config/global_registry.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_info.h"
+#include "tink/internal/keyset_handle_builder_entry.h"
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/internal/registry_impl.h"
@@ -41,6 +44,7 @@
 #include "tink/key_status.h"
 #include "tink/keyset_reader.h"
 #include "tink/keyset_writer.h"
+#include "tink/parameters.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/secret_key_access_token.h"
@@ -280,17 +284,17 @@ class KeysetHandle {
       : keyset_(std::move(keyset)), entries_(std::move(entries)) {}
   // Creates a handle that contains the given `keyset` and
   // `monitoring_annotations`.
-  KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset,
-               absl::flat_hash_map<std::string, std::string>
-                   monitoring_annotations)
+  KeysetHandle(
+      util::SecretProto<google::crypto::tink::Keyset> keyset,
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations)
       : keyset_(std::move(*keyset)),
         monitoring_annotations_(std::move(monitoring_annotations)) {}
   // Creates a handle that contains the given `keyset`, `entries`, and
   // `monitoring_annotations`.
-  KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset,
-               std::vector<std::shared_ptr<const Entry>> entries,
-               absl::flat_hash_map<std::string, std::string>
-                   monitoring_annotations)
+  KeysetHandle(
+      util::SecretProto<google::crypto::tink::Keyset> keyset,
+      std::vector<std::shared_ptr<const Entry>> entries,
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations)
       : keyset_(std::move(keyset)),
         entries_(std::move(entries)),
         monitoring_annotations_(std::move(monitoring_annotations)) {}
@@ -341,6 +345,156 @@ class KeysetHandle {
   // for each key proto in `keyset_`.
   std::vector<std::shared_ptr<const Entry>> entries_;
   absl::flat_hash_map<std::string, std::string> monitoring_annotations_;
+};
+
+// Creates new `KeysetHandle` objects.
+class KeysetHandleBuilder {
+ public:
+  // Movable, but not copyable.
+  KeysetHandleBuilder(KeysetHandleBuilder&& other) = default;
+  KeysetHandleBuilder& operator=(KeysetHandleBuilder&& other) = default;
+  KeysetHandleBuilder(const KeysetHandleBuilder& other) = delete;
+  KeysetHandleBuilder& operator=(const KeysetHandleBuilder& other) = delete;
+
+  // Creates initially empty keyset handle builder.
+  KeysetHandleBuilder() = default;
+  // Creates keyset handle builder by initially moving keys from `handle`.
+  explicit KeysetHandleBuilder(const KeysetHandle& handle);
+
+  // Represents a single entry in a `KeysetHandleBuilder`.
+  class Entry {
+   public:
+    // Movable, but not copyable.
+    Entry(Entry&& other) = default;
+    Entry& operator=(Entry&& other) = default;
+    Entry(const Entry& other) = delete;
+    Entry& operator=(const Entry& other) = delete;
+
+    // Creates new KeysetHandleBuilder::Entry from a given `key`. Also, sets
+    // key `status` and whether or not the key `is_primary`.
+    static Entry CreateFromKey(std::shared_ptr<const Key> key, KeyStatus status,
+                               bool is_primary);
+
+    template <typename CopyableKey>
+    inline static Entry CreateFromCopyableKey(CopyableKey key, KeyStatus status,
+                                              bool is_primary) {
+      auto copyable_key = absl::make_unique<CopyableKey>(std::move(key));
+      return CreateFromKey(std::move(copyable_key), status, is_primary);
+    }
+
+    // Creates new KeysetHandleBuilder::Entry from given `parameters`. Also,
+    // sets key `status` and whether or not the key `is_primary`. If `id`
+    // does not have a value, then the key will be assigned a random id.
+    static Entry CreateFromParams(std::shared_ptr<const Parameters> parameters,
+                                  KeyStatus status, bool is_primary,
+                                  absl::optional<int> id = absl::nullopt);
+
+    template <typename CopyableParameters>
+    inline static Entry CreateFromCopyableParams(
+        CopyableParameters parameters, KeyStatus status, bool is_primary,
+        absl::optional<int> id = absl::nullopt) {
+      auto copyable_params =
+          absl::make_unique<CopyableParameters>(std::move(parameters));
+      return CreateFromParams(std::move(copyable_params), status, is_primary,
+                              id);
+    }
+
+    // Sets the key status of this entry.
+    void SetStatus(KeyStatus status) { entry_->SetStatus(status); }
+    // Returns key status of this entry.
+    KeyStatus GetStatus() const { return entry_->GetStatus(); }
+
+    // Assigns a fixed id when this keyset is built.
+    void SetFixedId(int32_t id) { entry_->SetFixedId(id); }
+    // Assigns an unused random id when this keyset is built.
+    void SetRandomId() { entry_->SetRandomId(); }
+
+    // Sets this entry as the primary key.
+    void SetPrimary() { entry_->SetPrimary(); }
+    // Unsets this entry as the primary key.
+    void UnsetPrimary() { entry_->UnsetPrimary(); }
+    // Returns whether or not this entry has been marked as a primary.
+    bool IsPrimary() const { return entry_->IsPrimary(); }
+
+   private:
+    friend class KeysetHandleBuilder;
+
+    explicit Entry(std::unique_ptr<internal::KeysetHandleBuilderEntry> entry)
+        : entry_(std::move(entry)) {}
+
+    // Returns whether or not this entry has a randomly assigned id.
+    bool HasRandomId() {
+      return entry_->GetKeyIdStrategyEnum() ==
+             internal::KeyIdStrategyEnum::kRandomId;
+    }
+
+    internal::KeyIdStrategy GetKeyIdStrategy() {
+      return entry_->GetKeyIdStrategy();
+    }
+
+    crypto::tink::util::StatusOr<
+        crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
+    CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) {
+      return entry_->CreateKeysetKey(id, config);
+    }
+
+    std::unique_ptr<internal::KeysetHandleBuilderEntry> entry_;
+    bool added_to_builder_ = false;
+  };
+
+  // Adds an `entry` to the keyset builder. Crashes if `entry` has already been
+  // added to a keyset handle builder.
+  KeysetHandleBuilder& AddEntry(KeysetHandleBuilder::Entry entry);
+  // Removes an entry at `index` from keyset builder.
+  KeysetHandleBuilder& RemoveEntry(int index);
+
+  // Returns the number of Entry objects in this keyset builder.
+  int size() const { return entries_.size(); }
+
+  // Returns entry from keyset builder at `index`.
+  KeysetHandleBuilder::Entry& operator[](int index) { return entries_[index]; }
+
+  // Sets MonitoringAnnotations. If not called, then the default value of an
+  // empty map is used. When called multiple times, previous values are
+  // replaced.
+  KeysetHandleBuilder& SetMonitoringAnnotations(
+      const absl::flat_hash_map<std::string, std::string>&
+          monitoring_annotations);
+
+  // Creates a new `KeysetHandle` object.
+  //
+  // Note: Since KeysetHandleBuilder::Entry objects might have randomly
+  // generated IDs, Build() can only be called once on a single
+  // KeysetHandleBuilder object.  Otherwise, the KeysetHandleBuilder::Entry
+  // IDs would randomly change for each call to Build(), which would result
+  // in incompatible keysets.
+  crypto::tink::util::StatusOr<KeysetHandle> Build() {
+    return Build(KeyGenConfigGlobalRegistry());
+  }
+
+  // Does the same as Build() but also takes a `KeyGenConfiguration` object
+  // which is used to generate keys instead of relying on the global registry.
+  //
+  // Falls back to the global registry if the `config` does not provide the
+  // functionality to create the required key type.
+  crypto::tink::util::StatusOr<KeysetHandle> Build(
+      const KeyGenConfiguration& config);
+
+ private:
+  // Select the next key id based on the given strategy.
+  crypto::tink::util::StatusOr<int32_t> NextIdFromKeyIdStrategy(
+      internal::KeyIdStrategy strategy, const std::set<int32_t>& ids_so_far);
+
+  // Unset primary flag on all entries.
+  void ClearPrimary();
+
+  // Verify that entries with fixed IDs do not follow entries with random IDs.
+  crypto::tink::util::Status CheckIdAssignments();
+
+  std::vector<KeysetHandleBuilder::Entry> entries_;
+  absl::flat_hash_map<std::string, std::string> monitoring_annotations_;
+
+  bool build_called_ = false;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -96,6 +96,7 @@ tink_cc_library(
     tink::core::mac
     tink::core::output_stream
     tink::core::output_stream_with_result
+    tink::core::parameters
     tink::core::primitive_set
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -107,6 +108,7 @@ tink_cc_library(
     absl::core_headers
     absl::flat_hash_map
     absl::memory
+    absl::optional
     absl::status
     absl::strings
     absl::synchronization
@@ -122,6 +124,7 @@ tink_cc_library(
     tink::hybrid::hybrid_encrypt_factory
     tink::hybrid::hybrid_key_templates
     tink::internal::key_info
+    tink::internal::keyset_handle_builder_entry
     tink::internal::registry_impl
     tink::mac::mac_config
     tink::mac::mac_factory
@@ -420,7 +423,9 @@ tink_cc_library(
   NAME keyset_handle
   SRCS
     core/keyset_handle.cc
+    core/keyset_handle_builder.cc
     keyset_handle.h
+    keyset_handle_builder.h
   DEPS
     tink::core::aead
     tink::core::configuration
@@ -431,6 +436,7 @@ tink_cc_library(
     tink::core::key_status
     tink::core::keyset_reader
     tink::core::keyset_writer
+    tink::core::parameters
     tink::core::primitive_set
     tink::core::registry
     tink::core::restricted_data
@@ -441,19 +447,23 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
+    absl::str_format
     absl::optional
     tink::config::global_registry
+    tink::internal::call_with_core_dump_protection
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_info
     tink::internal::key_status_util
     tink::internal::key_type_info_store
+    tink::internal::keyset_handle_builder_entry
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::registry_impl
     tink::internal::util
+    tink::subtle::random
     tink::util::errors
     tink::util::keyset_util
     tink::util::secret_data
@@ -464,33 +474,7 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
-tink_cc_library(
-  NAME keyset_handle_builder
-  SRCS
-    core/keyset_handle_builder.cc
-    keyset_handle_builder.h
-  DEPS
-    tink::core::key
-    tink::core::key_gen_configuration
-    tink::core::key_status
-    tink::core::keyset_handle
-    tink::core::parameters
-    absl::flat_hash_map
-    absl::check
-    absl::memory
-    absl::status
-    absl::strings
-    absl::str_format
-    absl::optional
-    tink::config::global_registry
-    tink::internal::call_with_core_dump_protection
-    tink::internal::keyset_handle_builder_entry
-    tink::subtle::random
-    tink::util::secret_proto
-    tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
-)
+add_library(tink::core::keyset_handle_builder ALIAS tink_internal_core_keyset_handle)
 
 tink_cc_library(
   NAME cleartext_keyset_handle

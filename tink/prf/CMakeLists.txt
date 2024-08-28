@@ -331,6 +331,22 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME hkdf_prf_parameters
+  SRCS
+    hkdf_prf_parameters.cc
+    hkdf_prf_parameters.h
+  DEPS
+    tink::prf::prf_parameters
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -635,4 +651,19 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::hmac_prf_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME hkdf_prf_parameters_test
+  SRCS
+    hkdf_prf_parameters_test.cc
+  DEPS
+    tink::prf::hkdf_prf_parameters
+    gmock
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::util::statusor
+    tink::util::test_matchers
 )

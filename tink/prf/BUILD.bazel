@@ -371,6 +371,23 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "hkdf_prf_key",
+    srcs = ["hkdf_prf_key.cc"],
+    hdrs = ["hkdf_prf_key.h"],
+    include_prefix = "tink/prf",
+    deps = [
+        ":hkdf_prf_parameters",
+        ":prf_key",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -688,6 +705,23 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "hkdf_prf_key_test",
+    srcs = ["hkdf_prf_key_test.cc"],
+    deps = [
+        ":hkdf_prf_key",
+        ":hkdf_prf_parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],

@@ -347,6 +347,22 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME hkdf_prf_key
+  SRCS
+    hkdf_prf_key.cc
+    hkdf_prf_key.h
+  DEPS
+    tink::prf::hkdf_prf_parameters
+    tink::prf::prf_key
+    absl::status
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -664,6 +680,23 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME hkdf_prf_key_test
+  SRCS
+    hkdf_prf_key_test.cc
+  DEPS
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+    gmock
+    absl::status
+    absl::strings
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::util::statusor
     tink::util::test_matchers
 )

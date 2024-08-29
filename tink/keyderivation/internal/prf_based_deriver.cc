@@ -169,9 +169,10 @@ util::StatusOr<std::unique_ptr<KeysetDeriver>> PrfBasedDeriver::New(
     return streaming_prf.status();
   }
 
-  util::Status status = RegisterProtoSerializations();
-  if (!status.ok()) {
-    return status;
+  static const util::Status* registration_status =
+      new util::Status(RegisterProtoSerializations());
+  if (!registration_status->ok()) {
+    return *registration_status;
   }
 
   // Validate `key_template`.

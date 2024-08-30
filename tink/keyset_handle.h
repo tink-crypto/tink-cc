@@ -349,9 +349,12 @@ class KeysetHandle {
   //
   // The returned set is usually later "wrapped" into a class that
   // implements the corresponding Primitive-interface.
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   template <class P>
-  crypto::tink::util::StatusOr<std::unique_ptr<PrimitiveSet<P>>> GetPrimitives(
+  crypto::tink::util::StatusOr<std::unique_ptr<PrimitiveSet<P>>>
+  GetPrimitives(
       const KeyManager<P>* custom_manager) const;
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
   // Creates KeysetHandle::Entry from `keyset_` at `index`.
   Entry CreateEntryAt(int index) const;
@@ -520,6 +523,7 @@ class KeysetHandleBuilder {
 ///////////////////////////////////////////////////////////////////////////////
 // Implementation details of templated methods.
 
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
 template <class P>
 crypto::tink::util::StatusOr<std::unique_ptr<PrimitiveSet<P>>>
 KeysetHandle::GetPrimitives(const KeyManager<P>* custom_manager) const {
@@ -553,6 +557,7 @@ KeysetHandle::GetPrimitives(const KeyManager<P>* custom_manager) const {
   if (!primitives.ok()) return primitives.status();
   return absl::make_unique<PrimitiveSet<P>>(*std::move(primitives));
 }
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
 
 template <class P>
 crypto::tink::util::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(

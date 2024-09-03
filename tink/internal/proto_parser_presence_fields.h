@@ -93,4 +93,4 @@ class Uint32FieldWithPresence : public Field<Struct> {
 }  // namespace tink
 }  // namespace crypto
 
-#endif
+#endif  // TINK_INTERNAL_PROTO_PARSER_PRESENCE_FIELDS_H_

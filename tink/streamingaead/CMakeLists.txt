@@ -299,6 +299,22 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME aes_gcm_hkdf_streaming_parameters
+  SRCS
+    aes_gcm_hkdf_streaming_parameters.cc
+    aes_gcm_hkdf_streaming_parameters.h
+  DEPS
+    tink::streamingaead::streaming_aead_parameters
+    absl::flat_hash_set
+    absl::status
+    absl::strings
+    absl::optional
+    tink::core::parameters
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -629,4 +645,16 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME aes_gcm_hkdf_streaming_parameters_test
+  SRCS
+    aes_gcm_hkdf_streaming_parameters_test.cc
+  DEPS
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    gmock
+    absl::status
+    tink::util::statusor
+    tink::util::test_matchers
 )

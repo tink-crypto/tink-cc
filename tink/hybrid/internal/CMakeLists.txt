@@ -60,27 +60,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME hpke_decrypt_boringssl
-  SRCS
-    hpke_decrypt_boringssl.cc
-    hpke_decrypt_boringssl.h
-  DEPS
-    tink::hybrid::internal::hpke_key_boringssl
-    tink::hybrid::internal::hpke_util_boringssl
-    absl::core_headers
-    absl::memory
-    absl::status
-    absl::strings
-    crypto
-    tink::subtle::subtle_util
-    tink::util::status
-    tink::util::statusor
-    tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
-)
-
-tink_cc_library(
   NAME hpke_encrypt
   SRCS
     hpke_encrypt.cc
@@ -92,46 +71,6 @@ tink_cc_library(
     absl::status
     absl::string_view
     tink::core::hybrid_encrypt
-    tink::util::status
-    tink::util::statusor
-    tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
-)
-
-tink_cc_library(
-  NAME hpke_encrypt_boringssl
-  SRCS
-    hpke_encrypt_boringssl.cc
-    hpke_encrypt_boringssl.h
-  DEPS
-    tink::hybrid::internal::hpke_util_boringssl
-    absl::algorithm_container
-    absl::core_headers
-    absl::memory
-    absl::status
-    absl::strings
-    crypto
-    tink::subtle::subtle_util
-    tink::util::status
-    tink::util::statusor
-    tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
-)
-
-tink_cc_library(
-  NAME hpke_key_boringssl
-  SRCS
-    hpke_key_boringssl.cc
-    hpke_key_boringssl.h
-  DEPS
-    tink::hybrid::internal::hpke_util_boringssl
-    absl::core_headers
-    absl::memory
-    absl::status
-    absl::string_view
-    crypto
     tink::util::status
     tink::util::statusor
     tink::proto::hpke_cc_proto
@@ -393,27 +332,6 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME hpke_decrypt_boringssl_test
-  SRCS
-    hpke_decrypt_boringssl_test.cc
-  DEPS
-    tink::hybrid::internal::hpke_decrypt_boringssl
-    tink::hybrid::internal::hpke_key_boringssl
-    tink::hybrid::internal::hpke_test_util
-    gmock
-    absl::status
-    absl::strings
-    crypto
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
-)
-
-tink_cc_test(
   NAME hpke_decrypt_test
   SRCS
     hpke_decrypt_test.cc
@@ -434,26 +352,6 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME hpke_encrypt_boringssl_test
-  SRCS
-    hpke_encrypt_boringssl_test.cc
-  DEPS
-    tink::hybrid::internal::hpke_encrypt_boringssl
-    tink::hybrid::internal::hpke_test_util
-    gmock
-    absl::status
-    absl::strings
-    crypto
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
-)
-
-tink_cc_test(
   NAME hpke_encrypt_test
   SRCS
     hpke_encrypt_test.cc
@@ -467,26 +365,6 @@ tink_cc_test(
     tink::core::hybrid_encrypt
     tink::util::statusor
     tink::util::test_matchers
-    tink::proto::hpke_cc_proto
-  TAGS
-    exclude_if_openssl
-)
-
-tink_cc_test(
-  NAME hpke_key_boringssl_test
-  SRCS
-    hpke_key_boringssl_test.cc
-  DEPS
-    tink::hybrid::internal::hpke_key_boringssl
-    tink::hybrid::internal::hpke_test_util
-    gmock
-    absl::status
-    absl::strings
-    crypto
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS
     exclude_if_openssl

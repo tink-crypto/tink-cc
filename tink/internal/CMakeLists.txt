@@ -1,5 +1,7 @@
 tink_module(internal)
 
+add_subdirectory(testing)
+
 tink_cc_library(
   NAME ssl_util
   SRCS

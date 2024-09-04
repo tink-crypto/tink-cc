@@ -1,0 +1,75 @@
+package(
+    default_testonly = 1,
+    default_visibility = ["//:__subpackages__"],
+)
+
+licenses(["notice"])
+
+cc_library(
+    name = "equals_proto_key_serialization",
+    hdrs = ["equals_proto_key_serialization.h"],
+    include_prefix = "tink/internal/testing",
+    deps = [
+        "//tink:insecure_secret_key_access",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_test(
+    name = "equals_proto_key_serialization_test",
+    srcs = ["equals_proto_key_serialization_test.cc"],
+    deps = [
+        ":equals_proto_key_serialization",
+        "//proto:tink_cc_proto",
+        "//tink:insecure_secret_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:proto_key_serialization",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "field_with_number",
+    srcs = ["field_with_number.cc"],
+    hdrs = ["field_with_number.h"],
+    include_prefix = "tink/internal/testing",
+    deps = [
+        "//tink:insecure_secret_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:proto_key_serialization",
+        "//tink/internal:proto_parsing_helpers",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "field_with_number_test",
+    srcs = ["field_with_number_test.cc"],
+    deps = [
+        ":equals_proto_key_serialization",
+        ":field_with_number",
+        "//proto:tink_cc_proto",
+        "//tink:insecure_secret_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:proto_key_serialization",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

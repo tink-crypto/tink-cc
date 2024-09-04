@@ -315,6 +315,22 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME aes_gcm_hkdf_streaming_key
+  SRCS
+    aes_gcm_hkdf_streaming_key.cc
+    aes_gcm_hkdf_streaming_key.h
+  DEPS
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::streamingaead::streaming_aead_key
+    absl::status
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -655,6 +671,22 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     gmock
     absl::status
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME aes_gcm_hkdf_streaming_key_test
+  SRCS
+    aes_gcm_hkdf_streaming_key_test.cc
+  DEPS
+    tink::streamingaead::aes_gcm_hkdf_streaming_key
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    gmock
+    absl::status
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::util::statusor
     tink::util::test_matchers
 )

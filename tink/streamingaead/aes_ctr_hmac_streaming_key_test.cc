@@ -71,7 +71,7 @@ TEST(AesCtrHmacStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  // Key material is 16 bytes (another valid key length).
+  // Key material is 36 bytes (another valid key length).
   RestrictedData mismatched_initial_key_material =
       RestrictedData(parameters->KeySizeInBytes() + 1);
 

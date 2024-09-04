@@ -42,7 +42,6 @@ class AesCtrHmacStreamingKey : public StreamingAeadKey {
       const AesCtrHmacStreamingParameters& parameters,
       const RestrictedData& initial_key_material, PartialKeyAccessToken token);
 
-  // Returns the initial key material for AES-CTR-HMAC Streaming.
   const RestrictedData& GetInitialKeyMaterial(
       PartialKeyAccessToken token) const {
     return initial_key_material_;

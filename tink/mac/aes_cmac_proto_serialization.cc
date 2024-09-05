@@ -16,13 +16,14 @@
 
 #include "tink/mac/aes_cmac_proto_serialization.h"
 
+#include <cstdint>
+#include <new>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -30,27 +31,75 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "proto/aes_cmac.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::AesCmacKeyFormat;
-using ::google::crypto::tink::AesCmacParams;
+using ::crypto::tink::util::SecretDataAsStringView;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::google::crypto::tink::OutputPrefixType;
+
+struct AesCmacParamStruct {
+  uint32_t tag_size;
+};
+
+struct AesCmacKeyStruct {
+  uint32_t version;
+  SecretData key_value;
+  AesCmacParamStruct params;
+};
+
+struct AesCmacKeyFormatStruct {
+  uint32_t key_size;
+  AesCmacParamStruct params;
+};
+
+ProtoParser<AesCmacParamStruct> CreateParamParser() {
+  return ProtoParserBuilder<AesCmacParamStruct>()
+      .AddUint32Field(1, &AesCmacParamStruct::tag_size)
+      .BuildOrDie();
+}
+
+ProtoParser<AesCmacKeyStruct> CreateKeyParser() {
+  return ProtoParserBuilder<AesCmacKeyStruct>()
+      .AddUint32Field(1, &AesCmacKeyStruct::version)
+      .AddBytesSecretDataField(2, &AesCmacKeyStruct::key_value)
+      .AddMessageField(3, &AesCmacKeyStruct::params, CreateParamParser())
+      .BuildOrDie();
+}
+
+const ProtoParser<AesCmacKeyStruct>& GetKeyParser() {
+  static ProtoParser<AesCmacKeyStruct>* parser =
+      new ProtoParser<AesCmacKeyStruct>(CreateKeyParser());
+  return *parser;
+}
+
+ProtoParser<AesCmacKeyFormatStruct> CreateFormatParser() {
+  return ProtoParserBuilder<AesCmacKeyFormatStruct>()
+      .AddUint32Field(1, &AesCmacKeyFormatStruct::key_size)
+      .AddMessageField(2, &AesCmacKeyFormatStruct::params, CreateParamParser())
+      .BuildOrDie();
+}
+
+const ProtoParser<AesCmacKeyFormatStruct>& GetFormatParser() {
+  static ProtoParser<AesCmacKeyFormatStruct>* parser =
+      new ProtoParser<AesCmacKeyFormatStruct>(CreateFormatParser());
+  return *parser;
+}
 
 using AesCmacProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -107,20 +156,18 @@ util::StatusOr<AesCmacParameters> ParseParameters(
                         "Wrong type URL when parsing AesCmacParameters.");
   }
 
-  AesCmacKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesCmacKeyFormat proto");
+  util::StatusOr<AesCmacKeyFormatStruct> proto_key_format =
+      GetFormatParser().Parse(serialization.GetKeyTemplate().value());
+  if (!proto_key_format.ok()) {
+    return proto_key_format.status();
   }
 
   util::StatusOr<AesCmacParameters::Variant> variant =
       ToVariant(serialization.GetKeyTemplate().output_prefix_type());
   if (!variant.ok()) return variant.status();
 
-  return AesCmacParameters::Create(proto_key_format.key_size(),
-                                   proto_key_format.params().tag_size(),
-                                   *variant);
+  return AesCmacParameters::Create(proto_key_format->key_size,
+                                   proto_key_format->params.tag_size, *variant);
 }
 
 util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
@@ -129,14 +176,17 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  AesCmacParams proto_params;
-  proto_params.set_tag_size(parameters.CryptographicTagSizeInBytes());
-  AesCmacKeyFormat proto_key_format;
-  proto_key_format.set_key_size(parameters.KeySizeInBytes());
-  *proto_key_format.mutable_params() = proto_params;
+  AesCmacKeyFormatStruct proto_key_format;
+  proto_key_format.params.tag_size = parameters.CryptographicTagSizeInBytes();
+  proto_key_format.key_size = parameters.KeySizeInBytes();
 
+  util::StatusOr<std::string> serialized =
+      GetFormatParser().SerializeIntoString(proto_key_format);
+  if (!serialized.ok()) {
+    return serialized.status();
+  }
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
+      kTypeUrl, *output_prefix_type, *serialized);
 }
 
 util::StatusOr<AesCmacKey> ParseKey(
@@ -150,14 +200,13 @@ util::StatusOr<AesCmacKey> ParseKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
-  util::StatusOr<SecretProto<google::crypto::tink::AesCmacKey>> proto_key =
-      SecretProto<google::crypto::tink::AesCmacKey>::ParseFromSecretData(
-          serialization.SerializedKeyProto().Get(*token));
+  util::StatusOr<AesCmacKeyStruct> proto_key = GetKeyParser().Parse(
+      SecretDataAsStringView(serialization.SerializedKeyProto().Get(*token)));
   if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse AesCmacKey proto");
   }
-  if ((*proto_key)->version() != 0) {
+  if (proto_key->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -166,13 +215,12 @@ util::StatusOr<AesCmacKey> ParseKey(
       ToVariant(serialization.GetOutputPrefixType());
   if (!variant.ok()) return variant.status();
 
-  util::StatusOr<AesCmacParameters> parameters =
-      AesCmacParameters::Create((*proto_key)->key_value().length(),
-                                (*proto_key)->params().tag_size(), *variant);
+  util::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
+      proto_key->key_value.size(), proto_key->params.tag_size, *variant);
   if (!parameters.ok()) return parameters.status();
 
   util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
-      *parameters, RestrictedData((*proto_key)->key_value(), *token),
+      *parameters, RestrictedData(proto_key->key_value, *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!key.ok()) return key.status();
 
@@ -189,19 +237,18 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required");
   }
 
-  AesCmacParams proto_params;
-  proto_params.set_tag_size(key.GetParameters().CryptographicTagSizeInBytes());
-  SecretProto<google::crypto::tink::AesCmacKey> proto_key;
-  *proto_key->mutable_params() = std::move(proto_params);
-  proto_key->set_version(0);
-  internal::CallWithCoreDumpProtection(
-      [&] { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
+  AesCmacKeyStruct proto_key;
+  proto_key.params.tag_size = key.GetParameters().CryptographicTagSizeInBytes();
+  proto_key.version = 0;
+  proto_key.key_value =
+      SecretDataFromStringView(restricted_input->GetSecret(*token));
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  util::StatusOr<SecretData> serialized_key =
+      GetKeyParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }

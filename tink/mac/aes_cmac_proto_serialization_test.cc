@@ -18,16 +18,23 @@
 
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
+#include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/testing/equals_proto_key_serialization.h"
+#include "tink/internal/testing/field_with_number.h"
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
@@ -44,6 +51,10 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::ProtoKeySerialization;
+using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
+using ::crypto::tink::internal::proto_testing::FieldWithNumber;
+using ::crypto::tink::internal::proto_testing::SerializeMessage;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -51,6 +62,7 @@ using ::google::crypto::tink::AesCmacKeyFormat;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -376,6 +388,116 @@ TEST_F(AesCmacProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
+
+struct KeyAndSerialization {
+  KeyAndSerialization(std::shared_ptr<Key> key,
+                      ProtoKeySerialization proto_key_serialization)
+      : key(std::move(key)),
+        proto_key_serialization(std::move(proto_key_serialization)) {}
+
+  std::shared_ptr<Key> key;
+  ProtoKeySerialization proto_key_serialization;
+};
+
+class SerializationTest : public testing::TestWithParam<KeyAndSerialization> {};
+class ParseTest : public testing::TestWithParam<KeyAndSerialization> {};
+
+TEST_P(SerializationTest, SerializesCorrectly) {
+  ASSERT_THAT(RegisterAesCmacProtoSerialization(), IsOk());
+  const KeyAndSerialization& test_key = GetParam();
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<ProtoKeySerialization>(
+              *test_key.key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization.status(), IsOk());
+  ProtoKeySerialization* proto_serialization =
+      dynamic_cast<ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, Not(IsNull()));
+  EXPECT_THAT(*proto_serialization,
+              EqualsProtoKeySerialization(test_key.proto_key_serialization));
+}
+
+TEST_P(ParseTest, ParserCorrectly) {
+  ASSERT_THAT(RegisterAesCmacProtoSerialization(), IsOk());
+  const KeyAndSerialization& test_key = GetParam();
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          test_key.proto_key_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+  EXPECT_TRUE(**key == *test_key.key);
+}
+
+KeyAndSerialization CanonicalKeyAndSerialization0() {
+  absl::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(16, 11, AesCmacParameters::Variant::kTink);
+  CHECK_OK(parameters);
+
+  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+      *parameters,
+      RestrictedData("16 key bytes....", InsecureSecretKeyAccess::Get()), 104,
+      GetPartialKeyAccess());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.AesCmacKey",
+      {FieldWithNumber(2).IsString("16 key bytes...."),
+       FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
+      KeyData::SYMMETRIC, OutputPrefixType::TINK, 104);
+
+  return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
+                             serialization);
+}
+
+KeyAndSerialization CanonicalKeyAndSerialization1() {
+  absl::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(32, 11, AesCmacParameters::Variant::kNoPrefix);
+  CHECK_OK(parameters);
+
+  absl::StatusOr<AesCmacKey> key =
+      AesCmacKey::Create(*parameters,
+                         RestrictedData("32 key bytes....32 key bytes....",
+                                        InsecureSecretKeyAccess::Get()),
+                         absl::nullopt, GetPartialKeyAccess());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.AesCmacKey",
+      {FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
+       FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
+      KeyData::SYMMETRIC, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
+                             serialization);
+}
+
+KeyAndSerialization NonCanonicalKeyAndSerialization2() {
+  absl::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(32, 11, AesCmacParameters::Variant::kNoPrefix);
+  CHECK_OK(parameters);
+
+  absl::StatusOr<AesCmacKey> key =
+      AesCmacKey::Create(*parameters,
+                         RestrictedData("32 key bytes....32 key bytes....",
+                                        InsecureSecretKeyAccess::Get()),
+                         absl::nullopt, GetPartialKeyAccess());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.AesCmacKey",
+      {// Add an explicit version field
+       FieldWithNumber(1).IsVarint(0),
+       FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
+       FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
+      KeyData::SYMMETRIC, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
+                             serialization);
+}
+
+INSTANTIATE_TEST_SUITE_P(SerializationTest, SerializationTest,
+                         testing::Values(CanonicalKeyAndSerialization0(),
+                                         CanonicalKeyAndSerialization1()));
+
+INSTANTIATE_TEST_SUITE_P(ParseTest, ParseTest,
+                         testing::Values(CanonicalKeyAndSerialization0(),
+                                         CanonicalKeyAndSerialization1(),
+                                         NonCanonicalKeyAndSerialization2()));
 
 }  // namespace
 }  // namespace tink

@@ -1570,3 +1570,40 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "x_aes_gcm_key",
+    srcs = ["x_aes_gcm_key.cc"],
+    hdrs = ["x_aes_gcm_key.h"],
+    include_prefix = "tink/aead",
+    deps = [
+        ":aead_key",
+        ":x_aes_gcm_parameters",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/subtle:subtle_util",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_test(
+    name = "x_aes_gcm_key_test",
+    srcs = ["x_aes_gcm_key_test.cc"],
+    deps = [
+        ":x_aes_gcm_key",
+        ":x_aes_gcm_parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

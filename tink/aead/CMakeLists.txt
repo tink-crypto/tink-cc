@@ -1505,3 +1505,39 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME x_aes_gcm_key
+  SRCS
+    x_aes_gcm_key.cc
+    x_aes_gcm_key.h
+  DEPS
+    tink::aead::aead_key
+    tink::aead::x_aes_gcm_parameters
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::subtle::subtle_util
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME x_aes_gcm_key_test
+  SRCS
+    x_aes_gcm_key_test.cc
+  DEPS
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    gmock
+    absl::status
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::util::statusor
+    tink::util::test_matchers
+)

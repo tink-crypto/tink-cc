@@ -24,6 +24,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/subtle/ed25519_sign_boringssl.h"
@@ -71,8 +72,17 @@ Ed25519SignKeyManager::PublicKeySignFactory::Create(
     const Ed25519PrivateKey& private_key) const {
   // BoringSSL expects a 64-byte private key which contains the public key as a
   // suffix.
-  util::SecretData sk = util::SecretDataFromStringView(absl::StrCat(
-      private_key.key_value(), private_key.public_key().key_value()));
+  util::SecretData sk;
+  sk.resize(private_key.key_value().size() +
+            private_key.public_key().key_value().size());
+  internal::SafeMemCopy(
+      sk.data(),
+      reinterpret_cast<const uint8_t*>(private_key.key_value().data()),
+      private_key.key_value().size());
+  internal::SafeMemCopy(sk.data() + private_key.key_value().size(),
+                        reinterpret_cast<const uint8_t*>(
+                            private_key.public_key().key_value().data()),
+                        private_key.public_key().key_value().size());
 
   return subtle::Ed25519SignBoringSsl::New(sk);
 }

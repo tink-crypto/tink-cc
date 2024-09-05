@@ -171,6 +171,7 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::public_key_sign
     tink::internal::ec_util
+    tink::internal::safe_stringops
     tink::subtle::ed25519_sign_boringssl
     tink::util::constants
     tink::util::enums

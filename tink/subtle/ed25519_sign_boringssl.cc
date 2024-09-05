@@ -63,9 +63,12 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
                         private_key.size(), kSslPrivateKeySize));
   }
 
-  internal::SslUniquePtr<EVP_PKEY> ssl_priv_key(EVP_PKEY_new_raw_private_key(
-      EVP_PKEY_ED25519, /*unused=*/nullptr, private_key.data(),
-      internal::Ed25519KeyPrivKeySize()));
+  internal::SslUniquePtr<EVP_PKEY> ssl_priv_key(
+      crypto::tink::internal::CallWithCoreDumpProtection([&]() {
+        return EVP_PKEY_new_raw_private_key(
+            EVP_PKEY_ED25519, /*unused=*/nullptr, private_key.data(),
+            internal::Ed25519KeyPrivKeySize());
+      }));
   if (ssl_priv_key == nullptr) {
     return util::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_new_raw_private_key failed");

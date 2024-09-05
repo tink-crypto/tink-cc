@@ -32,6 +32,7 @@
 #include "openssl/ecdsa.h"
 #include "openssl/evp.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
@@ -98,36 +99,41 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
   auto status = internal::CheckFipsCompatibility<EcdsaRawSignBoringSsl>();
   if (!status.ok()) return status;
 
-  // Check curve.
-  util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
-      internal::EcGroupFromCurveType(ec_key.curve);
-  if (!group.ok()) {
-    return group.status();
-  }
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
-  EC_KEY_set_group(key.get(), group->get());
+  util::Status result = CallWithCoreDumpProtection([&]() -> util::Status {
+    // Check curve.
+    util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+        internal::EcGroupFromCurveType(ec_key.curve);
+    if (!group.ok()) {
+      return group.status();
+    }
+    EC_KEY_set_group(key.get(), group->get());
 
-  // Check key.
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> pub_key =
-      internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y);
-  if (!pub_key.ok()) {
-    return pub_key.status();
+    // Check key.
+    util::StatusOr<internal::SslUniquePtr<EC_POINT>> pub_key =
+        internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y);
+    if (!pub_key.ok()) {
+      return pub_key.status();
+    }
+
+    if (!EC_KEY_set_public_key(key.get(), pub_key->get())) {
+      return util::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
+    }
+
+    internal::SslUniquePtr<BIGNUM> priv_key(
+        BN_bin2bn(ec_key.priv.data(), ec_key.priv.size(), nullptr));
+    if (!EC_KEY_set_private_key(key.get(), priv_key.get())) {
+      return util::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
+    }
+    return util::OkStatus();
+  });
+  if (!result.ok()) {
+    return result;
   }
-
-  if (!EC_KEY_set_public_key(key.get(), pub_key->get())) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
-  }
-
-  internal::SslUniquePtr<BIGNUM> priv_key(
-      BN_bin2bn(ec_key.priv.data(), ec_key.priv.size(), nullptr));
-  if (!EC_KEY_set_private_key(key.get(), priv_key.get())) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
-  }
-
   return {
       absl::WrapUnique(new EcdsaRawSignBoringSsl(std::move(key), encoding))};
 }

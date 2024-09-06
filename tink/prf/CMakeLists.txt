@@ -363,6 +363,28 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME hkdf_prf_proto_serialization
+  SRCS
+    hkdf_prf_proto_serialization.cc
+    hkdf_prf_proto_serialization.h
+  DEPS
+    tink::prf::hkdf_prf_parameters
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_parameters_serialization
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::proto::common_cc_proto
+    tink::proto::hkdf_prf_cc_proto
+    tink::proto::tink_cc_proto
+)
+
 # tests
 
 tink_cc_test(
@@ -699,4 +721,28 @@ tink_cc_test(
     tink::core::restricted_data
     tink::util::statusor
     tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME hkdf_prf_proto_serialization_test
+  SRCS
+    hkdf_prf_proto_serialization_test.cc
+  DEPS
+    tink::prf::hkdf_prf_parameters
+    tink::prf::hkdf_prf_proto_serialization
+    gmock
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::subtle::random
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::common_cc_proto
+    tink::proto::hkdf_prf_cc_proto
+    tink::proto::tink_cc_proto
 )

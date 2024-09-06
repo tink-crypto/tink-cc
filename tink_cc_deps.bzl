@@ -52,25 +52,27 @@ def tink_cc_deps():
     # -------------------------------------------------------------------------
     # Abseil.
     # -------------------------------------------------------------------------
-    # Release from 2023-09-18.
+    # Release from 2024-01-22.
     maybe(
         http_archive,
         name = "com_google_absl",
-        sha256 = "497ebdc3a4885d9209b9bd416e8c3f71e7a1fb8af249f6c2a80b7cbeefcd7e21",
-        strip_prefix = "abseil-cpp-20230802.1",
-        urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.1.zip"],
+        sha256 = "d0f9a580463375978f5ae4e04da39c3664bdaa23724b2f0bf00896a02bf801b9",
+        strip_prefix = "abseil-cpp-20240116.0",
+        urls = [
+            "https://github.com/abseil/abseil-cpp/archive/refs/tags/20240116.0.zip",
+        ],
     )
 
     # -------------------------------------------------------------------------
     # BoringSSL.
     # -------------------------------------------------------------------------
-    # Commit from 2024-04-30.
+    # Commit from 2024-08-29.
     maybe(
         http_archive,
         name = "boringssl",
-        sha256 = "709a785a0cd37448b532e36a3bbd4fbe5ced312ebf936e5c4fcd0e9dbc5b8acb",
-        strip_prefix = "boringssl-2db0eb3f96a5756298dcd7f9319e56a98585bd10",
-        url = "https://github.com/google/boringssl/archive/2db0eb3f96a5756298dcd7f9319e56a98585bd10.zip",
+        sha256 = "96dd8b9be49a9954db8e3e6f75eae4c1dca1df1081b8598db4166671cfcff445",
+        strip_prefix = "boringssl-3a138e43694c381cbd3d35f3237afed5724a67e8",
+        url = "https://github.com/google/boringssl/archive/3a138e43694c381cbd3d35f3237afed5724a67e8.zip",
     )
 
     # -------------------------------------------------------------------------

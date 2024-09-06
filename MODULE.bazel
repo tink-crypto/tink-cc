@@ -53,7 +53,15 @@ bazel_dep(
 
 bazel_dep(
     name = "boringssl",
-    version = "0.0.0-20240530-2db0eb3",
+)
+
+# Required for HPKE DHKEM P-256 HKDF-SHA256.
+# TODO: b/364953575 - Update to BCR version.
+archive_override(
+    module_name = "boringssl",
+    integrity = "sha256-96dd8b9be49a9954db8e3e6f75eae4c1dca1df1081b8598db4166671cfcff445",
+    strip_prefix = "boringssl-3a138e43694c381cbd3d35f3237afed5724a67e8",
+    urls = ["https://github.com/google/boringssl/archive/3a138e43694c381cbd3d35f3237afed5724a67e8.zip"],
 )
 
 bazel_dep(
@@ -63,7 +71,7 @@ bazel_dep(
 
 bazel_dep(
     name = "abseil-cpp",
-    version = "20230802.1",
+    version = "20240116.0",
     repo_name = "com_google_absl",
 )
 

@@ -79,11 +79,11 @@ if (TINK_BUILD_TESTS)
 endif()
 
 if (NOT TINK_USE_INSTALLED_ABSEIL)
-  # Release from 2023-09-18.
+  # Release from 2024-01-22.
   http_archive(
     NAME abseil
-    URL https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.1.zip
-    SHA256 497ebdc3a4885d9209b9bd416e8c3f71e7a1fb8af249f6c2a80b7cbeefcd7e21
+    URL https://github.com/abseil/abseil-cpp/archive/refs/tags/20240116.0.zip
+    SHA256 d0f9a580463375978f5ae4e04da39c3664bdaa23724b2f0bf00896a02bf801b9
   )
 else()
   # This is everything that needs to be done here. Abseil already defines its
@@ -95,12 +95,11 @@ endif()
 # defined.
 if (NOT TARGET crypto)
   if (NOT TINK_USE_SYSTEM_OPENSSL)
-    # Commit from 2024-04-11.
+    # Commit from 2024-08-29.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/archive/07fa2780386fbbc001937fabf116c1fe4ddd2705.zip
-      SHA256 7042eac2edf6daaf2c82ca514293869f1e1a237111247aed77aee0d31a2d42f2
-      CMAKE_SUBDIR src
+      URL https://github.com/google/boringssl/archive/3a138e43694c381cbd3d35f3237afed5724a67e8.zip
+      SHA256 96dd8b9be49a9954db8e3e6f75eae4c1dca1df1081b8598db4166671cfcff445
     )
     # BoringSSL targets do not carry include directory info, this fixes it.
     target_include_directories(crypto PUBLIC

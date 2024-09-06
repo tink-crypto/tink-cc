@@ -45,7 +45,11 @@ class HpkeContextBoringSslTest : public testing::TestWithParam<HpkeParams> {};
 
 INSTANTIATE_TEST_SUITE_P(
     HpkeContextBoringSslTestSuite, HpkeContextBoringSslTest,
-    Values(HpkeParams{HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
+    Values(HpkeParams{HpkeKem::kP256HkdfSha256, HpkeKdf::kHkdfSha256,
+                      HpkeAead::kAes128Gcm},
+           HpkeParams{HpkeKem::kP256HkdfSha256, HpkeKdf::kHkdfSha256,
+                      HpkeAead::kChaCha20Poly1305},
+           HpkeParams{HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
                       HpkeAead::kAes128Gcm},
            HpkeParams{HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
                       HpkeAead::kChaCha20Poly1305}));

@@ -35,6 +35,8 @@ util::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
   switch (kem) {
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       return HpkeKem::kX25519HkdfSha256;
+    case google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256:
+      return HpkeKem::kP256HkdfSha256;
     default:
       return util::Status(
           absl::StatusCode::kInvalidArgument,
@@ -88,6 +90,10 @@ util::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       return internal::EcPointEncodingSizeInBytes(
           subtle::EllipticCurveType::CURVE25519,
+          subtle::EcPointFormat::UNCOMPRESSED);
+    case google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256:
+      return internal::EcPointEncodingSizeInBytes(
+          subtle::EllipticCurveType::NIST_P256,
           subtle::EcPointFormat::UNCOMPRESSED);
     default:
       return util::Status(

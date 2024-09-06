@@ -32,7 +32,7 @@ namespace internal {
 
 struct HpkeTestParams {
   std::string recipient_public_key;   // pkRm
-  std::string seed_for_testing;       // skEm
+  std::string seed_for_testing;       // skEm for X25519; ikmE for P-256.
   std::string application_info;       // info
   std::string plaintext;              // pt
   std::string associated_data;        // aad

@@ -16,7 +16,7 @@
 
 #include "tink/hybrid/internal/hpke_util_boringssl.h"
 
-#include <string>
+#include <cstdint>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -37,23 +37,39 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::Not;
+using ::testing::TestWithParam;
+using ::testing::Values;
 
-TEST(HpkeUtilBoringSslTest, ValidParamsFromProto) {
-  google::crypto::tink::HpkeParams params =
-      CreateHpkeParams(google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256,
-                       google::crypto::tink::HpkeKdf::HKDF_SHA256,
-                       google::crypto::tink::HpkeAead::AES_256_GCM);
+struct TestCase {
+  google::crypto::tink::HpkeKem kem_proto;
+  HpkeKem kem_struct;
+  uint16_t kem_id;
+};
+
+using HpkeUtilBoringSslTest = TestWithParam<TestCase>;
+
+INSTANTIATE_TEST_SUITE_P(
+    HpkeUtilBoringSslTestSuite, HpkeUtilBoringSslTest,
+    Values(TestCase{google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256,
+                    HpkeKem::kP256HkdfSha256, EVP_HPKE_DHKEM_P256_HKDF_SHA256},
+           TestCase{google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256,
+                    HpkeKem::kX25519HkdfSha256,
+                    EVP_HPKE_DHKEM_X25519_HKDF_SHA256}));
+
+TEST_P(HpkeUtilBoringSslTest, ValidParamsFromProto) {
+  TestCase test_case = GetParam();
+  google::crypto::tink::HpkeParams params = CreateHpkeParams(
+      test_case.kem_proto, google::crypto::tink::HpkeKdf::HKDF_SHA256,
+      google::crypto::tink::HpkeAead::AES_256_GCM);
 
   util::StatusOr<const EVP_HPKE_KEM *> kem_from_enum =
-      KemParam(google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256);
+      KemParam(test_case.kem_proto);
   ASSERT_THAT(kem_from_enum, IsOk());
-  EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_enum),
-              Eq(EVP_HPKE_DHKEM_X25519_HKDF_SHA256));
+  EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_enum), Eq(test_case.kem_id));
 
   util::StatusOr<const EVP_HPKE_KEM *> kem_from_proto = KemParam(params);
   ASSERT_THAT(kem_from_proto, IsOk());
-  EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_proto),
-              Eq(EVP_HPKE_DHKEM_X25519_HKDF_SHA256));
+  EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_proto), Eq(test_case.kem_id));
 
   util::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
   ASSERT_THAT(kdf, IsOk());
@@ -64,14 +80,14 @@ TEST(HpkeUtilBoringSslTest, ValidParamsFromProto) {
   EXPECT_THAT(EVP_HPKE_AEAD_id(*aead), Eq(EVP_HPKE_AES_256_GCM));
 }
 
-TEST(HpkeUtilBoringSslTest, ValidParamsFromStruct) {
-  HpkeParams params = {HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
+TEST_P(HpkeUtilBoringSslTest, ValidParamsFromStruct) {
+  TestCase test_case = GetParam();
+  HpkeParams params = {test_case.kem_struct, HpkeKdf::kHkdfSha256,
                        HpkeAead::kAes256Gcm};
 
   util::StatusOr<const EVP_HPKE_KEM *> kem_from_proto = KemParam(params);
   ASSERT_THAT(kem_from_proto, IsOk());
-  EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_proto),
-              Eq(EVP_HPKE_DHKEM_X25519_HKDF_SHA256));
+  EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_proto), Eq(test_case.kem_id));
 
   util::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
   ASSERT_THAT(kdf, IsOk());

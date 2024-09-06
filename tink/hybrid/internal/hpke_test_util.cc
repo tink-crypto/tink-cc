@@ -50,8 +50,7 @@ const absl::string_view kTestX25519HkdfSha256Aes128Gcm[] = {
     // exporter_values[1]
     "2e8f0b54673c7029649d4eb9d5e33bf1872cf76d623ff164ac185da9e88c21a5",
     // exporter_values[2]
-    "e9e43065102c3836401bed8c3c3c75ae46be1639869391d62c61f1ec7af54931"
-};
+    "e9e43065102c3836401bed8c3c3c75ae46be1639869391d62c61f1ec7af54931"};
 
 // Test vector from https://www.rfc-editor.org/rfc/rfc9180.html#appendix-A.2.
 // DHKEM(X25519, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305
@@ -73,8 +72,55 @@ const absl::string_view kTestX25519HkdfSha256ChaCha20Poly1305[] = {
     // exporter_values[1]
     "8c1df14732580e5501b00f82b10a1647b40713191b7c1240ac80e2b68808ba69",
     // exporter_values[2]
-    "5acb09211139c43b3090489a9da433e8a30ee7188ba8b0a9a1ccf0c229283e53"
-};
+    "5acb09211139c43b3090489a9da433e8a30ee7188ba8b0a9a1ccf0c229283e53"};
+
+// Test vector from https://www.rfc-editor.org/rfc/rfc9180.html#appendix-A.3.
+// DHKEM(P-256, HKDF-SHA256), HKDF-SHA256, AES-128-GCM
+const absl::string_view kTestP256HkdfSha256Aes128Gcm[] = {
+    "04fe8c19ce0905191ebc298a9245792531f26f0cece2460639e8bc39cb7f706a826a779b4c"
+    "f969b8a0e539c7f62fb3d30ad6aa8f80e30f1d128aafd68a2ce72ea0",          // pkRm
+    "4270e54ffd08d79d5928020af4686d8f6b7d35dbe470265f1f5aa22816ce860e",  // ikmE
+    "4f6465206f6e2061204772656369616e2055726e",                          // info
+    "4265617574792069732074727574682c20747275746820626561757479",        // pt
+    "436f756e742d30",                                                    // aad
+    "5ad590bb8baa577f8619db35a36311226a896e7342a6d836d8b7bcd2f20b6c7f9076ac232e"
+    "3ab2523f39513434",                                                  // ct
+    "f3ce7fdae57e1a310d87f1ebbde6f328be0a99cdbcadf4d6589cf29de4b8ffd2",  // skRm
+    "04a92719c6195d5085104f469a8b9814d5838ff72b60501e2c4466e5e67b325ac98536d7b6"
+    "1a1af4b78e5b7f951c0900be863c403ce65c9bfcb9382657222d18c4",  // enc
+    "",                        // exporter_contexts[0]
+    "00",                      // exporter_contexts[1]
+    "54657374436f6e74657874",  // exporter_contexts[2]
+    // exporter_values[0]
+    "5e9bc3d236e1911d95e65b576a8a86d478fb827e8bdfe77b741b289890490d4d",
+    // exporter_values[1]
+    "6cff87658931bda83dc857e6353efe4987a201b849658d9b047aab4cf216e796",
+    // exporter_values[2]
+    "d8f1ea7942adbba7412c6d431c62d01371ea476b823eb697e1f6e6cae1dab85a"};
+
+// Test vector from https://www.rfc-editor.org/rfc/rfc9180.html#appendix-A.5.
+// DHKEM(P-256, HKDF-SHA256), HKDF-SHA256, ChaCha20Poly1305
+const absl::string_view kTestP256HkdfSha256ChaCha20Poly1305[] = {
+    "04a697bffde9405c992883c5c439d6cc358170b51af72812333b015621dc0f40bad9bb726f"
+    "68a5c013806a790ec716ab8669f84f6b694596c2987cf35baba2a006",          // pkRm
+    "f1f1a3bc95416871539ecb51c3a8f0cf608afb40fbbe305c0a72819d35c33f1f",  // ikmE
+    "4f6465206f6e2061204772656369616e2055726e",                          // info
+    "4265617574792069732074727574682c20747275746820626561757479",        // pt
+    "436f756e742d30",                                                    // aad
+    "6469c41c5c81d3aa85432531ecf6460ec945bde1eb428cb2fedf7a29f5a685b4ccb0d057f0"
+    "3ea2952a27bb458b",                                                  // ct
+    "a4d1c55836aa30f9b3fbb6ac98d338c877c2867dd3a77396d13f68d3ab150d3b",  // skRm
+    "04c07836a0206e04e31d8ae99bfd549380b072a1b1b82e563c935c095827824fc1559eac6f"
+    "b9e3c70cd3193968994e7fe9781aa103f5b50e934b5b2f387e381291",  // enc
+    "",                        // exporter_contexts[0]
+    "00",                      // exporter_contexts[1]
+    "54657374436f6e74657874",  // exporter_contexts[2]
+    // exporter_values[0]
+    "9b13c510416ac977b553bf1741018809c246a695f45eff6d3b0356dbefe1e660",
+    // exporter_values[1]
+    "6c8b7be3a20a5684edecb4253619d9051ce8583baf850e0cb53c402bdcaf8ebb",
+    // exporter_values[2]
+    "477a50d804c7c51941f69b8e32fe8288386ee1a84905fe4938d58972f24ac938"};
 
 // BoringSSL test vectors with aead_id = 2.  Missing 'skRm' and 'enc'.
 // (No test vectors provided by RFC 9180 for this test case).
@@ -97,58 +143,113 @@ const absl::string_view kTestX25519HkdfSha256Aes256Gcm[] = {
     "",                    // Missing exporter_values[2]
 };
 
+// DHKEM(P-256, HKDF-SHA256), HKDF-SHA256, AES-256-GCM
+const absl::string_view kTestP256HkdfSha256Aes256Gcm[] = {
+    "04abc7e49a4c6b3566d77d0304addc6ed0e98512ffccf505e6a8e3eb25c685136f85314854"
+    "4876de76c0f2ef99cdc3a05ccf5ded7860c7c021238f9e2073d2356c",          // pkRm
+    "a90d3417c3da9cb6c6ae19b4b5dd6cc9529a4cc24efb7ae0ace1f31887a8cd6c",  // ikmE
+    "4f6465206f6e2061204772656369616e2055726e",                          // info
+    "4265617574792069732074727574682c20747275746820626561757479",        // pt
+    "436f756e742d30",                                                    // aad
+    "58c61a45059d0c5704560e9d88b564a8b63f1364b8d1fcb3c4c6ddc1d291742465e902cd21"
+    "6f8908da49f8f96f",  // ct
+    "",                  // Missing skRm
+    "",                  // Missing enc
+    "",                  // Missing exporter_contexts[0]
+    "",                  // Missing exporter_contexts[1]
+    "",                  // Missing exporter_contexts[2]
+    "",                  // Missing exporter_values[0]
+    "",                  // Missing exporter_values[1]
+    "",                  // Missing exporter_values[2]
+};
+
 HpkeTestParams DefaultHpkeTestParams() {
   return HpkeTestParams(kTestX25519HkdfSha256Aes128Gcm);
 }
 
 util::StatusOr<HpkeTestParams> CreateHpkeTestParams(
-    const google::crypto::tink::HpkeParams& params) {
-  if (params.kem() != google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("No test parameters for specified KEM:", params.kem()));
+    const google::crypto::tink::HpkeParams& proto_params) {
+  HpkeParams params;
+
+  switch (proto_params.kem()) {
+    case google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256:
+      params.kem = HpkeKem::kP256HkdfSha256;
+      break;
+    case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
+      params.kem = HpkeKem::kX25519HkdfSha256;
+      break;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          absl::StrCat("No test parameters for specified KEM:",
+                                       proto_params.kem()));
   }
-  if (params.kdf() != google::crypto::tink::HpkeKdf::HKDF_SHA256) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("No test parameters for specified KDF:", params.kdf()));
+
+  switch (proto_params.kdf()) {
+    case google::crypto::tink::HpkeKdf::HKDF_SHA256:
+      params.kdf = HpkeKdf::kHkdfSha256;
+      break;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          absl::StrCat("No test parameters for specified KDF:",
+                                       proto_params.kdf()));
   }
-  switch (params.aead()) {
+
+  switch (proto_params.aead()) {
     case google::crypto::tink::HpkeAead::AES_128_GCM:
-      return HpkeTestParams(kTestX25519HkdfSha256Aes128Gcm);
+      params.aead = HpkeAead::kAes128Gcm;
+      break;
     case google::crypto::tink::HpkeAead::AES_256_GCM:
-      return HpkeTestParams(kTestX25519HkdfSha256Aes256Gcm);
+      params.aead = HpkeAead::kAes256Gcm;
+      break;
     case google::crypto::tink::HpkeAead::CHACHA20_POLY1305:
-      return HpkeTestParams(kTestX25519HkdfSha256ChaCha20Poly1305);
+      params.aead = HpkeAead::kChaCha20Poly1305;
+      break;
     default:
       return util::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("No test parameters for specified AEAD:",
-                                       params.aead()));
+                                       proto_params.aead()));
   }
+  return CreateHpkeTestParams(params);
 }
 
 util::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params) {
-  if (params.kem != HpkeKem::kX25519HkdfSha256) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("No test parameters for specified KEM:", params.kem));
-  }
   if (params.kdf != HpkeKdf::kHkdfSha256) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("No test parameters for specified KDF:", params.kdf));
   }
-  switch (params.aead) {
-    case HpkeAead::kAes128Gcm:
-      return HpkeTestParams(kTestX25519HkdfSha256Aes128Gcm);
-    case HpkeAead::kAes256Gcm:
-      return HpkeTestParams(kTestX25519HkdfSha256Aes256Gcm);
-    case HpkeAead::kChaCha20Poly1305:
-      return HpkeTestParams(kTestX25519HkdfSha256ChaCha20Poly1305);
-    default:
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
-          absl::StrCat("No test parameters for specified AEAD:", params.aead));
+  if (params.kem == HpkeKem::kP256HkdfSha256) {
+    switch (params.aead) {
+      case HpkeAead::kAes128Gcm:
+        return HpkeTestParams(kTestP256HkdfSha256Aes128Gcm);
+      case HpkeAead::kAes256Gcm:
+        return HpkeTestParams(kTestP256HkdfSha256Aes256Gcm);
+      case HpkeAead::kChaCha20Poly1305:
+        return HpkeTestParams(kTestP256HkdfSha256ChaCha20Poly1305);
+      default:
+        return util::Status(
+            absl::StatusCode::kInvalidArgument,
+            absl::StrCat("No test parameters for specified AEAD:",
+                         params.aead));
+    }
+  } else if (params.kem == HpkeKem::kX25519HkdfSha256) {
+    switch (params.aead) {
+      case HpkeAead::kAes128Gcm:
+        return HpkeTestParams(kTestX25519HkdfSha256Aes128Gcm);
+      case HpkeAead::kAes256Gcm:
+        return HpkeTestParams(kTestX25519HkdfSha256Aes256Gcm);
+      case HpkeAead::kChaCha20Poly1305:
+        return HpkeTestParams(kTestX25519HkdfSha256ChaCha20Poly1305);
+      default:
+        return util::Status(
+            absl::StatusCode::kInvalidArgument,
+            absl::StrCat("No test parameters for specified AEAD:",
+                         params.aead));
+    }
+  } else {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("No test parameters for specified KEM:", params.kem));
   }
 }
 

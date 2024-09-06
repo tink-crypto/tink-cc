@@ -29,6 +29,7 @@ namespace internal {
 // Values from https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1.
 enum class HpkeKem {
   kUnknownKem = 0x0,
+  kP256HkdfSha256 = 0x10,
   kX25519HkdfSha256 = 0x20,
 };
 

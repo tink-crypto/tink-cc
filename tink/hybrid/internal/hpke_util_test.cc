@@ -47,6 +47,24 @@ INSTANTIATE_TEST_SUITE_P(
     HpkeParamsConversionTestSuite, HpkeParamsConversionTest,
     Values(
         HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::DHKEM_P256_HKDF_SHA256,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_128_GCM),
+            HpkeParams{HpkeKem::kP256HkdfSha256, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes128Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::DHKEM_P256_HKDF_SHA256,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_256_GCM),
+            HpkeParams{HpkeKem::kP256HkdfSha256, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes256Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::DHKEM_P256_HKDF_SHA256,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::CHACHA20_POLY1305),
+            HpkeParams{HpkeKem::kP256HkdfSha256, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kChaCha20Poly1305}},
+        HpkeParamsConversionTestCase{
             CreateHpkeParams(google::crypto::tink::DHKEM_X25519_HKDF_SHA256,
                              google::crypto::tink::HKDF_SHA256,
                              google::crypto::tink::AES_128_GCM),
@@ -99,6 +117,9 @@ TEST_P(HpkeBadParamsTest, HpkeParamsProtoToStruct) {
 TEST(HpkeKemEncodingSizeTest, HpkeEncapsulatedKeyLength) {
   // Encapsulated key length should match 'Nenc' column from
   // https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1.
+  EXPECT_THAT(
+      HpkeEncapsulatedKeyLength(google::crypto::tink::DHKEM_P256_HKDF_SHA256),
+      IsOkAndHolds(65));
   EXPECT_THAT(
       HpkeEncapsulatedKeyLength(google::crypto::tink::DHKEM_X25519_HKDF_SHA256),
       IsOkAndHolds(32));

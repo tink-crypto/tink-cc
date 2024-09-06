@@ -31,6 +31,8 @@ namespace internal {
 
 util::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
   switch (params.kem) {
+    case HpkeKem::kP256HkdfSha256:
+      return EVP_hpke_p256_hkdf_sha256();
     case HpkeKem::kX25519HkdfSha256:
       return EVP_hpke_x25519_hkdf_sha256();
     default:
@@ -43,6 +45,8 @@ util::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
 util::StatusOr<const EVP_HPKE_KEM*> KemParam(
     const google::crypto::tink::HpkeKem& kem) {
   switch (kem) {
+    case google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256:
+      return EVP_hpke_p256_hkdf_sha256();
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       return EVP_hpke_x25519_hkdf_sha256();
     default:

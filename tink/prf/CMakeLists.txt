@@ -369,15 +369,24 @@ tink_cc_library(
     hkdf_prf_proto_serialization.cc
     hkdf_prf_proto_serialization.h
   DEPS
+    tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     absl::status
     absl::string_view
     absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::call_with_core_dump_protection
+    tink::internal::key_parser
+    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::util::secret_data
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::common_cc_proto
@@ -728,6 +737,7 @@ tink_cc_test(
   SRCS
     hkdf_prf_proto_serialization_test.cc
   DEPS
+    tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     tink::prf::hkdf_prf_proto_serialization
     gmock
@@ -735,8 +745,13 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::subtle::random

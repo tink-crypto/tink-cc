@@ -58,12 +58,19 @@ class HpkeEncryptTest : public testing::TestWithParam<HpkeParams> {};
 
 INSTANTIATE_TEST_SUITE_P(
     HpkeEncryptionTestSuite, HpkeEncryptTest,
-    Values(CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
+    Values(CreateHpkeParams(HpkeKem::DHKEM_P256_HKDF_SHA256,
                             HpkeKdf::HKDF_SHA256, HpkeAead::AES_128_GCM),
-           CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
+           CreateHpkeParams(HpkeKem::DHKEM_P256_HKDF_SHA256,
+                            HpkeKdf::HKDF_SHA256, HpkeAead::AES_256_GCM),
+           CreateHpkeParams(HpkeKem::DHKEM_P256_HKDF_SHA256,
                             HpkeKdf::HKDF_SHA256, HpkeAead::CHACHA20_POLY1305),
            CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
-                            HpkeKdf::HKDF_SHA256, HpkeAead::AES_256_GCM)));
+                            HpkeKdf::HKDF_SHA256, HpkeAead::AES_128_GCM),
+           CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
+                            HpkeKdf::HKDF_SHA256, HpkeAead::AES_256_GCM),
+           CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
+                            HpkeKdf::HKDF_SHA256,
+                            HpkeAead::CHACHA20_POLY1305)));
 
 TEST_P(HpkeEncryptTest, SetupSenderContextAndEncrypt) {
   HpkeParams hpke_params = GetParam();
@@ -106,7 +113,7 @@ INSTANTIATE_TEST_SUITE_P(
                             HpkeKdf::KDF_UNKNOWN, HpkeAead::AES_128_GCM),
            CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
                             HpkeKdf::HKDF_SHA256, HpkeAead::AEAD_UNKNOWN),
-           CreateHpkeParams(HpkeKem::DHKEM_P256_HKDF_SHA256,
+           CreateHpkeParams(HpkeKem::DHKEM_P384_HKDF_SHA384,
                             HpkeKdf::HKDF_SHA256, HpkeAead::AES_128_GCM),
            CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
                             HpkeKdf::HKDF_SHA384, HpkeAead::AES_128_GCM)));

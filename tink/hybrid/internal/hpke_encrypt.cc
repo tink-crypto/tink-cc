@@ -17,6 +17,7 @@
 #include "tink/hybrid/internal/hpke_encrypt.h"
 
 #include <memory>
+#include <new>
 #include <string>
 
 #include "absl/memory/memory.h"
@@ -47,8 +48,9 @@ util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is missing HPKE parameters.");
   }
-  if (recipient_public_key.params().kem() !=
-      HpkeKem::DHKEM_X25519_HKDF_SHA256) {
+  HpkeKem kem = recipient_public_key.params().kem();
+  if (kem != HpkeKem::DHKEM_P256_HKDF_SHA256 &&
+      kem != HpkeKem::DHKEM_X25519_HKDF_SHA256) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key has an unsupported KEM");
   }

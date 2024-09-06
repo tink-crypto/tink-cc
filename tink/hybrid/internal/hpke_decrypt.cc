@@ -19,7 +19,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -57,8 +56,9 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key is missing HPKE parameters.");
   }
-  if (recipient_private_key.public_key().params().kem() !=
-      HpkeKem::DHKEM_X25519_HKDF_SHA256) {
+  HpkeKem kem = recipient_private_key.public_key().params().kem();
+  if (kem != HpkeKem::DHKEM_P256_HKDF_SHA256 &&
+      kem != HpkeKem::DHKEM_X25519_HKDF_SHA256) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key has an unsupported KEM");
   }

@@ -227,6 +227,23 @@ class HybridKeyTemplates {
   //   - OutputPrefixType: RAW
   static const google::crypto::tink::KeyTemplate&
   HpkeX25519HkdfSha256ChaCha20Poly1305Raw();
+
+  // Returns a KeyTemplate that generates new instances of
+  // HpkePrivateKey with the following parameters:
+  //   - KEM: ECDH over curve P-256 plus HKDF-SHA256
+  //   - KDF: HKDF-SHA256
+  //   - AEAD: AES-128-GCM
+  //   - OutputPrefixType: TINK
+  static const google::crypto::tink::KeyTemplate& HpkeP256HkdfSha256Aes128Gcm();
+
+  // Returns a KeyTemplate that generates new instances of
+  // HpkePrivateKey with the following parameters:
+  //   - KEM: ECDH over curve P-256 plus HKDF-SHA256
+  //   - KDF: HKDF-SHA256
+  //   - AEAD: AES-128-GCM
+  //   - OutputPrefixType: RAW
+  static const google::crypto::tink::KeyTemplate&
+  HpkeP256HkdfSha256Aes128GcmRaw();
 };
 
 }  // namespace tink

@@ -266,5 +266,21 @@ HybridKeyTemplates::HpkeX25519HkdfSha256ChaCha20Poly1305Raw() {
   return *key_template;
 }
 
+// static
+const KeyTemplate& HybridKeyTemplates::HpkeP256HkdfSha256Aes128Gcm() {
+  static const KeyTemplate* key_template =
+      NewHpkeKeyTemplate(HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
+                         HpkeAead::AES_128_GCM, OutputPrefixType::TINK);
+  return *key_template;
+}
+
+// static
+const KeyTemplate& HybridKeyTemplates::HpkeP256HkdfSha256Aes128GcmRaw() {
+  static const KeyTemplate* key_template =
+      NewHpkeKeyTemplate(HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
+                         HpkeAead::AES_128_GCM, OutputPrefixType::RAW);
+  return *key_template;
+}
+
 }  // namespace tink
 }  // namespace crypto

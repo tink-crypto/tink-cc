@@ -43,6 +43,10 @@ TEST(HpkeKeyManagerUtilTest, ValidateValidParamsSucceeds) {
                                               HpkeKdf::HKDF_SHA256,
                                               HpkeAead::AES_256_GCM)),
               IsOk());
+  ASSERT_THAT(ValidateParams(CreateHpkeParams(HpkeKem::DHKEM_P256_HKDF_SHA256,
+                                              HpkeKdf::HKDF_SHA256,
+                                              HpkeAead::AES_256_GCM)),
+              IsOk());
 }
 
 TEST(HpkeKeyManagerUtilTest, ValidateInvalidParamsFails) {

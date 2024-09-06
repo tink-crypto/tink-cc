@@ -50,6 +50,8 @@ using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::Not;
+using ::testing::TestWithParam;
+using ::testing::Values;
 
 HpkeKeyFormat CreateKeyFormat(HpkeKem kem, HpkeKdf kdf, HpkeAead aead) {
   HpkeKeyFormat key_format;
@@ -308,6 +310,7 @@ TEST(HpkePrivateKeyManagerTest, GetPublicKeySucceeds) {
   ASSERT_THAT(public_key->public_key(), Not(IsEmpty()));
   EXPECT_THAT(public_key->public_key(), Eq(key->public_key().public_key()));
 }
+
 TEST(HpkePrivateKeyManagerTest, GetPublicKeyP256Succeeds) {
   HpkeKeyFormat key_format =
       CreateKeyFormat(HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
@@ -371,10 +374,17 @@ TEST(HpkePrivateKeyManagerTest, GetPublicKey521Succeeds) {
   EXPECT_THAT(public_key->public_key(), Eq(key->public_key().public_key()));
 }
 
-TEST(HpkePrivateKeyManagerTest, EncryptThenDecryptSucceeds) {
+using HpkePrivateKeyManagerTest = TestWithParam<HpkeKem>;
+
+INSTANTIATE_TEST_SUITE_P(HpkePrivateKeyManagerTestSuite,
+                         HpkePrivateKeyManagerTest,
+                         Values(HpkeKem::DHKEM_P256_HKDF_SHA256,
+                                HpkeKem::DHKEM_X25519_HKDF_SHA256));
+
+TEST_P(HpkePrivateKeyManagerTest, EncryptThenDecryptSucceeds) {
+  HpkeKem kem = GetParam();
   util::StatusOr<HpkePrivateKey> private_key =
-      CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
-                HpkeAead::AES_128_GCM);
+      CreateKey(kem, HpkeKdf::HKDF_SHA256, HpkeAead::AES_128_GCM);
   ASSERT_THAT(private_key, IsOk());
   util::StatusOr<HpkePublicKey> public_key =
       HpkePrivateKeyManager().GetPublicKey(*private_key);
@@ -389,22 +399,6 @@ TEST(HpkePrivateKeyManagerTest, EncryptThenDecryptSucceeds) {
   ASSERT_THAT(HybridEncryptThenDecrypt(encrypt->get(), decrypt->get(),
                                        "some text", "some aad"),
               IsOk());
-}
-
-TEST(HpkePrivateKeyManagerTest, GetPrimitiveP256Fails) {
-  util::StatusOr<HpkePrivateKey> private_key =
-      CreateKey(HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
-                HpkeAead::AES_128_GCM);
-  ASSERT_THAT(private_key, IsOk());
-  util::StatusOr<HpkePublicKey> public_key =
-      HpkePrivateKeyManager().GetPublicKey(*private_key);
-  ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
-      HpkePrivateKeyManager().GetPrimitive<HybridDecrypt>(*private_key);
-  ASSERT_THAT(decrypt.status(), StatusIs(absl::StatusCode::kInvalidArgument));
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
-      HpkeEncrypt::New(*public_key);
-  ASSERT_THAT(encrypt.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(HpkePrivateKeyManagerTest, GetPrimitiveP384Fails) {

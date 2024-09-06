@@ -40,6 +40,8 @@ using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkePublicKey;
 using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
+using ::testing::TestWithParam;
+using ::testing::Values;
 
 TEST(HpkePublicKeyManagerTest, BasicAccessors) {
   EXPECT_THAT(HpkePublicKeyManager().get_version(), Eq(0));
@@ -54,12 +56,20 @@ TEST(HpkePublicKeyManagerTest, ValidateEmptyKeyFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(HpkePublicKeyManagerTest, ValidateKeySucceeds) {
-  EXPECT_THAT(HpkePublicKeyManager().ValidateKey(CreateHpkePublicKey(
-                  CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
-                                   HpkeKdf::HKDF_SHA256, HpkeAead::AES_128_GCM),
-                  /*raw_key_bytes=*/"")),
-              IsOk());
+using HpkePublicKeyManagerTest = TestWithParam<HpkeKem>;
+
+INSTANTIATE_TEST_SUITE_P(HpkePublicKeyManagerTestSuite,
+                         HpkePublicKeyManagerTest,
+                         Values(HpkeKem::DHKEM_P256_HKDF_SHA256,
+                                HpkeKem::DHKEM_X25519_HKDF_SHA256));
+
+TEST_P(HpkePublicKeyManagerTest, ValidateKeySucceeds) {
+  HpkeKem kem = GetParam();
+  EXPECT_THAT(
+      HpkePublicKeyManager().ValidateKey(CreateHpkePublicKey(
+          CreateHpkeParams(kem, HpkeKdf::HKDF_SHA256, HpkeAead::AES_128_GCM),
+          /*raw_key_bytes=*/"")),
+      IsOk());
 }
 
 TEST(HpkePublicKeyManagerTest, ValidateKeyWithInvalidKemFails) {

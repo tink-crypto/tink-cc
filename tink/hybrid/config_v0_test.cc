@@ -46,6 +46,7 @@ using ConfigV0Test = TestWithParam<KeyTemplate>;
 INSTANTIATE_TEST_SUITE_P(
     ConfigV0TestSuite, ConfigV0Test,
     Values(HybridKeyTemplates::EciesP256HkdfHmacSha256Aes128Gcm(),
+           HybridKeyTemplates::HpkeP256HkdfSha256Aes128Gcm(),
            HybridKeyTemplates::HpkeX25519HkdfSha256Aes128Gcm()));
 #else
 INSTANTIATE_TEST_SUITE_P(

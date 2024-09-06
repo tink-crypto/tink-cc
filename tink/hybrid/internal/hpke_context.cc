@@ -34,6 +34,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+// Nenc value in https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1.
+constexpr int kP256KemEncodingLengthInBytes = 65;
 constexpr int kX25519KemEncodingLengthInBytes = 32;
 
 std::string ConcatenatePayload(absl::string_view encapsulated_key,
@@ -43,7 +45,10 @@ std::string ConcatenatePayload(absl::string_view encapsulated_key,
 
 util::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
                                              absl::string_view payload) {
-  if (kem == HpkeKem::kX25519HkdfSha256) {
+  if (kem == HpkeKem::kP256HkdfSha256) {
+    return HpkePayloadView(payload.substr(0, kP256KemEncodingLengthInBytes),
+                           payload.substr(kP256KemEncodingLengthInBytes));
+  } else if (kem == HpkeKem::kX25519HkdfSha256) {
     return HpkePayloadView(payload.substr(0, kX25519KemEncodingLengthInBytes),
                            payload.substr(kX25519KemEncodingLengthInBytes));
   }

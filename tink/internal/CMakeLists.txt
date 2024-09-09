@@ -1354,6 +1354,7 @@ tink_cc_library(
     absl::string_view
     absl::optional
     absl::span
+    tink::core::big_integer
     tink::core::secret_key_access_token
     tink::util::secret_data
 )
@@ -1371,7 +1372,9 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
+    tink::core::big_integer
     tink::core::insecure_secret_key_access
+    tink::core::restricted_big_integer
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
@@ -1426,6 +1429,9 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::span
+    tink::core::big_integer
+    tink::core::insecure_secret_key_access
+    tink::core::restricted_big_integer
     tink::util::secret_data
 )
 
@@ -1440,6 +1446,9 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::span
+    tink::core::big_integer
+    tink::core::insecure_secret_key_access
+    tink::core::restricted_big_integer
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util

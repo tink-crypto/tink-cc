@@ -27,6 +27,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/big_integer.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
@@ -48,20 +49,24 @@ namespace proto_parsing {
 // Clears the value.
 void ClearStringLikeValue(std::string& s);
 void ClearStringLikeValue(util::SecretData& s);
+void ClearStringLikeValue(BigInteger& b);
 
 // Copies the first argument into the second.
 void CopyIntoStringLikeValue(absl::string_view sv, std::string& s);
 void CopyIntoStringLikeValue(absl::string_view sv, util::SecretData& s);
+void CopyIntoStringLikeValue(absl::string_view sv, BigInteger& b);
 
 // Returns the size of the string like value.
 size_t SizeOfStringLikeValue(const std::string& s);
 size_t SizeOfStringLikeValue(const util::SecretData& s);
+size_t SizeOfStringLikeValue(const BigInteger& b);
 
 // Serialize the string from the first argument into the second.
 // Behavior in case that first.size() > second.size() is unimportant -- it will
 // never be called like this.
 void SerializeStringLikeValue(const std::string& s, absl::Span<char> o);
 void SerializeStringLikeValue(const util::SecretData& s, absl::Span<char> o);
+void SerializeStringLikeValue(const BigInteger& b, absl::Span<char> o);
 
 // Methods to parse a field in a proto message into some member in the struct
 // "Struct".

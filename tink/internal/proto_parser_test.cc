@@ -31,6 +31,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_test_proto.pb.h"
@@ -877,6 +878,48 @@ TEST(ProtoParserTest, SerializeEmpty) {
   absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
   ASSERT_THAT(serialized, IsOk());
   EXPECT_THAT(*serialized, Eq(""));
+}
+// Various String field variants ===============================================
+
+struct VariousFieldStruct {
+  BigInteger big_integer_member;
+};
+
+TEST(ProtoParserTest, SerializeBigInteger) {
+  VariousFieldStruct s;
+  s.big_integer_member = BigInteger("data interpreted as bigint");
+  ProtoParser<VariousFieldStruct> parser =
+      ProtoParserBuilder<VariousFieldStruct>()
+          .AddBytesBigIntegerField(1, &VariousFieldStruct::big_integer_member)
+          .BuildOrDie();
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(
+      HexEncode(*serialized),
+      Eq(absl::StrCat("0a1a", HexEncode("data interpreted as bigint"))));
+}
+
+TEST(ProtoParserTest, ParseBigInteger) {
+  std::string message =
+      absl::StrCat(HexDecodeOrDie("0a1a"), "data interpreted as bigint");
+  ProtoParser<VariousFieldStruct> parser =
+      ProtoParserBuilder<VariousFieldStruct>()
+          .AddBytesBigIntegerField(1, &VariousFieldStruct::big_integer_member)
+          .BuildOrDie();
+  absl::StatusOr<VariousFieldStruct> parsed = parser.Parse(message);
+  ASSERT_THAT(parsed.status(), IsOk());
+  EXPECT_THAT(parsed->big_integer_member,
+              Eq(BigInteger("data interpreted as bigint")));
+}
+
+TEST(ProtoParserTest, ParseEmptyBigInteger) {
+  ProtoParser<VariousFieldStruct> parser =
+      ProtoParserBuilder<VariousFieldStruct>()
+          .AddBytesBigIntegerField(1, &VariousFieldStruct::big_integer_member)
+          .BuildOrDie();
+  absl::StatusOr<VariousFieldStruct> parsed = parser.Parse("");
+  ASSERT_THAT(parsed.status(), IsOk());
+  EXPECT_THAT(parsed->big_integer_member, Eq(BigInteger()));
 }
 
 // Varint Parsing special cases ================================================

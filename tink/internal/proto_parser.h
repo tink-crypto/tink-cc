@@ -33,6 +33,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
+#include "tink/big_integer.h"
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message_field.h"
@@ -156,6 +157,13 @@ class ProtoParserBuilder {
     fields_.push_back(
         absl::make_unique<proto_parsing::BytesField<Struct, std::string>>(
             tag, value, options));
+    return *this;
+  }
+  ProtoParserBuilder& AddBytesBigIntegerField(
+      int tag, BigInteger Struct::*value) {
+    fields_.push_back(
+        absl::make_unique<proto_parsing::BytesField<Struct, BigInteger>>(
+            tag, value));
     return *this;
   }
   ProtoParserBuilder& AddBytesSecretDataField(

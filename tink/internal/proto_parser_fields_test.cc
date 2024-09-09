@@ -26,6 +26,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/big_integer.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -78,6 +80,12 @@ TEST(ClearStringLikeValue, SecretData) {
   EXPECT_THAT(s, IsEmpty());
 }
 
+TEST(ClearStringLikeValue, BigInteger) {
+  BigInteger b = BigInteger("hi");
+  ClearStringLikeValue(b);
+  EXPECT_THAT(b.GetValue(), Eq(""));
+}
+
 TEST(CopyIntoStringLikeValue, String) {
   std::string s = "hi";
   std::string t;
@@ -92,6 +100,13 @@ TEST(CopyIntoStringLikeValue, SecretData) {
   EXPECT_THAT(SecretDataAsStringView(t), Eq(s));
 }
 
+TEST(CopyIntoStringLikeValue, BigInteger) {
+  std::string s = "hi";
+  BigInteger b;
+  CopyIntoStringLikeValue(s, b);
+  EXPECT_THAT(b.GetValue(), Eq(s));
+}
+
 TEST(SizeOfStringLikeValue, String) {
   std::string s = "1234567";
   EXPECT_THAT(SizeOfStringLikeValue(s), Eq(7));
@@ -100,6 +115,11 @@ TEST(SizeOfStringLikeValue, String) {
 TEST(SizeOfStringLikeValue, SecretData) {
   SecretData s = SecretDataFromStringView("1234567");
   EXPECT_THAT(SizeOfStringLikeValue(s), Eq(7));
+}
+
+TEST(SizeOfStringLikeValue, BigInteger) {
+  BigInteger b = BigInteger("1234567");
+  EXPECT_THAT(SizeOfStringLikeValue(b), Eq(7));
 }
 
 TEST(SerializeStringLikeValue, String) {
@@ -117,6 +137,14 @@ TEST(SerializeStringLikeValue, SecretData) {
   SerializeStringLikeValue(
       s, absl::MakeSpan(reinterpret_cast<char*>(t.data()), t.size()));
   EXPECT_THAT(SecretDataAsStringView(t).substr(0, 7), Eq("1234567"));
+}
+
+TEST(SerializeStringLikeValue, BigInteger) {
+  BigInteger s = BigInteger("1234567");
+  std::string t;
+  t.resize(100);
+  SerializeStringLikeValue(s, absl::MakeSpan(t));
+  EXPECT_THAT(t.substr(0, 7), Eq("1234567"));
 }
 
 // Uint32Field ==============================================================

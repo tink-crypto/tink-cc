@@ -402,3 +402,44 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "cord_x_aes_gcm_boringssl",
+    srcs = ["cord_x_aes_gcm_boringssl.cc"],
+    hdrs = ["cord_x_aes_gcm_boringssl.h"],
+    include_prefix = "tink/aead/internal",
+    deps = [
+        ":cord_aes_gcm_boringssl",
+        ":cord_utils",
+        "//tink/aead:cord_aead",
+        "//tink/internal:call_with_core_dump_protection",
+        "//tink/internal:ssl_unique_ptr",
+        "//tink/subtle:random",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:cord",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "cord_x_aes_gcm_boringssl_test",
+    srcs = ["cord_x_aes_gcm_boringssl_test.cc"],
+    deps = [
+        ":cord_x_aes_gcm_boringssl",
+        "//tink/aead:cord_aead",
+        "//tink/subtle:random",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:cord",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

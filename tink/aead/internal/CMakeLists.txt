@@ -382,3 +382,43 @@ tink_cc_test(
     absl::span
     tink::subtle::random
 )
+
+tink_cc_library(
+  NAME cord_x_aes_gcm_boringssl
+  SRCS
+    cord_x_aes_gcm_boringssl.cc
+    cord_x_aes_gcm_boringssl.h
+  DEPS
+    tink::aead::internal::cord_aes_gcm_boringssl
+    tink::aead::internal::cord_utils
+    absl::status
+    absl::statusor
+    absl::cord
+    absl::str_format
+    absl::string_view
+    crypto
+    tink::aead::cord_aead
+    tink::internal::call_with_core_dump_protection
+    tink::internal::ssl_unique_ptr
+    tink::subtle::random
+    tink::util::secret_data
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME cord_x_aes_gcm_boringssl_test
+  SRCS
+    cord_x_aes_gcm_boringssl_test.cc
+  DEPS
+    tink::aead::internal::cord_x_aes_gcm_boringssl
+    gmock
+    absl::status
+    absl::strings
+    absl::cord
+    absl::string_view
+    tink::aead::cord_aead
+    tink::subtle::random
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+)

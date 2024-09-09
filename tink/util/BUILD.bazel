@@ -606,3 +606,15 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "test_matchers_test",
+    srcs = ["test_matchers_test.cc"],
+    deps = [
+        ":status",
+        ":statusor",
+        ":test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

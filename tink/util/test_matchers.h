@@ -104,26 +104,26 @@ class IsOkAndHoldsMatcher {
  private:
   const InnerMatcher inner_matcher_;
 };
-}  // namespace internal
-
-inline std::string StatusToString(const util::Status& s) {
-  return s.ToString();
-}
 
 template <typename T>
-std::string StatusToString(const util::StatusOr<T>& s) {
-  return s.status().ToString();
+inline const util::Status& GetStatus(const util::StatusOr<T>& s) {
+  return s.status();
 }
+
+inline const util::Status& GetStatus(const util::Status& s) { return s; }
+
+}  // namespace internal
 
 // Matches a util::StatusOk() value.
 // This is better than EXPECT_TRUE(status.ok())
-// because the error message is a part of the failure messsage.
+// because the error message is a part of the failure message.
 MATCHER(IsOk,
         absl::StrCat(negation ? "isn't" : "is", " a Status with an OK value")) {
-  if (arg.ok()) {
+  const util::Status& status = internal::GetStatus(arg);
+  if (status.ok()) {
     return true;
   }
-  *result_listener << StatusToString(arg);
+  *result_listener << ::testing::PrintToString(status);
   return false;
 }
 
@@ -136,31 +136,34 @@ IsOkAndHolds(InnerMatcher&& inner_matcher) {
       std::forward<InnerMatcher>(inner_matcher));
 }
 
-// Matches a Status with the specified 'code' as code().
+// Matches Status, StatusOr<>, or a reference to either of them, with the
+// specified `code` as code().
 MATCHER_P(StatusIs, code,
           "is a Status with a " + absl::StatusCodeToString(code) + " code") {
-  if (arg.code() == code) {
+  const util::Status& status = internal::GetStatus(arg);
+  if (status.code() == code) {
     return true;
   }
-  *result_listener << ::testing::PrintToString(arg);
+  *result_listener << ::testing::PrintToString(status);
   return false;
 }
 
-// Matches a Status whose code() equals 'code', and whose message() matches
-// 'message_macher'.
+// Matches Status, StatusOr<>, or a reference to either of them, whose code()
+// equals `code`, and whose message() matches `message_macher`.
 MATCHER_P2(StatusIs, code, message_matcher, "") {
-  return (arg.code() == code) &&
-         testing::Matches(message_matcher)(std::string(arg.message()));
+  const util::Status& status = internal::GetStatus(arg);
+  return (status.code() == code) &&
+         testing::Matches(message_matcher)(std::string(status.message()));
 }
 
 // Matches a Keyset::Key with `key`.
 MATCHER_P(EqualsKey, key, "is equals to the expected key") {
   if (arg.key_id() == key.key_id() && arg.status() == key.status() &&
-         arg.output_prefix_type() == key.output_prefix_type() &&
-         arg.key_data().type_url() == key.key_data().type_url() &&
-         arg.key_data().key_material_type() ==
-             key.key_data().key_material_type() &&
-         arg.key_data().value() == key.key_data().value()) {
+      arg.output_prefix_type() == key.output_prefix_type() &&
+      arg.key_data().type_url() == key.key_data().type_url() &&
+      arg.key_data().key_material_type() ==
+          key.key_data().key_material_type() &&
+      arg.key_data().value() == key.key_data().value()) {
     return true;
   }
   *result_listener << "Expected: " << arg.key_id() << ", "

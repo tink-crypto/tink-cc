@@ -562,3 +562,15 @@ tink_cc_test(
     tink::proto::kms_envelope_cc_proto
     tink::proto::tink_cc_proto
 )
+
+tink_cc_test(
+  NAME test_matchers_test
+  SRCS
+    test_matchers_test.cc
+  DEPS
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
+    gmock
+    absl::status
+)

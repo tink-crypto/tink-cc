@@ -147,7 +147,11 @@ TEST(CordUtilsDeathTest, CordReaderReadNDiesIfReadingMoreThanAvailable) {
   absl::Cord fragmented_cord =
       absl::MakeFragmentedCord(absl::StrSplit(kData, absl::ByLength(3)));
   CordReader reader(fragmented_cord);
-  EXPECT_DEATH(reader.ReadN(kData.size() + 1, /*dest=*/nullptr), "");
+  // The `dest` parameter is annotated nonnull, but we want to test the
+  // defensive null check. Use a variable instead of passing nullptr directly
+  // to avoid a `-Wnonnull` warning.
+  char *null_dest = nullptr;
+  EXPECT_DEATH(reader.ReadN(kData.size() + 1, null_dest), "");
 }
 
 }  // namespace

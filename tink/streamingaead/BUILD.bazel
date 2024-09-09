@@ -352,6 +352,29 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "aes_gcm_hkdf_streaming_proto_serialization",
+    srcs = ["aes_gcm_hkdf_streaming_proto_serialization.cc"],
+    hdrs = ["aes_gcm_hkdf_streaming_proto_serialization.h"],
+    include_prefix = "tink/streamingaead",
+    deps = [
+        ":aes_gcm_hkdf_streaming_parameters",
+        "//proto:aes_gcm_hkdf_streaming_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -719,6 +742,27 @@ cc_test(
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "aes_gcm_hkdf_streaming_proto_serialization_test",
+    srcs = ["aes_gcm_hkdf_streaming_proto_serialization_test.cc"],
+    deps = [
+        ":aes_gcm_hkdf_streaming_parameters",
+        ":aes_gcm_hkdf_streaming_proto_serialization",
+        "//proto:aes_gcm_hkdf_streaming_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:parameters",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
 )

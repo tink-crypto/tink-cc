@@ -1607,3 +1607,49 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "x_aes_gcm_key_manager",
+    srcs = ["x_aes_gcm_key_manager.cc"],
+    hdrs = ["x_aes_gcm_key_manager.h"],
+    include_prefix = "tink/aead",
+    deps = [
+        ":cord_aead",
+        "//proto:tink_cc_proto",
+        "//proto:x_aes_gcm_cc_proto",
+        "//tink:core/key_type_manager",
+        "//tink:core/template_util",
+        "//tink:input_stream",
+        "//tink/aead/internal:cord_x_aes_gcm_boringssl",
+        "//tink/internal:fips_utils",
+        "//tink/subtle:random",
+        "//tink/util:constants",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:validation",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "x_aes_gcm_key_manager_test",
+    srcs = ["x_aes_gcm_key_manager_test.cc"],
+    deps = [
+        ":cord_aead",
+        ":x_aes_gcm_key_manager",
+        "//proto:tink_cc_proto",
+        "//proto:x_aes_gcm_cc_proto",
+        "//tink:core/key_type_manager",
+        "//tink/internal:fips_utils",
+        "//tink/subtle:random",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

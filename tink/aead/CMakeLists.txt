@@ -1541,3 +1541,48 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME x_aes_gcm_key_manager
+  SRCS
+    x_aes_gcm_key_manager.cc
+    x_aes_gcm_key_manager.h
+  DEPS
+    tink::aead::cord_aead
+    absl::memory
+    absl::status
+    absl::strings
+    absl::str_format
+    absl::string_view
+    tink::core::key_type_manager
+    tink::core::template_util
+    tink::core::input_stream
+    tink::aead::internal::cord_x_aes_gcm_boringssl
+    tink::internal::fips_utils
+    tink::subtle::random
+    tink::util::constants
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::util::validation
+    tink::proto::tink_cc_proto
+    tink::proto::x_aes_gcm_cc_proto
+)
+
+tink_cc_test(
+  NAME x_aes_gcm_key_manager_test
+  SRCS
+    x_aes_gcm_key_manager_test.cc
+  DEPS
+    tink::aead::cord_aead
+    tink::aead::x_aes_gcm_key_manager
+    gmock
+    absl::status
+    tink::core::key_type_manager
+    tink::internal::fips_utils
+    tink::subtle::random
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::tink_cc_proto
+    tink::proto::x_aes_gcm_cc_proto
+)

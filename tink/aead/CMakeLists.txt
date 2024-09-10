@@ -112,6 +112,7 @@ tink_cc_library(
     tink::proto::hmac_cc_proto
     tink::proto::kms_envelope_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::x_aes_gcm_cc_proto
 )
 
 tink_cc_library(
@@ -895,11 +896,15 @@ tink_cc_test(
     tink::aead::aes_eax_key_manager
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_siv_key_manager
+    tink::aead::cord_aead
     tink::aead::kms_envelope_aead_key_manager
+    tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
     gmock
     absl::status
     absl::statusor
+    absl::cord
+    absl::str_format
     tink::core::aead
     tink::core::key_manager_impl
     tink::core::key_manager
@@ -908,6 +913,7 @@ tink_cc_test(
     tink::subtle::aead_test_util
     tink::util::fake_kms_client
     tink::util::status
+    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
@@ -918,6 +924,7 @@ tink_cc_test(
     tink::proto::hmac_cc_proto
     tink::proto::kms_envelope_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::x_aes_gcm_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
 

@@ -28,6 +28,7 @@
 #include "proto/hmac.pb.h"
 #include "proto/kms_envelope.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/x_aes_gcm.pb.h"
 
 using google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using google::crypto::tink::AesEaxKeyFormat;
@@ -37,6 +38,7 @@ using google::crypto::tink::HashType;
 using google::crypto::tink::KeyTemplate;
 using google::crypto::tink::KmsEnvelopeAeadKeyFormat;
 using google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::XAesGcmKeyFormat;
 
 namespace crypto {
 namespace tink {
@@ -104,6 +106,21 @@ KeyTemplate* NewXChaCha20Poly1305KeyTemplate() {
   key_template->set_type_url(
       "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key");
   key_template->set_output_prefix_type(OutputPrefixType::TINK);
+  return key_template;
+}
+
+KeyTemplate* NewXAes256GcmKeyTemplate(OutputPrefixType output_prefix_type,
+                                      uint32_t salt_size) {
+  KeyTemplate* key_template = new KeyTemplate;
+  key_template->set_type_url(
+      "type.googleapis.com/google.crypto.tink.XAesGcmKey");
+  key_template->set_output_prefix_type(output_prefix_type);
+
+  XAesGcmKeyFormat key_format;
+  key_format.set_version(0);
+  key_format.mutable_params()->set_salt_size(salt_size);
+  key_format.SerializeToString(key_template->mutable_value());
+
   return key_template;
 }
 
@@ -190,6 +207,18 @@ const KeyTemplate& AeadKeyTemplates::Aes256CtrHmacSha256() {
 // static
 const KeyTemplate& AeadKeyTemplates::XChaCha20Poly1305() {
   static const KeyTemplate* key_template = NewXChaCha20Poly1305KeyTemplate();
+  return *key_template;
+}
+
+const KeyTemplate& AeadKeyTemplates::XAes256Gcm8ByteSalt() {
+  static const KeyTemplate* key_template =
+      NewXAes256GcmKeyTemplate(OutputPrefixType::TINK, /*salt_size=*/8);
+  return *key_template;
+}
+
+const KeyTemplate& AeadKeyTemplates::XAes256Gcm8ByteSaltNoPrefix() {
+  static const KeyTemplate* key_template =
+      NewXAes256GcmKeyTemplate(OutputPrefixType::RAW, /*salt_size=*/8);
   return *key_template;
 }
 

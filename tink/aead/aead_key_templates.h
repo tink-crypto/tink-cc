@@ -128,6 +128,24 @@ class AeadKeyTemplates {
   //   - OutputPrefixType: TINK
   static const google::crypto::tink::KeyTemplate& XChaCha20Poly1305();
 
+  // Returns a KeyTemplate that generates new instances of XAesGcmKey
+  // with the following parameters:
+  //   - key size: 32 bytes
+  //   - salt size: 8 bytes
+  //   - IV size: 12 bytes
+  //   - tag size: 16 bytes
+  //   - OutputPrefixType: TINK
+  static const google::crypto::tink::KeyTemplate& XAes256Gcm8ByteSalt();
+
+  // Returns a KeyTemplate that generates new instances of XAesGcmKey
+  // with the following parameters:
+  //   - key size: 32 bytes
+  //   - salt size: 8 bytes
+  //   - IV size: 12 bytes
+  //   - tag size: 16 bytes
+  //   - OutputPrefixType: RAW
+  static const google::crypto::tink::KeyTemplate& XAes256Gcm8ByteSaltNoPrefix();
+
   // Returns a KeyTemplate that generates new instances of KmsEnvelopeAeadKey
   // with the following parameters:
   //   - KEK is pointing to kek_uri

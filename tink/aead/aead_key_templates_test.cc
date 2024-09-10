@@ -24,13 +24,17 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/cord.h"
+#include "absl/strings/str_format.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_eax_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
+#include "tink/aead/cord_aead.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"
+#include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/config/global_registry.h"
 #include "tink/core/key_manager_impl.h"
@@ -39,6 +43,7 @@
 #include "tink/subtle/aead_test_util.h"
 #include "tink/util/fake_kms_client.h"
 #include "tink/util/status.h"
+#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
@@ -49,6 +54,7 @@
 #include "proto/hmac.pb.h"
 #include "proto/kms_envelope.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/x_aes_gcm.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
 using google::crypto::tink::AesCtrHmacAeadKeyFormat;
@@ -65,8 +71,11 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::test::IsOk;
+using ::google::crypto::tink::XAesGcmKeyFormat;
 using ::testing::Eq;
 using ::testing::Ref;
+using ::testing::TestWithParam;
+using ::testing::ValuesIn;
 
 TEST(AeadKeyTemplatesTest, testAesEaxKeyTemplates) {
   std::string type_url = "type.googleapis.com/google.crypto.tink.AesEaxKey";
@@ -368,6 +377,67 @@ TEST(AeadKeyTemplatesTest, testXChaCha20Poly1305KeyTemplates) {
       key_manager->get_key_factory().NewKey(key_template.value());
   EXPECT_TRUE(new_key_result.ok()) << new_key_result.status();
 }
+
+struct XAesGcmKeyTemplateTestCase {
+  int salt_size;
+  OutputPrefixType output_prefix_type;
+  const KeyTemplate& key_template;
+};
+
+using XAesGcmKeyTemplateTest = TestWithParam<XAesGcmKeyTemplateTestCase>;
+
+TEST_P(XAesGcmKeyTemplateTest, ExpectedValues) {
+  const XAesGcmKeyTemplateTestCase& test_case = GetParam();
+
+  const KeyTemplate& key_template = test_case.key_template;
+  EXPECT_EQ(key_template.type_url(),
+            "type.googleapis.com/google.crypto.tink.XAesGcmKey");
+  EXPECT_EQ(key_template.output_prefix_type(), test_case.output_prefix_type);
+
+  XAesGcmKeyFormat key_format;
+  EXPECT_TRUE(key_format.ParseFromString(key_template.value()));
+  EXPECT_EQ(key_format.params().salt_size(), test_case.salt_size);
+  EXPECT_EQ(key_format.version(), 0);
+}
+
+TEST_P(XAesGcmKeyTemplateTest, CreateKeyAndPrimitive) {
+  const XAesGcmKeyTemplateTestCase& test_case = GetParam();
+  std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
+
+  XAesGcmKeyFormat key_format;
+  EXPECT_TRUE(key_format.ParseFromString(test_case.key_template.value()));
+
+  ASSERT_THAT(key_manager->ValidateKeyFormat(key_format), IsOk());
+  util::StatusOr<google::crypto::tink::XAesGcmKey> key =
+      key_manager->CreateKey(key_format);
+  ASSERT_THAT(key, IsOk());
+  ASSERT_THAT(key_manager->ValidateKey(*key), IsOk());
+
+  util::StatusOr<std::unique_ptr<CordAead>> primitive =
+      key_manager->GetPrimitive<CordAead>(*key);
+  ASSERT_THAT(primitive, IsOk());
+
+  absl::Cord pt("hello world");
+  absl::Cord aad("aad");
+  util::StatusOr<absl::Cord> ct = (*primitive)->Encrypt(pt, aad);
+  util::StatusOr<absl::Cord> decrypted = (*primitive)->Decrypt(*ct, aad);
+  EXPECT_EQ(*decrypted, pt);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    XAesGcmKeyTemplateTests, XAesGcmKeyTemplateTest,
+    ValuesIn<XAesGcmKeyTemplateTestCase>({
+        {/*salt_size=*/8, OutputPrefixType::TINK,
+         AeadKeyTemplates::XAes256Gcm8ByteSalt()},
+        {/*salt_size=*/8, OutputPrefixType::RAW,
+         AeadKeyTemplates::XAes256Gcm8ByteSaltNoPrefix()},
+    }),
+    [](const testing::TestParamInfo<XAesGcmKeyTemplateTest::ParamType>& info) {
+      return absl::StrFormat(
+          "X_AES_GCM_%d_BYTE_SALT_%s_PREFIX", info.param.salt_size,
+          info.param.output_prefix_type == OutputPrefixType::TINK ? "TINK"
+                                                                  : "RAW");
+    });
 
 TEST(AeadKeyTemplatesTest, testKmsEnvelopeAead) {
   std::string type_url =

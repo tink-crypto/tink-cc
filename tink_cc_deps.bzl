@@ -7,14 +7,14 @@ def tink_cc_deps():
     """Loads dependencies of C++ Tink."""
 
     # Basic rules we need to add to bazel.
-    # Release from 2023-11-06.
+    # Release from 2024-06-03.
     maybe(
         http_archive,
         name = "bazel_skylib",
-        sha256 = "cd55a062e763b9349921f0f5db8c3933288dc8ba4f76dd9416aac68acee3cb94",
+        sha256 = "bc283cdfcd526a52c3201279cda4bc298652efa898b10b4db0837dc51652756f",
         urls = [
-            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.5.0/bazel-skylib-1.5.0.tar.gz",
-            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.5.0/bazel-skylib-1.5.0.tar.gz",
+            "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.7.1/bazel-skylib-1.7.1.tar.gz",
+            "https://github.com/bazelbuild/bazel-skylib/releases/download/1.7.1/bazel-skylib-1.7.1.tar.gz",
         ],
     )
 
@@ -44,22 +44,22 @@ def tink_cc_deps():
     maybe(
         http_archive,
         name = "com_google_protobuf",
-        sha256 = "e15c272392df84ae95797759c685a9225fe5e88838bab3e0650c29239bdfccdd",
-        strip_prefix = "protobuf-26.1",
-        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v26.1/protobuf-26.1.zip"],
+        sha256 = "023e2bb164b234af644c5049c6dac1d9c9f6dd2acb133b960d9009105b4226bd",
+        strip_prefix = "protobuf-27.4",
+        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v27.4/protobuf-27.4.tar.gz"],
     )
 
     # -------------------------------------------------------------------------
     # Abseil.
     # -------------------------------------------------------------------------
-    # Release from 2024-01-22.
+    # Release from 2024-04-08.
     maybe(
         http_archive,
         name = "com_google_absl",
-        sha256 = "d0f9a580463375978f5ae4e04da39c3664bdaa23724b2f0bf00896a02bf801b9",
-        strip_prefix = "abseil-cpp-20240116.0",
+        sha256 = "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
+        strip_prefix = "abseil-cpp-20240722.0",
         urls = [
-            "https://github.com/abseil/abseil-cpp/archive/refs/tags/20240116.0.zip",
+            "https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz",
         ],
     )
 
@@ -106,11 +106,11 @@ def tink_cc_testonly_deps():
     # -------------------------------------------------------------------------
     # GoogleTest/GoogleMock.
     # -------------------------------------------------------------------------
-    # Release from 2023-08-02.
+    # Release from 2024-07-31.
     maybe(
         http_archive,
         name = "com_google_googletest",
-        sha256 = "1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4",
-        strip_prefix = "googletest-1.14.0",
-        url = "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip",
+        sha256 = "7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926",
+        strip_prefix = "googletest-1.15.2",
+        url = "https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz",
     )

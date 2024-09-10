@@ -8,22 +8,24 @@ local_repository(
     path = "..",
 )
 
-# Release from 2023-09-18.
+# Release from 2024-04-08.
 maybe(
     http_archive,
     name = "com_google_absl",
-    sha256 = "497ebdc3a4885d9209b9bd416e8c3f71e7a1fb8af249f6c2a80b7cbeefcd7e21",
-    strip_prefix = "abseil-cpp-20230802.1",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20230802.1.zip"],
+    sha256 = "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
+    strip_prefix = "abseil-cpp-20240722.0",
+    urls = [
+        "https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz",
+    ],
 )
 
-# Release from 2023-08-02.
+# Release from 2024-07-31.
 maybe(
     http_archive,
     name = "com_google_googletest",
-    sha256 = "1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4",
-    strip_prefix = "googletest-1.14.0",
-    url = "https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip",
+    sha256 = "7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926",
+    strip_prefix = "googletest-1.15.2",
+    url = "https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz",
 )
 
 # Load Tink dependencies.

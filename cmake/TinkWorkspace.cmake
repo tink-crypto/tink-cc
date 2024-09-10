@@ -61,8 +61,8 @@ if (TINK_BUILD_TESTS)
   else()
     http_archive(
       NAME googletest
-      URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-      SHA256 1f357c27ca988c3f7c6b4bf68a9395005ac6761f034046e9dde0896e3aba00e4
+      URL https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz
+      SHA256 7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926
     )
   endif()
 
@@ -82,8 +82,8 @@ if (NOT TINK_USE_INSTALLED_ABSEIL)
   # Release from 2024-01-22.
   http_archive(
     NAME abseil
-    URL https://github.com/abseil/abseil-cpp/archive/refs/tags/20240116.0.zip
-    SHA256 d0f9a580463375978f5ae4e04da39c3664bdaa23724b2f0bf00896a02bf801b9
+    URL https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz
+    SHA256 f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3
   )
 else()
   # This is everything that needs to be done here. Abseil already defines its
@@ -135,8 +135,8 @@ if (NOT TINK_USE_INSTALLED_PROTOBUF)
 
   http_archive(
     NAME com_google_protobuf
-    URL https://github.com/protocolbuffers/protobuf/releases/download/v26.1/protobuf-26.1.zip
-    SHA256 e15c272392df84ae95797759c685a9225fe5e88838bab3e0650c29239bdfccdd
+    URL https://github.com/protocolbuffers/protobuf/releases/download/v27.4/protobuf-27.4.tar.gz
+    SHA256 023e2bb164b234af644c5049c6dac1d9c9f6dd2acb133b960d9009105b4226bd
   )
 else()
   find_package(Protobuf REQUIRED CONFIG)

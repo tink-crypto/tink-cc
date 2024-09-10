@@ -755,11 +755,12 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
+    tink::util::secret_data
     tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::common_cc_proto
-    tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )
 
@@ -1565,6 +1566,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_proto_serialization
     tink::signature::rsa_ssa_pss_public_key
     gmock
+    absl::no_destructor
     absl::check
     absl::status
     absl::string_view
@@ -1577,12 +1579,15 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::core::restricted_data
+    tink::core::secret_key_access_token
     tink::internal::bn_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
+    tink::internal::testing::equals_proto_key_serialization
+    tink::internal::testing::field_with_number
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto

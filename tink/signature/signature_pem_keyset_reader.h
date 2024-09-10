@@ -40,8 +40,8 @@ enum PemKeyType { PEM_RSA, PEM_EC };
 enum PemAlgorithm {
   RSASSA_PSS,
   RSASSA_PKCS1,
-  ECDSA_IEEE,  // NIST_P256 curve with IEEE_P1363 encoding
-  ECDSA_DER  // NIST_P256 curve with DER encoding
+  ECDSA_IEEE,  // NIST curve (P256, P384, P521) with IEEE_P1363 encoding
+  ECDSA_DER  // NIST curve (P256, P384, P521) with DER encoding
 };
 
 // Common set of parameters for the PEM key.

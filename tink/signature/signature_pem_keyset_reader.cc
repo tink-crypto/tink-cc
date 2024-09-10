@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <new>
 #include <random>
 #include <string>
 #include <utility>
@@ -114,11 +115,20 @@ util::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
       parameters->set_curve(EllipticCurveType::NIST_P384);
       break;
     }
+    case HashType::SHA512: {
+      if (pem_parameters.key_size_in_bits != 521) {
+        return util::Status(
+            absl::StatusCode::kInvalidArgument,
+            "For NIST_P521 ECDSA, the key should be 521 bits long.");
+      }
+      parameters->set_curve(EllipticCurveType::NIST_P521);
+      break;
+    }
     default: {
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
-          "Only NIST_P256 and NIST_P384 ECDSA are supported. The hash type "
-          "should be SHA256 or SHA384 respectively.");
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "Only NIST_P256, NIST_P384, and NIST_P521 ECDSA are "
+                          "supported. The hash type "
+                          "should be SHA256, SHA384, or SHA512 respectively.");
     }
   }
 
@@ -314,7 +324,8 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       auto private_key_proto_or = NewRsaSsaPrivateKey(
           *private_key_subtle, key_manager.get_version(), pem_key.parameters);
       if (!private_key_proto_or.ok()) return private_key_proto_or.status();
-      RsaSsaPssPrivateKey private_key_proto = private_key_proto_or.value();
+      const RsaSsaPssPrivateKey& private_key_proto =
+          private_key_proto_or.value();
 
       // Validate the key.
       auto key_validation_status = key_manager.ValidateKey(private_key_proto);

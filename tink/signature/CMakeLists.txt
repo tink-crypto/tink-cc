@@ -723,6 +723,7 @@ tink_cc_library(
     tink::core::partial_key_access_token
     tink::core::restricted_big_integer
     tink::internal::bn_util
+    tink::internal::call_with_core_dump_protection
     tink::internal::ssl_unique_ptr
     tink::util::status
     tink::util::statusor

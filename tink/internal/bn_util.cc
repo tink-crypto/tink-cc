@@ -104,9 +104,11 @@ util::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
 
 util::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(
     absl::string_view bigendian_bn_str) {
-  internal::SslUniquePtr<BIGNUM> bn(BN_bin2bn(
-      reinterpret_cast<const unsigned char *>(bigendian_bn_str.data()),
-      bigendian_bn_str.length(), /*ret=*/nullptr));
+  internal::SslUniquePtr<BIGNUM> bn(internal::CallWithCoreDumpProtection([&] {
+    return BN_bin2bn(
+        reinterpret_cast<const unsigned char *>(bigendian_bn_str.data()),
+        bigendian_bn_str.length(), /*ret=*/nullptr);
+  }));
   if (bn.get() == nullptr) {
     return util::Status(absl::StatusCode::kInternal,
                         "BIGNUM allocation failed");

@@ -24,6 +24,7 @@
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -35,6 +36,8 @@
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::internal::CallWithCoreDumpProtection;
 
 util::Status ValidateKeyPair(
     const BigInteger& public_exponent, const BigInteger& modulus,
@@ -92,37 +95,40 @@ util::Status ValidateKeyPair(
     return q_inv_bn.status();
   }
 
-  // Build RSA key from the given values.  The RSA object takes ownership of the
-  // given values after the call.
-  if (RSA_set0_key(rsa.get(), n->release(), e->release(), d_bn->release()) !=
-          1 ||
-      RSA_set0_factors(rsa.get(), p_bn->release(), q_bn->release()) != 1 ||
-      RSA_set0_crt_params(rsa.get(), dp_bn->release(), dq_bn->release(),
-                          q_inv_bn->release()) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "Internal RSA key loading error");
-  }
+  return CallWithCoreDumpProtection(
+      [&]() -> util::Status {
+        // Build RSA key from the given values.  The RSA object takes ownership
+        // of the given values after the call.
+        if (RSA_set0_key(rsa.get(), n->release(), e->release(),
+                         d_bn->release()) != 1 ||
+            RSA_set0_factors(rsa.get(), p_bn->release(), q_bn->release()) !=
+                1 ||
+            RSA_set0_crt_params(rsa.get(), dp_bn->release(), dq_bn->release(),
+                                q_inv_bn->release()) != 1) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "Internal RSA key loading error");
+        }
 
-  // Validate key.
-  int check_key_status = RSA_check_key(rsa.get());
-  if (check_key_status == 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "RSA key pair is not valid");
-  }
+        // Validate key.
+        int check_key_status = RSA_check_key(rsa.get());
+        if (check_key_status == 0) {
+          return util::Status(absl::StatusCode::kInvalidArgument,
+                              "RSA key pair is not valid");
+        }
 
-  if (check_key_status == -1) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "An error ocurred while checking the key");
-  }
+        if (check_key_status == -1) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "An error ocurred while checking the key");
+        }
 
 #ifdef OPENSSL_IS_BORINGSSL
-  if (RSA_check_fips(rsa.get()) == 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "RSA key pair is not valid in FIPS mode");
-  }
+        if (RSA_check_fips(rsa.get()) == 0) {
+          return util::Status(absl::StatusCode::kInvalidArgument,
+                              "RSA key pair is not valid in FIPS mode");
+        }
 #endif
-
-  return util::OkStatus();
+        return util::OkStatus();
+      });
 }
 
 }  // namespace

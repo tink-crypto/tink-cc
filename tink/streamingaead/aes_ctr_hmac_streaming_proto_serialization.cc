@@ -219,6 +219,10 @@ util::StatusOr<AesCtrHmacStreamingKey> ParseKey(
         "Parsing AesCtrHmacStreamingKey failed: only version 0 is accepted.");
   }
 
+  if (!(*proto_key)->has_params()) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Missing AesCtrHmacStreamingParams.");
+  }
   util::StatusOr<AesCtrHmacStreamingParameters> parameters =
       FromProtoParams((*proto_key)->params(), (*proto_key)->key_value().size());
   if (!parameters.ok()) {

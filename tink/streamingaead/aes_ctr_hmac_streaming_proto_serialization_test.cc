@@ -496,6 +496,31 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
                                  "version 0 is accepted")));
 }
 
+TEST_F(AesCtrHmacStreamingProtoSerializationTest,
+       ParseKeyWithMissingParamsFails) {
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
+
+  std::string initial_key_material = Random::GetRandomBytes(32);
+  google::crypto::tink::AesCtrHmacStreamingKey key_proto;
+  key_proto.set_version(0);
+  key_proto.set_key_value(initial_key_material);
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
+          /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Missing AesCtrHmacStreamingParams")));
+}
+
 TEST_P(AesCtrHmacStreamingParsePrefixTest,
        ParseKeyWithNonRawPrefixIgnoresPrefix) {
   OutputPrefixType ignored_output_prefix_type = GetParam();

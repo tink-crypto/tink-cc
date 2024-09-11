@@ -1600,6 +1600,7 @@ tink_cc_test(
     absl::strings
     crypto
     tink::internal::bn_util
+    tink::internal::ec_util
     tink::internal::err_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr

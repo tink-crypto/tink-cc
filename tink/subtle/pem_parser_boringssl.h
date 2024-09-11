@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "tink/internal/ec_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/statusor.h"
@@ -56,6 +57,9 @@ class PemParser {
   // SubtleUtilBoringSSL::EcKey.
   static util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
   ParseEcPublicKey(absl::string_view pem_serialized_key);
+
+  static util::StatusOr<std::unique_ptr<crypto::tink::internal::Ed25519Key>>
+  ParseEd25519PublicKey(absl::string_view pem_serialized_key);
 
   // Parses a given PEM serialized EC private key `pem_serialized_key` into a
   // SubtleUtilBoringSSL::EcKey.

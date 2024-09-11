@@ -16,6 +16,7 @@
 #include "tink/subtle/pem_parser_boringssl.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -342,6 +343,38 @@ util::StatusOr<std::string> PemParser::WriteRsaPrivateKey(
                         "Failed to write openssl RSA key to write bio");
   }
   return ConvertBioToString(bio.get());
+}
+
+util::StatusOr<std::unique_ptr<internal::Ed25519Key>>
+PemParser::ParseEd25519PublicKey(absl::string_view pem_serialized_key) {
+  internal::SslUniquePtr<BIO> pub_key_bio(BIO_new(BIO_s_mem()));
+  BIO_write(pub_key_bio.get(), pem_serialized_key.data(),
+            pem_serialized_key.size());
+
+  internal::SslUniquePtr<EVP_PKEY> evp_pub_key(
+      PEM_read_bio_PUBKEY(pub_key_bio.get(), /*x=*/nullptr,
+                          &FailingPassphraseCallback, /*u=*/nullptr));
+  if (evp_pub_key == nullptr) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "PEM Public Key parsing failed");
+  }
+  const size_t pub_key_size = internal::Ed25519KeyPubKeySize();
+  uint8_t public_key[pub_key_size] = {0};
+  size_t out_len_pub = pub_key_size;
+  if (EVP_PKEY_get_raw_public_key(evp_pub_key.get(), public_key,
+                                  &out_len_pub) != 1) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "invalid ed25519 public key");
+  }
+  if (out_len_pub != pub_key_size) {
+    return util::Status(absl::StatusCode::kInternal,
+                        absl::StrCat("Invalid public key size; expected ",
+                                     pub_key_size, " got ", out_len_pub));
+  }
+  auto key = std::make_unique<internal::Ed25519Key>();
+  key->public_key = std::string(reinterpret_cast<char*>(public_key),
+                                      sizeof(public_key));
+  return std::move(key);
 }
 
 util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>

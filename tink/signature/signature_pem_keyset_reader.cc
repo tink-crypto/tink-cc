@@ -33,11 +33,13 @@
 #include "tink/keyset_reader.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/subtle/pem_parser_boringssl.h"
+#include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/keyset_util.h"
 #include "tink/util/secret_data.h"
@@ -45,6 +47,7 @@
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
+#include "proto/ed25519.pb.h"
 #include "proto/rsa_ssa_pkcs1.pb.h"
 #include "proto/rsa_ssa_pss.pb.h"
 #include "proto/tink.pb.h"
@@ -55,6 +58,7 @@ namespace tink {
 using ::google::crypto::tink::EcdsaParams;
 using ::google::crypto::tink::EcdsaPrivateKey;
 using ::google::crypto::tink::EcdsaPublicKey;
+using ::google::crypto::tink::Ed25519PublicKey;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::EncryptedKeyset;
 using ::google::crypto::tink::HashType;
@@ -395,6 +399,36 @@ util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   return util::OkStatus();
 }
 
+util::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
+  if (pem_key.parameters.hash_type != HashType::SHA512) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Invalid ed25519 hash type: ",
+                                     pem_key.parameters.hash_type));
+  }
+  if (pem_key.parameters.key_size_in_bits != 256) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        absl::StrCat("Invalid ed25519 key size: ",
+                                     pem_key.parameters.key_size_in_bits));
+  }
+  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> ecc_public_key =
+      subtle::PemParser::ParseEd25519PublicKey(pem_key.serialized_key);
+  if (!ecc_public_key.ok()) {
+    return ecc_public_key.status();
+  }
+
+  Ed25519PublicKey ed25519_key;
+  Ed25519VerifyKeyManager key_manager;
+
+  ed25519_key.set_key_value((*ecc_public_key)->public_key);
+  ed25519_key.set_version(key_manager.get_version());
+
+  *keyset.add_key() = NewKeysetKey(
+      GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
+      key_manager.key_material_type(), ed25519_key.SerializeAsString());
+
+  return util::OkStatus();
+}
+
 // Parses a given PEM-encoded RSA public key `pem_key`, and adds it to the
 // keyset `keyset`.
 util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
@@ -544,8 +578,23 @@ util::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
         break;
       }
       case PemKeyType::PEM_EC:
-        auto add_ecdsa_status = AddEcdsaPublicKey(pem_key, *keyset);
-        if (!add_ecdsa_status.ok()) return add_ecdsa_status;
+        switch (pem_key.parameters.algorithm) {
+          case PemAlgorithm::ECDSA_IEEE:
+          case PemAlgorithm::ECDSA_DER: {
+            auto add_ecdsa_status = AddEcdsaPublicKey(pem_key, *keyset);
+            if (!add_ecdsa_status.ok()) return add_ecdsa_status;
+            break;
+          }
+          case PemAlgorithm::ED25519: {
+            auto add_ed25519_status = AddEd25519PublicKey(pem_key, *keyset);
+            if (!add_ed25519_status.ok()) return add_ed25519_status;
+            break;
+          }
+          default:
+            return util::Status(absl::StatusCode::kInvalidArgument,
+                                absl::StrCat("Invalid ECC algorithm ",
+                                             pem_key.parameters.algorithm));
+        }
     }
   }
 

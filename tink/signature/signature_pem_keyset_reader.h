@@ -41,7 +41,8 @@ enum PemAlgorithm {
   RSASSA_PSS,
   RSASSA_PKCS1,
   ECDSA_IEEE,  // NIST curve (P256, P384, P521) with IEEE_P1363 encoding
-  ECDSA_DER  // NIST curve (P256, P384, P521) with DER encoding
+  ECDSA_DER,  // NIST curve (P256, P384, P521) with DER encoding
+  ED25519,
 };
 
 // Common set of parameters for the PEM key.

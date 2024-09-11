@@ -35,6 +35,7 @@
 #include "openssl/pem.h"
 #include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -611,6 +612,7 @@ TEST_P(ParametrizedPemParserEcTest, ReadEcPrivateKeyInvalid) {
 
   EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
+
 TEST_P(ParametrizedPemParserEcTest, WriteEcPublicKeySucceeds) {
   EcKeyTestVector test_vector = GetParam();
   // Load an EcKey with the test vector.
@@ -645,6 +647,14 @@ TEST_P(ParametrizedPemParserEcTest, WriteEcPrivateKeySucceeds) {
   ASSERT_THAT(pem_material, IsOk());
   EXPECT_EQ(absl::StripAsciiWhitespace(*pem_material),
             absl::StripAsciiWhitespace(test_vector.priv_pem));
+}
+
+TEST_P(ParametrizedPemParserEcTest, ReadEcdsaWithEd25519Fails) {
+  EcKeyTestVector test_vector = GetParam();
+  EXPECT_THAT(PemParser::ParseEd25519PublicKey(test_vector.pub_pem).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(PemParser::ParseEd25519PublicKey(test_vector.priv_pem).status(),
+                StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 INSTANTIATE_TEST_SUITE_P(ParametrizedPemParserEcTest,
@@ -823,6 +833,30 @@ TEST(PemParserEcTest, WriteEcPrivateKeyWithBadPrivFails) {
   ec_key.priv = util::SecretDataFromStringView(priv);
   EXPECT_THAT(PemParser::WriteEcPrivateKey(ec_key).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+// Generated with:
+// openssl genpkey -algorithm ed25519 | openssl pkey -pubout
+constexpr absl::string_view kEd25519PublicKey =
+    "-----BEGIN PUBLIC KEY-----\n"
+    "MCowBQYDK2VwAyEAZFmzs3ry9Z9u6McUBlFYpUm0eJeskD3ZodMI/ptorg4=\n"
+    "-----END PUBLIC KEY-----\n";
+
+// Extracted from:
+// openssl asn1parse -in public-key.pem -dump
+//
+// The X is embedded within the dumped 33 byte hex-encoded BIT
+// STRING value. Discard the first byte, X is the remaining 32 bytes.
+constexpr absl::string_view kEd25519PublicKeyX =
+    "6459b3b37af2f59f6ee8c714065158a549b47897ac903dd9a1d308fe9b68ae0e";
+
+TEST(PemParserEcTest, ParseEd25519PublicKey) {
+  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> ed25519_pub_key =
+      PemParser::ParseEd25519PublicKey(kEd25519PublicKey);
+  ASSERT_THAT(ed25519_pub_key, IsOk());
+  EXPECT_THAT((*ed25519_pub_key)->private_key.size(), Eq(0));
+  EXPECT_THAT(absl::BytesToHexString((*ed25519_pub_key)->public_key),
+              Eq(kEd25519PublicKeyX));
 }
 
 }  // namespace

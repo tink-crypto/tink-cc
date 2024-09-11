@@ -382,6 +382,7 @@ tink_cc_library(
   DEPS
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_verify_key_manager
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
@@ -393,6 +394,7 @@ tink_cc_library(
     tink::internal::ec_util
     tink::internal::rsa_util
     tink::subtle::pem_parser_boringssl
+    tink::subtle::subtle_util_boringssl
     tink::util::enums
     tink::util::keyset_util
     tink::util::secret_data
@@ -400,6 +402,7 @@ tink_cc_library(
     tink::util::statusor
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
+    tink::proto::ed25519_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
@@ -1293,6 +1296,7 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
+    tink::proto::ed25519_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )

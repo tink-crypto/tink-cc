@@ -34,6 +34,7 @@ tink_cc_library(
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
+    tink::streamingaead::aes_gcm_hkdf_streaming_proto_serialization
     tink::streamingaead::streaming_aead_wrapper
     absl::core_headers
     absl::memory
@@ -483,7 +484,9 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_key
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
+    tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::streamingaead::key_gen_config_v0
     tink::streamingaead::streaming_aead_config
     tink::streamingaead::streaming_aead_key_templates

@@ -23,6 +23,7 @@
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key_manager.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
 #include "tink/streamingaead/streaming_aead_wrapper.h"
 #include "tink/util/status.h"
 
@@ -54,6 +55,11 @@ util::Status StreamingAeadConfig::Register() {
   }
 
   status = RegisterAesCtrHmacStreamingProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = RegisterAesGcmHkdfStreamingProtoSerialization();
   if (!status.ok()) {
     return status;
   }

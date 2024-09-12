@@ -22,6 +22,8 @@
 #include "tink/aead/aes_eax_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
+#include "tink/aead/cord_aead_wrapper.h"
+#include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
@@ -37,7 +39,11 @@ util::Status AddAeadV0(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-
+  status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+      absl::make_unique<CordAeadWrapper>(), config);
+  if (!status.ok()) {
+    return status;
+  }
   status = ConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCtrHmacAeadKeyManager>(), config);
   if (!status.ok()) {
@@ -55,6 +61,11 @@ util::Status AddAeadV0(Configuration& config) {
   }
   status = ConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesGcmSivKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status =
+      ConfigurationImpl::AddKeyTypeManager(CreateXAesGcmKeyManager(), config);
   if (!status.ok()) {
     return status;
   }

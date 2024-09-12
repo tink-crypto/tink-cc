@@ -167,6 +167,8 @@ tink_cc_library(
     tink::aead::aes_eax_key_manager
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_siv_key_manager
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
     tink::internal::key_gen_configuration_impl
     tink::util::status
@@ -185,6 +187,8 @@ tink_cc_library(
     tink::aead::aes_eax_key_manager
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_siv_key_manager
+    tink::aead::cord_aead_wrapper
+    tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
     tink::internal::configuration_impl
     tink::util::status
@@ -336,6 +340,7 @@ tink_cc_test(
     tink::aead::internal::config_v0
     tink::aead::internal::key_gen_config_v0
     gmock
+    absl::cord
     tink::core::aead
     tink::core::configuration
     tink::core::key_gen_configuration
@@ -345,6 +350,8 @@ tink_cc_test(
     tink::aead::aes_eax_key_manager
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_siv_key_manager
+    tink::aead::cord_aead
+    tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl

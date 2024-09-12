@@ -21,13 +21,16 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/strings/cord.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_eax_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_siv_key_manager.h"
+#include "tink/aead/cord_aead.h"
 #include "tink/aead/internal/key_gen_config_v0.h"
+#include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
@@ -61,6 +64,7 @@ TEST(AeadV0Test, PrimitiveWrappers) {
   ASSERT_THAT(store, IsOk());
 
   EXPECT_THAT((*store)->Get<Aead>(), IsOk());
+  EXPECT_THAT((*store)->Get<CordAead>(), IsOk());
 }
 
 TEST(AeadV0Test, KeyManagers) {
@@ -81,12 +85,14 @@ TEST(AeadV0Test, KeyManagers) {
     EXPECT_THAT(s->Get(AesEaxKeyManager().get_key_type()), IsOk());
     EXPECT_THAT(s->Get(AesGcmKeyManager().get_key_type()), IsOk());
     EXPECT_THAT(s->Get(AesGcmSivKeyManager().get_key_type()), IsOk());
+    EXPECT_THAT(s->Get(CreateXAesGcmKeyManager()->get_key_type()), IsOk());
     EXPECT_THAT(s->Get(XChaCha20Poly1305KeyManager().get_key_type()), IsOk());
   }
 }
 
 using AeadV0KeyTypesTest = TestWithParam<KeyTemplate>;
 using AeadV0BoringSslKeyTypesTest = TestWithParam<KeyTemplate>;
+using CordAeadV0KeyTypesTest = TestWithParam<KeyTemplate>;
 
 // For key type support when using BoringSSL or OpenSSL, see
 // https://developers.google.com/tink/supported-key-types#aead.
@@ -98,6 +104,9 @@ INSTANTIATE_TEST_SUITE_P(AeadV0BoringSslKeyTypesTestSuite,
                          AeadV0BoringSslKeyTypesTest,
                          Values(AeadKeyTemplates::Aes128GcmSiv(),
                                 AeadKeyTemplates::XChaCha20Poly1305()));
+INSTANTIATE_TEST_SUITE_P(CordAeadV0KeyTypesTestSuite, CordAeadV0KeyTypesTest,
+                         Values(AeadKeyTemplates::Aes256Gcm(),
+                                AeadKeyTemplates::XAes256Gcm8ByteSalt()));
 
 TEST_P(AeadV0KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;
@@ -143,6 +152,27 @@ TEST_P(AeadV0BoringSslKeyTypesTest, GetPrimitive) {
   util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
+}
+
+TEST_P(CordAeadV0KeyTypesTest, GetPrimitive) {
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddAeadKeyGenV0(key_gen_config), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddAeadV0(config), IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNew(GetParam(), key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+
+  util::StatusOr<std::unique_ptr<CordAead>> aead =
+      (*handle)->GetPrimitive<CordAead>(config);
+  ASSERT_THAT(aead, IsOk());
+
+  absl::Cord plaintext("plaintext");
+  absl::Cord aad("ad");
+  util::StatusOr<absl::Cord> ciphertext = (*aead)->Encrypt(plaintext, aad);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT((*aead)->Decrypt(*ciphertext, aad), IsOkAndHolds(plaintext));
 }
 
 }  // namespace

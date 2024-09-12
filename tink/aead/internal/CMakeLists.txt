@@ -167,7 +167,6 @@ tink_cc_library(
     tink::aead::aes_eax_key_manager
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_siv_key_manager
-    tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_key_manager
     tink::aead::xchacha20_poly1305_key_manager
     tink::internal::key_gen_configuration_impl
@@ -396,6 +395,7 @@ tink_cc_library(
     cord_x_aes_gcm_boringssl.cc
     cord_x_aes_gcm_boringssl.h
   DEPS
+    tink::aead::internal::base_x_aes_gcm
     tink::aead::internal::cord_aes_gcm_boringssl
     tink::aead::internal::cord_utils
     absl::status
@@ -403,10 +403,14 @@ tink_cc_library(
     absl::cord
     absl::str_format
     absl::string_view
+    absl::optional
     crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::aead::cord_aead
-    tink::internal::call_with_core_dump_protection
-    tink::internal::ssl_unique_ptr
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
     tink::subtle::random
     tink::util::secret_data
     tink::util::statusor
@@ -424,6 +428,50 @@ tink_cc_test(
     absl::cord
     absl::string_view
     tink::aead::cord_aead
+    tink::subtle::random
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME base_x_aes_gcm
+  SRCS
+    base_x_aes_gcm.cc
+    base_x_aes_gcm.h
+  DEPS
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::str_format
+    absl::string_view
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::secret_key_access_token
+    tink::aead::x_aes_gcm_key
+    tink::internal::call_with_core_dump_protection
+    tink::internal::ssl_unique_ptr
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME base_x_aes_gcm_test
+  SRCS
+    base_x_aes_gcm_test.cc
+  DEPS
+    tink::aead::internal::base_x_aes_gcm
+    gmock
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
     tink::subtle::random
     tink::util::secret_data
     tink::util::statusor

@@ -134,12 +134,12 @@ TEST(XAesGcmTest, CreateWithInvalidKeySizeFails) {
       NewCordXAesGcmBoringSsl(Random::GetRandomKeyBytes(31), kMinSaltSize)
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("key must be 32 bytes")));
+               HasSubstr("Key material must be 32 bytes")));
   EXPECT_THAT(
       NewCordXAesGcmBoringSsl(Random::GetRandomKeyBytes(33), kMinSaltSize)
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("key must be 32 bytes")));
+               HasSubstr("Key material must be 32 bytes")));
 }
 
 TEST(XAesGcmTest, CreateWithInvalidSaltSizeFails) {
@@ -152,7 +152,7 @@ TEST(XAesGcmTest, CreateWithInvalidSaltSizeFails) {
     } else {
       EXPECT_THAT(
           NewCordXAesGcmBoringSsl(key, s).status(),
-          StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("salt size")));
+          StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("Salt size")));
     }
   }
 }

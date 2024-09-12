@@ -1169,7 +1169,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519) {
   auto builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
   builder.Add(CreatePemKey(kEd25519PublicKey, PemKeyType::PEM_EC,
-                           PemAlgorithm::ED25519, /*key_size_in_bits=*/256,
+                           PemAlgorithm::ED25519, /*key_size_in_bits=*/253,
                            HashType::SHA512));
   util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
@@ -1208,7 +1208,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WrongAlgorithmFails) {
     for (const HashType hash_type :
          {HashType::SHA256, HashType::SHA384, HashType::SHA512}) {
       builder.Add(CreatePemKey(kEd25519PublicKey, PemKeyType::PEM_EC, algorithm,
-                               /*key_size_in_bits=*/256, hash_type));
+                               /*key_size_in_bits=*/253, hash_type));
 
       util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
       ASSERT_THAT(reader, IsOk());
@@ -1226,7 +1226,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WInvalidHashFails) {
        {HashType::SHA1, HashType::SHA256, HashType::SHA384}) {
     builder.Add(CreatePemKey(kEd25519PublicKey, PemKeyType::PEM_EC,
                              PemAlgorithm::ED25519,
-                             /*key_size_in_bits=*/256, hash_type));
+                             /*key_size_in_bits=*/253, hash_type));
 
     util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
     ASSERT_THAT(reader, IsOk());
@@ -1241,7 +1241,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WInvalidKeyTypeFails) {
 
   builder.Add(CreatePemKey(kEd25519PublicKey, PemKeyType::PEM_RSA,
                            PemAlgorithm::ED25519,
-                           /*key_size_in_bits=*/256, HashType::SHA512));
+                           /*key_size_in_bits=*/253, HashType::SHA512));
 
   util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());

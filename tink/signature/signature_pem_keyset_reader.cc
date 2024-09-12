@@ -405,7 +405,7 @@ util::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
                         absl::StrCat("Invalid ed25519 hash type: ",
                                      pem_key.parameters.hash_type));
   }
-  if (pem_key.parameters.key_size_in_bits != 256) {
+  if (pem_key.parameters.key_size_in_bits != 253) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Invalid ed25519 key size: ",
                                      pem_key.parameters.key_size_in_bits));

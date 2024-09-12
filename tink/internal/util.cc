@@ -35,28 +35,21 @@ absl::string_view EnsureStringNonNull(absl::string_view str) {
 
 bool BuffersOverlap(absl::string_view first, absl::string_view second) {
   // first begins within second's buffer.
-  bool first_begins_in_second =
-      std::less_equal<absl::string_view::const_iterator>{}(second.begin(),
-                                                           first.begin()) &&
-      std::less<absl::string_view::const_iterator>{}(first.begin(),
-                                                     second.end());
+  const bool first_begins_in_second =
+      first.data() >= second.data() &&
+      first.data() < second.data() + second.size();
 
   // second begins within first's buffer.
-  bool second_begins_in_first =
-      std::less_equal<absl::string_view::const_iterator>{}(first.begin(),
-                                                           second.begin()) &&
-      std::less<absl::string_view::const_iterator>{}(second.begin(),
-                                                     first.end());
+  const bool second_begins_in_first =
+      second.data() >= first.data() &&
+      second.data() < first.data() + first.size();
 
   return first_begins_in_second || second_begins_in_first;
 }
 
 bool BuffersAreIdentical(absl::string_view first, absl::string_view second) {
-  return !first.empty() && !second.empty() &&
-         std::equal_to<absl::string_view::const_iterator>{}(first.begin(),
-                                                            second.begin()) &&
-         std::equal_to<absl::string_view::const_iterator>{}(
-             std::prev(first.end()), std::prev(second.end()));
+  return !first.empty() && !second.empty() && first.data() == second.data() &&
+         first.size() == second.size();
 }
 
 bool IsPrintableAscii(absl::string_view input) {

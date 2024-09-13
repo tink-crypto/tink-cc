@@ -477,3 +477,50 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME zero_copy_x_aes_gcm_boringssl
+  SRCS
+    zero_copy_x_aes_gcm_boringssl.cc
+    zero_copy_x_aes_gcm_boringssl.h
+  DEPS
+    tink::aead::internal::base_x_aes_gcm
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_aes_gcm_boringssl
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::aead::x_aes_gcm_key
+    tink::subtle::random
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME zero_copy_x_aes_gcm_boringssl_test
+  SRCS
+    zero_copy_x_aes_gcm_boringssl_test.cc
+  DEPS
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_x_aes_gcm_boringssl
+    gmock
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    absl::span
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    tink::subtle::random
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
+)

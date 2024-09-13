@@ -499,3 +499,51 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "zero_copy_x_aes_gcm_boringssl",
+    srcs = ["zero_copy_x_aes_gcm_boringssl.cc"],
+    hdrs = ["zero_copy_x_aes_gcm_boringssl.h"],
+    include_prefix = "tink/aead/internal",
+    deps = [
+        ":base_x_aes_gcm",
+        ":zero_copy_aead",
+        ":zero_copy_aes_gcm_boringssl",
+        "//tink/aead:x_aes_gcm_key",
+        "//tink/subtle:random",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "zero_copy_x_aes_gcm_boringssl_test",
+    srcs = ["zero_copy_x_aes_gcm_boringssl_test.cc"],
+    deps = [
+        ":zero_copy_aead",
+        ":zero_copy_x_aes_gcm_boringssl",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/aead:x_aes_gcm_key",
+        "//tink/aead:x_aes_gcm_parameters",
+        "//tink/subtle:random",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

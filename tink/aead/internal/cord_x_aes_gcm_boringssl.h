@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_AEAD_INTERNAL_X_AES_GCM_BORINGSSL_H_
-#define TINK_AEAD_INTERNAL_X_AES_GCM_BORINGSSL_H_
+#ifndef TINK_AEAD_INTERNAL_CORD_X_AES_GCM_BORINGSSL_H_
+#define TINK_AEAD_INTERNAL_CORD_X_AES_GCM_BORINGSSL_H_
 
 #include <memory>
 
@@ -34,4 +34,4 @@ crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_AEAD_INTERNAL_X_AES_GCM_BORINGSSL_H_
+#endif  // TINK_AEAD_INTERNAL_CORD_X_AES_GCM_BORINGSSL_H_

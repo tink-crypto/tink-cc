@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_X_AEAD_AES_GCM_KEY_MANAGER_H_
-#define TINK_X_AEAD_AES_GCM_KEY_MANAGER_H_
+#ifndef TINK_AEAD_X_AES_GCM_KEY_MANAGER_H_
+#define TINK_AEAD_X_AES_GCM_KEY_MANAGER_H_
 
 #include <memory>
 
@@ -37,4 +37,4 @@ std::unique_ptr<XAesGcmKeyManager> CreateXAesGcmKeyManager();
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_X_AEAD_AES_GCM_KEY_MANAGER_H_
+#endif  // TINK_AEAD_X_AES_GCM_KEY_MANAGER_H_

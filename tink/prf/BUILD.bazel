@@ -43,6 +43,7 @@ cc_library(
         ":aes_cmac_prf_key_manager",
         ":aes_cmac_prf_proto_serialization",
         ":hkdf_prf_key_manager",
+        ":hkdf_prf_proto_serialization",
         ":hmac_prf_key_manager",
         ":hmac_prf_proto_serialization",
         ":prf_set_wrapper",
@@ -556,6 +557,8 @@ cc_test(
     deps = [
         ":aes_cmac_prf_key",
         ":aes_cmac_prf_parameters",
+        ":hkdf_prf_key",
+        ":hkdf_prf_parameters",
         ":hmac_prf_key",
         ":hmac_prf_key_manager",
         ":hmac_prf_parameters",
@@ -567,7 +570,6 @@ cc_test(
         "//tink:insecure_secret_key_access_testonly",
         "//tink:key_status",
         "//tink:keyset_handle",
-        "//tink:keyset_handle_builder",
         "//tink:partial_key_access",
         "//tink:registry",
         "//tink:restricted_data",
@@ -582,6 +584,7 @@ cc_test(
         "//tink/util:test_matchers",
         "@boringssl//:crypto",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

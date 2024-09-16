@@ -39,6 +39,7 @@ tink_cc_library(
     tink::prf::aes_cmac_prf_key_manager
     tink::prf::aes_cmac_prf_proto_serialization
     tink::prf::hkdf_prf_key_manager
+    tink::prf::hkdf_prf_proto_serialization
     tink::prf::hmac_prf_key_manager
     tink::prf::hmac_prf_proto_serialization
     tink::prf::prf_set_wrapper
@@ -530,6 +531,8 @@ tink_cc_test(
   DEPS
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
     tink::prf::hmac_prf_key
     tink::prf::hmac_prf_key_manager
     tink::prf::hmac_prf_parameters
@@ -539,11 +542,11 @@ tink_cc_test(
     tink::prf::prf_set
     gmock
     absl::status
+    absl::optional
     crypto
     tink::core::insecure_secret_key_access_testonly
     tink::core::key_status
     tink::core::keyset_handle
-    tink::core::keyset_handle_builder
     tink::core::partial_key_access
     tink::core::registry
     tink::core::restricted_data

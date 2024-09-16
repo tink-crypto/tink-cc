@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/types/optional.h"
 #include "tink/config/global_registry.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
@@ -30,10 +31,11 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
+#include "tink/prf/hkdf_prf_key.h"
+#include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/prf/hmac_prf_parameters.h"
@@ -282,6 +284,98 @@ TEST_F(PrfConfigTest, HmacPrfProtoKeySerializationRegistered) {
   ASSERT_THAT(after_handle, IsOk());
 
   EXPECT_THAT(dynamic_cast<const HmacPrfKey*>(
+                  (*after_handle)->GetPrimary().GetKey().get()),
+              NotNull());
+
+  EXPECT_THAT(KeysetHandleBuilder()
+                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                      *key, KeyStatus::kEnabled, /*is_primary=*/true))
+                  .Build(),
+              IsOk());
+}
+
+TEST_F(PrfConfigTest, HkdfPrfProtoParamsSerializationRegistered) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  util::StatusOr<internal::ProtoParametersSerialization>
+      proto_params_serialization =
+          internal::ProtoParametersSerialization::Create(
+              PrfKeyTemplates::HkdfSha256());
+  ASSERT_THAT(proto_params_serialization, IsOk());
+
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .ParseParameters(*proto_params_serialization)
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
+      /*salt=*/absl::nullopt);
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeParameters<internal::ProtoParametersSerialization>(
+                      *parameters)
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(PrfConfig::Register(), IsOk());
+
+  EXPECT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *proto_params_serialization),
+      IsOk());
+
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeParameters<internal::ProtoParametersSerialization>(
+                      *parameters),
+              IsOk());
+}
+
+TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
+  if (internal::IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
+      KeysetHandle::GenerateNew(PrfKeyTemplates::HkdfSha256(),
+                                KeyGenConfigPrfV0());
+  ASSERT_THAT(before_handle, IsOk());
+
+  // Fails to parse this key type, so falls back to legacy proto key.
+  EXPECT_THAT(dynamic_cast<const internal::LegacyProtoKey*>(
+                  (*before_handle)->GetPrimary().GetKey().get()),
+              NotNull());
+
+  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
+      /*salt=*/absl::nullopt);
+  ASSERT_THAT(parameters, IsOk());
+  util::StatusOr<HkdfPrfKey> key =
+      HkdfPrfKey::Create(*parameters,
+                         RestrictedData(subtle::Random::GetRandomBytes(32),
+                                        InsecureSecretKeyAccess::Get()),
+                         GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  EXPECT_THAT(KeysetHandleBuilder()
+                  .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
+                      *key, KeyStatus::kEnabled, /*is_primary=*/true))
+                  .Build()
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Failed to serialize")));
+
+  ASSERT_THAT(PrfConfig::Register(), IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
+      KeysetHandle::GenerateNew(PrfKeyTemplates::HkdfSha256(),
+                                KeyGenConfigPrfV0());
+  ASSERT_THAT(after_handle, IsOk());
+
+  EXPECT_THAT(dynamic_cast<const HkdfPrfKey*>(
                   (*after_handle)->GetPrimary().GetKey().get()),
               NotNull());
 

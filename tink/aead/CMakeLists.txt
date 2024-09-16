@@ -1556,15 +1556,25 @@ tink_cc_library(
     x_aes_gcm_key_manager.h
   DEPS
     tink::aead::cord_aead
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
     absl::memory
     absl::status
     absl::strings
     absl::str_format
     absl::string_view
+    absl::optional
+    tink::core::aead
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::internal::aead_from_zero_copy
     tink::aead::internal::cord_x_aes_gcm_boringssl
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_x_aes_gcm_boringssl
     tink::internal::fips_utils
     tink::subtle::random
     tink::util::constants
@@ -1585,9 +1595,12 @@ tink_cc_test(
     tink::aead::x_aes_gcm_key_manager
     gmock
     absl::status
+    absl::cord
+    tink::core::aead
     tink::core::key_type_manager
     tink::internal::fips_utils
     tink::subtle::random
+    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto

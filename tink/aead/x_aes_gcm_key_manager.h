@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
@@ -30,7 +31,8 @@ namespace tink {
 
 using XAesGcmKeyManager =
     KeyTypeManager<google::crypto::tink::XAesGcmKey,
-                   google::crypto::tink::XAesGcmKeyFormat, List<CordAead>>;
+                   google::crypto::tink::XAesGcmKeyFormat,
+                   List<crypto::tink::Aead, crypto::tink::CordAead>>;
 
 std::unique_ptr<XAesGcmKeyManager> CreateXAesGcmKeyManager();
 

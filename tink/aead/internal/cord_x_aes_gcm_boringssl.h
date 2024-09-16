@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "tink/aead/cord_aead.h"
-#include "tink/util/secret_data.h"
+#include "tink/aead/x_aes_gcm_key.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -28,7 +28,7 @@ namespace tink {
 namespace internal {
 
 crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
-    const util::SecretData& key_value, int salt_size);
+    const crypto::tink::XAesGcmKey& key);
 
 }  // namespace internal
 }  // namespace tink

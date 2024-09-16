@@ -27,7 +27,13 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "tink/aead/cord_aead.h"
+#include "tink/aead/x_aes_gcm_key.h"
+#include "tink/aead/x_aes_gcm_parameters.h"
+#include "tink/insecure_secret_key_access.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
@@ -38,12 +44,6 @@ namespace tink {
 namespace internal {
 namespace {
 
-constexpr int kKeySize = 32;
-constexpr int kMinSaltSize = 8;
-constexpr int kMaxSaltSize = 12;
-constexpr int kIvSize = 12;
-constexpr int kCtOverhead = kIvSize + 16;
-
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
@@ -53,6 +53,28 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Not;
 using ::testing::TestWithParam;
+
+constexpr int kKeySize = 32;
+constexpr int kMinSaltSize = 8;
+constexpr int kMaxSaltSize = 12;
+constexpr int kIvSize = 12;
+constexpr int kCtOverhead = kIvSize + 16;
+
+util::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
+  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kNoPrefix, salt_size);
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+  return XAesGcmKey::Create(*parameters,
+                            RestrictedData(util::SecretDataFromStringView(key),
+                                           InsecureSecretKeyAccess::Get()),
+                            absl::nullopt, GetPartialKeyAccess());
+}
+
+util::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
+  return CreateKey(Random::GetRandomBytes(kKeySize), salt_size);
+}
 
 struct XAesGcmTestVector {
   std::string name;
@@ -97,9 +119,11 @@ std::vector<XAesGcmTestVector> GetTestVectors() {
 
 TEST_P(XAesGcmTestVectors, DecryptKnownTestVectors) {
   const XAesGcmTestVector& test_case = GetParam();
-  std::string key = absl::HexStringToBytes(test_case.hex_key);
-  util::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(
-      SecretDataFromStringView(key), test_case.salt_size);
+  util::StatusOr<XAesGcmKey> key =
+      CreateKey(absl::HexStringToBytes(test_case.hex_key), test_case.salt_size);
+  ASSERT_THAT(key, IsOk());
+  util::StatusOr<std::unique_ptr<CordAead>> aead =
+      NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(aead, IsOk());
 
   std::string ct = absl::HexStringToBytes(test_case.hex_ciphertext);
@@ -116,8 +140,10 @@ INSTANTIATE_TEST_SUITE_P(
     });
 
 TEST(XAesGcmTest, EncryptDecrypt) {
-  util::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(
-      Random::GetRandomKeyBytes(kKeySize), kMinSaltSize);
+  util::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
+  ASSERT_THAT(key, IsOk());
+  util::StatusOr<std::unique_ptr<CordAead>> aead =
+      NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(aead, IsOk());
 
   absl::Cord pt(Random::GetRandomBytes(4096));
@@ -129,37 +155,11 @@ TEST(XAesGcmTest, EncryptDecrypt) {
   ASSERT_THAT(*recovered_plaintext, Eq(pt));
 }
 
-TEST(XAesGcmTest, CreateWithInvalidKeySizeFails) {
-  EXPECT_THAT(
-      NewCordXAesGcmBoringSsl(Random::GetRandomKeyBytes(31), kMinSaltSize)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Key material must be 32 bytes")));
-  EXPECT_THAT(
-      NewCordXAesGcmBoringSsl(Random::GetRandomKeyBytes(33), kMinSaltSize)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Key material must be 32 bytes")));
-}
-
-TEST(XAesGcmTest, CreateWithInvalidSaltSizeFails) {
-  for (int s = kMinSaltSize - 1; s < kMaxSaltSize + 1; s++) {
-    SecretData key = Random::GetRandomKeyBytes(kKeySize);
-    if (s >= kMinSaltSize && s <= kMaxSaltSize) {
-      util::StatusOr<std::unique_ptr<CordAead>> aead =
-          NewCordXAesGcmBoringSsl(key, s);
-      EXPECT_THAT(aead, IsOk());
-    } else {
-      EXPECT_THAT(
-          NewCordXAesGcmBoringSsl(key, s).status(),
-          StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("Salt size")));
-    }
-  }
-}
-
 TEST(XAesGcmTest, DecryptWithInvalidCiphertextSizeFails) {
-  util::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(
-      Random::GetRandomKeyBytes(kKeySize), kMinSaltSize);
+  util::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
+  ASSERT_THAT(key, IsOk());
+  util::StatusOr<std::unique_ptr<CordAead>> aead =
+      NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(aead, IsOk());
 
   for (int size = 0; size < kCtOverhead + kMinSaltSize; size++) {
@@ -173,8 +173,10 @@ TEST(XAesGcmTest, DecryptWithInvalidCiphertextSizeFails) {
 }
 
 TEST(XAesGcmTest, DecryptWithInvalidAssociatedDataFails) {
-  util::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(
-      Random::GetRandomKeyBytes(kKeySize), kMinSaltSize);
+  util::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
+  ASSERT_THAT(key, IsOk());
+  util::StatusOr<std::unique_ptr<CordAead>> aead =
+      NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(aead, IsOk());
 
   absl::Cord pt(Random::GetRandomBytes(4096));
@@ -187,8 +189,10 @@ TEST(XAesGcmTest, DecryptWithInvalidAssociatedDataFails) {
 }
 
 TEST(XAesGcmTest, EncryptReturnsDifferentSaltAndIv) {
-  util::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(
-      Random::GetRandomKeyBytes(kKeySize), kMinSaltSize);
+  util::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
+  ASSERT_THAT(key, IsOk());
+  util::StatusOr<std::unique_ptr<CordAead>> aead =
+      NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(aead, IsOk());
 
   absl::Cord pt("hello world");
@@ -208,8 +212,10 @@ TEST(XAesGcmTest, EncryptReturnsDifferentSaltAndIv) {
 }
 
 TEST(XAesGcmTest, SaltModificationFailsDecryption) {
-  util::StatusOr<std::unique_ptr<CordAead>> aead = NewCordXAesGcmBoringSsl(
-      Random::GetRandomKeyBytes(kKeySize), kMinSaltSize);
+  util::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
+  ASSERT_THAT(key, IsOk());
+  util::StatusOr<std::unique_ptr<CordAead>> aead =
+      NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(aead, IsOk());
 
   absl::Cord pt("hello world");
@@ -227,9 +233,10 @@ TEST(XAesGcmTest, SaltModificationFailsDecryption) {
 }
 
 TEST(XAesGcmTest, DifferentSaltSizeFailsDecryption) {
-  SecretData key = Random::GetRandomKeyBytes(kKeySize);
+  util::StatusOr<XAesGcmKey> key = CreateKey(kMinSaltSize);
+  ASSERT_THAT(key, IsOk());
   util::StatusOr<std::unique_ptr<CordAead>> encrypter =
-      NewCordXAesGcmBoringSsl(key, kMinSaltSize);
+      NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(encrypter, IsOk());
 
   absl::Cord pt("hello world");
@@ -237,14 +244,16 @@ TEST(XAesGcmTest, DifferentSaltSizeFailsDecryption) {
   util::StatusOr<absl::Cord> ct = (*encrypter)->Encrypt(pt, aad);
   ASSERT_THAT(ct, IsOk());
 
+  util::StatusOr<XAesGcmKey> other_key = CreateKey(kMaxSaltSize);
+  ASSERT_THAT(other_key, IsOk());
   util::StatusOr<std::unique_ptr<CordAead>> decrypter =
-      NewCordXAesGcmBoringSsl(key, kMaxSaltSize);
+      NewCordXAesGcmBoringSsl(*other_key);
   ASSERT_THAT(decrypter, IsOk());
 
   EXPECT_THAT((*decrypter)->Decrypt(*ct, aad).status(),
               StatusIs(absl::StatusCode::kInternal));
 
-  decrypter = NewCordXAesGcmBoringSsl(key, kMinSaltSize);
+  decrypter = NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(decrypter, IsOk());
   util::StatusOr<absl::Cord> decrypted = (*decrypter)->Decrypt(*ct, aad);
   EXPECT_THAT(decrypted, IsOk());

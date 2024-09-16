@@ -105,20 +105,8 @@ class CordXAesGcmBoringSsl : public CordAead {
 }  // namespace
 
 crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
-    const util::SecretData& key_value, int salt_size) {
-  util::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
-      XAesGcmParameters::Variant::kNoPrefix, salt_size);
-  if (!params.ok()) {
-    return params.status();
-  }
-  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
-      *params, RestrictedData(key_value, InsecureSecretKeyAccess::Get()),
-      absl::nullopt, GetPartialKeyAccess());
-  if (!key.ok()) {
-    return key.status();
-  }
-  absl::StatusOr<BaseXAesGcm> base_x_aes_gcm =
-      BaseXAesGcm::New(std::move(*key));
+    const XAesGcmKey& key) {
+  absl::StatusOr<BaseXAesGcm> base_x_aes_gcm = BaseXAesGcm::New(key);
   if (!base_x_aes_gcm.ok()) {
     return base_x_aes_gcm.status();
   }

@@ -442,7 +442,12 @@ cc_test(
     srcs = ["cord_x_aes_gcm_boringssl_test.cc"],
     deps = [
         ":cord_x_aes_gcm_boringssl",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
         "//tink/aead:cord_aead",
+        "//tink/aead:x_aes_gcm_key",
+        "//tink/aead:x_aes_gcm_parameters",
         "//tink/subtle:random",
         "//tink/util:secret_data",
         "//tink/util:statusor",
@@ -451,6 +456,7 @@ cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -17,14 +17,18 @@
 #include "tink/aead/x_aes_gcm_key_manager.h"
 
 #include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/strings/cord.h"
+#include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/subtle/random.h"
+#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
@@ -37,6 +41,7 @@ namespace {
 using ::crypto::tink::internal::FipsCompatibility;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::XAesGcmKey;
@@ -225,6 +230,37 @@ TEST(XAesGcmKeyManagerTest, CreatePrimitiveWithValidSaltSizes) {
     key.mutable_params()->set_salt_size(salt_size);
     EXPECT_THAT(key_manager->GetPrimitive<CordAead>(key), IsOk());
   }
+}
+
+TEST(XAesGcmKeyManagerTest, CordAndAeadCompatibility) {
+  std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
+  XAesGcmKey key = ValidKey();
+  util::StatusOr<std::unique_ptr<Aead>> aead =
+      key_manager->GetPrimitive<Aead>(key);
+  ASSERT_THAT(aead, IsOk());
+  util::StatusOr<std::unique_ptr<CordAead>> cord_aead =
+      key_manager->GetPrimitive<CordAead>(key);
+  ASSERT_THAT(cord_aead, IsOk());
+
+  // Use a large plaintext (16 KiB) to have cords with potentially multiple
+  // nodes.
+  std::string plaintext = Random::GetRandomBytes(1 << 14);
+  std::string associated_data = "associated_data";
+  util::StatusOr<std::string> aead_ciphertext =
+      (*aead)->Encrypt(plaintext, associated_data);
+  ASSERT_THAT(aead_ciphertext, IsOk());
+  util::StatusOr<absl::Cord> cord_aead_ciphertext =
+      (*cord_aead)->Encrypt(absl::Cord(plaintext), absl::Cord(associated_data));
+  ASSERT_THAT(cord_aead_ciphertext, IsOk());
+
+  util::StatusOr<std::string> aead_plaintext =
+      (*aead)->Decrypt(cord_aead_ciphertext->Flatten(), associated_data);
+  EXPECT_THAT(aead_plaintext, IsOk());
+  EXPECT_THAT(aead_plaintext, IsOkAndHolds(Eq(plaintext)));
+  util::StatusOr<absl::Cord> cord_aead_plaintext =
+      (*cord_aead)
+          ->Decrypt(absl::Cord(*aead_ciphertext), absl::Cord(associated_data));
+  EXPECT_THAT(cord_aead_plaintext, IsOkAndHolds(Eq(absl::Cord(plaintext))));
 }
 
 }  // namespace

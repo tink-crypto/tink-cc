@@ -19,18 +19,29 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
+#include "tink/aead/internal/aead_from_zero_copy.h"
 #include "tink/aead/internal/cord_x_aes_gcm_boringssl.h"
+#include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/aead/internal/zero_copy_x_aes_gcm_boringssl.h"
+#include "tink/aead/x_aes_gcm_key.h"
+#include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/constants.h"
 #include "tink/util/secret_data.h"
@@ -79,9 +90,51 @@ util::Status ValidateXAesGcmKey(const XAesGcmKey& key) {
   return ValidateParams(key.params());
 }
 
+util::StatusOr<::crypto::tink::XAesGcmKey> ConvertToXAesGcmKey(
+    const XAesGcmKey& key) {
+  util::StatusOr<XAesGcmParameters> x_aes_gcm_params =
+      XAesGcmParameters::Create(XAesGcmParameters::Variant::kNoPrefix,
+                                key.params().salt_size());
+  if (!x_aes_gcm_params.ok()) {
+    return x_aes_gcm_params.status();
+  }
+  return ::crypto::tink::XAesGcmKey::Create(
+      *x_aes_gcm_params,
+      RestrictedData(util::SecretDataFromStringView(key.key_value()),
+                     InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+}
+
 class XAesGcmKeyManagerImpl
-    : public KeyTypeManager<XAesGcmKey, XAesGcmKeyFormat, List<CordAead>> {
+    : public KeyTypeManager<XAesGcmKey, XAesGcmKeyFormat,
+                            List<Aead, CordAead>> {
  public:
+  class AeadFactory : public PrimitiveFactory<Aead> {
+    util::StatusOr<std::unique_ptr<Aead>> Create(
+        const XAesGcmKey& key) const override {
+      util::Status status = ValidateXAesGcmKey(key);
+      if (!status.ok()) {
+        return status;
+      }
+      status = ValidateVersion(key.version(), kCurrentVersion);
+      if (!status.ok()) {
+        return status;
+      }
+      util::StatusOr<::crypto::tink::XAesGcmKey> x_aes_gcm_key =
+          ConvertToXAesGcmKey(key);
+      if (!x_aes_gcm_key.ok()) {
+        return x_aes_gcm_key.status();
+      }
+      util::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
+          internal::NewZeroCopyXAesGcmBoringSsl(std::move(*x_aes_gcm_key));
+      if (!zero_copy_aead.ok()) {
+        return zero_copy_aead.status();
+      }
+      return absl::make_unique<internal::AeadFromZeroCopy>(
+          *std::move(zero_copy_aead));
+    }
+  };
+
   class CordAeadFactory : public PrimitiveFactory<CordAead> {
     util::StatusOr<std::unique_ptr<CordAead>> Create(
         const XAesGcmKey& key) const override {
@@ -93,14 +146,18 @@ class XAesGcmKeyManagerImpl
       if (!status.ok()) {
         return status;
       }
-      return internal::NewCordXAesGcmBoringSsl(
-          util::SecretDataFromStringView(key.key_value()),
-          key.params().salt_size());
+      util::StatusOr<::crypto::tink::XAesGcmKey> x_aes_gcm_key =
+          ConvertToXAesGcmKey(key);
+      if (!x_aes_gcm_key.ok()) {
+        return x_aes_gcm_key.status();
+      }
+      return internal::NewCordXAesGcmBoringSsl(*std::move(x_aes_gcm_key));
     };
   };
 
   XAesGcmKeyManagerImpl()
       : KeyTypeManager(
+            absl::make_unique<XAesGcmKeyManagerImpl::AeadFactory>(),
             absl::make_unique<XAesGcmKeyManagerImpl::CordAeadFactory>()) {}
 
   uint32_t get_version() const override { return kCurrentVersion; }
@@ -159,7 +216,8 @@ class XAesGcmKeyManagerImpl
 
 }  // namespace
 
-std::unique_ptr<KeyTypeManager<XAesGcmKey, XAesGcmKeyFormat, List<CordAead>>>
+std::unique_ptr<KeyTypeManager<::google::crypto::tink::XAesGcmKey,
+                               XAesGcmKeyFormat, List<Aead, CordAead>>>
 CreateXAesGcmKeyManager() {
   return absl::make_unique<XAesGcmKeyManagerImpl>();
 }

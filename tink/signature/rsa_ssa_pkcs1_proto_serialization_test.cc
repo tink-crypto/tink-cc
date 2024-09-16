@@ -20,10 +20,13 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/base/no_destructor.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -37,11 +40,14 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/testing/equals_proto_key_serialization.h"
+#include "tink/internal/testing/field_with_number.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_key_access_token.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
@@ -55,6 +61,11 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::ProtoKeySerialization;
+using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
+using ::crypto::tink::internal::proto_testing::FieldWithNumber;
+using ::crypto::tink::internal::proto_testing::SerializeMessage;
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HashType;
@@ -63,6 +74,7 @@ using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
 using ::google::crypto::tink::RsaSsaPkcs1Params;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -340,6 +352,11 @@ KeyValues GenerateKeyValues(int modulus_size_in_bits) {
 
   return KeyValues{*n_str,  *e_str,  *p_str, *q_str,
                    *dp_str, *dq_str, *d_str, *q_inv_str};
+}
+
+const KeyValues& Get2048BitKeyValues() {
+  static absl::NoDestructor<KeyValues> values(GenerateKeyValues(2048));
+  return *values;
 }
 
 TEST_P(RsaSsaPkcs1ProtoSerializationTest, ParsePublicKeySucceeds) {
@@ -632,6 +649,47 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
 }
 
 TEST_F(RsaSsaPkcs1ProtoSerializationTest,
+       ParsePrivateKeyWithInvalidPublicKeyVersionFails) {
+  ASSERT_THAT(RegisterRsaSsaPkcs1ProtoSerialization(), IsOk());
+
+  RsaSsaPkcs1Params params;
+  params.set_hash_type(HashType::SHA256);
+
+  KeyValues key_values = GenerateKeyValues(2048);
+
+  google::crypto::tink::RsaSsaPkcs1PublicKey public_key_proto;
+  public_key_proto.set_version(1);
+  public_key_proto.set_n(key_values.n);
+  public_key_proto.set_e(key_values.e);
+  *public_key_proto.mutable_params() = params;
+
+  google::crypto::tink::RsaSsaPkcs1PrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_p(key_values.p);
+  private_key_proto.set_q(key_values.q);
+  private_key_proto.set_dp(key_values.dp);
+  private_key_proto.set_dq(key_values.dq);
+  private_key_proto.set_d(key_values.d);
+  private_key_proto.set_crt(key_values.q_inv);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(RsaSsaPkcs1ProtoSerializationTest,
        ParsePrivateKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(RegisterRsaSsaPkcs1ProtoSerialization(), IsOk());
 
@@ -796,6 +854,311 @@ TEST_F(RsaSsaPkcs1ProtoSerializationTest,
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kPermissionDenied));
 }
+
+struct KeyAndSerialization {
+  KeyAndSerialization(absl::string_view test_name, std::shared_ptr<Key> key,
+                      ProtoKeySerialization proto_key_serialization)
+      : test_name(test_name),
+        key(std::move(key)),
+        proto_key_serialization(std::move(proto_key_serialization)) {}
+
+  std::string test_name;
+  std::shared_ptr<Key> key;
+  ProtoKeySerialization proto_key_serialization;
+};
+
+class SerializationTest : public testing::TestWithParam<KeyAndSerialization> {};
+class ParseTest : public testing::TestWithParam<KeyAndSerialization> {};
+
+TEST_P(SerializationTest, SerializesCorrectly) {
+  ASSERT_THAT(RegisterRsaSsaPkcs1ProtoSerialization(), IsOk());
+  const KeyAndSerialization& test_key = GetParam();
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<ProtoKeySerialization>(*test_key.key,
+                                               InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization.status(), IsOk());
+  ProtoKeySerialization* proto_serialization =
+      dynamic_cast<ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, Not(IsNull()));
+  EXPECT_THAT(*proto_serialization,
+              EqualsProtoKeySerialization(test_key.proto_key_serialization));
+}
+
+TEST_P(ParseTest, ParserCorrectly) {
+  ASSERT_THAT(RegisterRsaSsaPkcs1ProtoSerialization(), IsOk());
+  const KeyAndSerialization& test_key = GetParam();
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          test_key.proto_key_serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+  EXPECT_TRUE(**key == *test_key.key);
+}
+
+KeyAndSerialization PublicKeyAndSerializationTink() {
+  KeyValues values = Get2048BitKeyValues();
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n), 101020,
+                                   GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PublicKey",
+      {FieldWithNumber(2).IsSubMessage({
+           FieldWithNumber(1).IsVarint(HashType::SHA256),
+       }),
+       FieldWithNumber(3).IsString(values.n),
+       FieldWithNumber(4).IsString(values.e)},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK, 101020);
+
+  return KeyAndSerialization(
+      "PublicKeyTink", std::make_shared<RsaSsaPkcs1PublicKey>(*public_key),
+      serialization);
+}
+
+KeyAndSerialization PublicKeyAndSerializationRaw() {
+  KeyValues values = Get2048BitKeyValues();
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n),
+                                   absl::nullopt, GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PublicKey",
+      {FieldWithNumber(2).IsSubMessage({
+           FieldWithNumber(1).IsVarint(HashType::SHA512),
+       }),
+       FieldWithNumber(3).IsString(values.n),
+       FieldWithNumber(4).IsString(values.e)},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(
+      "PublicKeyRAW", std::make_shared<RsaSsaPkcs1PublicKey>(*public_key),
+      serialization);
+}
+
+KeyAndSerialization PrivateKeyAndSerializationRaw() {
+  KeyValues values = Get2048BitKeyValues();
+  SecretKeyAccessToken token = InsecureSecretKeyAccess::Get();
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n),
+                                   absl::nullopt, GetPartialKeyAccess());
+  util::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
+      RsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(RestrictedBigInteger(values.p, token))
+          .SetPrimeQ(RestrictedBigInteger(values.q, token))
+          .SetPrimeExponentP(RestrictedBigInteger(values.dp, token))
+          .SetPrimeExponentQ(RestrictedBigInteger(values.dq, token))
+          .SetPrivateExponent(RestrictedBigInteger(values.d, token))
+          .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
+          .Build(GetPartialKeyAccess());
+
+  CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PrivateKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(2).IsSubMessage({
+                FieldWithNumber(1).IsVarint(HashType::SHA512),
+            }),
+            FieldWithNumber(3).IsString(values.n),
+            FieldWithNumber(4).IsString(values.e)}),
+       FieldWithNumber(3).IsString(values.d),
+       FieldWithNumber(4).IsString(values.p),
+       FieldWithNumber(5).IsString(values.q),
+       FieldWithNumber(6).IsString(values.dp),
+       FieldWithNumber(7).IsString(values.dq),
+       FieldWithNumber(8).IsString(values.q_inv)},
+      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(
+      "PrivateKeyRAW", std::make_shared<RsaSsaPkcs1PrivateKey>(*private_key),
+      serialization);
+}
+
+KeyAndSerialization PrivateKeyAndSerializationTink() {
+  KeyValues values = Get2048BitKeyValues();
+  SecretKeyAccessToken token = InsecureSecretKeyAccess::Get();
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n), 4455,
+                                   GetPartialKeyAccess());
+  util::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
+      RsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(RestrictedBigInteger(values.p, token))
+          .SetPrimeQ(RestrictedBigInteger(values.q, token))
+          .SetPrimeExponentP(RestrictedBigInteger(values.dp, token))
+          .SetPrimeExponentQ(RestrictedBigInteger(values.dq, token))
+          .SetPrivateExponent(RestrictedBigInteger(values.d, token))
+          .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
+          .Build(GetPartialKeyAccess());
+
+  CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PrivateKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(2).IsSubMessage(
+                {FieldWithNumber(1).IsVarint(HashType::SHA512)}),
+            FieldWithNumber(3).IsString(values.n),
+            FieldWithNumber(4).IsString(values.e)}),
+       FieldWithNumber(3).IsString(values.d),
+       FieldWithNumber(4).IsString(values.p),
+       FieldWithNumber(5).IsString(values.q),
+       FieldWithNumber(6).IsString(values.dp),
+       FieldWithNumber(7).IsString(values.dq),
+       FieldWithNumber(8).IsString(values.q_inv)},
+      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 4455);
+
+  return KeyAndSerialization(
+      "PrivateKeyTINK", std::make_shared<RsaSsaPkcs1PrivateKey>(*private_key),
+      serialization);
+}
+
+KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
+  KeyValues values = Get2048BitKeyValues();
+  SecretKeyAccessToken token = InsecureSecretKeyAccess::Get();
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n), 4455,
+                                   GetPartialKeyAccess());
+  util::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
+      RsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(RestrictedBigInteger(values.p, token))
+          .SetPrimeQ(RestrictedBigInteger(values.q, token))
+          .SetPrimeExponentP(RestrictedBigInteger(values.dp, token))
+          .SetPrimeExponentQ(RestrictedBigInteger(values.dq, token))
+          .SetPrivateExponent(RestrictedBigInteger(values.d, token))
+          .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
+          .Build(GetPartialKeyAccess());
+
+  CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PrivateKey",
+      {FieldWithNumber(1).IsVarint(1000),  // Bad version
+       FieldWithNumber(1).IsVarint(0),     // Overwrite bad version number
+       FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(2).IsSubMessage(
+                {FieldWithNumber(1).IsVarint(HashType::SHA512)}),
+            FieldWithNumber(3).IsString(values.n),
+            FieldWithNumber(4).IsString(values.e)}),
+       FieldWithNumber(4).IsString(values.p),  // Not ordered
+       FieldWithNumber(5).IsString(values.q),
+       FieldWithNumber(6).IsString(values.dp),
+       FieldWithNumber(7).IsString(values.dq),
+       FieldWithNumber(3).IsString(values.d),
+       FieldWithNumber(8).IsString(values.q_inv)},
+      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 4455);
+
+  return KeyAndSerialization(
+      "PrivateKeyTinkNonCanonical2",
+      std::make_shared<RsaSsaPkcs1PrivateKey>(*private_key), serialization);
+}
+
+// Padded big ints.
+KeyAndSerialization PrivateKeyAndSerializationNonCanonical2() {
+  KeyValues values = Get2048BitKeyValues();
+  SecretKeyAccessToken token = InsecureSecretKeyAccess::Get();
+  std::string zero = HexDecodeOrDie("00");
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, BigInteger(values.n), 4455,
+                                   GetPartialKeyAccess());
+  util::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
+      RsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(RestrictedBigInteger(values.p, token))
+          .SetPrimeQ(RestrictedBigInteger(values.q, token))
+          .SetPrimeExponentP(RestrictedBigInteger(values.dp, token))
+          .SetPrimeExponentQ(RestrictedBigInteger(values.dq, token))
+          .SetPrivateExponent(RestrictedBigInteger(values.d, token))
+          .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
+          .Build(GetPartialKeyAccess());
+
+  CHECK_OK(public_key.status());
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.RsaSsaPkcs1PrivateKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(2).IsSubMessage({
+                FieldWithNumber(1).IsVarint(
+                    HashType::SHA512)  // Salt length explicit
+            }),
+            FieldWithNumber(3).IsString(absl::StrCat(zero, values.n)),
+            FieldWithNumber(4).IsString(absl::StrCat(zero, values.e))}),
+       FieldWithNumber(3).IsString(absl::StrCat(zero, values.d)),
+       FieldWithNumber(4).IsString(absl::StrCat(zero, values.p)),
+       FieldWithNumber(5).IsString(absl::StrCat(zero, values.q)),
+       FieldWithNumber(6).IsString(absl::StrCat(zero, values.dp)),
+       FieldWithNumber(7).IsString(absl::StrCat(zero, values.dq)),
+       FieldWithNumber(8).IsString(absl::StrCat(zero, values.q_inv))},
+      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 4455);
+
+  return KeyAndSerialization(
+      "PrivateKeyTinkNonCanonical",
+      std::make_shared<RsaSsaPkcs1PrivateKey>(*private_key), serialization);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SerializationTest, SerializationTest,
+    testing::Values(PublicKeyAndSerializationTink(),
+                    PublicKeyAndSerializationRaw(),
+                    PrivateKeyAndSerializationRaw(),
+                    PrivateKeyAndSerializationTink()),
+    [](testing::TestParamInfo<class KeyAndSerialization> info) {
+      return info.param.test_name;
+    });
+
+INSTANTIATE_TEST_SUITE_P(
+    ParseTest, ParseTest,
+    testing::Values(PublicKeyAndSerializationTink(),
+                    PublicKeyAndSerializationRaw(),
+                    PrivateKeyAndSerializationRaw(),
+                    PrivateKeyAndSerializationTink(),
+                    PrivateKeyAndSerializationNonCanonical(),
+                    PrivateKeyAndSerializationNonCanonical2()),
+    [](testing::TestParamInfo<class KeyAndSerialization> info) {
+      return info.param.test_name;
+    });
 
 }  // namespace
 }  // namespace tink

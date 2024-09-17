@@ -16,6 +16,8 @@
 
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 
+#include <utility>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
@@ -75,6 +77,7 @@ TEST(XChaCha20Poly1305ParametersTest, CopyConstructor) {
   ASSERT_THAT(parameters, IsOk());
 
   XChaCha20Poly1305Parameters copy(*parameters);
+
   EXPECT_THAT(copy.GetVariant(),
               Eq(XChaCha20Poly1305Parameters::Variant::kTink));
   EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
@@ -86,10 +89,47 @@ TEST(XChaCha20Poly1305ParametersTest, CopyAssignment) {
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  XChaCha20Poly1305Parameters copy = *parameters;
-  EXPECT_THAT(copy.GetVariant(),
+  util::StatusOr<XChaCha20Poly1305Parameters> copy =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->GetVariant(),
               Eq(XChaCha20Poly1305Parameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  EXPECT_THAT(copy->HasIdRequirement(), IsTrue());
+}
+
+TEST(XChaCha20Poly1305ParametersTest, MoveConstructor) {
+  util::StatusOr<XChaCha20Poly1305Parameters> parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  XChaCha20Poly1305Parameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.GetVariant(),
+              Eq(XChaCha20Poly1305Parameters::Variant::kTink));
+  EXPECT_THAT(move.HasIdRequirement(), IsTrue());
+}
+
+TEST(XChaCha20Poly1305ParametersTest, MoveAssignment) {
+  util::StatusOr<XChaCha20Poly1305Parameters> parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<XChaCha20Poly1305Parameters> move =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->GetVariant(),
+              Eq(XChaCha20Poly1305Parameters::Variant::kTink));
+  EXPECT_THAT(move->HasIdRequirement(), IsTrue());
 }
 
 TEST_P(XChaCha20Poly1305ParametersTest, ParametersEquals) {

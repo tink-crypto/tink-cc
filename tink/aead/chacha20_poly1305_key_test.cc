@@ -17,6 +17,7 @@
 #include "tink/aead/chacha20_poly1305_key.h"
 
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -187,6 +188,84 @@ TEST(ChaCha20Poly1305KeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(ChaCha20Poly1305KeyTest, CopyConstructor) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kTink, secret,
+      /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ChaCha20Poly1305Key copy(*key);
+
+  EXPECT_THAT(copy.GetParameters().GetVariant(),
+              Eq(ChaCha20Poly1305Parameters::Variant::kTink));
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
+}
+
+TEST(ChaCha20Poly1305KeyTest, CopyAssignment) {
+  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kTink, secret1,
+      /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<ChaCha20Poly1305Key> copy = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret2,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *key;
+
+  EXPECT_THAT(copy->GetParameters().GetVariant(),
+              Eq(ChaCha20Poly1305Parameters::Variant::kTink));
+  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
+  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(ChaCha20Poly1305KeyTest, MoveConstructor) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kTink, secret,
+      /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ChaCha20Poly1305Key move = std::move(*key);
+
+  EXPECT_THAT(move.GetParameters().GetVariant(),
+              Eq(ChaCha20Poly1305Parameters::Variant::kTink));
+  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
+}
+
+TEST(ChaCha20Poly1305KeyTest, MoveAssignment) {
+  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kTink, secret1,
+      /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<ChaCha20Poly1305Key> move = ChaCha20Poly1305Key::Create(
+      ChaCha20Poly1305Parameters::Variant::kNoPrefix, secret2,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*key);
+
+  EXPECT_THAT(move->GetParameters().GetVariant(),
+              Eq(ChaCha20Poly1305Parameters::Variant::kTink));
+  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
+  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
 }
 
 }  // namespace

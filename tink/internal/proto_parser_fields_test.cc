@@ -80,10 +80,10 @@ TEST(ClearStringLikeValue, SecretData) {
   EXPECT_THAT(s, IsEmpty());
 }
 
-TEST(ClearStringLikeValue, BigInteger) {
-  BigInteger b = BigInteger("hi");
+TEST(ClearStringLikeValue, StringView) {
+  absl::string_view b = absl::string_view("hi");
   ClearStringLikeValue(b);
-  EXPECT_THAT(b.GetValue(), Eq(""));
+  EXPECT_THAT(b, Eq(""));
 }
 
 TEST(CopyIntoStringLikeValue, String) {
@@ -102,9 +102,9 @@ TEST(CopyIntoStringLikeValue, SecretData) {
 
 TEST(CopyIntoStringLikeValue, BigInteger) {
   std::string s = "hi";
-  BigInteger b;
-  CopyIntoStringLikeValue(s, b);
-  EXPECT_THAT(b.GetValue(), Eq(s));
+  absl::string_view dest;
+  CopyIntoStringLikeValue(s, dest);
+  EXPECT_THAT(dest, Eq(s));
 }
 
 TEST(SizeOfStringLikeValue, String) {
@@ -118,7 +118,7 @@ TEST(SizeOfStringLikeValue, SecretData) {
 }
 
 TEST(SizeOfStringLikeValue, BigInteger) {
-  BigInteger b = BigInteger("1234567");
+  absl::string_view b = absl::string_view("1234567");
   EXPECT_THAT(SizeOfStringLikeValue(b), Eq(7));
 }
 
@@ -140,7 +140,7 @@ TEST(SerializeStringLikeValue, SecretData) {
 }
 
 TEST(SerializeStringLikeValue, BigInteger) {
-  BigInteger s = BigInteger("1234567");
+  absl::string_view s = "1234567";
   std::string t;
   t.resize(100);
   SerializeStringLikeValue(s, absl::MakeSpan(t));

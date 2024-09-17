@@ -882,44 +882,44 @@ TEST(ProtoParserTest, SerializeEmpty) {
 // Various String field variants ===============================================
 
 struct VariousFieldStruct {
-  BigInteger big_integer_member;
+  absl::string_view string_view_member;
 };
 
-TEST(ProtoParserTest, SerializeBigInteger) {
+TEST(ProtoParserTest, SerializeStringView) {
   VariousFieldStruct s;
-  s.big_integer_member = BigInteger("data interpreted as bigint");
+  s.string_view_member = "data which is copied";
   ProtoParser<VariousFieldStruct> parser =
       ProtoParserBuilder<VariousFieldStruct>()
-          .AddBytesBigIntegerField(1, &VariousFieldStruct::big_integer_member)
+          .AddBytesStringViewField(1, &VariousFieldStruct::string_view_member)
           .BuildOrDie();
   absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
   ASSERT_THAT(serialized, IsOk());
   EXPECT_THAT(
       HexEncode(*serialized),
-      Eq(absl::StrCat("0a1a", HexEncode("data interpreted as bigint"))));
+      Eq(absl::StrCat("0a14", HexEncode("data which is copied"))));
 }
 
-TEST(ProtoParserTest, ParseBigInteger) {
+TEST(ProtoParserTest, ParseStringView) {
   std::string message =
-      absl::StrCat(HexDecodeOrDie("0a1a"), "data interpreted as bigint");
+      absl::StrCat(HexDecodeOrDie("0a18"), "data which is not copied");
   ProtoParser<VariousFieldStruct> parser =
       ProtoParserBuilder<VariousFieldStruct>()
-          .AddBytesBigIntegerField(1, &VariousFieldStruct::big_integer_member)
+          .AddBytesStringViewField(1, &VariousFieldStruct::string_view_member)
           .BuildOrDie();
   absl::StatusOr<VariousFieldStruct> parsed = parser.Parse(message);
   ASSERT_THAT(parsed.status(), IsOk());
-  EXPECT_THAT(parsed->big_integer_member,
-              Eq(BigInteger("data interpreted as bigint")));
+  EXPECT_THAT(parsed->string_view_member, Eq("data which is not copied"));
+  EXPECT_THAT(parsed->string_view_member.data(), Eq(&message[2]));
 }
 
-TEST(ProtoParserTest, ParseEmptyBigInteger) {
+TEST(ProtoParserTest, ParseEmptyStringView) {
   ProtoParser<VariousFieldStruct> parser =
       ProtoParserBuilder<VariousFieldStruct>()
-          .AddBytesBigIntegerField(1, &VariousFieldStruct::big_integer_member)
+          .AddBytesStringViewField(1, &VariousFieldStruct::string_view_member)
           .BuildOrDie();
   absl::StatusOr<VariousFieldStruct> parsed = parser.Parse("");
   ASSERT_THAT(parsed.status(), IsOk());
-  EXPECT_THAT(parsed->big_integer_member, Eq(BigInteger()));
+  EXPECT_THAT(parsed->string_view_member, IsEmpty());
 }
 
 // Varint Parsing special cases ================================================

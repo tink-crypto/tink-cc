@@ -159,10 +159,13 @@ class ProtoParserBuilder {
             tag, value, options));
     return *this;
   }
-  ProtoParserBuilder& AddBytesBigIntegerField(
-      int tag, BigInteger Struct::*value) {
+  // Adds a Bytes field which maps to a string view. Note: when parsing into a
+  // string_view field, no copy is made. Instead, the resulting string_view
+  // field will point into the original string/SecretData.
+  ProtoParserBuilder& AddBytesStringViewField(
+      int tag, absl::string_view Struct::*value) {
     fields_.push_back(
-        absl::make_unique<proto_parsing::BytesField<Struct, BigInteger>>(
+        absl::make_unique<proto_parsing::BytesField<Struct, absl::string_view>>(
             tag, value));
     return *this;
   }

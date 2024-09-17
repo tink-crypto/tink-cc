@@ -177,7 +177,7 @@ class MockAeadPrimitiveWrapper : public PrimitiveWrapper<Aead, Aead> {
  public:
   MOCK_METHOD(util::StatusOr<std::unique_ptr<Aead>>, Wrap,
               (std::unique_ptr<PrimitiveSet<Aead>> primitive_set),
-              (const override));
+              (const, override));
 };
 
 // Generates a keyset for testing.

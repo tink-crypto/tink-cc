@@ -20,6 +20,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/crc/crc32c.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -41,6 +43,23 @@ TEST(ParsingState, Peek) {
   EXPECT_THAT(state.PeekByte(), Eq('d'));
 }
 
+TEST(ParsingState, Advance) {
+  std::string data = "data";
+  ParsingState state = ParsingState(data);
+  state.Advance(2);
+  EXPECT_THAT(state.PeekByte(), Eq('t'));
+  EXPECT_THAT(state.RemainingData(), Eq("ta"));
+}
+
+TEST(ParsingState, AdvanceGetCrc) {
+  std::string data = "data";
+  ParsingState state = ParsingState(data);
+  util::SecretValue<absl::crc32c_t> crc = state.AdvanceAndGetCrc(2);
+  EXPECT_THAT(state.PeekByte(), Eq('t'));
+  EXPECT_THAT(state.RemainingData(), Eq("ta"));
+  EXPECT_THAT(crc.value(), Eq(absl::ComputeCrc32c("da")));
+}
+
 TEST(ParsingState, RemovePrefix) {
   std::string data = "data";
   ParsingState state = ParsingState(data);
@@ -57,6 +76,37 @@ TEST(ParsingState, ParsingDone) {
   EXPECT_THAT(state.ParsingDone(), Eq(false));
   state.Advance(2);
   EXPECT_THAT(state.ParsingDone(), Eq(true));
+}
+
+TEST(ParsingStateWithCrc, ConstructAndRemainingData) {
+  std::string data = "data";
+  absl::crc32c_t crc{};
+  ParsingState state = ParsingState(data, &crc);
+  EXPECT_THAT(state.RemainingData(), Eq(data));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c("")));
+}
+
+TEST(ParsingStateWithCrc, Advance) {
+  std::string data = "data";
+  absl::crc32c_t crc{};
+  ParsingState state = ParsingState(data, &crc);
+  state.Advance(2);
+  EXPECT_THAT(state.PeekByte(), Eq('t'));
+  EXPECT_THAT(state.RemainingData(), Eq("ta"));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c("da")));
+}
+
+TEST(ParsingStateWithCrc, AdvanceGetCrc) {
+  std::string data = "much data";
+  absl::crc32c_t crc{};
+  ParsingState state = ParsingState(data, &crc);
+  state.Advance(5);  // Skip "much ".
+  util::SecretValue<absl::crc32c_t> returned_crc = state.AdvanceAndGetCrc(2);
+  EXPECT_THAT(state.PeekByte(), Eq('t'));
+  EXPECT_THAT(state.RemainingData(), Eq("ta"));
+  EXPECT_THAT(returned_crc.value(), Eq(absl::ComputeCrc32c("da")));
+  state.Advance(2);  // Skip "ta".
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(data)));
 }
 
 }  // namespace

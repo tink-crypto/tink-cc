@@ -1665,9 +1665,16 @@ cc_library(
 
 cc_library(
     name = "proto_parser_state",
+    srcs = ["proto_parser_state.cc"],
     hdrs = ["proto_parser_state.h"],
     include_prefix = "tink/internal",
-    deps = ["@com_google_absl//absl/strings:string_view"],
+    deps = [
+        ":call_with_core_dump_protection",
+        "//tink/util:secret_data",
+        "@com_google_absl//absl/base:nullability",
+        "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/strings:string_view",
+    ],
 )
 
 cc_test(
@@ -1675,6 +1682,8 @@ cc_test(
     srcs = ["proto_parser_state_test.cc"],
     deps = [
         ":proto_parser_state",
+        "//tink/util:secret_data",
+        "@com_google_absl//absl/crc:crc32c",
         "@com_google_googletest//:gtest_main",
     ],
 )

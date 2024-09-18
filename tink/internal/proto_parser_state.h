@@ -20,21 +20,36 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "absl/base/nullability.h"
+#include "absl/crc/crc32c.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-// Maintains the current state of parsing (except for the data which can already
+// Maintains the current state of parsing (except for the data that can already
 // be written into the resulting struct).
 //
-// Currently, this means we just maintain what data still needs to be parsed.
+// It maintains the data being parsed plus optionally a CRC32C of all the data
+// that was parsed.
 class ParsingState final {
  public:
   explicit ParsingState(absl::string_view serialization_to_parse)
-      : remaining_view_to_parse_(serialization_to_parse) {}
+      : remaining_view_to_parse_(serialization_to_parse),
+        crc_to_update_(nullptr) {}
+
+  // Creates a new parsing state which maintains the crc of the parsed data.
+  // Whenever Advance or AdvanceGetCrc is called, `crc_to_update` is
+  // updated with it. This is done consistently with the value of AdvanceGetCrc.
+  // All the CRC calculations are done within a CallWithCoreDumpProtection.
+  explicit ParsingState(absl::string_view serialization_to_parse,
+                        absl::Nonnull<absl::crc32c_t*> crc_to_update)
+      : remaining_view_to_parse_(serialization_to_parse),
+        crc_to_update_(crc_to_update) {}
 
   // Returns true if there is no more data to be parsed.
   bool ParsingDone() const { return remaining_view_to_parse_.empty(); }
@@ -42,8 +57,23 @@ class ParsingState final {
   // Returns the remaining data to be parsed.
   absl::string_view RemainingData() const { return remaining_view_to_parse_; }
 
-  // Removes the next s bytes from the data to be parsed.
-  void Advance(size_t s) { remaining_view_to_parse_.remove_prefix(s); }
+  // Removes the next `length` bytes from the data to be parsed. Updates the
+  // internal CRC if any.
+  void Advance(size_t length) {
+    if (crc_to_update_ != nullptr) {
+      CallWithCoreDumpProtection([&]() {
+        *crc_to_update_ = absl::ConcatCrc32c(
+            *crc_to_update_,
+            absl::ComputeCrc32c(remaining_view_to_parse_.substr(0, length)),
+            length);
+      });
+    }
+    remaining_view_to_parse_.remove_prefix(length);
+  }
+
+  // Removes the next `length` bytes from the data to be parsed and returns
+  // their CRC. Updates the internal CRC, if any.
+  util::SecretValue<absl::crc32c_t> AdvanceAndGetCrc(size_t length);
 
   // Returns the next byte without removing it from the data to be parsed.
   // Must not be called if |ParsingDone|.
@@ -53,6 +83,7 @@ class ParsingState final {
 
  private:
   absl::string_view remaining_view_to_parse_;
+  absl::Nullable<absl::crc32c_t*> crc_to_update_;
 };
 
 }  // namespace proto_parsing

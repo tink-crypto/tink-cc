@@ -1601,9 +1601,14 @@ tink_cc_library(
 tink_cc_library(
   NAME proto_parser_state
   SRCS
+    proto_parser_state.cc
     proto_parser_state.h
   DEPS
+    tink::internal::call_with_core_dump_protection
+    absl::nullability
+    absl::crc32c
     absl::string_view
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1613,4 +1618,6 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parser_state
     gmock
+    absl::crc32c
+    tink::util::secret_data
 )

@@ -85,8 +85,8 @@ TEST(MessageField, ConsumeIntoMemberSuccessCases) {
       absl::StrCat(/* 4 bytes */ HexDecodeOrDie("04"),
                    /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
                    /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"));
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(0x23));
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0x7a));
 }
@@ -99,10 +99,10 @@ TEST(MessageField, ConsumeIntoMemberEmptyString) {
   s.inner_member.uint32_member_2 = 0;
 
   std::string bytes = HexDecodeOrDie("00");
-  absl::string_view bytes_view = bytes;
+  ParsingState parsing_state = ParsingState(bytes);
   // This does not clear the fields because if there are multiple blocks
   // for the same field we merge them.
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(0));
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0));
 }
@@ -117,10 +117,10 @@ TEST(MessageField, ConsumeIntoMemberDoesNotClear) {
   std::string bytes =
       absl::StrCat(/* 4 bytes */ HexDecodeOrDie("02"),
                    /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"));
-  absl::string_view bytes_view = bytes;
+  ParsingState parsing_state = ParsingState(bytes);
   // This does not clear uint32_member_1 because if there are multiple blocks
   // for the same field we merge them.
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(10));
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0x7a));
 }
@@ -131,8 +131,8 @@ TEST(MessageField, EmptyWithoutVarint) {
   OuterStruct s;
 
   std::string bytes = "";
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
 TEST(MessageField, InvalidVarint) {
@@ -141,8 +141,8 @@ TEST(MessageField, InvalidVarint) {
   OuterStruct s;
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
 TEST(MessageField, SerializeEmpty) {

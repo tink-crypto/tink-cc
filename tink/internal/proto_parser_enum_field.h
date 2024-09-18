@@ -31,6 +31,7 @@
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
 namespace crypto {
@@ -64,7 +65,7 @@ class EnumField : public Field<Struct> {
     s.*value_ = {};
   }
 
-  absl::Status ConsumeIntoMember(absl::string_view& serialized,
+  absl::Status ConsumeIntoMember(ParsingState& serialized,
                                  Struct& s) const override {
     absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
     if (!result.ok()) {

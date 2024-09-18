@@ -29,6 +29,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -89,11 +90,11 @@ TEST(ProtoParserTest, ConsumeVarintIntoUint64DirectTest) {
   for (const VarintCase& v : VarintFieldParseCases()) {
     SCOPED_TRACE(v.value);
     std::string bytes = HexDecodeOrDie(v.hex_encoded_bytes);
-    absl::string_view bytes_view = bytes;
-    absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(bytes_view);
+    ParsingState parsing_state = ParsingState(bytes);
+    absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(parsing_state);
     ASSERT_THAT(result, IsOk());
     EXPECT_THAT(*result, Eq(v.value));
-    EXPECT_THAT(bytes_view, IsEmpty());
+    EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
   }
 }
 
@@ -101,11 +102,11 @@ TEST(ProtoParserTest, ConsumeVarintIntoUint32DirectTest) {
   for (const VarintCase& v : VarintFieldParseCases()) {
     SCOPED_TRACE(v.value);
     std::string bytes = HexDecodeOrDie(v.hex_encoded_bytes);
-    absl::string_view bytes_view = bytes;
-    absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(bytes_view);
+    ParsingState parsing_state = ParsingState(bytes);
+    absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(parsing_state);
     ASSERT_THAT(result, IsOk());
     EXPECT_THAT(*result, Eq(static_cast<uint32_t>(v.value)));
-    EXPECT_THAT(bytes_view, IsEmpty());
+    EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
   }
 }
 
@@ -159,8 +160,8 @@ TEST(ProtoParserTest, VarintParsingFailure) {
   for (absl::string_view hex_encoded_bytes : kHexEncodedVarintFailureCases) {
     SCOPED_TRACE(hex_encoded_bytes);
     std::string bytes = HexDecodeOrDie(hex_encoded_bytes);
-    absl::string_view bytes_view = bytes;
-    EXPECT_THAT(ConsumeVarintIntoUint64(bytes_view), Not(IsOk()));
+    ParsingState parsing_state = ParsingState(bytes);
+    EXPECT_THAT(ConsumeVarintIntoUint64(parsing_state), Not(IsOk()));
   }
 }
 
@@ -209,13 +210,13 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndFieldNumber) {
        CanonicalAndParseableWireTypeAndTagCases()) {
     SCOPED_TRACE(v.hex_encoded_bytes);
     std::string bytes = HexDecodeOrDie(v.hex_encoded_bytes);
-    absl::string_view bytes_view = bytes;
+    ParsingState parsing_state = ParsingState(bytes);
     absl::StatusOr<std::pair<WireType, int>> result =
-        ConsumeIntoWireTypeAndFieldNumber(bytes_view);
+        ConsumeIntoWireTypeAndFieldNumber(parsing_state);
     ASSERT_THAT(result, IsOk());
     EXPECT_THAT(result->first, Eq(v.wiretype));
     EXPECT_THAT(result->second, Eq(v.field_number));
-    EXPECT_THAT(bytes_view, IsEmpty());
+    EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
   }
 }
 
@@ -224,8 +225,8 @@ TEST(ProtoParserTest, ConsumeIntoWireTypeAndFieldNumberFailures) {
        std::vector<absl::string_view>({"00", "f8ffffffff7f"})) {
     SCOPED_TRACE(v);
     std::string bytes = HexDecodeOrDie(v);
-    absl::string_view bytes_view = bytes;
-    EXPECT_THAT(ConsumeIntoWireTypeAndFieldNumber(bytes_view), Not(IsOk()));
+    ParsingState parsing_state = ParsingState(bytes);
+    EXPECT_THAT(ConsumeIntoWireTypeAndFieldNumber(parsing_state), Not(IsOk()));
   }
 }
 
@@ -252,44 +253,44 @@ TEST(ProtoParserTest, SerializeIntoWireTypeAndTagSuccess) {
 TEST(ConsumeBytesReturnStringView, ValidInput) {
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
-  absl::string_view bytes_view = bytes;
+  ParsingState parsing_state = ParsingState(bytes);
   absl::StatusOr<absl::string_view> result =
-      ConsumeBytesReturnStringView(bytes_view);
+      ConsumeBytesReturnStringView(parsing_state);
   ASSERT_THAT(result, IsOk());
   EXPECT_THAT(*result, Eq("1234567890"));
-  EXPECT_THAT(bytes_view, Eq("XYZ"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("XYZ"));
 }
 
 TEST(ConsumeBytesReturnStringView, EmptyString) {
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
-  absl::string_view bytes_view = bytes;
+  ParsingState parsing_state = ParsingState(bytes);
   absl::StatusOr<absl::string_view> result =
-      ConsumeBytesReturnStringView(bytes_view);
+      ConsumeBytesReturnStringView(parsing_state);
   ASSERT_THAT(result, IsOk());
   EXPECT_THAT(*result, Eq(""));
-  EXPECT_THAT(bytes_view, Eq("abcde"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("abcde"));
 }
 
 TEST(ConsumeBytesReturnStringView, EmptyWithoutVarint) {
-  absl::string_view bytes_view = "";
-  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState("");
+  ASSERT_THAT(ConsumeBytesReturnStringView(parsing_state), Not(IsOk()));
 }
 
 TEST(ConsumeBytesReturnStringView, PaddedVarint) {
   std::string bytes =
       absl::StrCat(/* 0 bytes */ HexDecodeOrDie("8000"), "abcde");
-  absl::string_view bytes_view = bytes;
+  ParsingState parsing_state = ParsingState(bytes);
   absl::StatusOr<absl::string_view> result =
-      ConsumeBytesReturnStringView(bytes_view);
+      ConsumeBytesReturnStringView(parsing_state);
   ASSERT_THAT(result, IsOk());
-  ASSERT_THAT(bytes_view, Eq("abcde"));
+  ASSERT_THAT(parsing_state.RemainingData(), Eq("abcde"));
 }
 
 TEST(ConsumeBytesReturnStringView, VeryPaddedVarint) {
   std::string bytes =
       absl::StrCat(/* 0 bytes */ HexDecodeOrDie("808080808000"), "abcde");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view).status(),
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(ConsumeBytesReturnStringView(parsing_state).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("more than 5 bytes")));
 }
@@ -297,89 +298,90 @@ TEST(ConsumeBytesReturnStringView, VeryPaddedVarint) {
 TEST(ConsumeBytesReturnStringView, InvalidVarint) {
   std::string bytes =
       absl::StrCat(/* 0 bytes */ HexDecodeOrDie("8080808010"), "abcde");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(ConsumeBytesReturnStringView(bytes_view).status(),
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(ConsumeBytesReturnStringView(parsing_state).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("declared to be longer than 2^32-1")));
 }
 
 TEST(ConsumeFixed32, Consumes4Bytes) {
   std::string bytes = "1234567";
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(ConsumeFixed32(bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq("567"));
-  ASSERT_THAT(ConsumeFixed32(bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(ConsumeFixed32(parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("567"));
+  ASSERT_THAT(ConsumeFixed32(parsing_state), Not(IsOk()));
 }
 
 TEST(ConsumeFixed64, Consumes8Bytes) {
   std::string bytes = "0abc4abc8abc2ab";
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(ConsumeFixed64(bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq("8abc2ab"));
-  ASSERT_THAT(ConsumeFixed64(bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(ConsumeFixed64(parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("8abc2ab"));
+  ASSERT_THAT(ConsumeFixed64(parsing_state), Not(IsOk()));
 }
 
 TEST(SkipField, Fixed32) {
   std::string bytes = "1234567";
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kFixed32, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq("567"));
-  ASSERT_THAT(SkipField(WireType::kFixed32, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kFixed32, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("567"));
+  ASSERT_THAT(SkipField(WireType::kFixed32, parsing_state), Not(IsOk()));
 }
 
 TEST(SkipField, Fixed64) {
   std::string bytes = "0abc4abc8abc2ab";
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kFixed64, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq("8abc2ab"));
-  ASSERT_THAT(SkipField(WireType::kFixed64, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kFixed64, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("8abc2ab"));
+  ASSERT_THAT(SkipField(WireType::kFixed64, parsing_state), Not(IsOk()));
 }
 
 TEST(SkipField, Varint) {
   std::string bytes = HexDecodeOrDie("08");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq(""));
-  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kVarint, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
+  ASSERT_THAT(SkipField(WireType::kVarint, parsing_state), Not(IsOk()));
 }
 
 TEST(SkipField, VarintRemainder) {
   std::string bytes = HexDecodeOrDie("8808aa");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), IsOk());
-  EXPECT_THAT(HexEncode(bytes_view), Eq("aa"));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kVarint, parsing_state), IsOk());
+  EXPECT_THAT(HexEncode(parsing_state.RemainingData()), Eq("aa"));
 }
 
 TEST(SkipField, VarintFail) {
   std::string bytes = HexDecodeOrDie("888888");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kVarint, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kVarint, parsing_state), Not(IsOk()));
 }
 
 TEST(SkipField, LengthEncoded) {
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kLengthDelimited, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq("XYZ"));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kLengthDelimited, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("XYZ"));
 }
 
 TEST(SkipField, LengthEncodedTooShort) {
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "123456789");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kLengthDelimited, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kLengthDelimited, parsing_state),
+              Not(IsOk()));
 }
 
 TEST(SkipField, StartGroupFails) {
   std::string bytes = "some bytes";
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kStartGroup, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kStartGroup, parsing_state), Not(IsOk()));
 }
 TEST(SkipField, EndGroupFalis) {
   std::string bytes = "some bytes";
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipField(WireType::kEndGroup, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipField(WireType::kEndGroup, parsing_state), Not(IsOk()));
 }
 
 /* 3b: start group (field #7): 3 + 7 * 8 = 59 = 0x3b */
@@ -388,79 +390,79 @@ TEST(SkipField, EndGroupFalis) {
 /* 44:   end group (field #8): 4 + 8 * 8 = 60 = 0x44 */
 TEST(SkipGroup, BasicWorks) {
   std::string bytes = HexDecodeOrDie("3c");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq(""));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
 }
 
 TEST(SkipGroup, LeftOversAreKept) {
   std::string bytes = absl::StrCat(HexDecodeOrDie("3c"), "leftover");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq("leftover"));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("leftover"));
 }
 
 TEST(SkipGroup, WrongClosingTagFails) {
   std::string bytes = HexDecodeOrDie("44");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), Not(IsOk()));
 }
 
 TEST(SkipGroup, NestedWorks) {
   std::string bytes = HexDecodeOrDie("433b3c443c");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq(""));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
 }
 
 TEST(SkipGroup, BadNestingFails) {
   std::string bytes = HexDecodeOrDie("433c44");
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), Not(IsOk()));
 }
 
 TEST(SkipGroup, NestedStringFieldWorks) {
   std::string bytes = HexDecodeOrDie(absl::StrCat(
       /* kLengthDelimited, tag#1 = */ "0a",
       /* 10 bytes length encoded */ "0a", "12345678901234567890", "3c"));
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq(""));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
 }
 
 TEST(SkipGroup, NestedStringFieldTooShort) {
   std::string bytes = HexDecodeOrDie(absl::StrCat(
       /* kLengthDelimited, tag#1 = */ "0a",
       /* 10 bytes length encoded */ "0a", "1234567812345678", "3c"));
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), Not(IsOk()));
 }
 
 TEST(SkipGroup, NestedVarintFieldWorks) {
   std::string bytes = HexDecodeOrDie(absl::StrCat(
       /* kVarint, tag#1 = */ "08",
       /* Varint value 1 */ "08", "3c"));
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq(""));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
 }
 
 TEST(SkipGroup, NestedFixed64FieldWorks) {
   std::string bytes = HexDecodeOrDie(absl::StrCat(
       /* kFixed64, tag#1 = */ "09",
       /* Varint value 1 */ "0011223344556677", "3c"));
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq(""));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
 }
 
 TEST(SkipGroup, NestedFixed32FieldWorks) {
   std::string bytes = HexDecodeOrDie(absl::StrCat(
       /* kFixed32, tag#1 = */ "0d",
       /* Varint value 1 */ "00112233", "3c"));
-  absl::string_view bytes_view = bytes;
-  ASSERT_THAT(SkipGroup(7, bytes_view), IsOk());
-  EXPECT_THAT(bytes_view, Eq(""));
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(SkipGroup(7, parsing_state), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
 }
 
 }  // namespace

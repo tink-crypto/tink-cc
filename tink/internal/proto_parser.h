@@ -39,6 +39,7 @@
 #include "tink/internal/proto_parser_message_field.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_presence_fields.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/secret_key_access_token.h"
@@ -201,7 +202,10 @@ absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
     absl::string_view input) const {
   Struct result;
   low_level_parser_.ClearAllFields(result);
-  absl::Status status = low_level_parser_.ConsumeIntoAllFields(input, result);
+  proto_parsing::ParsingState parsing_state =
+      proto_parsing::ParsingState(input);
+  absl::Status status =
+      low_level_parser_.ConsumeIntoAllFields(parsing_state, result);
   if (!status.ok()) {
     return status;
   }

@@ -29,6 +29,7 @@
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_parser_options.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -184,10 +185,10 @@ TEST(Uint32Field, ConsumeIntoMemberSuccessCases) {
        Uint32TestCasesParseOnly()) {
     SCOPED_TRACE(test_case.first);
     std::string serialized = HexDecodeOrDie(test_case.first);
-    absl::string_view serialized_view = serialized;
-    EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), IsOk());
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
     EXPECT_THAT(s.uint32_member_1, Eq(test_case.second));
-    EXPECT_THAT(serialized_view, IsEmpty());
+    EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
   }
 }
 
@@ -198,10 +199,10 @@ TEST(Uint32Field, ConsumeIntoMemberLeavesRemainingData) {
   s.uint32_member_1 = 999;
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
-  absl::string_view serialized_view = serialized;
-  EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.uint32_member_1, Eq(128));
-  EXPECT_THAT(serialized_view, Eq("remaining data"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
 }
 
 TEST(Uint32Field, ConsumeIntoMemberFailureCases) {
@@ -212,8 +213,8 @@ TEST(Uint32Field, ConsumeIntoMemberFailureCases) {
   for (std::string test_case : {"", "faab"}) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
-    absl::string_view serialized_view = serialized;
-    EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), Not(IsOk()));
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
   }
 }
 
@@ -317,10 +318,10 @@ TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
 
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.string_member_1, Eq("1234567890"));
-  EXPECT_THAT(bytes_view, Eq("XYZ"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("XYZ"));
 }
 
 TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
@@ -330,10 +331,10 @@ TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
   s.string_member_1 = "hello";
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.string_member_1, Eq(""));
-  EXPECT_THAT(bytes_view, Eq("abcde"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("abcde"));
 }
 
 TEST(StringBytesField, EmptyWithoutVarint) {
@@ -342,8 +343,8 @@ TEST(StringBytesField, EmptyWithoutVarint) {
   ParsedStruct s;
 
   std::string bytes = "";
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
 TEST(StringBytesField, InvalidVarint) {
@@ -352,8 +353,8 @@ TEST(StringBytesField, InvalidVarint) {
   ParsedStruct s;
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
 TEST(StringBytesField, SerializeEmpty) {
@@ -445,10 +446,10 @@ TEST(SecretDataBytesField, ConsumeIntoMemberSuccessCases) {
 
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(SecretDataAsStringView(s.secret_data_member_1), Eq("1234567890"));
-  EXPECT_THAT(bytes_view, Eq("XYZ"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("XYZ"));
 }
 
 TEST(SecretDataBytesField, ConsumeIntoMemberEmptyString) {
@@ -458,10 +459,10 @@ TEST(SecretDataBytesField, ConsumeIntoMemberEmptyString) {
   s.secret_data_member_1 = SecretDataFromStringView("hello");
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(SecretDataAsStringView(s.secret_data_member_1), Eq(""));
-  EXPECT_THAT(bytes_view, Eq("abcde"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("abcde"));
 }
 
 TEST(SecretDataBytesField, EmptyWithoutVarint) {
@@ -470,8 +471,8 @@ TEST(SecretDataBytesField, EmptyWithoutVarint) {
   ParsedStruct s;
 
   std::string bytes = "";
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
 TEST(SecretDataBytesField, InvalidVarint) {
@@ -480,8 +481,8 @@ TEST(SecretDataBytesField, InvalidVarint) {
   ParsedStruct s;
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
-  absl::string_view bytes_view = bytes;
-  EXPECT_THAT(field.ConsumeIntoMember(bytes_view, s), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
 TEST(SecretDataBytesField, SerializeEmpty) {

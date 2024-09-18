@@ -1343,6 +1343,7 @@ tink_cc_library(
     tink::internal::proto_parser_message_field
     tink::internal::proto_parser_options
     tink::internal::proto_parser_presence_fields
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::proto_parsing_low_level_parser
     absl::btree
@@ -1391,6 +1392,7 @@ tink_cc_library(
     proto_parsing_helpers.cc
     proto_parsing_helpers.h
   DEPS
+    tink::internal::proto_parser_state
     absl::bits
     absl::status
     absl::statusor
@@ -1404,6 +1406,7 @@ tink_cc_test(
   SRCS
     proto_parsing_helpers_test.cc
   DEPS
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     gmock
     absl::status
@@ -1422,6 +1425,7 @@ tink_cc_library(
     proto_parser_fields.h
   DEPS
     tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::safe_stringops
     absl::status
@@ -1442,13 +1446,13 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
     gmock
     absl::strings
     absl::string_view
     absl::span
     tink::core::big_integer
     tink::core::insecure_secret_key_access
-    tink::core::restricted_big_integer
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
@@ -1460,6 +1464,7 @@ tink_cc_library(
     proto_parsing_low_level_parser.h
   DEPS
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     absl::btree
     absl::status
@@ -1475,6 +1480,7 @@ tink_cc_test(
     proto_parsing_low_level_parser_test.cc
   DEPS
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_low_level_parser
     tink::internal::proto_test_cc_proto
     gmock
@@ -1492,6 +1498,7 @@ tink_cc_library(
     proto_parser_message_field.h
   DEPS
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::proto_parsing_low_level_parser
     absl::btree
@@ -1526,6 +1533,7 @@ tink_cc_library(
   DEPS
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     absl::any_invocable
     absl::check
@@ -1541,6 +1549,8 @@ tink_cc_test(
     proto_parser_enum_field_test.cc
   DEPS
     tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
     gmock
     absl::strings
     absl::string_view
@@ -1555,6 +1565,7 @@ tink_cc_library(
     proto_parser_presence_fields.h
   DEPS
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     absl::status
     absl::statusor
@@ -1570,6 +1581,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_presence_fields
+    tink::internal::proto_parser_state
     gmock
     absl::strings
     absl::string_view
@@ -1584,4 +1596,21 @@ tink_cc_library(
   NAME proto_parser_options
   SRCS
     proto_parser_options.h
+)
+
+tink_cc_library(
+  NAME proto_parser_state
+  SRCS
+    proto_parser_state.h
+  DEPS
+    absl::string_view
+)
+
+tink_cc_test(
+  NAME proto_parser_state_test
+  SRCS
+    proto_parser_state_test.cc
+  DEPS
+    tink::internal::proto_parser_state
+    gmock
 )

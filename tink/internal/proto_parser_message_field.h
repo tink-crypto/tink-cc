@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 namespace crypto {
@@ -57,14 +58,16 @@ class MessageField : public Field<OuterStruct> {
     low_level_parser_.ClearAllFields(s.*value_);
   }
 
-  absl::Status ConsumeIntoMember(absl::string_view& serialized,
+  absl::Status ConsumeIntoMember(ParsingState& serialized,
                                  OuterStruct& s) const override {
     absl::StatusOr<absl::string_view> result =
         ConsumeBytesReturnStringView(serialized);
     if (!result.ok()) {
       return result.status();
     }
-    return low_level_parser_.ConsumeIntoAllFields(*result, s.*value_);
+    ParsingState submessage_parsing_state = ParsingState(*result);
+    return low_level_parser_.ConsumeIntoAllFields(submessage_parsing_state,
+                                                  s.*value_);
   }
 
   bool RequiresSerialization(const OuterStruct& values) const override {

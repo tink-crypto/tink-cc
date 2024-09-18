@@ -28,6 +28,7 @@
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -68,10 +69,10 @@ TEST(Uint32FieldWithPresence, ConsumeIntoMemberSuccessCases) {
   s.uint32_member_1 = absl::nullopt;
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
-  absl::string_view serialized_view = serialized;
-  EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.uint32_member_1, Optional(128));
-  EXPECT_THAT(serialized_view, Eq("remaining data"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
 }
 
 TEST(Uint32FieldWithPresence, ConsumeIntoMemberFailureCases) {
@@ -84,8 +85,8 @@ TEST(Uint32FieldWithPresence, ConsumeIntoMemberFailureCases) {
         /* valid uint_64 encoding: */ "ffffffffffffffffffff01"}) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
-    absl::string_view serialized_view = serialized;
-    EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), Not(IsOk()));
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
   }
 }
 

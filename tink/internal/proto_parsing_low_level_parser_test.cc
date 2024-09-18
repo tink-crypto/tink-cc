@@ -28,6 +28,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_test_proto.pb.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -78,9 +79,9 @@ TEST(LowLevelParserTest, ConsumeIntoFieldsBasic) {
   ParsedStruct s;
   parser.ClearAllFields(s);
   std::string serialized = proto.SerializeAsString();
-  absl::string_view serialized_view = serialized;
-  ASSERT_THAT(parser.ConsumeIntoAllFields(serialized_view, s), IsOk());
-  ASSERT_THAT(serialized_view, IsEmpty());
+  ParsingState parsing_state = ParsingState(serialized);
+  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsOk());
+  ASSERT_THAT(parsing_state.RemainingData(), IsEmpty());
   EXPECT_THAT(s.uint32_member_1, Eq(123));
   EXPECT_THAT(s.string_member_1, Eq("foo"));
 }
@@ -91,9 +92,9 @@ TEST(LowLevelParserTest, ConsumeIntoFieldsWrongWiretypeIgnored) {
   parser.ClearAllFields(s);
   std::string serialized = HexDecodeOrDie(
       absl::StrCat(/*Wiretype: kVarint, Tag 3*/ "18", /* Varint: 1*/ "08"));
-  absl::string_view serialized_view = serialized;
-  ASSERT_THAT(parser.ConsumeIntoAllFields(serialized_view, s), IsOk());
-  ASSERT_THAT(serialized_view, IsEmpty());
+  ParsingState parsing_state = ParsingState(serialized);
+  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsOk());
+  ASSERT_THAT(parsing_state.RemainingData(), IsEmpty());
   EXPECT_THAT(s.string_member_1, Eq(""));
 }
 
@@ -201,9 +202,9 @@ TEST(LowLevelParserTest, SkipUnknownField) {
   std::string serialized =
       absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString(),
                    proto3.SerializeAsString());
-  absl::string_view serialized_view = serialized;
-  ASSERT_THAT(parser.ConsumeIntoAllFields(serialized_view, s), IsOk());
-  ASSERT_THAT(serialized_view, IsEmpty());
+  ParsingState parsing_state = ParsingState(serialized);
+  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsOk());
+  ASSERT_THAT(parsing_state.RemainingData(), IsEmpty());
   EXPECT_THAT(s.uint32_member_1, Eq(123));
   EXPECT_THAT(s.string_member_1, Eq("foo"));
 }

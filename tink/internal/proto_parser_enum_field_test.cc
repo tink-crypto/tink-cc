@@ -26,6 +26,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/internal/proto_parser_options.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -77,10 +79,10 @@ TEST(EnumField, ConsumeIntoMemberSuccessCases) {
   for (std::pair<std::string, uint32_t> test_case : GetUint32TestCases()) {
     SCOPED_TRACE(test_case.first);
     std::string serialized = HexDecodeOrDie(test_case.first);
-    absl::string_view serialized_view = serialized;
-    EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), IsOk());
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
     EXPECT_THAT(s.enum_field, Eq(static_cast<MyEnum>(test_case.second)));
-    EXPECT_THAT(serialized_view, IsEmpty());
+    EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
   }
 }
 
@@ -91,10 +93,10 @@ TEST(EnumField, ConsumeIntoMemberLeavesRemainingData) {
   s.enum_field = static_cast<MyEnum>(999);
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
-  absl::string_view serialized_view = serialized;
-  EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), IsOk());
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
   EXPECT_THAT(s.enum_field, Eq(static_cast<MyEnum>(128)));
-  EXPECT_THAT(serialized_view, Eq("remaining data"));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
 }
 
 TEST(EnumField, ConsumeIntoMemberFailureCases) {
@@ -106,8 +108,8 @@ TEST(EnumField, ConsumeIntoMemberFailureCases) {
        {"", /* 11 bytes, too long */ "ffffffffffffffffffff01"}) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
-    absl::string_view serialized_view = serialized;
-    EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), Not(IsOk()));
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
   }
 }
 
@@ -116,8 +118,8 @@ TEST(EnumField, ConsumeIntoMemberInvalidFails) {
                                          &IsZeroOrOne);
   ExampleStruct s;
   std::string serialized = HexDecodeOrDie("8001");
-  absl::string_view serialized_view = serialized;
-  EXPECT_THAT(field.ConsumeIntoMember(serialized_view, s), Not(IsOk()));
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
 TEST(EnumField, SerializeVarintSuccessCases) {

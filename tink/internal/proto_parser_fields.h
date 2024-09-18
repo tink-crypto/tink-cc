@@ -29,6 +29,7 @@
 #include "absl/types/span.h"
 #include "tink/big_integer.h"
 #include "tink/internal/proto_parser_options.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/util/secret_data.h"
@@ -88,7 +89,7 @@ class Field {
   // type is kLengthDelimited, "serialized" contains only the data of the
   // field. Otherwise, it contains all the data of the remaining serialized
   // message. The processed data needs to be removed.
-  virtual absl::Status ConsumeIntoMember(absl::string_view& serialized,
+  virtual absl::Status ConsumeIntoMember(ParsingState& serialized,
                                          Struct& values) const = 0;
 
   // Returns true if the field needs to be serialized (i.e. is not the default).
@@ -121,7 +122,7 @@ class Uint32Field : public Field<Struct> {
 
   void ClearMember(Struct& s) const override { s.*value_ = 0; }
 
-  absl::Status ConsumeIntoMember(absl::string_view& serialized,
+  absl::Status ConsumeIntoMember(ParsingState& serialized,
                                  Struct& s) const override {
     absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
     if (!result.ok()) {
@@ -170,7 +171,7 @@ class BytesField : public Field<Struct> {
     ClearStringLikeValue(s.*value_);
   }
 
-  absl::Status ConsumeIntoMember(absl::string_view& serialized,
+  absl::Status ConsumeIntoMember(ParsingState& serialized,
                                  Struct& s) const override {
     absl::StatusOr<absl::string_view> result =
         ConsumeBytesReturnStringView(serialized);

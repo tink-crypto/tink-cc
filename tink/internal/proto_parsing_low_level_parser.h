@@ -29,6 +29,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
 namespace crypto {
@@ -62,9 +63,9 @@ class LowLevelParser {
   }
 
   // Parses the serialized message and populates the corresponding fields.
-  absl::Status ConsumeIntoAllFields(absl::string_view& serialized,
+  absl::Status ConsumeIntoAllFields(ParsingState& serialized,
                                     Struct& values) const {
-    while (!serialized.empty()) {
+    while (!serialized.ParsingDone()) {
       absl::StatusOr<std::pair<WireType, int>> wiretype_and_field_number =
           ConsumeIntoWireTypeAndFieldNumber(serialized);
       if (!wiretype_and_field_number.ok()) {

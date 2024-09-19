@@ -96,7 +96,7 @@ class Field {
   virtual bool RequiresSerialization(const Struct& values) const = 0;
   // Serializes the member into out, and removes the part which was written
   // on from out.
-  virtual absl::Status SerializeInto(absl::Span<char>& out,
+  virtual absl::Status SerializeInto(SerializationState& out,
                                      const Struct& values) const = 0;
   // Returns the required size for SerializeInto.
   virtual size_t GetSerializedSize(const Struct& values) const = 0;
@@ -137,7 +137,7 @@ class Uint32Field : public Field<Struct> {
            values.*value_ != 0;
   }
 
-  absl::Status SerializeInto(absl::Span<char>& out,
+  absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     return SerializeVarint(values.*value_, out);
   }
@@ -187,19 +187,20 @@ class BytesField : public Field<Struct> {
            SizeOfStringLikeValue(values.*value_) != 0;
   }
 
-  absl::Status SerializeInto(absl::Span<char>& out,
+  absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     size_t size = SizeOfStringLikeValue(values.*value_);
     absl::Status s = SerializeVarint(size, out);
     if (!s.ok()) {
       return s;
     }
-    if (out.size() < size) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Output buffer too small: ", out.size(), " < ", size));
+    if (out.GetBuffer().size() < size) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Output buffer too small: ", out.GetBuffer().size(), " < ",
+          size));
     }
-    SerializeStringLikeValue(values.*value_, out);
-    out.remove_prefix(size);
+    SerializeStringLikeValue(values.*value_, out.GetBuffer());
+    out.Advance(size);
     return absl::OkStatus();
   }
 

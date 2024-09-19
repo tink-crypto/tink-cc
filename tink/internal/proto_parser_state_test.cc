@@ -21,6 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/crc/crc32c.h"
+#include "absl/types/span.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -107,6 +108,22 @@ TEST(ParsingStateWithCrc, AdvanceGetCrc) {
   EXPECT_THAT(returned_crc.value(), Eq(absl::ComputeCrc32c("da")));
   state.Advance(2);  // Skip "ta".
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(data)));
+}
+
+
+TEST(SerializationState, ConstructAndBuffer) {
+  std::string data = "data";
+  SerializationState state = SerializationState(absl::MakeSpan(data));
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(data)));
+}
+
+TEST(SerializationState, Advance) {
+  std::string data = "data";
+  SerializationState state = SerializationState(absl::MakeSpan(data));
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(data)));
+  state.Advance(2);
+  std::string new_data = "ta";
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(new_data)));
 }
 
 }  // namespace

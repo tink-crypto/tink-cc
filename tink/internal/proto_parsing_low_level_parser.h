@@ -100,7 +100,7 @@ class LowLevelParser {
 
   // Serializes all fields into |out|, and removes the part which was written
   // to from |out|.
-  absl::Status SerializeInto(absl::Span<char>& out,
+  absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const {
     for (const auto& pair : fields_) {
       if (pair.second->RequiresSerialization(values)) {

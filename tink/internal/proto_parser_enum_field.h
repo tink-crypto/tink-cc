@@ -84,7 +84,7 @@ class EnumField : public Field<Struct> {
            values.*value_ != static_cast<Enum>(0);
   }
 
-  absl::Status SerializeInto(absl::Span<char>& out,
+  absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     return SerializeVarint(static_cast<uint32_t>(values.*value_), out);
   }

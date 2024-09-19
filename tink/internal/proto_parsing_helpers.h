@@ -39,7 +39,7 @@ absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(ParsingState& parsing_state);
 absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(ParsingState& parsing_state);
 
 int VarintLength(uint64_t value);
-absl::Status SerializeVarint(uint64_t value, absl::Span<char>& output);
+absl::Status SerializeVarint(uint64_t value, SerializationState& output);
 
 // See https://protobuf.dev/programming-guides/encoding/#structure
 // and
@@ -62,7 +62,7 @@ absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
 // output buffer is too small or field_number is not in the range [1, 2^29-1].
 absl::Status SerializeWireTypeAndFieldNumber(WireType wire_type,
                                              int field_number,
-                                             absl::Span<char>& output);
+                                             SerializationState& output);
 int WireTypeAndFieldNumberLength(WireType wire_type, int field_number);
 
 // Consumes a length delimited field and returns the string_view to the field.

@@ -1578,6 +1578,7 @@ cc_test(
     deps = [
         ":proto_parser_fields",
         ":proto_parser_message_field",
+        ":proto_parser_state",
         ":proto_parsing_low_level_parser",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
@@ -1674,6 +1675,7 @@ cc_library(
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -1684,6 +1686,7 @@ cc_test(
         ":proto_parser_state",
         "//tink/util:secret_data",
         "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )

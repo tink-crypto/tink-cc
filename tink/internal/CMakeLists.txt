@@ -1516,6 +1516,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message_field
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_low_level_parser
     gmock
     absl::btree
@@ -1608,6 +1609,7 @@ tink_cc_library(
     absl::nullability
     absl::crc32c
     absl::string_view
+    absl::span
     tink::util::secret_data
 )
 
@@ -1619,5 +1621,6 @@ tink_cc_test(
     tink::internal::proto_parser_state
     gmock
     absl::crc32c
+    absl::span
     tink::util::secret_data
 )

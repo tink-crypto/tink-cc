@@ -126,20 +126,21 @@ int VarintLength(uint64_t value) {
   return (bit_width + 6) / 7;
 }
 
-absl::Status SerializeVarint(uint64_t value, absl::Span<char>& output) {
+absl::Status SerializeVarint(uint64_t value, SerializationState& output) {
   int size = VarintLength(value);
-  if (output.size() < size) {
+  if (output.GetBuffer().size() < size) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Output buffer too small to contain varint of size ", size));
   }
+  absl::Span<char> output_buffer = output.GetBuffer();
   for (int i = 0; i < size; ++i) {
     uint64_t byte = (value >> (7 * i)) & 0x7f;
     if (i != size - 1) {
       byte |= 0x80;
     }
-    output[i] = byte;
+    output_buffer[i] = byte;
   }
-  output.remove_prefix(size);
+  output.Advance(size);
   return absl::OkStatus();
 }
 
@@ -160,7 +161,7 @@ absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
 
 absl::Status SerializeWireTypeAndFieldNumber(WireType wire_type,
                                              int field_number,
-                                             absl::Span<char>& output) {
+                                             SerializationState& output) {
   if (field_number <= 0 || field_number >= (1<<29)) {
     return absl::InvalidArgumentError(absl::StrCat(
         "Field Number ", field_number, " is not in range [1, 2^29)"));

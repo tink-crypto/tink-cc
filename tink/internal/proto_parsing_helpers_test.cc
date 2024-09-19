@@ -122,22 +122,22 @@ TEST(SerializeVarint, VarintCases) {
     SCOPED_TRACE(v.value);
     std::string output;
     output.resize(VarintLength(v.value));
-    absl::Span<char> output_span = absl::MakeSpan(output);
+    SerializationState output_span = SerializationState(absl::MakeSpan(output));
     EXPECT_THAT(SerializeVarint(v.value, output_span), IsOk());
     EXPECT_THAT(HexEncode(output), Eq(v.hex_encoded_bytes));
-    EXPECT_THAT(output_span, IsEmpty());
+    EXPECT_THAT(output_span.GetBuffer(), IsEmpty());
   }
 }
 
 TEST(SerializeVarint, LeavesUnusedBytes) {
   std::string output = "abcdef";
-  absl::Span<char> output_span = absl::MakeSpan(output);
+  SerializationState output_span = SerializationState(absl::MakeSpan(output));
   // Will overwrite the first two bytes with 0xa274
   EXPECT_THAT(SerializeVarint(14882, output_span), IsOk());
   EXPECT_THAT(HexEncode(output), Eq("a27463646566"));
   std::string expected = "cdef";
   // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
-  EXPECT_THAT(output_span, Eq(absl::MakeSpan(expected)));
+  EXPECT_THAT(output_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
 TEST(SerializeVarint, TooSmallOutputBuffer) {
@@ -146,7 +146,8 @@ TEST(SerializeVarint, TooSmallOutputBuffer) {
     SCOPED_TRACE(v.value);
     absl::Span<char> output_span = absl::MakeSpan(output_buffer);
     output_span = output_span.subspan(0, VarintLength(v.value) - 1);
-    EXPECT_THAT(SerializeVarint(v.value, output_span), Not(IsOk()));
+    SerializationState serialization_state = SerializationState(output_span);
+    EXPECT_THAT(SerializeVarint(v.value, serialization_state), Not(IsOk()));
   }
 }
 
@@ -235,16 +236,16 @@ TEST(ProtoParserTest, SerializeIntoWireTypeAndTagSuccess) {
     SCOPED_TRACE(v.hex_encoded_bytes);
     std::string buffer;
     buffer.resize(WireTypeAndFieldNumberLength(v.wiretype, v.field_number));
-    absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+    SerializationState state = SerializationState(absl::MakeSpan(buffer));
     if (v.field_number > 0 && v.field_number < /* 2^29 = */ 536870912) {
       EXPECT_THAT(SerializeWireTypeAndFieldNumber(v.wiretype, v.field_number,
-                                                  buffer_span),
+                                                  state),
                   IsOk());
       EXPECT_THAT(HexEncode(buffer), Eq(v.hex_encoded_bytes));
-      EXPECT_THAT(buffer_span, IsEmpty());
+      EXPECT_THAT(state.GetBuffer(), IsEmpty());
     } else {
       EXPECT_THAT(SerializeWireTypeAndFieldNumber(v.wiretype, v.field_number,
-                                                  buffer_span),
+                                                  state),
                   Not(IsOk()));
     }
   }

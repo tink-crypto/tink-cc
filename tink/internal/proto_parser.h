@@ -218,12 +218,13 @@ absl::StatusOr<std::string> ProtoParser<Struct>::SerializeIntoString(
   size_t size = low_level_parser_.GetSerializedSize(s);
   std::string result;
   result.resize(size);
-  absl::Span<char> output_buffer = absl::MakeSpan(result);
-  absl::Status status = low_level_parser_.SerializeInto(output_buffer, s);
+  proto_parsing::SerializationState serialization_state =
+      proto_parsing::SerializationState(absl::MakeSpan(result));
+  absl::Status status = low_level_parser_.SerializeInto(serialization_state, s);
   if (!status.ok()) {
     return status;
   }
-  if (!output_buffer.empty()) {
+  if (!serialization_state.GetBuffer().empty()) {
     return absl::InternalError("Resulting buffer expected to be empty");
   }
   return result;
@@ -235,13 +236,14 @@ ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
   size_t size = low_level_parser_.GetSerializedSize(s);
   crypto::tink::util::SecretData result;
   result.resize(size);
-  absl::Span<char> output_buffer =
-      absl::MakeSpan(reinterpret_cast<char*>(result.data()), result.size());
-  absl::Status status = low_level_parser_.SerializeInto(output_buffer, s);
+  proto_parsing::SerializationState serialization_state =
+      proto_parsing::SerializationState(absl::MakeSpan(
+          reinterpret_cast<char*>(result.data()), result.size()));
+  absl::Status status = low_level_parser_.SerializeInto(serialization_state, s);
   if (!status.ok()) {
     return status;
   }
-  if (!output_buffer.empty()) {
+  if (!serialization_state.GetBuffer().empty()) {
     return absl::InternalError("Resulting buffer expected to be empty");
   }
   return result;

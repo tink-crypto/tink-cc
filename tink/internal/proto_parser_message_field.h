@@ -74,16 +74,16 @@ class MessageField : public Field<OuterStruct> {
     return low_level_parser_.RequiresSerialization(values.*value_);
   }
 
-  absl::Status SerializeInto(absl::Span<char>& out,
+  absl::Status SerializeInto(SerializationState& out,
                              const OuterStruct& values) const override {
     size_t size = low_level_parser_.GetSerializedSize(values.*value_);
     absl::Status s = SerializeVarint(size, out);
     if (!s.ok()) {
       return s;
     }
-    if (out.size() < size) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Output buffer too small: ", out.size(), " < ", size));
+    if (out.GetBuffer().size() < size) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
     }
     return low_level_parser_.SerializeInto(out, values.*value_);
   }

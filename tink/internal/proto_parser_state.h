@@ -23,6 +23,7 @@
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/util/secret_data.h"
 
@@ -84,6 +85,28 @@ class ParsingState final {
  private:
   absl::string_view remaining_view_to_parse_;
   absl::Nullable<absl::crc32c_t*> crc_to_update_;
+};
+
+// Maintains the current state when serializing a struct.
+//
+// This maintains a Span<char> which contains the remaining buffer to write into
+// when serializing a struct.
+class SerializationState final {
+ public:
+  explicit SerializationState(absl::Span<char> output_buffer)
+      : output_buffer_(output_buffer) {}
+
+  // Returns the remaining data to be parsed.
+  absl::Span<char> GetBuffer() { return output_buffer_; }
+
+  // Removes the next `length` bytes from the data to be parsed. Updates the
+  // internal CRC if any.
+  void Advance(size_t length) {
+    output_buffer_.remove_prefix(length);
+  }
+
+ private:
+  absl::Span<char> output_buffer_;
 };
 
 }  // namespace proto_parsing

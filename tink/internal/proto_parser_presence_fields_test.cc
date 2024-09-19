@@ -104,10 +104,10 @@ TEST(Uint32FieldWithPresence, SerializeSuccessCases) {
 
     std::string buffer;
     buffer.resize(test_case.first.size() / 2);
-    absl::Span<char> buffer_span = absl::MakeSpan(buffer);
-    EXPECT_THAT(field.SerializeInto(buffer_span, s), IsOk());
+    SerializationState state = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeInto(state, s), IsOk());
     EXPECT_THAT(buffer, Eq(HexDecodeOrDie(test_case.first)));
-    EXPECT_THAT(buffer_span.size(), Eq(0));
+    EXPECT_THAT(state.GetBuffer().size(), Eq(0));
   }
 }
 
@@ -120,7 +120,7 @@ TEST(Uint32FieldWithPresence, SerializeVarintBufferTooSmall) {
 
   std::string buffer;
   buffer.resize(1);
-  absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeInto(buffer_span, s), Not(IsOk()));
 }
 
@@ -128,7 +128,7 @@ TEST(Uint32FieldWithPresence, SerializeLeavesRemainingData) {
   Uint32FieldWithPresence<ParsedStruct> field(1,
                                               &ParsedStruct::uint32_member_1);
   std::string buffer = "abcdef";
-  absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   ParsedStruct s;
   s.uint32_member_1 = 14882;
   // Will overwrite the first two bytes with 0xa274
@@ -136,7 +136,7 @@ TEST(Uint32FieldWithPresence, SerializeLeavesRemainingData) {
   EXPECT_THAT(HexEncode(buffer), Eq("a27463646566"));
   std::string expected = "cdef";
   // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
-  EXPECT_THAT(buffer_span, Eq(absl::MakeSpan(expected)));
+  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
 TEST(Uint32FieldWithPresence, GetTag) {

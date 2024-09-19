@@ -29,6 +29,7 @@
 #include "absl/types/span.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/restricted_data.h"
 
@@ -37,6 +38,7 @@ namespace tink {
 namespace internal {
 namespace proto_testing {
 
+using ::crypto::tink::internal::proto_parsing::SerializationState;
 using ::crypto::tink::internal::proto_parsing::SerializeVarint;
 using ::crypto::tink::internal::proto_parsing::WireType;
 
@@ -46,17 +48,17 @@ std::string WiretypeAndFieldNumber(WireType wire_type, int field_number) {
   std::string result;
   result.resize(
       proto_parsing::WireTypeAndFieldNumberLength(wire_type, field_number));
-  absl::Span<char> result_span = absl::MakeSpan(result);
+  SerializationState result_state = SerializationState(absl::MakeSpan(result));
   CHECK_OK(proto_parsing::SerializeWireTypeAndFieldNumber(
-      wire_type, field_number, result_span));
+      wire_type, field_number, result_state));
   return result;
 }
 
 std::string SerializeVarintToString(uint64_t v) {
   std::string result;
   result.resize(crypto::tink::internal::proto_parsing::VarintLength(v));
-  absl::Span<char> result_span = absl::MakeSpan(result);
-  CHECK_OK(SerializeVarint(v, result_span));
+  SerializationState result_state = SerializationState(absl::MakeSpan(result));
+  CHECK_OK(SerializeVarint(v, result_state));
   return result;
 }
 

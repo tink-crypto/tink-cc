@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -153,10 +154,10 @@ TEST(MessageField, SerializeEmpty) {
   s.inner_member.uint32_member_2 = 0;
 
   std::string buffer = "abc";
-  absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSize(s), Eq(1));
-  EXPECT_THAT(field.SerializeInto(buffer_span, s), IsOk());
-  EXPECT_THAT(buffer_span.size(), Eq(2));
+  EXPECT_THAT(field.SerializeInto(state, s), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(2));
   EXPECT_THAT(HexEncode(buffer.substr(0, 1)), Eq("00"));
 }
 
@@ -167,11 +168,11 @@ TEST(MessageField, SerializeNonEmpty) {
   s.inner_member.uint32_member_1 = 0x23;
   s.inner_member.uint32_member_2 = 0x7a;
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
-  absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSize(s), Eq(5));
-  EXPECT_THAT(field.SerializeInto(buffer_span, s), IsOk());
-  EXPECT_THAT(buffer_span.size(), Eq(buffer.size() - 5));
-  EXPECT_THAT(&buffer_span[0], Eq(&buffer[5]));
+  EXPECT_THAT(field.SerializeInto(state, s), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 5));
+  EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[5]));
   EXPECT_THAT(HexEncode(buffer.substr(0, 5)),
               Eq(absl::StrCat(/* 4 bytes */ ("04"),
                               /* Int field, tag 1, value 0x23 */ ("0823"),
@@ -187,8 +188,8 @@ TEST(MessageField, SerializeTooSmallBuffer) {
   s.inner_member.uint32_member_1 = 0x23;
   s.inner_member.uint32_member_2 = 0x7a;
   std::string buffer = "BUFF";
-  absl::Span<char> buffer_span = absl::MakeSpan(buffer);
-  EXPECT_THAT(field.SerializeInto(buffer_span, s), Not(IsOk()));
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeInto(state, s), Not(IsOk()));
 }
 
 // The buffer won't even hold the varint.
@@ -199,8 +200,8 @@ TEST(MessageField, SerializeVerySmallBuffer) {
   s.inner_member.uint32_member_1 = 0x23;
   s.inner_member.uint32_member_2 = 0x7a;
   std::string buffer;
-  absl::Span<char> buffer_span = absl::MakeSpan(buffer);
-  EXPECT_THAT(field.SerializeInto(buffer_span, s), Not(IsOk()));
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeInto(state, s), Not(IsOk()));
 }
 
 TEST(MessageField, RequiresSerialization) {

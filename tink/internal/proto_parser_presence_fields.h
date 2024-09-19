@@ -64,7 +64,7 @@ class Uint32FieldWithPresence : public Field<Struct> {
     return (values.*value_).has_value();
   }
 
-  absl::Status SerializeInto(absl::Span<char>& out,
+  absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     if (!(values.*value_).has_value()) {
       return absl::InvalidArgumentError(

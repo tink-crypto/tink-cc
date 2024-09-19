@@ -135,11 +135,12 @@ TEST(LowLevelParserTest, SerializeInto) {
 
   std::string serialized;
   serialized.resize(100);
-  absl::Span<char> serialized_span = absl::MakeSpan(serialized);
+  SerializationState serialized_span =
+      SerializationState(absl::MakeSpan(serialized));
 
   s.uint32_member_1 = 0x7b;
   EXPECT_THAT(parser.SerializeInto(serialized_span, s), IsOk());
-  EXPECT_THAT(serialized_span.size(), Eq(98));
+  EXPECT_THAT(serialized_span.GetBuffer().size(), Eq(98));
   EXPECT_THAT(HexEncode(serialized.substr(0, 2)), Eq("087b"));
 }
 
@@ -150,12 +151,13 @@ TEST(LowLevelParserTest, SerializeIntoMultipleFields) {
 
   std::string serialized;
   serialized.resize(100);
-  absl::Span<char> serialized_span = absl::MakeSpan(serialized);
+  SerializationState serialized_span =
+      SerializationState(absl::MakeSpan(serialized));
 
   s.uint32_member_1 = 0x7b;
   s.string_member_1 = "AAAAA";
   EXPECT_THAT(parser.SerializeInto(serialized_span, s), IsOk());
-  EXPECT_THAT(serialized_span.size(), Eq(91));
+  EXPECT_THAT(serialized_span.GetBuffer().size(), Eq(91));
   EXPECT_THAT(HexEncode(serialized.substr(0, 9)), Eq("087b1a054141414141"));
 }
 

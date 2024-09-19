@@ -134,10 +134,10 @@ TEST(EnumField, SerializeVarintSuccessCases) {
 
     std::string buffer;
     buffer.resize(test_case.first.size() / 2);
-    absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
     EXPECT_THAT(field.SerializeInto(buffer_span, s), IsOk());
     EXPECT_THAT(buffer, Eq(HexDecodeOrDie(test_case.first)));
-    EXPECT_THAT(buffer_span.size(), Eq(0));
+    EXPECT_THAT(buffer_span.GetBuffer().size(), Eq(0));
   }
 }
 
@@ -152,8 +152,8 @@ TEST(EnumField, SerializeVarintBufferTooSmall) {
 
     std::string buffer;
     buffer.resize(test_case.first.size() / 2 - 1);
-    absl::Span<char> buffer_span = absl::MakeSpan(buffer);
-    EXPECT_THAT(field.SerializeInto(buffer_span, s), Not(IsOk()));
+    SerializationState state = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeInto(state, s), Not(IsOk()));
   }
 }
 
@@ -161,15 +161,15 @@ TEST(EnumField, SerializeVarintLeavesRemainingData) {
   EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
                                          &AlwaysValid);
   std::string buffer = "abcdef";
-  absl::Span<char> buffer_span = absl::MakeSpan(buffer);
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
   ExampleStruct s;
   s.enum_field = static_cast<MyEnum>(14882);
   // Will overwrite the first two bytes with 0xa274
-  EXPECT_THAT(field.SerializeInto(buffer_span, s), IsOk());
+  EXPECT_THAT(field.SerializeInto(state, s), IsOk());
   EXPECT_THAT(HexEncode(buffer), Eq("a27463646566"));
   std::string expected = "cdef";
   // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
-  EXPECT_THAT(buffer_span, Eq(absl::MakeSpan(expected)));
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
 TEST(EnumField, GetTag) {

@@ -94,7 +94,16 @@ class ParsingState final {
 class SerializationState final {
  public:
   explicit SerializationState(absl::Span<char> output_buffer)
-      : output_buffer_(output_buffer) {}
+      : output_buffer_(output_buffer), crc_to_update_(nullptr) {}
+
+  // Creates a new serialization state which maintains the CRC of the parsed
+  // data. Whenever Advance or AdvanceWithCrc is called, `crc_to_update_` is
+  // updated, if not nullptr. For AdvanceWithCrc, the passed in CRC is used.
+  // All the CRC calculations are done within a CallWithCoreDumpProtection.
+  explicit SerializationState(absl::Span<char> output_buffer,
+                              absl::Nonnull<absl::crc32c_t*> crc_to_update)
+      : output_buffer_(output_buffer),
+        crc_to_update_(crc_to_update) {}
 
   // Returns the remaining data to be parsed.
   absl::Span<char> GetBuffer() { return output_buffer_; }
@@ -102,11 +111,31 @@ class SerializationState final {
   // Removes the next `length` bytes from the data to be parsed. Updates the
   // internal CRC if any.
   void Advance(size_t length) {
-    output_buffer_.remove_prefix(length);
+    if (crc_to_update_ == nullptr) {
+      output_buffer_.remove_prefix(length);
+      return;
+    }
+    util::SecretValue<absl::crc32c_t> crc;
+    CallWithCoreDumpProtection([&]() {
+      crc.value() = absl::ComputeCrc32c(
+          absl::string_view(output_buffer_.data(), length));
+    });
+    AdvanceWithCrc(length, crc.value());
   }
+
+  // Removes the next `length` bytes from the data to be parsed and updates the
+  // internal CRC, if any, with `crc`.
+  //
+  // NOTE:
+  //  *  This method takes `crc` by reference to allow it being in core dump
+  //     protected memory.
+  //  *  This method does not compute the actual CRC of the removed data, only
+  //     uses `crc`.
+  void AdvanceWithCrc(size_t length, const absl::crc32c_t& crc);
 
  private:
   absl::Span<char> output_buffer_;
+  absl::Nullable<absl::crc32c_t*> crc_to_update_;
 };
 
 }  // namespace proto_parsing

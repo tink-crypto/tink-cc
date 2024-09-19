@@ -126,6 +126,40 @@ TEST(SerializationState, Advance) {
   EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(new_data)));
 }
 
+TEST(SerializationState, AdvanceWithCrc) {
+  std::string data = "data";
+  SerializationState state = SerializationState(absl::MakeSpan(data));
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(data)));
+  // The passed in CRC is ignored, but calling the method still works.
+  state.AdvanceWithCrc(2, absl::crc32c_t{0x12345678});
+  std::string new_data = "ta";
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(new_data)));
+}
+
+
+TEST(SerializationStateWithCrc, Advance) {
+  std::string data = "data";
+  absl::crc32c_t crc{};
+  SerializationState state = SerializationState(absl::MakeSpan(data), &crc);
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(data)));
+  state.Advance(2);
+  std::string new_data = "ta";
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(new_data)));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c("da")));
+}
+
+TEST(SerializationStateWithCrc, AdvanceWithCrc) {
+  std::string data = "data";
+  absl::crc32c_t crc{};
+  SerializationState state = SerializationState(absl::MakeSpan(data), &crc);
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(data)));
+  // If we advance with a given value, the actual CRC is ignored.
+  state.AdvanceWithCrc(2, absl::crc32c_t{0x12345678});
+  std::string new_data = "ta";
+  EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(new_data)));
+  EXPECT_THAT(crc, Eq(absl::crc32c_t{0x12345678}));
+}
+
 }  // namespace
 
 }  // namespace proto_parsing

@@ -42,6 +42,16 @@ util::SecretValue<absl::crc32c_t> ParsingState::AdvanceAndGetCrc(
   return result;
 }
 
+void SerializationState::AdvanceWithCrc(size_t length,
+                                         const absl::crc32c_t& crc) {
+  output_buffer_.remove_prefix(length);
+  if (crc_to_update_ != nullptr) {
+    CallWithCoreDumpProtection([&]() {
+      *crc_to_update_ = absl::ConcatCrc32c(*crc_to_update_, crc, length);
+    });
+  }
+}
+
 }  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink

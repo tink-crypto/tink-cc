@@ -17,7 +17,7 @@
 #include "tink/aead/x_aes_gcm_key.h"
 
 #include <string>
-#include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -236,6 +236,100 @@ TEST(XAesGcmKeyTest, DifferentSaltSizeNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(XAesGcmKeyTest, CopyConstructor) {
+  RestrictedData secret = RestrictedData(kKeySize);
+
+  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kSaltSizeBytes);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  XAesGcmKey copy(*key);
+
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy.GetParameters(), Eq(*parameters));
+  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
+}
+
+TEST(XAesGcmKeyTest, CopyAssignment) {
+  RestrictedData secret1 = RestrictedData(kKeySize);
+
+  util::StatusOr<XAesGcmParameters> parameters1 = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kSaltSizeBytes);
+  ASSERT_THAT(parameters1, IsOk());
+
+  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData secret2 = RestrictedData(kKeySize);
+
+  util::StatusOr<XAesGcmParameters> parameters2 = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kNoPrefix, /*salt_size_bytes=*/10);
+  ASSERT_THAT(parameters2, IsOk());
+
+  util::StatusOr<XAesGcmKey> copy = XAesGcmKey::Create(
+      *parameters2, secret2,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *key;
+
+  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
+  EXPECT_THAT(copy->GetParameters(), Eq(*parameters1));
+  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(XAesGcmKeyTest, MoveConstructor) {
+  RestrictedData secret = RestrictedData(kKeySize);
+
+  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kSaltSizeBytes);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  XAesGcmKey move(std::move(*key));
+
+  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
+  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
+}
+
+TEST(XAesGcmKeyTest, MoveAssignment) {
+  RestrictedData secret1 = RestrictedData(kKeySize);
+
+  util::StatusOr<XAesGcmParameters> parameters1 = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kSaltSizeBytes);
+  ASSERT_THAT(parameters1, IsOk());
+
+  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData secret2 = RestrictedData(kKeySize);
+
+  util::StatusOr<XAesGcmParameters> parameters2 = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kNoPrefix, /*salt_size_bytes=*/10);
+  ASSERT_THAT(parameters2, IsOk());
+
+  util::StatusOr<XAesGcmKey> move = XAesGcmKey::Create(
+      *parameters2, secret2,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*key);
+
+  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
+  EXPECT_THAT(move->GetParameters(), Eq(*parameters1));
+  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
 }
 
 }  // namespace

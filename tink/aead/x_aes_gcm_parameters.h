@@ -60,8 +60,8 @@ class XAesGcmParameters : public AeadParameters {
   XAesGcmParameters(Variant variant, int salt_size_bytes)
       : variant_(variant), salt_size_bytes_(salt_size_bytes) {}
 
-  const Variant variant_;
-  const int salt_size_bytes_;
+  Variant variant_;
+  int salt_size_bytes_;
 };
 
 }  // namespace tink

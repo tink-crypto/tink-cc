@@ -16,6 +16,8 @@
 
 #include "tink/aead/x_aes_gcm_parameters.h"
 
+#include <utility>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
@@ -102,11 +104,43 @@ TEST(XAesGcmParametersTest, CopyAssignment) {
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
-  XAesGcmParameters copy = *parameters;
+  util::StatusOr<XAesGcmParameters> copy = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kNoPrefix, /*salt_size_bytes=*/10);
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.SaltSizeBytes(), Eq(kDefaultSaltSize));
-  EXPECT_THAT(copy.GetVariant(), Eq(XAesGcmParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->SaltSizeBytes(), Eq(kDefaultSaltSize));
+  EXPECT_THAT(copy->GetVariant(), Eq(XAesGcmParameters::Variant::kTink));
+  EXPECT_THAT(copy->HasIdRequirement(), IsTrue());
+}
+
+TEST(XAesGcmParametersTest, MoveConstructor) {
+  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
+  ASSERT_THAT(parameters, IsOk());
+
+  XAesGcmParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.SaltSizeBytes(), Eq(kDefaultSaltSize));
+  EXPECT_THAT(move.GetVariant(), Eq(XAesGcmParameters::Variant::kTink));
+  EXPECT_THAT(move.HasIdRequirement(), IsTrue());
+}
+
+TEST(XAesGcmParametersTest, MoveAssignment) {
+  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<XAesGcmParameters> move = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kNoPrefix, /*salt_size_bytes=*/10);
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->SaltSizeBytes(), Eq(kDefaultSaltSize));
+  EXPECT_THAT(move->GetVariant(), Eq(XAesGcmParameters::Variant::kTink));
+  EXPECT_THAT(move->HasIdRequirement(), IsTrue());
 }
 
 TEST_P(XAesGcmParametersTest, ParametersEquals) {

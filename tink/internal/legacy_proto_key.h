@@ -94,7 +94,7 @@ class LegacyProtoKey : public Key {
       absl::optional<SecretKeyAccessToken> token) const;
 
  private:
-  explicit LegacyProtoKey(ProtoKeySerialization serialization)
+  explicit LegacyProtoKey(const ProtoKeySerialization& serialization)
       : serialization_(serialization),
         unusable_proto_parameters_(serialization.TypeUrl(),
                                    serialization.GetOutputPrefixType()) {}

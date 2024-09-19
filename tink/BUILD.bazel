@@ -739,6 +739,7 @@ cc_library(
     name = "partial_key_access_token",
     hdrs = ["partial_key_access_token.h"],
     include_prefix = "tink",
+    visibility = ["//visibility:public"],
 )
 
 cc_library(

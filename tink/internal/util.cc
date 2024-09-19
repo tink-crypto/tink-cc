@@ -36,19 +36,20 @@ absl::string_view EnsureStringNonNull(absl::string_view str) {
 bool BuffersOverlap(absl::string_view first, absl::string_view second) {
   // first begins within second's buffer.
   const bool first_begins_in_second =
-      first.data() >= second.data() &&
-      first.data() < second.data() + second.size();
+      std::greater_equal<const char*>{}(first.data(), second.data()) &&
+      std::less<const char*>{}(first.data(), second.data() + second.size());
 
   // second begins within first's buffer.
   const bool second_begins_in_first =
-      second.data() >= first.data() &&
-      second.data() < first.data() + first.size();
+      std::greater_equal<const char*>{}(second.data(), first.data()) &&
+      std::less<const char*>{}(second.data(), first.data() + first.size());
 
   return first_begins_in_second || second_begins_in_first;
 }
 
 bool BuffersAreIdentical(absl::string_view first, absl::string_view second) {
-  return !first.empty() && !second.empty() && first.data() == second.data() &&
+  return !first.empty() && !second.empty() &&
+         std::equal_to<const char*>{}(first.data(), second.data()) &&
          first.size() == second.size();
 }
 

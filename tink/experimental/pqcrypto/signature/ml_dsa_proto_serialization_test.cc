@@ -25,7 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/experimental/pqcrypto/signature/internal/ml_dsa_test_util.h"
+#include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
@@ -96,11 +96,11 @@ MlDsaPrivateKey GenerateMlDsa65PrivateKey(MlDsaParameters::Variant variant,
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
   CHECK_OK(parameters);
 
-  util::StatusOr<MlDsaPrivateKey> private_key =
-      internal::GenerateMlDsaPrivateKey(*parameters, id_requirement);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      internal::CreateMlDsaKey(*parameters, id_requirement);
   CHECK_OK(private_key);
 
-  return *private_key;
+  return **private_key;
 }
 
 TEST_F(MlDsaProtoSerializationTest, RegisterTwiceSucceeds) {

@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
+#include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
 #include "tink/util/statusor.h"
@@ -26,6 +28,12 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+
+// Creates a new ML-DSA private key from `parameters`. If `id_requirement` is
+// set, the key will have the specified ID requirement. Otherwise, the key will
+// have no ID requirement.
+util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
+    const MlDsaParameters& params, absl::optional<int> id_requirement);
 
 // Creates a new SLH-DSA private key from `parameters`. If `id_requirement` is
 // set, the key will have the specified ID requirement. Otherwise, the key will

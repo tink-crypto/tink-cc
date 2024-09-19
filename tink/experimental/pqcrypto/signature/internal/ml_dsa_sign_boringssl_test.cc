@@ -24,7 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
-#include "tink/experimental/pqcrypto/signature/internal/ml_dsa_test_util.h"
+#include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/internal/fips_utils.h"
@@ -71,12 +71,12 @@ TEST_P(MlDsaSignBoringSslTest, SignatureLengthIsCorrect) {
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key =
-      GenerateMlDsaPrivateKey(*key_parameters, test_case.id_requirement);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewMlDsaSignBoringSsl(*private_key);
+      NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   std::string message = "message to be signed";
@@ -100,12 +100,12 @@ TEST(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key =
-      GenerateMlDsaPrivateKey(*key_parameters, absl::nullopt);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewMlDsaSignBoringSsl(*private_key);
+      NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign the same message twice, using the same private key.
@@ -132,12 +132,12 @@ TEST(MlDsaSignBoringSslTest, FipsMode) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key =
-      GenerateMlDsaPrivateKey(*key_parameters, absl::nullopt);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
-  EXPECT_THAT(NewMlDsaSignBoringSsl(*private_key).status(),
+  EXPECT_THAT(NewMlDsaSignBoringSsl(**private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

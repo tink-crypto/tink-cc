@@ -25,8 +25,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
 #include "tink/experimental/pqcrypto/signature/internal/ml_dsa_sign_boringssl.h"
-#include "tink/experimental/pqcrypto/signature/internal/ml_dsa_test_util.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
@@ -58,13 +58,13 @@ TEST(MlDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = GenerateMlDsaPrivateKey(
-      *key_parameters, /*id_requirement=*/absl::nullopt);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewMlDsaSignBoringSsl(*private_key);
+      NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -74,7 +74,7 @@ TEST(MlDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {
 
   //  Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
@@ -90,13 +90,13 @@ TEST(MlDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key =
-      GenerateMlDsaPrivateKey(*key_parameters, /*id_requirement=*/0x02030400);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/0x02030400);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewMlDsaSignBoringSsl(*private_key);
+      NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -106,7 +106,7 @@ TEST(MlDsaVerifyBoringSslTest, BasicSignVerifyTinkWorks) {
 
   //  Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
@@ -122,13 +122,13 @@ TEST(MlDsaVerifyBoringSslTest, VerifyWithWrongSignatureFails) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = GenerateMlDsaPrivateKey(
-      *key_parameters, /*id_requirement=*/absl::nullopt);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Verify with an invalid signature.
@@ -147,13 +147,13 @@ TEST(MlDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = GenerateMlDsaPrivateKey(
-      *key_parameters, /*id_requirement=*/absl::nullopt);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewMlDsaSignBoringSsl(*private_key);
+      NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -163,7 +163,7 @@ TEST(MlDsaVerifyBoringSslTest, VerifyWitModifiedSignatureFails) {
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Invalidate one byte of the output prefix.
@@ -182,13 +182,13 @@ TEST(MlDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key =
-      GenerateMlDsaPrivateKey(*key_parameters, /*id_requirement=*/0x02030400);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/0x02030400);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewMlDsaSignBoringSsl(*private_key);
+      NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -198,7 +198,7 @@ TEST(MlDsaVerifyBoringSslTest, VerifyWitModifiedOutputPrefixFails) {
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   // Invalidate one byte of the output prefix.
@@ -217,13 +217,13 @@ TEST(MlDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = GenerateMlDsaPrivateKey(
-      *key_parameters, /*id_requirement=*/absl::nullopt);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
   util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
-      NewMlDsaSignBoringSsl(*private_key);
+      NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
@@ -233,7 +233,7 @@ TEST(MlDsaVerifyBoringSslTest, VerifyWithWrongMessageFails) {
 
   // Create a new verifier.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
-      NewMlDsaVerifyBoringSsl(private_key->GetPublicKey());
+      NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
 
   EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"),
@@ -250,12 +250,12 @@ TEST(MlDsaVerifyBoringSslTest, FipsMode) {
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = GenerateMlDsaPrivateKey(
-      *key_parameters, /*id_requirement=*/absl::nullopt);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*key_parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
-  EXPECT_THAT(NewMlDsaVerifyBoringSsl(private_key->GetPublicKey()).status(),
+  EXPECT_THAT(NewMlDsaVerifyBoringSsl((*private_key)->GetPublicKey()).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
 

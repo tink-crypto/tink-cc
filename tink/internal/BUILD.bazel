@@ -1736,3 +1736,36 @@ cc_library(
         "@com_google_absl//absl/functional:any_invocable",
     ],
 )
+
+cc_library(
+    name = "proto_parser_secret_data_with_crc_field",
+    hdrs = ["proto_parser_secret_data_with_crc_field.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":proto_parser_fields",
+        ":proto_parser_state",
+        ":proto_parsing_helpers",
+        "//tink/util:secret_data",
+        "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+    ],
+)
+
+cc_test(
+    name = "proto_parser_secret_data_with_crc_field_test",
+    srcs = ["proto_parser_secret_data_with_crc_field_test.cc"],
+    deps = [
+        ":proto_parser_secret_data_with_crc_field",
+        ":proto_parser_state",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

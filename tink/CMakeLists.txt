@@ -677,6 +677,7 @@ tink_cc_library(
   NAME partial_key_access_token
   SRCS
     partial_key_access_token.h
+  PUBLIC
 )
 
 tink_cc_library(
@@ -685,6 +686,7 @@ tink_cc_library(
     partial_key_access.h
   DEPS
     tink::core::partial_key_access_token
+  PUBLIC
 )
 
 tink_cc_library(

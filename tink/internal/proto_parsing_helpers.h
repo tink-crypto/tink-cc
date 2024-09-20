@@ -65,6 +65,10 @@ absl::Status SerializeWireTypeAndFieldNumber(WireType wire_type,
                                              SerializationState& output);
 int WireTypeAndFieldNumberLength(WireType wire_type, int field_number);
 
+// Parses the next part of `parsing_state` as Varint (using the variant that
+// proto uses when it parses the size of a kLengthDelimited field)
+absl::StatusOr<uint32_t> ConsumeVarintForSize(ParsingState& parsing_state);
+
 // Consumes a length delimited field and returns the string_view to the field.
 absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
     ParsingState& parsing_state);

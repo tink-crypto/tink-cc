@@ -60,6 +60,8 @@ absl::StatusOr<uint32_t> ConsumeVarintForTag(ParsingState& parsing_state) {
   return absl::InvalidArgumentError("Varint too long");
 }
 
+}  // namespace
+
 // Consumes a varint for the case where it is used in a length delimited field.
 // The behavior of the proto library is subtly different in each case, and we
 // currently want to follow it closely. In size, we are very strict and do not
@@ -85,8 +87,6 @@ absl::StatusOr<uint32_t> ConsumeVarintForSize(ParsingState& parsing_state) {
   }
   return absl::InvalidArgumentError("Size varint encoded in more than 5 bytes");
 }
-
-}  // namespace
 
 // See https://protobuf.dev/programming-guides/encoding for documentation on
 // the wire format.

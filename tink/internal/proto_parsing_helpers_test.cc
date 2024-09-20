@@ -43,6 +43,7 @@ namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::StatusOr;
@@ -248,6 +249,55 @@ TEST(ProtoParserTest, SerializeIntoWireTypeAndTagSuccess) {
                                                   state),
                   Not(IsOk()));
     }
+  }
+}
+
+TEST(ConsumeVarintForSize, ValidInput) {
+  std::string bytes = absl::StrCat(HexDecodeOrDie("0a"), "def");
+  ParsingState parsing_state = ParsingState(bytes);
+  absl::StatusOr<uint32_t> result =
+      ConsumeVarintForSize(parsing_state);
+  ASSERT_THAT(result, IsOkAndHolds(10));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("def"));
+}
+
+TEST(ConsumeVarintForSize, VariousValidInputs) {
+  std::vector<std::pair<std::string, uint32_t>> input_and_results = {
+      {"00", 0},
+      // Up to 5 byte long values can be arbitrarily padded
+      {"8000", 0},
+      {"8080808000", 0},
+      {"01", 1},
+      {"8180808000", 1},
+      {"ff7f", 0x3fff},
+      // Values up to 2^32 - 1 are allowed
+      {"ffffffff0f", 0xffffffff},
+      // An arbitrary value
+      {"abcd8107", 0xe066ab}
+  };
+  for (std::pair<std::string, int> input_and_result : input_and_results) {
+    std::string bytes = HexDecodeOrDie(input_and_result.first);
+    ParsingState parsing_state = ParsingState(bytes);
+    absl::StatusOr<uint32_t> result =
+        ConsumeVarintForSize(parsing_state);
+    ASSERT_THAT(result, IsOkAndHolds(Eq(input_and_result.second)));
+    EXPECT_THAT(parsing_state.RemainingData(), Eq(""));
+  }
+}
+
+TEST(ConsumeVarintForSize, InvalidVarints) {
+  std::vector<std::string> invalid_inputs = {
+      // 6 bytes are always rejected
+      "808080808000",
+      // All values greater than 2^32-1 are rejected (which means bit 5 in the
+      // 5th byte has to be set)
+      "ffffffff1f",
+      "8080808010",
+  };
+  for (std::string input : invalid_inputs) {
+    std::string bytes = HexDecodeOrDie(input);
+    ParsingState parsing_state = ParsingState(bytes);
+    EXPECT_THAT(ConsumeVarintForSize(parsing_state), Not(IsOk()));
   }
 }
 

@@ -23,10 +23,17 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
+#include "absl/status/status.h"
+#include "absl/types/optional.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_info.h"
 #include "tink/internal/keyset_wrapper.h"
+#include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/key.h"
 #include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
+#include "tink/restricted_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/validation.h"
@@ -39,14 +46,17 @@ namespace internal {
 template <typename P, typename Q>
 class KeysetWrapperImpl : public KeysetWrapper<Q> {
  public:
-  // We allow injection of a function creating the P primitive from KeyData for
-  // testing -- later, this function will just be Registry::GetPrimitive().
   explicit KeysetWrapperImpl(
       const PrimitiveWrapper<P, Q>* transforming_wrapper,
       absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
           const google::crypto::tink::KeyData& key_data) const>
-          primitive_getter)
+          primitive_getter,
+      absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+          const Key& key) const>
+          primitive_getter_from_key)
       : primitive_getter_(std::move(primitive_getter)),
+        primitive_getter_from_key_(std::move(primitive_getter_from_key)),
+
         transforming_wrapper_(*transforming_wrapper) {}
 
   crypto::tink::util::StatusOr<std::unique_ptr<Q>> Wrap(
@@ -57,18 +67,48 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
     if (!status.ok()) return status;
     typename PrimitiveSet<P>::Builder primitives_builder;
     primitives_builder.AddAnnotations(annotations);
-    for (const google::crypto::tink::Keyset::Key& key : keyset.key()) {
-      if (key.status() != google::crypto::tink::KeyStatusType::ENABLED) {
+    for (const google::crypto::tink::Keyset::Key& proto_key : keyset.key()) {
+      if (proto_key.status() != google::crypto::tink::KeyStatusType::ENABLED) {
         continue;
       }
-      auto primitive = primitive_getter_(key.key_data());
-      if (!primitive.ok()) return primitive.status();
-      if (key.key_id() == keyset.primary_key_id()) {
+
+      // Get the proto key serialization.
+      util::StatusOr<internal::ProtoKeySerialization> serialization =
+          internal::ProtoKeySerialization::Create(
+              proto_key.key_data().type_url(),
+              RestrictedData(proto_key.key_data().value(),
+                             InsecureSecretKeyAccess::Get()),
+              proto_key.key_data().key_material_type(),
+              google::crypto::tink::OutputPrefixType::RAW,
+              /*id_requirement=*/absl::nullopt);
+      if (!serialization.ok()) {
+        return serialization.status();
+      }
+
+      util::StatusOr<std::unique_ptr<const Key>> key =
+          internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+              *serialization, InsecureSecretKeyAccess::Get());
+
+      util::StatusOr<std::unique_ptr<P>> primitive;
+      if (!key.ok() ||
+          primitive_getter_from_key_(*key.value()).status().code() ==
+              absl::StatusCode::kNotFound) {
+        // Try the legacy way.
+        primitive = primitive_getter_(proto_key.key_data());
+      } else {
+        primitive = primitive_getter_from_key_(*key.value());
+      }
+
+      if (!primitive.ok()) {
+        return primitive.status();
+      }
+
+      if (proto_key.key_id() == keyset.primary_key_id()) {
         primitives_builder.AddPrimaryPrimitive(std::move(primitive.value()),
-                                               KeyInfoFromKey(key));
+                                               KeyInfoFromKey(proto_key));
       } else {
         primitives_builder.AddPrimitive(std::move(primitive.value()),
-                                        KeyInfoFromKey(key));
+                                        KeyInfoFromKey(proto_key));
       }
     }
     crypto::tink::util::StatusOr<PrimitiveSet<P>> primitives =
@@ -82,6 +122,9 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
   absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
       const google::crypto::tink::KeyData& key_data) const>
       primitive_getter_;
+  absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+      const Key& key) const>
+      primitive_getter_from_key_;
   const PrimitiveWrapper<P, Q>& transforming_wrapper_;
 };
 

@@ -727,6 +727,7 @@ tink_cc_library(
   SRCS
     configuration.h
   DEPS
+    tink::internal::configuration_helper
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
 )
@@ -887,6 +888,7 @@ tink_cc_test(
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
+    tink::core::insecure_secret_key_access
     tink::core::key_gen_configuration
     tink::core::key_status
     tink::core::keyset_handle
@@ -903,9 +905,11 @@ tink_cc_test(
     absl::status
     absl::strings
     absl::optional
+    tink::aead::aead_config
     tink::aead::aead_key_templates
     tink::aead::aead_wrapper
     tink::aead::aes_gcm_key_manager
+    tink::aead::aes_gcm_parameters
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
     tink::config::fips_140_2
@@ -915,10 +919,12 @@ tink_cc_test(
     tink::internal::configuration_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
+    tink::internal::ssl_util
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::signature_key_templates
     tink::subtle::random
+    tink::subtle::xchacha20_poly1305_boringssl
     tink::util::status
     tink::util::statusor
     tink::util::test_keyset_handle

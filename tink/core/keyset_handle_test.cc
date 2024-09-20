@@ -32,9 +32,11 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
+#include "tink/aead/aead_config.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/binary_keyset_reader.h"
@@ -48,9 +50,11 @@
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/ssl_util.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_reader.h"
@@ -63,6 +67,7 @@
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
 #include "tink/subtle/random.h"
+#include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_keyset_handle.h"
@@ -205,7 +210,7 @@ Keyset GetPublicTestKeyset() {
 }
 
 // Creates an XChaCha20Poly1305Key from the given parameters.
-crypto::tink::util::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
+util::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
 CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
                            absl::optional<int> id_requirement) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
@@ -215,6 +220,13 @@ CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
     return key.status();
   }
   return absl::make_unique<crypto::tink::XChaCha20Poly1305Key>(*key);
+}
+
+util::StatusOr<std::unique_ptr<Aead>> GetPrimitiveForXChaCha20Poly1305Key(
+    const XChaCha20Poly1305Key& key) {
+  return subtle::XChacha20Poly1305BoringSsl::New(
+      (key.GetKeyBytes(GetPartialKeyAccess())
+           .Get(InsecureSecretKeyAccess::Get())));
 }
 
 TEST_F(KeysetHandleTest, DefaultCtor) {
@@ -646,17 +658,15 @@ TEST_F(KeysetHandleTest, GenerateNewInvalidKeyTemplateFails) {
   EXPECT_EQ(absl::StatusCode::kNotFound, handle_result.status().code());
 }
 
-using KeysetHandleGenerateNewFromParametersTest =
+using KeysetHandlePrefixTest =
     TestWithParam<XChaCha20Poly1305Parameters::Variant>;
 
 INSTANTIATE_TEST_SUITE_P(
-    KeysetHandleGenerateNewFromParametersTestSuite,
-    KeysetHandleGenerateNewFromParametersTest,
+    KeysetHandlePrefixTestSuite, KeysetHandlePrefixTest,
     Values(XChaCha20Poly1305Parameters::Variant::kTink,
            XChaCha20Poly1305Parameters::Variant::kNoPrefix));
 
-TEST_P(KeysetHandleGenerateNewFromParametersTest,
-       GenerateNewFromParametersWorks) {
+TEST_P(KeysetHandlePrefixTest, GenerateNewFromParametersWorks) {
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
 
   util::StatusOr<XChaCha20Poly1305Parameters> params =
@@ -1030,6 +1040,224 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithGlobalRegistryConfig) {
   ASSERT_THAT(handle, IsOk());
 
   EXPECT_THAT((*handle)->GetPrimitive<Aead>(ConfigGlobalRegistry()), IsOk());
+}
+
+TEST_P(KeysetHandlePrefixTest,
+       GetPrimitiveWithBespokeConfigUsingPrimitiveGettersSucceeds) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
+  }
+  Registry::Reset();
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  XChaCha20Poly1305Parameters::Variant variant = GetParam();
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(variant);
+  ASSERT_THAT(params, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
+                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
+                                               key_gen_config),
+              IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*params, key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+  ASSERT_THAT((*handle)->Validate(), IsOk());
+  EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
+
+  Configuration config;
+  ASSERT_THAT(
+      (internal::ConfigurationImpl::AddPrimitiveGetter<Aead,
+                                                       XChaCha20Poly1305Key>(
+          GetPrimitiveForXChaCha20Poly1305Key, config)),
+      IsOk());
+  ASSERT_THAT(internal::ConfigurationImpl::AddPrimitiveWrapper(
+                  absl::make_unique<AeadWrapper>(), config),
+              IsOk());
+
+  util::StatusOr<std::unique_ptr<Aead>> aead =
+      (*handle)->GetPrimitive<Aead>(config);
+  ASSERT_THAT(aead, IsOk());
+
+  // Check that encrypt/decrypt works.
+  const std::string plaintext = "plaintext";
+  const std::string aad = "aad";
+  util::StatusOr<std::string> encryption = (*aead)->Encrypt(plaintext, aad);
+  ASSERT_THAT(encryption, IsOk());
+  util::StatusOr<std::string> decryption = (*aead)->Decrypt(*encryption, aad);
+  ASSERT_THAT(decryption, IsOk());
+  EXPECT_EQ(*decryption, plaintext);
+}
+
+TEST_F(KeysetHandleTest,
+       GetPrimitiveWithBespokeConfigUsingMultipleKeysPrimitiveGettersSucceeds) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
+  }
+  Registry::Reset();
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(params, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
+                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
+                                               key_gen_config),
+              IsOk());
+
+  KeysetHandleBuilder::Entry entry0 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(*params,
+                                                           KeyStatus::kEnabled,
+                                                           /*is_primary=*/true);
+
+  KeysetHandleBuilder::Entry entry1 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *params, KeyStatus::kEnabled, /*is_primary=*/false);
+
+  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+                                            .AddEntry(std::move(entry0))
+                                            .AddEntry(std::move(entry1))
+                                            .Build(key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+  ASSERT_THAT(*handle, SizeIs(2));
+
+  ASSERT_THAT(handle->Validate(), IsOk());
+  EXPECT_THAT(handle->GetPrimary().GetKey()->GetParameters(), Eq(*params));
+
+  KeysetHandle::Entry expected_entry1 = (*handle)[1];
+  EXPECT_THAT(expected_entry1.IsPrimary(), IsFalse());
+  EXPECT_THAT(expected_entry1.GetKey()->GetParameters(), Eq(*params));
+
+  Configuration config;
+  ASSERT_THAT(
+      (internal::ConfigurationImpl::AddPrimitiveGetter<Aead,
+                                                       XChaCha20Poly1305Key>(
+          GetPrimitiveForXChaCha20Poly1305Key, config)),
+      IsOk());
+  ASSERT_THAT(internal::ConfigurationImpl::AddPrimitiveWrapper(
+                  absl::make_unique<AeadWrapper>(), config),
+              IsOk());
+
+  util::StatusOr<std::unique_ptr<Aead>> aead =
+      handle->GetPrimitive<Aead>(config);
+  ASSERT_THAT(aead, IsOk());
+
+  // Check that encrypt/decrypt works.
+  const std::string plaintext = "plaintext";
+  const std::string aad = "aad";
+  util::StatusOr<std::string> encryption = (*aead)->Encrypt(plaintext, aad);
+  ASSERT_THAT(encryption, IsOk());
+  util::StatusOr<std::string> decryption = (*aead)->Decrypt(*encryption, aad);
+  ASSERT_THAT(decryption, IsOk());
+  EXPECT_EQ(*decryption, plaintext);
+}
+
+TEST_F(KeysetHandleTest,
+       GetPrimitiveWithBespokeConfigMultipleKeysMixedPrimitiveGettersSucceeds) {
+  if (!internal::IsBoringSsl()) {
+    GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
+  }
+  Registry::Reset();
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  util::StatusOr<XChaCha20Poly1305Parameters> xchacha_params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(xchacha_params, IsOk());
+
+  util::StatusOr<AesGcmParameters> aes_gcm_params =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(aes_gcm_params, IsOk());
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
+                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
+                                               key_gen_config),
+              IsOk());
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+                  absl::make_unique<AesGcmKeyManager>(), key_gen_config),
+              IsOk());
+
+  KeysetHandleBuilder::Entry entry0 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(*xchacha_params,
+                                                           KeyStatus::kEnabled,
+                                                           /*is_primary=*/true);
+
+  KeysetHandleBuilder::Entry entry1 =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *aes_gcm_params, KeyStatus::kEnabled, /*is_primary=*/false);
+
+  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+                                            .AddEntry(std::move(entry0))
+                                            .AddEntry(std::move(entry1))
+                                            .Build(key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+  ASSERT_THAT(*handle, SizeIs(2));
+
+  ASSERT_THAT(handle->Validate(), IsOk());
+  EXPECT_THAT(handle->GetPrimary().GetKey()->GetParameters(),
+              Eq(*xchacha_params));
+
+  KeysetHandle::Entry expected_entry1 = (*handle)[1];
+  EXPECT_THAT(expected_entry1.IsPrimary(), IsFalse());
+  EXPECT_THAT(expected_entry1.GetKey()->GetParameters(), Eq(*aes_gcm_params));
+
+  Configuration config;
+  ASSERT_THAT(
+      (internal::ConfigurationImpl::AddPrimitiveGetter<Aead,
+                                                       XChaCha20Poly1305Key>(
+          GetPrimitiveForXChaCha20Poly1305Key, config)),
+      IsOk());
+  ASSERT_THAT(internal::ConfigurationImpl::AddKeyTypeManager(
+                  absl::make_unique<AesGcmKeyManager>(), config),
+              IsOk());
+  ASSERT_THAT(internal::ConfigurationImpl::AddPrimitiveWrapper(
+                  absl::make_unique<AeadWrapper>(), config),
+              IsOk());
+
+  util::StatusOr<std::unique_ptr<Aead>> aead =
+      handle->GetPrimitive<Aead>(config);
+  EXPECT_THAT(aead, IsOk());
+
+  // Check that encrypt/decrypt works.
+  const std::string plaintext = "plaintext";
+  const std::string aad = "aad";
+  util::StatusOr<std::string> encryption = (*aead)->Encrypt(plaintext, aad);
+  ASSERT_THAT(encryption, IsOk());
+  util::StatusOr<std::string> decryption = (*aead)->Decrypt(*encryption, aad);
+  ASSERT_THAT(decryption, IsOk());
+  EXPECT_EQ(*decryption, plaintext);
+}
+
+TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigNoPrimitiveGetterFails) {
+  Registry::Reset();
+  util::StatusOr<XChaCha20Poly1305Parameters> params =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<
+                  XChaCha20Poly1305Parameters>(CreateXChaCha20Poly1305Key,
+                                               key_gen_config),
+              IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*params, key_gen_config);
+  EXPECT_THAT(handle, IsOk());
+  EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
+
+  Configuration config;
+  ASSERT_THAT(internal::ConfigurationImpl::AddPrimitiveWrapper(
+                  absl::make_unique<AeadWrapper>(), config),
+              IsOk());
+
+  EXPECT_THAT((*handle)->GetPrimitive<Aead>(config).status(),
+              StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST_F(KeysetHandleTest, GetPrimitiveWithConfigFips1402) {

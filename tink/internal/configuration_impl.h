@@ -19,12 +19,18 @@
 
 #include <functional>
 #include <memory>
+#include <tuple>
+#include <typeindex>
+#include <utility>
 
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/configuration.h"
+#include "tink/internal/configuration_helper.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/key.h"
 #include "tink/key_manager.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -66,9 +72,64 @@ class ConfigurationImpl {
       return (*info)->GetPrimitive<typename PW::InputPrimitive>(key_data);
     };
 
+    PrimitiveGetterFn<typename PW::InputPrimitive, Key>
+        primitive_getter_from_key = [&config](const Key& key)
+        -> crypto::tink::util::StatusOr<
+            std::unique_ptr<typename PW::InputPrimitive>> {
+      auto it = config.primitive_getter_fn_map_.find(
+          std::tuple<std::type_index, std::type_index>(
+              std::type_index(typeid(typename PW::InputPrimitive)),
+              std::type_index(typeid(key))));
+      if (it != config.primitive_getter_fn_map_.end()) {
+        return (*reinterpret_cast<
+                PrimitiveGetterFn<typename PW::InputPrimitive, Key>*>(
+            it->second.get()))(key);
+      } else {
+        // No matching primitive getter is found.
+        return crypto::tink::util::Status(
+            absl::StatusCode::kNotFound,
+            absl::StrCat("Primitive getter for (",
+                         typeid(typename PW::InputPrimitive).name(), ",",
+                         typeid(key).name(), ") not found."));
+      }
+    };
+
     return config.keyset_wrapper_store_
         .Add<typename PW::InputPrimitive, typename PW::Primitive>(
-            std::move(wrapper), primitive_getter);
+            std::move(wrapper), primitive_getter,
+            std::move(primitive_getter_from_key));
+  }
+
+  template <class P, class K>
+  static crypto::tink::util::Status AddPrimitiveGetter(
+      PrimitiveGetterFn<P, K> primitive_getter_fn,
+      crypto::tink::Configuration& config) {
+    if (config.global_registry_mode_) {
+      return crypto::tink::util::Status(absl::StatusCode::kFailedPrecondition,
+                                        kConfigurationImplErr);
+    }
+
+    auto it = config.primitive_getter_fn_map_.find(
+        std::tuple<std::type_index, std::type_index>(
+            std::type_index(typeid(P)), std::type_index(typeid(K))));
+    if (it != config.primitive_getter_fn_map_.end()) {
+      return util::Status(absl::StatusCode::kAlreadyExists,
+                          absl::StrCat("Primitive getter for ",
+                                       typeid(P).name(), " already exists."));
+    }
+
+    auto fn_ptr = std::make_shared<PrimitiveGetterFn<P, K>>(
+        std::move(primitive_getter_fn));
+
+    // Creates a pair to be inserted in the map.
+    std::pair<std::tuple<std::type_index, std::type_index>,
+              std::shared_ptr<void>>
+        map_entry{std::tuple<std::type_index, std::type_index>(
+                      std::type_index(typeid(P)), std::type_index(typeid(K))),
+                  fn_ptr};
+
+    config.primitive_getter_fn_map_.insert(std::move(map_entry));
+    return crypto::tink::util::OkStatus();
   }
 
   template <class KM>

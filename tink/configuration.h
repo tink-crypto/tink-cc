@@ -17,6 +17,7 @@
 #ifndef TINK_CONFIGURATION_H_
 #define TINK_CONFIGURATION_H_
 
+#include "tink/internal/configuration_helper.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
 
@@ -47,6 +48,7 @@ class Configuration {
 
   crypto::tink::internal::KeyTypeInfoStore key_type_info_store_;
   crypto::tink::internal::KeysetWrapperStore keyset_wrapper_store_;
+  crypto::tink::internal::PrimitiveGetterFnMap primitive_getter_fn_map_;
 };
 
 }  // namespace tink

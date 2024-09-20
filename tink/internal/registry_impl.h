@@ -38,6 +38,7 @@
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/key.h"
 #include "tink/key_manager.h"
 #include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
@@ -239,8 +240,18 @@ crypto::tink::util::Status RegistryImpl::RegisterPrimitiveWrapper(
       primitive_getter = [this](const google::crypto::tink::KeyData& key_data) {
         return this->GetPrimitive<P>(key_data);
       };
+
+  absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+      const Key& key) const>
+      always_failing_primitive_getter = [](const Key& key) {
+    return crypto::tink::util::Status(
+        absl::StatusCode::kNotFound,
+        "Primitive getter not available in global registry mode.");
+  };
+
   return keyset_wrapper_store_.Add(std::move(owned_wrapper),
-                                   std::move(primitive_getter));
+                                   std::move(primitive_getter),
+                                   std::move(always_failing_primitive_getter));
 }
 
 // TODO: b/284059638 - Remove this and upstream functions from the public API.

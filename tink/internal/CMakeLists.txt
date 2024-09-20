@@ -54,10 +54,17 @@ tink_cc_library(
   DEPS
     tink::internal::key_info
     tink::internal::keyset_wrapper
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     absl::flat_hash_map
     absl::any_invocable
+    absl::status
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::core::restricted_data
     tink::util::status
     tink::util::statusor
     tink::util::validation
@@ -110,6 +117,7 @@ tink_cc_library(
     tink::core::key_type_manager
     tink::core::private_key_type_manager
     tink::core::input_stream
+    tink::core::key
     tink::core::key_manager
     tink::core::primitive_set
     tink::core::primitive_wrapper
@@ -214,19 +222,39 @@ tink_cc_test(
   SRCS
     keyset_wrapper_impl_test.cc
   DEPS
+    tink::internal::key_gen_configuration_impl
     tink::internal::keyset_wrapper_impl
+    tink::internal::ssl_util
     gmock
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
+    absl::optional
+    tink::core::aead
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::key_gen_configuration
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::partial_key_access
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::core::restricted_data
+    tink::aead::aead_config
+    tink::aead::aead_wrapper
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
+    tink::subtle::xchacha20_poly1305_boringssl
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
+    tink::util::test_keyset_handle
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
 )
 
 tink_cc_test(
@@ -1054,11 +1082,14 @@ tink_cc_library(
   SRCS
     configuration_impl.h
   DEPS
+    tink::internal::configuration_helper
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     absl::status
+    absl::strings
     absl::string_view
     tink::core::configuration
+    tink::core::key
     tink::core::key_manager
     tink::util::status
     tink::util::statusor
@@ -1078,7 +1109,6 @@ tink_cc_test(
     absl::memory
     absl::status
     absl::string_view
-    tink::core::cleartext_keyset_handle
     tink::core::configuration
     tink::core::key_manager_impl
     tink::core::key_type_manager
@@ -1092,6 +1122,8 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
+    tink::aead::aead_config
+    tink::aead::aes_gcm_key
     tink::subtle::random
     tink::util::status
     tink::util::statusor
@@ -1160,12 +1192,14 @@ tink_cc_library(
   SRCS
     keyset_wrapper_store.h
   DEPS
+    tink::internal::configuration_helper
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_impl
     absl::flat_hash_map
     absl::any_invocable
     absl::status
     absl::strings
+    tink::core::key
     tink::core::primitive_wrapper
     tink::util::status
     tink::util::statusor
@@ -1187,6 +1221,7 @@ tink_cc_test(
     tink::core::key_type_manager
     tink::core::template_util
     tink::core::input_stream
+    tink::core::key
     tink::core::mac
     tink::core::primitive_set
     tink::core::primitive_wrapper
@@ -1623,4 +1658,14 @@ tink_cc_test(
     absl::crc32c
     absl::span
     tink::util::secret_data
+)
+
+tink_cc_library(
+  NAME configuration_helper
+  SRCS
+    configuration_helper.h
+  DEPS
+    absl::flat_hash_map
+    absl::any_invocable
+    tink::util::statusor
 )

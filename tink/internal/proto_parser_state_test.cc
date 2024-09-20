@@ -31,6 +31,8 @@ namespace proto_parsing {
 
 namespace {
 using testing::Eq;
+using testing::IsFalse;
+using testing::IsTrue;
 
 TEST(ParsingState, ConstructAndRemainingData) {
   std::string data = "data";
@@ -110,6 +112,12 @@ TEST(ParsingStateWithCrc, AdvanceGetCrc) {
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(data)));
 }
 
+TEST(ParsingState, HasCrc) {
+  std::string data = "data";
+  absl::crc32c_t crc{};
+  EXPECT_THAT(ParsingState(data).HasCrc(), IsFalse());
+  EXPECT_THAT(ParsingState(data, &crc).HasCrc(), IsTrue());
+}
 
 TEST(SerializationState, ConstructAndBuffer) {
   std::string data = "data";
@@ -158,6 +166,14 @@ TEST(SerializationStateWithCrc, AdvanceWithCrc) {
   std::string new_data = "ta";
   EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(new_data)));
   EXPECT_THAT(crc, Eq(absl::crc32c_t{0x12345678}));
+}
+
+TEST(SerializationState, HasCrc) {
+  std::string data = "data";
+  absl::crc32c_t crc{};
+  EXPECT_THAT(SerializationState(absl::MakeSpan(data)).HasCrc(), IsFalse());
+  EXPECT_THAT(SerializationState(absl::MakeSpan(data), &crc).HasCrc(),
+              IsTrue());
 }
 
 }  // namespace

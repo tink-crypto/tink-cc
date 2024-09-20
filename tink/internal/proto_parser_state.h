@@ -72,6 +72,12 @@ class ParsingState final {
     remaining_view_to_parse_.remove_prefix(length);
   }
 
+  // Returns true if this ParsingState maintains a CRC on every call to Advance
+  // and AdvanceAndGetCrc.
+  bool HasCrc() const {
+    return crc_to_update_ != nullptr;
+  }
+
   // Removes the next `length` bytes from the data to be parsed and returns
   // their CRC. Updates the internal CRC, if any.
   util::SecretValue<absl::crc32c_t> AdvanceAndGetCrc(size_t length);
@@ -107,6 +113,12 @@ class SerializationState final {
 
   // Returns the remaining data to be parsed.
   absl::Span<char> GetBuffer() { return output_buffer_; }
+
+  // Returns true if this ParsingState maintains a CRC on every call to Advance
+  // and AdvanceWithCrc.
+  bool HasCrc() const {
+    return crc_to_update_ != nullptr;
+  }
 
   // Removes the next `length` bytes from the data to be parsed. Updates the
   // internal CRC if any.

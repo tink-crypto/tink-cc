@@ -781,6 +781,93 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME x_aes_gcm_key
+  SRCS
+    x_aes_gcm_key.cc
+    x_aes_gcm_key.h
+  DEPS
+    tink::aead::aead_key
+    tink::aead::x_aes_gcm_parameters
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::subtle::subtle_util
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_library(
+  NAME x_aes_gcm_key_manager
+  SRCS
+    x_aes_gcm_key_manager.cc
+    x_aes_gcm_key_manager.h
+  DEPS
+    tink::aead::cord_aead
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    absl::memory
+    absl::status
+    absl::strings
+    absl::str_format
+    absl::string_view
+    absl::optional
+    tink::core::aead
+    tink::core::key_type_manager
+    tink::core::template_util
+    tink::core::input_stream
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::internal::aead_from_zero_copy
+    tink::aead::internal::cord_x_aes_gcm_boringssl
+    tink::aead::internal::zero_copy_aead
+    tink::aead::internal::zero_copy_x_aes_gcm_boringssl
+    tink::internal::fips_utils
+    tink::subtle::random
+    tink::util::constants
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::util::validation
+    tink::proto::tink_cc_proto
+    tink::proto::x_aes_gcm_cc_proto
+)
+
+tink_cc_library(
+  NAME x_aes_gcm_proto_serialization
+  SRCS
+    x_aes_gcm_proto_serialization.cc
+    x_aes_gcm_proto_serialization.h
+  DEPS
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::call_with_core_dump_protection
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::util::secret_data
+    tink::util::secret_proto
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+    tink::proto::x_aes_gcm_cc_proto
+)
+
 # tests
 
 tink_cc_test(
@@ -1513,26 +1600,6 @@ tink_cc_test(
     tink::util::test_matchers
 )
 
-tink_cc_library(
-  NAME x_aes_gcm_key
-  SRCS
-    x_aes_gcm_key.cc
-    x_aes_gcm_key.h
-  DEPS
-    tink::aead::aead_key
-    tink::aead::x_aes_gcm_parameters
-    absl::status
-    absl::strings
-    absl::string_view
-    absl::optional
-    tink::core::key
-    tink::core::partial_key_access_token
-    tink::core::restricted_data
-    tink::subtle::subtle_util
-    tink::util::status
-    tink::util::statusor
-)
-
 tink_cc_test(
   NAME x_aes_gcm_key_test
   SRCS
@@ -1547,43 +1614,6 @@ tink_cc_test(
     tink::core::restricted_data
     tink::util::statusor
     tink::util::test_matchers
-)
-
-tink_cc_library(
-  NAME x_aes_gcm_key_manager
-  SRCS
-    x_aes_gcm_key_manager.cc
-    x_aes_gcm_key_manager.h
-  DEPS
-    tink::aead::cord_aead
-    tink::aead::x_aes_gcm_key
-    tink::aead::x_aes_gcm_parameters
-    absl::memory
-    absl::status
-    absl::strings
-    absl::str_format
-    absl::string_view
-    absl::optional
-    tink::core::aead
-    tink::core::key_type_manager
-    tink::core::template_util
-    tink::core::input_stream
-    tink::core::insecure_secret_key_access
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::aead::internal::aead_from_zero_copy
-    tink::aead::internal::cord_x_aes_gcm_boringssl
-    tink::aead::internal::zero_copy_aead
-    tink::aead::internal::zero_copy_x_aes_gcm_boringssl
-    tink::internal::fips_utils
-    tink::subtle::random
-    tink::util::constants
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::validation
-    tink::proto::tink_cc_proto
-    tink::proto::x_aes_gcm_cc_proto
 )
 
 tink_cc_test(
@@ -1601,6 +1631,34 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::subtle::random
     tink::util::status
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::tink_cc_proto
+    tink::proto::x_aes_gcm_cc_proto
+)
+
+tink_cc_test(
+  NAME x_aes_gcm_proto_serialization_test
+  SRCS
+    x_aes_gcm_proto_serialization_test.cc
+  DEPS
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    tink::aead::x_aes_gcm_proto_serialization
+    gmock
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto

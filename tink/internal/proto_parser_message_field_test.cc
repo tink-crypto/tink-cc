@@ -18,10 +18,12 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/btree_map.h"
+#include "absl/crc/crc32c.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -85,9 +87,32 @@ TEST(MessageField, ConsumeIntoMemberSuccessCases) {
   std::string bytes =
       absl::StrCat(/* 4 bytes */ HexDecodeOrDie("04"),
                    /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
-                   /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"));
+                   /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
+                   "remaining_data");
   ParsingState parsing_state = ParsingState(bytes);
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
+  EXPECT_THAT(s.inner_member.uint32_member_1, Eq(0x23));
+  EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0x7a));
+}
+
+TEST(MessageField, ConsumeIntoMemberWithCrcSuccessCases) {
+  MessageField<OuterStruct, InnerStruct> field(1, &OuterStruct::inner_member,
+                                               InnerStructFields());
+  OuterStruct s;
+  s.inner_member.uint32_member_1 = 0;
+  s.inner_member.uint32_member_2 = 0;
+
+  std::string bytes =
+      absl::StrCat(/* 4 bytes */ HexDecodeOrDie("04"),
+                   /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
+                   /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
+                   "remaining_data");
+  absl::crc32c_t crc{};
+  ParsingState parsing_state = ParsingState(bytes, &crc);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(bytes.substr(0, 5))));
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(0x23));
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0x7a));
 }

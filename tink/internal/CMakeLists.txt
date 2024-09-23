@@ -1555,6 +1555,7 @@ tink_cc_test(
     tink::internal::proto_parsing_low_level_parser
     gmock
     absl::btree
+    absl::crc32c
     absl::strings
     absl::string_view
     absl::span

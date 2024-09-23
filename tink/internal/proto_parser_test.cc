@@ -35,6 +35,7 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_test_proto.pb.h"
+#include "tink/internal/testing/field_with_number.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -44,6 +45,7 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
@@ -87,10 +89,11 @@ struct ParsedStruct {
   SecretData secret_data_member_1;
   SecretData secret_data_member_2;
   InnerStruct inner_member_1;
+  InnerStruct inner_member_2;
   MyEnum enum_member;
 };
 
-// SERIALIZATION TESTS =========================================================
+// PARSE TESTS =================================================================
 TEST(ProtoParserTest, Uint32AbsentWorks) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -358,6 +361,30 @@ TEST(ProtoParserTest, ParseMessageField) {
       parser->Parse(proto.SerializeAsString());
   ASSERT_THAT(outer_parsed, IsOk());
   EXPECT_THAT(outer_parsed->inner_member_1.uint32_member_1, Eq(123));
+}
+
+TEST(ProtoParserTest, ParseDoubleMessageField) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField<InnerStruct>(
+              1, &ParsedStruct::inner_member_1,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(10, &InnerStruct::uint32_member_1)
+                  .BuildOrDie())
+          .AddMessageField<InnerStruct>(
+              2, &ParsedStruct::inner_member_2,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(10, &InnerStruct::uint32_member_1)
+                  .BuildOrDie())
+          .BuildOrDie();
+  std::string serialization = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(10).IsVarint(100)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(10).IsVarint(20)}));
+
+  absl::StatusOr<ParsedStruct> outer_parsed = parser.Parse(serialization);
+  ASSERT_THAT(outer_parsed, IsOk());
+  EXPECT_THAT(outer_parsed->inner_member_1.uint32_member_1, Eq(100));
+  EXPECT_THAT(outer_parsed->inner_member_2.uint32_member_1, Eq(20));
 }
 
 TEST(ProtoParserTest, EmptyMessageAlwaysWorks) {

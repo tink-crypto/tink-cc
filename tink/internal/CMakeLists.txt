@@ -1410,7 +1410,7 @@ tink_cc_test(
     absl::optional
     tink::core::big_integer
     tink::core::insecure_secret_key_access
-    tink::core::restricted_big_integer
+    tink::internal::testing::field_with_number
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util

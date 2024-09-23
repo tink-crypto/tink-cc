@@ -37,6 +37,8 @@
 #include "tink/aead/chacha20_poly1305_key.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/key_gen_config_v0.h"
+#include "tink/aead/x_aes_gcm_key.h"
+#include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/config/global_registry.h"
@@ -51,7 +53,6 @@
 #include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/registry.h"
@@ -64,6 +65,7 @@
 #include "proto/aes_gcm_siv.pb.h"
 #include "proto/chacha20_poly1305.pb.h"
 #include "proto/tink.pb.h"
+#include "proto/x_aes_gcm.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
 namespace crypto {
@@ -131,9 +133,12 @@ TEST_F(AeadConfigTest, RegisterNonFipsTemplates) {
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
   std::list<KeyTemplate> non_fips_key_templates = {
-      AeadKeyTemplates::Aes128Eax(),         AeadKeyTemplates::Aes256Eax(),
-      AeadKeyTemplates::Aes128GcmSiv(),      AeadKeyTemplates::Aes256GcmSiv(),
+      AeadKeyTemplates::Aes128Eax(),
+      AeadKeyTemplates::Aes256Eax(),
+      AeadKeyTemplates::Aes128GcmSiv(),
+      AeadKeyTemplates::Aes256GcmSiv(),
       AeadKeyTemplates::XChaCha20Poly1305(),
+      AeadKeyTemplates::XAes256Gcm8ByteSalt(),
   };
 
   for (auto key_template : non_fips_key_templates) {
@@ -745,6 +750,97 @@ TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoKeySerializationRegistered) {
   util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
       ChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()),
+      /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      *key, InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+                  *proto_key_serialization, InsecureSecretKeyAccess::Get()),
+              IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .SerializeKey<internal::ProtoKeySerialization>(
+                      *key, InsecureSecretKeyAccess::Get()),
+              IsOk());
+}
+
+TEST_F(AeadConfigTest, XAesGcmProtoParamsSerializationRegistered) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+
+  // TODO: b/347926425 - Rewrite tests using parameters proto format API.
+  util::StatusOr<internal::ProtoParametersSerialization>
+      proto_params_serialization =
+          internal::ProtoParametersSerialization::Create(
+              AeadKeyTemplates::XAes256Gcm8ByteSalt());
+  ASSERT_THAT(proto_params_serialization, IsOk());
+
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .ParseParameters(*proto_params_serialization)
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, /*salt_size_bytes=*/12);
+  ASSERT_THAT(params, IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<internal::ProtoParametersSerialization>(*params)
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
+
+  ASSERT_THAT(AeadConfig::Register(), IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *proto_params_serialization),
+      IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<internal::ProtoParametersSerialization>(*params),
+      IsOk());
+}
+
+TEST_F(AeadConfigTest, XAesGcmProtoKeySerializationRegistered) {
+  if (IsFipsModeEnabled()) {
+    GTEST_SKIP() << "Not supported in FIPS-only mode";
+  }
+  std::string key_bytes = subtle::Random::GetRandomBytes(32);
+  google::crypto::tink::XAesGcmKey key_proto;
+  key_proto.set_version(0);
+  key_proto.mutable_params()->set_salt_size(12);
+  key_proto.set_key_value(key_bytes);
+
+  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.XAesGcmKey",
+          RestrictedData(key_proto.SerializeAsString(),
+                         InsecureSecretKeyAccess::Get()),
+          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+  ASSERT_THAT(proto_key_serialization, IsOk());
+
+  ASSERT_THAT(
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .ParseKey(*proto_key_serialization, InsecureSecretKeyAccess::Get())
+          .status(),
+      StatusIs(absl::StatusCode::kNotFound));
+
+  util::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, /*salt_size_bytes=*/12);
+  ASSERT_THAT(params, IsOk());
+
+  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *params, RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

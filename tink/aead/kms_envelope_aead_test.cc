@@ -148,7 +148,8 @@ TEST_F(KmsEnvelopeAeadTest, DecryptFailsWithInvalidCiphertextOrAad) {
       (*aead)
           ->Decrypt(ciphertext.substr(0, 4 + dek_encrypted_key_size - 1), aad)
           .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("invalid")));
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("length of encrypted DEK too large")));
 
   std::string corrupted_ciphertext = *encrypt_result;
   // Corrupt the serialized DEK.
@@ -161,6 +162,13 @@ TEST_F(KmsEnvelopeAeadTest, DecryptFailsWithInvalidCiphertextOrAad) {
   EXPECT_THAT((*aead)->Decrypt(ciphertext, "wrong aad").status(),
               StatusIs(absl::StatusCode::kInternal,
                        HasSubstr("Authentication failed")));
+
+  std::string ciphertextWithHugeEncryptedDekLength =
+      "\x88\x88\x88\x88\x88\x88\x88\x88";
+  EXPECT_THAT(
+      (*aead)->Decrypt(ciphertextWithHugeEncryptedDekLength, "").status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("length of encrypted DEK too large")));
 }
 
 TEST_F(KmsEnvelopeAeadTest, DekMaintainsCorrectKeyFormat) {

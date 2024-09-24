@@ -17,6 +17,7 @@
 #include "tink/aead/aes_eax_key.h"
 
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -260,6 +261,130 @@ TEST(AesEaxKeyTest, DifferentIdRequirementKeysNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesEaxKeyTest, CopyConstructor) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesEaxKey copy(*key);
+
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy.GetParameters(), Eq(*parameters));
+  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
+}
+
+TEST(AesEaxKeyTest, CopyAssignment) {
+  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesEaxParameters> parameters1 =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters1, IsOk());
+
+  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<AesEaxParameters> parameters2 =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters2, IsOk());
+
+  util::StatusOr<AesEaxKey> copy =
+      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+                        GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *key;
+
+  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
+  EXPECT_THAT(copy->GetParameters(), Eq(*parameters1));
+  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(AesEaxKeyTest, MoveConstructor) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesEaxKey move(std::move(*key));
+
+  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
+  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
+}
+
+TEST(AesEaxKeyTest, MoveAssignment) {
+  RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesEaxParameters> parameters1 =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters1, IsOk());
+
+  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+      *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<AesEaxParameters> parameters2 =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters2, IsOk());
+
+  util::StatusOr<AesEaxKey> move =
+      AesEaxKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+                        GetPartialKeyAccess());
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*key);
+
+  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
+  EXPECT_THAT(move->GetParameters(), Eq(*parameters1));
+  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
 }
 
 }  // namespace

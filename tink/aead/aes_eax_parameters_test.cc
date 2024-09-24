@@ -16,6 +16,8 @@
 
 #include "tink/aead/aes_eax_parameters.h"
 
+#include <utility>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
@@ -29,6 +31,7 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
+using ::testing::IsTrue;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -262,44 +265,98 @@ TEST(AesEaxParametersTest, BuildWithInvalidTagSizeFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_P(AesEaxParametersTest, CopyConstructor) {
-  BuildTestCase test_case = GetParam();
-
+TEST(AesEaxParametersTest, CopyConstructor) {
   util::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
-          .SetKeySizeInBytes(test_case.key_size)
-          .SetIvSizeInBytes(test_case.iv_size)
-          .SetTagSizeInBytes(test_case.tag_size)
-          .SetVariant(test_case.variant)
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
   AesEaxParameters copy(*parameters);
-  EXPECT_THAT(copy.GetKeySizeInBytes(), Eq(test_case.key_size));
-  EXPECT_THAT(copy.GetIvSizeInBytes(), Eq(test_case.iv_size));
-  EXPECT_THAT(copy.GetTagSizeInBytes(), Eq(test_case.tag_size));
-  EXPECT_THAT(copy.GetVariant(), Eq(test_case.variant));
-  EXPECT_THAT(copy.HasIdRequirement(), test_case.has_id_requirement);
+
+  EXPECT_THAT(copy.GetKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(copy.GetIvSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy.GetTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy.GetVariant(), Eq(AesEaxParameters::Variant::kTink));
+  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
 }
 
-TEST_P(AesEaxParametersTest, CopyAssignment) {
-  BuildTestCase test_case = GetParam();
-
+TEST(AesEaxParametersTest, CopyAssignment) {
   util::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
-          .SetKeySizeInBytes(test_case.key_size)
-          .SetIvSizeInBytes(test_case.iv_size)
-          .SetTagSizeInBytes(test_case.tag_size)
-          .SetVariant(test_case.variant)
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  AesEaxParameters copy = *parameters;
-  EXPECT_THAT(copy.GetKeySizeInBytes(), Eq(test_case.key_size));
-  EXPECT_THAT(copy.GetIvSizeInBytes(), Eq(test_case.iv_size));
-  EXPECT_THAT(copy.GetTagSizeInBytes(), Eq(test_case.tag_size));
-  EXPECT_THAT(copy.GetVariant(), Eq(test_case.variant));
-  EXPECT_THAT(copy.HasIdRequirement(), test_case.has_id_requirement);
+  util::StatusOr<AesEaxParameters> copy =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->GetKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(copy->GetIvSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->GetTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->GetVariant(), Eq(AesEaxParameters::Variant::kTink));
+  EXPECT_THAT(copy->HasIdRequirement(), IsTrue());
+}
+
+TEST(AesEaxParametersTest, MoveConstructor) {
+  util::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  AesEaxParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.GetKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move.GetIvSizeInBytes(), Eq(16));
+  EXPECT_THAT(move.GetTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move.GetVariant(), Eq(AesEaxParameters::Variant::kTink));
+  EXPECT_THAT(move.HasIdRequirement(), IsTrue());
+}
+
+TEST(AesEaxParametersTest, MoveAssignment) {
+  util::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesEaxParameters> move =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->GetKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move->GetIvSizeInBytes(), Eq(16));
+  EXPECT_THAT(move->GetTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move->GetVariant(), Eq(AesEaxParameters::Variant::kTink));
+  EXPECT_THAT(move->HasIdRequirement(), IsTrue());
 }
 
 TEST_P(AesEaxParametersTest, SameParametersEquals) {

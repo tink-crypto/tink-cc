@@ -17,6 +17,7 @@
 #include "tink/aead/aes_gcm_parameters.h"
 
 #include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -225,6 +226,7 @@ TEST(AesGcmParametersTest, CopyConstructor) {
   ASSERT_THAT(parameters, IsOk());
 
   AesGcmParameters copy(*parameters);
+
   EXPECT_THAT(copy.KeySizeInBytes(), Eq(16));
   EXPECT_THAT(copy.IvSizeInBytes(), Eq(16));
   EXPECT_THAT(copy.TagSizeInBytes(), Eq(16));
@@ -242,12 +244,69 @@ TEST(AesGcmParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  AesGcmParameters copy = *parameters;
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(16));
-  EXPECT_THAT(copy.IvSizeInBytes(), Eq(16));
-  EXPECT_THAT(copy.TagSizeInBytes(), Eq(16));
-  EXPECT_THAT(copy.GetVariant(), Eq(AesGcmParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  util::StatusOr<AesGcmParameters> copy =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->KeySizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->IvSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->TagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->GetVariant(), Eq(AesGcmParameters::Variant::kTink));
+  EXPECT_THAT(copy->HasIdRequirement(), IsTrue());
+}
+
+TEST(AesGcmParametersTest, MoveConstructor) {
+  util::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  AesGcmParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.KeySizeInBytes(), Eq(16));
+  EXPECT_THAT(move.IvSizeInBytes(), Eq(16));
+  EXPECT_THAT(move.TagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move.GetVariant(), Eq(AesGcmParameters::Variant::kTink));
+  EXPECT_THAT(move.HasIdRequirement(), IsTrue());
+}
+
+TEST(AesGcmParametersTest, MoveAssignment) {
+  util::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesGcmParameters> move =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(12)
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->KeySizeInBytes(), Eq(16));
+  EXPECT_THAT(move->IvSizeInBytes(), Eq(16));
+  EXPECT_THAT(move->TagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move->GetVariant(), Eq(AesGcmParameters::Variant::kTink));
+  EXPECT_THAT(move->HasIdRequirement(), IsTrue());
 }
 
 using AesGcmParametersVariantTest =

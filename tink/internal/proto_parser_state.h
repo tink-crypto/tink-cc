@@ -88,6 +88,20 @@ class ParsingState final {
     return static_cast<uint8_t>(*remaining_view_to_parse_.begin());
   }
 
+  // Splits off a state for a `length` bytes prefix that represent a
+  // submessage.
+  //
+  // Parsing of the submessage state *must* be finished before any other
+  // function of this state can be called: the submessage state shares the
+  // computed CRC with this state, and the CRC is only updated correctly if
+  // the parsing happens in order.
+  ParsingState SplitOffSubmessageState(size_t length) {
+    ParsingState result = ParsingState(
+        remaining_view_to_parse_.substr(0, length), crc_to_update_);
+    remaining_view_to_parse_.remove_prefix(length);
+    return result;
+  }
+
  private:
   absl::string_view remaining_view_to_parse_;
   absl::Nullable<absl::crc32c_t*> crc_to_update_;

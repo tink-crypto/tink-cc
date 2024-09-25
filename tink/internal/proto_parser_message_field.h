@@ -1,4 +1,3 @@
-
 // Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,12 +59,17 @@ class MessageField : public Field<OuterStruct> {
 
   absl::Status ConsumeIntoMember(ParsingState& serialized,
                                  OuterStruct& s) const override {
-    absl::StatusOr<absl::string_view> result =
-        ConsumeBytesReturnStringView(serialized);
-    if (!result.ok()) {
-      return result.status();
+    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
+    if (!length.ok()) {
+      return length.status();
     }
-    ParsingState submessage_parsing_state = ParsingState(*result);
+    if (*length > serialized.RemainingData().size()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Length ", *length, " exceeds remaining input size ",
+                       serialized.RemainingData().size()));
+    }
+    ParsingState submessage_parsing_state =
+        serialized.SplitOffSubmessageState(*length);
     return low_level_parser_.ConsumeIntoAllFields(submessage_parsing_state,
                                                   s.*value_);
   }

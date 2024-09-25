@@ -119,6 +119,51 @@ TEST(ParsingState, HasCrc) {
   EXPECT_THAT(ParsingState(data, &crc).HasCrc(), IsTrue());
 }
 
+TEST(ParsingState, SplitOffSubmessageState) {
+  std::string data = "data 1234 remainder";
+  ParsingState state = ParsingState(data);
+  EXPECT_THAT(state.RemainingData(), Eq("data 1234 remainder"));
+  ParsingState submessage_state = state.SplitOffSubmessageState(9);
+  EXPECT_THAT(submessage_state.RemainingData(), Eq("data 1234"));
+  EXPECT_THAT(state.RemainingData(), Eq(" remainder"));
+}
+
+TEST(ParsingState, SplitOffSubmessageStateCrc) {
+  std::string data = "data 1234 rem";
+  absl::crc32c_t crc{};
+  ParsingState state = ParsingState(data, &crc);
+  EXPECT_THAT(state.RemainingData(), Eq("data 1234 rem"));
+  ParsingState submessage_state = state.SplitOffSubmessageState(9);
+  EXPECT_THAT(submessage_state.RemainingData(), Eq("data 1234"));
+  EXPECT_THAT(state.RemainingData(), Eq(" rem"));
+
+  // No data was processed yet.
+  EXPECT_THAT(crc, Eq(absl::crc32c_t{}));
+  submessage_state.Advance(5);  // Process "data "
+
+  EXPECT_THAT(submessage_state.RemainingData(), Eq("1234"));
+  EXPECT_THAT(state.RemainingData(), Eq(" rem"));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c("data ")));
+
+  submessage_state.Advance(4);  // Process "1234"
+  state.Advance(4);             // Process "rem "
+  EXPECT_THAT(submessage_state.RemainingData(), Eq(""));
+  EXPECT_THAT(state.RemainingData(), Eq(""));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c("data 1234 rem")));
+}
+
+TEST(ParsingState, SplitOffSubmessageStateCrcWrongOrder) {
+  std::string data = "onetwo";
+  absl::crc32c_t crc{};
+  ParsingState state = ParsingState(data, &crc);
+  ParsingState submessage_state = state.SplitOffSubmessageState(3);
+  EXPECT_THAT(submessage_state.RemainingData(), Eq("one"));
+  EXPECT_THAT(state.RemainingData(), Eq("two"));
+  state.Advance(3);
+  submessage_state.Advance(3);
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c("twoone")));
+}
+
 TEST(SerializationState, ConstructAndBuffer) {
   std::string data = "data";
   SerializationState state = SerializationState(absl::MakeSpan(data));

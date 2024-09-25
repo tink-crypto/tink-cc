@@ -151,6 +151,18 @@ TEST(MessageField, ConsumeIntoMemberDoesNotClear) {
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0x7a));
 }
 
+TEST(MessageField, ConsumeIntoMemberVarintTooLong) {
+  MessageField<OuterStruct, InnerStruct> field(1, &OuterStruct::inner_member,
+                                               InnerStructFields());
+  OuterStruct s;
+  s.inner_member.uint32_member_1 = 0;
+  s.inner_member.uint32_member_2 = 0;
+
+  std::string bytes = /* LengthDelimetedLength: */ HexDecodeOrDie("01");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+}
+
 TEST(MessageField, EmptyWithoutVarint) {
   MessageField<OuterStruct, InnerStruct> field(1, &OuterStruct::inner_member,
                                                InnerStructFields());

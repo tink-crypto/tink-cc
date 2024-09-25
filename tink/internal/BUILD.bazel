@@ -1770,3 +1770,33 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "secret_data_with_crc",
+    srcs = ["secret_data_with_crc.cc"],
+    hdrs = ["secret_data_with_crc.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":call_with_core_dump_protection",
+        "//tink/util:secret_data",
+        "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_test(
+    name = "secret_data_with_crc_test",
+    srcs = ["secret_data_with_crc_test.cc"],
+    deps = [
+        ":secret_data_with_crc",
+        "//tink/subtle:random",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

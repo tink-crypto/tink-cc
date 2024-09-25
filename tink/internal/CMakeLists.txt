@@ -1702,3 +1702,32 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME secret_data_with_crc
+  SRCS
+    secret_data_with_crc.cc
+    secret_data_with_crc.h
+  DEPS
+    tink::internal::call_with_core_dump_protection
+    absl::crc32c
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME secret_data_with_crc_test
+  SRCS
+    secret_data_with_crc_test.cc
+  DEPS
+    tink::internal::secret_data_with_crc
+    gmock
+    absl::crc32c
+    absl::status
+    tink::subtle::random
+    tink::util::secret_data
+    tink::util::test_matchers
+)

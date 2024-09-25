@@ -59,7 +59,7 @@ void CopyIntoStringLikeValue(absl::string_view sv, absl::string_view& dest) {
 
 size_t SizeOfStringLikeValue(const std::string& s) { return s.size(); }
 size_t SizeOfStringLikeValue(const util::SecretData& s) { return s.size(); }
-size_t SizeOfStringLikeValue(const absl::string_view& b) { return b.size(); }
+size_t SizeOfStringLikeValue(const absl::string_view b) { return b.size(); }
 
 void SerializeStringLikeValue(const std::string& s, absl::Span<char> o) {
   memcpy(o.data(), s.data(), std::min(s.size(), o.size()));
@@ -67,7 +67,7 @@ void SerializeStringLikeValue(const std::string& s, absl::Span<char> o) {
 void SerializeStringLikeValue(const util::SecretData& s, absl::Span<char> o) {
   SafeMemCopy(o.data(), s.data(), std::min(s.size(), o.size()));
 }
-void SerializeStringLikeValue(const absl::string_view& s, absl::Span<char> o) {
+void SerializeStringLikeValue(const absl::string_view s, absl::Span<char> o) {
   memcpy(o.data(), s.data(), std::min(s.size(), o.size()));
 }
 

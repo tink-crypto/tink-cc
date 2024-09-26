@@ -25,6 +25,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -35,6 +36,7 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_test_proto.pb.h"
+#include "tink/internal/secret_data_with_crc.h"
 #include "tink/internal/testing/field_with_number.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -49,10 +51,11 @@ using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
-using ::crypto::tink::util::StatusOr;
+using ::crypto::tink::util::SecretValue;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;
@@ -78,6 +81,9 @@ enum class MyEnum : uint32_t {
 struct InnerStruct {
   uint32_t uint32_member_1;
   uint32_t uint32_member_2;
+  SecretData secret_data_member_1;
+  SecretDataWithCrc secret_data_with_crc_member_1;
+  SecretDataWithCrc secret_data_with_crc_member_2;
 };
 
 struct ParsedStruct {
@@ -91,6 +97,9 @@ struct ParsedStruct {
   InnerStruct inner_member_1;
   InnerStruct inner_member_2;
   MyEnum enum_member;
+
+  SecretDataWithCrc secret_data_with_crc_member_1;
+  SecretDataWithCrc secret_data_with_crc_member_2;
 };
 
 // PARSE TESTS =================================================================
@@ -568,6 +577,69 @@ TEST(ProtoParserTest, SkipUnknownFields) {
   EXPECT_THAT(parsed->string_member_1, Eq("foo"));
 }
 
+TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcParsingWorks) {
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesSecretDataWithCrcField(
+              1, &ParsedStruct::secret_data_with_crc_member_1)
+          .AddUint32Field(2, &ParsedStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  std::string serialization =
+      absl::StrCat(FieldWithNumber(1).IsString("some text"),
+                   FieldWithNumber(2).IsVarint(101));
+
+  absl::StatusOr<std::pair<ParsedStruct, SecretValue<absl::crc32c_t>>> parsed =
+      parser->ParseWithCrc(serialization);
+  ASSERT_THAT(parsed, IsOk());
+
+  EXPECT_THAT(parsed->first.secret_data_with_crc_member_1.UncheckedData(),
+              Eq("some text"));
+  EXPECT_THAT(parsed->first.secret_data_with_crc_member_1.SecretCrc().value(),
+              Eq(absl::ComputeCrc32c("some text")));
+  EXPECT_THAT(parsed->first.uint32_member_1, Eq(101));
+  EXPECT_THAT(parsed->second.value(), Eq(absl::ComputeCrc32c(serialization)));
+}
+
+TEST(ProtoParserTest, MultipleBytesFieldSecretDataWithCrcParsingWorks) {
+  std::string text11 = "Text for first submessage, first field";
+  std::string text12 = "Text for first submessage, second field";
+  std::string text21 = "Text for second submessage, first field";
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField(
+              1, &ParsedStruct::inner_member_1,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddBytesSecretDataWithCrcField(
+                      1, &InnerStruct::secret_data_with_crc_member_1)
+                  .AddBytesSecretDataWithCrcField(
+                      2, &InnerStruct::secret_data_with_crc_member_2)
+                  .BuildOrDie())
+          .AddMessageField(
+              2, &ParsedStruct::inner_member_2,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddBytesSecretDataWithCrcField(
+                      1, &InnerStruct::secret_data_with_crc_member_1)
+                  .AddBytesSecretDataWithCrcField(
+                      2, &InnerStruct::secret_data_with_crc_member_2)
+                  .BuildOrDie())
+          .BuildOrDie();
+  std::string serialization = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(text11),
+                                       FieldWithNumber(2).IsString(text12)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsString(text21)}));
+  absl::StatusOr<std::pair<ParsedStruct, SecretValue<absl::crc32c_t>>> parsed =
+      parser.ParseWithCrc(serialization);
+  ASSERT_THAT(parsed, IsOk());
+
+  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_1.data(),
+              IsOkAndHolds(Eq(text11)));
+  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_2.data(),
+              IsOkAndHolds(Eq(text12)));
+  EXPECT_THAT(parsed->first.inner_member_2.secret_data_with_crc_member_1.data(),
+              IsOkAndHolds(Eq(text21)));
+}
+
 // Found by a prototype fuzzer.
 TEST(ProtoParserTest, Regression1) {
   std::string serialization = HexDecodeOrDie("a20080808080808080808000");
@@ -847,6 +919,113 @@ TEST(ProtoParserTest, SerializeSecredDataFieldAlwaysSerializeWorks) {
   absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
   ASSERT_THAT(serialized.status(), IsOk());
   ASSERT_THAT(HexEncode(*serialized), Eq("0a00"));
+}
+
+TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
+  ParsedStruct parsed_struct;
+  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc("some text");
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesSecretDataWithCrcField(
+              kBytesField1Tag, &ParsedStruct::secret_data_with_crc_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<SecretDataWithCrc> serialized =
+      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  ASSERT_THAT(serialized, IsOk());
+
+  std::string expected_serialization =
+      FieldWithNumber(kBytesField1Tag).IsString("some text");
+  EXPECT_THAT(serialized->data(), test::IsOkAndHolds(expected_serialization));
+}
+
+TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
+  ParsedStruct parsed_struct;
+  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc("some text");
+  parsed_struct.secret_data_with_crc_member_2 =
+      SecretDataWithCrc("another text");
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesSecretDataWithCrcField(
+              kBytesField1Tag, &ParsedStruct::secret_data_with_crc_member_1)
+          .AddBytesSecretDataWithCrcField(
+              kBytesField2Tag, &ParsedStruct::secret_data_with_crc_member_2)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<SecretDataWithCrc> serialized =
+      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  ASSERT_THAT(serialized, IsOk());
+
+  std::string expected_serialization =
+      absl::StrCat(FieldWithNumber(kBytesField1Tag).IsString("some text"),
+                   FieldWithNumber(kBytesField2Tag).IsString("another text"));
+  EXPECT_THAT(serialized->data(), IsOkAndHolds(expected_serialization));
+}
+
+// Tests that in order to compute the overall CRC, the CRC field is used (and
+// not the data).
+TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcWrongCRC) {
+  ParsedStruct parsed_struct;
+  std::string text1 = "some text of arbitrary length";
+  std::string text2 = "different text of same length";
+  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc(
+      text1, SecretValue<absl::crc32c_t>(absl::ComputeCrc32c(text2)));
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddBytesSecretDataWithCrcField(
+              kBytesField1Tag, &ParsedStruct::secret_data_with_crc_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<SecretDataWithCrc> serialized =
+      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  ASSERT_THAT(serialized, IsOk());
+
+  std::string expected_serialization =
+      FieldWithNumber(kBytesField1Tag).IsString(text1);
+  std::string serialization_of_computed_crc =
+      FieldWithNumber(kBytesField1Tag).IsString(text2);
+  EXPECT_THAT(serialized->UncheckedData(), Eq(expected_serialization));
+  EXPECT_THAT(serialized->SecretCrc().value(),
+              Eq(absl::ComputeCrc32c(serialization_of_computed_crc)));
+}
+
+// Checks that the CRC computation is correct when serializing inner fields.
+TEST(ProtoParserTest, CrcOfInnerFieldSerializationWorks) {
+  ParsedStruct parsed_struct;
+  std::string text1 = "something";
+  std::string text2 = "anything, does not matter";
+  parsed_struct.inner_member_1.secret_data_with_crc_member_1 =
+      SecretDataWithCrc(text1);
+  parsed_struct.inner_member_2.secret_data_with_crc_member_1 =
+      SecretDataWithCrc(text2);
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField(
+              1, &ParsedStruct::inner_member_1,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddBytesSecretDataWithCrcField(
+                      1, &InnerStruct::secret_data_with_crc_member_1)
+                  .BuildOrDie())
+          .AddMessageField(
+              2, &ParsedStruct::inner_member_2,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddBytesSecretDataWithCrcField(
+                      1, &InnerStruct::secret_data_with_crc_member_1)
+                  .BuildOrDie())
+          .BuildOrDie();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<SecretDataWithCrc> serialized =
+      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  ASSERT_THAT(serialized, IsOk());
+
+  std::string expected_serialization = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(text1)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsString(text2)}));
+  EXPECT_THAT(serialized->data(), IsOkAndHolds(expected_serialization));
 }
 
 TEST(ProtoParserTest, SerializeMessageField) {

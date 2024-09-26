@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "absl/container/btree_map.h"
+#include "absl/crc/crc32c.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -39,11 +40,14 @@
 #include "tink/internal/proto_parser_message_field.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_presence_fields.h"
+#include "tink/internal/proto_parser_secret_data_with_crc_field.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
+#include "tink/internal/secret_data_with_crc.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
+
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -96,8 +100,26 @@ class ProtoParser {
 
   absl::StatusOr<Struct> Parse(absl::string_view input) const;
 
+  // Parses the input and returns the struct together with the CRC of the input.
+  // For fields which support CRCs (e.g. AddBytesSecretDataWithCrcField), the
+  // CRC of the field is consistent with the CRC of the output. This enables
+  // end-to-end coverage of the CRC computation: if the returned CRC is known
+  // to be correct, the CRCs of the individual fields must also be correct.
+  absl::StatusOr<
+      std::pair<Struct, crypto::tink::util::SecretValue<absl::crc32c_t>>>
+  ParseWithCrc(absl::string_view input) const;
+
   absl::StatusOr<std::string> SerializeIntoString(const Struct& s) const;
   absl::StatusOr<crypto::tink::util::SecretData> SerializeIntoSecretData(
+      const Struct& s) const;
+
+  // Serializes the input and returns the the serialized value. For fields
+  // which support CRCs (e.g. AddBytesSecretDataWithCrcField), the data of the
+  // field is not considered when computing the overall CRC. Instead, only the
+  // CRC of the field is used to compute the result. This enables end-to-end
+  // coverage of the CRC computation: if the returned CRC is correct, the CRCs
+  // of the fields must have been corrects.
+  absl::StatusOr<SecretDataWithCrc> SerializeIntoSecretDataWithCrc(
       const Struct& s) const;
 
  private:
@@ -179,6 +201,17 @@ class ProtoParserBuilder {
             tag, value, options));
     return *this;
   }
+
+  // Adds a SecretData field together with a corresponding CRC. If this function
+  // is used, the CRC methods of the parser must be used.
+  ProtoParserBuilder& AddBytesSecretDataWithCrcField(
+      int tag, SecretDataWithCrc Struct::*data) {
+    fields_.push_back(
+        absl::make_unique<proto_parsing::SecretDataWithCrcField<Struct>>(tag,
+                                                                         data));
+    return *this;
+  }
+
   template <typename InnerStruct>
   ProtoParserBuilder<Struct>& AddMessageField(
       int tag, InnerStruct Struct::*value,
@@ -206,6 +239,23 @@ absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
       proto_parsing::ParsingState(input);
   absl::Status status =
       low_level_parser_.ConsumeIntoAllFields(parsing_state, result);
+  if (!status.ok()) {
+    return status;
+  }
+  return result;
+}
+
+template <typename Struct>
+absl::StatusOr<std::pair<Struct, util::SecretValue<absl::crc32c_t>>>
+ProtoParser<Struct>::ParseWithCrc(absl::string_view input) const {
+  std::pair<Struct, crypto::tink::util::SecretValue<absl::crc32c_t>> result;
+  result.second.value() = absl::crc32c_t{};
+
+  low_level_parser_.ClearAllFields(result.first);
+  proto_parsing::ParsingState parsing_state =
+      proto_parsing::ParsingState(input, &result.second.value());
+  absl::Status status =
+      low_level_parser_.ConsumeIntoAllFields(parsing_state, result.first);
   if (!status.ok()) {
     return status;
   }
@@ -247,6 +297,27 @@ ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
     return absl::InternalError("Resulting buffer expected to be empty");
   }
   return result;
+}
+
+template <typename Struct>
+absl::StatusOr<SecretDataWithCrc>
+ProtoParser<Struct>::SerializeIntoSecretDataWithCrc(const Struct& s) const {
+  size_t size = low_level_parser_.GetSerializedSize(s);
+  crypto::tink::util::SecretData result_data;
+  crypto::tink::util::SecretValue<absl::crc32c_t> result_crc;
+  result_data.resize(size);
+  absl::Span<char> buffer = absl::MakeSpan(
+      reinterpret_cast<char*>(result_data.data()), result_data.size());
+  proto_parsing::SerializationState serialization_state =
+      proto_parsing::SerializationState(buffer, &(result_crc).value());
+  absl::Status status = low_level_parser_.SerializeInto(serialization_state, s);
+  if (!status.ok()) {
+    return status;
+  }
+  if (!serialization_state.GetBuffer().empty()) {
+    return absl::InternalError("Resulting buffer expected to be empty");
+  }
+  return SecretDataWithCrc(std::move(result_data), std::move(result_crc));
 }
 
 template <typename Struct>

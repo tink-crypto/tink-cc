@@ -17,6 +17,7 @@
 #include "tink/aead/aes_gcm_siv_parameters.h"
 
 #include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -97,26 +98,60 @@ TEST(AesGcmSivParametersTest, CreateWithInvalidKeySizeFails) {
       StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(AesGcmParametersTest, CopyConstructor) {
+TEST(AesGcmSivParametersTest, CopyConstructor) {
   util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   AesGcmSivParameters copy(*parameters);
+
   EXPECT_THAT(copy.KeySizeInBytes(), Eq(16));
   EXPECT_THAT(copy.GetVariant(), Eq(AesGcmSivParameters::Variant::kTink));
   EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
 }
 
-TEST(AesGcmParametersTest, CopyAssignment) {
+TEST(AesGcmSivParametersTest, CopyAssignment) {
   util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  AesGcmSivParameters copy = *parameters;
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(32));
-  EXPECT_THAT(copy.GetVariant(), Eq(AesGcmSivParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  util::StatusOr<AesGcmSivParameters> copy = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->KeySizeInBytes(), Eq(32));
+  EXPECT_THAT(copy->GetVariant(), Eq(AesGcmSivParameters::Variant::kTink));
+  EXPECT_THAT(copy->HasIdRequirement(), IsTrue());
+}
+
+TEST(AesGcmSivParametersTest, MoveConstructor) {
+  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  AesGcmSivParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.KeySizeInBytes(), Eq(16));
+  EXPECT_THAT(move.GetVariant(), Eq(AesGcmSivParameters::Variant::kTink));
+  EXPECT_THAT(move.HasIdRequirement(), IsTrue());
+}
+
+TEST(AesGcmSivParametersTest, MoveAssignment) {
+  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesGcmSivParameters> move = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->KeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move->GetVariant(), Eq(AesGcmSivParameters::Variant::kTink));
+  EXPECT_THAT(move->HasIdRequirement(), IsTrue());
 }
 
 using AesGcmSivParametersVariantTest =

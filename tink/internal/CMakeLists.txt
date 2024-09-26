@@ -1679,6 +1679,7 @@ tink_cc_library(
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
+    tink::internal::secret_data_with_crc
     absl::crc32c
     absl::status
     absl::statusor
@@ -1693,6 +1694,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parser_secret_data_with_crc_field
     tink::internal::proto_parser_state
+    tink::internal::secret_data_with_crc
     gmock
     absl::crc32c
     absl::strings

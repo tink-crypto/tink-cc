@@ -24,9 +24,11 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/internal/secret_data_with_crc.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -38,9 +40,8 @@ template <typename Struct>
 class SecretDataWithCrcField : public Field<Struct> {
  public:
   explicit SecretDataWithCrcField(
-      int tag, util::SecretData Struct::*data,
-      util::SecretValue<absl::crc32c_t> Struct::*crc)
-      : data_(data), crc_(crc), tag_(tag) {}
+      int tag, SecretDataWithCrc Struct::*data)
+      : data_(data), tag_(tag) {}
   // Not copyable and movable.
   SecretDataWithCrcField(const SecretDataWithCrcField&) = delete;
   SecretDataWithCrcField& operator=(const SecretDataWithCrcField&) = delete;
@@ -48,8 +49,7 @@ class SecretDataWithCrcField : public Field<Struct> {
   SecretDataWithCrcField& operator=(SecretDataWithCrcField&&) noexcept = delete;
 
   void ClearMember(Struct& s) const override {
-    s.*data_ = util::SecretData();
-    (s.*crc_).value() = absl::crc32c_t{};
+    s.*data_ = SecretDataWithCrc();
   }
 
   absl::Status ConsumeIntoMember(ParsingState& parsing_state,
@@ -69,9 +69,10 @@ class SecretDataWithCrcField : public Field<Struct> {
     if (!length.ok()) {
       return length.status();
     }
-    s.*data_ = util::SecretDataFromStringView(
-        parsing_state.RemainingData().substr(0, *length));
-    s.*crc_ = parsing_state.AdvanceAndGetCrc(*length);
+    absl::string_view data = parsing_state.RemainingData().substr(0, *length);
+    util::SecretValue<absl::crc32c_t> crc =
+        parsing_state.AdvanceAndGetCrc(*length);
+    s.*data_ = SecretDataWithCrc(data, crc);
     return absl::OkStatus();
   }
 
@@ -92,7 +93,7 @@ class SecretDataWithCrcField : public Field<Struct> {
           "Can only serialize parse as SecretDataWithCrcField when CRC is "
           "maintained");
     }
-    size_t size = SizeOfStringLikeValue(values.*data_);
+    size_t size = (values.*data_).UncheckedData().size();
     absl::Status s = SerializeVarint(size, serialization_state);
     if (!s.ok()) {
       return s;
@@ -102,13 +103,15 @@ class SecretDataWithCrcField : public Field<Struct> {
           "Output buffer too small: ", serialization_state.GetBuffer().size(),
           " < ", size));
     }
-    SerializeStringLikeValue(values.*data_, serialization_state.GetBuffer());
-    serialization_state.AdvanceWithCrc(size, (values.*crc_).value());
+    SerializeStringLikeValue((values.*data_).UncheckedData(),
+                             serialization_state.GetBuffer());
+    serialization_state.AdvanceWithCrc(size,
+                                       (values.*data_).SecretCrc().value());
     return absl::OkStatus();
   }
 
   size_t GetSerializedSize(const Struct& values) const override {
-    size_t size = SizeOfStringLikeValue(values.*data_);
+    size_t size = (values.*data_).UncheckedData().size();
     return VarintLength(size) + size;
   }
 
@@ -116,8 +119,7 @@ class SecretDataWithCrcField : public Field<Struct> {
   int GetTag() const override { return tag_; }
 
  private:
-  util::SecretData Struct::*data_;
-  util::SecretValue<absl::crc32c_t> Struct::*crc_;
+  SecretDataWithCrc Struct::*data_;
   int tag_;
 };
 

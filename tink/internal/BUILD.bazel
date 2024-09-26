@@ -1746,6 +1746,7 @@ cc_library(
         ":proto_parser_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
+        ":secret_data_with_crc",
         "//tink/util:secret_data",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/status",
@@ -1760,6 +1761,7 @@ cc_test(
     deps = [
         ":proto_parser_secret_data_with_crc_field",
         ":proto_parser_state",
+        ":secret_data_with_crc",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",

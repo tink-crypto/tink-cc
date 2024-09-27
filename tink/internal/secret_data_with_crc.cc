@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -40,8 +41,15 @@ using ::crypto::tink::util::SecretValue;
 
 bool IsValidSecretcCrc32c(absl::string_view data,
                           const SecretValue<absl::crc32c_t>& expected_crc) {
-  return CallWithCoreDumpProtection(
-      [&]() { return absl::ComputeCrc32c(data) == expected_crc.value(); });
+  return CallWithCoreDumpProtection([&]() {
+    bool result = absl::ComputeCrc32c(data) == expected_crc.value();
+    // We need to cut flows here since the boolean does depend on secret data.
+    // This can be a problem: if the CRC is adversarially supplied the adversary
+    // can get 32 bits of information about the secret. This means that the
+    // CRC always needs to come from the same source as the secret.
+    CutAllFlows(result);
+    return result;
+  });
 }
 
 SecretValue<absl::crc32c_t> ComputeSecretCrc32c(absl::string_view data) {

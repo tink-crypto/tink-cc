@@ -1717,6 +1717,7 @@ tink_cc_library(
     secret_data_with_crc.h
   DEPS
     tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     absl::crc32c
     absl::status
     absl::statusor

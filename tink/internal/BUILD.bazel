@@ -1785,6 +1785,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":call_with_core_dump_protection",
+        ":dfsan_forwarders",
         "//tink/util:secret_data",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/status",

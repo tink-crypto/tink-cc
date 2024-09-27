@@ -332,8 +332,8 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::ec_util
+    tink::internal::output_prefix_util
     tink::subtle::common_enums
-    tink::subtle::subtle_util
     tink::util::status
     tink::util::statusor
 )
@@ -486,9 +486,9 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::ec_util
+    tink::internal::output_prefix_util
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
-    tink::subtle::subtle_util
     tink::util::status
     tink::util::statusor
 )

@@ -19,17 +19,16 @@
 #include <string>
 
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/subtle_util.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -101,15 +100,13 @@ util::StatusOr<std::string> ComputeOutputPrefix(
         return util::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must have value with kCrunchy");
       }
-      return absl::StrCat(absl::HexStringToBytes("00"),
-                          subtle::BigEndian32(*id_requirement));
+      return internal::ComputeOutputPrefix(0, *id_requirement);
     case HpkeParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
         return util::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must have value with kTink");
       }
-      return absl::StrCat(absl::HexStringToBytes("01"),
-                          subtle::BigEndian32(*id_requirement));
+      return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
       return util::Status(
           absl::StatusCode::kInvalidArgument,

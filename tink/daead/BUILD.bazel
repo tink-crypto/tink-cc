@@ -160,7 +160,7 @@ cc_library(
         "//tink:key",
         "//tink:partial_key_access_token",
         "//tink:restricted_data",
-        "//tink/subtle:subtle_util",
+        "//tink/internal:output_prefix_util",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/status",

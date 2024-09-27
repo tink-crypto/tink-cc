@@ -16,21 +16,18 @@
 
 #include "tink/mac/hmac_key.h"
 
-#include <memory>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
-#include "absl/strings/str_format.h"
 #include "absl/types/optional.h"
+#include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/subtle_util.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -79,15 +76,13 @@ util::StatusOr<std::string> HmacKey::ComputeOutputPrefix(
             absl::StatusCode::kInvalidArgument,
             "id requirement must have value with kCrunchy or kLegacy");
       }
-      return absl::StrCat(absl::HexStringToBytes("00"),
-                          subtle::BigEndian32(*id_requirement));
+      return internal::ComputeOutputPrefix(0, *id_requirement);
     case HmacParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
         return util::Status(absl::StatusCode::kInvalidArgument,
                             "id requirement must have value with kTink");
       }
-      return absl::StrCat(absl::HexStringToBytes("01"),
-                          subtle::BigEndian32(*id_requirement));
+      return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
       return util::Status(
           absl::StatusCode::kInvalidArgument,

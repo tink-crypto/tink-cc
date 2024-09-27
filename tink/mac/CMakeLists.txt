@@ -194,13 +194,12 @@ tink_cc_library(
     absl::core_headers
     absl::status
     absl::strings
-    absl::str_format
     absl::optional
     crypto
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
-    tink::subtle::subtle_util
+    tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
 )
@@ -261,12 +260,11 @@ tink_cc_library(
     absl::core_headers
     absl::status
     absl::strings
-    absl::str_format
     absl::optional
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
-    tink::subtle::subtle_util
+    tink::internal::output_prefix_util
     tink::util::status
     tink::util::statusor
 )

@@ -1738,3 +1738,18 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME output_prefix_util
+  SRCS
+    output_prefix_util.h
+)
+
+tink_cc_test(
+  NAME output_prefix_util_test
+  SRCS
+    output_prefix_util_test.cc
+  DEPS
+    tink::internal::output_prefix_util
+    gmock
+)

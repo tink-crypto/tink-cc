@@ -20,14 +20,13 @@
 #include <utility>
 
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_eax_parameters.h"
+#include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
-#include "tink/subtle/subtle_util.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -46,15 +45,13 @@ util::StatusOr<std::string> ComputeOutputPrefix(
             absl::StatusCode::kInvalidArgument,
             "ID requirement must not be empty with kCrunchy or kLegacy");
       }
-      return absl::StrCat(absl::HexStringToBytes("00"),
-                          subtle::BigEndian32(*id_requirement));
+      return internal::ComputeOutputPrefix(0, *id_requirement);
     case AesEaxParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
         return util::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must not be empty with kTink");
       }
-      return absl::StrCat(absl::HexStringToBytes("01"),
-                          subtle::BigEndian32(*id_requirement));
+      return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
       return util::Status(
           absl::StatusCode::kInvalidArgument,

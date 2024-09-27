@@ -1807,3 +1807,18 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "output_prefix_util",
+    hdrs = ["output_prefix_util.h"],
+    include_prefix = "tink/internal",
+)
+
+cc_test(
+    name = "output_prefix_util_test",
+    srcs = ["output_prefix_util_test.cc"],
+    deps = [
+        ":output_prefix_util",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

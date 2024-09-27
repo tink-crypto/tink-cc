@@ -16,7 +16,6 @@
 
 #include "tink/aead/internal/base_x_aes_gcm.h"
 
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -37,6 +36,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -124,8 +124,8 @@ using BaseXAesGcmTest = TestWithParam<XAesGcmKeyDerivationTestVector>;
 
 TEST_P(BaseXAesGcmTest, DeriveWithKnownTestVectors) {
   const XAesGcmKeyDerivationTestVector& test_case = GetParam();
-  util::StatusOr<XAesGcmKey> key = CreateKey(
-      absl::HexStringToBytes(test_case.base_hex_key), kDefaultSaltSize);
+  util::StatusOr<XAesGcmKey> key =
+      CreateKey(test::HexDecodeOrDie(test_case.base_hex_key), kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm =
       BaseXAesGcm::New(std::move(*key));

@@ -27,6 +27,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
@@ -38,6 +39,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -74,7 +76,7 @@ class ZeroCopyAesGcmBoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
     util::SecretData key =
-        util::SecretDataFromStringView(absl::HexStringToBytes(kKey128Hex));
+        util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128Hex));
     util::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
         ZeroCopyAesGcmBoringSsl::New(key);
     ASSERT_THAT(cipher, IsOk());
@@ -114,7 +116,7 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, DecryptEncodedCiphertext) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(&plaintext, kMaxDecryptionSize);
   util::StatusOr<int64_t> plaintext_size =
-      cipher_->Decrypt(absl::HexStringToBytes(kEncodedCiphertext),
+      cipher_->Decrypt(test::HexDecodeOrDie(kEncodedCiphertext),
                        kAssociatedData, absl::MakeSpan(plaintext));
   ASSERT_THAT(plaintext_size, IsOk());
   EXPECT_EQ(plaintext.substr(0, *plaintext_size), kMessage);
@@ -136,7 +138,7 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, DecryptBufferTooSmall) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(&plaintext, kMaxDecryptionSize - 1);
   EXPECT_THAT(cipher_
-                  ->Decrypt(absl::HexStringToBytes(kEncodedCiphertext),
+                  ->Decrypt(test::HexDecodeOrDie(kEncodedCiphertext),
                             kAssociatedData, absl::MakeSpan(plaintext))
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -160,7 +162,7 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, DecryptOverlappingPlaintextCiphertext) {
   std::string buffer(1024, '\0');
   // Plaintext's buffer starts at the beginning of the buffer.
   auto out_buffer = absl::MakeSpan(buffer).subspan(0, kMessage.size());
-  std::string ciphertext_data = absl::HexStringToBytes(kEncodedCiphertext);
+  std::string ciphertext_data = test::HexDecodeOrDie(kEncodedCiphertext);
   // Copy the ciphertext into buffer such that the IV part will overlap with the
   // end of the plaintext output buffer.
   int ciphertext_start = kMessage.size() - kIvSizeInBytes;

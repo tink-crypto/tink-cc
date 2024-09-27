@@ -24,7 +24,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/cord.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -38,6 +37,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -48,7 +48,6 @@ using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Not;
@@ -120,13 +119,13 @@ std::vector<XAesGcmTestVector> GetTestVectors() {
 TEST_P(XAesGcmTestVectors, DecryptKnownTestVectors) {
   const XAesGcmTestVector& test_case = GetParam();
   util::StatusOr<XAesGcmKey> key =
-      CreateKey(absl::HexStringToBytes(test_case.hex_key), test_case.salt_size);
+      CreateKey(test::HexDecodeOrDie(test_case.hex_key), test_case.salt_size);
   ASSERT_THAT(key, IsOk());
   util::StatusOr<std::unique_ptr<CordAead>> aead =
       NewCordXAesGcmBoringSsl(*key);
   ASSERT_THAT(aead, IsOk());
 
-  std::string ct = absl::HexStringToBytes(test_case.hex_ciphertext);
+  std::string ct = test::HexDecodeOrDie(test_case.hex_ciphertext);
   util::StatusOr<absl::Cord> recovered_plaintext = (*aead)->Decrypt(
       absl::Cord(absl::StrCat(test_case.nonce, ct)), absl::Cord(test_case.aad));
   ASSERT_THAT(recovered_plaintext, IsOk());

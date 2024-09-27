@@ -13,26 +13,19 @@
 // limitations under the License.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#include <algorithm>
 #include <cstdint>
-#include <iterator>
 #include <limits>
 #include <memory>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/container/flat_hash_set.h"
-#include "absl/memory/memory.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/ssl_aead.h"
-#include "tink/config/tink_fips.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/subtle_util.h"
@@ -40,6 +33,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 // We test SslOneShotAead implementations against a very large input.
 namespace crypto {
@@ -57,7 +51,7 @@ constexpr absl::string_view k128Key = "000102030405060708090a0b0c0d0e0f";
 constexpr absl::string_view k256Key =
     "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f";
 // 12 bytes IV.
-constexpr absl::string_view kAesGcmIvHex = "0123456789012345678901234";
+constexpr absl::string_view kAesGcmIvHex = "012345678901234567890123";
 // 24 bytes IV.
 constexpr absl::string_view kXchacha20Poly1305IvHex =
     "012345678901234567890123456789012345678901234567";
@@ -99,11 +93,11 @@ TEST_P(SslOneShotAeadLargeInputsTest, EncryptDecryptLargeInput) {
 
   TestParams test_param = GetParam();
   util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             absl::HexStringToBytes(test_param.key_hex)));
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
-  std::string iv = absl::HexStringToBytes(test_param.iv_hex);
+  std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
   std::string ciphertext_buffer;
   // Length of the message + tag.
   subtle::ResizeStringUninitialized(

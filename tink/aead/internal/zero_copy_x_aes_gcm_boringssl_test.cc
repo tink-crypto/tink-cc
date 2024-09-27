@@ -24,12 +24,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
-#include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/insecure_secret_key_access.h"
@@ -37,9 +35,9 @@
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -205,18 +203,18 @@ std::vector<XAesGcmTestVector> GetTestVectors() {
 TEST_P(XAesGcmTestVectors, DecryptKnownTestVectors) {
   const XAesGcmTestVector& test_case = GetParam();
   util::StatusOr<XAesGcmKey> key =
-      CreateKey(absl::HexStringToBytes(test_case.hex_key), kDefaultSaltSize);
+      CreateKey(test::HexDecodeOrDie(test_case.hex_key), kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
   util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
       NewZeroCopyXAesGcmBoringSsl(*key);
   ASSERT_THAT(zero_copy_aead, IsOk());
 
-  std::string ct = absl::StrCat(
-      test_case.nonce, absl::HexStringToBytes(test_case.hex_ciphertext));
+  std::string ct = absl::StrCat(test_case.nonce,
+                                test::HexDecodeOrDie(test_case.hex_ciphertext));
 
   std::string recovered((*zero_copy_aead)->MaxDecryptionSize(ct.size()), 0);
-  util::StatusOr<int64_t> n = (*zero_copy_aead)->Decrypt(
-      ct, test_case.aad, absl::MakeSpan(recovered));
+  util::StatusOr<int64_t> n =
+      (*zero_copy_aead)->Decrypt(ct, test_case.aad, absl::MakeSpan(recovered));
   ASSERT_THAT(n, IsOk());
   ASSERT_THAT(*n, Eq(test_case.plaintext.size()));
   ASSERT_THAT(recovered, Eq(test_case.plaintext));

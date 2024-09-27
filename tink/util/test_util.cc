@@ -33,6 +33,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
@@ -87,24 +88,11 @@ std::string ReadTestFile(absl::string_view filename) {
 }
 
 util::StatusOr<std::string> HexDecode(absl::string_view hex) {
-  if (hex.size() % 2 != 0) {
+  std::string decoded;
+  const bool result = absl::HexStringToBytes(hex, &decoded);
+  if (!result) {
     return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Input has odd size.");
-  }
-  std::string decoded(hex.size() / 2, static_cast<char>(0));
-  for (size_t i = 0; i < hex.size(); ++i) {
-    char c = hex[i];
-    char val;
-    if ('0' <= c && c <= '9')
-      val = c - '0';
-    else if ('a' <= c && c <= 'f')
-      val = c - 'a' + 10;
-    else if ('A' <= c && c <= 'F')
-      val = c - 'A' + 10;
-    else
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Not hexadecimal");
-    decoded[i / 2] = (decoded[i / 2] << 4) | val;
+                        absl::StrCat("Failed to decode hex: ", hex));
   }
   return decoded;
 }
@@ -169,8 +157,8 @@ void AddTinkKey(const std::string& key_type, uint32_t key_id,
                 google::crypto::tink::KeyStatusType key_status,
                 google::crypto::tink::KeyData::KeyMaterialType material_type,
                 google::crypto::tink::Keyset* keyset) {
-  AddKey(key_type, key_id, key, OutputPrefixType::TINK,
-         key_status, material_type, keyset);
+  AddKey(key_type, key_id, key, OutputPrefixType::TINK, key_status,
+         material_type, keyset);
 }
 
 void AddLegacyKey(const std::string& key_type, uint32_t key_id,
@@ -178,8 +166,8 @@ void AddLegacyKey(const std::string& key_type, uint32_t key_id,
                   google::crypto::tink::KeyStatusType key_status,
                   google::crypto::tink::KeyData::KeyMaterialType material_type,
                   google::crypto::tink::Keyset* keyset) {
-  AddKey(key_type, key_id, key, OutputPrefixType::LEGACY,
-         key_status, material_type, keyset);
+  AddKey(key_type, key_id, key, OutputPrefixType::LEGACY, key_status,
+         material_type, keyset);
 }
 
 void AddRawKey(const std::string& key_type, uint32_t key_id,
@@ -187,20 +175,16 @@ void AddRawKey(const std::string& key_type, uint32_t key_id,
                google::crypto::tink::KeyStatusType key_status,
                google::crypto::tink::KeyData::KeyMaterialType material_type,
                google::crypto::tink::Keyset* keyset) {
-  AddKey(key_type, key_id, key, OutputPrefixType::RAW,
-         key_status, material_type, keyset);
+  AddKey(key_type, key_id, key, OutputPrefixType::RAW, key_status,
+         material_type, keyset);
 }
 
 EciesAeadHkdfPrivateKey GetEciesAesGcmHkdfTestKey(
-    subtle::EllipticCurveType curve_type,
-    subtle::EcPointFormat ec_point_format,
-    subtle::HashType hash_type,
-    uint32_t aes_gcm_key_size) {
+    subtle::EllipticCurveType curve_type, subtle::EcPointFormat ec_point_format,
+    subtle::HashType hash_type, uint32_t aes_gcm_key_size) {
   return GetEciesAesGcmHkdfTestKey(
-      Enums::SubtleToProto(curve_type),
-      Enums::SubtleToProto(ec_point_format),
-      Enums::SubtleToProto(hash_type),
-      aes_gcm_key_size);
+      Enums::SubtleToProto(curve_type), Enums::SubtleToProto(ec_point_format),
+      Enums::SubtleToProto(hash_type), aes_gcm_key_size);
 }
 
 EciesAeadHkdfPrivateKey GetEciesAeadHkdfTestKey(

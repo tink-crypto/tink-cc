@@ -225,6 +225,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -247,6 +248,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -277,6 +279,7 @@ tink_cc_test(
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_boringssl
     gmock
+    absl::check
     absl::status
     absl::strings
     absl::span
@@ -285,6 +288,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -294,12 +298,9 @@ tink_cc_test(
   DEPS
     tink::aead::internal::ssl_aead
     gmock
-    absl::flat_hash_set
-    absl::memory
     absl::status
     absl::strings
     absl::span
-    tink::config::tink_fips
     tink::internal::ssl_util
     tink::internal::util
     tink::subtle::subtle_util
@@ -307,6 +308,7 @@ tink_cc_test(
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -438,6 +440,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_library(
@@ -482,6 +485,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_library(
@@ -511,7 +515,6 @@ tink_cc_test(
   SRCS
     zero_copy_x_aes_gcm_boringssl_test.cc
   DEPS
-    tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_x_aes_gcm_boringssl
     gmock
     absl::status
@@ -526,7 +529,7 @@ tink_cc_test(
     tink::aead::x_aes_gcm_parameters
     tink::subtle::random
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )

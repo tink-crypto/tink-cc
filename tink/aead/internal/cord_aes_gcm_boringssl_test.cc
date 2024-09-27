@@ -25,7 +25,6 @@
 #include "gtest/gtest.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_test_helpers.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
@@ -38,6 +37,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -59,7 +59,7 @@ using ::testing::Test;
 class CordAesGcmBoringSslTest : public Test {
  protected:
   void SetUp() override {
-    key_ = util::SecretDataFromStringView(absl::HexStringToBytes(key_128));
+    key_ = util::SecretDataFromStringView(test::HexDecodeOrDie(key_128));
     util::StatusOr<std::unique_ptr<CordAead>> res =
         CordAesGcmBoringSsl::New(key_);
     ASSERT_THAT(res, IsOk());
@@ -146,8 +146,7 @@ TEST_F(CordAesGcmBoringSslTest, ModifiedCord) {
     modified_ct[i / 8] ^= 1 << (i % 8);
     absl::Cord modified_ct_cord;
     modified_ct_cord = absl::Cord(modified_ct);
-    EXPECT_THAT(cipher_->Decrypt(modified_ct_cord, ad), Not(IsOk()))
-        << i;
+    EXPECT_THAT(cipher_->Decrypt(modified_ct_cord, ad), Not(IsOk())) << i;
   }
   // Modify the associated data.
   for (size_t i = 0; i < ad.size() * 8; i++) {
@@ -164,8 +163,7 @@ TEST_F(CordAesGcmBoringSslTest, ModifiedCord) {
     std::string truncated_ct(std::string(ct->Flatten()), 0, i);
     absl::Cord truncated_ct_cord;
     truncated_ct_cord = absl::Cord(truncated_ct);
-    EXPECT_THAT(cipher_->Decrypt(truncated_ct_cord, ad), Not(IsOk()))
-        << i;
+    EXPECT_THAT(cipher_->Decrypt(truncated_ct_cord, ad), Not(IsOk())) << i;
   }
 }
 

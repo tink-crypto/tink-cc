@@ -1284,8 +1284,8 @@ cc_test(
         "//tink/util:secret_data",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "//tink/util:test_util",
         "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -1295,7 +1295,7 @@ cc_test(
     srcs = ["core/big_integer_test.cc"],
     deps = [
         ":big_integer",
-        "@com_google_absl//absl/strings",
+        "//tink/util:test_util",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],
@@ -1307,7 +1307,7 @@ cc_test(
     deps = [
         ":insecure_secret_key_access_testonly",
         ":restricted_big_integer",
-        "@com_google_absl//absl/strings",
+        "//tink/util:test_util",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
     ],

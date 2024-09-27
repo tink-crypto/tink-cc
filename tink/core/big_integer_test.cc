@@ -21,8 +21,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -57,7 +57,7 @@ TEST(BigIntegerTest, DefaultConstructor) {
 
 
 TEST(BigIntegerTest, CreateAndGet) {
-  const std::string big_integer_bytes = absl::HexStringToBytes(kHexBigInt);
+  const std::string big_integer_bytes = test::HexDecodeOrDie(kHexBigInt);
   BigInteger big_integer(big_integer_bytes);
 
   EXPECT_THAT(big_integer.SizeInBytes(), Eq(256));
@@ -65,9 +65,9 @@ TEST(BigIntegerTest, CreateAndGet) {
 }
 
 TEST(BigIntegerTest, CreateAndGetPadded) {
-  const std::string big_integer_bytes = absl::HexStringToBytes(kHexBigInt);
+  const std::string big_integer_bytes = test::HexDecodeOrDie(kHexBigInt);
   const std::string padded_big_integer_bytes =
-      absl::HexStringToBytes(kHexBigIntPadded);
+      test::HexDecodeOrDie(kHexBigIntPadded);
   BigInteger from_padded_big_integer(padded_big_integer_bytes);
 
   EXPECT_THAT(from_padded_big_integer.SizeInBytes(), Eq(256));
@@ -92,7 +92,7 @@ TEST(BigIntegerTest, CreateAndGetNullCharactersWorks) {
 }
 
 TEST(BigIntegerTest, Equals) {
-  const std::string big_integer_bytes = absl::HexStringToBytes(kHexBigInt);
+  const std::string big_integer_bytes = test::HexDecodeOrDie(kHexBigInt);
   BigInteger big_integer(big_integer_bytes);
   BigInteger same_big_integer(big_integer_bytes);
 
@@ -103,8 +103,8 @@ TEST(BigIntegerTest, Equals) {
 }
 
 TEST(BigIntegerTest, EqualsPadded) {
-  BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
-  BigInteger padded_big_integer(absl::HexStringToBytes(kHexBigIntPadded));
+  BigInteger big_integer(test::HexDecodeOrDie(kHexBigInt));
+  BigInteger padded_big_integer(test::HexDecodeOrDie(kHexBigIntPadded));
 
   EXPECT_TRUE(big_integer == padded_big_integer);
   EXPECT_TRUE(padded_big_integer == big_integer);
@@ -113,7 +113,7 @@ TEST(BigIntegerTest, EqualsPadded) {
 }
 
 TEST(BigIntegerTest, NotEquals) {
-  const std::string other_big_integer_value_256 = absl::HexStringToBytes(
+  const std::string other_big_integer_value_256 = test::HexDecodeOrDie(
       "00c2410a2bcd4ce644c5b594ae5059e12b2f054b658d5da5959a2fdf1871b808bc3df3e6"
       "28d2792e51aad5c124b43bda453dca5cde4bcf28e7bd4effba0cb4b742bbb6d5a013cb63"
       "d1aa3a89e02627ef5398b52c0cfd97d208abeb8d7c9bce0bbeb019a86ddb589beb29a5b7"
@@ -123,7 +123,7 @@ TEST(BigIntegerTest, NotEquals) {
       "5b0b15db09c8647f5d524c0f2e7620a3416b9623cadc0f097af573261c98c8400aa12af3"
       "8e43cad84d");
 
-  BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
+  BigInteger big_integer(test::HexDecodeOrDie(kHexBigInt));
   BigInteger diff_big_integer(other_big_integer_value_256);
 
   EXPECT_THAT(big_integer.SizeInBytes(), Eq(256));
@@ -145,8 +145,8 @@ TEST(BigIntegerTest, NotEqualsDifferentSize) {
       "d6bbca8059e5706e9dfed8f4856465ffa712ed1aa18e888d12dc6aa09ce95ecfca83cc5b"
       "0b15db09c8647f5d524c0f2e7620a3416b9623cadc0f097af573261c98c8400aa12af38e"
       "43cad84dbfff";
-  BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
-  BigInteger diff_big_integer(absl::HexStringToBytes(other_big_integer_value));
+  BigInteger big_integer(test::HexDecodeOrDie(kHexBigInt));
+  BigInteger diff_big_integer(test::HexDecodeOrDie(other_big_integer_value));
 
   EXPECT_THAT(big_integer.SizeInBytes(), Eq(256));
   EXPECT_THAT(diff_big_integer.SizeInBytes(), Eq(258));
@@ -158,7 +158,7 @@ TEST(BigIntegerTest, NotEqualsDifferentSize) {
 }
 
 TEST(BigIntegerTest, CopyConstructor) {
-  BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
+  BigInteger big_integer(test::HexDecodeOrDie(kHexBigInt));
   BigInteger copy(big_integer);
 
   EXPECT_THAT(copy.SizeInBytes(), Eq(256));
@@ -166,7 +166,7 @@ TEST(BigIntegerTest, CopyConstructor) {
 }
 
 TEST(BigIntegerTest, CopyAssignment) {
-  BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
+  BigInteger big_integer(test::HexDecodeOrDie(kHexBigInt));
   BigInteger copy = big_integer;
 
   EXPECT_THAT(copy.SizeInBytes(), Eq(256));
@@ -174,20 +174,20 @@ TEST(BigIntegerTest, CopyAssignment) {
 }
 
 TEST(BigIntegerTest, MoveConstructor) {
-  BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
+  BigInteger big_integer(test::HexDecodeOrDie(kHexBigInt));
   BigInteger move(std::move(big_integer));
 
   EXPECT_THAT(move.SizeInBytes(), Eq(256));
-  EXPECT_THAT(move.GetValue(), Eq(absl::HexStringToBytes(kHexBigInt)));
+  EXPECT_THAT(move.GetValue(), Eq(test::HexDecodeOrDie(kHexBigInt)));
 }
 
 TEST(BigIntegerTest, MoveAssignment) {
-  BigInteger big_integer(absl::HexStringToBytes(kHexBigInt));
+  BigInteger big_integer(test::HexDecodeOrDie(kHexBigInt));
   BigInteger move;
   move = std::move(big_integer);
 
   EXPECT_THAT(move.SizeInBytes(), Eq(256));
-  EXPECT_THAT(move.GetValue(), Eq(absl::HexStringToBytes(kHexBigInt)));
+  EXPECT_THAT(move.GetValue(), Eq(test::HexDecodeOrDie(kHexBigInt)));
 }
 
 }  // namespace tink

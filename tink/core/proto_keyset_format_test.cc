@@ -25,7 +25,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
-#include "absl/strings/escaping.h"
 #include "tink/aead.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/binary_keyset_reader.h"
@@ -35,7 +34,6 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/keyset_reader.h"
 #include "tink/mac.h"
 #include "tink/mac/aes_cmac_parameters.h"
@@ -43,6 +41,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -184,7 +183,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, ParseNoAccessFails) {
 }
 
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, TestVector) {
-  std::string serialized_keyset = absl::HexStringToBytes(
+  std::string serialized_keyset = test::HexDecodeOrDie(
       "0895e59bcc0612680a5c0a2e747970652e676f6f676c65617069732e636f6d2f676f6f67"
       "6c652e63727970746f2e74696e6b2e486d61634b657912281a20cca20f02278003b3513f"
       "5d01759ac1302f7d883f2f4a40025532ee1b11f9e587120410100803180110011895e59b"
@@ -198,7 +197,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, TestVector) {
   ASSERT_THAT(mac.status(), IsOk());
   ASSERT_THAT(
       (*mac)->VerifyMac(
-          absl::HexStringToBytes("016986f2956092d259136923c6f4323557714ec499"),
+          test::HexDecodeOrDie("016986f2956092d259136923c6f4323557714ec499"),
           "data"),
       IsOk());
 }
@@ -218,7 +217,6 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, SerializeAndParsePublicKey) {
   util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-
 
   crypto::tink::util::StatusOr<SecretData> serialization1 =
       SerializeKeysetToProtoKeysetFormat(**public_handle,
@@ -461,7 +459,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest,
 // Test vector copied from parseEncryptedKeysetFromTestVector() in
 // TinkProtoKeysetFormatTest.java.
 TEST_F(SerializeKeysetToProtoKeysetFormatTest, EncryptedKeysetTestVector) {
-  std::string serialized_keyset_encryption_keyset = absl::HexStringToBytes(
+  std::string serialized_keyset_encryption_keyset = test::HexDecodeOrDie(
       "08cd9bdff30312540a480a30747970652e676f6f676c65617069732e636f6d2f676f6f67"
       "6c652e63727970746f2e74696e6b2e41657347636d4b657912121a1082bbe6de4bf9a765"
       "5305615af46e594c1801100118cd9bdff3032001");
@@ -474,7 +472,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, EncryptedKeysetTestVector) {
       keyset_encryption_handle->GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(keyset_encryption_aead, IsOk());
 
-  std::string encrypted_mac_keyset = absl::HexStringToBytes(
+  std::string encrypted_mac_keyset = test::HexDecodeOrDie(
       "129101013e77cdcd28f57ffb418afa7f25d48a74efe720246e9aa538f33a702888bb7c48"
       "bce0e5a016a0c8e9085066d67c7c7fb40dceb176a3a10c7f7ab30c564dd8e2d918a2fc2d"
       "2e9a0245c537ff6d1fd756ff9d6de5cf4eb7f229de215e6e892f32fd703d0c9c3d216881"
@@ -490,7 +488,7 @@ TEST_F(SerializeKeysetToProtoKeysetFormatTest, EncryptedKeysetTestVector) {
       (*mac_handle).GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac, IsOk());
   std::string tag =
-      absl::HexStringToBytes("018f2d72de5055e622591fcf0fb85a7b4158e96f68");
+      test::HexDecodeOrDie("018f2d72de5055e622591fcf0fb85a7b4158e96f68");
   std::string data = "data";
   ASSERT_THAT((*mac)->VerifyMac(tag, data), IsOk());
 }

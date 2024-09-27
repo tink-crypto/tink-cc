@@ -1199,7 +1199,6 @@ tink_cc_test(
     tink::core::proto_keyset_format
     gmock
     absl::memory
-    absl::strings
     tink::aead::aes_gcm_parameters
     tink::config::global_registry
     tink::config::tink_config
@@ -1208,6 +1207,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1217,8 +1217,8 @@ tink_cc_test(
   DEPS
     tink::core::big_integer
     gmock
-    absl::strings
     absl::string_view
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1229,8 +1229,8 @@ tink_cc_test(
     tink::core::insecure_secret_key_access_testonly
     tink::core::restricted_big_integer
     gmock
-    absl::strings
     absl::string_view
+    tink::util::test_util
 )
 
 tink_cc_test(

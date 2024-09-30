@@ -243,7 +243,8 @@ TEST_F(RsaSsaPssProtoSerializationTest,
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST_F(RsaSsaPssProtoSerializationTest, ParseParametersWithUnkownHashFails) {
+TEST_F(RsaSsaPssProtoSerializationTest,
+       ParseParametersWithUnknownSigHashFails) {
   ASSERT_THAT(RegisterRsaSsaPssProtoSerialization(), IsOk());
 
   RsaSsaPssKeyFormat key_format_proto;
@@ -252,7 +253,63 @@ TEST_F(RsaSsaPssProtoSerializationTest, ParseParametersWithUnkownHashFails) {
 
   RsaSsaPssParams params;
   params.set_sig_hash(HashType::UNKNOWN_HASH);
+  params.set_mgf1_hash(HashType::SHA256);
+  params.set_salt_length(32);
+  *key_format_proto.mutable_params() = params;
+
+  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+      internal::ProtoParametersSerialization::Create(
+          kPrivateTypeUrl, OutputPrefixType::TINK,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *serialization);
+
+  ASSERT_THAT(parameters.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(RsaSsaPssProtoSerializationTest,
+       ParseParametersWithUnknownMgf1HashFails) {
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerialization(), IsOk());
+
+  RsaSsaPssKeyFormat key_format_proto;
+  key_format_proto.set_modulus_size_in_bits(2048);
+  key_format_proto.set_public_exponent(kF4Str);
+
+  RsaSsaPssParams params;
+  params.set_sig_hash(HashType::SHA256);
   params.set_mgf1_hash(HashType::UNKNOWN_HASH);
+  params.set_salt_length(32);
+  *key_format_proto.mutable_params() = params;
+
+  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+      internal::ProtoParametersSerialization::Create(
+          kPrivateTypeUrl, OutputPrefixType::TINK,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
+          *serialization);
+
+  ASSERT_THAT(parameters.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST_F(RsaSsaPssProtoSerializationTest,
+       ParseParametersWithMismatchedHashTypesFails) {
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerialization(), IsOk());
+
+  RsaSsaPssKeyFormat key_format_proto;
+  key_format_proto.set_modulus_size_in_bits(2048);
+  key_format_proto.set_public_exponent(kF4Str);
+
+  RsaSsaPssParams params;
+  params.set_sig_hash(HashType::SHA256);
+  params.set_mgf1_hash(HashType::SHA512);
   params.set_salt_length(32);
   *key_format_proto.mutable_params() = params;
 
@@ -884,8 +941,8 @@ TEST_P(SerializationTest, SerializesCorrectly) {
 
   util::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<ProtoKeySerialization>(
-              *test_key.key, InsecureSecretKeyAccess::Get());
+          .SerializeKey<ProtoKeySerialization>(*test_key.key,
+                                               InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization.status(), IsOk());
   ProtoKeySerialization* proto_serialization =
       dynamic_cast<ProtoKeySerialization*>(serialization->get());
@@ -1086,7 +1143,7 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPssPrivateKey",
       {FieldWithNumber(1).IsVarint(1000),  // Bad version
-       FieldWithNumber(1).IsVarint(0),  // Overwrite bad version number
+       FieldWithNumber(1).IsVarint(0),     // Overwrite bad version number
        FieldWithNumber(2).IsSubMessage(
            {FieldWithNumber(1).IsVarint(17),  // Bad version number ignored
             FieldWithNumber(2).IsSubMessage({

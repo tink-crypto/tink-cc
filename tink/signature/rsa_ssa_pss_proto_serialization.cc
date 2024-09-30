@@ -256,7 +256,7 @@ util::StatusOr<RsaSsaPssParameters> ToParameters(
   }
 
   util::StatusOr<RsaSsaPssParameters::HashType> mgf1_hash_type =
-      ToEnumHashType(params.sig_hash);
+      ToEnumHashType(params.mgf1_hash);
   if (!mgf1_hash_type.ok()) {
     return mgf1_hash_type.status();
   }
@@ -286,7 +286,7 @@ util::StatusOr<RsaSsaPssParamsStruct> FromParameters(
   }
 
   RsaSsaPssParamsStruct params;
-  params.sig_hash =*sig_hash_type;
+  params.sig_hash = *sig_hash_type;
   params.mgf1_hash = *mgf1_hash_type;
   params.salt_length = parameters.GetSaltLengthInBytes();
 

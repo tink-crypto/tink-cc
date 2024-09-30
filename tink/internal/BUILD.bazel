@@ -1751,6 +1751,7 @@ cc_library(
         ":proto_parser_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
+        ":safe_stringops",
         ":secret_data_with_crc",
         "//tink/util:secret_data",
         "@com_google_absl//absl/crc:crc32c",

@@ -28,6 +28,7 @@
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/internal/secret_data_with_crc.h"
 #include "tink/util/secret_data.h"
 
@@ -93,19 +94,19 @@ class SecretDataWithCrcField : public Field<Struct> {
           "Can only serialize parse as SecretDataWithCrcField when CRC is "
           "maintained");
     }
-    size_t size = (values.*data_).UncheckedData().size();
-    absl::Status s = SerializeVarint(size, serialization_state);
+    absl::string_view data_view = (values.*data_).UncheckedData();
+    absl::Status s = SerializeVarint(data_view.size(), serialization_state);
     if (!s.ok()) {
       return s;
     }
-    if (serialization_state.GetBuffer().size() < size) {
+    if (serialization_state.GetBuffer().size() < data_view.size()) {
       return absl::InvalidArgumentError(absl::StrCat(
           "Output buffer too small: ", serialization_state.GetBuffer().size(),
-          " < ", size));
+          " < ", data_view.size()));
     }
-    SerializeStringLikeValue((values.*data_).UncheckedData(),
-                             serialization_state.GetBuffer());
-    serialization_state.AdvanceWithCrc(size,
+    SafeMemCopy(serialization_state.GetBuffer().data(), data_view.data(),
+                data_view.size());
+    serialization_state.AdvanceWithCrc(data_view.size(),
                                        (values.*data_).SecretCrc().value());
     return absl::OkStatus();
   }

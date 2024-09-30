@@ -69,7 +69,7 @@ std::string GetTestFileNamePrefix() {
     test_name = test_name_parts[0];
   }
   return absl::StrCat(test_suite_name, "_", test_name, "_",
-                      absl::BytesToHexString(random_string));
+                      test::HexEncode(random_string));
 }
 
 }  // namespace internal

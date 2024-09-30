@@ -20,13 +20,13 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -122,9 +122,9 @@ TEST_P(MdUtilComputeHashSamplesTest, ComputesHash) {
   const MdUtilComputeHashSamplesTestParam& params = GetParam();
   util::StatusOr<const EVP_MD*> hasher = EvpHashFromHashType(params.hash_type);
   ASSERT_THAT(hasher, IsOk());
-  std::string data = absl::HexStringToBytes(params.data_hex);
+  std::string data = test::HexDecodeOrDie(params.data_hex);
   std::string expected_digest =
-      absl::HexStringToBytes(params.expected_digest_hex);
+      test::HexDecodeOrDie(params.expected_digest_hex);
   EXPECT_THAT(ComputeHash(data, **hasher), IsOkAndHolds(expected_digest));
 }
 

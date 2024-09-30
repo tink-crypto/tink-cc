@@ -23,7 +23,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -34,6 +33,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -63,7 +63,7 @@ TEST(AesGcmSivBoringSslTest, EncryptDecrypt) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   if (!internal::IsBoringSsl()) {
     EXPECT_THAT(AesGcmSivBoringSsl::New(key).status(),
                 StatusIs(absl::StatusCode::kUnimplemented));
@@ -92,7 +92,7 @@ TEST(AesGcmSivBoringSslTest, DecryptFailsIfCiphertextTooSmall) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
   ASSERT_THAT(aead, IsOk());
 
@@ -113,10 +113,9 @@ TEST(AesGcmSivBoringSslTest, TestFipsOnly) {
   }
 
   util::SecretData key128 = util::SecretDataFromStringView(
-      absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f"));
-  util::SecretData key256 =
-      util::SecretDataFromStringView(absl::HexStringToBytes(
-          "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
+      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
+  util::SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
+      "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
 
   EXPECT_THAT(AesGcmSivBoringSsl::New(key128).status(),
               StatusIs(absl::StatusCode::kInternal));

@@ -159,6 +159,7 @@ tink_cc_library(
     absl::strings
     tink::util::status
     tink::util::statusor
+    tink::util::test_util
     tink::proto::hpke_cc_proto
   TESTONLY
   TAGS

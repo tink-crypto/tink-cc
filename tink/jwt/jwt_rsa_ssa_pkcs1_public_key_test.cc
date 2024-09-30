@@ -30,6 +30,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -334,9 +335,8 @@ TEST(JwtEcdsaPublicKeyTest, BuildWithMissingModulusFails) {
           .SetParameters(*parameters)
           .Build(GetPartialKeyAccess());
 
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("modulus must be specified")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                     HasSubstr("modulus must be specified")));
 }
 
 TEST_P(JwtRsaSsaPkcs1PublicKeyTest, KeyEquals) {
@@ -431,7 +431,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentModulusNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  std::string other_modulus_bytes = absl::HexStringToBytes(
+  std::string other_modulus_bytes = test::HexDecodeOrDie(
       "00dd904590397808c4314329623d9013453843251b13b8b3c4fef54598112af3eb31c711"
       "03c6259951674e53bd93a7e36d19472e474ebe8028686d9529484d8bafea4a04ba195556"
       "67616c8478670594009c9bc6a3efe52274cba64c724747d7edc194e4fedde32a3289d94c"

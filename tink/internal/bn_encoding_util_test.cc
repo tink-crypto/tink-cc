@@ -23,7 +23,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/big_integer.h"
@@ -32,6 +31,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -50,18 +50,18 @@ TEST(BnEncodingUtilTest, GetValueOfFixedLength) {
                                      "1000000000000000", "ffffffffffffffff",
                                      "0fffffffffffffff", "00ffffffffffffff"};
   for (const std::string& s : bn_str) {
-    const std::string bn_bytes = absl::HexStringToBytes(s);
+    const std::string bn_bytes = test::HexDecodeOrDie(s);
     util::StatusOr<std::string> bn_bytes_fixed_length =
         GetValueOfFixedLength(bn_bytes, 10);
 
     EXPECT_THAT(bn_bytes_fixed_length,
-                IsOkAndHolds(absl::HexStringToBytes(absl::StrCat("0000", s))));
+                IsOkAndHolds(test::HexDecodeOrDie(absl::StrCat("0000", s))));
   }
 }
 
 TEST(BnEncodingUtilTest, GetValueOfFixedLengthIntegerTooBig) {
   std::string bn_str = "0fffffffffffffff";
-  const std::string bn_bytes = absl::HexStringToBytes(bn_str);
+  const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
 
   util::StatusOr<std::string> bn_bytes_fixed_length =
       GetValueOfFixedLength(bn_bytes, 2);
@@ -71,7 +71,7 @@ TEST(BnEncodingUtilTest, GetValueOfFixedLengthIntegerTooBig) {
 
 TEST(BnEncodingUtilTest, GetValueOfFixedLengthSameLength) {
   std::string bn_str = "0fffffffffffffff";
-  const std::string bn_bytes = absl::HexStringToBytes(bn_str);
+  const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
 
   util::StatusOr<std::string> bn_bytes_fixed_length =
       GetValueOfFixedLength(bn_bytes, 8);
@@ -91,7 +91,7 @@ TEST(BnEncodingUtilTest, CreateBigIntegerObjectOfFixedLength) {
       "43cad84d";
 
   const std::string big_integer_bytes_256 =
-      absl::HexStringToBytes(big_integer_hex_256);
+      test::HexDecodeOrDie(big_integer_hex_256);
   util::StatusOr<std::string> big_integer_bytes_fixed_length =
       GetValueOfFixedLength(big_integer_bytes_256, 258);
 
@@ -102,7 +102,7 @@ TEST(BnEncodingUtilTest, CreateBigIntegerObjectOfFixedLength) {
   EXPECT_THAT(*big_integer_bytes_fixed_length, SizeIs(258));
   EXPECT_THAT(
       big_integer_bytes_fixed_length,
-      IsOkAndHolds(absl::HexStringToBytes(
+      IsOkAndHolds(test::HexDecodeOrDie(
           "0000b3510a2bcd4ce644c5b594ae5059e12b2f054b658d5da5959a2fdf1871b808bc"
           "3df3e628d2792e51aad5c124b43bda453dca5cde4bcf28e7bd4effba0cb4b742bbb6"
           "d5a013cb63d1aa3a89e02627ef5398b52c0cfd97d208abeb8d7c9bce0bbeb019a86d"
@@ -121,7 +121,7 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLength) {
                                      "1000000000000000", "ffffffffffffffff",
                                      "0fffffffffffffff", "00ffffffffffffff"};
   for (const std::string& s : bn_str) {
-    const std::string bn_bytes = absl::HexStringToBytes(s);
+    const std::string bn_bytes = test::HexDecodeOrDie(s);
     RestrictedBigInteger bn_bytes_restricted(
         bn_bytes, InsecureSecretKeyAccess::Get());
     util::StatusOr<util::SecretData> bn_bytes_fixed_length =
@@ -130,16 +130,16 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLength) {
 
     EXPECT_THAT(bn_bytes_fixed_length,
                 IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
-                    absl::HexStringToBytes(absl::StrCat("0000", s))))));
+                    test::HexDecodeOrDie(absl::StrCat("0000", s))))));
   }
 }
 
 TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthIntegerTooBig) {
   std::string bn_str = "0fffffffffffffff";
-  const std::string bn_bytes = absl::HexStringToBytes(bn_str);
+  const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
 
-    RestrictedBigInteger bn_bytes_restricted(
-        bn_bytes, InsecureSecretKeyAccess::Get());
+  RestrictedBigInteger bn_bytes_restricted(bn_bytes,
+                                           InsecureSecretKeyAccess::Get());
   util::StatusOr<util::SecretData> bn_bytes_fixed_length =
       GetSecretValueOfFixedLength(bn_bytes_restricted, 2,
                                   InsecureSecretKeyAccess::Get());
@@ -149,9 +149,9 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthIntegerTooBig) {
 
 TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthSameLength) {
   std::string bn_str = "0fffffffffffffff";
-  const std::string bn_bytes = absl::HexStringToBytes(bn_str);
-    RestrictedBigInteger bn_bytes_restricted(
-        bn_bytes, InsecureSecretKeyAccess::Get());
+  const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
+  RestrictedBigInteger bn_bytes_restricted(bn_bytes,
+                                           InsecureSecretKeyAccess::Get());
 
   util::StatusOr<util::SecretData> bn_bytes_fixed_length =
       GetSecretValueOfFixedLength(bn_bytes_restricted, 8,

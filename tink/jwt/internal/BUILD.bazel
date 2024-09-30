@@ -535,7 +535,6 @@ cc_test(
         "//tink/util:test_util",
         "@boringssl//:crypto",
         "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -648,9 +647,9 @@ cc_test(
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "//tink/util:test_util",
         "@boringssl//:crypto",
         "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )

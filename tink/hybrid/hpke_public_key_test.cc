@@ -23,8 +23,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
+#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -188,7 +188,7 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKeyWithInvalidLength) {
 TEST(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidPoint) {
   // Copied from "public point not on curve" Wycheproof test case in
   // https://github.com/google/wycheproof/blob/master/testvectors/ecdh_secp256k1_test.json.
-  std::string invalid_point = absl::HexStringToBytes(
+  std::string invalid_point = test::HexDecodeOrDie(
       "3056301006072a8648ce3d020106052b8104000a0342000449c248edc659e18482b71057"
       "48a4b95d3a46952a5ba72da0d702dc97a64e99799d8cff7a5c4b925e4360ece25ccf307d"
       "7a9a7063286bbd16ef64c65f546757e4");

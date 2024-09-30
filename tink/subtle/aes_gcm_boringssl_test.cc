@@ -25,7 +25,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -34,6 +33,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -64,7 +64,7 @@ class AesGcmBoringSslTest : public Test {
     }
 
     util::SecretData key =
-        util::SecretDataFromStringView(absl::HexStringToBytes(kKey128));
+        util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128));
     util::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmBoringSsl::New(key);
     ASSERT_THAT(cipher, IsOk());
     cipher_ = std::move(*cipher);
@@ -234,9 +234,9 @@ TEST(AesGcmBoringSslFipsTest, FipsOnly) {
   }
 
   util::SecretData key_128 =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey128));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128));
   util::SecretData key_256 =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256));
 
   EXPECT_THAT(AesGcmBoringSsl::New(key_128), IsOk());
   EXPECT_THAT(AesGcmBoringSsl::New(key_256), IsOk());
@@ -249,9 +249,9 @@ TEST(AesGcmBoringSslFipsTest, FipsFailWithoutBoringCrypto) {
   }
 
   util::SecretData key_128 =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey128));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128));
   util::SecretData key_256 =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256));
 
   EXPECT_THAT(AesGcmBoringSsl::New(key_128).status(),
               StatusIs(absl::StatusCode::kInternal));

@@ -26,7 +26,6 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/test_random_access_stream.h"
@@ -41,6 +40,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -58,15 +58,13 @@ TEST(AesGcmHkdfStreamingTest, testBasic) {
   }
   for (HashType hkdf_hash : {SHA1, SHA256, SHA512}) {
     for (int ikm_size : {16, 32}) {
-      for (int derived_key_size = 16;
-           derived_key_size <= ikm_size;
+      for (int derived_key_size = 16; derived_key_size <= ikm_size;
            derived_key_size += 16) {
         for (int ct_segment_size : {80, 128, 200}) {
           for (int ciphertext_offset : {0, 10, 16}) {
             SCOPED_TRACE(absl::StrCat(
-                "hkdf_hash = ", EnumToString(hkdf_hash),
-                ", ikm_size = ", ikm_size,
-                ", derived_key_size = ", derived_key_size,
+                "hkdf_hash = ", EnumToString(hkdf_hash), ", ikm_size = ",
+                ikm_size, ", derived_key_size = ", derived_key_size,
                 ", ciphertext_segment_size = ", ct_segment_size,
                 ", ciphertext_offset = ", ciphertext_offset));
             // Create AesGcmHkdfStreaming.
@@ -82,8 +80,8 @@ TEST(AesGcmHkdfStreamingTest, testBasic) {
 
             // Try to get an encrypting stream to a "null" ct_destination.
             std::string associated_data = "some associated data";
-            auto failed_result = streaming_aead->NewEncryptingStream(
-                nullptr, associated_data);
+            auto failed_result =
+                streaming_aead->NewEncryptingStream(nullptr, associated_data);
             EXPECT_FALSE(failed_result.ok());
             EXPECT_EQ(absl::StatusCode::kInvalidArgument,
                       failed_result.status().code());
@@ -237,7 +235,7 @@ TEST(AesGcmHkdfStreamingTest, SizeIsUnauthenticated) {
   // The header is 24 = 0x18 bytes for this key and Tink verifies that the
   // ciphertext starts with 0x18 in the first byte.
   std::string wrong_ciphertext =
-      absl::StrCat(absl::HexStringToBytes("18"),
+      absl::StrCat(crypto::tink::test::HexDecodeOrDie("18"),
                    "some arbitrary text which does not matter at all but needs "
                    "to be at least of length 24 bytes");
   absl::StatusOr<std::unique_ptr<RandomAccessStream>> plaintext_stream =

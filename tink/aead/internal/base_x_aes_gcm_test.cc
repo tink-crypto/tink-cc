@@ -24,7 +24,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/x_aes_gcm_key.h"
@@ -136,7 +135,7 @@ TEST_P(BaseXAesGcmTest, DeriveWithKnownTestVectors) {
   ASSERT_THAT(dervived_key, IsOk());
 
   EXPECT_THAT(
-      absl::BytesToHexString(util::SecretDataAsStringView(*dervived_key)),
+      test::HexEncode(util::SecretDataAsStringView(*dervived_key)),
       Eq(test_case.derived_hex_key));
 }
 

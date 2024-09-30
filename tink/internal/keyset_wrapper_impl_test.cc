@@ -26,7 +26,6 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -350,8 +349,8 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
   ASSERT_THAT(AeadConfig::Register(), IsOk());
   util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       XChaCha20Poly1305Parameters::Variant::kTink,
-      RestrictedData(absl::HexStringToBytes("ab1562faea9f47af3ae1c3d6d030e3af23"
-                                            "0255dff3df583ced6fbbcbf9d606a9"),
+      RestrictedData(test::HexDecodeOrDie("ab1562faea9f47af3ae1c3d6d030e3af23"
+                                          "0255dff3df583ced6fbbcbf9d606a9"),
                      InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/0x02030405, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
@@ -385,7 +384,7 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
   EXPECT_THAT(*decryption, Eq(""));
 
   // Check decryption with the fixed ciphertext.
-  std::string fixed_ct = absl::HexStringToBytes(
+  std::string fixed_ct = test::HexDecodeOrDie(
       absl::StrCat(/*tink_prefix*/ "01",
                    /*key_id*/ "02030405",
                    /*iv*/ "6a5e0c4617e07091b605a4de2c02dde117de2ebd53b23497",

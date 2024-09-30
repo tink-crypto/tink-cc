@@ -53,6 +53,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 #include "proto/jwt_ecdsa.pb.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"

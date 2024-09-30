@@ -920,7 +920,6 @@ tink_cc_test(
     tink::hybrid::hpke_public_key
     gmock
     absl::status
-    absl::strings
     absl::optional
     crypto
     tink::core::partial_key_access
@@ -930,6 +929,7 @@ tink_cc_test(
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -956,6 +956,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1038,7 +1039,6 @@ tink_cc_test(
     tink::hybrid::ecies_parameters
     gmock
     absl::status
-    absl::strings
     absl::string_view
     absl::optional
     tink::core::parameters
@@ -1048,6 +1048,7 @@ tink_cc_test(
     tink::daead::aes_siv_parameters
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1058,22 +1059,18 @@ tink_cc_test(
     tink::hybrid::ecies_parameters
     tink::hybrid::ecies_public_key
     gmock
-    absl::memory
     absl::status
-    absl::strings
     absl::optional
     crypto
     tink::core::big_integer
     tink::core::ec_point
-    tink::core::parameters
     tink::core::partial_key_access
-    tink::daead::aes_siv_parameters
     tink::internal::ec_util
-    tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1102,6 +1099,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(

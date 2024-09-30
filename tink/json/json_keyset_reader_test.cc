@@ -27,15 +27,14 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/substitute.h"
+#include "tink/keyset_reader.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
-#include "tink/keyset_reader.h"
 
 namespace crypto {
 namespace tink {

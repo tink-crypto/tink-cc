@@ -504,7 +504,6 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_verify_key_manager
     gmock
     absl::status
-    absl::strings
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -616,7 +615,6 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
     gmock
     absl::status
-    absl::strings
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -629,6 +627,7 @@ tink_cc_test(
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )

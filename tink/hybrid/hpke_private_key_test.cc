@@ -22,10 +22,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -287,7 +287,7 @@ TEST(HpkePrivateKeyTest, CreateX25519PrivateKeyWithInvalidKeyLengthFails) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
                   internal::X25519KeyPrivKeySize());
   RestrictedData expanded_private_key_bytes = RestrictedData(
-      absl::StrCat(absl::HexStringToBytes("00"), private_key_input),
+      absl::StrCat(test::HexDecodeOrDie("00"), private_key_input),
       InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(

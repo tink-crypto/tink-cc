@@ -21,13 +21,13 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -53,14 +53,13 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha1,
                     absl::nullopt},
            TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha224,
-                    absl::HexStringToBytes("00010203040506")},
+                    test::HexDecodeOrDie("00010203040506")},
            TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha256,
-                    absl::HexStringToBytes("00010203040506070809")},
+                    test::HexDecodeOrDie("00010203040506070809")},
            TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha384,
-                    absl::HexStringToBytes("000102030405060708090a0b0c")},
-           TestCase{
-               /*key_size=*/32, HkdfPrfParameters::HashType::kSha512,
-               absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f")}));
+                    test::HexDecodeOrDie("000102030405060708090a0b0c")},
+           TestCase{/*key_size=*/32, HkdfPrfParameters::HashType::kSha512,
+                    test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f")}));
 
 TEST_P(HkdfPrfKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();

@@ -1025,7 +1025,6 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     gmock
     absl::status
-    absl::strings
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -1052,7 +1051,6 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_verify_key_manager
     gmock
     absl::status
-    absl::strings
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -1294,6 +1292,7 @@ tink_cc_test(
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::ed25519_cc_proto
@@ -1424,6 +1423,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1448,6 +1448,7 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1533,13 +1534,13 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_public_key
     gmock
     absl::status
-    absl::strings
     absl::string_view
     absl::optional
     tink::core::big_integer
     tink::core::partial_key_access
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1565,6 +1566,7 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1627,7 +1629,6 @@ tink_cc_test(
     tink::signature::ecdsa_public_key
     gmock
     absl::status
-    absl::strings
     absl::string_view
     absl::optional
     crypto
@@ -1638,6 +1639,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(

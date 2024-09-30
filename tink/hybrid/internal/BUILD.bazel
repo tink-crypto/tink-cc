@@ -161,6 +161,7 @@ cc_library(
         "//proto:hpke_cc_proto",
         "//tink/util:status",
         "//tink/util:statusor",
+        "//tink/util:test_util",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
     ],

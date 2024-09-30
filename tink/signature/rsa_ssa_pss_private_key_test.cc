@@ -25,6 +25,7 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -626,7 +627,7 @@ TEST(RsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
 
   // Test vector from
   // https://github.com/google/wycheproof/blob/master/testvectors/rsa_pss_2048_sha256_mgf1_32_test.json
-  BigInteger mismatched_modulus(absl::HexStringToBytes(
+  BigInteger mismatched_modulus(test::HexDecodeOrDie(
       "00a2b451a07d0aa5f96e455671513550514a8a5b462ebef717094fa1fee82224e637f974"
       "6d3f7cafd31878d80325b6ef5a1700f65903b469429e89d6eac8845097b5ab393189db92"
       "512ed8a7711a1253facd20f79c15e8247f3d3e42e46e48c98e254a2fe9765313a03eff8f"

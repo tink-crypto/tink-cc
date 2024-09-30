@@ -23,7 +23,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -35,6 +34,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -64,7 +64,7 @@ TEST(XChacha20Poly1305BoringSslTest, EncryptDecrypt) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   if (!internal::IsBoringSsl()) {
     EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key).status(),
                 StatusIs(absl::StatusCode::kUnimplemented));
@@ -97,22 +97,22 @@ TEST(XChacha20Poly1305BoringSslTest, SimpleDecrypt) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  std::string message = absl::HexStringToBytes(
+  std::string message = test::HexDecodeOrDie(
       "4c616469657320616e642047656e746c656d656e206f662074686520636c617373206f66"
       "202739393a204966204920636f756c64206f6666657220796f75206f6e6c79206f6e6520"
       "74697020666f7220746865206675747572652c2073756e73637265656e20776f756c6420"
       "62652069742e");
-  std::string raw_ciphertext = absl::HexStringToBytes(
+  std::string raw_ciphertext = test::HexDecodeOrDie(
       "bd6d179d3e83d43b9576579493c0e939572a1700252bfaccbed2902c21396cbb731c7f1b"
       "0b4aa6440bf3a82f4eda7e39ae64c6708c54c216cb96b72e1213b4522f8c9ba40db5d945"
       "b11b69b982c1bb9e3f3fac2bc369488f76b2383565d3fff921f9664c97637da9768812f6"
       "15c68b13b52e");
-  std::string iv = absl::HexStringToBytes(
-      "404142434445464748494a4b4c4d4e4f5051525354555657");
-  std::string tag = absl::HexStringToBytes("c0875924c1c7987947deafd8780acf49");
+  std::string iv =
+      test::HexDecodeOrDie("404142434445464748494a4b4c4d4e4f5051525354555657");
+  std::string tag = test::HexDecodeOrDie("c0875924c1c7987947deafd8780acf49");
   std::string associated_data =
-      absl::HexStringToBytes("50515253c0c1c2c3c4c5c6c7");
-  util::SecretData key = util::SecretDataFromStringView(absl::HexStringToBytes(
+      test::HexDecodeOrDie("50515253c0c1c2c3c4c5c6c7");
+  util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"));
 
   util::StatusOr<std::unique_ptr<Aead>> aead =
@@ -134,7 +134,7 @@ TEST(XChacha20Poly1305BoringSslTest, DecryptFailsIfCiphertextTooSmall) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Aead>> aead =
       XChacha20Poly1305BoringSsl::New(key);
   ASSERT_THAT(aead, IsOk());
@@ -156,7 +156,7 @@ TEST(XChacha20Poly1305BoringSslTest, FailisOnFipsOnlyMode) {
   }
 
   util::SecretData key256 =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
 
   EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key256).status(),
               StatusIs(absl::StatusCode::kInternal));

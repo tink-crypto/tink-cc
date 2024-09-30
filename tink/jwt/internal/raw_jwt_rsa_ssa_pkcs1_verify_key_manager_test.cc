@@ -22,7 +22,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/internal/bn_util.h"
@@ -176,7 +175,7 @@ TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, NistTestVector) {
   };
 
   const NistTestVector nist_test_vector{
-      absl::HexStringToBytes(
+      test::HexDecodeOrDie(
           "c9548608087bed6be0a4623b9d849aa0b4b4b6114ad0a7d82578076ceefe26ce48d1"
           "448e16d69963510e1e5fc658f3cf8f32a489b62d93fec1cdea6e1dde3feba04bb6a0"
           "34518d83fd6138ea999982ab95d6a03517688ab6f8411c4a96b3e79d4141b8f68338"
@@ -185,13 +184,13 @@ TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, NistTestVector) {
           "aef939e8802b62405d6e3d358ffa88f206b976b87f8b12b827b0ee7823f9d1955f47"
           "f8678f7843b4cd03777e46717060e82bf149b36d4cf3d0bc7e4d0effde51a72f4ced"
           "8e8e5b11bdb135825ff08873e2f776929abb"),
-      absl::HexStringToBytes("3c7bf9"),
-      absl::HexStringToBytes(
+      test::HexDecodeOrDie("3c7bf9"),
+      test::HexDecodeOrDie(
           "bf082fa4b79f32849e8fae692696fc978ccb648c6e278d9bde4338d7b4632e3228b4"
           "77e6a0d2cd14c68d51abdeed7c8c577457ec9fa2eff93cbf03c019d4014e1dfb3115"
           "02d82f9265689e2d19f91b61c17a701c9ef50a69a55aae4cd57e67edc763c3f987ba"
           "3e46a2a6ffb680c3c25df46716e61228c832419e9f43916a4959"),
-      absl::HexStringToBytes(
+      test::HexDecodeOrDie(
           "621120a71ff2a182dd2997beb2480f54be516b79a4c202d1d6f59270f8e4d4dbd625"
           "ac52fe0e49c5fd69dc0d15fb19ec58c9312a8161a61cb878abcb11399937f28ff080"
           "3877c239ce0b7c4cbc1e23eca22746b071b2716475424c12944660b929b6240aebe8"

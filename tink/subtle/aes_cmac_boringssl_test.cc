@@ -25,7 +25,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
 #include "tink/mac.h"
@@ -34,6 +33,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -59,7 +59,7 @@ TEST(AesCmacBoringSslTest, Basic) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kTagSize);
   ASSERT_THAT(cmac, IsOk());
@@ -68,7 +68,7 @@ TEST(AesCmacBoringSslTest, Basic) {
     EXPECT_THAT(tag, IsOk());
     EXPECT_THAT(*tag, SizeIs(kTagSize));
     EXPECT_THAT((*cmac)->VerifyMac(*tag, kMessage), IsOk())
-        << "tag:" << absl::BytesToHexString(*tag);
+        << "tag:" << test::HexEncode(*tag);
   }
   {  // Test with empty example data.
     absl::string_view data;
@@ -76,7 +76,7 @@ TEST(AesCmacBoringSslTest, Basic) {
     EXPECT_THAT(tag, IsOk());
     EXPECT_THAT(*tag, SizeIs(kTagSize));
     EXPECT_THAT((*cmac)->VerifyMac(*tag, data), IsOk())
-        << "tag:" << absl::BytesToHexString(*tag);
+        << "tag:" << test::HexEncode(*tag);
   }
 }
 
@@ -86,7 +86,7 @@ TEST(AesCmacBoringSslTest, Modification) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kTagSize);
   ASSERT_THAT(cmac, IsOk());
@@ -98,8 +98,8 @@ TEST(AesCmacBoringSslTest, Modification) {
     std::string modified_tag = *tag;
     modified_tag[i / 8] ^= 1 << (i % 8);
     EXPECT_THAT((*cmac)->VerifyMac(modified_tag, kMessage), Not(IsOk()))
-        << "tag:" << absl::BytesToHexString(*tag)
-        << " modified:" << absl::BytesToHexString(modified_tag);
+        << "tag:" << test::HexEncode(*tag)
+        << " modified:" << test::HexEncode(modified_tag);
   }
 }
 
@@ -109,7 +109,7 @@ TEST(AesCmacBoringSslTest, Truncation) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kTagSize);
   ASSERT_THAT(cmac, IsOk());
@@ -119,8 +119,8 @@ TEST(AesCmacBoringSslTest, Truncation) {
   for (size_t i = 0; i < tag->size(); i++) {
     std::string modified_tag(*tag, 0, i);
     EXPECT_FALSE((*cmac)->VerifyMac(modified_tag, kMessage).ok())
-        << "tag:" << absl::BytesToHexString(*tag)
-        << " modified:" << absl::BytesToHexString(modified_tag);
+        << "tag:" << test::HexEncode(*tag)
+        << " modified:" << test::HexEncode(modified_tag);
   }
 }
 
@@ -130,7 +130,7 @@ TEST(AesCmacBoringSslTest, BasicSmallTag) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kSmallTagSize);
   EXPECT_THAT(cmac, IsOk());
@@ -140,7 +140,7 @@ TEST(AesCmacBoringSslTest, BasicSmallTag) {
     EXPECT_THAT(tag, IsOk());
     EXPECT_EQ(kSmallTagSize, tag->size());
     EXPECT_THAT((*cmac)->VerifyMac(*tag, data), IsOk())
-        << "tag:" << absl::BytesToHexString(*tag);
+        << "tag:" << test::HexEncode(*tag);
   }
   {  // Test with empty example data.
     absl::string_view data;
@@ -148,7 +148,7 @@ TEST(AesCmacBoringSslTest, BasicSmallTag) {
     EXPECT_THAT(tag, IsOk());
     EXPECT_EQ(kSmallTagSize, tag->size());
     EXPECT_THAT((*cmac)->VerifyMac(*tag, data), IsOk())
-        << "tag:" << absl::BytesToHexString(*tag);
+        << "tag:" << test::HexEncode(*tag);
   }
 }
 
@@ -158,7 +158,7 @@ TEST(AesCmacBoringSslTest, ModificationSmallTag) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kSmallTagSize);
   ASSERT_THAT(cmac, IsOk());
@@ -171,8 +171,8 @@ TEST(AesCmacBoringSslTest, ModificationSmallTag) {
     std::string modified_tag = *tag;
     modified_tag[i / 8] ^= 1 << (i % 8);
     EXPECT_THAT((*cmac)->VerifyMac(modified_tag, kMessage), Not(IsOk()))
-        << "tag:" << absl::BytesToHexString(*tag)
-        << " modified:" << absl::BytesToHexString(modified_tag);
+        << "tag:" << test::HexEncode(*tag)
+        << " modified:" << test::HexEncode(modified_tag);
   }
 }
 
@@ -182,7 +182,7 @@ TEST(AesCmacBoringSslTest, TruncationOrAdditionSmallTag) {
   }
 
   util::SecretData key =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   util::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kSmallTagSize);
   ASSERT_THAT(cmac, IsOk());
@@ -192,14 +192,14 @@ TEST(AesCmacBoringSslTest, TruncationOrAdditionSmallTag) {
   for (size_t i = 0; i < kSmallTagSize; i++) {
     std::string modified_tag(*tag, 0, i);
     EXPECT_THAT((*cmac)->VerifyMac(modified_tag, kMessage), Not(IsOk()))
-        << "tag:" << absl::BytesToHexString(*tag)
-        << " modified:" << absl::BytesToHexString(modified_tag);
+        << "tag:" << test::HexEncode(*tag)
+        << " modified:" << test::HexEncode(modified_tag);
   }
   for (size_t i = kSmallTagSize + 1; i < kTagSize; i++) {
     std::string modified_tag(*tag + std::string(i - kSmallTagSize, 'x'));
     EXPECT_THAT((*cmac)->VerifyMac(modified_tag, kMessage), Not(IsOk()))
-        << "tag:" << absl::BytesToHexString(*tag)
-        << " modified:" << absl::BytesToHexString(modified_tag);
+        << "tag:" << test::HexEncode(*tag)
+        << " modified:" << test::HexEncode(modified_tag);
   }
 }
 
@@ -245,9 +245,9 @@ class AesCmacBoringSslTestVectorTest
   void ExpectCmacVerifyHex(absl::string_view key_hex, absl::string_view tag_hex,
                            absl::string_view data_hex) {
     util::SecretData key =
-        util::SecretDataFromStringView(absl::HexStringToBytes(key_hex));
-    std::string tag = absl::HexStringToBytes(tag_hex);
-    std::string data = absl::HexStringToBytes(data_hex);
+        util::SecretDataFromStringView(test::HexDecodeOrDie(key_hex));
+    std::string tag = test::HexDecodeOrDie(tag_hex);
+    std::string data = test::HexDecodeOrDie(data_hex);
     util::StatusOr<std::unique_ptr<Mac>> cmac =
         AesCmacBoringSsl::New(key, kTagSize);
     EXPECT_THAT(cmac, IsOk());
@@ -281,9 +281,9 @@ TEST(AesCmacBoringSslTest, TestFipsOnly) {
   }
 
   util::SecretData key128 = util::SecretDataFromStringView(
-      absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f"));
+      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   util::SecretData key256 =
-      util::SecretDataFromStringView(absl::HexStringToBytes(kKey256Hex));
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
 
   EXPECT_THAT(subtle::AesCmacBoringSsl::New(key128, kTagSize).status(),
               StatusIs(absl::StatusCode::kInternal));

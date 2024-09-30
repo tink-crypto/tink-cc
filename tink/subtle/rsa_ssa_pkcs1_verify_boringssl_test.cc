@@ -25,7 +25,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "openssl/bn.h"
 #include "include/rapidjson/document.h"
@@ -40,6 +39,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -62,7 +62,7 @@ struct NistTestVector {
 };
 
 static const NistTestVector nist_test_vector{
-    absl::HexStringToBytes(
+    test::HexDecodeOrDie(
         "c47abacc2a84d56f3614d92fd62ed36ddde459664b9301dcd1d61781cfcc026bcb2399"
         "bee7e75681a80b7bf500e2d08ceae1c42ec0b707927f2b2fe92ae852087d25f1d260cc"
         "74905ee5f9b254ed05494a9fe06732c3680992dd6f0dc634568d11542a705f83ae96d2"
@@ -71,13 +71,13 @@ static const NistTestVector nist_test_vector{
         "b66305e4fdf8f0391b3b2313fe549f0189ff968b92f33c266a4bc2cffc897d1937eeb9"
         "e406f5d0eaa7a14782e76af3fce98f54ed237b4a04a4159a5f6250a296a902880204e6"
         "1d891c4da29f2d65f34cbb"),
-    absl::HexStringToBytes("49d2a1"),
-    absl::HexStringToBytes(
+    test::HexDecodeOrDie("49d2a1"),
+    test::HexDecodeOrDie(
         "95123c8d1b236540b86976a11cea31f8bd4e6c54c235147d20ce722b03a6ad756fbd91"
         "8c27df8ea9ce3104444c0bbe877305bc02e35535a02a58dcda306e632ad30b3dc3ce0b"
         "a97fdf46ec192965dd9cd7f4a71b02b8cba3d442646eeec4af590824ca98d74fbca934"
         "d0b6867aa1991f3040b707e806de6e66b5934f05509bea"),
-    absl::HexStringToBytes(
+    test::HexDecodeOrDie(
         "51265d96f11ab338762891cb29bf3f1d2b3305107063f5f3245af376dfcc7027d39365"
         "de70a31db05e9e10eb6148cb7f6425f0c93c4fb0e2291adbd22c77656afc196858a11e"
         "1c670d9eeb592613e69eb4f3aa501730743ac4464486c7ae68fd509e896f63884e9424"

@@ -25,7 +25,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "tink/config/tink_fips.h"
 #include "tink/experimental/pqcrypto/signature/subtle/falcon_sign.h"
@@ -35,6 +34,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 extern "C" {
 #include "third_party/pqclean/crypto_sign/falcon-1024/api.h"

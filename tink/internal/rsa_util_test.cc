@@ -28,7 +28,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
@@ -39,6 +38,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -358,7 +358,7 @@ util::StatusOr<internal::SslUniquePtr<RSA>> NewRsaPublicKey(
     absl::string_view n_hex, uint64_t exp) {
   internal::SslUniquePtr<RSA> key(RSA_new());
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> n_bn =
-      internal::StringToBignum(absl::HexStringToBytes(n_hex));
+      internal::StringToBignum(test::HexDecodeOrDie(n_hex));
   if (!n_bn.ok()) {
     return n_bn.status();
   }
@@ -422,7 +422,7 @@ TEST(RsaUtilTest, RsaCheckPublicKeyModulusTooLarge) {
     too_large_modulus[0] = 0x01;
   }
   util::StatusOr<internal::SslUniquePtr<RSA>> key =
-      NewRsaPublicKey(absl::BytesToHexString(too_large_modulus), RSA_F4);
+      NewRsaPublicKey(test::HexEncode(too_large_modulus), RSA_F4);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT(RsaCheckPublicKey(key->get()), Not(IsOk()));
 }

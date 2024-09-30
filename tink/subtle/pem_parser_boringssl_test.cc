@@ -26,7 +26,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/ascii.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bio.h"
@@ -46,6 +45,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -503,21 +503,21 @@ using ParametrizedPemParserRsaTest = TestWithParam<RsaKeyTestVector>;
 TEST_P(ParametrizedPemParserRsaTest, WriteRsaPrivateKey) {
   RsaKeyTestVector test_vector = GetParam();
   internal::RsaPrivateKey key;
-  key.n = absl::HexStringToBytes(test_vector.modulus_hex_str);
-  key.e = absl::HexStringToBytes(test_vector.public_exponent_hex_str);
+  key.n = test::HexDecodeOrDie(test_vector.modulus_hex_str);
+  key.e = test::HexDecodeOrDie(test_vector.public_exponent_hex_str);
 
   key.d = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.private_exponent_hex_str));
+      test::HexDecodeOrDie(test_vector.private_exponent_hex_str));
   key.p = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.p_hex_str));
+      test::HexDecodeOrDie(test_vector.p_hex_str));
   key.q = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.q_hex_str));
+      test::HexDecodeOrDie(test_vector.q_hex_str));
   key.dp = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.dp_hex_str));
+      test::HexDecodeOrDie(test_vector.dp_hex_str));
   key.dq = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.dq_hex_str));
+      test::HexDecodeOrDie(test_vector.dq_hex_str));
   key.crt = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.coefficient_hex_str));
+      test::HexDecodeOrDie(test_vector.coefficient_hex_str));
 
   util::StatusOr<std::string> pem_result = PemParser::WriteRsaPrivateKey(key);
   EXPECT_THAT(pem_result, IsOk()) << internal::GetSslErrors();
@@ -527,8 +527,8 @@ TEST_P(ParametrizedPemParserRsaTest, WriteRsaPrivateKey) {
 TEST_P(ParametrizedPemParserRsaTest, WriteRsaPublicKey) {
   RsaKeyTestVector test_vector = GetParam();
   internal::RsaPublicKey key;
-  key.n = absl::HexStringToBytes(test_vector.modulus_hex_str);
-  key.e = absl::HexStringToBytes(test_vector.public_exponent_hex_str);
+  key.n = test::HexDecodeOrDie(test_vector.modulus_hex_str);
+  key.e = test::HexDecodeOrDie(test_vector.public_exponent_hex_str);
 
   auto pem_result = PemParser::WriteRsaPublicKey(key);
   EXPECT_THAT(pem_result, IsOk());
@@ -566,8 +566,8 @@ TEST_P(ParametrizedPemParserEcTest, ReadEcPublicKeySuccess) {
 
   EXPECT_THAT(ecdsa_key, IsOk()) << internal::GetSslErrors();
 
-  auto x_hex_result = absl::BytesToHexString(ecdsa_key->get()->pub_x);
-  auto y_hex_result = absl::BytesToHexString(ecdsa_key->get()->pub_y);
+  auto x_hex_result = test::HexEncode(ecdsa_key->get()->pub_x);
+  auto y_hex_result = test::HexEncode(ecdsa_key->get()->pub_y);
   EXPECT_EQ(test_vector.pub_x_hex_str, x_hex_result);
   EXPECT_EQ(test_vector.pub_y_hex_str, y_hex_result);
   EXPECT_EQ(test_vector.curve, ecdsa_key->get()->curve);
@@ -581,10 +581,10 @@ TEST_P(ParametrizedPemParserEcTest, ReadEcPrivateKeySuccess) {
 
   EXPECT_THAT(ecdsa_key, IsOk()) << internal::GetSslErrors();
 
-  std::string x_hex = absl::BytesToHexString((*ecdsa_key)->pub_x);
-  std::string y_hex = absl::BytesToHexString((*ecdsa_key)->pub_y);
+  std::string x_hex = test::HexEncode((*ecdsa_key)->pub_x);
+  std::string y_hex = test::HexEncode((*ecdsa_key)->pub_y);
   std::string priv_hex =
-      absl::BytesToHexString(util::SecretDataAsStringView((*ecdsa_key)->priv));
+      test::HexEncode(util::SecretDataAsStringView((*ecdsa_key)->priv));
   EXPECT_THAT(x_hex, Eq(test_vector.pub_x_hex_str));
   EXPECT_THAT(y_hex, Eq(test_vector.pub_y_hex_str));
   EXPECT_THAT(priv_hex, Eq(absl::AsciiStrToLower(test_vector.priv_hex_str)));
@@ -618,10 +618,10 @@ TEST_P(ParametrizedPemParserEcTest, WriteEcPublicKeySucceeds) {
   // Load an EcKey with the test vector.
   SubtleUtilBoringSSL::EcKey ec_key;
   ec_key.curve = test_vector.curve;
-  ec_key.pub_x = absl::HexStringToBytes(test_vector.pub_x_hex_str);
-  ec_key.pub_y = absl::HexStringToBytes(test_vector.pub_y_hex_str);
+  ec_key.pub_x = test::HexDecodeOrDie(test_vector.pub_x_hex_str);
+  ec_key.pub_y = test::HexDecodeOrDie(test_vector.pub_y_hex_str);
   ec_key.priv = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.priv_hex_str));
+      test::HexDecodeOrDie(test_vector.priv_hex_str));
 
   // Check that converting the public key with WriteEcPublicKey() succeeds.
   util::StatusOr<std::string> pem_material =
@@ -636,10 +636,10 @@ TEST_P(ParametrizedPemParserEcTest, WriteEcPrivateKeySucceeds) {
   // Load an EcKey with the test vector.
   SubtleUtilBoringSSL::EcKey ec_key;
   ec_key.curve = test_vector.curve;
-  ec_key.pub_x = absl::HexStringToBytes(test_vector.pub_x_hex_str);
-  ec_key.pub_y = absl::HexStringToBytes(test_vector.pub_y_hex_str);
+  ec_key.pub_x = test::HexDecodeOrDie(test_vector.pub_x_hex_str);
+  ec_key.pub_y = test::HexDecodeOrDie(test_vector.pub_y_hex_str);
   ec_key.priv = util::SecretDataFromStringView(
-      absl::HexStringToBytes(test_vector.priv_hex_str));
+      test::HexDecodeOrDie(test_vector.priv_hex_str));
 
   // Check that converting the private key with WriteEcPrivateKey() succeeds.
   util::StatusOr<std::string> pem_material =
@@ -855,7 +855,7 @@ TEST(PemParserEcTest, ParseEd25519PublicKey) {
       PemParser::ParseEd25519PublicKey(kEd25519PublicKey);
   ASSERT_THAT(ed25519_pub_key, IsOk());
   EXPECT_THAT((*ed25519_pub_key)->private_key.size(), Eq(0));
-  EXPECT_THAT(absl::BytesToHexString((*ed25519_pub_key)->public_key),
+  EXPECT_THAT(test::HexEncode((*ed25519_pub_key)->public_key),
               Eq(kEd25519PublicKeyX));
 }
 

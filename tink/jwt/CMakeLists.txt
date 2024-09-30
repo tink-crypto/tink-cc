@@ -595,7 +595,6 @@ tink_cc_test(
   DEPS
     tink::jwt::raw_jwt
     gmock
-    absl::strings
     absl::time
     tink::util::statusor
     tink::util::test_matchers
@@ -641,7 +640,6 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     gmock
-    absl::strings
     absl::time
     tink::util::statusor
     tink::util::test_matchers
@@ -698,6 +696,7 @@ tink_cc_test(
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::ecdsa_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
@@ -745,6 +744,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
@@ -861,7 +861,6 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_public_key
     gmock
     absl::status
-    absl::strings
     absl::optional
     tink::core::big_integer
     tink::core::ec_point
@@ -870,6 +869,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -965,6 +965,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -990,6 +991,7 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1060,6 +1062,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1085,6 +1088,7 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(

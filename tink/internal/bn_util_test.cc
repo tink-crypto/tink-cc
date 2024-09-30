@@ -23,7 +23,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -33,6 +32,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -54,7 +54,7 @@ TEST(BnUtil, StringToBignum) {
                                      "1000000000000000", "ffffffffffffffff",
                                      "0fffffffffffffff", "00ffffffffffffff"};
   for (const std::string& s : bn_str) {
-    const std::string bn_bytes = absl::HexStringToBytes(s);
+    const std::string bn_bytes = test::HexDecodeOrDie(s);
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> bn =
         StringToBignum(bn_bytes);
     ASSERT_THAT(bn, IsOk());
@@ -66,8 +66,8 @@ TEST(BnUtil, StringToBignum) {
 }
 
 TEST(StringToBignum, IgnoresLeadingZeros) {
-  std::string encoded = absl::HexStringToBytes("0102");
-  std::string encoded_with_leading_zeros = absl::HexStringToBytes("0000000102");
+  std::string encoded = test::HexDecodeOrDie("0102");
+  std::string encoded_with_leading_zeros = test::HexDecodeOrDie("0000000102");
 
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> num =
       StringToBignum(encoded);
@@ -88,7 +88,7 @@ TEST(BnUtil, BignumToString) {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> expected_bn = HexToBignum(s);
     ASSERT_THAT(expected_bn, IsOk());
 
-    const std::string bn_bytes = absl::HexStringToBytes(s);
+    const std::string bn_bytes = test::HexDecodeOrDie(s);
     util::StatusOr<std::string> result =
         BignumToString(expected_bn->get(), bn_bytes.size());
     ASSERT_THAT(result, IsOk());
@@ -99,75 +99,75 @@ TEST(BnUtil, BignumToString) {
 TEST(BignumToStringWithBNNumBytes, NoLeadingZeros) {
   {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> bn0 =
-      StringToBignum(absl::HexStringToBytes("000000"));
+        StringToBignum(test::HexDecodeOrDie("000000"));
     ASSERT_THAT(bn0, IsOk());
 
     util::StatusOr<std::string> encoded0 =
         internal::BignumToString(bn0->get(), BN_num_bytes(bn0->get()));
     ASSERT_THAT(encoded0, IsOk());
-    EXPECT_EQ(*encoded0, absl::HexStringToBytes(""));
+    EXPECT_EQ(*encoded0, test::HexDecodeOrDie(""));
   }
 
   {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> bn127 =
-      StringToBignum(absl::HexStringToBytes("00007F"));
+        StringToBignum(test::HexDecodeOrDie("00007F"));
     ASSERT_THAT(bn127, IsOk());
 
     util::StatusOr<std::string> encoded127 =
         internal::BignumToString(bn127->get(), BN_num_bytes(bn127->get()));
     ASSERT_THAT(encoded127, IsOk());
-    EXPECT_EQ(*encoded127, absl::HexStringToBytes("7F"));
+    EXPECT_EQ(*encoded127, test::HexDecodeOrDie("7F"));
   }
 
   {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> bn128 =
-        StringToBignum(absl::HexStringToBytes("000080"));
+        StringToBignum(test::HexDecodeOrDie("000080"));
     ASSERT_THAT(bn128, IsOk());
 
     util::StatusOr<std::string> encoded128 =
         internal::BignumToString(bn128->get(), BN_num_bytes(bn128->get()));
     ASSERT_THAT(encoded128, IsOk());
-    EXPECT_EQ(*encoded128, absl::HexStringToBytes("80"));
+    EXPECT_EQ(*encoded128, test::HexDecodeOrDie("80"));
   }
 
   {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> bn255 =
-      StringToBignum(absl::HexStringToBytes("0000FF"));
+        StringToBignum(test::HexDecodeOrDie("0000FF"));
     ASSERT_THAT(bn255, IsOk());
 
       util::StatusOr<std::string> encoded255 =
         internal::BignumToString(bn255->get(), BN_num_bytes(bn255->get()));
     ASSERT_THAT(encoded255, IsOk());
-    EXPECT_EQ(*encoded255, absl::HexStringToBytes("FF"));
+    EXPECT_EQ(*encoded255, test::HexDecodeOrDie("FF"));
   }
 
   {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> bn256 =
-      StringToBignum(absl::HexStringToBytes("000100"));
+        StringToBignum(test::HexDecodeOrDie("000100"));
     ASSERT_THAT(bn256, IsOk());
 
     util::StatusOr<std::string> encoded256 =
         internal::BignumToString(bn256->get(), BN_num_bytes(bn256->get()));
     ASSERT_THAT(encoded256, IsOk());
-    EXPECT_EQ(*encoded256, absl::HexStringToBytes("0100"));
+    EXPECT_EQ(*encoded256, test::HexDecodeOrDie("0100"));
   }
 }
 
 
 TEST(BignumToString, PadsWithLeadingZeros) {
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> num =
-      StringToBignum(absl::HexStringToBytes("0102"));
+      StringToBignum(test::HexDecodeOrDie("0102"));
   ASSERT_THAT(num, IsOk());
 
   util::StatusOr<std::string> encoded =
       BignumToString(num->get(), /*len=*/ 2);
   ASSERT_THAT(encoded, IsOk());
-  EXPECT_EQ(*encoded, absl::HexStringToBytes("0102"));
+  EXPECT_EQ(*encoded, test::HexDecodeOrDie("0102"));
 
   util::StatusOr<std::string> encodedWithPadding =
       BignumToString(num->get(), /*len=*/ 5);
   ASSERT_THAT(encodedWithPadding, IsOk());
-  EXPECT_EQ(*encodedWithPadding, absl::HexStringToBytes("0000000102"));
+  EXPECT_EQ(*encodedWithPadding, test::HexDecodeOrDie("0000000102"));
 
   // try to encode with a value for len that is too short.
   ASSERT_THAT(BignumToString(num->get(), /*len=*/1), Not(IsOk()));
@@ -192,7 +192,7 @@ TEST(BnUtil, BignumToSecretData) {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> expected_bn = HexToBignum(s);
     ASSERT_THAT(expected_bn, IsOk());
 
-    const std::string bn_bytes = absl::HexStringToBytes(s);
+    const std::string bn_bytes = test::HexDecodeOrDie(s);
     util::StatusOr<util::SecretData> result =
         BignumToSecretData(expected_bn->get(), bn_bytes.size());
     ASSERT_THAT(result, IsOk());
@@ -210,7 +210,7 @@ TEST(BnUtil, BignumToBinaryPadded) {
     util::StatusOr<internal::SslUniquePtr<BIGNUM>> expected_bn = HexToBignum(s);
     ASSERT_THAT(expected_bn, IsOk());
 
-    const std::string bn_bytes = absl::HexStringToBytes(s);
+    const std::string bn_bytes = test::HexDecodeOrDie(s);
     std::vector<char> buffer;
     buffer.resize(bn_bytes.size());
     util::Status res = BignumToBinaryPadded(
@@ -228,7 +228,7 @@ TEST(BnUtil, BufferToSmall) {
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> expected_bn =
       HexToBignum(bn_str);
   ASSERT_THAT(expected_bn, IsOk());
-  const std::string bn_bytes = absl::HexStringToBytes(bn_str);
+  const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
   for (size_t buffer_size = 1; buffer_size < bn_bytes.size(); buffer_size++) {
     {
       std::vector<char> buffer;

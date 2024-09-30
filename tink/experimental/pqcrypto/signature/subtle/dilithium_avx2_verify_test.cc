@@ -26,7 +26,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
@@ -38,6 +37,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 extern "C" {
 #include "third_party/pqclean/crypto_sign/dilithium2/api.h"
@@ -268,7 +268,7 @@ struct TestVector {
 TEST(DilithiumAvx2VerifyTest, Vectors) {
   TestVector dilithium_vectors[] = {
       {/*TEST Dilithium2*/
-       /*public_key= */ absl::HexStringToBytes(
+       /*public_key= */ test::HexDecodeOrDie(
            "1C0EE1111B08003F28E65E8B3BDEB037CF8F221DFCDAF5950EDB38D506D85BEF"
            "6177E3DE0D4F1EF5847735947B56D08E841DB2444FA2B729ADEB1417CA7ADF42"
            "A1490C5A097F002760C1FC419BE8325AAD0197C52CED80D3DF18E7774265B289"
@@ -313,10 +313,10 @@ TEST(DilithiumAvx2VerifyTest, Vectors) {
            "3"),
 
        /*message = */
-       absl::HexStringToBytes("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
-                              "D55B22E75BF57BB556AC8"),
+       test::HexDecodeOrDie("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
+                            "D55B22E75BF57BB556AC8"),
        /*signature = */
-       absl::HexStringToBytes(
+       test::HexDecodeOrDie(
            "AF5920774603D20E98A79AA3ABFA32B6E22519E673E37AC4AC73FE85341E2C29"
            "23C1992E1B0BBE3873D7C8FC5662F207BF58EA381CD4A3A0C062DEC45BDAF8BA"
            "0AA52BEF6FA14F3F6CF28F7620BF94A92CC27D045414A64D65C0149630528024"
@@ -394,7 +394,7 @@ TEST(DilithiumAvx2VerifyTest, Vectors) {
            "D9E6F5FA0001041927373D5A7680B8C1C9FE2029383B3C484D565F65799D9EA6"
            "A9ADD2DEE5E7F7F9000000000000000012243248")},
       {/*TEST Dilithium3*/
-       /*public_key= */ absl::HexStringToBytes(
+       /*public_key= */ test::HexDecodeOrDie(
            "1C0EE1111B08003F28E65E8B3BDEB037CF8F221DFCDAF5950EDB38D506D85BEF"
            "032369A2CE572FD08BFC304B4848E78D752D77E97A28B99B9BB6FB5C7C633751"
            "4B321ECDC1FB669F26D4171AB42B72720EE70E0519A6E1D3D6D9914EC1B21CDE"
@@ -479,10 +479,10 @@ TEST(DilithiumAvx2VerifyTest, Vectors) {
            "A"),
 
        /*message = */
-       absl::HexStringToBytes("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
-                              "D55B22E75BF57BB556AC8"),
+       test::HexDecodeOrDie("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
+                            "D55B22E75BF57BB556AC8"),
        /*signature = */
-       absl::HexStringToBytes(
+       test::HexDecodeOrDie(
            "BBF85FFD0E01C80C8C1C1931CD640BF273D49693C4C4BFF5DD20D94CF3757ABD"
            "45473B9D01B1871305DA90EDC6707D5417129467F61F723950C1AEDF7055EC1D"
            "4777AD8808E8B347D1D0921EBAB890CCA8E3A0DFD3003DE9F9CB4A97D884E1DD"
@@ -628,7 +628,7 @@ TEST(DilithiumAvx2VerifyTest, Vectors) {
            "D0FBFC023C596C749EAEFB0A1784C8CFE5E7448A989FD8D94366B4C7D6FF0000"
            "0000000000000000000000070F1E232B32383E")},
       {/*TEST Dilithium5*/
-       /*public_key= */ absl::HexStringToBytes(
+       /*public_key= */ test::HexDecodeOrDie(
            "1C0EE1111B08003F28E65E8B3BDEB037CF8F221DFCDAF5950EDB38D506D85BEF"
            "032369A2CE572FD08BFC304B4848E78D752D77E97A28B99B9BB6FB5C7C633751"
            "4B321ECDC1FB669F26D4171AB42B72720EE70E0519A6E1D3D6D9914EC1B21CDE"
@@ -713,10 +713,10 @@ TEST(DilithiumAvx2VerifyTest, Vectors) {
            "A"),
 
        /*message = */
-       absl::HexStringToBytes("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
-                              "D55B22E75BF57BB556AC8"),
+       test::HexDecodeOrDie("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
+                            "D55B22E75BF57BB556AC8"),
        /*signature = */
-       absl::HexStringToBytes(
+       test::HexDecodeOrDie(
            "BBF85FFD0E01C80C8C1C1931CD640BF273D49693C4C4BFF5DD20D94CF3757ABD"
            "45473B9D01B1871305DA90EDC6707D5417129467F61F723950C1AEDF7055EC1D"
            "4777AD8808E8B347D1D0921EBAB890CCA8E3A0DFD3003DE9F9CB4A97D884E1DD"
@@ -880,7 +880,7 @@ TEST(DilithiumAvx2VerifyTest, AesVectors) {
   TestVector dilithium_aes_vectors[] = {
       {
           /*TEST Dilithium2 AES*/
-          /*public_key= */ absl::HexStringToBytes(
+          /*public_key= */ test::HexDecodeOrDie(
               "1C0EE1111B08003F28E65E8B3BDEB037CF8F221DFCDAF5950EDB38D506D85BEF"
               "7E0188CEFDBAB31CF94FABE34E3C383EFCA7FA815D2C70826B1A046818E2A05F"
               "16B29C1C0BBBFC5707BB7051262FD0A2E34B7107D4619C54FE277549DBC23ED5"
@@ -925,10 +925,10 @@ TEST(DilithiumAvx2VerifyTest, AesVectors) {
               "2"),
 
           /*message = */
-          absl::HexStringToBytes("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
-                                 "D55B22E75BF57BB556AC8"),
+          test::HexDecodeOrDie("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
+                               "D55B22E75BF57BB556AC8"),
           /*signature = */
-          absl::HexStringToBytes(
+          test::HexDecodeOrDie(
               "EB5742B00BD29D1365DE0E434DA8A154B0D939088507EABF21C68FF30BAEA9F0"
               "E6FEB469B6D4F14FCFA520ED2233A54778CE4FACF32A82593F741C3F1351DC21"
               "248C06F0688F3566AE473B0602E20DFD336FCDEEB016206C1F3AE2639466F143"
@@ -1008,7 +1008,7 @@ TEST(DilithiumAvx2VerifyTest, AesVectors) {
       },
       {
           /*TEST Dilithium3 AES*/
-          /*public_key= */ absl::HexStringToBytes(
+          /*public_key= */ test::HexDecodeOrDie(
               "1C0EE1111B08003F28E65E8B3BDEB037CF8F221DFCDAF5950EDB38D506D85BEF"
               "939D474DC88E95C73766FD2228B27F4DCFFADFB35D22DCB8050237E977399E52"
               "E32C9939AEA889B14201AB02A2C4ED8DA6143693A7A6F0E4ACC419C16E5A1B5B"
@@ -1073,10 +1073,10 @@ TEST(DilithiumAvx2VerifyTest, AesVectors) {
               "E"),
 
           /*message = */
-          absl::HexStringToBytes("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
-                                 "D55B22E75BF57BB556AC8"),
+          test::HexDecodeOrDie("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
+                               "D55B22E75BF57BB556AC8"),
           /*signature = */
-          absl::HexStringToBytes(
+          test::HexDecodeOrDie(
               "84EC9F59B6A2FDD5869CF5524ED3FF70BB40FE6BDC99C3B6733FB63DA094FA3F"
               "2815FE466856A22366F4F61351DE657481263D526A397E19548DF524932EF1D7"
               "7D71156AB32589BFCA3E79493AE2E8A48DC120812DFC80223F011BCFE26F7858"
@@ -1183,7 +1183,7 @@ TEST(DilithiumAvx2VerifyTest, AesVectors) {
       },
       {
           /*TEST Dilithium5 AES*/
-          /*public_key= */ absl::HexStringToBytes(
+          /*public_key= */ test::HexDecodeOrDie(
               "1C0EE1111B08003F28E65E8B3BDEB037CF8F221DFCDAF5950EDB38D506D85BEF"
               "66D02BD8299B815AB461FB6043BC1059C1850C557F629421BACB553D862C7F7B"
               "4461D75A2795D428F42F87D9B6FEDC924BF55402C3E98B1DD0A56069414E5D56"
@@ -1268,10 +1268,10 @@ TEST(DilithiumAvx2VerifyTest, AesVectors) {
               "0"),
 
           /*message = */
-          absl::HexStringToBytes("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
-                                 "D55B22E75BF57BB556AC8"),
+          test::HexDecodeOrDie("D81C4D8D734FCBFBEADE3D3F8A039FAA2A2C9957E835A"
+                               "D55B22E75BF57BB556AC8"),
           /*signature = */
-          absl::HexStringToBytes(
+          test::HexDecodeOrDie(
               "71F7F7FD6276C18539BF89D27B86C26716771342AD46F1FBC8594496B3C85B36"
               "1B2CBEEE99CF0BD6E8E43F31F6154D49C1ED65EF51F8BAE947469C3772B60065"
               "EA5FA1B02895D9DC1A02E063054420ADCAC38079419D1F02D89753ABAF499E28"

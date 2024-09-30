@@ -21,10 +21,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
+#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -50,9 +50,9 @@ using ::testing::Values;
 // Test case for P-256 downloaded from NIST
 // https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/component-testing
 const EcPoint& kP256EcPoint = *new EcPoint(
-    BigInteger(absl::HexStringToBytes(
+    BigInteger(test::HexDecodeOrDie(
         "700c48f77f56584c5cc632ca65640db91b6bacce3a4df6b42ce7cc838833d287")),
-    BigInteger(absl::HexStringToBytes(
+    BigInteger(test::HexDecodeOrDie(
         "db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ac")));
 
 struct TestCase {
@@ -166,9 +166,9 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
 TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidPointFails) {
   // Creates an invalid EC point, by modifying the Y coordinate of kP256EcPoint.
   EcPoint invalid_point(
-      BigInteger(absl::HexStringToBytes(
+      BigInteger(test::HexDecodeOrDie(
           "700c48f77f56584c5cc632ca65640db91b6bacce3a4df6b42ce7cc838833d287")),
-      BigInteger(absl::HexStringToBytes(
+      BigInteger(test::HexDecodeOrDie(
           "db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ad")));
 
   util::StatusOr<EcdsaParameters> params =

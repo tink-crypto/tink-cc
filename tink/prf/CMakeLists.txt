@@ -711,11 +711,11 @@ tink_cc_test(
     tink::prf::hkdf_prf_parameters
     gmock
     absl::status
-    absl::strings
     absl::string_view
     absl::optional
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -727,12 +727,12 @@ tink_cc_test(
     tink::prf::hkdf_prf_parameters
     gmock
     absl::status
-    absl::strings
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
 )
 
 tink_cc_test(
@@ -745,7 +745,6 @@ tink_cc_test(
     tink::prf::hkdf_prf_proto_serialization
     gmock
     absl::status
-    absl::strings
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -760,6 +759,7 @@ tink_cc_test(
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
     tink::proto::tink_cc_proto

@@ -20,10 +20,10 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/internal/hpke_util.h"
 #include "tink/util/statusor.h"
+#include "tink/util/test_util.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -43,20 +43,20 @@ struct HpkeTestParams {
   std::vector<std::string> exported_values;
 
   explicit HpkeTestParams(const absl::string_view* test_vector)
-      : recipient_public_key(absl::HexStringToBytes(test_vector[0])),
-        seed_for_testing(absl::HexStringToBytes(test_vector[1])),
-        application_info(absl::HexStringToBytes(test_vector[2])),
-        plaintext(absl::HexStringToBytes(test_vector[3])),
-        associated_data(absl::HexStringToBytes(test_vector[4])),
-        ciphertext(absl::HexStringToBytes(test_vector[5])),
-        recipient_private_key(absl::HexStringToBytes(test_vector[6])),
-        encapsulated_key(absl::HexStringToBytes(test_vector[7])),
-        exported_contexts({absl::HexStringToBytes(test_vector[8]),
-                           absl::HexStringToBytes(test_vector[9]),
-                           absl::HexStringToBytes(test_vector[10])}),
-        exported_values({absl::HexStringToBytes(test_vector[11]),
-                         absl::HexStringToBytes(test_vector[12]),
-                         absl::HexStringToBytes(test_vector[13])}) {}
+      : recipient_public_key(test::HexDecodeOrDie(test_vector[0])),
+        seed_for_testing(test::HexDecodeOrDie(test_vector[1])),
+        application_info(test::HexDecodeOrDie(test_vector[2])),
+        plaintext(test::HexDecodeOrDie(test_vector[3])),
+        associated_data(test::HexDecodeOrDie(test_vector[4])),
+        ciphertext(test::HexDecodeOrDie(test_vector[5])),
+        recipient_private_key(test::HexDecodeOrDie(test_vector[6])),
+        encapsulated_key(test::HexDecodeOrDie(test_vector[7])),
+        exported_contexts({test::HexDecodeOrDie(test_vector[8]),
+                           test::HexDecodeOrDie(test_vector[9]),
+                           test::HexDecodeOrDie(test_vector[10])}),
+        exported_values({test::HexDecodeOrDie(test_vector[11]),
+                         test::HexDecodeOrDie(test_vector[12]),
+                         test::HexDecodeOrDie(test_vector[13])}) {}
 };
 
 // Returns an HpkeTestParams struct for the following HPKE parameters:

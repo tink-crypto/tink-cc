@@ -22,7 +22,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
@@ -39,6 +38,7 @@
 #include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 #include "proto/common.pb.h"
 #include "proto/hkdf_prf.pb.h"
 #include "proto/tink.pb.h"
@@ -82,22 +82,22 @@ class HkdfPrfProtoSerializationTest : public TestWithParam<TestCase> {
 
 INSTANTIATE_TEST_SUITE_P(
     HkdfPrfParametersCreateTestSuite, HkdfPrfProtoSerializationTest,
-    Values(
-        TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha1,
-                 HashType::SHA1, /*salt=*/absl::nullopt},
-        TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha224,
-                 HashType::SHA224,
-                 /*salt=*/absl::HexStringToBytes("00010203040506")},
-        TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha256,
-                 HashType::SHA256,
-                 /*salt=*/absl::HexStringToBytes("00010203040506070809")},
-        TestCase{/*key_size=*/32, HkdfPrfParameters::HashType::kSha384,
-                 HashType::SHA384,
-                 /*salt=*/absl::HexStringToBytes("000102030405060708090a0b0c")},
-        TestCase{/*key_size=*/32, HkdfPrfParameters::HashType::kSha512,
-                 HashType::SHA512,
-                 /*salt=*/
-                 absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f")}));
+    Values(TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha1,
+                    HashType::SHA1, /*salt=*/absl::nullopt},
+           TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha224,
+                    HashType::SHA224,
+                    /*salt=*/test::HexDecodeOrDie("00010203040506")},
+           TestCase{/*key_size=*/16, HkdfPrfParameters::HashType::kSha256,
+                    HashType::SHA256,
+                    /*salt=*/test::HexDecodeOrDie("00010203040506070809")},
+           TestCase{
+               /*key_size=*/32, HkdfPrfParameters::HashType::kSha384,
+               HashType::SHA384,
+               /*salt=*/test::HexDecodeOrDie("000102030405060708090a0b0c")},
+           TestCase{/*key_size=*/32, HkdfPrfParameters::HashType::kSha512,
+                    HashType::SHA512,
+                    /*salt=*/
+                    test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f")}));
 
 TEST_F(HkdfPrfProtoSerializationTest, RegisterTwiceSucceeds) {
   ASSERT_THAT(RegisterHkdfPrfProtoSerialization(), IsOk());

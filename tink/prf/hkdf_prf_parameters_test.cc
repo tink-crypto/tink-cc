@@ -21,11 +21,11 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -58,7 +58,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HkdfPrfParametersTest, Create) {
   TestCase test_case = GetParam();
-  std::string salt = absl::HexStringToBytes(kSalt);
+  std::string salt = test::HexDecodeOrDie(kSalt);
 
   util::StatusOr<HkdfPrfParameters> parameters =
       HkdfPrfParameters::Create(test_case.key_size, test_case.hash_type, salt);
@@ -148,7 +148,7 @@ TEST(HkdfPrfParametersTest, CopyAssignment) {
 
 TEST_P(HkdfPrfParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
-  std::string salt = absl::HexStringToBytes(kSalt);
+  std::string salt = test::HexDecodeOrDie(kSalt);
 
   util::StatusOr<HkdfPrfParameters> parameters =
       HkdfPrfParameters::Create(test_case.key_size, test_case.hash_type, salt);
@@ -197,13 +197,13 @@ TEST(HkdfPrfParametersTest, DifferentashTypeNotEqual) {
 }
 
 TEST(HkdfPrfParametersTest, DifferentSaltNotEqual) {
-  std::string salt1 = absl::HexStringToBytes("2023ab");
+  std::string salt1 = test::HexDecodeOrDie("2023ab");
   util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/salt1);
   ASSERT_THAT(parameters, IsOk());
 
-  std::string salt2 = absl::HexStringToBytes("2023af");
+  std::string salt2 = test::HexDecodeOrDie("2023af");
   util::StatusOr<HkdfPrfParameters> other_parameters =
       HkdfPrfParameters::Create(/*key_size_in_bytes=*/16,
                                 HkdfPrfParameters::HashType::kSha256,

@@ -24,11 +24,11 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -97,7 +97,7 @@ TEST(EcUtilTest, NewEd25519KeyWithWycheproofTestVectors) {
 }
 
 TEST(EcUtilTest, NewEd25519KeyInvalidSeed) {
-  std::string valid_seed = absl::HexStringToBytes(
+  std::string valid_seed = test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f");
   // Seed that is too small.
   for (int i = 0; i < 32; i++) {
@@ -146,9 +146,9 @@ TEST_P(EcUtilNewEcKeyWithSeed, KeysFromDifferentSeedAreDifferent) {
   }
 
   util::SecretData seed1 = util::SecretDataFromStringView(
-      absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f"));
+      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   util::SecretData seed2 = util::SecretDataFromStringView(
-      absl::HexStringToBytes("0f0e0d0c0b0a09080706050403020100"));
+      test::HexDecodeOrDie("0f0e0d0c0b0a09080706050403020100"));
   subtle::EllipticCurveType curve = GetParam();
 
   util::StatusOr<EcKey> keypair1 = NewEcKey(curve, seed1);
@@ -167,7 +167,7 @@ TEST_P(EcUtilNewEcKeyWithSeed, SameSeedGivesSameKey) {
   }
 
   util::SecretData seed1 = util::SecretDataFromStringView(
-      absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f"));
+      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   subtle::EllipticCurveType curve = GetParam();
 
   util::StatusOr<EcKey> keypair1 = NewEcKey(curve, seed1);
@@ -189,7 +189,7 @@ TEST(EcUtilTest, GenerationWithSeedFailsWithWrongCurve) {
     GTEST_SKIP() << "NewEcKey with seed is not supported with OpenSSL";
   }
   util::SecretData seed = util::SecretDataFromStringView(
-      absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f"));
+      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   util::StatusOr<EcKey> keypair =
       NewEcKey(subtle::EllipticCurveType::CURVE25519, seed);
   EXPECT_THAT(keypair.status(), StatusIs(absl::StatusCode::kInternal));
@@ -204,7 +204,7 @@ TEST(EcUtilTest, NewEcKeyFromSeedUnimplementedIfOpenSsl) {
         << "OpenSSL-only test; skipping because BoringSSL is being used";
   }
   util::SecretData seed = util::SecretDataFromStringView(
-      absl::HexStringToBytes("000102030405060708090a0b0c0d0e0f"));
+      test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   util::StatusOr<EcKey> keypair =
       NewEcKey(subtle::EllipticCurveType::CURVE25519, seed);
   EXPECT_THAT(keypair.status(), StatusIs(absl::StatusCode::kUnimplemented));
@@ -278,37 +278,37 @@ std::vector<X25519FunctionTestVector> GetX25519FunctionTestVectors() {
       // https://datatracker.ietf.org/doc/html/rfc7748#section-5.2
       {
           /*private_key=*/
-          absl::HexStringToBytes("090000000000000000000000000000000000000000000"
-                                 "0000000000000000000"),
+          test::HexDecodeOrDie("090000000000000000000000000000000000000000000"
+                               "0000000000000000000"),
           /*expected_public_key=*/
-          absl::HexStringToBytes("422c8e7a6227d7bca1350b3e2bb7279f7897b87bb6854"
-                                 "b783c60e80311ae3079"),
+          test::HexDecodeOrDie("422c8e7a6227d7bca1350b3e2bb7279f7897b87bb6854"
+                               "b783c60e80311ae3079"),
       },
       // https://datatracker.ietf.org/doc/html/rfc7748#section-6.1; Alice
       {
           /*private_key=*/
-          absl::HexStringToBytes("77076d0a7318a57d3c16c17251b26645df4c2f87ebc09"
-                                 "92ab177fba51db92c2a"),
+          test::HexDecodeOrDie("77076d0a7318a57d3c16c17251b26645df4c2f87ebc09"
+                               "92ab177fba51db92c2a"),
           /*expected_public_key=*/
-          absl::HexStringToBytes("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381"
-                                 "af4eba4a98eaa9b4e6a"),
+          test::HexDecodeOrDie("8520f0098930a754748b7ddcb43ef75a0dbf3a0d26381"
+                               "af4eba4a98eaa9b4e6a"),
       },
       // https://datatracker.ietf.org/doc/html/rfc7748#section-6.1; Bob
       {
           /*private_key=*/
-          absl::HexStringToBytes("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b"
-                                 "6fd1c2f8b27ff88e0eb"),
+          test::HexDecodeOrDie("5dab087e624a8a4b79e17f8b83800ee66f3bb1292618b"
+                               "6fd1c2f8b27ff88e0eb"),
           /*expected_public_key=*/
-          absl::HexStringToBytes("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b786"
-                                 "74dadfc7e146f882b4f"),
+          test::HexDecodeOrDie("de9edb7d7b7dc1b4d35b61c2ece435373f8343c85b786"
+                               "74dadfc7e146f882b4f"),
       },
       // Locally made up test vector
       {
           /*private_key=*/
           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           /*expected_public_key=*/
-          absl::HexStringToBytes("4049502db92ca2342c3f92dac5d6de7c85db5df5407a5"
-                                 "b4996ce39f2efb7e827"),
+          test::HexDecodeOrDie("4049502db92ca2342c3f92dac5d6de7c85db5df5407a5"
+                               "b4996ce39f2efb7e827"),
       },
   };
 }
@@ -340,25 +340,25 @@ std::vector<X25519SharedSecretTestVector> GetX25519SharedSecretTestVectors() {
   return {
       {
           /*private_key=*/
-          absl::HexStringToBytes("a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5"
-                                 "a18506a2244ba449ac4"),
+          test::HexDecodeOrDie("a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5"
+                               "a18506a2244ba449ac4"),
           /*public_key=*/
-          absl::HexStringToBytes("e6db6867583030db3594c1a424b15f7c726624ec26b33"
-                                 "53b10a903a6d0ab1c4c"),
+          test::HexDecodeOrDie("e6db6867583030db3594c1a424b15f7c726624ec26b33"
+                               "53b10a903a6d0ab1c4c"),
           /*expected_shared_secret=*/
-          absl::HexStringToBytes("c3da55379de9c6908e94ea4df28d084f32eccf03491c7"
-                                 "1f754b4075577a28552"),
+          test::HexDecodeOrDie("c3da55379de9c6908e94ea4df28d084f32eccf03491c7"
+                               "1f754b4075577a28552"),
       },
       {
           /*private_key=*/
-          absl::HexStringToBytes("4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea0"
-                                 "1d42ca4169e7918ba0d"),
+          test::HexDecodeOrDie("4b66e9d4d1b4673c5ad22691957d6af5c11b6421e0ea0"
+                               "1d42ca4169e7918ba0d"),
           /*public_key=*/
-          absl::HexStringToBytes("e5210f12786811d3f4b7959d0538ae2c31dbe7106fc03"
-                                 "c3efc4cd549c715a493"),
+          test::HexDecodeOrDie("e5210f12786811d3f4b7959d0538ae2c31dbe7106fc03"
+                               "c3efc4cd549c715a493"),
           /*expected_shared_secret=*/
-          absl::HexStringToBytes("95cbde9476e8907d7aade45cb4b873f88b595a68799fa"
-                                 "152e6f8f7647aac7957"),
+          test::HexDecodeOrDie("95cbde9476e8907d7aade45cb4b873f88b595a68799fa"
+                               "152e6f8f7647aac7957"),
       },
   };
 }
@@ -403,8 +403,8 @@ TEST(EcUtilTest, ComputeX25519SharedSecretInvalidKeyType) {
       /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
       /*in=*/
       reinterpret_cast<const uint8_t*>(
-          absl::HexStringToBytes("a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5"
-                                 "a18506a2244ba449ac4")
+          test::HexDecodeOrDie("a546e36bf0527c9d3b16154b82465edd62144c0ac1fc5"
+                               "a18506a2244ba449ac4")
               .data()),
       /*len=*/Ed25519KeyPrivKeySize()));
   ASSERT_THAT(ssl_priv_key, Not(IsNull()));
@@ -412,8 +412,8 @@ TEST(EcUtilTest, ComputeX25519SharedSecretInvalidKeyType) {
       /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
       /*in=*/
       reinterpret_cast<const uint8_t*>(
-          absl::HexStringToBytes("e6db6867583030db3594c1a424b15f7c726624ec26b33"
-                                 "53b10a903a6d0ab1c4c")
+          test::HexDecodeOrDie("e6db6867583030db3594c1a424b15f7c726624ec26b33"
+                               "53b10a903a6d0ab1c4c")
               .data()),
       /*len=*/Ed25519KeyPubKeySize()));
   ASSERT_THAT(ssl_pub_key, Not(IsNull()));
@@ -473,24 +473,24 @@ using EcUtilEncodeDecodePointTest = TestWithParam<EncodingTestVector>;
 TEST_P(EcUtilEncodeDecodePointTest, EcPointEncode) {
   const EncodingTestVector& test = GetParam();
   util::StatusOr<SslUniquePtr<EC_POINT>> point =
-      GetEcPoint(test.curve, absl::HexStringToBytes(test.x_hex),
-                 absl::HexStringToBytes(test.y_hex));
+      GetEcPoint(test.curve, test::HexDecodeOrDie(test.x_hex),
+                 test::HexDecodeOrDie(test.y_hex));
   ASSERT_THAT(point, IsOk());
 
   util::StatusOr<std::string> encoded_point =
       EcPointEncode(test.curve, test.format, point->get());
   ASSERT_THAT(encoded_point, IsOk());
-  EXPECT_EQ(test.encoded_hex, absl::BytesToHexString(*encoded_point));
+  EXPECT_EQ(test.encoded_hex, test::HexEncode(*encoded_point));
 }
 
 TEST_P(EcUtilEncodeDecodePointTest, EcPointDecode) {
   const EncodingTestVector& test = GetParam();
   // Get the test point and its encoded version.
   util::StatusOr<SslUniquePtr<EC_POINT>> point =
-      GetEcPoint(test.curve, absl::HexStringToBytes(test.x_hex),
-                 absl::HexStringToBytes(test.y_hex));
+      GetEcPoint(test.curve, test::HexDecodeOrDie(test.x_hex),
+                 test::HexDecodeOrDie(test.y_hex));
   ASSERT_THAT(point, IsOk());
-  std::string encoded_str = absl::HexStringToBytes(test.encoded_hex);
+  std::string encoded_str = test::HexDecodeOrDie(test.encoded_hex);
 
   util::StatusOr<SslUniquePtr<EC_GROUP>> ec_group =
       EcGroupFromCurveType(test.curve);
@@ -640,8 +640,8 @@ TEST(EcUtilTest, GetEcPointReturnsAValidPoint) {
       "00aa3fb2448335f694e3cda4ae0cc71b1b2f2a206fa802d7262f19983c44674fe15327a"
       "caac1fa40424c395a6556cb8167312527fae5865ecffc14bbdc17da78cdcf";
   util::StatusOr<SslUniquePtr<EC_POINT>> point = GetEcPoint(
-      EllipticCurveType::NIST_P521, absl::HexStringToBytes(kXCoordinateHex),
-      absl::HexStringToBytes(kYCoordinateHex));
+      EllipticCurveType::NIST_P521, test::HexDecodeOrDie(kXCoordinateHex),
+      test::HexDecodeOrDie(kYCoordinateHex));
   ASSERT_THAT(point, IsOk());
 
   // We check that we can decode this point and the result is the same as the
@@ -660,8 +660,8 @@ TEST(EcUtilTest, GetEcPointReturnsAValidPoint) {
       BignumToBinaryPadded(
           absl::MakeSpan(&xy[kCurveSizeInBytes], kCurveSizeInBytes), y.get()),
       IsOk());
-  EXPECT_EQ(xy, absl::StrCat(absl::HexStringToBytes(kXCoordinateHex),
-                             absl::HexStringToBytes(kYCoordinateHex)));
+  EXPECT_EQ(xy, absl::StrCat(test::HexDecodeOrDie(kXCoordinateHex),
+                             test::HexDecodeOrDie(kYCoordinateHex)));
 }
 
 TEST(EcUtilTest, EcSignatureIeeeToDer) {

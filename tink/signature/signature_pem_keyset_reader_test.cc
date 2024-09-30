@@ -24,7 +24,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/internal/rsa_util.h"
@@ -44,6 +43,7 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
 #include "proto/ed25519.pb.h"
@@ -281,20 +281,20 @@ util::StatusOr<EcdsaPublicKey> GetExpectedEcdsaPublicKeyProto(
 
   switch (curve) {
     case EllipticCurveType::NIST_P256: {
-      public_key_proto.set_x(absl::HexStringToBytes(kEcdsaP256PublicKeyX));
-      public_key_proto.set_y(absl::HexStringToBytes(kEcdsaP256PublicKeyY));
+      public_key_proto.set_x(test::HexDecodeOrDie(kEcdsaP256PublicKeyX));
+      public_key_proto.set_y(test::HexDecodeOrDie(kEcdsaP256PublicKeyY));
       public_key_proto.mutable_params()->set_hash_type(HashType::SHA256);
       break;
     }
     case EllipticCurveType::NIST_P384: {
-      public_key_proto.set_x(absl::HexStringToBytes(kEcdsaP384PublicKeyX));
-      public_key_proto.set_y(absl::HexStringToBytes(kEcdsaP384PublicKeyY));
+      public_key_proto.set_x(test::HexDecodeOrDie(kEcdsaP384PublicKeyX));
+      public_key_proto.set_y(test::HexDecodeOrDie(kEcdsaP384PublicKeyY));
       public_key_proto.mutable_params()->set_hash_type(HashType::SHA384);
       break;
     }
     case EllipticCurveType::NIST_P521: {
-      public_key_proto.set_x(absl::HexStringToBytes(kEcdsaP521PublicKeyX));
-      public_key_proto.set_y(absl::HexStringToBytes(kEcdsaP521PublicKeyY));
+      public_key_proto.set_x(test::HexDecodeOrDie(kEcdsaP521PublicKeyX));
+      public_key_proto.set_y(test::HexDecodeOrDie(kEcdsaP521PublicKeyY));
       public_key_proto.mutable_params()->set_hash_type(HashType::SHA512);
       break;
     }
@@ -319,17 +319,17 @@ util::StatusOr<EcdsaPrivateKey> GetExpectedEcdsaPrivateKeyProto(
   switch (curve) {
     case EllipticCurveType::NIST_P256: {
       private_key_proto.set_key_value(
-          absl::HexStringToBytes(kEcdsaP256PrivateKeyD));
+          test::HexDecodeOrDie(kEcdsaP256PrivateKeyD));
       break;
     }
     case EllipticCurveType::NIST_P384: {
       private_key_proto.set_key_value(
-          absl::HexStringToBytes(kEcdsaP384PrivateKeyD));
+          test::HexDecodeOrDie(kEcdsaP384PrivateKeyD));
       break;
     }
     case EllipticCurveType::NIST_P521: {
       private_key_proto.set_key_value(
-          absl::HexStringToBytes(kEcdsaP521PrivateKeyD));
+          test::HexDecodeOrDie(kEcdsaP521PrivateKeyD));
       break;
     }
     default: {
@@ -1182,7 +1182,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519) {
   expected_key.set_status(KeyStatusType::ENABLED);
   expected_key.set_output_prefix_type(OutputPrefixType::RAW);
   Ed25519PublicKey expected_pub_key;
-  expected_pub_key.set_key_value(absl::HexStringToBytes(kEd25519PublicKeyX));
+  expected_pub_key.set_key_value(test::HexDecodeOrDie(kEd25519PublicKeyX));
   expected_key.mutable_key_data()->set_type_url(
       "type.googleapis.com/google.crypto.tink.Ed25519PublicKey");
   expected_key.mutable_key_data()->set_key_material_type(

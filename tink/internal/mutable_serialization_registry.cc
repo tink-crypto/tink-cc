@@ -141,7 +141,7 @@ MutableSerializationRegistry::ParseKeyWithLegacyFallback(
     if (!proto_key.ok()) {
       return proto_key.status();
     }
-    return {absl::make_unique<LegacyProtoKey>(*proto_key)};
+    return {absl::make_unique<LegacyProtoKey>(std::move(*proto_key))};
   }
   if (!key.ok()) return key.status();
   return key;

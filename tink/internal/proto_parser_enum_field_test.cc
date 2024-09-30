@@ -117,7 +117,7 @@ TEST(EnumField, ConsumeIntoMemberInvalidFails) {
   EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
                                          &IsZeroOrOne);
   ExampleStruct s;
-  std::string serialized = HexDecodeOrDie("8001");
+  std::string serialized = HexDecodeOrDie(/* 128 as varint */"8001");
   ParsingState parsing_state = ParsingState(serialized);
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
@@ -200,17 +200,6 @@ TEST(EnumField, RequiresSerializationAlwaysSerialize) {
   EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
   s.enum_field = MyEnum::k1;
   EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
-bool NotZero(uint32_t v) { return v != 0; }
-
-void DyingFunction() {
-  EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
-                                         &NotZero);
-  (void)field;
-}
-TEST(EnumFieldDeathTest, ZeroInvalidCrashes) {
-  ASSERT_DEATH(DyingFunction(), "");
 }
 
 }  // namespace

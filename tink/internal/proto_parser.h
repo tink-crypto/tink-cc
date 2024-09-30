@@ -164,7 +164,7 @@ class ProtoParserBuilder {
   // to find the correct range of an enum to ensure the static cast is valid.
   // By [dcl.enum/7&8] for enums without underlying type, only the enums listed
   // are valid. Hence the user needs to provide "is_valid" to ensure validity
-  // when casting. is_valid(0) needs to be true (as we need a default value).
+  // when casting.
   template <typename T>
   ProtoParserBuilder& AddEnumField(
       int tag, T Struct::*value,

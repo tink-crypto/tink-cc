@@ -52,7 +52,6 @@ class EnumField : public Field<Struct> {
     static_assert(std::numeric_limits<std::underlying_type_t<Enum>>::max() <=
                       std::numeric_limits<uint32_t>::max(),
                   "Only sizes up to uint32_t are supported as underlying type");
-    CHECK(is_valid_(0)) << "0 needs to be valid for EnumField.";
   }
 
   // Not copyable, not movable.

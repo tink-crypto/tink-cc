@@ -55,32 +55,32 @@ readonly CCACHE_TAR="ccache.tgz"
 # Output folder for ccache.
 mkdir -p ccache
 # Output folder for caching the CMake config.
-mkdir -p "${CONFIG_CACHE_DIR}"
+mkdir -p config_cache
 
-readonly CMAKE_OPTS=(
-  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-  -DCMAKE_CXX_STANDARD=14
-  -DCMAKE_CXX_STANDARD_REQUIRED=ON
-)
-
-cat <<EOF > _run.sh
+cat <<'EOF' > _run.sh
 #!/bin/bash
 set -euo pipefail
 
 # TODO: b/369963540 - Remove this once the Docker image is updated.
 apt install ccache
 
-export CCACHE_DIR=ccache
+export CCACHE_DIR="$(pwd)/ccache"
+readonly CMAKE_OPTS=(
+  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+  -DCMAKE_CXX_STANDARD=14
+  -DCMAKE_CXX_STANDARD_REQUIRED=ON
+)
 
 set -x
 rm -rf out && mkdir -p out
-cmake -S . -B out ${CMAKE_OPTS[@]}
+cmake -S . -B out "${CMAKE_OPTS[@]}"
+
 # Create the config cache.
-tar -C . -czf "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" out
+tar -C . -czf config_cache/config_cache.tgz out
 
 # Build and create the ccache TAR.
 cmake --build out --parallel "$(nproc)"
-tar -C . -czf "${CCACHE_TAR}" ccache
+tar -C . -czf ccache.tgz ccache
 EOF
 
 chmod +x _run.sh

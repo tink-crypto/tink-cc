@@ -24,7 +24,7 @@
 #   to execute tests in a custom container image for local testing. E.g.:
 #
 #   CONTAINER_IMAGE="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images/linux-tink-cc-cmake:latest" \
-#     sh ./kokoro/gcp_ubuntu/cmake_ccache_update/run_tests.sh
+#     sh ./kokoro/gcp_ubuntu/cmake_ccache_update/run.sh
 #
 set -euo pipefail
 
@@ -53,33 +53,39 @@ if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-readonly CONFIG_CACHE_DIR=config_cache
+readonly CONFIG_CACHE_DIR="config_cache"
+readonly CONFIG_CACHE_TAR="config_cache.tgz"
+readonly CCACHE_TAR="ccache.tgz"
 
 # Output folder for ccache.
 mkdir -p ccache
 # Output folder for caching the CMake config.
 mkdir -p "${CONFIG_CACHE_DIR}"
 
-cat <<EOF > _run.sh
-#!/bin/bash
-set -euo pipefail
-
-export CCACHE_DIR="$(pwd)/ccache"
-
-readonly CMAKE_OPS=(
+readonly CMAKE_OPTS=(
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
   -DCMAKE_CXX_STANDARD=14
   -DCMAKE_CXX_STANDARD_REQUIRED=ON
 )
 
-set -x
-mkdir -p out
-cmake -S . -B out "${CMAKE_OPS[@]}"
+cat <<EOF > _run.sh
+#!/bin/bash
+set -euo pipefail
 
+# TODO: b/369963540 - Remove this once the Docker image is updated.
+apt install ccache
+
+export CCACHE_DIR=ccache
+
+set -x
+rm -rf out && mkdir -p out
+cmake -S . -B out ${CMAKE_OPTS[@]}
 # Create the config cache.
-tar -C . -czf "$(pwd)/${CONFIG_CACHE_DIR}/config_cache.tgz" out
+tar -C . -czf "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" out
+
+# Build and create the ccache TAR.
 cmake --build out --parallel "$(nproc)"
-tar -C . -czf "$(pwd)/ccache.tgz" ccache
+tar -C . -czf "${CCACHE_TAR}" ccache
 EOF
 
 chmod +x _run.sh
@@ -87,8 +93,10 @@ chmod +x _run.sh
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" ./_run.sh
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
-  readonly REMOTE_CACHE_URL="https://storage.googleapis.com/${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_BASE_IMAGE_HASH}"
+  readonly GCS_URL="https://storage.googleapis.com"
+  readonly REMOTE_CACHE_URL="${GCS_URL}/${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"
 
-  gsutil cp ccache.tgz "${REMOTE_CACHE_URL}/ccache/ccache.tgz"
-  gsutil cp "${CONFIG_CACHE_DIR}/cache.tgz" "${REMOTE_CACHE_URL}/config_cache/config_cache.tgz"
+  gsutil cp "${CCACHE_TAR}" "${REMOTE_CACHE_URL}/ccache/${CCACHE_TAR}"
+  gsutil cp "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" \
+    "${REMOTE_CACHE_URL}/${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}"
 fi

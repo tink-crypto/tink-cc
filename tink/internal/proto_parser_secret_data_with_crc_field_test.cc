@@ -93,6 +93,19 @@ TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberRequiresStateWithCrc) {
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
 }
 
+TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberVarintSaysTooLong) {
+  SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
+  ParsedStruct s;
+  s.secret_with_crc = SecretDataWithCrc("before");
+
+  std::string bytes =
+      absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0b"), "1234567890");
+  absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
+  ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
+
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+}
+
 TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberEmptyString) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;

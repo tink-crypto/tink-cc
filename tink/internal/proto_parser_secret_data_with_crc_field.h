@@ -70,6 +70,11 @@ class SecretDataWithCrcField : public Field<Struct> {
     if (!length.ok()) {
       return length.status();
     }
+    if (*length > parsing_state.RemainingData().size()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Length ", *length, " exceeds remaining input size ",
+                       parsing_state.RemainingData().size()));
+    }
     absl::string_view data = parsing_state.RemainingData().substr(0, *length);
     util::SecretValue<absl::crc32c_t> crc =
         parsing_state.AdvanceAndGetCrc(*length);

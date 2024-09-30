@@ -187,7 +187,7 @@ absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
   if (*result > parsing_state.RemainingData().size()) {
     return absl::InvalidArgumentError(
         absl::StrCat("Length ", *result, " exceeds remaining input size ",
-                     parsing_state.RemainingData()));
+                     parsing_state.RemainingData().size()));
   }
   absl::string_view result_view =
       parsing_state.RemainingData().substr(0, *result);

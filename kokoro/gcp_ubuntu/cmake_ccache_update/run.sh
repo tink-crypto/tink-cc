@@ -93,9 +93,7 @@ chmod +x _run.sh
 ./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" ./_run.sh
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
-  readonly GCS_URL="https://storage.googleapis.com"
-  readonly REMOTE_CACHE_URL="${GCS_URL}/${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"
-
+  readonly REMOTE_CACHE_URL="gs://${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"
   gsutil cp "${CCACHE_TAR}" "${REMOTE_CACHE_URL}/ccache/${CCACHE_TAR}"
   gsutil cp "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" \
     "${REMOTE_CACHE_URL}/${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}"

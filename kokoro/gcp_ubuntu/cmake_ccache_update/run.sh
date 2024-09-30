@@ -41,11 +41,6 @@ if [[ "${IS_KOKORO}" == "true" ]]; then
   source kokoro/testutils/cc_test_container_images.sh
   CONTAINER_IMAGE="${TINK_CC_CMAKE_IMAGE}"
   RUN_COMMAND_ARGS+=( -k "${TINK_GCR_SERVICE_KEY}" )
-
-  # Activate the service account for the remote cache.
-  gcloud auth activate-service-account \
-    --key-file="${TINK_REMOTE_CACHE_SERVICE_KEY}"
-  gcloud config set project tink-test-infrastructure
 fi
 readonly CONTAINER_IMAGE
 
@@ -94,6 +89,12 @@ chmod +x _run.sh
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
   readonly REMOTE_CACHE_URL="gs://${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"
+
+  # Activate the service account for the remote cache.
+  gcloud auth activate-service-account \
+    --key-file="${TINK_REMOTE_CACHE_SERVICE_KEY}"
+  gcloud config set project tink-test-infrastructure
+
   gsutil cp "${CCACHE_TAR}" "${REMOTE_CACHE_URL}/ccache/${CCACHE_TAR}"
   gsutil cp "${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}" \
     "${REMOTE_CACHE_URL}/${CONFIG_CACHE_DIR}/${CONFIG_CACHE_TAR}"

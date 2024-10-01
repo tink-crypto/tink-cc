@@ -1085,7 +1085,7 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
       KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 4455);
 
   return KeyAndSerialization(
-      "PrivateKeyTinkNonCanonical2",
+      "PrivateKeyTinkNonCanonical",
       std::make_shared<RsaSsaPkcs1PrivateKey>(*private_key), serialization);
 }
 
@@ -1134,7 +1134,7 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical2() {
       KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 4455);
 
   return KeyAndSerialization(
-      "PrivateKeyTinkNonCanonical",
+      "PrivateKeyTinkNonCanonical2",
       std::make_shared<RsaSsaPkcs1PrivateKey>(*private_key), serialization);
 }
 

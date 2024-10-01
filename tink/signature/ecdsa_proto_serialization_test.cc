@@ -89,8 +89,7 @@ struct TestCase {
   EllipticCurveType curve = EllipticCurveType::NIST_P256;
   HashType hash = HashType::SHA256;
   EcdsaSignatureEncoding encoding = EcdsaSignatureEncoding::DER;
-  subtle::EllipticCurveType subtle_curve =
-      subtle::EllipticCurveType::NIST_P256;
+  subtle::EllipticCurveType subtle_curve = subtle::EllipticCurveType::NIST_P256;
   absl::optional<int> id;
   std::string output_prefix;
 };
@@ -623,6 +622,33 @@ TEST_F(EcdsaProtoSerializationTest,
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Failed to parse EcdsaPrivateKey proto")));
+}
+
+TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
+  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::EcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersionFails) {

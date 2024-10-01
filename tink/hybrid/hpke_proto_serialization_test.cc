@@ -615,6 +615,33 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
+  ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
+
+  util::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(subtle::EllipticCurveType::CURVE25519);
+  ASSERT_THAT(key_pair, IsOk());
+
+  google::crypto::tink::HpkePrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_private_key(key_pair->private_key);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
 

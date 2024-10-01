@@ -1307,6 +1307,41 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
                HasSubstr("Failed to parse EciesAeadHkdfPrivateKey proto")));
 }
 
+TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
+  ASSERT_THAT(RegisterEciesProtoSerialization(), IsOk());
+
+  EciesAeadHkdfParams params;
+  *params.mutable_kem_params() =
+      CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
+  *params.mutable_dem_params() = CreateAesGcmDemParams(16);
+  params.set_ec_point_format(EcPointFormat::COMPRESSED);
+  EciesAeadHkdfKeyFormat key_format_proto;
+  *key_format_proto.mutable_params() = params;
+
+  util::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(key_pair, IsOk());
+
+  EciesAeadHkdfPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_key_value(key_pair->private_key);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   ASSERT_THAT(RegisterEciesProtoSerialization(), IsOk());
 

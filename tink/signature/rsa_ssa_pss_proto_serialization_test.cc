@@ -703,6 +703,36 @@ TEST_F(RsaSsaPssProtoSerializationTest,
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST_F(RsaSsaPssProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerialization(), IsOk());
+
+  KeyValues key_values = GenerateKeyValues(2048);
+
+  google::crypto::tink::RsaSsaPssPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  private_key_proto.set_p(key_values.p);
+  private_key_proto.set_q(key_values.q);
+  private_key_proto.set_dp(key_values.dp);
+  private_key_proto.set_dq(key_values.dq);
+  private_key_proto.set_d(key_values.d);
+  private_key_proto.set_crt(key_values.q_inv);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 TEST_F(RsaSsaPssProtoSerializationTest,
        ParsePrivateKeyWithInvalidVersionFails) {
   ASSERT_THAT(RegisterRsaSsaPssProtoSerialization(), IsOk());

@@ -36,25 +36,26 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using google::crypto::tink::EcdsaKeyFormat;
-using google::crypto::tink::EcdsaPrivateKey;
-using google::crypto::tink::EcdsaSignatureEncoding;
-using google::crypto::tink::Ed25519PrivateKey;
-using google::crypto::tink::EllipticCurveType;
-using google::crypto::tink::HashType;
-using google::crypto::tink::KeyTemplate;
-using google::crypto::tink::OutputPrefixType;
-using google::crypto::tink::RsaSsaPkcs1KeyFormat;
-using google::crypto::tink::RsaSsaPkcs1PrivateKey;
-using google::crypto::tink::RsaSsaPssKeyFormat;
-using google::crypto::tink::RsaSsaPssPrivateKey;
+using ::google::crypto::tink::EcdsaKeyFormat;
+using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+using ::google::crypto::tink::EcdsaSignatureEncoding;
+using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
+using ::google::crypto::tink::EllipticCurveType;
+using ::google::crypto::tink::HashType;
+using ::google::crypto::tink::KeyTemplate;
+using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
+using RsaSsaPkcs1PrivateKeyProto =
+    ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
+using ::google::crypto::tink::RsaSsaPssKeyFormat;
+using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
 
 std::unique_ptr<KeyTemplate> NewEcdsaKeyTemplate(
     HashType hash_type, EllipticCurveType curve_type,
     EcdsaSignatureEncoding encoding, OutputPrefixType output_prefix_type) {
   auto key_template = absl::make_unique<KeyTemplate>();
   key_template->set_type_url(
-      absl::StrCat(kTypeGoogleapisCom, EcdsaPrivateKey().GetTypeName()));
+      absl::StrCat(kTypeGoogleapisCom, EcdsaPrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(output_prefix_type);
   EcdsaKeyFormat key_format;
   auto params = key_format.mutable_params();
@@ -76,8 +77,8 @@ std::unique_ptr<KeyTemplate> NewRsaSsaPkcs1KeyTemplate(HashType hash_type,
                                                        int modulus_size_in_bits,
                                                        int public_exponent) {
   auto key_template = absl::make_unique<KeyTemplate>();
-  key_template->set_type_url(
-      absl::StrCat(kTypeGoogleapisCom, RsaSsaPkcs1PrivateKey().GetTypeName()));
+  key_template->set_type_url(absl::StrCat(
+      kTypeGoogleapisCom, RsaSsaPkcs1PrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(OutputPrefixType::TINK);
   RsaSsaPkcs1KeyFormat key_format;
   auto params = key_format.mutable_params();
@@ -97,8 +98,8 @@ std::unique_ptr<KeyTemplate> NewRsaSsaPssKeyTemplate(HashType sig_hash,
                                                      int modulus_size_in_bits,
                                                      int public_exponent) {
   auto key_template = absl::make_unique<KeyTemplate>();
-  key_template->set_type_url(
-      absl::StrCat(kTypeGoogleapisCom, RsaSsaPssPrivateKey().GetTypeName()));
+  key_template->set_type_url(absl::StrCat(
+      kTypeGoogleapisCom, RsaSsaPssPrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(OutputPrefixType::TINK);
   RsaSsaPssKeyFormat key_format;
   auto params = key_format.mutable_params();
@@ -241,20 +242,20 @@ const KeyTemplate& SignatureKeyTemplates::RsaSsaPss4096Sha384Sha384F4() {
 }
 
 // static
-const google::crypto::tink::KeyTemplate& SignatureKeyTemplates::Ed25519() {
+const ::google::crypto::tink::KeyTemplate& SignatureKeyTemplates::Ed25519() {
   static KeyTemplate* key_template = new KeyTemplate();
   key_template->set_type_url(
-      absl::StrCat(kTypeGoogleapisCom, Ed25519PrivateKey().GetTypeName()));
+      absl::StrCat(kTypeGoogleapisCom, Ed25519PrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(OutputPrefixType::TINK);
   return *key_template;
 }
 
 // static
-const google::crypto::tink::KeyTemplate&
+const ::google::crypto::tink::KeyTemplate&
 SignatureKeyTemplates::Ed25519WithRawOutput() {
   static KeyTemplate* key_template = new KeyTemplate();
   key_template->set_type_url(
-      absl::StrCat(kTypeGoogleapisCom, Ed25519PrivateKey().GetTypeName()));
+      absl::StrCat(kTypeGoogleapisCom, Ed25519PrivateKeyProto().GetTypeName()));
   key_template->set_output_prefix_type(OutputPrefixType::RAW);
   return *key_template;
 }

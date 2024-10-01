@@ -44,17 +44,17 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
-using google::crypto::tink::RsaSsaPssKeyFormat;
-using google::crypto::tink::RsaSsaPssParams;
-using google::crypto::tink::RsaSsaPssPrivateKey;
+using ::crypto::tink::util::Enums;
+using ::crypto::tink::util::Status;
+using ::crypto::tink::util::StatusOr;
+using ::google::crypto::tink::RsaSsaPssKeyFormat;
+using ::google::crypto::tink::RsaSsaPssParams;
+using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
 
 namespace {
-std::unique_ptr<RsaSsaPssPrivateKey> RsaPrivateKeySubtleToProto(
+std::unique_ptr<RsaSsaPssPrivateKeyProto> RsaPrivateKeySubtleToProto(
     const internal::RsaPrivateKey& private_key) {
-  auto key_proto = absl::make_unique<RsaSsaPssPrivateKey>();
+  auto key_proto = absl::make_unique<RsaSsaPssPrivateKeyProto>();
   key_proto->set_version(RsaSsaPssSignKeyManager().get_version());
   key_proto->set_d(std::string(util::SecretDataAsStringView(private_key.d)));
   key_proto->set_p(std::string(util::SecretDataAsStringView(private_key.p)));
@@ -71,7 +71,7 @@ std::unique_ptr<RsaSsaPssPrivateKey> RsaPrivateKeySubtleToProto(
 }
 
 internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
-    const RsaSsaPssPrivateKey& key_proto) {
+    const RsaSsaPssPrivateKeyProto& key_proto) {
   internal::RsaPrivateKey key;
   key.n = key_proto.public_key().n();
   key.e = key_proto.public_key().e();
@@ -86,7 +86,7 @@ internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
 
 }  // namespace
 
-StatusOr<RsaSsaPssPrivateKey> RsaSsaPssSignKeyManager::CreateKey(
+StatusOr<RsaSsaPssPrivateKeyProto> RsaSsaPssSignKeyManager::CreateKey(
     const RsaSsaPssKeyFormat& key_format) const {
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(key_format.public_exponent());
@@ -102,7 +102,7 @@ StatusOr<RsaSsaPssPrivateKey> RsaSsaPssSignKeyManager::CreateKey(
     return status;
   }
 
-  RsaSsaPssPrivateKey key_proto =
+  RsaSsaPssPrivateKeyProto key_proto =
       std::move(*RsaPrivateKeySubtleToProto(private_key));
   *key_proto.mutable_public_key()->mutable_params() = key_format.params();
   return key_proto;
@@ -110,7 +110,7 @@ StatusOr<RsaSsaPssPrivateKey> RsaSsaPssSignKeyManager::CreateKey(
 
 StatusOr<std::unique_ptr<PublicKeySign>>
 RsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
-    const RsaSsaPssPrivateKey& private_key) const {
+    const RsaSsaPssPrivateKeyProto& private_key) const {
   auto key = RsaPrivateKeyProtoToSubtle(private_key);
   internal::RsaSsaPssParams params;
   const RsaSsaPssParams& params_proto = private_key.public_key().params();
@@ -135,7 +135,7 @@ RsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
 }
 
 Status RsaSsaPssSignKeyManager::ValidateKey(
-    const RsaSsaPssPrivateKey& key) const {
+    const RsaSsaPssPrivateKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return RsaSsaPssVerifyKeyManager().ValidateKey(key.public_key());

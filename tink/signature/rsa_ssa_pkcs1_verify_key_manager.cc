@@ -39,13 +39,13 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Enums;
-using google::crypto::tink::RsaSsaPkcs1Params;
-using google::crypto::tink::RsaSsaPkcs1PublicKey;
+using ::crypto::tink::util::Enums;
+using ::google::crypto::tink::RsaSsaPkcs1Params;
+using RsaSsaPkcs1PublicKeyProto = ::google::crypto::tink::RsaSsaPkcs1PublicKey;
 
 util::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RsaSsaPkcs1VerifyKeyManager::PublicKeyVerifyFactory::Create(
-    const RsaSsaPkcs1PublicKey& rsa_ssa_pkcs1_public_key) const {
+    const RsaSsaPkcs1PublicKeyProto& rsa_ssa_pkcs1_public_key) const {
   internal::RsaPublicKey rsa_pub_key;
   rsa_pub_key.n = rsa_ssa_pkcs1_public_key.n();
   rsa_pub_key.e = rsa_ssa_pkcs1_public_key.e();
@@ -67,7 +67,7 @@ util::Status RsaSsaPkcs1VerifyKeyManager::ValidateParams(
 }
 
 util::Status RsaSsaPkcs1VerifyKeyManager::ValidateKey(
-    const RsaSsaPkcs1PublicKey& key) const {
+    const RsaSsaPkcs1PublicKeyProto& key) const {
   util::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> n =

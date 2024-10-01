@@ -35,18 +35,18 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
-using google::crypto::tink::EcdsaParams;
-using google::crypto::tink::EcdsaPublicKey;
-using google::crypto::tink::EcdsaSignatureEncoding;
-using google::crypto::tink::EllipticCurveType;
-using google::crypto::tink::HashType;
+using ::crypto::tink::util::Enums;
+using ::crypto::tink::util::Status;
+using ::crypto::tink::util::StatusOr;
+using ::google::crypto::tink::EcdsaParams;
+using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
+using ::google::crypto::tink::EcdsaSignatureEncoding;
+using ::google::crypto::tink::EllipticCurveType;
+using ::google::crypto::tink::HashType;
 
 StatusOr<std::unique_ptr<PublicKeyVerify>>
 EcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
-    const EcdsaPublicKey& ecdsa_public_key) const {
+    const EcdsaPublicKeyProto& ecdsa_public_key) const {
   internal::EcKey ec_key;
   ec_key.curve = Enums::ProtoToSubtle(ecdsa_public_key.params().curve());
   ec_key.pub_x = ecdsa_public_key.x();
@@ -98,7 +98,8 @@ Status EcdsaVerifyKeyManager::ValidateParams(const EcdsaParams& params) const {
   return util::OkStatus();
 }
 
-Status EcdsaVerifyKeyManager::ValidateKey(const EcdsaPublicKey& key) const {
+Status EcdsaVerifyKeyManager::ValidateKey(
+    const EcdsaPublicKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return ValidateParams(key.params());

@@ -40,15 +40,15 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
-using google::crypto::tink::RsaSsaPssParams;
-using google::crypto::tink::RsaSsaPssPublicKey;
+using ::crypto::tink::util::Enums;
+using ::crypto::tink::util::Status;
+using ::crypto::tink::util::StatusOr;
+using ::google::crypto::tink::RsaSsaPssParams;
+using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 
 StatusOr<std::unique_ptr<PublicKeyVerify>>
 RsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
-    const RsaSsaPssPublicKey& rsa_ssa_pss_public_key) const {
+    const RsaSsaPssPublicKeyProto& rsa_ssa_pss_public_key) const {
   internal::RsaPublicKey rsa_pub_key;
   rsa_pub_key.n = rsa_ssa_pss_public_key.n();
   rsa_pub_key.e = rsa_ssa_pss_public_key.e();
@@ -66,7 +66,7 @@ RsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
 }
 
 Status RsaSsaPssVerifyKeyManager::ValidateKey(
-    const RsaSsaPssPublicKey& key) const {
+    const RsaSsaPssPublicKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   StatusOr<internal::SslUniquePtr<BIGNUM>> n =

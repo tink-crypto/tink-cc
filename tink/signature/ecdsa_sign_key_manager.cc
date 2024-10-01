@@ -42,14 +42,14 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
-using google::crypto::tink::EcdsaKeyFormat;
-using google::crypto::tink::EcdsaPrivateKey;
-using google::crypto::tink::EcdsaPublicKey;
+using ::crypto::tink::util::Enums;
+using ::crypto::tink::util::Status;
+using ::crypto::tink::util::StatusOr;
+using ::google::crypto::tink::EcdsaKeyFormat;
+using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 
-StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::CreateKey(
+StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::CreateKey(
     const EcdsaKeyFormat& ecdsa_key_format) const {
   // Generate new EC key.
   auto ec_key_result = internal::NewEcKey(
@@ -57,8 +57,8 @@ StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::CreateKey(
   if (!ec_key_result.ok()) return ec_key_result.status();
   auto ec_key = ec_key_result.value();
 
-  // Build EcdsaPrivateKey.
-  EcdsaPrivateKey ecdsa_private_key;
+  // Build EcdsaPrivateKeyProto.
+  EcdsaPrivateKeyProto ecdsa_private_key;
   ecdsa_private_key.set_version(get_version());
   ecdsa_private_key.set_key_value(util::SecretDataAsStringView(ec_key.priv));
   auto ecdsa_public_key = ecdsa_private_key.mutable_public_key();
@@ -69,7 +69,7 @@ StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::CreateKey(
   return ecdsa_private_key;
 }
 
-StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::DeriveKey(
+StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
     const EcdsaKeyFormat& ecdsa_key_format, InputStream* input_stream) const {
   if (IsFipsModeEnabled()) {
     return crypto::tink::util::Status(
@@ -90,13 +90,13 @@ StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::DeriveKey(
   // will result in the same keys being generated.
   int random_bytes_used = 0;
   switch (ecdsa_key_format.params().curve()) {
-    case google::crypto::tink::EllipticCurveType::NIST_P256:
+    case ::google::crypto::tink::EllipticCurveType::NIST_P256:
       random_bytes_used = 16;
       break;
-    case google::crypto::tink::EllipticCurveType::NIST_P384:
+    case ::google::crypto::tink::EllipticCurveType::NIST_P384:
       random_bytes_used = 24;
       break;
-    case google::crypto::tink::EllipticCurveType::NIST_P521:
+    case ::google::crypto::tink::EllipticCurveType::NIST_P521:
       random_bytes_used = 32;
       break;
     default:
@@ -127,10 +127,11 @@ StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::DeriveKey(
   }
 
   // Build EcdsaPrivateKey.
-  EcdsaPrivateKey ecdsa_private_key;
+  EcdsaPrivateKeyProto ecdsa_private_key;
   ecdsa_private_key.set_version(get_version());
   ecdsa_private_key.set_key_value(util::SecretDataAsStringView(ec_key->priv));
-  EcdsaPublicKey* ecdsa_public_key = ecdsa_private_key.mutable_public_key();
+  EcdsaPublicKeyProto* ecdsa_public_key =
+      ecdsa_private_key.mutable_public_key();
   ecdsa_public_key->set_version(get_version());
   ecdsa_public_key->set_x(ec_key->pub_x);
   ecdsa_public_key->set_y(ec_key->pub_y);
@@ -140,8 +141,8 @@ StatusOr<EcdsaPrivateKey> EcdsaSignKeyManager::DeriveKey(
 
 StatusOr<std::unique_ptr<PublicKeySign>>
 EcdsaSignKeyManager::PublicKeySignFactory::Create(
-    const EcdsaPrivateKey& ecdsa_private_key) const {
-  const EcdsaPublicKey& public_key = ecdsa_private_key.public_key();
+    const EcdsaPrivateKeyProto& ecdsa_private_key) const {
+  const EcdsaPublicKeyProto& public_key = ecdsa_private_key.public_key();
   internal::EcKey ec_key;
   ec_key.curve = Enums::ProtoToSubtle(public_key.params().curve());
   ec_key.pub_x = public_key.x();
@@ -154,7 +155,7 @@ EcdsaSignKeyManager::PublicKeySignFactory::Create(
   return {std::move(result.value())};
 }
 
-Status EcdsaSignKeyManager::ValidateKey(const EcdsaPrivateKey& key) const {
+Status EcdsaSignKeyManager::ValidateKey(const EcdsaPrivateKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return EcdsaVerifyKeyManager().ValidateKey(key.public_key());

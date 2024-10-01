@@ -63,13 +63,13 @@
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
-using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using google::crypto::tink::AesGcmKeyFormat;
-using google::crypto::tink::EcdsaPrivateKey;
-using google::crypto::tink::EciesAeadHkdfPrivateKey;
-using google::crypto::tink::Keyset;
-using google::crypto::tink::OutputPrefixType;
+using ::crypto::tink::util::Enums;
+using ::crypto::tink::util::Status;
+using ::google::crypto::tink::AesGcmKeyFormat;
+using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
+using ::google::crypto::tink::Keyset;
+using ::google::crypto::tink::OutputPrefixType;
 
 namespace crypto {
 namespace tink {
@@ -291,7 +291,7 @@ google::crypto::tink::EciesAeadHkdfPrivateKey GetEciesAesSivHkdfTestKey(
   return ecies_key;
 }
 
-EcdsaPrivateKey GetEcdsaTestPrivateKey(
+EcdsaPrivateKeyProto GetEcdsaTestPrivateKey(
     subtle::EllipticCurveType curve_type, subtle::HashType hash_type,
     subtle::EcdsaSignatureEncoding encoding) {
   return GetEcdsaTestPrivateKey(Enums::SubtleToProto(curve_type),
@@ -299,12 +299,12 @@ EcdsaPrivateKey GetEcdsaTestPrivateKey(
                                 Enums::SubtleToProto(encoding));
 }
 
-EcdsaPrivateKey GetEcdsaTestPrivateKey(
+EcdsaPrivateKeyProto GetEcdsaTestPrivateKey(
     google::crypto::tink::EllipticCurveType curve_type,
     google::crypto::tink::HashType hash_type,
     google::crypto::tink::EcdsaSignatureEncoding encoding) {
   auto test_key = internal::NewEcKey(Enums::ProtoToSubtle(curve_type)).value();
-  EcdsaPrivateKey ecdsa_key;
+  EcdsaPrivateKeyProto ecdsa_key;
   ecdsa_key.set_version(0);
   ecdsa_key.set_key_value(util::SecretDataAsStringView(test_key.priv));
   auto public_key = ecdsa_key.mutable_public_key();

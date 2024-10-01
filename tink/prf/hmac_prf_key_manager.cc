@@ -39,15 +39,15 @@ namespace {
 constexpr int kMinKeySizeInBytes = 16;
 }
 
-using google::crypto::tink::HmacPrfKey;
-using google::crypto::tink::HmacPrfKeyFormat;
-using google::crypto::tink::HmacPrfParams;
-using subtle::HashType;
-using util::Enums;
-using util::Status;
-using util::StatusOr;
+using HmacPrfKeyProto = ::google::crypto::tink::HmacPrfKey;
+using ::crypto::tink::subtle::HashType;
+using ::crypto::tink::util::Enums;
+using ::crypto::tink::util::Status;
+using ::crypto::tink::util::StatusOr;
+using ::google::crypto::tink::HmacPrfKeyFormat;
+using ::google::crypto::tink::HmacPrfParams;
 
-util::Status HmacPrfKeyManager::ValidateKey(const HmacPrfKey& key) const {
+util::Status HmacPrfKeyManager::ValidateKey(const HmacPrfKeyProto& key) const {
   util::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < kMinKeySizeInBytes) {
@@ -68,16 +68,16 @@ util::Status HmacPrfKeyManager::ValidateKeyFormat(
   return ValidateParams(key_format.params());
 }
 
-crypto::tink::util::StatusOr<HmacPrfKey> HmacPrfKeyManager::CreateKey(
+crypto::tink::util::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::CreateKey(
     const HmacPrfKeyFormat& key_format) const {
-  HmacPrfKey key;
+  HmacPrfKeyProto key;
   key.set_version(get_version());
   key.set_key_value(subtle::Random::GetRandomBytes(key_format.key_size()));
   *(key.mutable_params()) = key_format.params();
   return key;
 }
 
-StatusOr<HmacPrfKey> HmacPrfKeyManager::DeriveKey(
+StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::DeriveKey(
     const HmacPrfKeyFormat& hmac_prf_key_format,
     InputStream* input_stream) const {
   crypto::tink::util::Status status = ValidateKeyFormat(hmac_prf_key_format);
@@ -89,7 +89,7 @@ StatusOr<HmacPrfKey> HmacPrfKeyManager::DeriveKey(
     return randomness.status();
   }
 
-  HmacPrfKey key;
+  HmacPrfKeyProto key;
   key.set_version(get_version());
   *(key.mutable_params()) = hmac_prf_key_format.params();
   key.set_key_value(randomness.value());

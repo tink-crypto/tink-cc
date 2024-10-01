@@ -40,13 +40,13 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
-using google::crypto::tink::HashType;
-using google::crypto::tink::HmacKey;
-using google::crypto::tink::HmacKeyFormat;
-using google::crypto::tink::HmacParams;
+using ::crypto::tink::util::Enums;
+using ::crypto::tink::util::Status;
+using ::crypto::tink::util::StatusOr;
+using ::google::crypto::tink::HashType;
+using HmacKeyProto = ::google::crypto::tink::HmacKey;
+using ::google::crypto::tink::HmacKeyFormat;
+using ::google::crypto::tink::HmacParams;
 
 namespace {
 
@@ -55,9 +55,9 @@ constexpr int kMinTagSizeInBytes = 10;
 
 }  // namespace
 
-StatusOr<HmacKey> HmacKeyManager::CreateKey(
+StatusOr<HmacKeyProto> HmacKeyManager::CreateKey(
     const HmacKeyFormat& hmac_key_format) const {
-  HmacKey hmac_key;
+  HmacKeyProto hmac_key;
   hmac_key.set_version(get_version());
   *(hmac_key.mutable_params()) = hmac_key_format.params();
   hmac_key.set_key_value(
@@ -65,7 +65,7 @@ StatusOr<HmacKey> HmacKeyManager::CreateKey(
   return hmac_key;
 }
 
-StatusOr<HmacKey> HmacKeyManager::DeriveKey(
+StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
     const HmacKeyFormat& hmac_key_format, InputStream* input_stream) const {
   crypto::tink::util::Status status =
       ValidateVersion(hmac_key_format.version(), get_version());
@@ -82,7 +82,7 @@ StatusOr<HmacKey> HmacKeyManager::DeriveKey(
     return randomness.status();
   }
 
-  HmacKey hmac_key;
+  HmacKeyProto hmac_key;
   hmac_key.set_version(get_version());
   *(hmac_key.mutable_params()) = hmac_key_format.params();
   hmac_key.set_key_value(randomness.value());
@@ -115,7 +115,7 @@ Status HmacKeyManager::ValidateParams(const HmacParams& params) const {
   return util::OkStatus();
 }
 
-Status HmacKeyManager::ValidateKey(const HmacKey& key) const {
+Status HmacKeyManager::ValidateKey(const HmacKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < kMinKeySizeInBytes) {

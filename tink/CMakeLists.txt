@@ -438,6 +438,7 @@ tink_cc_library(
     tink::core::keyset_writer
     tink::core::parameters
     tink::core::primitive_set
+    tink::core::private_key
     tink::core::registry
     tink::core::restricted_data
     tink::core::secret_key_access_token
@@ -459,9 +460,11 @@ tink_cc_library(
     tink::internal::keyset_handle_builder_entry
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
+    tink::internal::legacy_proto_key
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::registry_impl
+    tink::internal::serialization
     tink::internal::util
     tink::subtle::random
     tink::util::errors
@@ -921,6 +924,7 @@ tink_cc_test(
     tink::internal::configuration_impl
     tink::internal::fips_utils
     tink::internal::key_gen_configuration_impl
+    tink::internal::mutable_serialization_registry
     tink::internal::ssl_util
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager

@@ -17,6 +17,7 @@
 #include "tink/keyset_handle.h"
 
 #include <cstdint>
+#include <cstdio>
 #include <memory>
 #include <string>
 #include <utility>
@@ -30,21 +31,23 @@
 #include "absl/types/optional.h"
 #include "tink/aead.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/internal/key_info.h"
 #include "tink/internal/key_status_util.h"
 #include "tink/internal/key_type_info_store.h"
+#include "tink/internal/legacy_proto_key.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/serialization.h"
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_manager.h"
 #include "tink/key_status.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/keyset_reader.h"
 #include "tink/keyset_writer.h"
-#include "tink/parameters.h"
+#include "tink/private_key.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/util/errors.h"
@@ -55,6 +58,7 @@
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
+using ::crypto::tink::util::SecretProto;
 using google::crypto::tink::EncryptedKeyset;
 using google::crypto::tink::KeyData;
 using google::crypto::tink::Keyset;
@@ -122,6 +126,97 @@ util::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
       RestrictedData(key.key_data().value(), InsecureSecretKeyAccess::Get()),
       key.key_data().key_material_type(), key.output_prefix_type(),
       id_requirement);
+}
+
+// Tries to serialize a LegacyProtoKey. Fails if the key is not a legacy type.
+util::StatusOr<internal::ProtoKeySerialization> SerializeLegacyKey(
+    const Key& key) {
+  const internal::LegacyProtoKey* proto_key =
+      dynamic_cast<const internal::LegacyProtoKey*>(&key);
+  if (proto_key == nullptr) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Failed to serialize legacy proto key.");
+  }
+  util::StatusOr<const internal::ProtoKeySerialization*> serialized_key =
+      proto_key->Serialization(InsecureSecretKeyAccess::Get());
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
+
+  return **serialized_key;
+}
+
+util::StatusOr<internal::ProtoKeySerialization> SerializeKey(const Key& key) {
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<internal::ProtoKeySerialization>(
+              key, InsecureSecretKeyAccess::Get());
+  if (!serialization.ok()) {
+    return serialization.status();
+  }
+
+  const internal::ProtoKeySerialization* serialized_proto_key =
+      dynamic_cast<const internal::ProtoKeySerialization*>(
+          serialization->get());
+  if (serialized_proto_key == nullptr) {
+    return util::Status(absl::StatusCode::kInternal,
+                        "Failed to serialize proto key.");
+  }
+
+  return *serialized_proto_key;
+}
+
+util::StatusOr<internal::ProtoKeySerialization> GetProtoKeySerialization(
+    const Key& key) {
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      SerializeKey(key);
+  // TODO(b/359489205): Make sure that this excludes kNotFound error
+  // potentially returned by registered classes.
+  if (serialization.status().code() == absl::StatusCode::kNotFound) {
+    // Fallback to legacy proto key.
+    serialization = SerializeLegacyKey(key);
+  }
+
+  return serialization;
+}
+
+SecretProto<Keyset::Key> ToKeysetKey(
+    int id, KeyStatusType status,
+    const internal::ProtoKeySerialization& serialization) {
+  SecretProto<Keyset::Key> key;
+  key->set_status(status);
+  key->set_key_id(id);
+  key->set_output_prefix_type(serialization.GetOutputPrefixType());
+  KeyData* key_data = key->mutable_key_data();
+  key_data->set_type_url(std::string(serialization.TypeUrl()));
+  internal::CallWithCoreDumpProtection([&]() {
+    key_data->set_value(serialization.SerializedKeyProto().GetSecret(
+        InsecureSecretKeyAccess::Get()));
+  });
+  key_data->set_key_material_type(serialization.KeyMaterialType());
+  return key;
+}
+
+util::StatusOr<SecretProto<Keyset::Key>>
+CreateKeysetKeyFromProtoKeySerialization(
+    const internal::ProtoKeySerialization& key, int id, KeyStatusType status) {
+  absl::optional<int> id_requirement = key.IdRequirement();
+  if (id_requirement.has_value() && *id_requirement != id) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Wrong ID set for key with ID requirement.");
+  }
+  return ToKeysetKey(id, status, key);
+}
+
+util::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKey(const Key& key, int id,
+                                                         KeyStatusType status) {
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      GetProtoKeySerialization(key);
+  if (!serialization.ok()) {
+    return serialization.status();
+  }
+
+  return CreateKeysetKeyFromProtoKeySerialization(*serialization, id, status);
 }
 
 }  // anonymous namespace
@@ -418,23 +513,58 @@ util::StatusOr<std::unique_ptr<Keyset::Key>> ExtractPublicKey(
 util::StatusOr<std::unique_ptr<KeysetHandle>>
 KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
   util::SecretProto<Keyset> public_keyset;
-  for (const Keyset::Key& key : keyset_->key()) {
-    auto public_key_result = ExtractPublicKey(key, config);
-    if (!public_key_result.ok()) return public_key_result.status();
-    public_keyset->add_key()->Swap(public_key_result.value().get());
+  std::vector<std::shared_ptr<const Entry>> public_entries;
+
+  for (int i = 0; i < keyset_->key().size(); ++i) {
+    const Keyset::Key& key = keyset_->key(i);
+    const Entry& entry = (*this)[i];
+    const PrivateKey* private_key =
+        dynamic_cast<const PrivateKey*>(entry.GetKey().get());
+    if (private_key != nullptr) {
+      util::StatusOr<KeyStatusType> key_status =
+          internal::ToKeyStatusType(entry.GetStatus());
+      if (!key_status.ok()) {
+        return key_status.status();
+      }
+      util::StatusOr<SecretProto<Keyset::Key>> public_key = CreateKeysetKey(
+          private_key->GetPublicKey(), entry.GetId(), key_status.value());
+      if (!public_key.ok()) {
+        return public_key.status();
+      }
+      // TODO(b/370439805): Replace this with creating a new entry from the
+      // public key directly, after a way to get a dynamically allocated copy of
+      // a key object reference is implemented.
+      util::StatusOr<const Entry> public_key_entry =
+          CreateEntry(*public_key.value(), keyset_->primary_key_id());
+      if (!public_key_entry.ok()) {
+        return public_key_entry.status();
+      }
+      public_entries.push_back(
+          std::make_shared<const Entry>(*public_key_entry));
+      public_keyset->add_key()->Swap(&(*public_key.value()));
+      // Falls back to legacy behavior.
+    } else {
+      auto public_key_result = ExtractPublicKey(key, config);
+      if (!public_key_result.ok()) {
+        return public_key_result.status();
+      }
+      util::StatusOr<const Entry> entry =
+          CreateEntry(*public_key_result.value(), keyset_->primary_key_id());
+      if (!entry.ok()) {
+        return entry.status();
+      }
+      public_entries.push_back(std::make_shared<const Entry>(*entry));
+      public_keyset->add_key()->Swap(public_key_result.value().get());
+    }
   }
+
   public_keyset->set_primary_key_id(keyset_->primary_key_id());
-  util::StatusOr<std::vector<std::shared_ptr<const Entry>>> entries =
-      GetEntriesFromKeyset(*public_keyset);
-  if (!entries.ok()) {
-    return entries.status();
-  }
-  if (entries->size() != public_keyset->key_size()) {
+  if (public_entries.size() != public_keyset->key_size()) {
     return util::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
   return absl::WrapUnique<KeysetHandle>(
-      new KeysetHandle(std::move(public_keyset), *std::move(entries)));
+      new KeysetHandle(std::move(public_keyset), std::move(public_entries)));
 }
 
 crypto::tink::util::StatusOr<uint32_t> KeysetHandle::AddToKeyset(

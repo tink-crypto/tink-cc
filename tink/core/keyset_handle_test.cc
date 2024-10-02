@@ -54,6 +54,7 @@
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/key_gen_configuration_impl.h"
+#include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
@@ -839,6 +840,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
     util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
         handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
     ASSERT_THAT(public_handle, IsOk());
+    EXPECT_THAT((*public_handle)->size(), Eq(3));
 
     const Keyset& public_keyset = TestKeysetHandle::GetKeyset(**public_handle);
     EXPECT_EQ(keyset->primary_key_id(), public_keyset.primary_key_id());
@@ -914,6 +916,42 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithBespokeConfigSucceeds) {
     EXPECT_EQ(KeyData::ASYMMETRIC_PUBLIC,
               public_keyset.key(i).key_data().key_material_type());
   }
+}
+
+TEST_F(KeysetHandleTest,
+       GetPublicKeysetHandleWithBespokeConfigNoKeyManagersSucceeds) {
+  util::StatusOr<const Keyset> keyset = CreateEcdsaMultiKeyset();
+  ASSERT_THAT(keyset, IsOk());
+  std::unique_ptr<KeysetHandle> handle =
+      TestKeysetHandle::GetKeysetHandle(*keyset);
+
+  KeyGenConfiguration config;
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(config);
+  ASSERT_THAT(public_handle, IsOk());
+
+  const Keyset& public_keyset = TestKeysetHandle::GetKeyset(**public_handle);
+  EXPECT_EQ(keyset->primary_key_id(), public_keyset.primary_key_id());
+  EXPECT_EQ(keyset->key_size(), public_keyset.key_size());
+  for (int i = 0; i < keyset->key_size(); i++) {
+    CompareKeyMetadata(keyset->key(i), public_keyset.key(i));
+    EXPECT_EQ(KeyData::ASYMMETRIC_PUBLIC,
+              public_keyset.key(i).key_data().key_material_type());
+  }
+}
+
+TEST_F(
+    KeysetHandleTest,
+    GetPublicKeysetHandleWithBespokeConfigEmptySerializationRegistryFails) {
+  internal::MutableSerializationRegistry::GlobalInstance().Reset();
+  util::StatusOr<const Keyset> keyset = CreateEcdsaMultiKeyset();
+  ASSERT_THAT(keyset, IsOk());
+  std::unique_ptr<KeysetHandle> handle =
+      TestKeysetHandle::GetKeysetHandle(*keyset);
+
+  KeyGenConfiguration config;
+  EXPECT_THAT(handle->GetPublicKeysetHandle(config).status(),
+              StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST_F(KeysetHandleTest, GetPublicKeysetHandleWithBespokeConfigFails) {

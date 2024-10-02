@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -165,36 +166,68 @@ TEST(HmacParametersTest, CreateWithInvalidTagSizeFails) {
 
 TEST(HmacParametersTest, CopyConstructor) {
   util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
-      /*key_size_in_bytes=*/32,
-      /*cryptographic_tag_size_in_bytes=*/12, HmacParameters::HashType::kSha256,
-      HmacParameters::Variant::kTink);
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   HmacParameters copy(*parameters);
-  EXPECT_THAT(copy.GetVariant(), Eq(parameters->GetVariant()));
-  EXPECT_THAT(copy.CryptographicTagSizeInBytes(),
-              Eq(parameters->CryptographicTagSizeInBytes()));
-  EXPECT_THAT(copy.TotalTagSizeInBytes(),
-              Eq(parameters->TotalTagSizeInBytes()));
-  EXPECT_THAT(copy.GetHashType(), Eq(parameters->GetHashType()));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(parameters->HasIdRequirement()));
+
+  EXPECT_THAT(copy.KeySizeInBytes(), 32);
+  EXPECT_THAT(copy.CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy.GetHashType(), Eq(HmacParameters::HashType::kSha256));
+  EXPECT_THAT(copy.GetVariant(), Eq(HmacParameters::Variant::kTink));
 }
 
 TEST(HmacParametersTest, CopyAssignment) {
   util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
-      /*key_size_in_bytes=*/32,
-      /*cryptographic_tag_size_in_bytes=*/12, HmacParameters::HashType::kSha512,
-      HmacParameters::Variant::kTink);
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  HmacParameters copy = *parameters;
-  EXPECT_THAT(copy.GetVariant(), Eq(parameters->GetVariant()));
-  EXPECT_THAT(copy.CryptographicTagSizeInBytes(),
-              Eq(parameters->CryptographicTagSizeInBytes()));
-  EXPECT_THAT(copy.TotalTagSizeInBytes(),
-              Eq(parameters->TotalTagSizeInBytes()));
-  EXPECT_THAT(copy.GetHashType(), Eq(parameters->GetHashType()));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(parameters->HasIdRequirement()));
+  util::StatusOr<HmacParameters> copy = HmacParameters::Create(
+      /*key_size_in_bytes=*/16, /*cryptographic_tag_size_in_bytes=*/12,
+      HmacParameters::HashType::kSha224, HmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->KeySizeInBytes(), 32);
+  EXPECT_THAT(copy->CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->GetHashType(), Eq(HmacParameters::HashType::kSha256));
+  EXPECT_THAT(copy->GetVariant(), Eq(HmacParameters::Variant::kTink));
+}
+
+TEST(HmacParametersTest, MoveConstructor) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  HmacParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.KeySizeInBytes(), 32);
+  EXPECT_THAT(move.CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move.GetHashType(), Eq(HmacParameters::HashType::kSha256));
+  EXPECT_THAT(move.GetVariant(), Eq(HmacParameters::Variant::kTink));
+}
+
+TEST(HmacParametersTest, MoveAssignment) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<HmacParameters> move = HmacParameters::Create(
+      /*key_size_in_bytes=*/16, /*cryptographic_tag_size_in_bytes=*/12,
+      HmacParameters::HashType::kSha224, HmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->KeySizeInBytes(), 32);
+  EXPECT_THAT(move->CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move->GetHashType(), Eq(HmacParameters::HashType::kSha256));
+  EXPECT_THAT(move->GetVariant(), Eq(HmacParameters::Variant::kTink));
 }
 
 TEST(HmacParametersTest, ParametersEquals) {

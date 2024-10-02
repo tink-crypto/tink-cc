@@ -250,6 +250,106 @@ TEST(HmacKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_key == *key);
 }
 
+TEST(HmacKeyTest, CopyConstructor) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<HmacKey> key = HmacKey::Create(
+      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  HmacKey copy(*key);
+
+  EXPECT_THAT(copy.GetParameters(), Eq(*parameters));
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy.GetIdRequirement(), Eq(123));
+}
+
+TEST(HmacKeyTest, CopyAssignment) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<HmacKey> key = HmacKey::Create(
+      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<HmacParameters> parameters2 = HmacParameters::Create(
+      /*key_size_in_bytes=*/16, /*cryptographic_tag_size_in_bytes=*/12,
+      HmacParameters::HashType::kSha224, HmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters2, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<HmacKey> copy =
+      HmacKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+                      GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *key;
+
+  EXPECT_THAT(copy->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy->GetIdRequirement(), Eq(123));
+}
+
+TEST(HmacKeyTest, MoveConstructor) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<HmacKey> key = HmacKey::Create(
+      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  HmacKey move(std::move(*key));
+
+  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
+  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(move.GetIdRequirement(), Eq(123));
+}
+
+TEST(HmacKeyTest, MoveAssignment) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<HmacKey> key = HmacKey::Create(
+      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<HmacParameters> parameters2 = HmacParameters::Create(
+      /*key_size_in_bytes=*/16, /*cryptographic_tag_size_in_bytes=*/12,
+      HmacParameters::HashType::kSha224, HmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters2, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<HmacKey> move =
+      HmacKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
+                      GetPartialKeyAccess());
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*key);
+
+  EXPECT_THAT(move->GetParameters(), Eq(*parameters));
+  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(move->GetIdRequirement(), Eq(123));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

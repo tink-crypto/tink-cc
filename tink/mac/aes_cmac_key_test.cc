@@ -248,6 +248,112 @@ TEST(AesCmacKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_FALSE(*other_key == *key);
 }
 
+TEST(AesCmacKeyTest, CopyConstructor) {
+  util::StatusOr<AesCmacParameters> params =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                /*cryptographic_tag_size_in_bytes=*/16,
+                                AesCmacParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesCmacKey copy(*key);
+
+  EXPECT_THAT(copy.GetParameters(), Eq(*params));
+  EXPECT_THAT(copy.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+}
+
+TEST(AesCmacKeyTest, CopyAssigment) {
+  util::StatusOr<AesCmacParameters> params =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                /*cryptographic_tag_size_in_bytes=*/16,
+                                AesCmacParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<AesCmacParameters> params2 =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
+                                /*cryptographic_tag_size_in_bytes=*/12,
+                                AesCmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(params2, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<AesCmacKey> copy =
+      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/absl::nullopt,
+                         GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *key;
+
+  EXPECT_THAT(copy->GetParameters(), Eq(*params));
+  EXPECT_THAT(copy->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(copy->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+}
+
+TEST(AesCmacKeyTest, MoveConstructor) {
+  util::StatusOr<AesCmacParameters> params =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                /*cryptographic_tag_size_in_bytes=*/16,
+                                AesCmacParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesCmacKey move(std::move(*key));
+
+  EXPECT_THAT(move.GetParameters(), Eq(*params));
+  EXPECT_THAT(move.GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(move.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+}
+
+TEST(AesCmacKeyTest, MoveAssigment) {
+  util::StatusOr<AesCmacParameters> params =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                /*cryptographic_tag_size_in_bytes=*/16,
+                                AesCmacParameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+      *params, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<AesCmacParameters> params2 =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
+                                /*cryptographic_tag_size_in_bytes=*/12,
+                                AesCmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(params2, IsOk());
+
+  RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<AesCmacKey> move =
+      AesCmacKey::Create(*params2, secret2, /*id_requirement=*/absl::nullopt,
+                         GetPartialKeyAccess());
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*key);
+
+  EXPECT_THAT(move->GetParameters(), Eq(*params));
+  EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+  EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

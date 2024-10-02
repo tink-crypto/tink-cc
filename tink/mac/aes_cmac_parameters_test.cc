@@ -16,8 +16,8 @@
 
 #include "tink/mac/aes_cmac_parameters.h"
 
-#include <memory>
 #include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -149,33 +149,69 @@ TEST(AesCmacParametersTest, CreateWithInvalidTagSizeFails) {
 TEST(AesCmacParametersTest, CopyConstructor) {
   util::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/12,
+                                /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   AesCmacParameters copy(*parameters);
-  EXPECT_THAT(copy.GetVariant(), Eq(parameters->GetVariant()));
-  EXPECT_THAT(copy.CryptographicTagSizeInBytes(),
-              Eq(parameters->CryptographicTagSizeInBytes()));
-  EXPECT_THAT(copy.TotalTagSizeInBytes(),
-              Eq(parameters->TotalTagSizeInBytes()));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(parameters->HasIdRequirement()));
+
+  EXPECT_THAT(copy.KeySizeInBytes(), Eq(32));
+  EXPECT_THAT(copy.CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy.GetVariant(), Eq(AesCmacParameters::Variant::kTink));
 }
 
 TEST(AesCmacParametersTest, CopyAssignment) {
   util::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
-                                /*cryptographic_tag_size_in_bytes=*/12,
+                                /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  AesCmacParameters copy = *parameters;
-  EXPECT_THAT(copy.GetVariant(), Eq(parameters->GetVariant()));
-  EXPECT_THAT(copy.CryptographicTagSizeInBytes(),
-              Eq(parameters->CryptographicTagSizeInBytes()));
-  EXPECT_THAT(copy.TotalTagSizeInBytes(),
-              Eq(parameters->TotalTagSizeInBytes()));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(parameters->HasIdRequirement()));
+  util::StatusOr<AesCmacParameters> copy =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
+                                /*cryptographic_tag_size_in_bytes=*/12,
+                                AesCmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->KeySizeInBytes(), Eq(32));
+  EXPECT_THAT(copy->CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->GetVariant(), Eq(AesCmacParameters::Variant::kTink));
+}
+
+TEST(AesCmacParametersTest, MoveConstructor) {
+  util::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                /*cryptographic_tag_size_in_bytes=*/16,
+                                AesCmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  AesCmacParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.KeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move.CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move.GetVariant(), Eq(AesCmacParameters::Variant::kTink));
+}
+
+TEST(AesCmacParametersTest, MoveAssignment) {
+  util::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                /*cryptographic_tag_size_in_bytes=*/16,
+                                AesCmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesCmacParameters> move =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/16,
+                                /*cryptographic_tag_size_in_bytes=*/12,
+                                AesCmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->KeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move->CryptographicTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move->GetVariant(), Eq(AesCmacParameters::Variant::kTink));
 }
 
 using AesCmacParametersVariantTest =

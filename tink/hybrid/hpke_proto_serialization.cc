@@ -328,6 +328,11 @@ util::StatusOr<HpkePrivateKey> ParsePrivateKey(
                         "Only version 0 keys are accepted.");
   }
 
+  if ((*proto_key)->public_key().version() != 0) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Only version 0 public keys are accepted.");
+  }
+
   util::StatusOr<HpkeParameters::Variant> variant =
       ToVariant(serialization.GetOutputPrefixType());
   if (!variant.ok()) {

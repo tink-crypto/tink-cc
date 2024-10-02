@@ -101,8 +101,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest, RegisterTwiceSucceeds) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    JwtRsaSsaPssProtoSerializationTestSuite,
-    JwtRsaSsaPssProtoSerializationTest,
+    JwtRsaSsaPssProtoSerializationTestSuite, JwtRsaSsaPssProtoSerializationTest,
     Values(TestCase{/*strategy=*/JwtRsaSsaPssParameters::KidStrategy::
                         kBase64EncodedKeyId,
                     /*expected_parameters_strategy=*/
@@ -112,16 +111,15 @@ INSTANTIATE_TEST_SUITE_P(
                     JwtRsaSsaPssAlgorithm::PS256,
                     /*modulus_size_in_bits=*/2048,
                     /*kid=*/"AgMEAA", /*id=*/0x02030400},
-           TestCase{
-               /*strategy=*/JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-               /*expected_parameters_strategy=*/
-               JwtRsaSsaPssParameters::KidStrategy::kIgnored,
-               OutputPrefixType::RAW,
-               JwtRsaSsaPssParameters::Algorithm::kPs384,
-               JwtRsaSsaPssAlgorithm::PS384,
-               /*modulus_size_in_bits=*/2048,
-               /*kid=*/absl::nullopt,
-               /*id=*/absl::nullopt},
+           TestCase{/*strategy=*/JwtRsaSsaPssParameters::KidStrategy::kIgnored,
+                    /*expected_parameters_strategy=*/
+                    JwtRsaSsaPssParameters::KidStrategy::kIgnored,
+                    OutputPrefixType::RAW,
+                    JwtRsaSsaPssParameters::Algorithm::kPs384,
+                    JwtRsaSsaPssAlgorithm::PS384,
+                    /*modulus_size_in_bits=*/2048,
+                    /*kid=*/absl::nullopt,
+                    /*id=*/absl::nullopt},
            TestCase{/*strategy=*/JwtRsaSsaPssParameters::KidStrategy::kCustom,
                     /*expected_parameters_strategy=*/
                     JwtRsaSsaPssParameters::KidStrategy::kIgnored,
@@ -257,12 +255,11 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  ASSERT_THAT(
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .ParseParameters(*serialization)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Could not determine JwtRsaSsaPssAlgorithm")));
+  ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .ParseParameters(*serialization)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Could not determine JwtRsaSsaPssAlgorithm")));
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializeParametersSucceeds) {
@@ -579,10 +576,9 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
-  EXPECT_THAT(
-      parsed_key.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Could not determine JwtRsaSsaPssAlgorithm")));
+  EXPECT_THAT(parsed_key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Could not determine JwtRsaSsaPssAlgorithm")));
 }
 
 TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializePublicKeySucceeds) {
@@ -796,6 +792,46 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
+}
+
+TEST_F(JwtRsaSsaPssProtoSerializationTest,
+       ParsePrivateKeyWithInvalidPublicKeyVersionFails) {
+  ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerialization(), IsOk());
+
+  KeyValues key_values = GenerateKeyValues(2048);
+
+  google::crypto::tink::JwtRsaSsaPssPublicKey public_key_proto;
+  public_key_proto.set_version(1);  // invalid version number
+  public_key_proto.set_algorithm(JwtRsaSsaPssAlgorithm::PS256);
+  public_key_proto.set_n(key_values.n);
+  public_key_proto.set_e(key_values.e);
+
+  google::crypto::tink::JwtRsaSsaPssPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_p(key_values.p);
+  private_key_proto.set_q(key_values.q);
+  private_key_proto.set_dp(key_values.dp);
+  private_key_proto.set_dq(key_values.dq);
+  private_key_proto.set_d(key_values.d);
+  private_key_proto.set_crt(key_values.q_inv);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::RAW,
+                                              /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 public keys are accepted")));
 }
 
 TEST_F(JwtRsaSsaPssProtoSerializationTest,

@@ -455,7 +455,46 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       testing::HasSubstr("Only version 0 keys are accepted")));
+}
+
+TEST_F(Ed25519ProtoSerializationTest,
+       ParsePrivateKeyWithInvalidPublicKeyVersion) {
+  ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
+
+  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  google::crypto::tink::Ed25519PublicKey public_key_proto;
+  public_key_proto.set_version(1);  // invalid version
+  public_key_proto.set_key_value((*key_pair)->public_key);
+
+  google::crypto::tink::Ed25519PrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(
+      util::SecretDataAsStringView((*key_pair)->private_key));
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
+          serialized_key, KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
+          /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(
+      key.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               testing::HasSubstr("Only version 0 public keys are accepted")));
 }
 
 TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {

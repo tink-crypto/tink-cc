@@ -692,6 +692,48 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersionFails) {
                        HasSubstr("Only version 0 keys are accepted")));
 }
 
+TEST_F(EcdsaProtoSerializationTest,
+       ParsePrivateKeyWithInvalidPublicKeyVersionFails) {
+  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+
+  EcdsaParams params;
+  params.set_curve(EllipticCurveType::NIST_P256);
+  params.set_hash_type(HashType::SHA256);
+  params.set_encoding(EcdsaSignatureEncoding::DER);
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::EcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(1);  // invalid version
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+  *public_key_proto.mutable_params() = params;
+
+  google::crypto::tink::EcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 public keys are accepted")));
+}
+
 TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
 

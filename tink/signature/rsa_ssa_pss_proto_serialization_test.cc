@@ -72,6 +72,7 @@ using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::RsaSsaPssKeyFormat;
 using ::google::crypto::tink::RsaSsaPssParams;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::NotNull;
@@ -773,7 +774,54 @@ TEST_F(RsaSsaPssProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 keys are accepted")));
+}
+
+TEST_F(RsaSsaPssProtoSerializationTest,
+       ParsePrivateKeyWithInvalidPublicKeyVersionFails) {
+  ASSERT_THAT(RegisterRsaSsaPssProtoSerialization(), IsOk());
+
+  RsaSsaPssParams params;
+  params.set_sig_hash(HashType::SHA256);
+  params.set_mgf1_hash(HashType::SHA256);
+  params.set_salt_length(32);
+
+  KeyValues key_values = GenerateKeyValues(2048);
+
+  google::crypto::tink::RsaSsaPssPublicKey public_key_proto;
+  public_key_proto.set_version(1);  // invalid version
+  public_key_proto.set_n(key_values.n);
+  public_key_proto.set_e(key_values.e);
+  *public_key_proto.mutable_params() = params;
+
+  google::crypto::tink::RsaSsaPssPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_p(key_values.p);
+  private_key_proto.set_q(key_values.q);
+  private_key_proto.set_dp(key_values.dp);
+  private_key_proto.set_dq(key_values.dq);
+  private_key_proto.set_d(key_values.d);
+  private_key_proto.set_crt(key_values.q_inv);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 public keys are accepted")));
 }
 
 TEST_F(RsaSsaPssProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
@@ -1175,8 +1223,7 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
       {FieldWithNumber(1).IsVarint(1000),  // Bad version
        FieldWithNumber(1).IsVarint(0),     // Overwrite bad version number
        FieldWithNumber(2).IsSubMessage(
-           {FieldWithNumber(1).IsVarint(17),  // Bad version number ignored
-            FieldWithNumber(2).IsSubMessage({
+           {FieldWithNumber(2).IsSubMessage({
                 FieldWithNumber(2).IsVarint(HashType::SHA512),
                 FieldWithNumber(1).IsVarint(HashType::SHA512),  // Not ordered
                 FieldWithNumber(3).IsVarint(0),  // Salt length explicit

@@ -273,6 +273,11 @@ util::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
         "JwtRsaSsaPkcs1PrivateKey proto is missing public key.");
   }
 
+  if ((*proto_key)->public_key().version() != 0) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Only version 0 public keys are accepted.");
+  }
+
   util::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key = ToPublicKey(
       (*proto_key)->public_key(), serialization.GetOutputPrefixType(),
       serialization.IdRequirement());

@@ -367,6 +367,11 @@ util::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
                         "Only version 0 keys are accepted.");
   }
 
+  if (proto_key->public_key.version != 0) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Only version 0 public keys are accepted.");
+  }
+
   int modulus_size_in_bits = proto_key->public_key.n.size() * 8;
 
   util::StatusOr<RsaSsaPssParameters> parameters = ToParameters(
@@ -386,21 +391,17 @@ util::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
   return RsaSsaPssPrivateKey::Builder()
       .SetPublicKey(*public_key)
       .SetPrimeP(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key->p),
-                               *token))
-      .SetPrimeQ(RestrictedBigInteger(SecretDataAsStringView(proto_key->q),
-                                      *token))
+          RestrictedBigInteger(SecretDataAsStringView(proto_key->p), *token))
+      .SetPrimeQ(
+          RestrictedBigInteger(SecretDataAsStringView(proto_key->q), *token))
       .SetPrimeExponentP(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key->dp),
-                               *token))
+          RestrictedBigInteger(SecretDataAsStringView(proto_key->dp), *token))
       .SetPrimeExponentQ(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key->dq),
-                               *token))
-      .SetPrivateExponent(RestrictedBigInteger(
-          SecretDataAsStringView(proto_key->d), *token))
+          RestrictedBigInteger(SecretDataAsStringView(proto_key->dq), *token))
+      .SetPrivateExponent(
+          RestrictedBigInteger(SecretDataAsStringView(proto_key->d), *token))
       .SetCrtCoefficient(
-          RestrictedBigInteger(SecretDataAsStringView(proto_key->crt),
-                               *token))
+          RestrictedBigInteger(SecretDataAsStringView(proto_key->crt), *token))
       .Build(GetPartialKeyAccess());
 }
 

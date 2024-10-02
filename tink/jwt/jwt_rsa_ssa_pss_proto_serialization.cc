@@ -145,9 +145,9 @@ util::StatusOr<JwtRsaSsaPssAlgorithm> ToProtoAlgorithm(
 }
 
 util::StatusOr<JwtRsaSsaPssParameters> ToParameters(
-    OutputPrefixType output_prefix_type,
-    JwtRsaSsaPssAlgorithm proto_algorithm, int modulus_size_in_bits,
-    const BigInteger& public_exponent, bool has_custom_kid) {
+    OutputPrefixType output_prefix_type, JwtRsaSsaPssAlgorithm proto_algorithm,
+    int modulus_size_in_bits, const BigInteger& public_exponent,
+    bool has_custom_kid) {
   util::StatusOr<JwtRsaSsaPssParameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
   if (!kid_strategy.ok()) {
@@ -182,8 +182,8 @@ util::StatusOr<JwtRsaSsaPssPublicKey> ToPublicKey(
   }
 
   JwtRsaSsaPssPublicKey::Builder builder = JwtRsaSsaPssPublicKey::Builder()
-                                                 .SetParameters(*parameters)
-                                                 .SetModulus(modulus);
+                                               .SetParameters(*parameters)
+                                               .SetModulus(modulus);
   if (id_requirement.has_value()) {
     builder.SetIdRequirement(*id_requirement);
   }
@@ -196,9 +196,8 @@ util::StatusOr<JwtRsaSsaPssPublicKey> ToPublicKey(
 util::StatusOr<JwtRsaSsaPssParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Wrong type URL when parsing JwtRsaSsaPssParameters.");
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Wrong type URL when parsing JwtRsaSsaPssParameters.");
   }
 
   JwtRsaSsaPssKeyFormat proto_key_format;
@@ -251,9 +250,8 @@ util::StatusOr<JwtRsaSsaPssPrivateKey> ParsePrivateKey(
                         "SecretKeyAccess is required");
   }
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Wrong type URL when parsing JwtRsaSsaPssPrivateKey.");
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Wrong type URL when parsing JwtRsaSsaPssPrivateKey.");
   }
 
   absl::StatusOr<SecretProto<google::crypto::tink::JwtRsaSsaPssPrivateKey>>
@@ -268,9 +266,13 @@ util::StatusOr<JwtRsaSsaPssPrivateKey> ParsePrivateKey(
                         "Only version 0 keys are accepted.");
   }
   if (!(*proto_key)->has_public_key()) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "JwtRsaSsaPssPrivateKey proto is missing public key.");
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "JwtRsaSsaPssPrivateKey proto is missing public key.");
+  }
+
+  if ((*proto_key)->public_key().version() != 0) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Only version 0 public keys are accepted.");
   }
 
   util::StatusOr<JwtRsaSsaPssPublicKey> public_key = ToPublicKey(
@@ -426,8 +428,8 @@ JwtRsaSsaPssProtoParametersSerializer() {
 }
 
 JwtRsaSsaPssProtoPublicKeyParserImpl& JwtRsaSsaPssProtoPublicKeyParser() {
-  static auto* parser = new JwtRsaSsaPssProtoPublicKeyParserImpl(
-      kPublicTypeUrl, ParsePublicKey);
+  static auto* parser =
+      new JwtRsaSsaPssProtoPublicKeyParserImpl(kPublicTypeUrl, ParsePublicKey);
   return *parser;
 }
 
@@ -474,9 +476,8 @@ util::Status RegisterJwtRsaSsaPssProtoSerialization() {
     return status;
   }
 
-  status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterKeySerializer(&JwtRsaSsaPssProtoPublicKeySerializer());
+  status = internal::MutableSerializationRegistry::GlobalInstance()
+               .RegisterKeySerializer(&JwtRsaSsaPssProtoPublicKeySerializer());
   if (!status.ok()) {
     return status;
   }

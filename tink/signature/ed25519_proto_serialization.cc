@@ -196,6 +196,10 @@ util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
+  if ((*proto_key)->public_key().version() != 0) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "Only version 0 public keys are accepted.");
+  }
 
   util::StatusOr<Ed25519Parameters::Variant> variant =
       ToVariant(serialization.GetOutputPrefixType());

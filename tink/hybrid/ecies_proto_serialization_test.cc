@@ -1389,6 +1389,52 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
               "Only version 0 keys are accepted for EciesAeadHkdfPrivateKey")));
 }
 
+TEST_F(EciesProtoSerializationTest,
+       ParsePrivateKeyWithInvalidPublicKeyVersion) {
+  ASSERT_THAT(RegisterEciesProtoSerialization(), IsOk());
+
+  EciesAeadHkdfParams params;
+  *params.mutable_kem_params() =
+      CreateKemParams(EllipticCurveType::NIST_P256, HashType::SHA256, kSalt);
+  *params.mutable_dem_params() = CreateAesGcmDemParams(16);
+  params.set_ec_point_format(EcPointFormat::COMPRESSED);
+  EciesAeadHkdfKeyFormat key_format_proto;
+  *key_format_proto.mutable_params() = params;
+
+  util::StatusOr<KeyPair> key_pair =
+      GenerateKeyPair(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(key_pair, IsOk());
+
+  EciesAeadHkdfPublicKey public_key_proto;
+  public_key_proto.set_version(1);
+  public_key_proto.set_x(key_pair->x);
+  public_key_proto.set_y(key_pair->y);
+  *public_key_proto.mutable_params() = params;
+
+  EciesAeadHkdfPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(key_pair->private_key);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::TINK,
+                                              /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 public keys are accepted for "
+                                 "EciesAeadHkdfPrivateKey")));
+}
+
 TEST_F(EciesProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(RegisterEciesProtoSerialization(), IsOk());
 

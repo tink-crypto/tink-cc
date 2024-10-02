@@ -799,6 +799,46 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 }
 
 TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
+       ParsePrivateKeyWithInvalidPublicKeyVersionFails) {
+  ASSERT_THAT(RegisterJwtRsaSsaPkcs1ProtoSerialization(), IsOk());
+
+  KeyValues key_values = GenerateKeyValues(2048);
+
+  google::crypto::tink::JwtRsaSsaPkcs1PublicKey public_key_proto;
+  public_key_proto.set_version(1);  // invalid version number
+  public_key_proto.set_algorithm(JwtRsaSsaPkcs1Algorithm::RS256);
+  public_key_proto.set_n(key_values.n);
+  public_key_proto.set_e(key_values.e);
+
+  google::crypto::tink::JwtRsaSsaPkcs1PrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_p(key_values.p);
+  private_key_proto.set_q(key_values.q);
+  private_key_proto.set_dp(key_values.dp);
+  private_key_proto.set_dq(key_values.dq);
+  private_key_proto.set_d(key_values.d);
+  private_key_proto.set_crt(key_values.q_inv);
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
+                                              KeyData::ASYMMETRIC_PRIVATE,
+                                              OutputPrefixType::RAW,
+                                              /*id_requirement=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 public keys are accepted")));
+}
+
+TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
        ParsePrivateKeyWithoutPublicKeyFails) {
   ASSERT_THAT(RegisterJwtRsaSsaPkcs1ProtoSerialization(), IsOk());
 

@@ -15,42 +15,51 @@
 ################################################################################
 
 # This script builds with CMake and runs tests within a given directory.
-#
-# Users must spcify the CMake project directory. Optionally, users may specify
-# a list of additional CMake arguments.
-#
-# Usage:
-#   ./kokoro/testutils/run_cmake_tests.sh \
-#     <project directory> \
-#     [<additional CMake param> <additional CMake param> ...]
 
 set -eEo pipefail
 
 usage() {
-  echo "Usage: $0 <project directory> \\"
-  echo "         [<additional CMake param> <additional CMake param> ...]"
+  cat <<EOF
+Usage: $0 [-h] [-o <output directory>] <project directory> \
+  [<additional CMake param> <additional CMake param> ...]"
+  -o: Output directory. If not specified, a temporary directory will be used.
+  -h: Show this help message.
+EOF
   exit 1
 }
 
 CMAKE_PROJECT_DIR=
 ADDITIONAL_CMAKE_PARAMETERS=
+CMAKE_OUTPUT_DIR=
 
 #######################################
 # Process command line arguments.
 #
 # Globals:
-#   PROJECT_DIRECTORY
+#   CMAKE_OUTPUT_DIR
+#   CMAKE_PROJECT_DIR
+#   ADDITIONAL_CMAKE_PARAMETERS
 #
 #######################################
 process_args() {
+  while getopts "ho:" opt; do
+    case "${opt}" in
+      o) CMAKE_OUTPUT_DIR="$(cd "${OPTARG}" && pwd)" ;;
+      *) usage ;;
+    esac
+  done
+  shift $((OPTIND - 1))
+
+  CMAKE_OUTPUT_DIR="${CMAKE_OUTPUT_DIR:-$(mktemp -dt cmake-build.XXXXXX)}"
+  readonly CMAKE_OUTPUT_DIR
+
   CMAKE_PROJECT_DIR="$1"
   readonly CMAKE_PROJECT_DIR
-
   if [[ -z "${CMAKE_PROJECT_DIR}" ]]; then
     usage
   fi
-
   shift 1
+
   ADDITIONAL_CMAKE_PARAMETERS=("$@")
   readonly ADDITIONAL_CMAKE_PARAMETERS
 }
@@ -65,10 +74,11 @@ main() {
   )
   # We need an absolute path to the CMake project directory.
   local -r tink_cmake_project_dir="$(cd "${CMAKE_PROJECT_DIR}" && pwd)"
-  local -r cmake_build_dir="$(mktemp -dt cmake-build.XXXXXX)"
-  cd "${cmake_build_dir}"
+  cd "${CMAKE_OUTPUT_DIR}"
   cmake --version
-  cmake "${tink_cmake_project_dir}" "${cmake_parameters[@]}"
+  set -x
+  cmake -S "${tink_cmake_project_dir}" -B "${CMAKE_OUTPUT_DIR}" \
+    "${cmake_parameters[@]}"
   cmake --build . --parallel "$(nproc)"
   CTEST_OUTPUT_ON_FAILURE=1 ctest --parallel "$(nproc)"
 }

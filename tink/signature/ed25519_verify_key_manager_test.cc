@@ -40,8 +40,8 @@ namespace tink {
 
 using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::Ed25519KeyFormat;
-using ::google::crypto::tink::Ed25519PrivateKey;
-using ::google::crypto::tink::Ed25519PublicKey;
+using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
+using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
 using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
 using ::testing::Not;
@@ -57,45 +57,45 @@ TEST(Ed25519VerifyKeyManagerTest, Basics) {
 }
 
 TEST(Ed25519VerifyKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(Ed25519VerifyKeyManager().ValidateKey(Ed25519PublicKey()),
+  EXPECT_THAT(Ed25519VerifyKeyManager().ValidateKey(Ed25519PublicKeyProto()),
               Not(IsOk()));
 }
 
-Ed25519PrivateKey CreateValidPrivateKey() {
+Ed25519PrivateKeyProto CreateValidPrivateKey() {
   return Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat()).value();
 }
 
-Ed25519PublicKey CreateValidPublicKey() {
+Ed25519PublicKeyProto CreateValidPublicKey() {
   return Ed25519SignKeyManager().GetPublicKey(CreateValidPrivateKey()).value();
 }
 
 // Checks that a public key generaed by the SignKeyManager is considered valid.
 TEST(Ed25519VerifyKeyManagerTest, PublicKeyValid) {
-  Ed25519PublicKey key = CreateValidPublicKey();
+  Ed25519PublicKeyProto key = CreateValidPublicKey();
   EXPECT_THAT(Ed25519VerifyKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(Ed25519VerifyKeyManagerTest, PublicKeyWrongVersion) {
-  Ed25519PublicKey key = CreateValidPublicKey();
+  Ed25519PublicKeyProto key = CreateValidPublicKey();
   key.set_version(1);
   EXPECT_THAT(Ed25519VerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(Ed25519VerifyKeyManagerTest, PublicKeyWrongKeyLength31) {
-  Ed25519PublicKey key = CreateValidPublicKey();
+  Ed25519PublicKeyProto key = CreateValidPublicKey();
   key.set_key_value(std::string(31, 'a'));
   EXPECT_THAT(Ed25519VerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(Ed25519VerifyKeyManagerTest, PublicKeyWrongKeyLength64) {
-  Ed25519PublicKey key = CreateValidPublicKey();
+  Ed25519PublicKeyProto key = CreateValidPublicKey();
   key.set_key_value(std::string(64, 'a'));
   EXPECT_THAT(Ed25519VerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(Ed25519SignKeyManagerTest, Create) {
-  Ed25519PrivateKey private_key = CreateValidPrivateKey();
-  Ed25519PublicKey public_key =
+  Ed25519PrivateKeyProto private_key = CreateValidPrivateKey();
+  Ed25519PublicKeyProto public_key =
       Ed25519SignKeyManager().GetPublicKey(private_key).value();
 
   auto direct_signer_or =
@@ -114,9 +114,9 @@ TEST(Ed25519SignKeyManagerTest, Create) {
 }
 
 TEST(Ed25519SignKeyManagerTest, CreateDifferentPrivateKey) {
-  Ed25519PrivateKey private_key = CreateValidPrivateKey();
+  Ed25519PrivateKeyProto private_key = CreateValidPrivateKey();
   // Note: we create a new key in the next line.
-  Ed25519PublicKey public_key =
+  Ed25519PublicKeyProto public_key =
       Ed25519SignKeyManager().GetPublicKey(CreateValidPrivateKey()).value();
 
   auto direct_signer_or = subtle::Ed25519SignBoringSsl::New(

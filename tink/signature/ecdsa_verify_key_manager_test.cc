@@ -43,8 +43,8 @@ using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::Enums;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaParams;
-using ::google::crypto::tink::EcdsaPrivateKey;
-using ::google::crypto::tink::EcdsaPublicKey;
+using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
@@ -63,11 +63,11 @@ TEST(EcdsaVerifyKeyManagerTest, Basics) {
 }
 
 TEST(EcdsaVerifyKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(EcdsaVerifyKeyManager().ValidateKey(EcdsaPublicKey()),
+  EXPECT_THAT(EcdsaVerifyKeyManager().ValidateKey(EcdsaPublicKeyProto()),
               Not(IsOk()));
 }
 
-EcdsaPrivateKey CreateValidPrivateKey() {
+EcdsaPrivateKeyProto CreateValidPrivateKey() {
   EcdsaKeyFormat key_format;
   EcdsaParams* params = key_format.mutable_params();
   params->set_hash_type(HashType::SHA256);
@@ -76,18 +76,18 @@ EcdsaPrivateKey CreateValidPrivateKey() {
   return EcdsaSignKeyManager().CreateKey(key_format).value();
 }
 
-EcdsaPublicKey CreateValidPublicKey() {
+EcdsaPublicKeyProto CreateValidPublicKey() {
   return EcdsaSignKeyManager().GetPublicKey(CreateValidPrivateKey()).value();
 }
 
 // Checks that a public key generaed by the SignKeyManager is considered valid.
 TEST(EcdsaVerifyKeyManagerTest, PublicKeyValid) {
-  EcdsaPublicKey key = CreateValidPublicKey();
+  EcdsaPublicKeyProto key = CreateValidPublicKey();
   EXPECT_THAT(EcdsaVerifyKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP256) {
-  EcdsaPublicKey key = CreateValidPublicKey();
+  EcdsaPublicKeyProto key = CreateValidPublicKey();
   EcdsaParams* params = key.mutable_params();
   params->set_curve(EllipticCurveType::NIST_P256);
   params->set_hash_type(HashType::SHA512);
@@ -97,7 +97,7 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP256) {
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP384) {
-  EcdsaPublicKey key = CreateValidPublicKey();
+  EcdsaPublicKeyProto key = CreateValidPublicKey();
   EcdsaParams* params = key.mutable_params();
   params->set_curve(EllipticCurveType::NIST_P384);
   params->set_hash_type(HashType::SHA256);
@@ -107,7 +107,7 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP384) {
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP521) {
-  EcdsaPublicKey key = CreateValidPublicKey();
+  EcdsaPublicKeyProto key = CreateValidPublicKey();
   EcdsaParams* params = key.mutable_params();
   params->set_curve(EllipticCurveType::NIST_P521);
   params->set_hash_type(HashType::SHA256);
@@ -163,8 +163,8 @@ TEST(EcdsaSignKeyManagerTest, ValidateParamsBadHashP521) {
 }
 
 TEST(EcdsaSignKeyManagerTest, Create) {
-  EcdsaPrivateKey private_key = CreateValidPrivateKey();
-  EcdsaPublicKey public_key =
+  EcdsaPrivateKeyProto private_key = CreateValidPrivateKey();
+  EcdsaPublicKeyProto public_key =
       EcdsaSignKeyManager().GetPublicKey(private_key).value();
 
   internal::EcKey ec_key;
@@ -189,9 +189,9 @@ TEST(EcdsaSignKeyManagerTest, Create) {
 }
 
 TEST(EcdsaSignKeyManagerTest, CreateDifferentPrivateKey) {
-  EcdsaPrivateKey private_key = CreateValidPrivateKey();
+  EcdsaPrivateKeyProto private_key = CreateValidPrivateKey();
   // Note: we create a new key in the next line.
-  EcdsaPublicKey public_key =
+  EcdsaPublicKeyProto public_key =
       EcdsaSignKeyManager().GetPublicKey(CreateValidPrivateKey()).value();
 
   internal::EcKey ec_key;

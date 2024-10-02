@@ -50,8 +50,8 @@ using ::crypto::tink::util::Enums;
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaParams;
-using ::google::crypto::tink::EcdsaPrivateKey;
-using ::google::crypto::tink::EcdsaPublicKey;
+using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
@@ -129,9 +129,10 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyFormatBadHashP521) {
 
 TEST(EcdsaSignKeyManagerTest, CreateKey) {
   EcdsaKeyFormat format = CreateValidKeyFormat();
-  StatusOr<EcdsaPrivateKey> key_or = EcdsaSignKeyManager().CreateKey(format);
+  StatusOr<EcdsaPrivateKeyProto> key_or =
+      EcdsaSignKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
-  EcdsaPrivateKey key = key_or.value();
+  EcdsaPrivateKeyProto key = key_or.value();
 
   EXPECT_THAT(key.version(), Eq(0));
 
@@ -150,23 +151,24 @@ TEST(EcdsaSignKeyManagerTest, CreateKey) {
 
 TEST(EcdsaSignKeyManagerTest, CreateKeyValid) {
   EcdsaKeyFormat format = CreateValidKeyFormat();
-  StatusOr<EcdsaPrivateKey> key_or = EcdsaSignKeyManager().CreateKey(format);
+  StatusOr<EcdsaPrivateKeyProto> key_or =
+      EcdsaSignKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(EcdsaSignKeyManager().ValidateKey(key_or.value()), IsOk());
 }
 
-EcdsaPrivateKey CreateValidKey() {
+EcdsaPrivateKeyProto CreateValidKey() {
   EcdsaKeyFormat format = CreateValidKeyFormat();
   return EcdsaSignKeyManager().CreateKey(format).value();
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKey) {
-  EcdsaPrivateKey key = CreateValidKey();
+  EcdsaPrivateKeyProto key = CreateValidKey();
   EXPECT_THAT(EcdsaSignKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP256) {
-  EcdsaPrivateKey key = CreateValidKey();
+  EcdsaPrivateKeyProto key = CreateValidKey();
   EcdsaParams* params = key.mutable_public_key()->mutable_params();
   params->set_curve(EllipticCurveType::NIST_P256);
   params->set_hash_type(HashType::SHA512);
@@ -176,7 +178,7 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP256) {
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP384) {
-  EcdsaPrivateKey key = CreateValidKey();
+  EcdsaPrivateKeyProto key = CreateValidKey();
   EcdsaParams* params = key.mutable_public_key()->mutable_params();
   params->set_curve(EllipticCurveType::NIST_P384);
   params->set_hash_type(HashType::SHA256);
@@ -186,7 +188,7 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP384) {
 }
 
 TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP521) {
-  EcdsaPrivateKey key = CreateValidKey();
+  EcdsaPrivateKeyProto key = CreateValidKey();
   EcdsaParams* params = key.mutable_public_key()->mutable_params();
   params->set_curve(EllipticCurveType::NIST_P521);
   params->set_hash_type(HashType::SHA256);
@@ -196,12 +198,12 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP521) {
 }
 
 TEST(EcdsaSignKeyManagerTest, GetPublicKey) {
-  EcdsaPrivateKey key = CreateValidKey();
-  StatusOr<EcdsaPublicKey> public_key_or =
+  EcdsaPrivateKeyProto key = CreateValidKey();
+  StatusOr<EcdsaPublicKeyProto> public_key_or =
       EcdsaSignKeyManager().GetPublicKey(key);
 
   ASSERT_THAT(public_key_or, IsOk());
-  EcdsaPublicKey public_key = public_key_or.value();
+  EcdsaPublicKeyProto public_key = public_key_or.value();
 
   EXPECT_THAT(public_key.version(), Eq(key.public_key().version()));
   EXPECT_THAT(public_key.params().hash_type(),
@@ -216,8 +218,8 @@ TEST(EcdsaSignKeyManagerTest, GetPublicKey) {
 }
 
 TEST(EcdsaSignKeyManagerTest, Create) {
-  EcdsaPrivateKey private_key = CreateValidKey();
-  EcdsaPublicKey public_key =
+  EcdsaPrivateKeyProto private_key = CreateValidKey();
+  EcdsaPublicKeyProto public_key =
       EcdsaSignKeyManager().GetPublicKey(private_key).value();
 
   auto signer_or =
@@ -240,9 +242,9 @@ TEST(EcdsaSignKeyManagerTest, Create) {
 }
 
 TEST(EcdsaSignKeyManagerTest, CreateDifferentKey) {
-  EcdsaPrivateKey private_key = CreateValidKey();
+  EcdsaPrivateKeyProto private_key = CreateValidKey();
   // Note: we create a new key in the next line.
-  EcdsaPublicKey public_key =
+  EcdsaPublicKeyProto public_key =
       EcdsaSignKeyManager().GetPublicKey(CreateValidKey()).value();
 
   auto signer_or =
@@ -286,7 +288,7 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeySignVerifySucceedsWithBoringSsl) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
-  util::StatusOr<EcdsaPrivateKey> key =
+  util::StatusOr<EcdsaPrivateKeyProto> key =
       EcdsaSignKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key, IsOk());
 
@@ -408,7 +410,7 @@ TEST_P(NistCurveParamsDeriveTest, TestVectors) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>(std::get<1>(GetParam()))};
 
-  util::StatusOr<EcdsaPrivateKey> private_key =
+  util::StatusOr<EcdsaPrivateKeyProto> private_key =
       EcdsaSignKeyManager().DeriveKey(key_format, &input_stream);
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT(private_key->key_value(),

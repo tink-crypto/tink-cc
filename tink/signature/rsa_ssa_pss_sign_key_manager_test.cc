@@ -46,8 +46,8 @@ using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::RsaSsaPssKeyFormat;
-using ::google::crypto::tink::RsaSsaPssPrivateKey;
-using ::google::crypto::tink::RsaSsaPssPublicKey;
+using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
+using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 using ::testing::Eq;
 using ::testing::Gt;
 using ::testing::Not;
@@ -135,9 +135,9 @@ TEST(RsaSsaPssSignKeyManagerTest, ValidateKeyFormatUnkownHashDisallowed) {
 }
 
 // Runs several sanity checks, checking if a given private key fits a format.
-void CheckNewKey(const RsaSsaPssPrivateKey& private_key,
+void CheckNewKey(const RsaSsaPssPrivateKeyProto& private_key,
                  const RsaSsaPssKeyFormat& key_format) {
-  RsaSsaPssPublicKey public_key = private_key.public_key();
+  RsaSsaPssPublicKeyProto public_key = private_key.public_key();
 
   EXPECT_THAT(private_key.version(), Eq(0));
   EXPECT_THAT(private_key.version(), Eq(public_key.version()));
@@ -198,7 +198,7 @@ void CheckNewKey(const RsaSsaPssPrivateKey& private_key,
 
 TEST(RsaSsaPssSignKeyManagerTest, CreateKey) {
   RsaSsaPssKeyFormat key_format = ValidKeyFormat();
-  StatusOr<RsaSsaPssPrivateKey> private_key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> private_key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key_or, IsOk());
   CheckNewKey(private_key_or.value(), key_format);
@@ -208,7 +208,7 @@ TEST(RsaSsaPssSignKeyManagerTest, CreateKeySmallKey) {
   RsaSsaPssKeyFormat key_format =
       CreateKeyFormat(HashType::SHA256, HashType::SHA256, 32, 3072, RSA_F4);
 
-  StatusOr<RsaSsaPssPrivateKey> private_key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> private_key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key_or, IsOk());
   CheckNewKey(private_key_or.value(), key_format);
@@ -218,14 +218,14 @@ TEST(RsaSsaPssSignKeyManagerTest, CreateKeyLargeKey) {
   RsaSsaPssKeyFormat key_format =
       CreateKeyFormat(HashType::SHA512, HashType::SHA512, 64, 4096, RSA_F4);
 
-  StatusOr<RsaSsaPssPrivateKey> private_key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> private_key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key_or, IsOk());
   CheckNewKey(private_key_or.value(), key_format);
 }
 
 TEST(RsaSsaPssSignKeyManagerTest, CreateKeyValid) {
-  StatusOr<RsaSsaPssPrivateKey> key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> key_or =
       RsaSsaPssSignKeyManager().CreateKey(ValidKeyFormat());
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(RsaSsaPssSignKeyManager().ValidateKey(key_or.value()), IsOk());
@@ -237,7 +237,7 @@ TEST(RsaSsaPssSignKeyManagerTest, CreateKeyAlwaysNewRsaPair) {
   // This test takes about a second per key.
   int num_generated_keys = 5;
   for (int i = 0; i < num_generated_keys; ++i) {
-    StatusOr<RsaSsaPssPrivateKey> key_or =
+    StatusOr<RsaSsaPssPrivateKeyProto> key_or =
         RsaSsaPssSignKeyManager().CreateKey(ValidKeyFormat());
     ASSERT_THAT(key_or, IsOk());
     keys.insert(key_or.value().p());
@@ -247,10 +247,10 @@ TEST(RsaSsaPssSignKeyManagerTest, CreateKeyAlwaysNewRsaPair) {
 }
 
 TEST(RsaSsaPssSignKeyManagerTest, GetPublicKey) {
-  StatusOr<RsaSsaPssPrivateKey> key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> key_or =
       RsaSsaPssSignKeyManager().CreateKey(ValidKeyFormat());
   ASSERT_THAT(key_or, IsOk());
-  StatusOr<RsaSsaPssPublicKey> public_key_or =
+  StatusOr<RsaSsaPssPublicKeyProto> public_key_or =
       RsaSsaPssSignKeyManager().GetPublicKey(key_or.value());
   ASSERT_THAT(public_key_or, IsOk());
   EXPECT_THAT(public_key_or.value().version(),
@@ -262,10 +262,10 @@ TEST(RsaSsaPssSignKeyManagerTest, GetPublicKey) {
 TEST(RsaSsaPssSignKeyManagerTest, Create) {
   RsaSsaPssKeyFormat key_format =
       CreateKeyFormat(HashType::SHA256, HashType::SHA256, 32, 3072, RSA_F4);
-  StatusOr<RsaSsaPssPrivateKey> key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(key_or, IsOk());
-  RsaSsaPssPrivateKey key = key_or.value();
+  RsaSsaPssPrivateKeyProto key = key_or.value();
 
   auto signer_or = RsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key);
   ASSERT_THAT(signer_or, IsOk());
@@ -288,17 +288,17 @@ TEST(RsaSsaPssSignKeyManagerTest, Create) {
 TEST(RsaSsaPssSignKeyManagerTest, CreateWrongKey) {
   RsaSsaPssKeyFormat key_format =
       CreateKeyFormat(HashType::SHA256, HashType::SHA256, 32, 3072, RSA_F4);
-  StatusOr<RsaSsaPssPrivateKey> key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(key_or, IsOk());
-  RsaSsaPssPrivateKey key = key_or.value();
+  RsaSsaPssPrivateKeyProto key = key_or.value();
 
   auto signer_or = RsaSsaPssSignKeyManager().GetPrimitive<PublicKeySign>(key);
 
-  StatusOr<RsaSsaPssPrivateKey> second_key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> second_key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(second_key_or, IsOk());
-  RsaSsaPssPrivateKey second_key = second_key_or.value();
+  RsaSsaPssPrivateKeyProto second_key = second_key_or.value();
 
   ASSERT_THAT(signer_or, IsOk());
 

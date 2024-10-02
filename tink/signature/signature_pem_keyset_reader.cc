@@ -56,9 +56,9 @@ namespace crypto {
 namespace tink {
 
 using ::google::crypto::tink::EcdsaParams;
-using ::google::crypto::tink::EcdsaPrivateKey;
-using ::google::crypto::tink::EcdsaPublicKey;
-using ::google::crypto::tink::Ed25519PublicKey;
+using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
+using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::EncryptedKeyset;
 using ::google::crypto::tink::HashType;
@@ -66,11 +66,12 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
-using ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
-using ::google::crypto::tink::RsaSsaPkcs1PublicKey;
+using RsaSsaPkcs1PrivateKeyProto =
+    ::google::crypto::tink::RsaSsaPkcs1PrivateKey;
+using RsaSsaPkcs1PublicKeyProto = ::google::crypto::tink::RsaSsaPkcs1PublicKey;
 using ::google::crypto::tink::RsaSsaPssParams;
-using ::google::crypto::tink::RsaSsaPssPrivateKey;
-using ::google::crypto::tink::RsaSsaPssPublicKey;
+using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
+using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 
 namespace {
 
@@ -182,10 +183,10 @@ Keyset::Key NewKeysetKey(uint32_t key_id, absl::string_view key_type,
 // Construct a new ECDSA key proto from a subtle ECDSA private key
 // `private_key_subtle`. The key is assigned version `key_version` and
 // key parameters `parameters`.
-util::StatusOr<EcdsaPrivateKey> NewEcdsaPrivateKey(
+util::StatusOr<EcdsaPrivateKeyProto> NewEcdsaPrivateKey(
     const internal::EcKey& private_key_subtle, uint32_t key_version,
     const PemKeyParams& parameters) {
-  EcdsaPrivateKey private_key_proto;
+  EcdsaPrivateKeyProto private_key_proto;
 
   // ECDSA private key parameters.
   private_key_proto.set_version(key_version);
@@ -193,7 +194,8 @@ util::StatusOr<EcdsaPrivateKey> NewEcdsaPrivateKey(
       util::SecretDataAsStringView(private_key_subtle.priv));
 
   // Inner ECDSA public key.
-  EcdsaPublicKey* public_key_proto = private_key_proto.mutable_public_key();
+  EcdsaPublicKeyProto* public_key_proto =
+      private_key_proto.mutable_public_key();
   public_key_proto->set_x(private_key_subtle.pub_x);
   public_key_proto->set_y(private_key_subtle.pub_y);
 
@@ -210,10 +212,10 @@ util::StatusOr<EcdsaPrivateKey> NewEcdsaPrivateKey(
 // Construct a new RSASSA-PSS key proto from a subtle RSA private key
 // `private_key_subtle`; the key is assigned version `key_version` and
 // key paramters `parameters`.
-util::StatusOr<RsaSsaPssPrivateKey> NewRsaSsaPrivateKey(
+util::StatusOr<RsaSsaPssPrivateKeyProto> NewRsaSsaPrivateKey(
     const internal::RsaPrivateKey& private_key_subtle, uint32_t key_version,
     const PemKeyParams& parameters) {
-  RsaSsaPssPrivateKey private_key_proto;
+  RsaSsaPssPrivateKeyProto private_key_proto;
 
   // RSA Private key parameters.
   private_key_proto.set_version(key_version);
@@ -231,7 +233,8 @@ util::StatusOr<RsaSsaPssPrivateKey> NewRsaSsaPrivateKey(
       std::string(util::SecretDataAsStringView(private_key_subtle.crt)));
 
   // Inner RSA public key.
-  RsaSsaPssPublicKey* public_key_proto = private_key_proto.mutable_public_key();
+  RsaSsaPssPublicKeyProto* public_key_proto =
+      private_key_proto.mutable_public_key();
   public_key_proto->set_version(key_version);
   public_key_proto->set_n(private_key_subtle.n);
   public_key_proto->set_e(private_key_subtle.e);
@@ -249,10 +252,10 @@ util::StatusOr<RsaSsaPssPrivateKey> NewRsaSsaPrivateKey(
 // Construct a new RSASSA-PKCS1 key proto from a subtle RSA private key
 // `private_key_subtle`; the key is assigned version `key_version` and
 // key paramters `parameters`.
-RsaSsaPkcs1PrivateKey NewRsaSsaPkcs1PrivateKey(
+RsaSsaPkcs1PrivateKeyProto NewRsaSsaPkcs1PrivateKey(
     const internal::RsaPrivateKey& private_key_subtle, uint32_t key_version,
     const PemKeyParams& parameters) {
-  RsaSsaPkcs1PrivateKey private_key_proto;
+  RsaSsaPkcs1PrivateKeyProto private_key_proto;
 
   // RSA Private key parameters.
   private_key_proto.set_version(key_version);
@@ -270,7 +273,7 @@ RsaSsaPkcs1PrivateKey NewRsaSsaPkcs1PrivateKey(
       std::string(util::SecretDataAsStringView(private_key_subtle.crt)));
 
   // Inner RSA Public key parameters.
-  RsaSsaPkcs1PublicKey* public_key_proto =
+  RsaSsaPkcs1PublicKeyProto* public_key_proto =
       private_key_proto.mutable_public_key();
   public_key_proto->set_version(key_version);
   public_key_proto->set_n(private_key_subtle.n);
@@ -289,7 +292,7 @@ util::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
   if (!private_key_subtle.ok()) return private_key_subtle.status();
 
   EcdsaSignKeyManager key_manager;
-  util::StatusOr<EcdsaPrivateKey> private_key_proto = NewEcdsaPrivateKey(
+  util::StatusOr<EcdsaPrivateKeyProto> private_key_proto = NewEcdsaPrivateKey(
       **private_key_subtle, key_manager.get_version(), pem_key.parameters);
   if (!private_key_proto.ok()) return private_key_proto.status();
 
@@ -328,7 +331,7 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       auto private_key_proto_or = NewRsaSsaPrivateKey(
           *private_key_subtle, key_manager.get_version(), pem_key.parameters);
       if (!private_key_proto_or.ok()) return private_key_proto_or.status();
-      const RsaSsaPssPrivateKey& private_key_proto =
+      const RsaSsaPssPrivateKeyProto& private_key_proto =
           private_key_proto_or.value();
 
       // Validate the key.
@@ -343,7 +346,7 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
     }
     case PemAlgorithm::RSASSA_PKCS1: {
       RsaSsaPkcs1SignKeyManager key_manager;
-      RsaSsaPkcs1PrivateKey private_key_proto = NewRsaSsaPkcs1PrivateKey(
+      RsaSsaPkcs1PrivateKeyProto private_key_proto = NewRsaSsaPkcs1PrivateKey(
           *private_key_subtle, key_manager.get_version(), pem_key.parameters);
 
       // Validate the key.
@@ -376,7 +379,7 @@ util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   std::unique_ptr<internal::EcKey> public_key_subtle =
       std::move(public_key_subtle_or).value();
 
-  EcdsaPublicKey ecdsa_key;
+  EcdsaPublicKeyProto ecdsa_key;
   EcdsaVerifyKeyManager key_manager;
 
   // ECDSA Public Key Parameters
@@ -416,7 +419,7 @@ util::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
     return ecc_public_key.status();
   }
 
-  Ed25519PublicKey ed25519_key;
+  Ed25519PublicKeyProto ed25519_key;
   Ed25519VerifyKeyManager key_manager;
 
   ed25519_key.set_key_value((*ecc_public_key)->public_key);
@@ -451,7 +454,7 @@ util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
 
   switch (pem_key.parameters.algorithm) {
     case PemAlgorithm::RSASSA_PSS: {
-      RsaSsaPssPublicKey public_key_proto;
+      RsaSsaPssPublicKeyProto public_key_proto;
       RsaSsaPssVerifyKeyManager key_manager;
 
       // RSA Public key paramters.
@@ -476,7 +479,7 @@ util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
       break;
     }
     case PemAlgorithm::RSASSA_PKCS1: {
-      RsaSsaPkcs1PublicKey public_key_proto;
+      RsaSsaPkcs1PublicKeyProto public_key_proto;
       RsaSsaPkcs1VerifyKeyManager key_manager;
 
       // RSA Public key paramters.

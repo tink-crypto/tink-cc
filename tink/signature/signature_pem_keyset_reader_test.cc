@@ -57,18 +57,18 @@ namespace {
 using ::crypto::tink::test::EqualsKey;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::EcdsaPrivateKey;
-using ::google::crypto::tink::EcdsaPublicKey;
+using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
+using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
-using ::google::crypto::tink::Ed25519PublicKey;
+using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
-using ::google::crypto::tink::RsaSsaPssPrivateKey;
-using ::google::crypto::tink::RsaSsaPssPublicKey;
+using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
+using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
@@ -274,9 +274,9 @@ constexpr absl::string_view kRsaPrivateKey2048 =
 
 // Helper function that creates an EcdsaPublicKey from the given PEM encoded
 // key `pem_encoded_key`, Hash type `hash_type` and key version `key_version`.
-util::StatusOr<EcdsaPublicKey> GetExpectedEcdsaPublicKeyProto(
+util::StatusOr<EcdsaPublicKeyProto> GetExpectedEcdsaPublicKeyProto(
     EllipticCurveType curve, EcdsaSignatureEncoding encoding) {
-  EcdsaPublicKey public_key_proto;
+  EcdsaPublicKeyProto public_key_proto;
   public_key_proto.set_version(0);
 
   switch (curve) {
@@ -310,10 +310,10 @@ util::StatusOr<EcdsaPublicKey> GetExpectedEcdsaPublicKeyProto(
   return public_key_proto;
 }
 
-util::StatusOr<EcdsaPrivateKey> GetExpectedEcdsaPrivateKeyProto(
+util::StatusOr<EcdsaPrivateKeyProto> GetExpectedEcdsaPrivateKeyProto(
     EllipticCurveType curve, EcdsaSignatureEncoding encoding) {
-  util::StatusOr<EcdsaPublicKey> public_key;
-  EcdsaPrivateKey private_key_proto;
+  util::StatusOr<EcdsaPublicKeyProto> public_key;
+  EcdsaPrivateKeyProto private_key_proto;
   private_key_proto.set_version(0);
 
   switch (curve) {
@@ -348,7 +348,7 @@ util::StatusOr<EcdsaPrivateKey> GetExpectedEcdsaPrivateKeyProto(
 
 // Helper function that creates an RsaSsaPssPublicKey from the given PEM encoded
 // key `pem_encoded_key`, Hash type `hash_type` and key version `key_version`.
-util::StatusOr<RsaSsaPssPublicKey> GetRsaSsaPssPublicKeyProto(
+util::StatusOr<RsaSsaPssPublicKeyProto> GetRsaSsaPssPublicKeyProto(
     absl::string_view pem_encoded_key, HashType hash_type,
     uint32_t key_version) {
   util::StatusOr<std::unique_ptr<internal::RsaPublicKey>> public_key =
@@ -358,7 +358,7 @@ util::StatusOr<RsaSsaPssPublicKey> GetRsaSsaPssPublicKeyProto(
   }
   std::unique_ptr<internal::RsaPublicKey> key_subtle = *std::move(public_key);
 
-  RsaSsaPssPublicKey public_key_proto;
+  RsaSsaPssPublicKeyProto public_key_proto;
   public_key_proto.set_version(key_version);
   public_key_proto.set_e(key_subtle->e);
   public_key_proto.set_n(key_subtle->n);
@@ -373,7 +373,7 @@ util::StatusOr<RsaSsaPssPublicKey> GetRsaSsaPssPublicKeyProto(
 // Helper function that creates an RsaSsaPssPrivateKey from the given PEM
 // encoded key `pem_encoded_key`, Hash type `hash_type` and key version
 // `key_version`.
-util::StatusOr<RsaSsaPssPrivateKey> GetRsaSsaPssPrivateKeyProto(
+util::StatusOr<RsaSsaPssPrivateKeyProto> GetRsaSsaPssPrivateKeyProto(
     absl::string_view pem_encoded_key, HashType hash_type,
     uint32_t key_version) {
   // Parse the key with subtle::PemParser to make sure the proto key fields are
@@ -386,7 +386,7 @@ util::StatusOr<RsaSsaPssPrivateKey> GetRsaSsaPssPrivateKeyProto(
   std::unique_ptr<internal::RsaPrivateKey> key_subtle = *std::move(private_key);
 
   // Set the inner RSASSA-PSS public key and its parameters.
-  RsaSsaPssPrivateKey private_key_proto;
+  RsaSsaPssPrivateKeyProto private_key_proto;
 
   private_key_proto.set_version(key_version);
   private_key_proto.set_d(
@@ -403,7 +403,8 @@ util::StatusOr<RsaSsaPssPrivateKey> GetRsaSsaPssPrivateKeyProto(
       std::string(util::SecretDataAsStringView(key_subtle->crt)));
 
   // Set public key parameters.
-  RsaSsaPssPublicKey* public_key_proto = private_key_proto.mutable_public_key();
+  RsaSsaPssPublicKeyProto* public_key_proto =
+      private_key_proto.mutable_public_key();
   public_key_proto->set_version(key_version);
   public_key_proto->set_e(key_subtle->e);
   public_key_proto->set_n(key_subtle->n);
@@ -463,7 +464,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   expected_keydata1->set_type_url(ecdsa_sign_key_manager.get_key_type());
   expected_keydata1->set_key_material_type(
       ecdsa_sign_key_manager.key_material_type());
-  util::StatusOr<EcdsaPrivateKey> ecdsa_private_key1 =
+  util::StatusOr<EcdsaPrivateKeyProto> ecdsa_private_key1 =
       GetExpectedEcdsaPrivateKeyProto(EllipticCurveType::NIST_P256,
                                       EcdsaSignatureEncoding::IEEE_P1363);
   ASSERT_THAT(ecdsa_private_key1, IsOk());
@@ -481,7 +482,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   expected_keydata2->set_type_url(rsa_sign_key_manager.get_key_type());
   expected_keydata2->set_key_material_type(
       rsa_sign_key_manager.key_material_type());
-  util::StatusOr<RsaSsaPssPrivateKey> rsa_pss_private_key2 =
+  util::StatusOr<RsaSsaPssPrivateKeyProto> rsa_pss_private_key2 =
       GetRsaSsaPssPrivateKeyProto(kRsaPrivateKey2048, HashType::SHA384,
                                   rsa_sign_key_manager.get_version());
   ASSERT_THAT(rsa_pss_private_key2, IsOk());
@@ -525,7 +526,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPublicKeyWithMultipleKeyTypes) {
   expected_keydata1->set_key_material_type(
       verify_key_manager.key_material_type());
 
-  util::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_pub_key =
+  util::StatusOr<RsaSsaPssPublicKeyProto> rsa_ssa_pss_pub_key =
       GetRsaSsaPssPublicKeyProto(kRsaPublicKey2048, HashType::SHA384,
                                  verify_key_manager.get_version());
   ASSERT_THAT(rsa_ssa_pss_pub_key, IsOk());
@@ -544,7 +545,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPublicKeyWithMultipleKeyTypes) {
   expected_secondary_data->set_type_url(key_manager.get_key_type());
   expected_secondary_data->set_key_material_type(
       key_manager.key_material_type());
-  util::StatusOr<EcdsaPublicKey> pub_key = GetExpectedEcdsaPublicKeyProto(
+  util::StatusOr<EcdsaPublicKeyProto> pub_key = GetExpectedEcdsaPublicKeyProto(
       EllipticCurveType::NIST_P256, EcdsaSignatureEncoding::DER);
   ASSERT_THAT(pub_key, IsOk());
   expected_secondary_data->set_value(pub_key->SerializeAsString());
@@ -612,7 +613,7 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPublicKey) {
   expected_keydata1->set_key_material_type(
       verify_key_manager.key_material_type());
 
-  util::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_pub_key =
+  util::StatusOr<RsaSsaPssPublicKeyProto> rsa_ssa_pss_pub_key =
       GetRsaSsaPssPublicKeyProto(kRsaPublicKey2048, HashType::SHA384,
                                  verify_key_manager.get_version());
   ASSERT_THAT(rsa_ssa_pss_pub_key, IsOk());
@@ -713,7 +714,7 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
   expected_keydata1->set_type_url(sign_key_manager.get_key_type());
   expected_keydata1->set_key_material_type(
       sign_key_manager.key_material_type());
-  util::StatusOr<RsaSsaPssPrivateKey> rsa_pss_private_key1 =
+  util::StatusOr<RsaSsaPssPrivateKeyProto> rsa_pss_private_key1 =
       GetRsaSsaPssPrivateKeyProto(kRsaPrivateKey2048, HashType::SHA256,
                                   sign_key_manager.get_version());
   ASSERT_THAT(rsa_pss_private_key1, IsOk());
@@ -983,7 +984,7 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaCorrectPublicKey) {
   KeyData* expected_primary_data = expected_primary.mutable_key_data();
   expected_primary_data->set_type_url(key_manager.get_key_type());
   expected_primary_data->set_key_material_type(key_manager.key_material_type());
-  util::StatusOr<EcdsaPublicKey> pub_key =
+  util::StatusOr<EcdsaPublicKeyProto> pub_key =
       GetExpectedEcdsaPublicKeyProto(test_case.ec_curve, test_case.encoding);
   ASSERT_THAT(pub_key, IsOk());
   expected_primary_data->set_value(pub_key->SerializeAsString());
@@ -1018,7 +1019,7 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {
   expected_keydata1->set_type_url(ecdsa_sign_key_manager.get_key_type());
   expected_keydata1->set_key_material_type(
       ecdsa_sign_key_manager.key_material_type());
-  util::StatusOr<EcdsaPrivateKey> ecdsa_private_key1 =
+  util::StatusOr<EcdsaPrivateKeyProto> ecdsa_private_key1 =
       GetExpectedEcdsaPrivateKeyProto(test_case.ec_curve, test_case.encoding);
   ASSERT_THAT(ecdsa_private_key1, IsOk());
   expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
@@ -1181,7 +1182,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519) {
   expected_key.set_key_id((*keyset)->primary_key_id());
   expected_key.set_status(KeyStatusType::ENABLED);
   expected_key.set_output_prefix_type(OutputPrefixType::RAW);
-  Ed25519PublicKey expected_pub_key;
+  Ed25519PublicKeyProto expected_pub_key;
   expected_pub_key.set_key_value(test::HexDecodeOrDie(kEd25519PublicKeyX));
   expected_key.mutable_key_data()->set_type_url(
       "type.googleapis.com/google.crypto.tink.Ed25519PublicKey");

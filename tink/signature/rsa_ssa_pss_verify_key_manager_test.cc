@@ -48,8 +48,8 @@ using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::RsaSsaPssKeyFormat;
-using ::google::crypto::tink::RsaSsaPssPrivateKey;
-using ::google::crypto::tink::RsaSsaPssPublicKey;
+using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
+using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Not;
@@ -63,8 +63,9 @@ TEST(RsaSsaPssVerifyKeyManagerTest, Basics) {
 }
 
 TEST(RsaSsaPssVerifyKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(RsaSsaPssPublicKey()),
-              Not(IsOk()));
+  EXPECT_THAT(
+      RsaSsaPssVerifyKeyManager().ValidateKey(RsaSsaPssPublicKeyProto()),
+      Not(IsOk()));
 }
 
 RsaSsaPssKeyFormat CreateKeyFormat(HashType sig_hash, HashType mgf1_hash,
@@ -89,11 +90,11 @@ RsaSsaPssKeyFormat ValidKeyFormat() {
   return CreateKeyFormat(HashType::SHA256, HashType::SHA256, 32, 3072, RSA_F4);
 }
 
-RsaSsaPssPrivateKey CreateValidPrivateKey() {
+RsaSsaPssPrivateKeyProto CreateValidPrivateKey() {
   return RsaSsaPssSignKeyManager().CreateKey(ValidKeyFormat()).value();
 }
 
-RsaSsaPssPublicKey CreateValidPublicKey() {
+RsaSsaPssPublicKeyProto CreateValidPublicKey() {
   return RsaSsaPssSignKeyManager()
       .GetPublicKey(CreateValidPrivateKey())
       .value();
@@ -101,39 +102,39 @@ RsaSsaPssPublicKey CreateValidPublicKey() {
 
 // Checks that a public key generaed by the SignKeyManager is considered valid.
 TEST(RsaSsaPssVerifyKeyManagerTest, PublicKeyValid) {
-  RsaSsaPssPublicKey key = CreateValidPublicKey();
+  RsaSsaPssPublicKeyProto key = CreateValidPublicKey();
   EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(RsaSsaPssVerifyKeyManagerTest, PublicKeyWrongVersion) {
-  RsaSsaPssPublicKey key = CreateValidPublicKey();
+  RsaSsaPssPublicKeyProto key = CreateValidPublicKey();
   key.set_version(1);
   EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(RsaSsaPssVerifyKeyManagerTest, PublicKeyHashMismatchDisallowed) {
-  RsaSsaPssPublicKey key = CreateValidPublicKey();
+  RsaSsaPssPublicKeyProto key = CreateValidPublicKey();
   key.mutable_params()->set_sig_hash(HashType::SHA512);
   key.mutable_params()->set_mgf1_hash(HashType::SHA256);
   EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(RsaSsaPssVerifyKeyManagerTest, PublicKeyHashMismatchDisallowed2) {
-  RsaSsaPssPublicKey key = CreateValidPublicKey();
+  RsaSsaPssPublicKeyProto key = CreateValidPublicKey();
   key.mutable_params()->set_sig_hash(HashType::SHA256);
   key.mutable_params()->set_mgf1_hash(HashType::SHA512);
   EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(RsaSsaPssVerifyKeyManagerTest, PublicKeyUnkownHashDisallowed) {
-  RsaSsaPssPublicKey key = CreateValidPublicKey();
+  RsaSsaPssPublicKeyProto key = CreateValidPublicKey();
   key.mutable_params()->set_sig_hash(HashType::UNKNOWN_HASH);
   key.mutable_params()->set_mgf1_hash(HashType::UNKNOWN_HASH);
   EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(RsaSsaPssVerifyKeyManagerTest, ValidateKeyFormatSmallModulusDisallowed) {
-  RsaSsaPssPublicKey key = CreateValidPublicKey();
+  RsaSsaPssPublicKeyProto key = CreateValidPublicKey();
   key.set_n("\x23");
   key.set_e("\x3");
   EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(key),
@@ -142,7 +143,7 @@ TEST(RsaSsaPssVerifyKeyManagerTest, ValidateKeyFormatSmallModulusDisallowed) {
 }
 
 TEST(RsaSsaPssVerifyKeyManagerTest, NegativeSaltLengthFails) {
-  RsaSsaPssPublicKey key = CreateValidPublicKey();
+  RsaSsaPssPublicKeyProto key = CreateValidPublicKey();
   key.mutable_params()->set_salt_length(-5);
   EXPECT_THAT(RsaSsaPssVerifyKeyManager().ValidateKey(key), Not(IsOk()));
 }
@@ -150,11 +151,11 @@ TEST(RsaSsaPssVerifyKeyManagerTest, NegativeSaltLengthFails) {
 TEST(RsaSsaPssSignKeyManagerTest, Create) {
   RsaSsaPssKeyFormat key_format =
       CreateKeyFormat(HashType::SHA256, HashType::SHA256, 32, 3072, RSA_F4);
-  StatusOr<RsaSsaPssPrivateKey> private_key_or =
+  StatusOr<RsaSsaPssPrivateKeyProto> private_key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key_or, IsOk());
-  RsaSsaPssPrivateKey private_key = private_key_or.value();
-  RsaSsaPssPublicKey public_key =
+  RsaSsaPssPrivateKeyProto private_key = private_key_or.value();
+  RsaSsaPssPublicKeyProto public_key =
       RsaSsaPssSignKeyManager().GetPublicKey(private_key).value();
 
   internal::RsaPrivateKey private_key_subtle;
@@ -225,7 +226,7 @@ static const NistTestVector* nist_test_vector = new NistTestVector({
 // clang-format on
 
 TEST(RsaSsaPssVerifyKeyManagerTest, TestVector) {
-  RsaSsaPssPublicKey key;
+  RsaSsaPssPublicKeyProto key;
   key.mutable_params()->set_mgf1_hash(nist_test_vector->mgf1_hash);
   key.mutable_params()->set_sig_hash(nist_test_vector->sig_hash);
   key.mutable_params()->set_salt_length(nist_test_vector->salt_length);

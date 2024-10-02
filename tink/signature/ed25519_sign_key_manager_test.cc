@@ -45,8 +45,8 @@ namespace tink {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::Ed25519KeyFormat;
-using ::google::crypto::tink::Ed25519PrivateKey;
-using ::google::crypto::tink::Ed25519PublicKey;
+using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
+using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
 using ::google::crypto::tink::KeyData;
 using ::testing::Eq;
 using ::testing::Not;
@@ -68,10 +68,10 @@ TEST(Ed25519SignKeyManagerTest, ValidateKeyFormat) {
 }
 
 TEST(Ed25519SignKeyManagerTest, CreateKey) {
-  StatusOr<Ed25519PrivateKey> key_or =
+  StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
-  Ed25519PrivateKey key = key_or.value();
+  Ed25519PrivateKeyProto key = key_or.value();
 
   EXPECT_THAT(key.version(), Eq(0));
 
@@ -82,7 +82,7 @@ TEST(Ed25519SignKeyManagerTest, CreateKey) {
 }
 
 TEST(Ed25519SignKeyManagerTest, CreateKeyValid) {
-  StatusOr<Ed25519PrivateKey> key_or =
+  StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(Ed25519SignKeyManager().ValidateKey(key_or.value()), IsOk());
@@ -92,7 +92,7 @@ TEST(Ed25519SignKeyManagerTest, CreateKeyAlwaysNew) {
   absl::flat_hash_set<std::string> keys;
   int num_tests = 100;
   for (int i = 0; i < num_tests; ++i) {
-    StatusOr<Ed25519PrivateKey> key_or =
+    StatusOr<Ed25519PrivateKeyProto> key_or =
         Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
     ASSERT_THAT(key_or, IsOk());
     keys.insert(std::string(key_or.value().key_value()));
@@ -101,10 +101,10 @@ TEST(Ed25519SignKeyManagerTest, CreateKeyAlwaysNew) {
 }
 
 TEST(Ed25519SignKeyManagerTest, GetPublicKey) {
-  StatusOr<Ed25519PrivateKey> key_or =
+  StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
-  StatusOr<Ed25519PublicKey> public_key_or =
+  StatusOr<Ed25519PublicKeyProto> public_key_or =
       Ed25519SignKeyManager().GetPublicKey(key_or.value());
   ASSERT_THAT(public_key_or, IsOk());
   EXPECT_THAT(public_key_or.value().version(),
@@ -114,10 +114,10 @@ TEST(Ed25519SignKeyManagerTest, GetPublicKey) {
 }
 
 TEST(Ed25519SignKeyManagerTest, Create) {
-  StatusOr<Ed25519PrivateKey> key_or =
+  StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
-  Ed25519PrivateKey key = key_or.value();
+  Ed25519PrivateKeyProto key = key_or.value();
 
   auto signer_or =
       Ed25519SignKeyManager().GetPrimitive<PublicKeySign>(key);
@@ -135,10 +135,10 @@ TEST(Ed25519SignKeyManagerTest, Create) {
 }
 
 TEST(Ed25519SignKeyManagerTest, CreateDifferentKey) {
-  StatusOr<Ed25519PrivateKey> key_or =
+  StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
-  Ed25519PrivateKey key = key_or.value();
+  Ed25519PrivateKeyProto key = key_or.value();
 
   auto signer_or =
       Ed25519SignKeyManager().GetPrimitive<PublicKeySign>(key);
@@ -161,7 +161,7 @@ TEST(Ed25519SignKeyManagerTest, DeriveKey) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
-  StatusOr<Ed25519PrivateKey> key_or =
+  StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(),
@@ -174,7 +174,7 @@ TEST(Ed25519SignKeyManagerTest, DeriveKeySignVerify) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
-  Ed25519PrivateKey key =
+  Ed25519PrivateKeyProto key =
       Ed25519SignKeyManager().DeriveKey(format, &input_stream).value();
   auto signer_or = Ed25519SignKeyManager().GetPrimitive<PublicKeySign>(key);
   ASSERT_THAT(signer_or, IsOk());

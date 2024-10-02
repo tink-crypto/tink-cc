@@ -44,9 +44,9 @@ namespace tink {
 using ::crypto::tink::util::Status;
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::Ed25519KeyFormat;
-using ::google::crypto::tink::Ed25519PrivateKey;
+using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
 
-StatusOr<Ed25519PrivateKey> Ed25519SignKeyManager::CreateKey(
+StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::CreateKey(
     const Ed25519KeyFormat& key_format) const {
   util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
       internal::NewEd25519Key();
@@ -54,7 +54,7 @@ StatusOr<Ed25519PrivateKey> Ed25519SignKeyManager::CreateKey(
     return key.status();
   }
 
-  Ed25519PrivateKey ed25519_private_key;
+  Ed25519PrivateKeyProto ed25519_private_key;
   ed25519_private_key.set_version(get_version());
   ed25519_private_key.set_key_value(
       util::SecretDataAsStringView((*key)->private_key));
@@ -69,7 +69,7 @@ StatusOr<Ed25519PrivateKey> Ed25519SignKeyManager::CreateKey(
 
 StatusOr<std::unique_ptr<PublicKeySign>>
 Ed25519SignKeyManager::PublicKeySignFactory::Create(
-    const Ed25519PrivateKey& private_key) const {
+    const Ed25519PrivateKeyProto& private_key) const {
   // BoringSSL expects a 64-byte private key which contains the public key as a
   // suffix.
   util::SecretData sk;
@@ -87,7 +87,8 @@ Ed25519SignKeyManager::PublicKeySignFactory::Create(
   return subtle::Ed25519SignBoringSsl::New(sk);
 }
 
-Status Ed25519SignKeyManager::ValidateKey(const Ed25519PrivateKey& key) const {
+Status Ed25519SignKeyManager::ValidateKey(
+    const Ed25519PrivateKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().length() != 32) {
@@ -97,7 +98,7 @@ Status Ed25519SignKeyManager::ValidateKey(const Ed25519PrivateKey& key) const {
   return Ed25519VerifyKeyManager().ValidateKey(key.public_key());
 }
 
-StatusOr<Ed25519PrivateKey> Ed25519SignKeyManager::DeriveKey(
+StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
     const Ed25519KeyFormat& key_format, InputStream* input_stream) const {
   util::Status status = ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
@@ -115,7 +116,7 @@ StatusOr<Ed25519PrivateKey> Ed25519SignKeyManager::DeriveKey(
   util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
       internal::NewEd25519Key(*randomness);
 
-  Ed25519PrivateKey ed25519_private_key;
+  Ed25519PrivateKeyProto ed25519_private_key;
   ed25519_private_key.set_version(get_version());
   ed25519_private_key.set_key_value(
       util::SecretDataAsStringView((*key)->private_key));

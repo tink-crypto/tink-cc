@@ -291,14 +291,14 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
       *output_prefix_type, key.GetIdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+util::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
     const MlKemPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
   util::StatusOr<RestrictedData> restricted_input =
-      key.GetPrivateKeyBytes(GetPartialKeyAccess());
+      key.GetPrivateSeedBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
   }
@@ -365,7 +365,7 @@ MlKemProtoPrivateKeyParserImpl& MlKemProtoPrivateKeyParser() {
 
 MlKemProtoPrivateKeySerializerImpl& MlKemProtoPrivateKeySerializer() {
   static auto* serializer =
-      new MlKemProtoPrivateKeySerializerImpl(SerializePrivateKey);
+      new MlKemProtoPrivateKeySerializerImpl(SerializePrivateSeed);
   return *serializer;
 }
 

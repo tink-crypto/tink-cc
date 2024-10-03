@@ -22,8 +22,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
@@ -75,10 +74,10 @@ util::StatusOr<MlKemPublicKey> MlKemPublicKey::Create(
                         "currently supported.");
   }
 
-  if (public_key_bytes.size() != KYBER_PUBLIC_KEY_BYTES) {
+  if (public_key_bytes.size() != MLKEM768_PUBLIC_KEY_BYTES) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Invalid ML-KEM public key size. Only ",
-                                     KYBER_PUBLIC_KEY_BYTES,
+                                     MLKEM768_PUBLIC_KEY_BYTES,
                                      "-byte keys are currently supported."));
   }
 

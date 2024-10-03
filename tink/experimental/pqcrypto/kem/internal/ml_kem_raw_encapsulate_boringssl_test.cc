@@ -21,8 +21,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
@@ -57,8 +56,8 @@ TEST(MlKemRawEncapsulateBoringSslTest, EncapsulationLengthsAreCorrect) {
   ASSERT_THAT(kem_encasulation, IsOk());
 
   EXPECT_EQ(kem_encasulation->ciphertext.size(),
-            KYBER_CIPHERTEXT_BYTES + private_key->GetOutputPrefix().size());
-  EXPECT_EQ(kem_encasulation->shared_secret.size(), KYBER_SHARED_SECRET_BYTES);
+            MLKEM768_CIPHERTEXT_BYTES + private_key->GetOutputPrefix().size());
+  EXPECT_EQ(kem_encasulation->shared_secret.size(), MLKEM_SHARED_SECRET_BYTES);
 }
 
 TEST(MlKemRawEncapsulateBoringSslTest, EncapsulationIsNonDeterministic) {

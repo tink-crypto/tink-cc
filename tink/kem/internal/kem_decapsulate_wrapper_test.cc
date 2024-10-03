@@ -28,10 +28,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#include "tink/internal/registry_impl.h"
-#include "tink/registry.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/aead/aes_gcm_parameters.h"
@@ -41,6 +38,7 @@
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/kem/internal/kem_encapsulate_wrapper.h"
 #include "tink/kem/kem_decapsulate.h"
 #include "tink/kem/kem_encapsulate.h"
@@ -48,6 +46,7 @@
 #include "tink/monitoring/monitoring.h"
 #include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
+#include "tink/registry.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -326,22 +325,23 @@ TEST_F(KemDecapsulateWrapperTest, DecapsulateArbitraryBytes) {
   // Decapsulating with the primary key works.
   util::StatusOr<KeysetHandle> decapsulate =
       (*kem_decapsulate)
-          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("07213743"),
-                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+          ->Decapsulate(
+              absl::StrCat("\x01", HexDecodeOrDie("07213743"),
+                           std::string(MLKEM768_CIPHERTEXT_BYTES, 'A')));
   EXPECT_THAT(decapsulate.status(), IsOk());
 
   // Decapsulating also works with a non-primary key.
-  decapsulate =
-      (*kem_decapsulate)
-          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("01234543"),
-                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+  decapsulate = (*kem_decapsulate)
+                    ->Decapsulate(absl::StrCat(
+                        "\x01", HexDecodeOrDie("01234543"),
+                        std::string(MLKEM768_CIPHERTEXT_BYTES, 'A')));
   EXPECT_THAT(decapsulate.status(), IsOk());
 
   // Decapsulating doesn't work with an unknown prefix.
-  decapsulate =
-      (*kem_decapsulate)
-          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("01234567"),
-                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+  decapsulate = (*kem_decapsulate)
+                    ->Decapsulate(absl::StrCat(
+                        "\x01", HexDecodeOrDie("01234567"),
+                        std::string(MLKEM768_CIPHERTEXT_BYTES, 'A')));
   EXPECT_THAT(
       decapsulate.status(),
       StatusIs(
@@ -508,28 +508,29 @@ TEST_F(KemDecapsulateWrapperTestWithMonitoring, DecapsulateArbitraryBytes) {
 
   // Decapsulating with the primary key works.
   EXPECT_CALL(*decapsulation_monitoring_client_ptr_,
-              Log(0x07213743, KYBER_CIPHERTEXT_BYTES + 5));
+              Log(0x07213743, MLKEM768_CIPHERTEXT_BYTES + 5));
   util::StatusOr<KeysetHandle> decapsulate =
       (*kem_decapsulate)
-          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("07213743"),
-                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+          ->Decapsulate(
+              absl::StrCat("\x01", HexDecodeOrDie("07213743"),
+                           std::string(MLKEM768_CIPHERTEXT_BYTES, 'A')));
   EXPECT_THAT(decapsulate.status(), IsOk());
 
   // Decapsulating also works with a non-primary key.
   EXPECT_CALL(*decapsulation_monitoring_client_ptr_,
-              Log(0x01234543, KYBER_CIPHERTEXT_BYTES + 5));
-  decapsulate =
-      (*kem_decapsulate)
-          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("01234543"),
-                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+              Log(0x01234543, MLKEM768_CIPHERTEXT_BYTES + 5));
+  decapsulate = (*kem_decapsulate)
+                    ->Decapsulate(absl::StrCat(
+                        "\x01", HexDecodeOrDie("01234543"),
+                        std::string(MLKEM768_CIPHERTEXT_BYTES, 'A')));
   EXPECT_THAT(decapsulate.status(), IsOk());
 
   // Decapsulating doesn't work with an unknown prefix.
   EXPECT_CALL(*decapsulation_monitoring_client_ptr_, LogFailure());
-  decapsulate =
-      (*kem_decapsulate)
-          ->Decapsulate(absl::StrCat("\x01", HexDecodeOrDie("01234567"),
-                                     std::string(KYBER_CIPHERTEXT_BYTES, 'A')));
+  decapsulate = (*kem_decapsulate)
+                    ->Decapsulate(absl::StrCat(
+                        "\x01", HexDecodeOrDie("01234567"),
+                        std::string(MLKEM768_CIPHERTEXT_BYTES, 'A')));
   EXPECT_THAT(
       decapsulate.status(),
       StatusIs(

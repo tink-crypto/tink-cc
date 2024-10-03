@@ -321,7 +321,6 @@ cc_test(
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:secret_data",
-        "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@boringssl//:crypto",

@@ -24,8 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/util/secret_data.h"
@@ -60,11 +59,12 @@ INSTANTIATE_TEST_SUITE_P(
 
 std::string GeneratePublicKey() {
   std::string public_key_bytes;
-  public_key_bytes.resize(KYBER_PUBLIC_KEY_BYTES);
-  auto bssl_private_key = util::MakeSecretUniquePtr<KYBER_private_key>();
+  public_key_bytes.resize(MLKEM768_PUBLIC_KEY_BYTES);
+  auto bssl_private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
 
-  KYBER_generate_key(reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
-                     bssl_private_key.get());
+  MLKEM768_generate_key(reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+                        /* optional_out_seed = */ nullptr,
+                        bssl_private_key.get());
 
   return public_key_bytes;
 }
@@ -99,12 +99,13 @@ TEST_P(MlKemPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
   std::string public_key_bytes = GeneratePublicKey();
   EXPECT_THAT(
       MlKemPublicKey::Create(
-          *parameters, public_key_bytes.substr(0, KYBER_PUBLIC_KEY_BYTES - 1),
+          *parameters,
+          public_key_bytes.substr(0, MLKEM768_PUBLIC_KEY_BYTES - 1),
           test_case.id_requirement, GetPartialKeyAccess())
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat("Invalid ML-KEM public key size. Only ",
-                                      KYBER_PUBLIC_KEY_BYTES,
+                                      MLKEM768_PUBLIC_KEY_BYTES,
                                       "-byte keys are currently supported."))));
 
   public_key_bytes.push_back(0);
@@ -114,7 +115,7 @@ TEST_P(MlKemPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr(absl::StrCat("Invalid ML-KEM public key size. Only ",
-                                      KYBER_PUBLIC_KEY_BYTES,
+                                      MLKEM768_PUBLIC_KEY_BYTES,
                                       "-byte keys are currently supported."))));
 }
 

@@ -25,10 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
-#include "openssl/base.h"
-#include "openssl/bytestring.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
@@ -59,17 +56,17 @@ class MlKemRawDecapsulateBoringSsl : public RawKemDecapsulate {
 
   explicit MlKemRawDecapsulateBoringSsl(
       MlKemPrivateKey private_key,
-      util::SecretUniquePtr<KYBER_private_key> boringssl_private_key)
+      util::SecretUniquePtr<MLKEM768_private_key> boringssl_private_key)
       : private_key_(std::move(private_key)),
         boringssl_private_key_(std::move(boringssl_private_key)) {}
 
   MlKemPrivateKey private_key_;
-  util::SecretUniquePtr<KYBER_private_key> boringssl_private_key_;
+  util::SecretUniquePtr<MLKEM768_private_key> boringssl_private_key_;
 };
 
 util::StatusOr<std::unique_ptr<RawKemDecapsulate>>
 MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
-  auto status = CheckFipsCompatibility<MlKemRawDecapsulateBoringSsl>();
+  util::Status status = CheckFipsCompatibility<MlKemRawDecapsulateBoringSsl>();
   if (!status.ok()) {
     return status;
   }
@@ -79,28 +76,29 @@ MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
                         "Only ML-KEM 768 is supported");
   }
 
-  absl::string_view private_key_bytes =
-      recipient_key.GetPrivateKeyBytes(GetPartialKeyAccess())
+  absl::string_view private_seed_bytes =
+      recipient_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
 
-  CBS cbs;
-  CBS_init(&cbs, reinterpret_cast<const uint8_t*>(private_key_bytes.data()),
-           private_key_bytes.size());
-  auto private_key = util::MakeSecretUniquePtr<KYBER_private_key>();
-  if (!KYBER_parse_private_key(private_key.get(), &cbs)) {
+  auto boringssl_private_key =
+      util::MakeSecretUniquePtr<MLKEM768_private_key>();
+  if (!MLKEM768_private_key_from_seed(
+          boringssl_private_key.get(),
+          reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
+          private_seed_bytes.size())) {
     return util::Status(absl::StatusCode::kInternal,
-                        "Invalid ML-KEM private key.");
+                        "Failed to expand ML-KEM private key from seed.");
   }
 
   return absl::make_unique<MlKemRawDecapsulateBoringSsl>(
-      std::move(recipient_key), std::move(private_key));
+      std::move(recipient_key), std::move(boringssl_private_key));
 }
 
 util::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
     absl::string_view ciphertext) const {
   size_t output_prefix_size = private_key_.GetOutputPrefix().size();
 
-  if (ciphertext.size() != KYBER_CIPHERTEXT_BYTES + output_prefix_size) {
+  if (ciphertext.size() != MLKEM768_CIPHERTEXT_BYTES + output_prefix_size) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Decapsulation failed: incorrect ciphertext size for ML-KEM");
@@ -111,10 +109,11 @@ util::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
                         "Decapsulation failed: invalid output prefix");
   }
 
-  util::SecretData shared_secret(KYBER_SHARED_SECRET_BYTES);
-  KYBER_decap(shared_secret.data(),
-              reinterpret_cast<const uint8_t*>(&ciphertext[output_prefix_size]),
-              boringssl_private_key_.get());
+  util::SecretData shared_secret(MLKEM_SHARED_SECRET_BYTES);
+  MLKEM768_decap(
+      shared_secret.data(),
+      reinterpret_cast<const uint8_t*>(&ciphertext[output_prefix_size]),
+      MLKEM768_CIPHERTEXT_BYTES, boringssl_private_key_.get());
 
   return RestrictedData(shared_secret, InsecureSecretKeyAccess::Get());
 }

@@ -27,20 +27,19 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#include "tink/internal/registry_impl.h"
-#include "tink/registry.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/aead/aead_config.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_encapsulate_aes_gcm.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
+#include "tink/internal/registry_impl.h"
 #include "tink/kem/kem_encapsulate.h"
 #include "tink/monitoring/monitoring.h"
 #include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
+#include "tink/registry.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -258,7 +257,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapMultiple) {
       (*kem_encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulate_result, IsOk());
   EXPECT_THAT(encapsulate_result->ciphertext.size(),
-              Eq(KYBER_CIPHERTEXT_BYTES + 5));
+              Eq(MLKEM768_CIPHERTEXT_BYTES + 5));
 }
 
 // Tests with monitoring enabled.
@@ -307,7 +306,7 @@ TEST_F(KemEncapsulateWrapperTestWithMonitoring, Encapsulate) {
       (*kem_encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulate_result, IsOk());
   EXPECT_THAT(encapsulate_result->ciphertext.size(),
-              Eq(KYBER_CIPHERTEXT_BYTES + 5));
+              Eq(MLKEM768_CIPHERTEXT_BYTES + 5));
 }
 
 }  // namespace

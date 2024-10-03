@@ -27,8 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
@@ -57,17 +56,17 @@ class MlKemRawEncapsulateBoringSsl : public RawKemEncapsulate {
 
   explicit MlKemRawEncapsulateBoringSsl(
       MlKemPublicKey public_key,
-      std::unique_ptr<KYBER_public_key> boringssl_public_key)
+      std::unique_ptr<MLKEM768_public_key> boringssl_public_key)
       : public_key_(std::move(public_key)),
         boringssl_public_key_(std::move(boringssl_public_key)) {}
 
   MlKemPublicKey public_key_;
-  std::unique_ptr<KYBER_public_key> boringssl_public_key_;
+  std::unique_ptr<MLKEM768_public_key> boringssl_public_key_;
 };
 
 util::StatusOr<std::unique_ptr<RawKemEncapsulate>>
 MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
-  auto status = CheckFipsCompatibility<MlKemRawEncapsulateBoringSsl>();
+  util::Status status = CheckFipsCompatibility<MlKemRawEncapsulateBoringSsl>();
   if (!status.ok()) {
     return status;
   }
@@ -83,8 +82,8 @@ MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
   CBS cbs;
   CBS_init(&cbs, reinterpret_cast<const uint8_t*>(public_key_bytes.data()),
            public_key_bytes.size());
-  auto public_key = std::make_unique<KYBER_public_key>();
-  if (!KYBER_parse_public_key(public_key.get(), &cbs)) {
+  auto public_key = std::make_unique<MLKEM768_public_key>();
+  if (!MLKEM768_parse_public_key(public_key.get(), &cbs)) {
     return util::Status(absl::StatusCode::kInternal,
                         "Invalid ML-KEM public key");
   }
@@ -100,11 +99,11 @@ util::StatusOr<RawKemEncapsulation> MlKemRawEncapsulateBoringSsl::Encapsulate()
   // The ciphertext will be prepended with the output prefix for TINK keys.
   std::string ciphertext(public_key_.GetOutputPrefix());
   subtle::ResizeStringUninitialized(
-      &ciphertext, output_prefix_size + KYBER_CIPHERTEXT_BYTES);
+      &ciphertext, output_prefix_size + MLKEM768_CIPHERTEXT_BYTES);
 
-  util::SecretData shared_secret(KYBER_SHARED_SECRET_BYTES);
-  KYBER_encap(reinterpret_cast<uint8_t*>(&ciphertext[output_prefix_size]),
-              shared_secret.data(), boringssl_public_key_.get());
+  util::SecretData shared_secret(MLKEM_SHARED_SECRET_BYTES);
+  MLKEM768_encap(reinterpret_cast<uint8_t*>(&ciphertext[output_prefix_size]),
+                 shared_secret.data(), boringssl_public_key_.get());
 
   return RawKemEncapsulation{
       std::move(ciphertext),

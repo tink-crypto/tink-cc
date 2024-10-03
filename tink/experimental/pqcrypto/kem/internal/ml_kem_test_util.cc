@@ -25,8 +25,7 @@
 #include "absl/types/optional.h"
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
@@ -48,27 +47,17 @@ util::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
                         "Only ML-KEM 768 is supported");
   }
 
-  std::string public_key_bytes(KYBER_PUBLIC_KEY_BYTES, '\0');
-  auto private_key = util::MakeSecretUniquePtr<KYBER_private_key>();
-  KYBER_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                     private_key.get());
-
-  CBB cbb;
-  size_t size;
-  util::SecretData private_key_bytes(KYBER_PRIVATE_KEY_BYTES);
-  if (!CBB_init_fixed(&cbb, private_key_bytes.data(),
-                      KYBER_PRIVATE_KEY_BYTES) ||
-      !KYBER_marshal_private_key(&cbb, private_key.get()) ||
-      !CBB_finish(&cbb, nullptr, &size) || size != KYBER_PRIVATE_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "Failed to serialize ML-KEM private key");
-  }
+  std::string public_key_bytes(MLKEM768_PUBLIC_KEY_BYTES, '\0');
+  util::SecretData private_seed_bytes(MLKEM_SEED_BYTES);
+  auto private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
+  MLKEM768_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                        private_seed_bytes.data(), private_key.get());
 
   util::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       key_parameters, public_key_bytes, id_requirement, GetPartialKeyAccess());
 
   return MlKemPrivateKey::Create(*public_key,
-                                 RestrictedData(std::move(private_key_bytes),
+                                 RestrictedData(std::move(private_seed_bytes),
                                                 InsecureSecretKeyAccess::Get()),
                                  GetPartialKeyAccess());
 }

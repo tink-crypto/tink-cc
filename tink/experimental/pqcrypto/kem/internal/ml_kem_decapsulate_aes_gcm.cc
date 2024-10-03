@@ -24,8 +24,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
+#include "openssl/mlkem.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_raw_decapsulate_boringssl.h"
@@ -75,12 +74,12 @@ util::StatusOr<std::unique_ptr<KemDecapsulate>> MlKemDecapsulateAes256Gcm::New(
     return status;
   }
 
-  if (aes_gcm_parameters.KeySizeInBytes() != KYBER_SHARED_SECRET_BYTES) {
+  if (aes_gcm_parameters.KeySizeInBytes() != MLKEM_SHARED_SECRET_BYTES) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("AES-GCM parameters are not compatible with ML-KEM: the "
                      "ML-KEM shared secret is ",
-                     KYBER_SHARED_SECRET_BYTES,
+                     MLKEM_SHARED_SECRET_BYTES,
                      " bytes but the AES key size is ",
                      aes_gcm_parameters.KeySizeInBytes(), " bytes"));
   }

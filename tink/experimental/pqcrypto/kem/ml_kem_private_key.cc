@@ -26,9 +26,8 @@
 #include "absl/strings/string_view.h"
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_KYBER
-#include "openssl/experimental/kyber.h"
 #include "openssl/mem.h"
+#include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
@@ -42,13 +41,13 @@ namespace crypto {
 namespace tink {
 
 util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
-    const MlKemPublicKey& public_key, const RestrictedData& private_key_bytes,
+    const MlKemPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
-  if (private_key_bytes.size() != KYBER_PRIVATE_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        absl::StrCat("Invalid ML-KEM private key size. Only ",
-                                     KYBER_PRIVATE_KEY_BYTES,
-                                     "-byte keys are currently supported."));
+  if (private_seed_bytes.size() != MLKEM_SEED_BYTES) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrCat("Invalid ML-KEM private seed. The seed must be ",
+                     MLKEM_SEED_BYTES, " bytes."));
   }
 
   if (public_key.GetParameters().GetKeySize() != 768) {
@@ -58,30 +57,30 @@ util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
   }
 
   // Confirm that the private key and public key are a valid ML-KEM key pair.
-  auto bssl_private_key = util::MakeSecretUniquePtr<KYBER_private_key>();
-  auto private_key_view =
-      private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get());
-  CBS cbs;
-  CBS_init(&cbs, reinterpret_cast<const uint8_t*>(private_key_view.data()),
-           private_key_view.size());
-  if (!KYBER_parse_private_key(bssl_private_key.get(), &cbs)) {
+  absl::string_view private_seed_view =
+      private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get());
+  auto bssl_private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
+  if (!MLKEM768_private_key_from_seed(
+          bssl_private_key.get(),
+          reinterpret_cast<const uint8_t*>(private_seed_view.data()),
+          private_seed_view.size())) {
     return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid ML-KEM private key.");
+                        "Failed to create ML-KEM private key from seed.");
   }
 
-  auto bssl_public_key = absl::make_unique<KYBER_public_key>();
-  KYBER_public_from_private(bssl_public_key.get(), bssl_private_key.get());
+  auto bssl_public_key = absl::make_unique<MLKEM768_public_key>();
+  MLKEM768_public_from_private(bssl_public_key.get(), bssl_private_key.get());
 
   std::string public_key_bytes_regen;
-  public_key_bytes_regen.resize(KYBER_PUBLIC_KEY_BYTES);
+  public_key_bytes_regen.resize(MLKEM768_PUBLIC_KEY_BYTES);
 
   CBB cbb;
   size_t size;
   if (!CBB_init_fixed(&cbb,
                       reinterpret_cast<uint8_t*>(&public_key_bytes_regen[0]),
-                      KYBER_PUBLIC_KEY_BYTES) ||
-      !KYBER_marshal_public_key(&cbb, bssl_public_key.get()) ||
-      !CBB_finish(&cbb, nullptr, &size) || size != KYBER_PUBLIC_KEY_BYTES) {
+                      MLKEM768_PUBLIC_KEY_BYTES) ||
+      !MLKEM768_marshal_public_key(&cbb, bssl_public_key.get()) ||
+      !CBB_finish(&cbb, nullptr, &size) || size != MLKEM768_PUBLIC_KEY_BYTES) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid ML-KEM public key.");
   }
@@ -91,12 +90,12 @@ util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
 
   if (CRYPTO_memcmp(expected_public_key_bytes.data(),
                     public_key_bytes_regen.data(),
-                    KYBER_PUBLIC_KEY_BYTES) != 0) {
+                    MLKEM768_PUBLIC_KEY_BYTES) != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid ML-KEM key pair");
+                        "ML-KEM public key doesn't match the private key.");
   }
 
-  return MlKemPrivateKey(public_key, private_key_bytes);
+  return MlKemPrivateKey(public_key, private_seed_bytes);
 }
 
 bool MlKemPrivateKey::operator==(const Key& other) const {
@@ -105,7 +104,7 @@ bool MlKemPrivateKey::operator==(const Key& other) const {
     return false;
   }
   return public_key_ == that->public_key_ &&
-         private_key_bytes_ == that->private_key_bytes_;
+         private_seed_bytes_ == that->private_seed_bytes_;
 }
 
 }  // namespace tink

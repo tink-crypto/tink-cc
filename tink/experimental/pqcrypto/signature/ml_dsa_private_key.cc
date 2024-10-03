@@ -26,12 +26,12 @@
 #include "absl/strings/string_view.h"
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
+#include "openssl/mem.h"
 #include "openssl/mldsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
-#include "tink/partial_key_access.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
 #include "tink/util/secret_data.h"
@@ -78,9 +78,10 @@ util::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
 
   CBB cbb;
   size_t size;
-  std::string public_key_bytes;
-  public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
-  if (!CBB_init_fixed(&cbb, reinterpret_cast<uint8_t*>(public_key_bytes.data()),
+  std::string public_key_bytes_regen;
+  public_key_bytes_regen.resize(MLDSA65_PUBLIC_KEY_BYTES);
+  if (!CBB_init_fixed(&cbb,
+                      reinterpret_cast<uint8_t*>(public_key_bytes_regen.data()),
                       MLDSA65_PUBLIC_KEY_BYTES) ||
       !MLDSA65_marshal_public_key(&cbb, boringssl_public_key.get()) ||
       !CBB_finish(&cbb, nullptr, &size) || size != MLDSA65_PUBLIC_KEY_BYTES) {
@@ -88,7 +89,12 @@ util::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
                         "Failed to serialize ML-DSA public key.");
   }
 
-  if (public_key.GetPublicKeyBytes(GetPartialKeyAccess()) != public_key_bytes) {
+  absl::string_view expected_public_key_bytes =
+      public_key.GetPublicKeyBytes(token);
+
+  if (CRYPTO_memcmp(expected_public_key_bytes.data(),
+                    public_key_bytes_regen.data(),
+                    MLDSA65_PUBLIC_KEY_BYTES) != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "ML-DSA public key doesn't match the private key.");
   }

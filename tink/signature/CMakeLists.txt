@@ -1127,12 +1127,20 @@ tink_cc_test(
   DEPS
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
+    tink::signature::signature_config
     gmock
     absl::flat_hash_set
+    absl::optional
     crypto
+    tink::core::key_status
+    tink::core::keyset_handle
     tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::config::global_registry
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::util::status

@@ -1,5 +1,7 @@
 tink_module(signature::internal)
 
+add_subdirectory(testing)
+
 tink_cc_library(
   NAME ecdsa_raw_sign_boringssl
   SRCS

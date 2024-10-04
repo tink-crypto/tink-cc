@@ -1,0 +1,41 @@
+package(
+    default_testonly = 1,
+    default_visibility = ["//:__subpackages__"],
+)
+
+licenses(["notice"])
+
+cc_library(
+    name = "rsa_ssa_pkcs1_test_vectors",
+    testonly = 1,
+    srcs = ["rsa_ssa_pkcs1_test_vectors.cc"],
+    hdrs = ["rsa_ssa_pkcs1_test_vectors.h"],
+    include_prefix = "tink/signature/internal/testing",
+    deps = [
+        ":signature_test_vector",
+        "//tink:big_integer",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_big_integer",
+        "//tink/signature:rsa_ssa_pkcs1_parameters",
+        "//tink/signature:rsa_ssa_pkcs1_private_key",
+        "//tink/signature:rsa_ssa_pkcs1_public_key",
+        "//tink/util:statusor",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_library(
+    name = "signature_test_vector",
+    testonly = 1,
+    hdrs = ["signature_test_vector.h"],
+    include_prefix = "tink/signature/internal/testing",
+    deps = [
+        "//tink/signature:signature_private_key",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)

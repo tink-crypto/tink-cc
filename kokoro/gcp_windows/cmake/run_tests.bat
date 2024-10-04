@@ -35,10 +35,10 @@ CD "build"
   -DTINK_BUILD_TESTS=ON
 IF %errorlevel% neq 0 EXIT /B 1
 
-%CMAKE_BIN% --build . --config Debug --parallel 4
+%CMAKE_BIN% --build . --config Release --parallel 8
 IF %errorlevel% neq 0 EXIT /B 1
 
-%CTEST_BIN% -C Debug
+%CTEST_BIN% -C Release
 IF %errorlevel% neq 0 EXIT /B 1
 
 EXIT /B 0

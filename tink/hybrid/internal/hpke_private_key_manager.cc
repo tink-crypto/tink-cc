@@ -41,11 +41,11 @@ using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkeKeyFormat;
-using ::google::crypto::tink::HpkePrivateKey;
-using ::google::crypto::tink::HpkePublicKey;
+using HpkePrivateKeyProto = ::google::crypto::tink::HpkePrivateKey;
+using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 
-util::Status GenerateX25519Key(HpkePublicKey& public_key,
-                               HpkePrivateKey& private_key) {
+util::Status GenerateX25519Key(HpkePublicKeyProto& public_key,
+                               HpkePrivateKeyProto& private_key) {
   util::StatusOr<std::unique_ptr<internal::X25519Key>> key =
       internal::NewX25519Key();
   if (!key.ok()) {
@@ -56,8 +56,8 @@ util::Status GenerateX25519Key(HpkePublicKey& public_key,
   return util::OkStatus();
 }
 
-util::Status GenerateEcKey(HpkePublicKey& public_key,
-                           HpkePrivateKey& private_key,
+util::Status GenerateEcKey(HpkePublicKeyProto& public_key,
+                           HpkePrivateKeyProto& private_key,
                            EllipticCurveType ec_curve_type) {
   util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(ec_curve_type);
   if (!ec_key.ok()) {
@@ -92,12 +92,12 @@ util::Status HpkePrivateKeyManager::ValidateKeyFormat(
   return ValidateParams(key_format.params());
 }
 
-util::StatusOr<HpkePrivateKey> HpkePrivateKeyManager::CreateKey(
+util::StatusOr<HpkePrivateKeyProto> HpkePrivateKeyManager::CreateKey(
     const HpkeKeyFormat& key_format) const {
   // Set key metadata.
-  HpkePrivateKey private_key;
+  HpkePrivateKeyProto private_key;
   private_key.set_version(get_version());
-  HpkePublicKey* public_key = private_key.mutable_public_key();
+  HpkePublicKeyProto* public_key = private_key.mutable_public_key();
   public_key->set_version(get_version());
   *(public_key->mutable_params()) = key_format.params();
   // Generate key material.
@@ -141,13 +141,13 @@ util::StatusOr<HpkePrivateKey> HpkePrivateKeyManager::CreateKey(
   return private_key;
 }
 
-util::StatusOr<HpkePublicKey> HpkePrivateKeyManager::GetPublicKey(
-    const HpkePrivateKey& private_key) const {
+util::StatusOr<HpkePublicKeyProto> HpkePrivateKeyManager::GetPublicKey(
+    const HpkePrivateKeyProto& private_key) const {
   return private_key.public_key();
 }
 
 util::Status HpkePrivateKeyManager::ValidateKey(
-    const HpkePrivateKey& key) const {
+    const HpkePrivateKeyProto& key) const {
   util::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (!key.has_public_key()) {

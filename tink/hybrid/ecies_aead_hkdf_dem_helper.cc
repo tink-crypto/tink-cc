@@ -51,7 +51,7 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::subtle::AeadOrDaead;
-using ::google::crypto::tink::AesCtrHmacAeadKey;
+using AesCtrHmacAeadKeyProto = ::google::crypto::tink::AesCtrHmacAeadKey;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::AesSivKeyFormat;
@@ -145,7 +145,7 @@ EciesAeadHkdfDemHelper::GetAeadOrDaead(
     case AES_GCM_KEY:
       return Wrap(subtle::AesGcmBoringSsl::New(symmetric_key_value));
     case AES_CTR_HMAC_AEAD_KEY: {
-      AesCtrHmacAeadKey key;
+      AesCtrHmacAeadKeyProto key;
       auto aes_ctr_key = key.mutable_aes_ctr_key();
       aes_ctr_key->mutable_params()->set_iv_size(
           key_params_.aes_ctr_key_iv_size_in_bytes);

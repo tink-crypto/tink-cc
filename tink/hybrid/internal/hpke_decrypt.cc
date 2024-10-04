@@ -38,12 +38,12 @@ namespace {
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
-using ::google::crypto::tink::HpkePrivateKey;
+using HpkePrivateKeyProto = ::google::crypto::tink::HpkePrivateKey;
 
 }  // namespace
 
 util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
-    const HpkePrivateKey& recipient_private_key) {
+    const HpkePrivateKeyProto& recipient_private_key) {
   if (recipient_private_key.private_key().empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key is empty.");

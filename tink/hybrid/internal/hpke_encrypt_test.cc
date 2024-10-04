@@ -48,7 +48,7 @@ using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkeParams;
-using ::google::crypto::tink::HpkePublicKey;
+using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 using ::testing::SizeIs;
 using ::testing::Values;
 
@@ -80,7 +80,7 @@ TEST_P(HpkeEncryptTest, SetupSenderContextAndEncrypt) {
 
   util::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
   ASSERT_THAT(params, IsOk());
-  HpkePublicKey recipient_key =
+  HpkePublicKeyProto recipient_key =
       CreateHpkePublicKey(hpke_params, params->recipient_public_key);
   util::StatusOr<std::unique_ptr<HybridEncrypt>> hpke_encrypt =
       HpkeEncrypt::New(recipient_key);
@@ -121,7 +121,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HpkeEncryptWithBadParamTest, BadParamFails) {
   HpkeParams hpke_params = GetParam();
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePublicKey recipient_key =
+  HpkePublicKeyProto recipient_key =
       CreateHpkePublicKey(hpke_params, params.recipient_public_key);
   util::StatusOr<std::unique_ptr<HybridEncrypt>> hpke_encrypt =
       HpkeEncrypt::New(recipient_key);
@@ -134,7 +134,7 @@ TEST(HpkeEncryptWithZeroLengthPublicKey, ZeroLengthPublicKeyFails) {
       CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                        HpkeAead::AES_128_GCM);
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePublicKey recipient_key =
+  HpkePublicKeyProto recipient_key =
       CreateHpkePublicKey(hpke_params, /*raw_key_bytes=*/"");
 
   util::StatusOr<std::unique_ptr<HybridEncrypt>> hpke_encrypt =

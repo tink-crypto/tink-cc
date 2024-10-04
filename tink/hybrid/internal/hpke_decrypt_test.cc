@@ -50,15 +50,15 @@ using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkeParams;
-using ::google::crypto::tink::HpkePrivateKey;
-using ::google::crypto::tink::HpkePublicKey;
+using HpkePrivateKeyProto = ::google::crypto::tink::HpkePrivateKey;
+using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 using ::testing::Values;
 
 util::StatusOr<std::string> Encrypt(HpkeParams params,
                                     absl::string_view recipient_public_key,
                                     absl::string_view plaintext,
                                     absl::string_view context_info) {
-  HpkePublicKey recipient_key =
+  HpkePublicKeyProto recipient_key =
       CreateHpkePublicKey(params, std::string(recipient_public_key));
   util::StatusOr<std::unique_ptr<HybridEncrypt>> hpke_encrypt =
       HpkeEncrypt::New(recipient_key);
@@ -86,7 +86,7 @@ TEST_P(HpkeDecryptTest, SetupRecipientContextAndDecrypt) {
   HpkeParams hpke_params = GetParam();
   util::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
   ASSERT_THAT(params, IsOk());
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params->recipient_private_key);
   util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
@@ -127,7 +127,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HpkeDecryptWithBadParamTest, BadParamsFails) {
   HpkeParams bad_params = GetParam();
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(bad_params, params.recipient_private_key);
   util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
@@ -140,7 +140,7 @@ TEST(HpkeDecryptWithShortCiphertextTest, ShortCiphertextFails) {
       CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                        HpkeAead::AES_128_GCM);
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
   util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
@@ -157,7 +157,7 @@ TEST(HpkeDecryptWithBadCiphertextTest, BadCiphertextFails) {
       CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                        HpkeAead::AES_128_GCM);
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
   util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
@@ -180,7 +180,7 @@ TEST(HpkeDecryptWithBadAssociatedDataTest, BadAssociatedDataFails) {
       CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                        HpkeAead::AES_128_GCM);
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
   util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
@@ -203,7 +203,7 @@ TEST(HpkeDecryptWithMissingPublicKeyTest, MissingPublicKeyFails) {
       CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                        HpkeAead::AES_128_GCM);
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
   recipient_key.clear_public_key();
 
@@ -219,7 +219,7 @@ TEST(HpkeDecryptWithMissingHpkeParamsTest, MissingHpkeParamsFails) {
       CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                        HpkeAead::AES_128_GCM);
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
   recipient_key.mutable_public_key()->clear_params();
 
@@ -235,7 +235,7 @@ TEST(HpkeDecryptWithZeroLengthPrivateKeyTest, ZeroLengthPrivateKeyFails) {
       CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                        HpkeAead::AES_128_GCM);
   HpkeTestParams params = DefaultHpkeTestParams();
-  HpkePrivateKey recipient_key =
+  HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, /*raw_key_bytes=*/"");
 
   util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =

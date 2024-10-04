@@ -23,9 +23,10 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::google::crypto::tink::HpkePublicKey;
+using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 
-util::Status HpkePublicKeyManager::ValidateKey(const HpkePublicKey& key) const {
+util::Status HpkePublicKeyManager::ValidateKey(
+    const HpkePublicKeyProto& key) const {
   return ValidateKeyAndVersion(key, get_version());
 }
 

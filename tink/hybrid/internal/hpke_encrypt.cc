@@ -36,10 +36,10 @@ namespace tink {
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
-using ::google::crypto::tink::HpkePublicKey;
+using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 
 util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
-    const HpkePublicKey& recipient_public_key) {
+    const HpkePublicKeyProto& recipient_public_key) {
   if (recipient_public_key.public_key().empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is empty.");

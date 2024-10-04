@@ -38,7 +38,7 @@ namespace tink {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::StatusOr;
-using ::google::crypto::tink::AesEaxKey;
+using AesEaxKeyProto = ::google::crypto::tink::AesEaxKey;
 using ::google::crypto::tink::AesEaxKeyFormat;
 using ::testing::Eq;
 using ::testing::Ne;
@@ -56,7 +56,7 @@ TEST(AesEaxKeyManagerTest, Basics) {
 }
 
 TEST(AesEaxKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(AesEaxKeyManager().ValidateKey(AesEaxKey()), Not(IsOk()));
+  EXPECT_THAT(AesEaxKeyManager().ValidateKey(AesEaxKeyProto()), Not(IsOk()));
 }
 
 TEST(AesEaxKeyManagerTest, ValidateEmptyKeyFormat) {
@@ -135,14 +135,14 @@ TEST(AesEaxKeyManagerTest, MultipleCreateCallsCreateDifferentKeys) {
 }
 
 TEST(AesEaxKeyManagerTest, ValidKey) {
-  AesEaxKey key;
+  AesEaxKeyProto key;
   key.set_key_value(std::string(32, 'a'));
   key.mutable_params()->set_iv_size(16);
   EXPECT_THAT(AesEaxKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(AesEaxKeyManagerTest, ValidateKeyKeyLength) {
-  AesEaxKey key;
+  AesEaxKeyProto key;
   key.mutable_params()->set_iv_size(16);
 
   for (int len = 0; len < 200; ++len) {
@@ -158,7 +158,7 @@ TEST(AesEaxKeyManagerTest, ValidateKeyKeyLength) {
 }
 
 TEST(AesEaxKeyManagerTest, ValidateKeyIvLength) {
-  AesEaxKey key;
+  AesEaxKeyProto key;
   key.set_key_value(std::string(32, 'a'));
 
   for (int iv_len = 0; iv_len < 200; ++iv_len) {
@@ -177,7 +177,7 @@ TEST(AesGcmKeyManagerTest, CreateAead) {
   AesEaxKeyFormat format;
   format.set_key_size(32);
   format.mutable_params()->set_iv_size(16);
-  StatusOr<AesEaxKey> key_or = AesEaxKeyManager().CreateKey(format);
+  StatusOr<AesEaxKeyProto> key_or = AesEaxKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
 
   StatusOr<std::unique_ptr<Aead>> aead_or =

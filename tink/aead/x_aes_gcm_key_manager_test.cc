@@ -44,7 +44,7 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::XAesGcmKey;
+using XAesGcmKeyProto = ::google::crypto::tink::XAesGcmKey;
 using ::google::crypto::tink::XAesGcmKeyFormat;
 using ::testing::Eq;
 using ::testing::Not;
@@ -59,8 +59,8 @@ XAesGcmKeyFormat ValidKeyFormat() {
   return key_format;
 }
 
-XAesGcmKey ValidKey() {
-  XAesGcmKey key;
+XAesGcmKeyProto ValidKey() {
+  XAesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value(Random::GetRandomBytes(kValidKeySize));
   key.mutable_params()->set_salt_size(kMinSaltSize);
@@ -137,13 +137,13 @@ TEST(XAesGcmKeyManagerTest, CreateKeyGeneratesRandomKey) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
   XAesGcmKeyFormat key_format = ValidKeyFormat();
 
-  util::StatusOr<XAesGcmKey> key_1 = key_manager->CreateKey(key_format);
+  util::StatusOr<XAesGcmKeyProto> key_1 = key_manager->CreateKey(key_format);
   ASSERT_THAT(key_1, IsOk());
-  util::StatusOr<XAesGcmKey> key_2 = key_manager->CreateKey(key_format);
+  util::StatusOr<XAesGcmKeyProto> key_2 = key_manager->CreateKey(key_format);
   ASSERT_THAT(key_2, IsOk());
 
   EXPECT_THAT(key_1->key_value(), Not(Eq(key_2->key_value())));
-  for (const XAesGcmKey& key : {*key_1, *key_2}) {
+  for (const XAesGcmKeyProto& key : {*key_1, *key_2}) {
     EXPECT_THAT(key.params().salt_size(), Eq(key_format.params().salt_size()));
     EXPECT_THAT(key.version(), Eq(key_manager->get_version()));
   }
@@ -154,14 +154,14 @@ TEST(XAesGcmKeyManagerTest, CreateKeyWithValidSaltSizes) {
   XAesGcmKeyFormat key_format = ValidKeyFormat();
   for (int salt_size = kMinSaltSize; salt_size <= kMaxSaltSize; ++salt_size) {
     key_format.mutable_params()->set_salt_size(salt_size);
-    util::StatusOr<XAesGcmKey> key = key_manager->CreateKey(key_format);
+    util::StatusOr<XAesGcmKeyProto> key = key_manager->CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
     EXPECT_THAT(key->params().salt_size(), Eq(salt_size));
   }
 }
 
 TEST(XAesGcmKeyManagerTest, ValidateKeyWithInvalidVersionFails) {
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   key.set_version(1);
   ASSERT_THAT(CreateXAesGcmKeyManager()->ValidateKey(key),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -169,7 +169,7 @@ TEST(XAesGcmKeyManagerTest, ValidateKeyWithInvalidVersionFails) {
 
 TEST(XAesGcmKeyManagerTest, ValidateKeyWithInvalidKeySizeFails) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   for (int invalid_key_size : {16, 31, 33}) {
     *key.mutable_key_value() = Random::GetRandomBytes(invalid_key_size);
     EXPECT_THAT(key_manager->ValidateKey(key),
@@ -179,7 +179,7 @@ TEST(XAesGcmKeyManagerTest, ValidateKeyWithInvalidKeySizeFails) {
 
 TEST(XAesGcmKeyManagerTest, ValidateKeyWithInvalidSaltSizeFails) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   for (int invalid_salt_size : {7, 13}) {
     key.mutable_params()->set_salt_size(invalid_salt_size);
     EXPECT_THAT(key_manager->ValidateKey(key),
@@ -189,7 +189,7 @@ TEST(XAesGcmKeyManagerTest, ValidateKeyWithInvalidSaltSizeFails) {
 
 TEST(XAesGcmKeyManagerTest, ValidateKeyWithValidSaltSizes) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   for (int salt_size = kMinSaltSize; salt_size <= kMaxSaltSize; ++salt_size) {
     key.mutable_params()->set_salt_size(salt_size);
     EXPECT_THAT(key_manager->ValidateKey(key), IsOk());
@@ -197,7 +197,7 @@ TEST(XAesGcmKeyManagerTest, ValidateKeyWithValidSaltSizes) {
 }
 
 TEST(XAesGcmKeyManagerTest, CreatePrimitiveWithInvalidVersionFails) {
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   key.set_version(1);
   ASSERT_THAT(CreateXAesGcmKeyManager()->GetPrimitive<CordAead>(key).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -205,7 +205,7 @@ TEST(XAesGcmKeyManagerTest, CreatePrimitiveWithInvalidVersionFails) {
 
 TEST(XAesGcmKeyManagerTest, CreatePrimitiveFailsWithInvalidKeySize) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   for (int invalid_key_size : {16, 31, 33}) {
     *key.mutable_key_value() = Random::GetRandomBytes(invalid_key_size);
     EXPECT_THAT(key_manager->GetPrimitive<CordAead>(key).status(),
@@ -215,7 +215,7 @@ TEST(XAesGcmKeyManagerTest, CreatePrimitiveFailsWithInvalidKeySize) {
 
 TEST(XAesGcmKeyManagerTest, CreatePrimitiveFailsWithInvalidSaltSize) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   for (int invalid_salt_size : {7, 13}) {
     key.mutable_params()->set_salt_size(invalid_salt_size);
     EXPECT_THAT(key_manager->GetPrimitive<CordAead>(key).status(),
@@ -225,7 +225,7 @@ TEST(XAesGcmKeyManagerTest, CreatePrimitiveFailsWithInvalidSaltSize) {
 
 TEST(XAesGcmKeyManagerTest, CreatePrimitiveWithValidSaltSizes) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   for (int salt_size = kMinSaltSize; salt_size <= kMaxSaltSize; ++salt_size) {
     key.mutable_params()->set_salt_size(salt_size);
     EXPECT_THAT(key_manager->GetPrimitive<CordAead>(key), IsOk());
@@ -234,7 +234,7 @@ TEST(XAesGcmKeyManagerTest, CreatePrimitiveWithValidSaltSizes) {
 
 TEST(XAesGcmKeyManagerTest, CordAndAeadCompatibility) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
-  XAesGcmKey key = ValidKey();
+  XAesGcmKeyProto key = ValidKey();
   util::StatusOr<std::unique_ptr<Aead>> aead =
       key_manager->GetPrimitive<Aead>(key);
   ASSERT_THAT(aead, IsOk());

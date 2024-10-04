@@ -57,15 +57,15 @@ constexpr int kMinTagSizeInBytes = 10;
 using ::crypto::tink::util::Enums;
 using ::crypto::tink::util::Status;
 using ::crypto::tink::util::StatusOr;
-using ::google::crypto::tink::AesCtrHmacAeadKey;
+using AesCtrHmacAeadKeyProto = ::google::crypto::tink::AesCtrHmacAeadKey;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
-using ::google::crypto::tink::AesCtrKey;
+using AesCtrKeyProto = ::google::crypto::tink::AesCtrKey;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HmacKey;
+using HmacKeyProto = ::google::crypto::tink::HmacKey;
 
-StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKeyManager::CreateKey(
+StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::CreateKey(
     const AesCtrHmacAeadKeyFormat& aes_ctr_hmac_aead_key_format) const {
-  AesCtrHmacAeadKey aes_ctr_hmac_aead_key;
+  AesCtrHmacAeadKeyProto aes_ctr_hmac_aead_key;
   aes_ctr_hmac_aead_key.set_version(get_version());
 
   // Generate AesCtrKey.
@@ -88,7 +88,7 @@ StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKeyManager::CreateKey(
 }
 
 StatusOr<std::unique_ptr<Aead>> AesCtrHmacAeadKeyManager::AeadFactory::Create(
-    const AesCtrHmacAeadKey& key) const {
+    const AesCtrHmacAeadKeyProto& key) const {
   auto aes_ctr_result = subtle::AesCtrBoringSsl::New(
       util::SecretDataFromStringView(key.aes_ctr_key().key_value()),
       key.aes_ctr_key().params().iv_size());
@@ -107,7 +107,7 @@ StatusOr<std::unique_ptr<Aead>> AesCtrHmacAeadKeyManager::AeadFactory::Create(
 }
 
 Status AesCtrHmacAeadKeyManager::ValidateKey(
-    const AesCtrHmacAeadKey& key) const {
+    const AesCtrHmacAeadKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
 
@@ -192,7 +192,7 @@ Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
 //     and AES key size 16 bytes.
 //   - HMAC pads its key with zeroes, so both parties will end up with the same
 //     HMAC key, but different AES keys (offset by 1 byte).
-StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKeyManager::DeriveKey(
+StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::DeriveKey(
     const AesCtrHmacAeadKeyFormat& key_format,
     InputStream* input_stream) const {
   Status status = ValidateKeyFormat(key_format);
@@ -209,7 +209,7 @@ StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKeyManager::DeriveKey(
     }
     return aes_ctr_randomness.status();
   }
-  StatusOr<HmacKey> hmac_key =
+  StatusOr<HmacKeyProto> hmac_key =
       HmacKeyManager().DeriveKey(key_format.hmac_key_format(), input_stream);
   if (!hmac_key.ok()) {
     return hmac_key.status();
@@ -219,7 +219,7 @@ StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKeyManager::DeriveKey(
   key.set_version(get_version());
   *key.mutable_hmac_key() = hmac_key.value();
 
-  AesCtrKey* aes_ctr_key = key.mutable_aes_ctr_key();
+  AesCtrKeyProto* aes_ctr_key = key.mutable_aes_ctr_key();
   aes_ctr_key->set_version(get_version());
   aes_ctr_key->set_key_value(aes_ctr_randomness.value());
   *aes_ctr_key->mutable_params() = key_format.aes_ctr_key_format().params();

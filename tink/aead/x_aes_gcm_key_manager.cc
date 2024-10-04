@@ -61,7 +61,7 @@ constexpr int kKeySizeBytes = 32;
 using ::crypto::tink::internal::FipsCompatibility;
 using ::crypto::tink::subtle::Random;
 using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::XAesGcmKey;
+using XAesGcmKeyProto = ::google::crypto::tink::XAesGcmKey;
 using ::google::crypto::tink::XAesGcmKeyFormat;
 using ::google::crypto::tink::XAesGcmParams;
 
@@ -82,7 +82,7 @@ util::Status ValidateKeySize(uint32_t key_size) {
   return absl::OkStatus();
 }
 
-util::Status ValidateXAesGcmKey(const XAesGcmKey& key) {
+util::Status ValidateXAesGcmKey(const XAesGcmKeyProto& key) {
   absl::Status status = ValidateKeySize(key.key_value().size());
   if (!status.ok()) {
     return status;
@@ -91,7 +91,7 @@ util::Status ValidateXAesGcmKey(const XAesGcmKey& key) {
 }
 
 util::StatusOr<::crypto::tink::XAesGcmKey> ConvertToXAesGcmKey(
-    const XAesGcmKey& key) {
+    const XAesGcmKeyProto& key) {
   util::StatusOr<XAesGcmParameters> x_aes_gcm_params =
       XAesGcmParameters::Create(XAesGcmParameters::Variant::kNoPrefix,
                                 key.params().salt_size());
@@ -106,12 +106,12 @@ util::StatusOr<::crypto::tink::XAesGcmKey> ConvertToXAesGcmKey(
 }
 
 class XAesGcmKeyManagerImpl
-    : public KeyTypeManager<XAesGcmKey, XAesGcmKeyFormat,
+    : public KeyTypeManager<XAesGcmKeyProto, XAesGcmKeyFormat,
                             List<Aead, CordAead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
     util::StatusOr<std::unique_ptr<Aead>> Create(
-        const XAesGcmKey& key) const override {
+        const XAesGcmKeyProto& key) const override {
       util::Status status = ValidateXAesGcmKey(key);
       if (!status.ok()) {
         return status;
@@ -137,7 +137,7 @@ class XAesGcmKeyManagerImpl
 
   class CordAeadFactory : public PrimitiveFactory<CordAead> {
     util::StatusOr<std::unique_ptr<CordAead>> Create(
-        const XAesGcmKey& key) const override {
+        const XAesGcmKeyProto& key) const override {
       util::Status status = ValidateXAesGcmKey(key);
       if (!status.ok()) {
         return status;
@@ -168,7 +168,7 @@ class XAesGcmKeyManagerImpl
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const XAesGcmKey& key) const override {
+  util::Status ValidateKey(const XAesGcmKeyProto& key) const override {
     util::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) {
       return status;
@@ -185,20 +185,20 @@ class XAesGcmKeyManagerImpl
     return ValidateVersion(key_format.version(), get_version());
   }
 
-  util::StatusOr<XAesGcmKey> CreateKey(
+  util::StatusOr<XAesGcmKeyProto> CreateKey(
       const XAesGcmKeyFormat& key_format) const override {
     util::Status status = ValidateKeyFormat(key_format);
     if (!status.ok()) {
       return status;
     }
-    XAesGcmKey key;
+    XAesGcmKeyProto key;
     key.set_version(get_version());
     key.set_key_value(Random::GetRandomBytes(kKeySizeBytes));
     key.mutable_params()->set_salt_size(key_format.params().salt_size());
     return key;
   }
 
-  util::StatusOr<XAesGcmKey> DeriveKey(
+  util::StatusOr<XAesGcmKeyProto> DeriveKey(
       const XAesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
     return absl::UnimplementedError(
@@ -211,13 +211,13 @@ class XAesGcmKeyManagerImpl
 
  private:
   const std::string key_type_ =
-      absl::StrCat(kTypeGoogleapisCom, XAesGcmKey().GetTypeName());
+      absl::StrCat(kTypeGoogleapisCom, XAesGcmKeyProto().GetTypeName());
 };
 
 }  // namespace
 
-std::unique_ptr<KeyTypeManager<::google::crypto::tink::XAesGcmKey,
-                               XAesGcmKeyFormat, List<Aead, CordAead>>>
+std::unique_ptr<
+    KeyTypeManager<XAesGcmKeyProto, XAesGcmKeyFormat, List<Aead, CordAead>>>
 CreateXAesGcmKeyManager() {
   return absl::make_unique<XAesGcmKeyManagerImpl>();
 }

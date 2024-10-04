@@ -49,7 +49,7 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::crypto::tink::util::StatusOr;
-using ::google::crypto::tink::AesGcmKey;
+using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -63,26 +63,26 @@ TEST(AesGcmKeyManagerTest, Basics) {
 }
 
 TEST(AesGcmKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(AesGcmKeyManager().ValidateKey(AesGcmKey()),
+  EXPECT_THAT(AesGcmKeyManager().ValidateKey(AesGcmKeyProto()),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(AesGcmKeyManagerTest, ValidateValid16ByteKey) {
-  AesGcmKey key;
+  AesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value("0123456789abcdef");
   EXPECT_THAT(AesGcmKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(AesGcmKeyManagerTest, ValidateValid32ByteKey) {
-  AesGcmKey key;
+  AesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value("01234567890123456789012345678901");
   EXPECT_THAT(AesGcmKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(AesGcmKeyManagerTest, InvalidKeySizes15Bytes) {
-  AesGcmKey key;
+  AesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value("0123456789abcde");
   EXPECT_THAT(AesGcmKeyManager().ValidateKey(key),
@@ -90,7 +90,7 @@ TEST(AesGcmKeyManagerTest, InvalidKeySizes15Bytes) {
 }
 
 TEST(AesGcmKeyManagerTest, InvalidKeySizes17Bytes) {
-  AesGcmKey key;
+  AesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value("0123456789abcdefg");
   EXPECT_THAT(AesGcmKeyManager().ValidateKey(key),
@@ -98,7 +98,7 @@ TEST(AesGcmKeyManagerTest, InvalidKeySizes17Bytes) {
 }
 
 TEST(AesGcmKeyManagerTest, InvalidKeySizes24Bytes) {
-  AesGcmKey key;
+  AesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value("01234567890123");
   EXPECT_THAT(AesGcmKeyManager().ValidateKey(key),
@@ -106,7 +106,7 @@ TEST(AesGcmKeyManagerTest, InvalidKeySizes24Bytes) {
 }
 
 TEST(AesGcmKeyManagerTest, InvalidKeySizes31Bytes) {
-  AesGcmKey key;
+  AesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value("0123456789012345678901234567890");
   EXPECT_THAT(AesGcmKeyManager().ValidateKey(key),
@@ -114,7 +114,7 @@ TEST(AesGcmKeyManagerTest, InvalidKeySizes31Bytes) {
 }
 
 TEST(AesGcmKeyManagerTest, InvalidKeySizes33Bytes) {
-  AesGcmKey key;
+  AesGcmKeyProto key;
   key.set_version(0);
   key.set_key_value("012345678901234567890123456789012");
   EXPECT_THAT(AesGcmKeyManager().ValidateKey(key),
@@ -159,7 +159,7 @@ TEST(AesGcmKeyManagerTest, Create16ByteKey) {
   AesGcmKeyFormat format;
   format.set_key_size(16);
 
-  StatusOr<AesGcmKey> key_or = AesGcmKeyManager().CreateKey(format);
+  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -169,7 +169,7 @@ TEST(AesGcmKeyManagerTest, Create32ByteKey) {
   AesGcmKeyFormat format;
   format.set_key_size(32);
 
-  StatusOr<AesGcmKey> key_or = AesGcmKeyManager().CreateKey(format);
+  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -178,7 +178,7 @@ TEST(AesGcmKeyManagerTest, Create32ByteKey) {
 TEST(AesGcmKeyManagerTest, CreateAead) {
   AesGcmKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmKey> key_or = AesGcmKeyManager().CreateKey(format);
+  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
 
   StatusOr<std::unique_ptr<Aead>> aead_or =
@@ -199,7 +199,7 @@ TEST(AesGcmKeyManagerTest, CreateAead) {
 TEST(AesGcmKeyManagerTest, CreateCordAead) {
   AesGcmKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmKey> key_or = AesGcmKeyManager().CreateKey(format);
+  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
 
   StatusOr<std::unique_ptr<CordAead>> aead_or =
@@ -225,7 +225,7 @@ TEST(AesGcmKeyManagerTest, DeriveShortKey) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
-  StatusOr<AesGcmKey> key_or =
+  StatusOr<AesGcmKeyProto> key_or =
       AesGcmKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(), Eq("0123456789abcdef"));
@@ -239,7 +239,7 @@ TEST(AesGcmKeyManagerTest, DeriveLongKey) {
   IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
       "0123456789abcdef0123456789abcdefXXX")};
 
-  StatusOr<AesGcmKey> key_or =
+  StatusOr<AesGcmKeyProto> key_or =
       AesGcmKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(),

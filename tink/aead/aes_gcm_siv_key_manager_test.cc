@@ -43,7 +43,7 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::StatusOr;
-using ::google::crypto::tink::AesGcmSivKey;
+using AesGcmSivKeyProto = ::google::crypto::tink::AesGcmSivKey;
 using ::google::crypto::tink::AesGcmSivKeyFormat;
 using ::testing::Eq;
 using ::testing::Not;
@@ -57,26 +57,26 @@ TEST(AesGcmSivKeyManagerTest, Basics) {
 }
 
 TEST(AesGcmSivKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(AesGcmSivKey()),
+  EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(AesGcmSivKeyProto()),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(AesGcmSivKeyManagerTest, ValidateValid16ByteKey) {
-  AesGcmSivKey key;
+  AesGcmSivKeyProto key;
   key.set_version(0);
   key.set_key_value("0123456789abcdef");
   EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(AesGcmSivKeyManagerTest, ValidateValid32ByteKey) {
-  AesGcmSivKey key;
+  AesGcmSivKeyProto key;
   key.set_version(0);
   key.set_key_value("01234567890123456789012345678901");
   EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(AesGcmSivKeyManagerTest, InvalidKeySizes17Bytes) {
-  AesGcmSivKey key;
+  AesGcmSivKeyProto key;
   key.set_version(0);
   key.set_key_value("0123456789abcdefg");
   EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(key),
@@ -84,7 +84,7 @@ TEST(AesGcmSivKeyManagerTest, InvalidKeySizes17Bytes) {
 }
 
 TEST(AesGcmSivKeyManagerTest, InvalidKeySizes24Bytes) {
-  AesGcmSivKey key;
+  AesGcmSivKeyProto key;
   key.set_version(0);
   key.set_key_value("01234567890123");
   EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(key),
@@ -92,7 +92,7 @@ TEST(AesGcmSivKeyManagerTest, InvalidKeySizes24Bytes) {
 }
 
 TEST(AesGcmSivKeyManagerTest, InvalidKeySizes31Bytes) {
-  AesGcmSivKey key;
+  AesGcmSivKeyProto key;
   key.set_version(0);
   key.set_key_value("0123456789012345678901234567890");
   EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(key),
@@ -100,7 +100,7 @@ TEST(AesGcmSivKeyManagerTest, InvalidKeySizes31Bytes) {
 }
 
 TEST(AesGcmSivKeyManagerTest, InvalidKeySizes33Bytes) {
-  AesGcmSivKey key;
+  AesGcmSivKeyProto key;
   key.set_version(0);
   key.set_key_value("012345678901234567890123456789012");
   EXPECT_THAT(AesGcmSivKeyManager().ValidateKey(key),
@@ -145,7 +145,7 @@ TEST(AesGcmSivKeyManagerTest, Create16ByteKey) {
   AesGcmSivKeyFormat format;
   format.set_key_size(16);
 
-  StatusOr<AesGcmSivKey> key_or = AesGcmSivKeyManager().CreateKey(format);
+  StatusOr<AesGcmSivKeyProto> key_or = AesGcmSivKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -155,7 +155,7 @@ TEST(AesGcmSivKeyManagerTest, Create32ByteKey) {
   AesGcmSivKeyFormat format;
   format.set_key_size(32);
 
-  StatusOr<AesGcmSivKey> key_or = AesGcmSivKeyManager().CreateKey(format);
+  StatusOr<AesGcmSivKeyProto> key_or = AesGcmSivKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -167,7 +167,7 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadFailsWithOpenSsl) {
   }
   AesGcmSivKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmSivKey> key = AesGcmSivKeyManager().CreateKey(format);
+  StatusOr<AesGcmSivKeyProto> key = AesGcmSivKeyManager().CreateKey(format);
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(AesGcmSivKeyManager().GetPrimitive<Aead>(*key).status(),
@@ -184,7 +184,7 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
   }
   AesGcmSivKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmSivKey> key = AesGcmSivKeyManager().CreateKey(format);
+  StatusOr<AesGcmSivKeyProto> key = AesGcmSivKeyManager().CreateKey(format);
   ASSERT_THAT(key, IsOk());
 
   StatusOr<std::unique_ptr<Aead>> aead =

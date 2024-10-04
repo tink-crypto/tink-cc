@@ -52,11 +52,11 @@ using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
-using ::google::crypto::tink::AesCtrKey;
+using AesCtrKeyProto = ::google::crypto::tink::AesCtrKey;
 using ::google::crypto::tink::AesCtrKeyFormat;
 using ::google::crypto::tink::AesCtrParams;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HmacKey;
+using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::google::crypto::tink::HmacKeyFormat;
 using ::google::crypto::tink::HmacParams;
 using ::google::crypto::tink::KeyData;
@@ -145,8 +145,8 @@ google::crypto::tink::AesCtrHmacAeadKey BuildAesCtrHmacAeadKey(
     int iv_size, int tag_size, HashType proto_hash_type, int aes_ctr_version,
     int hmac_version) {
   google::crypto::tink::AesCtrHmacAeadKey aes_ctr_hmac_aead_key;
-  HmacKey& hmac_key = *aes_ctr_hmac_aead_key.mutable_hmac_key();
-  AesCtrKey& aes_ctr_key = *aes_ctr_hmac_aead_key.mutable_aes_ctr_key();
+  HmacKeyProto& hmac_key = *aes_ctr_hmac_aead_key.mutable_hmac_key();
+  AesCtrKeyProto& aes_ctr_key = *aes_ctr_hmac_aead_key.mutable_aes_ctr_key();
 
   AesCtrParams& aes_ctr_params = *aes_ctr_key.mutable_params();
   aes_ctr_params.set_iv_size(iv_size);

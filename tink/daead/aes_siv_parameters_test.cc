@@ -17,6 +17,7 @@
 #include "tink/daead/aes_siv_parameters.h"
 
 #include <tuple>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -107,9 +108,9 @@ TEST(AesSivParametersTest, CopyConstructor) {
   ASSERT_THAT(parameters, IsOk());
 
   AesSivParameters copy(*parameters);
+
   EXPECT_THAT(copy.KeySizeInBytes(), Eq(64));
   EXPECT_THAT(copy.GetVariant(), Eq(AesSivParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
 }
 
 TEST(AesSivParametersTest, CopyAssignment) {
@@ -117,10 +118,40 @@ TEST(AesSivParametersTest, CopyAssignment) {
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  AesSivParameters copy = *parameters;
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(64));
-  EXPECT_THAT(copy.GetVariant(), Eq(AesSivParameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
+  util::StatusOr<AesSivParameters> copy = AesSivParameters::Create(
+      /*key_size_in_bytes=*/32, AesSivParameters::Variant::kNoPrefix);
+  ASSERT_THAT(copy, IsOk());
+
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->KeySizeInBytes(), Eq(64));
+  EXPECT_THAT(copy->GetVariant(), Eq(AesSivParameters::Variant::kTink));
+}
+
+TEST(AesSivParametersTest, MoveConstructor) {
+  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+      /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  AesSivParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.KeySizeInBytes(), Eq(64));
+  EXPECT_THAT(move.GetVariant(), Eq(AesSivParameters::Variant::kTink));
+}
+
+TEST(AesSivParametersTest, MoveAssignment) {
+  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+      /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesSivParameters> move = AesSivParameters::Create(
+      /*key_size_in_bytes=*/32, AesSivParameters::Variant::kNoPrefix);
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->KeySizeInBytes(), Eq(64));
+  EXPECT_THAT(move->GetVariant(), Eq(AesSivParameters::Variant::kTink));
 }
 
 using AesSivParametersVariantTest =

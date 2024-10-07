@@ -354,11 +354,35 @@ SignatureTestVector CreateTestVector5() {
       HexDecodeOrDie("aa"));
 }
 
+SignatureTestVector CreateTestVector6() {
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha384)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .Build();
+  CHECK_OK(parameters.status());
+  return SignatureTestVector(
+      absl::make_unique<RsaSsaPkcs1PrivateKey>(
+          PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
+      HexDecodeOrDie(
+          "71ae1ecd20509a12627a876e2efcd67015659923b9e2564405673641d73615eb9376"
+          "25db427b55c582b97172eeddabc247ee2f0f44652c8310d433f4cdbad3b558d26404"
+          "14afc70725fe40849d2652d91413a9ce5ee2f234cae1fb1a35b8b3452b60ca33d38c"
+          "6c84b2feaffff1c0f5be3deab76b3cdff154f76c18bfdbe18e0b62ea832986802e9a"
+          "07eeeae3b367c551c6672cc64e1e9e13bed3352d6f8a109ebaf86a90a973939f4c6a"
+          "7b4f0ff214228051bdfd1c00ed2dda804e168fa4247835b25a8d88a57b8e042c45ce"
+          "dc00db2cd03f5bd4ec5647e90737e5325ce2fc3ecea2af569d1fb51a8332f4b526ba"
+          "214b0b8d10d562ba2dccb0267c85098d8ff1"),
+      HexDecodeOrDie("aa"));
+}
+
 }  // namespace
 
 std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors() {
   return {CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
-          CreateTestVector3(), CreateTestVector4(), CreateTestVector5()};
+          CreateTestVector3(), CreateTestVector4(), CreateTestVector5(),
+          CreateTestVector6()};
 }
 
 }  // namespace internal

@@ -616,6 +616,7 @@ cc_library(
     hdrs = ["rsa_ssa_pkcs1_private_key.h"],
     include_prefix = "tink/signature",
     deps = [
+        ":rsa_ssa_pkcs1_parameters",
         ":rsa_ssa_pkcs1_public_key",
         ":signature_private_key",
         "//tink:big_integer",

@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,6 +34,9 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/wycheproof_util.h"
 #include "tink/util/status.h"
@@ -48,6 +51,8 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::Not;
+using ::testing::NotNull;
 
 class RsaSsaPkcs1VerifyBoringSslTest : public ::testing::Test {};
 
@@ -350,6 +355,69 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, TestRestrictedFipsModuli) {
   EXPECT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(public_key, params).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
+
+using RsaSsaPkcs1VerifyBoringSslTestVectorTest =
+    testing::TestWithParam<internal::SignatureTestVector>;
+
+TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
+  const internal::SignatureTestVector& param = GetParam();
+  const RsaSsaPkcs1PrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  if (internal::IsFipsModeEnabled() &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072) {
+    // Users wants FIPS but modulus size doesn't support FIPS
+    ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    // Users wants FIPS, but we don't have FIPS.
+    ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
+}
+
+TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
+       DifferentMessageDoesNotVerify) {
+  const internal::SignatureTestVector& param = GetParam();
+  const RsaSsaPkcs1PrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  if (internal::IsFipsModeEnabled() &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072) {
+    // Users wants FIPS but modulus size doesn't support FIPS
+    ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    // Users wants FIPS, but we don't have FIPS.
+    ASSERT_THAT(RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT(
+      (*verifier)->Verify(param.signature, absl::StrCat(param.message, "a")),
+      Not(IsOk()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RsaSsaPkcs1VerifyBoringSslTestVectorTest,
+    RsaSsaPkcs1VerifyBoringSslTestVectorTest,
+    testing::ValuesIn(internal::CreateRsaSsaPkcs1TestVectors()));
 
 }  // namespace
 }  // namespace subtle

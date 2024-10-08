@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,10 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/strings/strip.h"
 #include "openssl/bn.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
@@ -32,6 +34,10 @@
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/partial_key_access.h"
+#include "tink/public_key_verify.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/errors.h"
 #include "tink/util/status.h"
@@ -41,9 +47,46 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
+util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
+  internal::RsaPublicKey public_key;
+  public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
+  public_key.e =
+      std::string(key.GetParameters().GetPublicExponent().GetValue());
+  internal::RsaSsaPkcs1Params params;
+  switch (key.GetParameters().GetHashType()) {
+    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha256:
+      params.hash_type = SHA256;
+      break;
+    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha384:
+      params.hash_type = SHA384;
+      break;
+    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha512:
+      params.hash_type = SHA512;
+      break;
+    default:
+      return util::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Unsupported hash:", key.GetParameters().GetHashType()));
+  }
+  return New(public_key, params, key.GetOutputPrefix(),
+             key.GetParameters().GetVariant() ==
+                     RsaSsaPkcs1Parameters::Variant::kLegacy
+                 ? std::string(1, 0)
+                 : "");
+}
+
 util::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
 RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                                 const internal::RsaSsaPkcs1Params& params) {
+  return New(pub_key, params, "", "");
+}
+
+util::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
+RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
+                                const internal::RsaSsaPkcs1Params& params,
+                                absl::string_view output_prefix,
+                                absl::string_view message_suffix) {
   util::Status status =
       internal::CheckFipsCompatibility<RsaSsaPkcs1VerifyBoringSsl>();
   if (!status.ok()) {
@@ -71,12 +114,13 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
   }
 
   std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl> verify(
-      new RsaSsaPkcs1VerifyBoringSsl(*std::move(rsa), *sig_hash));
+      new RsaSsaPkcs1VerifyBoringSsl(*std::move(rsa), *sig_hash, output_prefix,
+                                     message_suffix));
   return std::move(verify);
 }
 
-util::Status RsaSsaPkcs1VerifyBoringSsl::Verify(absl::string_view signature,
-                                                absl::string_view data) const {
+util::Status RsaSsaPkcs1VerifyBoringSsl::VerifyWithoutPrefix(
+    absl::string_view signature, absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
@@ -98,6 +142,26 @@ util::Status RsaSsaPkcs1VerifyBoringSsl::Verify(absl::string_view signature,
   }
 
   return util::OkStatus();
+}
+
+util::Status RsaSsaPkcs1VerifyBoringSsl::Verify(absl::string_view signature,
+                                                absl::string_view data) const {
+  if (output_prefix_.empty() && message_suffix_.empty()) {
+    return VerifyWithoutPrefix(signature, data);
+  }
+  if (!absl::StartsWith(signature, output_prefix_)) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "OutputPrefix does not match");
+  }
+  // Stores a copy of the data in case message_suffix_ is not empty.
+  // Needs to stay alive until this method is done.
+  std::string data_copy_holder;
+  if (!message_suffix_.empty()) {
+    data_copy_holder = absl::StrCat(data, message_suffix_);
+    data = data_copy_holder;
+  }
+  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
+                             data);
 }
 
 }  // namespace subtle

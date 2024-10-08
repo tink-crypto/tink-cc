@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 
 #include <cstdint>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -27,8 +28,11 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
+#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -39,8 +43,10 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::Not;
+using ::testing::NotNull;
 
 class RsaPkcs1SignBoringsslTest : public ::testing::Test {
  public:
@@ -187,6 +193,41 @@ TEST_F(RsaPkcs1SignBoringsslTest, TestAllowedFipsModuli) {
   EXPECT_THAT(RsaSsaPkcs1SignBoringSsl::New(private_key, params).status(),
               IsOk());
 }
+
+using RsaSsaPkcs1SignBoringSSLTestVectorTest =
+    testing::TestWithParam<internal::SignatureTestVector>;
+
+// RsaSsaPkcs1 is deterministic, so we can compute the signature.
+TEST_P(RsaSsaPkcs1SignBoringSSLTestVectorTest, ComputeSignatureInTestVector) {
+  const internal::SignatureTestVector& param = GetParam();
+  const RsaSsaPkcs1PrivateKey* typed_key =
+      dynamic_cast<const RsaSsaPkcs1PrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  if (internal::IsFipsModeEnabled() &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 2048 &&
+      typed_key->GetParameters().GetModulusSizeInBits() != 3072) {
+    // Users wants FIPS but modulus size doesn't support FIPS
+    ASSERT_THAT(RsaSsaPkcs1SignBoringSsl::New(*typed_key), Not(IsOk()));
+    return;
+  }
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    // Users wants FIPS, but we don't have FIPS.
+    ASSERT_THAT(RsaSsaPkcs1SignBoringSsl::New(*typed_key), Not(IsOk()));
+    return;
+  }
+  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      RsaSsaPkcs1SignBoringSsl::New(*typed_key);
+  ASSERT_THAT(signer, IsOk());
+  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT(*signature, Eq(param.signature));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RsaSsaPkcs1SignBoringSSLTestVectorTest,
+    RsaSsaPkcs1SignBoringSSLTestVectorTest,
+    testing::ValuesIn(internal::CreateRsaSsaPkcs1TestVectors()));
 
 }  // namespace
 }  // namespace subtle

@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/strings/string_view.h"
@@ -28,6 +29,7 @@
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -47,6 +49,9 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
   New(const internal::RsaPublicKey& pub_key,
       const internal::RsaSsaPkcs1Params& params);
 
+  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+      const RsaSsaPkcs1PublicKey& key);
+
   // Verifies that 'signature' is a digital signature for 'data'.
   crypto::tink::util::Status Verify(absl::string_view signature,
                                     absl::string_view data) const override;
@@ -63,12 +68,28 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
   // https://www.keylength.com/en/4/).
   static constexpr size_t kMinModulusSizeInBits = 2048;
 
+  static crypto::tink::util::StatusOr<
+      std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
+  New(const internal::RsaPublicKey& pub_key,
+      const internal::RsaSsaPkcs1Params& params,
+      absl::string_view output_prefix, absl::string_view message_suffix);
+
   RsaSsaPkcs1VerifyBoringSsl(internal::SslUniquePtr<RSA> rsa,
-                             const EVP_MD* sig_hash)
-      : rsa_(std::move(rsa)), sig_hash_(sig_hash) {}
+                             const EVP_MD* sig_hash,
+                             absl::string_view output_prefix,
+                             absl::string_view message_suffix)
+      : rsa_(std::move(rsa)),
+        sig_hash_(sig_hash),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  crypto::tink::util::Status VerifyWithoutPrefix(absl::string_view signature,
+                                                 absl::string_view data) const;
 
   const internal::SslUniquePtr<RSA> rsa_;
   const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
+  const std::string output_prefix_;
+  const std::string message_suffix_;
 };
 
 }  // namespace subtle

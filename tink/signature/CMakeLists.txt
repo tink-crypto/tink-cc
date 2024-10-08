@@ -590,6 +590,7 @@ tink_cc_library(
     rsa_ssa_pkcs1_private_key.cc
     rsa_ssa_pkcs1_private_key.h
   DEPS
+    tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::signature_private_key
     absl::status

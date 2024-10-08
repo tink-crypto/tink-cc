@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
@@ -35,8 +36,12 @@
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/rsa_ssa_pkcs1_parameters.h"
+#include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -44,9 +49,62 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
+using ::crypto::tink::util::SecretDataFromStringView;
+
+util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
+    const RsaSsaPkcs1PrivateKey& key) {
+  internal::RsaPrivateKey private_key;
+  private_key.n = std::string(
+      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
+  private_key.e = std::string(
+      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
+  private_key.d = SecretDataFromStringView(
+      key.GetPrivateExponent().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.p =
+      SecretDataFromStringView(key.GetPrimeP(GetPartialKeyAccess())
+                                   .GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.q =
+      SecretDataFromStringView(key.GetPrimeQ(GetPartialKeyAccess())
+                                   .GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.dp = SecretDataFromStringView(
+      key.GetPrimeExponentP().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.dq = SecretDataFromStringView(
+      key.GetPrimeExponentQ().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.crt = SecretDataFromStringView(
+      key.GetCrtCoefficient().GetSecret(InsecureSecretKeyAccess::Get()));
+  internal::RsaSsaPkcs1Params params;
+  switch (key.GetParameters().GetHashType()) {
+    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha256:
+      params.hash_type = SHA256;
+      break;
+    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha384:
+      params.hash_type = SHA384;
+      break;
+    case crypto::tink::RsaSsaPkcs1Parameters::HashType::kSha512:
+      params.hash_type = SHA512;
+      break;
+    default:
+      return util::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Unsupported hash:", key.GetParameters().GetHashType()));
+  }
+  return New(private_key, params, key.GetOutputPrefix(),
+             key.GetParameters().GetVariant() ==
+                     RsaSsaPkcs1Parameters::Variant::kLegacy
+                 ? std::string(1, 0)
+                 : "");
+}
+
 util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
     const internal::RsaSsaPkcs1Params& params) {
+  return New(private_key, params, "", "");
+}
+
+util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
+    const internal::RsaPrivateKey& private_key,
+    const internal::RsaSsaPkcs1Params& params, absl::string_view output_prefix,
+    absl::string_view message_suffix) {
   util::Status status =
       internal::CheckFipsCompatibility<RsaSsaPkcs1SignBoringSsl>();
   if (!status.ok()) {
@@ -84,11 +142,11 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     return rsa.status();
   }
 
-  return {absl::WrapUnique(
-      new RsaSsaPkcs1SignBoringSsl(*std::move(rsa), *sig_hash))};
+  return {absl::WrapUnique(new RsaSsaPkcs1SignBoringSsl(
+      *std::move(rsa), *sig_hash, output_prefix, message_suffix))};
 }
 
-util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::Sign(
+util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
   util::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
@@ -113,6 +171,24 @@ util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::Sign(
   }
   signature.resize(signature_length);
   return signature;
+}
+
+util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::Sign(
+    absl::string_view data) const {
+  util::StatusOr<std::string> signature_without_prefix_;
+  if (message_suffix_.empty()) {
+    signature_without_prefix_ = SignWithoutPrefix(data);
+  } else {
+    signature_without_prefix_ =
+        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
+  }
+  if (!signature_without_prefix_.ok()) {
+    return signature_without_prefix_.status();
+  }
+  if (output_prefix_.empty()) {
+    return signature_without_prefix_;
+  }
+  return absl::StrCat(output_prefix_, *signature_without_prefix_);
 }
 
 }  // namespace subtle

@@ -23,9 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "openssl/experimental/spx.h"
-#undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "openssl/slhdsa.h"
 #include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
@@ -70,7 +68,7 @@ TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   TestCase test_case = GetParam();
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -91,7 +89,7 @@ TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   // Check signature size.
   EXPECT_NE(*signature, message);
   EXPECT_EQ((*signature).size(),
-            test_case.output_prefix.size() + SPX_SIGNATURE_BYTES);
+            test_case.output_prefix.size() + SLHDSA_SHA2_128S_SIGNATURE_BYTES);
   EXPECT_EQ(test_case.output_prefix,
             (*signature).substr(0, test_case.output_prefix.size()));
 }
@@ -104,7 +102,7 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
 
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
@@ -127,8 +125,8 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   ASSERT_THAT(second_signature, IsOk());
 
   // Check the signatures' sizes.
-  EXPECT_EQ((*first_signature).size(), SPX_SIGNATURE_BYTES);
-  EXPECT_EQ((*second_signature).size(), SPX_SIGNATURE_BYTES);
+  EXPECT_EQ((*first_signature).size(), SLHDSA_SHA2_128S_SIGNATURE_BYTES);
+  EXPECT_EQ((*second_signature).size(), SLHDSA_SHA2_128S_SIGNATURE_BYTES);
 
   EXPECT_NE(*first_signature, *second_signature);
 }
@@ -141,7 +139,7 @@ TEST_F(SlhDsaSignBoringSslTest, FipsMode) {
 
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());

@@ -23,9 +23,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "openssl/experimental/spx.h"
-#undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "openssl/slhdsa.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
@@ -54,8 +52,8 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
   // Verifies that 'signature' is a digital signature for 'data'.
   crypto::tink::util::Status Verify(absl::string_view signature,
                                     absl::string_view data) const override {
-    if (signature.size() <
-        SPX_SIGNATURE_BYTES + public_key_.GetOutputPrefix().size()) {
+    if (signature.size() < SLHDSA_SHA2_128S_SIGNATURE_BYTES +
+                               public_key_.GetOutputPrefix().size()) {
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "Verification failed: invalid signature length");
     }
@@ -66,12 +64,14 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
     }
 
     if (1 !=
-        SPX_verify(
+        SLHDSA_SHA2_128S_verify(
             reinterpret_cast<const uint8_t *>(
                 signature.data() + public_key_.GetOutputPrefix().size()),
+            SLHDSA_SHA2_128S_SIGNATURE_BYTES,
             reinterpret_cast<const uint8_t *>(
                 public_key_.GetPublicKeyBytes(GetPartialKeyAccess()).data()),
-            reinterpret_cast<const uint8_t *>(data.data()), data.size())) {
+            reinterpret_cast<const uint8_t *>(data.data()), data.size(),
+            /* context = */ nullptr, /* context_len = */ 0)) {
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "Signature is not valid");
     }

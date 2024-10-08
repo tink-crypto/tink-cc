@@ -22,9 +22,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "openssl/boringssl/src/include/openssl/mem.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "openssl/experimental/spx.h"
-#undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "openssl/slhdsa.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
@@ -40,7 +38,7 @@ util::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaPublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
   // Only 64-byte private keys are currently supported.
-  if (private_key_bytes.size() != SPX_SECRET_KEY_BYTES) {
+  if (private_key_bytes.size() != SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "SLH-DSA private key length must be 64 bytes.");
   }
@@ -52,26 +50,19 @@ util::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   }
   // Confirm that the private key and public key are a valid SLH-DSA key pair.
   std::string public_key_bytes_regen;
-  public_key_bytes_regen.resize(SPX_PUBLIC_KEY_BYTES);
-  std::string private_key_bytes_regen;
-  private_key_bytes_regen.resize(SPX_SECRET_KEY_BYTES);
+  public_key_bytes_regen.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
 
-  absl::string_view expected_private_key_bytes =
-      private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get());
-  SPX_generate_key_from_seed(
+  SLHDSA_SHA2_128S_public_from_private(
       reinterpret_cast<uint8_t*>(public_key_bytes_regen.data()),
-      reinterpret_cast<uint8_t*>(private_key_bytes_regen.data()),
-      // Uses the first 48 bytes of the private key as seed.
-      reinterpret_cast<const uint8_t*>(expected_private_key_bytes.data()));
+      reinterpret_cast<const uint8_t*>(
+          private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get()).data()));
 
   absl::string_view expected_public_key_bytes =
       public_key.GetPublicKeyBytes(token);
 
   if (CRYPTO_memcmp(expected_public_key_bytes.data(),
-                    public_key_bytes_regen.data(), SPX_PUBLIC_KEY_BYTES) != 0 ||
-      CRYPTO_memcmp(expected_private_key_bytes.data(),
-                    private_key_bytes_regen.data(),
-                    SPX_SECRET_KEY_BYTES) != 0) {
+                    public_key_bytes_regen.data(),
+                    SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES) != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid SLH-DSA key pair");
   }

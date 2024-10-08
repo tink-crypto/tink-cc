@@ -23,9 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "openssl/experimental/spx.h"
-#undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "openssl/slhdsa.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
@@ -67,17 +65,18 @@ TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
 
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes;
-  public_key_bytes.resize(SPX_PUBLIC_KEY_BYTES);
+  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
   std::string private_key_bytes;
-  private_key_bytes.resize(SPX_SECRET_KEY_BYTES);
+  private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
-  SPX_generate_key(reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-                   reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+  SLHDSA_SHA2_128S_generate_key(
+      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
+      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -101,13 +100,14 @@ TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
 TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
-      *parameters, subtle::Random::GetRandomBytes(SPX_PUBLIC_KEY_BYTES),
+      *parameters,
+      subtle::Random::GetRandomBytes(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES),
       /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
@@ -125,18 +125,19 @@ TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
 TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes;
-  public_key_bytes.resize(SPX_PUBLIC_KEY_BYTES);
+  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
   std::string private_key_bytes;
-  private_key_bytes.resize(SPX_SECRET_KEY_BYTES);
+  private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
-  SPX_generate_key(reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-                   reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+  SLHDSA_SHA2_128S_generate_key(
+      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
+      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -144,8 +145,9 @@ TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
   ASSERT_THAT(public_key, IsOk());
 
   // Generate a new key pair.
-  SPX_generate_key(reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-                   reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+  SLHDSA_SHA2_128S_generate_key(
+      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
+      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
   RestrictedData restricted_private_key_bytes =
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
 
@@ -161,18 +163,19 @@ TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
 TEST(SlhDsaPrivateKeyTest, CreateWithModifiedPrivateKeyFails) {
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes;
-  public_key_bytes.resize(SPX_PUBLIC_KEY_BYTES);
+  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
   std::string private_key_bytes;
-  private_key_bytes.resize(SPX_SECRET_KEY_BYTES);
+  private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
-  SPX_generate_key(reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-                   reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+  SLHDSA_SHA2_128S_generate_key(
+      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
+      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -198,17 +201,18 @@ TEST_P(SlhDsaPrivateKeyTest, KeyEquals) {
 
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes;
-  public_key_bytes.resize(SPX_PUBLIC_KEY_BYTES);
+  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
   std::string private_key_bytes;
-  private_key_bytes.resize(SPX_SECRET_KEY_BYTES);
+  private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
-  SPX_generate_key(reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-                   reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+  SLHDSA_SHA2_128S_generate_key(
+      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
+      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -234,18 +238,19 @@ TEST_P(SlhDsaPrivateKeyTest, KeyEquals) {
 TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/SPX_SECRET_KEY_BYTES,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes;
-  public_key_bytes.resize(SPX_PUBLIC_KEY_BYTES);
+  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
   std::string private_key_bytes;
   private_key_bytes.resize(parameters->GetPrivateKeySizeInBytes());
 
-  SPX_generate_key(reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-                   reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+  SLHDSA_SHA2_128S_generate_key(
+      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
+      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
 
   util::StatusOr<SlhDsaPublicKey> public_key123 =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,

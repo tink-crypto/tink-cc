@@ -23,9 +23,7 @@
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "openssl/experimental/spx.h"
-#undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
+#include "openssl/slhdsa.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
@@ -63,15 +61,17 @@ util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
   // The signature will be prepended with the output prefix for TINK keys.
   std::string signature(private_key_.GetOutputPrefix());
   subtle::ResizeStringUninitialized(
-      &signature, SPX_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
+      &signature,
+      SLHDSA_SHA2_128S_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
 
-  SPX_sign(reinterpret_cast<uint8_t *>(signature.data() +
-                                       private_key_.GetOutputPrefix().size()),
-           private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
-               .Get(InsecureSecretKeyAccess::Get())
-               .data(),
-           reinterpret_cast<const uint8_t *>(data.data()), data.size(),
-           /*randomized=*/1);
+  SLHDSA_SHA2_128S_sign(
+      reinterpret_cast<uint8_t *>(signature.data() +
+                                  private_key_.GetOutputPrefix().size()),
+      private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
+          .Get(InsecureSecretKeyAccess::Get())
+          .data(),
+      reinterpret_cast<const uint8_t *>(data.data()), data.size(),
+      /* context = */ nullptr, /* context_len = */ 0);
 
   return signature;
 }

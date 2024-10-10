@@ -5,85 +5,6 @@ package(
 licenses(["notice"])
 
 cc_library(
-    name = "key_derivation_config",
-    srcs = ["key_derivation_config.cc"],
-    hdrs = ["key_derivation_config.h"],
-    include_prefix = "tink/keyderivation",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":keyset_deriver_wrapper",
-        "//tink:registry",
-        "//tink/config:tink_fips",
-        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
-        "//tink/prf:hkdf_prf_key_manager",
-        "//tink/util:status",
-        "@com_google_absl//absl/memory",
-    ],
-)
-
-cc_test(
-    name = "key_derivation_config_test",
-    srcs = ["key_derivation_config_test.cc"],
-    deps = [
-        ":key_derivation_config",
-        ":key_derivation_key_templates",
-        ":keyset_deriver",
-        "//proto:tink_cc_proto",
-        "//tink:aead",
-        "//tink:keyset_handle",
-        "//tink:registry",
-        "//tink/aead:aead_config",
-        "//tink/aead:aead_key_templates",
-        "//tink/aead:aes_gcm_key_manager",
-        "//tink/config:global_registry",
-        "//tink/prf:prf_key_templates",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@com_google_absl//absl/memory",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "key_derivation_key_templates",
-    srcs = ["key_derivation_key_templates.cc"],
-    hdrs = ["key_derivation_key_templates.h"],
-    include_prefix = "tink/keyderivation",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":keyset_deriver",
-        "//proto:prf_based_deriver_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:keyset_handle",
-        "//tink/config:global_registry",
-        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
-        "//tink/util:statusor",
-    ],
-)
-
-cc_test(
-    name = "key_derivation_key_templates_test",
-    srcs = ["key_derivation_key_templates_test.cc"],
-    deps = [
-        ":key_derivation_key_templates",
-        ":keyset_deriver_wrapper",
-        "//proto:prf_based_deriver_cc_proto",
-        "//proto:tink_cc_proto",
-        "//tink:registry",
-        "//tink/aead:aead_key_templates",
-        "//tink/aead:aes_gcm_key_manager",
-        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
-        "//tink/prf:hkdf_prf_key_manager",
-        "//tink/prf:prf_key_templates",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "keyset_deriver",
     hdrs = ["keyset_deriver.h"],
     include_prefix = "tink/keyderivation",
@@ -115,6 +36,61 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "key_derivation_config",
+    srcs = ["key_derivation_config.cc"],
+    hdrs = ["key_derivation_config.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyset_deriver_wrapper",
+        "//tink:registry",
+        "//tink/config:tink_fips",
+        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
+        "//tink/prf:hkdf_prf_key_manager",
+        "//tink/util:status",
+        "@com_google_absl//absl/memory",
+    ],
+)
+
+cc_library(
+    name = "key_derivation_key_templates",
+    srcs = ["key_derivation_key_templates.cc"],
+    hdrs = ["key_derivation_key_templates.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":keyset_deriver",
+        "//proto:prf_based_deriver_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:keyset_handle",
+        "//tink/config:global_registry",
+        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
+        "//tink/util:statusor",
+    ],
+)
+
+cc_library(
+    name = "key_derivation_key",
+    hdrs = ["key_derivation_key.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":key_derivation_parameters",
+        "//tink:key",
+    ],
+)
+
+cc_library(
+    name = "key_derivation_parameters",
+    hdrs = ["key_derivation_parameters.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = ["//tink:parameters"],
+)
+
+# tests
+
 cc_test(
     name = "keyset_deriver_wrapper_test",
     srcs = ["keyset_deriver_wrapper_test.cc"],
@@ -132,6 +108,51 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "key_derivation_config_test",
+    srcs = ["key_derivation_config_test.cc"],
+    deps = [
+        ":key_derivation_config",
+        ":key_derivation_key_templates",
+        ":keyset_deriver",
+        "//proto:tink_cc_proto",
+        "//tink:aead",
+        "//tink:keyset_handle",
+        "//tink:registry",
+        "//tink/aead:aead_config",
+        "//tink/aead:aead_key_templates",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/config:global_registry",
+        "//tink/prf:prf_key_templates",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "key_derivation_key_templates_test",
+    srcs = ["key_derivation_key_templates_test.cc"],
+    deps = [
+        ":key_derivation_key_templates",
+        ":keyset_deriver_wrapper",
+        "//proto:prf_based_deriver_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:registry",
+        "//tink/aead:aead_key_templates",
+        "//tink/aead:aes_gcm_key_manager",
+        "//tink/keyderivation/internal:prf_based_deriver_key_manager",
+        "//tink/prf:hkdf_prf_key_manager",
+        "//tink/prf:prf_key_templates",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
 )

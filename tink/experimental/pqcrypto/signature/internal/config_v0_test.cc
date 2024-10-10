@@ -25,6 +25,7 @@
 #include "absl/log/check.h"
 #include "tink/configuration.h"
 #include "tink/experimental/pqcrypto/signature/internal/key_gen_config_v0.h"
+#include "tink/experimental/pqcrypto/signature/internal/testing/ml_dsa_test_vectors.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/internal/keyset_wrapper_store.h"
@@ -33,6 +34,7 @@
 #include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
@@ -44,6 +46,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::testing::Not;
+using ::testing::TestWithParam;
 
 SlhDsaParameters GetSlhDsaParameters(SlhDsaParameters::Variant variant) {
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
@@ -330,6 +333,86 @@ TEST(PqcSignatureConfigV0Test,
   util::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
+}
+
+using PqcSignatureConfigV0Test = TestWithParam<internal::SignatureTestVector>;
+
+INSTANTIATE_TEST_SUITE_P(PqcSignatureConfigV0Test, PqcSignatureConfigV0Test,
+                         testing::ValuesIn(internal::CreateMlDsaTestVectors()));
+
+// TODO(b/372241762) Add similar tests for SLH-DSA.
+TEST_P(PqcSignatureConfigV0Test, TestVectorSignVerifyWorks) {
+  SignatureTestVector test_vector = GetParam();
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddPqcSignatureKeyGenV0(key_gen_config), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddPqcSignatureV0(config), IsOk());
+
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build(key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(key_gen_config);
+  ASSERT_THAT(public_handle, IsOk());
+
+  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      handle->GetPrimitive<PublicKeySign>(config);
+  ASSERT_THAT(signer, IsOk());
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
+  ASSERT_THAT(verifier, IsOk());
+
+  // Sign the message.
+  util::StatusOr<std::string> signature = (*signer)->Sign(test_vector.message);
+  ASSERT_THAT(signature, IsOk());
+
+  // Check that both signatures verify successfully.
+  EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
+              IsOk());
+
+  EXPECT_THAT((*verifier)->Verify(*signature, test_vector.message), IsOk());
+}
+
+TEST_P(PqcSignatureConfigV0Test, TestVectorVerifyWrongMessageFails) {
+  SignatureTestVector test_vector = GetParam();
+
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddPqcSignatureKeyGenV0(key_gen_config), IsOk());
+  Configuration config;
+  ASSERT_THAT(AddPqcSignatureV0(config), IsOk());
+
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              test_vector.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build(key_gen_config);
+  ASSERT_THAT(handle, IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(key_gen_config);
+  ASSERT_THAT(public_handle, IsOk());
+
+  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      handle->GetPrimitive<PublicKeySign>(config);
+  ASSERT_THAT(signer, IsOk());
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
+  ASSERT_THAT(verifier, IsOk());
+
+  // Sign the message.
+  util::StatusOr<std::string> signature = (*signer)->Sign(test_vector.message);
+  ASSERT_THAT(signature, IsOk());
+
+  EXPECT_THAT((*verifier)->Verify(test_vector.signature, "wrong_message"),
+              Not(IsOk()));
+  EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"), Not(IsOk()));
 }
 
 }  // namespace

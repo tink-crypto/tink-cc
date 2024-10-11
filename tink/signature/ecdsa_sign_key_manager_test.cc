@@ -26,11 +26,17 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/config/global_registry.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/signature_config.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
@@ -416,6 +422,81 @@ TEST_P(NistCurveParamsDeriveTest, TestVectors) {
   EXPECT_THAT(private_key->key_value(),
               Eq(test::HexDecodeOrDie(std::get<2>(GetParam()))));
 }
+
+using EcdsaSignKeyManagerTestVectorTest =
+    testing::TestWithParam<internal::SignatureTestVector>;
+
+// Ecdsa is randomized, so we can compute the signature.
+TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  const internal::SignatureTestVector& param = GetParam();
+  StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+  ASSERT_THAT(public_handle, IsOk());
+  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
+}
+
+TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyFreshSignature) {
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  const internal::SignatureTestVector& param = GetParam();
+  StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      handle->GetPrimitive<PublicKeySign>(ConfigGlobalRegistry());
+  ASSERT_THAT(signer, IsOk());
+  StatusOr<std::string> fresh_signature = (*signer)->Sign("some message");
+  ASSERT_THAT(fresh_signature, IsOk());
+
+  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+  ASSERT_THAT(public_handle, IsOk());
+  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*fresh_signature, "some message"), IsOk());
+}
+
+TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyWrongMessage) {
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  const internal::SignatureTestVector& param = GetParam();
+  StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+  ASSERT_THAT(public_handle, IsOk());
+  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT(
+      (*verifier)->Verify(param.signature, absl::StrCat("x", param.message)),
+      Not(IsOk()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EcdsaSignKeyManagerTestVectorTest,
+    EcdsaSignKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateEcdsaTestVectors()));
+
 
 }  // namespace
 }  // namespace tink

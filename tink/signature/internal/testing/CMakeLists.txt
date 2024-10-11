@@ -76,3 +76,28 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME ecdsa_test_vectors
+  SRCS
+    ecdsa_test_vectors.cc
+    ecdsa_test_vectors.h
+  DEPS
+    tink::signature::internal::testing::signature_test_vector
+    absl::check
+    absl::memory
+    absl::strings
+    absl::optional
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_big_integer
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_util
+  TESTONLY
+)

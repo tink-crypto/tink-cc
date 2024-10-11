@@ -1077,14 +1077,20 @@ tink_cc_test(
   DEPS
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::signature_config
     gmock
     absl::memory
     absl::status
     absl::strings
+    tink::core::key_status
+    tink::core::keyset_handle
     tink::core::public_key_sign
     tink::core::public_key_verify
+    tink::config::global_registry
     tink::internal::ec_util
     tink::internal::ssl_util
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::ecdsa_verify_boringssl
     tink::util::enums
     tink::util::istream_input_stream

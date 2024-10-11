@@ -27,12 +27,15 @@
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/key_status.h"
 #include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/internal/key_gen_config_v0.h"
+#include "tink/signature/internal/testing/rsa_ssa_pkcs1_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
@@ -47,6 +50,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::KeyTemplate;
+using ::testing::Eq;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -115,6 +119,58 @@ TEST_P(SignatureV0KeyTypesTest, GetPrimitive) {
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
+
+
+// Tests that the config allows correct use of RsaSsaPkcs1.
+using RsaSsaPkcs1Test = testing::TestWithParam<internal::SignatureTestVector>;
+
+// RsaSsaPkcs1 is deterministic, so we can compute the signature.
+TEST_P(RsaSsaPkcs1Test, ComputeSignatureInTestVector) {
+  const internal::SignatureTestVector& param = GetParam();
+  Configuration config;
+  ASSERT_THAT(AddSignatureV0(config), IsOk());
+
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      handle->GetPrimitive<PublicKeySign>(config);
+  ASSERT_THAT(signer, IsOk());
+  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT(*signature, Eq(param.signature));
+}
+
+TEST_P(RsaSsaPkcs1Test, VerifySignatureInTestVector) {
+  const internal::SignatureTestVector& param = GetParam();
+  Configuration config;
+  ASSERT_THAT(AddSignatureV0(config), IsOk());
+  KeyGenConfiguration key_gen_config;
+  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
+
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(key_gen_config);
+  ASSERT_THAT(public_handle, IsOk());
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RsaSsaPkcs1Test, RsaSsaPkcs1Test,
+    testing::ValuesIn(internal::CreateRsaSsaPkcs1TestVectors()));
 
 }  // namespace
 }  // namespace internal

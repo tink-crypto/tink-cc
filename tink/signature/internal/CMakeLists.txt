@@ -36,6 +36,8 @@ tink_cc_library(
   DEPS
     absl::memory
     tink::core::configuration
+    tink::core::public_key_sign
+    tink::core::public_key_verify
     tink::internal::configuration_impl
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
@@ -43,11 +45,17 @@ tink_cc_library(
     tink::signature::ed25519_verify_key_manager
     tink::signature::public_key_sign_wrapper
     tink::signature::public_key_verify_wrapper
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_proto_serialization
+    tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
+    tink::subtle::rsa_ssa_pkcs1_sign_boringssl
+    tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::util::status
+    tink::util::statusor
 )
 
 tink_cc_library(
@@ -126,6 +134,7 @@ tink_cc_test(
     gmock
     tink::core::configuration
     tink::core::key_gen_configuration
+    tink::core::key_status
     tink::core::keyset_handle
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -138,6 +147,8 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::signature_key_templates
+    tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto

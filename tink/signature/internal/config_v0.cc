@@ -15,25 +15,49 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/signature/internal/config_v0.h"
+#include <memory>
 
 #include "absl/memory/memory.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
+#include "tink/public_key_sign.h"
+#include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
+#include "tink/signature/rsa_ssa_pkcs1_private_key.h"
+#include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
+#include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
+#include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
+#include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 #include "tink/util/status.h"
+#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
+
+namespace {
+
+util::StatusOr<std::unique_ptr<PublicKeySign>>
+NewRsaSsaPkcs1SignBoringSsl(const RsaSsaPkcs1PrivateKey& key) {
+  return crypto::tink::subtle::RsaSsaPkcs1SignBoringSsl::New(key);
+}
+
+util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+NewRsaSsaPkcs1VerifyBoringSsl(const RsaSsaPkcs1PublicKey& key) {
+  return crypto::tink::subtle::RsaSsaPkcs1VerifyBoringSsl::New(key);
+}
+
+
+}  // namespace
 
 util::Status AddSignatureV0(Configuration& config) {
   util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
@@ -59,12 +83,31 @@ util::Status AddSignatureV0(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
+
+  // RSA SSA PKCS1
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<RsaSsaPkcs1SignKeyManager>(),
       absl::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
   if (!status.ok()) {
     return status;
   }
+  status = RegisterRsaSsaPkcs1ProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeySign,
+                                                 RsaSsaPkcs1PrivateKey>(
+      NewRsaSsaPkcs1SignBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify,
+                                                 RsaSsaPkcs1PublicKey>(
+      NewRsaSsaPkcs1VerifyBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+
   return ConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<RsaSsaPssSignKeyManager>(),
       absl::make_unique<RsaSsaPssVerifyKeyManager>(), config);

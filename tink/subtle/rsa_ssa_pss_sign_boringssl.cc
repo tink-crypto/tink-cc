@@ -29,14 +29,20 @@
 #include "absl/types/span.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
+#include "tink/signature/rsa_ssa_pss_private_key.h"
+#include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -44,6 +50,8 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
+
+using ::crypto::tink::util::SecretDataFromStringView;
 
 // Computes an RSA-SSA PSS signature using `rsa_private_key` over `digest`;
 // `digest` is the digest of the message to sign computed with `sig_md`,
@@ -102,11 +110,69 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
   return signature;
 }
 
+util::StatusOr<subtle::HashType> ToSubtle(
+    crypto::tink::RsaSsaPssParameters::HashType hash_type) {
+  switch (hash_type) {
+    case crypto::tink::RsaSsaPssParameters::HashType::kSha256:
+      return subtle::HashType::SHA256;
+    case crypto::tink::RsaSsaPssParameters::HashType::kSha384:
+      return subtle::HashType::SHA384;
+    case crypto::tink::RsaSsaPssParameters::HashType::kSha512:
+      return subtle::HashType::SHA512;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          absl::StrCat("Unsupported hash:", hash_type));
+  }
+}
+
 }  // namespace
 
 util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
+    const RsaSsaPssPrivateKey& key) {
+  internal::RsaPrivateKey private_key;
+  private_key.n = std::string(
+      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
+  private_key.e = std::string(
+      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
+  private_key.d = SecretDataFromStringView(
+      key.GetPrivateExponent().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.p =
+      SecretDataFromStringView(key.GetPrimeP(GetPartialKeyAccess())
+                                   .GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.q =
+      SecretDataFromStringView(key.GetPrimeQ(GetPartialKeyAccess())
+                                   .GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.dp = SecretDataFromStringView(
+      key.GetPrimeExponentP().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.dq = SecretDataFromStringView(
+      key.GetPrimeExponentQ().GetSecret(InsecureSecretKeyAccess::Get()));
+  private_key.crt = SecretDataFromStringView(
+      key.GetCrtCoefficient().GetSecret(InsecureSecretKeyAccess::Get()));
+  internal::RsaSsaPssParams params;
+  util::StatusOr<subtle::HashType> mgf1_hash =
+      ToSubtle(key.GetParameters().GetMgf1HashType());
+  if (!mgf1_hash.ok()) {
+    return mgf1_hash.status();
+  }
+  params.mgf1_hash = *mgf1_hash;
+  util::StatusOr<subtle::HashType> sig_hash =
+      ToSubtle(key.GetParameters().GetSigHashType());
+  if (!sig_hash.ok()) {
+    return sig_hash.status();
+  }
+  params.sig_hash = *sig_hash;
+  params.salt_length = key.GetParameters().GetSaltLengthInBytes();
+  return New(
+      private_key, params, key.GetOutputPrefix(),
+      key.GetParameters().GetVariant() == RsaSsaPssParameters::Variant::kLegacy
+          ? std::string(1, 0)
+          : "");
+}
+
+util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
-    const internal::RsaSsaPssParams& params) {
+    const internal::RsaSsaPssParams& params, absl::string_view output_prefix,
+    absl::string_view message_suffix) {
   util::Status status =
       internal::CheckFipsCompatibility<RsaSsaPssSignBoringSsl>();
   if (!status.ok()) {
@@ -140,10 +206,11 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
   }
 
   return {absl::WrapUnique(new RsaSsaPssSignBoringSsl(
-      *std::move(rsa), *sig_hash, *mgf1_hash, params.salt_length))};
+      *std::move(rsa), *sig_hash, *mgf1_hash, params.salt_length, output_prefix,
+      message_suffix))};
 }
 
-util::StatusOr<std::string> RsaSsaPssSignBoringSsl::Sign(
+util::StatusOr<std::string> RsaSsaPssSignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
   util::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
@@ -157,6 +224,24 @@ util::StatusOr<std::string> RsaSsaPssSignBoringSsl::Sign(
     return util::Status(absl::StatusCode::kInternal, "Signing failed.");
   }
   return signature;
+}
+
+util::StatusOr<std::string> RsaSsaPssSignBoringSsl::Sign(
+    absl::string_view data) const {
+  util::StatusOr<std::string> signature_without_prefix_;
+  if (message_suffix_.empty()) {
+    signature_without_prefix_ = SignWithoutPrefix(data);
+  } else {
+    signature_without_prefix_ =
+        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
+  }
+  if (!signature_without_prefix_.ok()) {
+    return signature_without_prefix_.status();
+  }
+  if (output_prefix_.empty()) {
+    return signature_without_prefix_;
+  }
+  return absl::StrCat(output_prefix_, *signature_without_prefix_);
 }
 
 }  // namespace subtle

@@ -271,6 +271,7 @@ tink_cc_library(
     absl::status
     absl::strings
     crypto
+    tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::err_util
     tink::internal::fips_utils
@@ -278,6 +279,8 @@ tink_cc_library(
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::internal::util
+    tink::signature::rsa_ssa_pss_parameters
+    tink::signature::rsa_ssa_pss_public_key
     tink::util::errors
     tink::util::status
     tink::util::statusor
@@ -1303,6 +1306,9 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

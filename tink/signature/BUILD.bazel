@@ -750,6 +750,7 @@ cc_library(
     hdrs = ["rsa_ssa_pss_private_key.h"],
     include_prefix = "tink/signature",
     deps = [
+        ":rsa_ssa_pss_parameters",
         ":rsa_ssa_pss_public_key",
         ":signature_private_key",
         "//tink:big_integer",

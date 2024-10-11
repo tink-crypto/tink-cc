@@ -21,6 +21,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/util/statusor.h"
@@ -88,6 +89,10 @@ class RsaSsaPssPrivateKey : public SignaturePrivateKey {
 
   const RsaSsaPssPublicKey& GetPublicKey() const override {
     return public_key_;
+  }
+
+  const RsaSsaPssParameters& GetParameters() const override {
+    return GetPublicKey().GetParameters();
   }
 
   bool operator==(const Key& other) const override;

@@ -43,8 +43,8 @@ using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::IsOk;
 
-using ::google::crypto::tink::AesEaxKey;
-using ::google::crypto::tink::AesGcmKey;
+using AesEaxKeyProto = ::google::crypto::tink::AesEaxKey;
+using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::EncryptedKeyset;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
@@ -140,8 +140,8 @@ class JsonKeysetReaderTest : public ::testing::Test {
   std::string good_json_encrypted_keyset_;
 
   // Some prepopulated keys.
-  AesGcmKey gcm_key_;
-  AesEaxKey eax_key_;
+  AesGcmKeyProto gcm_key_;
+  AesEaxKeyProto eax_key_;
 };
 
 TEST_F(JsonKeysetReaderTest, testReaderCreation) {

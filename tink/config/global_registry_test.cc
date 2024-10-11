@@ -44,7 +44,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::AesGcmKey;
+using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
@@ -60,12 +60,13 @@ class FakePrimitive {
 };
 
 class FakeKeyTypeManager
-    : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat, List<FakePrimitive>> {
+    : public KeyTypeManager<AesGcmKeyProto, AesGcmKeyFormat,
+                            List<FakePrimitive>> {
  public:
   class FakePrimitiveFactory : public PrimitiveFactory<FakePrimitive> {
    public:
     util::StatusOr<std::unique_ptr<FakePrimitive>> Create(
-        const AesGcmKey& key) const override {
+        const AesGcmKeyProto& key) const override {
       return absl::make_unique<FakePrimitive>(key.key_value());
     }
   };
@@ -81,7 +82,7 @@ class FakeKeyTypeManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const AesGcmKey& key) const override {
+  util::Status ValidateKey(const AesGcmKeyProto& key) const override {
     return util::OkStatus();
   }
 
@@ -90,15 +91,15 @@ class FakeKeyTypeManager
     return util::OkStatus();
   }
 
-  util::StatusOr<AesGcmKey> CreateKey(
+  util::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
-    return AesGcmKey();
+    return AesGcmKeyProto();
   }
 
-  util::StatusOr<AesGcmKey> DeriveKey(
+  util::StatusOr<AesGcmKeyProto> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
-    return AesGcmKey();
+    return AesGcmKeyProto();
   }
 
  private:

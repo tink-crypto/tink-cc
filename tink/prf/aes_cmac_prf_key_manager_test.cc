@@ -39,7 +39,7 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::test::IsOk;
-using ::google::crypto::tink::AesCmacPrfKey;
+using AesCmacPrfKeyProto = ::google::crypto::tink::AesCmacPrfKey;
 using ::google::crypto::tink::AesCmacPrfKeyFormat;
 using ::testing::Eq;
 using ::testing::Not;
@@ -66,7 +66,8 @@ TEST(AesCmacPrfKeyManagerTest, Basics) {
 }
 
 TEST(AesCmacPrfKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(AesCmacPrfKeyManager().ValidateKey(AesCmacPrfKey()), Not(IsOk()));
+  EXPECT_THAT(AesCmacPrfKeyManager().ValidateKey(AesCmacPrfKeyProto()),
+              Not(IsOk()));
 }
 
 TEST(AesCmacPrfKeyManagerTest, ValidateEmptyKeyFormat) {
@@ -110,34 +111,34 @@ TEST(AesCmacPrfKeyManagerTest, ValidateKeyFormatKeySizes) {
 TEST(AesCmacPrfKeyManagerTest, CreateKey) {
   AesCmacPrfKeyFormat format = ValidKeyFormat();
   ASSERT_THAT(AesCmacPrfKeyManager().CreateKey(format), IsOk());
-  AesCmacPrfKey key = AesCmacPrfKeyManager().CreateKey(format).value();
+  AesCmacPrfKeyProto key = AesCmacPrfKeyManager().CreateKey(format).value();
   EXPECT_THAT(key.version(), Eq(0));
   EXPECT_THAT(key.key_value(), SizeIs(format.key_size()));
 }
 
 TEST(AesCmacPrfKeyManagerTest, ValidateKey) {
   AesCmacPrfKeyFormat format = ValidKeyFormat();
-  AesCmacPrfKey key = AesCmacPrfKeyManager().CreateKey(format).value();
+  AesCmacPrfKeyProto key = AesCmacPrfKeyManager().CreateKey(format).value();
   EXPECT_THAT(AesCmacPrfKeyManager().ValidateKey(key), IsOk());
 }
 
 TEST(AesCmacPrfKeyManagerTest, ValidateKeyInvalidVersion) {
   AesCmacPrfKeyFormat format = ValidKeyFormat();
-  AesCmacPrfKey key = AesCmacPrfKeyManager().CreateKey(format).value();
+  AesCmacPrfKeyProto key = AesCmacPrfKeyManager().CreateKey(format).value();
   key.set_version(1);
   EXPECT_THAT(AesCmacPrfKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(AesCmacPrfKeyManagerTest, ValidateKeyShortKey) {
   AesCmacPrfKeyFormat format = ValidKeyFormat();
-  AesCmacPrfKey key = AesCmacPrfKeyManager().CreateKey(format).value();
+  AesCmacPrfKeyProto key = AesCmacPrfKeyManager().CreateKey(format).value();
   key.set_key_value("0123456789abcdef");
   EXPECT_THAT(AesCmacPrfKeyManager().ValidateKey(key), Not(IsOk()));
 }
 
 TEST(AesCmacPrfKeyManagerTest, GetPrimitive) {
   AesCmacPrfKeyFormat format = ValidKeyFormat();
-  AesCmacPrfKey key = AesCmacPrfKeyManager().CreateKey(format).value();
+  AesCmacPrfKeyProto key = AesCmacPrfKeyManager().CreateKey(format).value();
   auto manager_prf_or = AesCmacPrfKeyManager().GetPrimitive<Prf>(key);
   ASSERT_THAT(manager_prf_or, IsOk());
   auto prf_value_or = manager_prf_or.value()->Compute("some plaintext", 16);
@@ -158,7 +159,7 @@ TEST(AesCmacPrfKeyManagerTest, DeriveKeyValid) {
   auto key_or =
       AesCmacPrfKeyManager().DeriveKey(ValidKeyFormat(), inputstream.get());
   ASSERT_THAT(key_or, IsOk());
-  AesCmacPrfKey key = key_or.value();
+  AesCmacPrfKeyProto key = key_or.value();
   EXPECT_THAT(key.version(), Eq(AesCmacPrfKeyManager().get_version()));
   EXPECT_THAT(key.key_value(), Eq(bytes));
 }

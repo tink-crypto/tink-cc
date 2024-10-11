@@ -40,8 +40,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::google::crypto::tink::AesCmacKey;
-using ::google::crypto::tink::HmacKey;
+using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
+using HmacKeyProto = ::google::crypto::tink::HmacKey;
 
 util::Status ChunkedMacComputationImpl::Update(absl::string_view data) {
   if (!status_.ok()) return status_;
@@ -100,7 +100,7 @@ ChunkedMacImpl::CreateVerification(absl::string_view tag) const {
 }
 
 util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
-    const AesCmacKey& key) {
+    const AesCmacKeyProto& key) {
   if (!key.has_params()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid key: missing parameters.");
@@ -114,7 +114,8 @@ util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
       new ChunkedMacImpl(std::move(stateful_mac_factory)));
 }
 
-util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(const HmacKey& key) {
+util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
+    const HmacKeyProto& key) {
   if (!key.has_params()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid key: missing paramaters.");

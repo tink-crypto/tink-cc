@@ -54,8 +54,8 @@ using ::crypto::tink::test::AddRawKey;
 using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::DummyAead;
 using ::crypto::tink::test::IsOk;
-using ::google::crypto::tink::AesEaxKey;
-using ::google::crypto::tink::AesGcmKey;
+using AesEaxKeyProto = ::google::crypto::tink::AesEaxKey;
+using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::EncryptedKeyset;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
@@ -146,8 +146,8 @@ class JsonKeysetWriterTest : public ::testing::Test {
   rapidjson::Document good_json_keyset_;
   rapidjson::Document good_json_encrypted_keyset_;
   std::string good_json_encrypted_keyset_string_;
-  AesGcmKey gcm_key_;
-  AesEaxKey eax_key_;
+  AesGcmKeyProto gcm_key_;
+  AesEaxKeyProto eax_key_;
 };
 
 TEST_F(JsonKeysetWriterTest, testWriterCreation) {

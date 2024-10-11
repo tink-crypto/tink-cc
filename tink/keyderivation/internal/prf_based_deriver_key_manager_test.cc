@@ -48,14 +48,14 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::StatusOr;
-using ::google::crypto::tink::AesGcmKey;
+using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HkdfPrfKey;
+using HkdfPrfKeyProto = ::google::crypto::tink::HkdfPrfKey;
 using ::google::crypto::tink::HkdfPrfKeyFormat;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyTemplate;
-using ::google::crypto::tink::PrfBasedDeriverKey;
+using PrfBasedDeriverKeyProto = ::google::crypto::tink::PrfBasedDeriverKey;
 using ::google::crypto::tink::PrfBasedDeriverKeyFormat;
 using ::testing::Eq;
 using ::testing::SizeIs;
@@ -69,17 +69,18 @@ TEST(PrfBasedDeriverKeyManagerTest, Basics) {
 }
 
 TEST(PrfBasedDeriverKeyManagerTest, ValidateKeyEmpty) {
-  EXPECT_THAT(PrfBasedDeriverKeyManager().ValidateKey(PrfBasedDeriverKey()),
-              StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(
+      PrfBasedDeriverKeyManager().ValidateKey(PrfBasedDeriverKeyProto()),
+      StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(PrfBasedDeriverKeyManagerTest, ValidateKey) {
-  HkdfPrfKey prf_key;
+  HkdfPrfKeyProto prf_key;
   prf_key.set_version(0);
   prf_key.set_key_value("0123456789abcdef");
   prf_key.mutable_params()->set_hash(HashType::SHA256);
 
-  PrfBasedDeriverKey key;
+  PrfBasedDeriverKeyProto key;
   key.set_version(0);
   *key.mutable_prf_key() = test::AsKeyData(prf_key, KeyData::SYMMETRIC);
   *key.mutable_params()->mutable_derived_key_template() =
@@ -89,12 +90,12 @@ TEST(PrfBasedDeriverKeyManagerTest, ValidateKey) {
 }
 
 TEST(PrfBasedDeriverKeyManagerTest, ValidateKeyWithWrongVersion) {
-  HkdfPrfKey prf_key;
+  HkdfPrfKeyProto prf_key;
   prf_key.set_version(0);
   prf_key.set_key_value("0123456789abcdef");
   prf_key.mutable_params()->set_hash(HashType::SHA256);
 
-  PrfBasedDeriverKey key;
+  PrfBasedDeriverKeyProto key;
   key.set_version(1);
   *key.mutable_prf_key() = test::AsKeyData(prf_key, KeyData::SYMMETRIC);
   *key.mutable_params()->mutable_derived_key_template() =
@@ -151,7 +152,7 @@ TEST(PrfBasedDeriverKeyManagerTest, CreateKey) {
   *key_format.mutable_params()->mutable_derived_key_template() =
       AeadKeyTemplates::Aes256Gcm();
 
-  util::StatusOr<PrfBasedDeriverKey> key =
+  util::StatusOr<PrfBasedDeriverKeyProto> key =
       PrfBasedDeriverKeyManager().CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key).version(), Eq(0));
@@ -159,7 +160,7 @@ TEST(PrfBasedDeriverKeyManagerTest, CreateKey) {
               Eq(HkdfPrfKeyManager().get_key_type()));
   EXPECT_THAT((*key).prf_key().key_material_type(), Eq(KeyData::SYMMETRIC));
 
-  HkdfPrfKey prf_key;
+  HkdfPrfKeyProto prf_key;
   ASSERT_TRUE(prf_key.ParseFromString((*key).prf_key().value()));
   EXPECT_THAT(prf_key.key_value().size(), Eq(32));
 
@@ -240,13 +241,13 @@ TEST(PrfBasedDeriverKeyManagerTest, GetPrimitive) {
                   absl::make_unique<AesGcmKeyManager>(), true),
               IsOk());
 
-  HkdfPrfKey prf_key;
+  HkdfPrfKeyProto prf_key;
   prf_key.set_version(0);
   prf_key.mutable_params()->set_hash(HashType::SHA256);
   prf_key.mutable_params()->set_salt(subtle::Random::GetRandomBytes(15));
   prf_key.set_key_value(subtle::Random::GetRandomBytes(33));
   prf_key.mutable_params()->set_hash(HashType::SHA256);
-  PrfBasedDeriverKey key;
+  PrfBasedDeriverKeyProto key;
   key.set_version(0);
   *key.mutable_prf_key() = test::AsKeyData(prf_key, KeyData::SYMMETRIC);
   *key.mutable_params()->mutable_derived_key_template() =
@@ -277,9 +278,9 @@ TEST(PrfBasedDeriverKeyManagerTest, GetPrimitive) {
   ASSERT_THAT(keyset.key(0).key_data().type_url(),
               Eq(keyset.key(0).key_data().type_url()));
 
-  AesGcmKey derived_key;
+  AesGcmKeyProto derived_key;
   ASSERT_TRUE(derived_key.ParseFromString(keyset.key(0).key_data().value()));
-  AesGcmKey direct_derived_key;
+  AesGcmKeyProto direct_derived_key;
   ASSERT_TRUE(direct_derived_key.ParseFromString(
       direct_keyset.key(0).key_data().value()));
   EXPECT_THAT(derived_key.key_value(), Eq(direct_derived_key.key_value()));

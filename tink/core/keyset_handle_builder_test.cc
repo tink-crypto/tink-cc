@@ -78,7 +78,7 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCmacParams;
-using ::google::crypto::tink::AesGcmKey;
+using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
@@ -1148,14 +1148,14 @@ class MockAeadPrimitiveWrapper : public PrimitiveWrapper<Aead, Aead> {
 };
 
 class FakeAeadKeyManager
-    : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat, List<Aead>> {
+    : public KeyTypeManager<AesGcmKeyProto, AesGcmKeyFormat, List<Aead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
    public:
     explicit AeadFactory(absl::string_view key_type) : key_type_(key_type) {}
 
     util::StatusOr<std::unique_ptr<Aead>> Create(
-        const AesGcmKey& key) const override {
+        const AesGcmKeyProto& key) const override {
       return {absl::make_unique<test::DummyAead>(key_type_)};
     }
 
@@ -1176,7 +1176,8 @@ class FakeAeadKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(const AesGcmKey& key) const override {
+  crypto::tink::util::Status ValidateKey(
+      const AesGcmKeyProto& key) const override {
     return util::OkStatus();
   }
 
@@ -1185,15 +1186,15 @@ class FakeAeadKeyManager
     return util::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<AesGcmKey> CreateKey(
+  crypto::tink::util::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
-    return AesGcmKey();
+    return AesGcmKeyProto();
   }
 
-  crypto::tink::util::StatusOr<AesGcmKey> DeriveKey(
+  crypto::tink::util::StatusOr<AesGcmKeyProto> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
-    return AesGcmKey();
+    return AesGcmKeyProto();
   }
 
  private:

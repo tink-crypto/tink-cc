@@ -59,13 +59,13 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::AesGcmKey;
+using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::RsaSsaPssKeyFormat;
 using ::google::crypto::tink::RsaSsaPssParams;
-using ::google::crypto::tink::RsaSsaPssPrivateKey;
-using ::google::crypto::tink::RsaSsaPssPublicKey;
+using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
+using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 using ::testing::Eq;
 using ::testing::NotNull;
 
@@ -79,12 +79,13 @@ class FakePrimitive {
 };
 
 class FakeKeyTypeManager
-    : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat, List<FakePrimitive>> {
+    : public KeyTypeManager<AesGcmKeyProto, AesGcmKeyFormat,
+                            List<FakePrimitive>> {
  public:
   class FakePrimitiveFactory : public PrimitiveFactory<FakePrimitive> {
    public:
     util::StatusOr<std::unique_ptr<FakePrimitive>> Create(
-        const AesGcmKey& key) const override {
+        const AesGcmKeyProto& key) const override {
       return absl::make_unique<FakePrimitive>(key.key_value());
     }
   };
@@ -100,7 +101,7 @@ class FakeKeyTypeManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const AesGcmKey& key) const override {
+  util::Status ValidateKey(const AesGcmKeyProto& key) const override {
     return util::OkStatus();
   }
 
@@ -109,15 +110,15 @@ class FakeKeyTypeManager
     return util::OkStatus();
   }
 
-  util::StatusOr<AesGcmKey> CreateKey(
+  util::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
-    return AesGcmKey();
+    return AesGcmKeyProto();
   }
 
-  util::StatusOr<AesGcmKey> DeriveKey(
+  util::StatusOr<AesGcmKeyProto> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
-    return AesGcmKey();
+    return AesGcmKeyProto();
   }
 
  private:
@@ -266,13 +267,14 @@ TEST(KeyGenConfigurationImplTest, GetMissingKeyManagerFails) {
 }
 
 class FakeSignKeyManager
-    : public PrivateKeyTypeManager<RsaSsaPssPrivateKey, RsaSsaPssKeyFormat,
-                                   RsaSsaPssPublicKey, List<PublicKeySign>> {
+    : public PrivateKeyTypeManager<RsaSsaPssPrivateKeyProto, RsaSsaPssKeyFormat,
+                                   RsaSsaPssPublicKeyProto,
+                                   List<PublicKeySign>> {
  public:
   class PublicKeySignFactory : public PrimitiveFactory<PublicKeySign> {
    public:
     util::StatusOr<std::unique_ptr<PublicKeySign>> Create(
-        const RsaSsaPssPrivateKey& key) const override {
+        const RsaSsaPssPrivateKeyProto& key) const override {
       return {absl::make_unique<test::DummyPublicKeySign>("a public key sign")};
     }
   };
@@ -288,7 +290,7 @@ class FakeSignKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const RsaSsaPssPrivateKey& key) const override {
+  util::Status ValidateKey(const RsaSsaPssPrivateKeyProto& key) const override {
     return util::OkStatus();
   }
 
@@ -297,19 +299,19 @@ class FakeSignKeyManager
     return util::OkStatus();
   }
 
-  util::StatusOr<RsaSsaPssPrivateKey> CreateKey(
+  util::StatusOr<RsaSsaPssPrivateKeyProto> CreateKey(
       const RsaSsaPssKeyFormat& key_format) const override {
-    return RsaSsaPssPrivateKey();
+    return RsaSsaPssPrivateKeyProto();
   }
 
-  util::StatusOr<RsaSsaPssPrivateKey> DeriveKey(
+  util::StatusOr<RsaSsaPssPrivateKeyProto> DeriveKey(
       const RsaSsaPssKeyFormat& key_format,
       InputStream* input_stream) const override {
-    return RsaSsaPssPrivateKey();
+    return RsaSsaPssPrivateKeyProto();
   }
 
-  util::StatusOr<RsaSsaPssPublicKey> GetPublicKey(
-      const RsaSsaPssPrivateKey& private_key) const override {
+  util::StatusOr<RsaSsaPssPublicKeyProto> GetPublicKey(
+      const RsaSsaPssPrivateKeyProto& private_key) const override {
     return private_key.public_key();
   }
 
@@ -318,12 +320,13 @@ class FakeSignKeyManager
 };
 
 class FakeVerifyKeyManager
-    : public KeyTypeManager<RsaSsaPssPublicKey, void, List<PublicKeyVerify>> {
+    : public KeyTypeManager<RsaSsaPssPublicKeyProto, void,
+                            List<PublicKeyVerify>> {
  public:
   class PublicKeyVerifyFactory : public PrimitiveFactory<PublicKeyVerify> {
    public:
     util::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
-        const RsaSsaPssPublicKey& key) const override {
+        const RsaSsaPssPublicKeyProto& key) const override {
       return {
           absl::make_unique<test::DummyPublicKeyVerify>("a public key verify")};
     }
@@ -340,7 +343,7 @@ class FakeVerifyKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const RsaSsaPssPublicKey& key) const override {
+  util::Status ValidateKey(const RsaSsaPssPublicKeyProto& key) const override {
     return util::OkStatus();
   }
 

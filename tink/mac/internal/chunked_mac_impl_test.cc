@@ -42,10 +42,10 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::AesCmacKey;
+using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
 using ::google::crypto::tink::AesCmacParams;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HmacKey;
+using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::google::crypto::tink::HmacParams;
 using ::testing::_;
 using ::testing::ByMove;
@@ -66,14 +66,14 @@ class MockStatefulMacFactory : public subtle::StatefulMacFactory {
 TEST(ChunkedMacFactoryTest, NewChunkedCmacSucceeds) {
   AesCmacParams params;
   params.set_tag_size(16);
-  AesCmacKey key;
+  AesCmacKeyProto key;
   *key.mutable_params() = params;
 
   EXPECT_THAT(NewChunkedCmac(key), IsOk());
 }
 
 TEST(ChunkedMacFactoryTest, NewChunkedCmacWithMissingKeyParamsFails) {
-  EXPECT_THAT(NewChunkedCmac(AesCmacKey()).status(),
+  EXPECT_THAT(NewChunkedCmac(AesCmacKeyProto()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
@@ -81,14 +81,14 @@ TEST(ChunkedMacFactoryTest, NewChunkedHmacSucceeds) {
   HmacParams params;
   params.set_hash(HashType::SHA256);
   params.set_tag_size(16);
-  HmacKey key;
+  HmacKeyProto key;
   *key.mutable_params() = params;
 
   EXPECT_THAT(NewChunkedHmac(key), IsOk());
 }
 
 TEST(ChunkedMacFactoryTest, NewChunkedHmacWithMissingKeyParamsFails) {
-  EXPECT_THAT(NewChunkedHmac(HmacKey()).status(),
+  EXPECT_THAT(NewChunkedHmac(HmacKeyProto()).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 

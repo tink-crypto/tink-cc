@@ -44,7 +44,7 @@ using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HmacPrfKey;
+using HmacPrfKeyProto = ::google::crypto::tink::HmacPrfKey;
 using ::google::crypto::tink::HmacPrfKeyFormat;
 using ::testing::HasSubstr;
 using ::testing::Not;
@@ -62,7 +62,7 @@ TEST(HmacPrfKeyManagerTest, Basics) {
 }
 
 TEST(HmacPrfKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(HmacPrfKeyManager().ValidateKey(HmacPrfKey()), Not(IsOk()));
+  EXPECT_THAT(HmacPrfKeyManager().ValidateKey(HmacPrfKeyProto()), Not(IsOk()));
 }
 
 TEST(HmacPrfKeyManagerTest, ValidateEmptyKeyFormat) {
@@ -99,7 +99,7 @@ TEST(HmacPrfKeyManagerTest, CreateKey) {
 }
 
 TEST(HmacPrfKeyManagerTest, ValidKey) {
-  HmacPrfKey key;
+  HmacPrfKeyProto key;
   key.set_version(0);
 
   key.mutable_params()->set_hash(HashType::SHA256);
@@ -109,7 +109,7 @@ TEST(HmacPrfKeyManagerTest, ValidKey) {
 }
 
 TEST(HmacPrfKeyManagerTest, ValidateKeyShortKey) {
-  HmacPrfKey key;
+  HmacPrfKeyProto key;
   key.set_version(0);
 
   key.mutable_params()->set_hash(HashType::SHA256);
@@ -127,7 +127,7 @@ TEST(HmacPrfKeyManagerTest, DeriveKey) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
-  StatusOr<HmacPrfKey> key_or =
+  StatusOr<HmacPrfKeyProto> key_or =
       HmacPrfKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_EQ(key_or.value().key_value(), "0123456789abcdefghijklm");
@@ -165,7 +165,7 @@ TEST(HmacPrfKeyManagerTest, GetPrimitive) {
   HmacPrfKeyFormat key_format;
   key_format.mutable_params()->set_hash(HashType::SHA256);
   key_format.set_key_size(16);
-  HmacPrfKey key = HmacPrfKeyManager().CreateKey(key_format).value();
+  HmacPrfKeyProto key = HmacPrfKeyManager().CreateKey(key_format).value();
   auto manager_mac_or = HmacPrfKeyManager().GetPrimitive<Prf>(key);
   ASSERT_THAT(manager_mac_or, IsOk());
   auto prf_value_or = manager_mac_or.value()->Compute("some plaintext", 16);
@@ -188,7 +188,7 @@ TEST(HmacPrfKeyManagerTest, GetPrimitiveAllHashTypes) {
     HmacPrfKeyFormat key_format;
     key_format.mutable_params()->set_hash(HashType::SHA256);
     key_format.set_key_size(16);
-    HmacPrfKey key = HmacPrfKeyManager().CreateKey(key_format).value();
+    HmacPrfKeyProto key = HmacPrfKeyManager().CreateKey(key_format).value();
     auto manager_mac_or = HmacPrfKeyManager().GetPrimitive<Prf>(key);
     ASSERT_THAT(manager_mac_or, IsOk());
     EXPECT_THAT(manager_mac_or.value()->Compute("some plaintext", 16),
@@ -197,7 +197,7 @@ TEST(HmacPrfKeyManagerTest, GetPrimitiveAllHashTypes) {
 }
 
 TEST(HmacPrfKeyManagerTest, GetPrimitiveUnknownHash) {
-  HmacPrfKey key;
+  HmacPrfKeyProto key;
   key.set_version(0);
   key.mutable_params()->set_hash(HashType::UNKNOWN_HASH);
   key.set_key_value("0123456789abcdef");

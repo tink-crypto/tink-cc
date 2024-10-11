@@ -45,7 +45,7 @@ using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HmacKey;
+using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::google::crypto::tink::HmacKeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -63,7 +63,7 @@ TEST(HmacKeyManagerTest, Basics) {
 }
 
 TEST(HmacKeyManagerTest, ValidateEmptyKey) {
-  EXPECT_THAT(HmacKeyManager().ValidateKey(HmacKey()), Not(IsOk()));
+  EXPECT_THAT(HmacKeyManager().ValidateKey(HmacKeyProto()), Not(IsOk()));
 }
 
 TEST(HmacKeyManagerTest, ValidateEmptyKeyFormat) {
@@ -173,7 +173,7 @@ TEST(HmacKeyManagerTest, CreateKey) {
 }
 
 TEST(HmacKeyManagerTest, ValidKey) {
-  HmacKey key;
+  HmacKeyProto key;
   key.set_version(0);
 
   key.mutable_params()->set_hash(HashType::SHA256);
@@ -184,7 +184,7 @@ TEST(HmacKeyManagerTest, ValidKey) {
 }
 
 TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha1) {
-  HmacKey key;
+  HmacKeyProto key;
   key.set_version(0);
   key.mutable_params()->set_hash(HashType::SHA1);
   key.set_key_value("0123456789abcdef");
@@ -196,7 +196,7 @@ TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha1) {
 }
 
 TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha224) {
-  HmacKey key;
+  HmacKeyProto key;
   key.set_version(0);
   key.mutable_params()->set_hash(HashType::SHA224);
   key.set_key_value("0123456789abcdef");
@@ -208,7 +208,7 @@ TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha224) {
 }
 
 TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha256) {
-  HmacKey key;
+  HmacKeyProto key;
   key.set_version(0);
   key.mutable_params()->set_hash(HashType::SHA256);
   key.set_key_value("0123456789abcdef");
@@ -220,7 +220,7 @@ TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha256) {
 }
 
 TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha384) {
-  HmacKey key;
+  HmacKeyProto key;
   key.set_version(0);
   key.mutable_params()->set_hash(HashType::SHA384);
   key.set_key_value("0123456789abcdef");
@@ -232,7 +232,7 @@ TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha384) {
 }
 
 TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha512) {
-  HmacKey key;
+  HmacKeyProto key;
   key.set_version(0);
   key.mutable_params()->set_hash(HashType::SHA512);
   key.set_key_value("0123456789abcdef");
@@ -244,7 +244,7 @@ TEST(HmacKeyManagerTest, ValidateKeyTagSizesSha512) {
 }
 
 TEST(HmacKeyManagerTest, ValidateKeyShortKey) {
-  HmacKey key;
+  HmacKeyProto key;
   key.set_version(0);
 
   key.mutable_params()->set_hash(HashType::SHA256);
@@ -264,7 +264,8 @@ TEST(HmacKeyManagerTest, DeriveKey) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
-  StatusOr<HmacKey> key_or = HmacKeyManager().DeriveKey(format, &input_stream);
+  StatusOr<HmacKeyProto> key_or =
+      HmacKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_EQ(key_or.value().key_value(), "0123456789abcdefghijklm");
   EXPECT_EQ(key_or.value().params().hash(), format.params().hash());
@@ -305,7 +306,7 @@ TEST(HmacKeyManagerTest, GetMacPrimitive) {
   key_format.mutable_params()->set_tag_size(16);
   key_format.mutable_params()->set_hash(HashType::SHA256);
   key_format.set_key_size(16);
-  HmacKey key = HmacKeyManager().CreateKey(key_format).value();
+  HmacKeyProto key = HmacKeyManager().CreateKey(key_format).value();
   auto manager_mac_or = HmacKeyManager().GetPrimitive<Mac>(key);
   ASSERT_THAT(manager_mac_or, IsOk());
   auto mac_value_or = manager_mac_or.value()->ComputeMac("some plaintext");
@@ -325,7 +326,7 @@ TEST(HmacKeyManagerTest, GetChunkedMacPrimitive) {
   key_format.mutable_params()->set_tag_size(16);
   key_format.mutable_params()->set_hash(HashType::SHA256);
   key_format.set_key_size(16);
-  HmacKey key = HmacKeyManager().CreateKey(key_format).value();
+  HmacKeyProto key = HmacKeyManager().CreateKey(key_format).value();
 
   util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       HmacKeyManager().GetPrimitive<ChunkedMac>(key);
@@ -352,7 +353,7 @@ TEST(HmacKeyManagerTest, MixPrimitives) {
   key_format.mutable_params()->set_tag_size(16);
   key_format.mutable_params()->set_hash(HashType::SHA256);
   key_format.set_key_size(16);
-  HmacKey key = HmacKeyManager().CreateKey(key_format).value();
+  HmacKeyProto key = HmacKeyManager().CreateKey(key_format).value();
 
   util::StatusOr<std::unique_ptr<Mac>> mac =
       HmacKeyManager().GetPrimitive<Mac>(key);

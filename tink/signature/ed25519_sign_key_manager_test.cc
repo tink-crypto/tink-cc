@@ -16,6 +16,7 @@
 
 #include "tink/signature/ed25519_sign_key_manager.h"
 
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -24,10 +25,16 @@
 #include "absl/container/flat_hash_set.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "tink/config/global_registry.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/registry.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "tink/signature/internal/testing/ed25519_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
+#include "tink/signature/signature_config.h"
 #include "tink/subtle/ed25519_verify_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
@@ -197,6 +204,53 @@ TEST(Ed25519SignKeyManagerTest, DeriveKeyNotEnoughRandomness) {
   ASSERT_THAT(Ed25519SignKeyManager().DeriveKey(format, &input_stream).status(),
               test::StatusIs(absl::StatusCode::kInvalidArgument));
 }
+
+
+using Ed25519SignKeyManagerTestVectorTest =
+    testing::TestWithParam<internal::SignatureTestVector>;
+
+// Ed25519 is deterministic, so we can compute the signature.
+TEST_P(Ed25519SignKeyManagerTestVectorTest, ComputeSignatureInTestVector) {
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  const internal::SignatureTestVector& param = GetParam();
+  StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      handle->GetPrimitive<PublicKeySign>(ConfigGlobalRegistry());
+  ASSERT_THAT(signer, IsOk());
+  StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT(*signature, Eq(param.signature));
+}
+
+TEST_P(Ed25519SignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
+  ASSERT_THAT(SignatureConfig::Register(), IsOk());
+  const internal::SignatureTestVector& param = GetParam();
+  StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.signature_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+  ASSERT_THAT(public_handle, IsOk());
+  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Ed25519SignKeyManagerTestVectorTest,
+    Ed25519SignKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateEd25519TestVectors()));
 
 }  // namespace
 }  // namespace tink

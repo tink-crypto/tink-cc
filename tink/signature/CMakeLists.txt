@@ -1103,13 +1103,19 @@ tink_cc_test(
   DEPS
     tink::signature::ed25519_sign_key_manager
     tink::signature::ed25519_verify_key_manager
+    tink::signature::signature_config
     gmock
     absl::flat_hash_set
     absl::memory
     absl::status
+    tink::core::key_status
+    tink::core::keyset_handle
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
+    tink::config::global_registry
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::subtle::ed25519_verify_boringssl
     tink::util::enums
     tink::util::istream_input_stream

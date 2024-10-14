@@ -29,6 +29,7 @@
 #include "openssl/rsa.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -219,7 +220,9 @@ util::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa) {
   if (!d.ok()) {
     return d.status();
   }
-  if (RSA_set0_key(rsa, n->get(), e->get(), d->get()) != 1) {
+  if (CallWithCoreDumpProtection([&]() {
+        return RSA_set0_key(rsa, n->get(), e->get(), d->get());
+      }) != 1) {
     return util::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("Could not load RSA key: ", internal::GetSslErrors()));
@@ -294,37 +297,40 @@ util::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
   if (!exponent_status.ok()) {
     return exponent_status;
   }
-  internal::SslUniquePtr<RSA> rsa(RSA_new());
-  if (rsa.get() == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
-                        "BoringSsl RSA allocation error");
-  }
-  util::Status status = GetRsaModAndExponents(private_key, rsa.get());
-  if (!status.ok()) {
-    return status;
-  }
-  status = GetRsaPrimeFactors(private_key, rsa.get());
-  if (!status.ok()) {
-    return status;
-  }
-  status = GetRsaCrtParams(private_key, rsa.get());
-  if (!status.ok()) {
-    return status;
-  }
+  return CallWithCoreDumpProtection(
+      [&]() -> util::StatusOr<internal::SslUniquePtr<RSA>> {
+        internal::SslUniquePtr<RSA> rsa(RSA_new());
+        if (rsa.get() == nullptr) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "BoringSsl RSA allocation error");
+        }
+        util::Status status = GetRsaModAndExponents(private_key, rsa.get());
+        if (!status.ok()) {
+          return status;
+        }
+        status = GetRsaPrimeFactors(private_key, rsa.get());
+        if (!status.ok()) {
+          return status;
+        }
+        status = GetRsaCrtParams(private_key, rsa.get());
+        if (!status.ok()) {
+          return status;
+        }
 
-  if (RSA_check_key(rsa.get()) == 0) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Could not load RSA key: ", internal::GetSslErrors()));
-  }
+        if (RSA_check_key(rsa.get()) == 0) {
+          return util::Status(absl::StatusCode::kInvalidArgument,
+                              absl::StrCat("Could not load RSA key: ",
+                                           internal::GetSslErrors()));
+        }
 #ifdef OPENSSL_IS_BORINGSSL
-  if (RSA_check_fips(rsa.get()) == 0) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        absl::StrCat("Could not load RSA key: ", internal::GetSslErrors()));
-  }
+        if (RSA_check_fips(rsa.get()) == 0) {
+          return util::Status(absl::StatusCode::kInvalidArgument,
+                              absl::StrCat("Could not load RSA key: ",
+                                           internal::GetSslErrors()));
+        }
 #endif
-  return std::move(rsa);
+        return std::move(rsa);
+      });
 }
 
 util::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(

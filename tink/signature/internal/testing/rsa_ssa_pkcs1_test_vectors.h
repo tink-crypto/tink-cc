@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SIGNATURE_INTERNAL_TESTING_RSA_SSA_PKCS_TEST_VECTORS_H_
-#define TINK_SIGNATURE_INTERNAL_TESTING_RSA_SSA_PKCS_TEST_VECTORS_H_
+#ifndef TINK_SIGNATURE_INTERNAL_TESTING_RSA_SSA_PKCS1_TEST_VECTORS_H_
+#define TINK_SIGNATURE_INTERNAL_TESTING_RSA_SSA_PKCS1_TEST_VECTORS_H_
 
 #include <vector>
 #include "tink/signature/internal/testing/signature_test_vector.h"
@@ -33,5 +33,4 @@ std::vector<SignatureTestVector> CreateRsaSsaPkcs1TestVectors();
 }  // namespace tink
 }  // namespace crypto
 
-
-#endif  // TINK_SIGNATURE_INTERNAL_TESTING_RSA_SSA_PKCS_TEST_VECTORS_H_
+#endif  // TINK_SIGNATURE_INTERNAL_TESTING_RSA_SSA_PKCS1_TEST_VECTORS_H_

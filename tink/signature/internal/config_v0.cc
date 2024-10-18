@@ -33,10 +33,15 @@
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
+#include "tink/signature/rsa_ssa_pss_private_key.h"
+#include "tink/signature/rsa_ssa_pss_proto_serialization.h"
+#include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
+#include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
+#include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -54,6 +59,17 @@ NewRsaSsaPkcs1SignBoringSsl(const RsaSsaPkcs1PrivateKey& key) {
 util::StatusOr<std::unique_ptr<PublicKeyVerify>>
 NewRsaSsaPkcs1VerifyBoringSsl(const RsaSsaPkcs1PublicKey& key) {
   return crypto::tink::subtle::RsaSsaPkcs1VerifyBoringSsl::New(key);
+}
+
+
+util::StatusOr<std::unique_ptr<PublicKeySign>>
+NewRsaSsaPssSignBoringSsl(const RsaSsaPssPrivateKey& key) {
+  return crypto::tink::subtle::RsaSsaPssSignBoringSsl::New(key);
+}
+
+util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+NewRsaSsaPssVerifyBoringSsl(const RsaSsaPssPublicKey& key) {
+  return crypto::tink::subtle::RsaSsaPssVerifyBoringSsl::New(key);
 }
 
 
@@ -104,6 +120,24 @@ util::Status AddSignatureV0(Configuration& config) {
   status = ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify,
                                                  RsaSsaPkcs1PublicKey>(
       NewRsaSsaPkcs1VerifyBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+
+  // RSA SSA PSS
+  status = RegisterRsaSsaPssProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeySign,
+                                                 RsaSsaPssPrivateKey>(
+      NewRsaSsaPssSignBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify,
+                                                 RsaSsaPssPublicKey>(
+      NewRsaSsaPssVerifyBoringSsl, config);
   if (!status.ok()) {
     return status;
   }

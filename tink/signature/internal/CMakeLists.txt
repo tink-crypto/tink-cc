@@ -50,10 +50,15 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
+    tink::signature::rsa_ssa_pss_private_key
+    tink::signature::rsa_ssa_pss_proto_serialization
+    tink::signature::rsa_ssa_pss_public_key
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
+    tink::subtle::rsa_ssa_pss_sign_boringssl
+    tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::util::status
     tink::util::statusor
 )
@@ -147,7 +152,10 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::signature::signature_key_templates
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
+    tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
     tink::util::statusor
     tink::util::test_matchers

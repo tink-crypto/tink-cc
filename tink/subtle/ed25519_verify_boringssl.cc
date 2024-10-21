@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,18 +19,25 @@
 #include <cstdint>
 #include <cstring>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
+#include "absl/strings/strip.h"
 #include "openssl/evp.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -40,8 +47,19 @@ namespace subtle {
 
 constexpr int kEd25519SignatureLenInBytes = 64;
 
+crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+Ed25519VerifyBoringSsl::New(const Ed25519PublicKey &public_key) {
+  return New(public_key.GetPublicKeyBytes(GetPartialKeyAccess()),
+             public_key.GetOutputPrefix(),
+             public_key.GetParameters().GetVariant() ==
+                     Ed25519Parameters::Variant::kLegacy
+                 ? std::string(1, 0)
+                 : "");
+}
+
 util::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
-    absl::string_view public_key) {
+    absl::string_view public_key, absl::string_view output_prefix,
+    absl::string_view message_suffix) {
   auto status = internal::CheckFipsCompatibility<Ed25519VerifyBoringSsl>();
   if (!status.ok()) return status;
 
@@ -63,11 +81,12 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
                         "EVP_PKEY_new_raw_public_key failed");
   }
 
-  return {absl::WrapUnique(new Ed25519VerifyBoringSsl(std::move(ssl_pub_key)))};
+  return {absl::WrapUnique(new Ed25519VerifyBoringSsl(
+      std::move(ssl_pub_key), output_prefix, message_suffix))};
 }
 
-util::Status Ed25519VerifyBoringSsl::Verify(absl::string_view signature,
-                                            absl::string_view data) const {
+util::Status Ed25519VerifyBoringSsl::VerifyWithoutPrefix(
+    absl::string_view signature, absl::string_view data) const {
   signature = internal::EnsureStringNonNull(signature);
   data = internal::EnsureStringNonNull(data);
 
@@ -97,6 +116,26 @@ util::Status Ed25519VerifyBoringSsl::Verify(absl::string_view signature,
   }
 
   return util::OkStatus();
+}
+
+util::Status Ed25519VerifyBoringSsl::Verify(absl::string_view signature,
+                                            absl::string_view data) const {
+  if (output_prefix_.empty() && message_suffix_.empty()) {
+    return VerifyWithoutPrefix(signature, data);
+  }
+  if (!absl::StartsWith(signature, output_prefix_)) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "OutputPrefix does not match");
+  }
+  // Stores a copy of the data in case message_suffix_ is not empty.
+  // Needs to stay alive until this method is done.
+  std::string data_copy_holder;
+  if (!message_suffix_.empty()) {
+    data_copy_holder = absl::StrCat(data, message_suffix_);
+    data = data_copy_holder;
+  }
+  return VerifyWithoutPrefix(absl::StripPrefix(signature, output_prefix_),
+                             data);
 }
 
 }  // namespace subtle

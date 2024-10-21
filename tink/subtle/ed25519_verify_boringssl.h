@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -36,7 +37,12 @@ namespace subtle {
 class Ed25519VerifyBoringSsl : public PublicKeyVerify {
  public:
   static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
-      absl::string_view public_key);
+      const Ed25519PublicKey& public_key);
+
+  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+      absl::string_view public_key) {
+    return New(public_key, "", "");
+  }
 
   // Verifies that 'signature' is a digital signature for 'data'.
   crypto::tink::util::Status Verify(absl::string_view signature,
@@ -46,10 +52,23 @@ class Ed25519VerifyBoringSsl : public PublicKeyVerify {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  explicit Ed25519VerifyBoringSsl(internal::SslUniquePtr<EVP_PKEY> public_key)
-      : public_key_(std::move(public_key)) {}
+  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+      absl::string_view public_key, absl::string_view output_prefix,
+      absl::string_view message_suffix);
+
+  explicit Ed25519VerifyBoringSsl(internal::SslUniquePtr<EVP_PKEY> public_key,
+                                  absl::string_view output_prefix,
+                                  absl::string_view message_suffix)
+      : public_key_(std::move(public_key)),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  crypto::tink::util::Status VerifyWithoutPrefix(absl::string_view signature,
+                                                 absl::string_view data) const;
 
   const internal::SslUniquePtr<EVP_PKEY> public_key_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
 };
 
 }  // namespace subtle

@@ -138,11 +138,14 @@ tink_cc_library(
     absl::strings
     absl::str_format
     crypto
+    tink::core::partial_key_access
     tink::core::public_key_verify
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::internal::util
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_public_key
     tink::util::status
     tink::util::statusor
 )
@@ -1283,6 +1286,10 @@ tink_cc_test(
     tink::core::public_key_verify
     tink::config::tink_fips
     tink::internal::ec_util
+    tink::internal::fips_utils
+    tink::signature::ed25519_private_key
+    tink::signature::internal::testing::ed25519_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

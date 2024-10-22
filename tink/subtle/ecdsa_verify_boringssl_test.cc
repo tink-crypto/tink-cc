@@ -29,6 +29,9 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecdsa_sign_boringssl.h"
 #include "tink/subtle/subtle_util_boringssl.h"
@@ -43,7 +46,10 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::Not;
+using ::testing::NotNull;
 
 class EcdsaVerifyBoringSslTest : public ::testing::Test {};
 
@@ -286,6 +292,52 @@ TEST_F(EcdsaVerifyBoringSslTest, TestFipsFailWithoutBoringCrypto) {
                   .status(),
               StatusIs(absl::StatusCode::kInternal));
 }
+
+using EcdsaVerifyBoringSslTestVectorTest =
+    testing::TestWithParam<internal::SignatureTestVector>;
+
+TEST_P(EcdsaVerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
+  const internal::SignatureTestVector& param = GetParam();
+  const EcdsaPrivateKey* typed_key =
+      dynamic_cast<const EcdsaPrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    // Users wants FIPS, but we don't have FIPS.
+    ASSERT_THAT(EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
+}
+
+TEST_P(EcdsaVerifyBoringSslTestVectorTest, DifferentMessageDoesNotVerify) {
+  const internal::SignatureTestVector& param = GetParam();
+  const EcdsaPrivateKey* typed_key =
+      dynamic_cast<const EcdsaPrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    // Users wants FIPS, but we don't have FIPS.
+    ASSERT_THAT(EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey()),
+                Not(IsOk()));
+    return;
+  }
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT(
+      (*verifier)->Verify(param.signature, absl::StrCat(param.message, "a")),
+      Not(IsOk()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EcdsaVerifyBoringSslTestVectorTest,
+    EcdsaVerifyBoringSslTestVectorTest,
+    testing::ValuesIn(internal::CreateEcdsaTestVectors()));
 
 }  // namespace
 }  // namespace subtle

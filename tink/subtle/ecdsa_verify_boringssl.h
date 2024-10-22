@@ -18,6 +18,7 @@
 #define TINK_SUBTLE_ECDSA_VERIFY_BORINGSSL_H_
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "absl/strings/string_view.h"
@@ -26,6 +27,7 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util_boringssl.h"
 #include "tink/util/status.h"
@@ -38,13 +40,20 @@ namespace subtle {
 // ECDSA verification using Boring SSL, accepting signatures in DER-encoding.
 class EcdsaVerifyBoringSsl : public PublicKeyVerify {
  public:
+  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+      const EcdsaPublicKey& public_key);
+
   static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
   New(const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding);
+      EcdsaSignatureEncoding encoding) {
+    return New(ec_key, hash_type, encoding, "", "");
+  }
 
   static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
   New(internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
-      EcdsaSignatureEncoding encoding);
+      EcdsaSignatureEncoding encoding) {
+    return New(std::move(ec_key), hash_type, encoding, "", "");
+  }
 
   // Verifies that 'signature' is a digital signature for 'data'.
   crypto::tink::util::Status Verify(
@@ -55,13 +64,33 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
  private:
+  static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
+  New(const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
+      EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
+      absl::string_view message_suffix);
+  static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
+  New(internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
+      EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
+      absl::string_view message_suffix);
+
   EcdsaVerifyBoringSsl(internal::SslUniquePtr<EC_KEY> key, const EVP_MD* hash,
-                       EcdsaSignatureEncoding encoding)
-      : key_(std::move(key)), hash_(hash), encoding_(encoding) {}
+                       EcdsaSignatureEncoding encoding,
+                       absl::string_view output_prefix,
+                       absl::string_view message_suffix)
+      : key_(std::move(key)),
+        hash_(hash),
+        encoding_(encoding),
+        output_prefix_(output_prefix),
+        message_suffix_(message_suffix) {}
+
+  crypto::tink::util::Status VerifyWithoutPrefix(absl::string_view signature,
+                                                 absl::string_view data) const;
 
   internal::SslUniquePtr<EC_KEY> key_;
   const EVP_MD* hash_;  // Owned by BoringSSL.
   EcdsaSignatureEncoding encoding_;
+  const std::string output_prefix_;
+  const std::string message_suffix_;
 };
 
 }  // namespace subtle

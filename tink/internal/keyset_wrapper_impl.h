@@ -25,7 +25,7 @@
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#include "tink/insecure_secret_key_access.h"
+#include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/key_info.h"
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -76,8 +76,9 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
       util::StatusOr<internal::ProtoKeySerialization> serialization =
           internal::ProtoKeySerialization::Create(
               proto_key.key_data().type_url(),
-              RestrictedData(proto_key.key_data().value(),
-                             InsecureSecretKeyAccess::Get()),
+              RestrictedData(
+                  proto_key.key_data().value(),
+                  internal::GetInsecureSecretKeyAccessInternal()),
               proto_key.key_data().key_material_type(),
               google::crypto::tink::OutputPrefixType::RAW,
               /*id_requirement=*/absl::nullopt);
@@ -87,7 +88,8 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
 
       util::StatusOr<std::unique_ptr<const Key>> key =
           internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-              *serialization, InsecureSecretKeyAccess::Get());
+              *serialization,
+              internal::GetInsecureSecretKeyAccessInternal());
 
       util::StatusOr<std::unique_ptr<P>> primitive;
       if (!key.ok() ||

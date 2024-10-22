@@ -52,6 +52,7 @@ tink_cc_library(
   SRCS
     keyset_wrapper_impl.h
   DEPS
+    tink::internal::internal_insecure_secret_key_access
     tink::internal::key_info
     tink::internal::keyset_wrapper
     tink::internal::mutable_serialization_registry
@@ -60,7 +61,6 @@ tink_cc_library(
     absl::any_invocable
     absl::status
     absl::optional
-    tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::primitive_set
     tink::core::primitive_wrapper
@@ -1760,4 +1760,14 @@ tink_cc_test(
   DEPS
     tink::internal::output_prefix_util
     gmock
+)
+
+tink_cc_library(
+  NAME internal_insecure_secret_key_access
+  SRCS
+    internal_insecure_secret_key_access.cc
+    internal_insecure_secret_key_access.h
+  DEPS
+    tink::core::insecure_secret_key_access
+    tink::core::secret_key_access_token
 )

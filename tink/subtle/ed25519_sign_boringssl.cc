@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,21 +19,28 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "absl/log/log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_private_key.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -46,7 +53,8 @@ constexpr int kEd25519SignatureLenInBytes = 64;
 
 // static
 util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
-    util::SecretData private_key) {
+    util::SecretData private_key, absl::string_view output_prefix,
+    absl::string_view message_suffix) {
   auto status = internal::CheckFipsCompatibility<Ed25519SignBoringSsl>();
   if (!status.ok()) return status;
 
@@ -74,10 +82,11 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
                         "EVP_PKEY_new_raw_private_key failed");
   }
 
-  return {absl::WrapUnique(new Ed25519SignBoringSsl(std::move(ssl_priv_key)))};
+  return {absl::WrapUnique(new Ed25519SignBoringSsl(
+      std::move(ssl_priv_key), output_prefix, message_suffix))};
 }
 
-util::StatusOr<std::string> Ed25519SignBoringSsl::Sign(
+util::StatusOr<std::string> Ed25519SignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
 
@@ -98,6 +107,43 @@ util::StatusOr<std::string> Ed25519SignBoringSsl::Sign(
 
   return std::string(reinterpret_cast<char *>(out_sig),
                      kEd25519SignatureLenInBytes);
+}
+
+util::StatusOr<std::string> Ed25519SignBoringSsl::Sign(
+    absl::string_view data) const {
+  util::StatusOr<std::string> signature_without_prefix_;
+  if (message_suffix_.empty()) {
+    signature_without_prefix_ = SignWithoutPrefix(data);
+  } else {
+    signature_without_prefix_ =
+        SignWithoutPrefix(absl::StrCat(data, message_suffix_));
+  }
+  if (!signature_without_prefix_.ok()) {
+    return signature_without_prefix_.status();
+  }
+  if (output_prefix_.empty()) {
+    return signature_without_prefix_;
+  }
+  return absl::StrCat(output_prefix_, *signature_without_prefix_);
+}
+
+util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
+    const Ed25519PrivateKey &key) {
+  util::SecretData private_key =
+      key.GetPrivateKeyBytes(GetPartialKeyAccess())
+          .Get(InsecureSecretKeyAccess::Get());
+  std::string public_key =
+      std::string(key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
+  size_t private_key_size = private_key.size();
+  private_key.resize(private_key.size() + public_key.size());
+  memcpy(private_key.data() + private_key_size, public_key.data(),
+         public_key.size());
+
+  return New(
+      private_key, key.GetOutputPrefix(),
+      key.GetParameters().GetVariant() == Ed25519Parameters::Variant::kLegacy
+          ? std::string(1, 0)
+          : "");
 }
 
 }  // namespace subtle

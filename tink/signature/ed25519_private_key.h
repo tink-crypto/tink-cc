@@ -20,6 +20,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/util/statusor.h"
@@ -48,6 +49,9 @@ class Ed25519PrivateKey : public SignaturePrivateKey {
 
   const Ed25519PublicKey& GetPublicKey() const override { return public_key_; }
 
+  const Ed25519Parameters& GetParameters() const override {
+    return public_key_.GetParameters();
+  }
   bool operator==(const Key& other) const override;
 
  private:

@@ -494,6 +494,7 @@ tink_cc_library(
     ed25519_private_key.cc
     ed25519_private_key.h
   DEPS
+    tink::signature::ed25519_parameters
     tink::signature::ed25519_public_key
     tink::signature::signature_private_key
     absl::status

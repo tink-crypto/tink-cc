@@ -516,6 +516,7 @@ cc_library(
     hdrs = ["ed25519_private_key.h"],
     include_prefix = "tink/signature",
     deps = [
+        ":ed25519_parameters",
         ":ed25519_public_key",
         ":signature_private_key",
         "//tink:insecure_secret_key_access",

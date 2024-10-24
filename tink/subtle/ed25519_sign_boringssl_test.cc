@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,8 +29,12 @@
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ed25519_private_key.h"
+#include "tink/signature/internal/testing/ed25519_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/subtle/ed25519_verify_boringssl.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
@@ -46,6 +50,9 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::Eq;
+using ::testing::Not;
+using ::testing::NotNull;
 
 constexpr int kEd25519SignatureLenInBytes = 64;
 
@@ -355,6 +362,34 @@ TEST_F(Ed25519SignBoringSslTest, testFipsMode) {
   EXPECT_THAT(Ed25519SignBoringSsl::New(key->private_key).status(),
               StatusIs(absl::StatusCode::kInternal));
 }
+
+using Ed25519SignBoringSSLTestVectorTest =
+    testing::TestWithParam<internal::SignatureTestVector>;
+
+// Ed25519 is deterministic, so we can compute the signature.
+TEST_P(Ed25519SignBoringSSLTestVectorTest, ComputeSignatureInTestVector) {
+  const internal::SignatureTestVector& param = GetParam();
+  const Ed25519PrivateKey* typed_key =
+      dynamic_cast<const Ed25519PrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, NotNull());
+  if (internal::IsFipsModeEnabled()) {
+    // Users wants FIPS but Ed25519 is not FIPS
+    ASSERT_THAT(Ed25519SignBoringSsl::New(*typed_key), Not(IsOk()));
+    return;
+  }
+  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      Ed25519SignBoringSsl::New(*typed_key);
+  ASSERT_THAT(signer, IsOk());
+  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT(*signature, Eq(param.signature));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Ed25519SignBoringSSLTestVectorTest,
+    Ed25519SignBoringSSLTestVectorTest,
+    testing::ValuesIn(internal::CreateEd25519TestVectors()));
 
 }  // namespace
 }  // namespace subtle

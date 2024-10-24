@@ -236,11 +236,16 @@ tink_cc_library(
     absl::status
     absl::strings
     crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::internal::fips_utils
     tink::internal::md_util
     tink::internal::util
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
     tink::signature::internal::ecdsa_raw_sign_boringssl
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
 )
@@ -1219,11 +1224,15 @@ tink_cc_test(
     tink::subtle::subtle_util_boringssl
     gmock
     absl::status
+    absl::strings
     absl::string_view
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::ec_util
     tink::internal::fips_utils
+    tink::signature::ecdsa_private_key
+    tink::signature::internal::testing::ecdsa_test_vectors
+    tink::signature::internal::testing::signature_test_vector
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

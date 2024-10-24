@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,17 +17,22 @@
 #include "tink/subtle/ecdsa_sign_boringssl.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/internal/testing/ecdsa_test_vectors.h"
+#include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/subtle/subtle_util_boringssl.h"
@@ -42,6 +47,7 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::testing::Not;
 
 class EcdsaSignBoringSslTest : public ::testing::Test {};
 
@@ -193,6 +199,46 @@ TEST_F(EcdsaSignBoringSslTest, TestFipsFailWithoutBoringCrypto) {
                   .status(),
               StatusIs(absl::StatusCode::kInternal));
 }
+
+using EcdsaSignBoringSSLTestVectorTest =
+    testing::TestWithParam<internal::SignatureTestVector>;
+
+// ECDSA is probabilistic, so we can only check that a new signature is
+// verified by the verifier.
+TEST_P(EcdsaSignBoringSSLTestVectorTest, FreshSignatureInTestVector) {
+  const internal::SignatureTestVector& param = GetParam();
+  const EcdsaPrivateKey* typed_key =
+      dynamic_cast<const EcdsaPrivateKey*>(
+          param.signature_private_key.get());
+  ASSERT_THAT(typed_key, testing::NotNull());
+  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
+    // Users wants FIPS, but we don't have FIPS.
+    ASSERT_THAT(EcdsaSignBoringSsl::New(*typed_key), Not(IsOk()));
+    return;
+  }
+  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+      EcdsaSignBoringSsl::New(*typed_key);
+  ASSERT_THAT(signer, IsOk());
+  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  ASSERT_THAT(signature, IsOk());
+
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+      EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey());
+  ASSERT_THAT(verifier, IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, param.message), IsOk());
+
+  // Also check that the verifier doesn't simply verify everything: we change
+  // the message.
+  EXPECT_THAT((*verifier)->Verify(*signature, absl::StrCat(param.message, "x")),
+              Not(IsOk()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    EcdsaSignBoringSSLTestVectorTest,
+    EcdsaSignBoringSSLTestVectorTest,
+    testing::ValuesIn(internal::CreateEcdsaTestVectors()));
+
+
 
 }  // namespace
 }  // namespace subtle

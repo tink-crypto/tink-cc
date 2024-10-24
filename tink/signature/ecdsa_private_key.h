@@ -20,6 +20,7 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/util/statusor.h"
@@ -48,6 +49,10 @@ class EcdsaPrivateKey : public SignaturePrivateKey {
   }
 
   const EcdsaPublicKey& GetPublicKey() const override { return public_key_; }
+
+  const EcdsaParameters& GetParameters() const override {
+    return public_key_.GetParameters();
+  }
 
   bool operator==(const Key& other) const override;
 

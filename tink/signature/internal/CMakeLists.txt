@@ -41,6 +41,9 @@ tink_cc_library(
     tink::internal::configuration_impl
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_proto_serialization
+    tink::signature::ed25519_public_key
     tink::signature::ed25519_sign_key_manager
     tink::signature::ed25519_verify_key_manager
     tink::signature::public_key_sign_wrapper
@@ -55,6 +58,8 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_public_key
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
+    tink::subtle::ed25519_sign_boringssl
+    tink::subtle::ed25519_verify_boringssl
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::subtle::rsa_ssa_pss_sign_boringssl

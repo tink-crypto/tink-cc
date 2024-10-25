@@ -24,6 +24,9 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_private_key.h"
+#include "tink/signature/ed25519_proto_serialization.h"
+#include "tink/signature/ed25519_public_key.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
 #include "tink/signature/public_key_sign_wrapper.h"
@@ -38,6 +41,8 @@
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
+#include "tink/subtle/ed25519_sign_boringssl.h"
+#include "tink/subtle/ed25519_verify_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
@@ -72,6 +77,15 @@ NewRsaSsaPssVerifyBoringSsl(const RsaSsaPssPublicKey& key) {
   return crypto::tink::subtle::RsaSsaPssVerifyBoringSsl::New(key);
 }
 
+util::StatusOr<std::unique_ptr<PublicKeySign>>
+NewEd25519SignBoringSsl(const Ed25519PrivateKey& key) {
+  return crypto::tink::subtle::Ed25519SignBoringSsl::New(key);
+}
+
+util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+NewEd25519VerifyBoringSsl(const Ed25519PublicKey& key) {
+  return crypto::tink::subtle::Ed25519VerifyBoringSsl::New(key);
+}
 
 }  // namespace
 
@@ -93,9 +107,26 @@ util::Status AddSignatureV0(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
+  // Ed25519
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<Ed25519SignKeyManager>(),
       absl::make_unique<Ed25519VerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = RegisterEd25519ProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeySign,
+                                                 Ed25519PrivateKey>(
+      NewEd25519SignBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify,
+                                                 Ed25519PublicKey>(
+      NewEd25519VerifyBoringSsl, config);
   if (!status.ok()) {
     return status;
   }

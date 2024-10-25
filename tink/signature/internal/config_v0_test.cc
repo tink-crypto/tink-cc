@@ -234,6 +234,10 @@ INSTANTIATE_TEST_SUITE_P(
     testing::ValuesIn(internal::CreateRsaSsaPkcs1TestVectors()));
 
 INSTANTIATE_TEST_SUITE_P(
+    Ed25519Test, DeterministicSignatureTests,
+    testing::ValuesIn(internal::CreateEd25519TestVectors()));
+
+INSTANTIATE_TEST_SUITE_P(
     RsaSsaPssTest, RandomizedSignaturesTest,
     testing::ValuesIn(internal::CreateRsaSsaPssTestVectors()));
 

@@ -33,6 +33,8 @@
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -90,23 +92,32 @@ util::StatusOr<std::string> Ed25519SignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
 
-  uint8_t out_sig[kEd25519SignatureLenInBytes];
-  std::fill(std::begin(out_sig), std::end(out_sig), 0);
-
+  std::string out_sig;
+  out_sig.resize(kEd25519SignatureLenInBytes);
+  // We ignore writes in the out_sig for core dump safety  -- after all, the
+  // signature is what can be leaked to the adversary anyhow.
+  internal::ScopedAssumeRegionCoreDumpSafe scope(out_sig.data(),
+                                                 kEd25519SignatureLenInBytes);
   internal::SslUniquePtr<EVP_MD_CTX> md_ctx(EVP_MD_CTX_create());
   size_t sig_len = kEd25519SignatureLenInBytes;
   // type must be set to nullptr with Ed25519.
   // See https://www.openssl.org/docs/man1.1.1/man3/EVP_DigestSignInit.html.
-  if (EVP_DigestSignInit(md_ctx.get(), /*pctx=*/nullptr, /*type=*/nullptr,
-                         /*e=*/nullptr, priv_key_.get()) != 1 ||
-      EVP_DigestSign(md_ctx.get(), out_sig, &sig_len,
-                     /*data=*/reinterpret_cast<const uint8_t *>(data.data()),
-                     data.size()) != 1) {
+  bool success = internal::CallWithCoreDumpProtection([&]() {
+    return EVP_DigestSignInit(md_ctx.get(), /*pctx=*/nullptr, /*type=*/nullptr,
+                              /*e=*/nullptr, priv_key_.get()) == 1 &&
+           EVP_DigestSign(
+               md_ctx.get(), reinterpret_cast<uint8_t *>(&out_sig[0]),
+               &sig_len,
+               /*data=*/reinterpret_cast<const uint8_t *>(data.data()),
+               data.size()) == 1;
+  });
+  if (!success) {
     return util::Status(absl::StatusCode::kInternal, "Signing failed.");
   }
-
-  return std::string(reinterpret_cast<char *>(out_sig),
-                     kEd25519SignatureLenInBytes);
+  // It is fine to leak the signature to the adversary so we can now clear the
+  // label.
+  internal::DfsanClearLabel(out_sig.data(), kEd25519SignatureLenInBytes);
+  return out_sig;
 }
 
 util::StatusOr<std::string> Ed25519SignBoringSsl::Sign(

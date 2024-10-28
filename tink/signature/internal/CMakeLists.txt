@@ -15,6 +15,7 @@ tink_cc_library(
     tink::core::public_key_sign
     tink::internal::bn_util
     tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::ec_util
     tink::internal::err_util
     tink::internal::fips_utils

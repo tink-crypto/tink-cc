@@ -33,6 +33,7 @@
 #include "openssl/evp.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
@@ -145,25 +146,44 @@ util::StatusOr<std::string> EcdsaRawSignBoringSsl::Sign(
   data = internal::EnsureStringNonNull(data);
 
   // Compute the raw signature.
-  std::vector<uint8_t> buffer(ECDSA_size(key_.get()));
-  unsigned int sig_length;
-  if (1 != ECDSA_sign(0 /* unused */,
-                      reinterpret_cast<const uint8_t*>(data.data()),
-                      data.size(), buffer.data(), &sig_length, key_.get())) {
-    return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+  size_t signature_buffer_size = ECDSA_size(key_.get());
+  std::vector<uint8_t> buffer(signature_buffer_size);
+  // We allow core dump leakage of information written into the buffer. This is
+  // anyhow only the signature, which is fine to give to the adversary.
+  ScopedAssumeRegionCoreDumpSafe scope(buffer.data(), signature_buffer_size);
+  util::StatusOr<int> signature_length =
+      CallWithCoreDumpProtection([&]() -> util::StatusOr<int> {
+        unsigned int sig_length;
+        int result = ECDSA_sign(0 /* unused */,
+                          reinterpret_cast<const uint8_t*>(data.data()),
+                          data.size(), buffer.data(), &sig_length, key_.get());
+        if (result != 1) {
+          return util::Status(absl::StatusCode::kInternal,
+                              "BoringSSL signing failed");
+        }
+        // We clear the label from the signature length -- the signature is
+        // now public, so the label can be cleared.
+        DfsanClearLabel(&sig_length, sizeof(sig_length));
+        return sig_length;
+      });
+  if (!signature_length.ok()) {
+    return signature_length.status();
   }
 
+  // We now remove DFSan labels from the signature - this is fine to leak.
+  DfsanClearLabel(buffer.data(), *signature_length);
   if (encoding_ == subtle::EcdsaSignatureEncoding::IEEE_P1363) {
-    auto status_or_sig = DerToIeee(
-        absl::string_view(reinterpret_cast<char*>(buffer.data()), sig_length),
-        key_.get());
+    auto status_or_sig =
+        DerToIeee(absl::string_view(reinterpret_cast<char*>(buffer.data()),
+                                    *signature_length),
+                  key_.get());
     if (!status_or_sig.ok()) {
       return status_or_sig.status();
     }
     return status_or_sig.value();
   }
 
-  return std::string(reinterpret_cast<char*>(buffer.data()), sig_length);
+  return std::string(reinterpret_cast<char*>(buffer.data()), *signature_length);
 }
 
 }  // namespace internal

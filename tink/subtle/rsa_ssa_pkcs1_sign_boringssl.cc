@@ -16,6 +16,7 @@
 
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -30,6 +31,8 @@
 #include "openssl/rsa.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
@@ -155,21 +158,31 @@ util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
   }
 
   std::string signature;
-  ResizeStringUninitialized(&signature, RSA_size(private_key_.get()));
-  unsigned int signature_length = 0;
+  size_t signature_buffer_size = RSA_size(private_key_.get());
+  ResizeStringUninitialized(&signature, signature_buffer_size);
 
-  if (RSA_sign(/*hash_nid=*/EVP_MD_type(sig_hash_),
-               /*digest=*/reinterpret_cast<const uint8_t*>(digest->data()),
-               /*digest_len=*/digest->size(),
-               /*out=*/reinterpret_cast<uint8_t*>(&signature[0]),
-               /*out_len=*/&signature_length,
-               /*rsa=*/private_key_.get()) != 1) {
-    // TODO(b/112581512): Decide if it's safe to propagate the BoringSSL error.
-    // For now, just empty the error stack.
-    internal::GetSslErrors();
-    return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+  util::Status s = internal::CallWithCoreDumpProtection([&]() {
+    unsigned int signature_length = 0;
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
+                                                   signature_buffer_size);
+    if (RSA_sign(/*hash_nid=*/EVP_MD_type(sig_hash_),
+                 /*digest=*/reinterpret_cast<const uint8_t*>(digest->data()),
+                 /*digest_len=*/digest->size(),
+                 /*out=*/reinterpret_cast<uint8_t*>(&signature[0]),
+                 /*out_len=*/&signature_length,
+                 /*rsa=*/private_key_.get()) != 1) {
+      // TODO(b/112581512): Decide if it's safe to propagate the BoringSSL
+      // error. For now, just empty the error stack.
+      internal::GetSslErrors();
+      return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+    }
+    internal::DfsanClearLabel(&signature[0], signature_buffer_size);
+    signature.resize(signature_length);
+    return util::OkStatus();
+  });
+  if (!s.ok()) {
+    return s;
   }
-  signature.resize(signature_length);
   return signature;
 }
 

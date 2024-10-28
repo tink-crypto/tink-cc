@@ -25,10 +25,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#define OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
-#include "openssl/experimental/spx.h"
-#undef OPENSSL_UNSTABLE_EXPERIMENTAL_SPX
 #include "openssl/mldsa.h"
+#include "openssl/slhdsa.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
@@ -78,15 +76,15 @@ util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
 
 util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     const SlhDsaParameters& params, absl::optional<int> id_requirement) {
-  uint8_t public_key_bytes[SPX_PUBLIC_KEY_BYTES];
-  uint8_t private_key_bytes[SPX_SECRET_KEY_BYTES];
+  uint8_t public_key_bytes[SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES];
+  uint8_t private_key_bytes[SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES];
 
-  SPX_generate_key(public_key_bytes, private_key_bytes);
+  SLHDSA_SHA2_128S_generate_key(public_key_bytes, private_key_bytes);
 
   util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
       params,
       absl::string_view(reinterpret_cast<const char*>(public_key_bytes),
-                        SPX_PUBLIC_KEY_BYTES),
+                        SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES),
       id_requirement, GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
@@ -96,7 +94,7 @@ util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
       *public_key,
       RestrictedData(
           absl::string_view(reinterpret_cast<const char*>(private_key_bytes),
-                            SPX_SECRET_KEY_BYTES),
+                            SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES),
           InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   if (!private_key.ok()) {

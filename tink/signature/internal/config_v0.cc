@@ -22,6 +22,9 @@
 #include "tink/internal/configuration_impl.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
+#include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_private_key.h"
@@ -41,6 +44,8 @@
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
+#include "tink/subtle/ecdsa_sign_boringssl.h"
+#include "tink/subtle/ecdsa_verify_boringssl.h"
 #include "tink/subtle/ed25519_sign_boringssl.h"
 #include "tink/subtle/ed25519_verify_boringssl.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
@@ -78,6 +83,16 @@ NewRsaSsaPssVerifyBoringSsl(const RsaSsaPssPublicKey& key) {
 }
 
 util::StatusOr<std::unique_ptr<PublicKeySign>>
+NewEcdsaSignBoringSsl(const EcdsaPrivateKey& key) {
+  return crypto::tink::subtle::EcdsaSignBoringSsl::New(key);
+}
+
+util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+NewEcdsaVerifyBoringSsl(const EcdsaPublicKey& key) {
+  return crypto::tink::subtle::EcdsaVerifyBoringSsl::New(key);
+}
+
+util::StatusOr<std::unique_ptr<PublicKeySign>>
 NewEd25519SignBoringSsl(const Ed25519PrivateKey& key) {
   return crypto::tink::subtle::Ed25519SignBoringSsl::New(key);
 }
@@ -101,9 +116,26 @@ util::Status AddSignatureV0(Configuration& config) {
     return status;
   }
 
+  // ECDSA
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<EcdsaSignKeyManager>(),
       absl::make_unique<EcdsaVerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = RegisterEcdsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeySign,
+                                                 EcdsaPrivateKey>(
+      NewEcdsaSignBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify,
+                                                 EcdsaPublicKey>(
+      NewEcdsaVerifyBoringSsl, config);
   if (!status.ok()) {
     return status;
   }

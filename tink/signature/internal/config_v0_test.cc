@@ -241,6 +241,10 @@ INSTANTIATE_TEST_SUITE_P(
     RsaSsaPssTest, RandomizedSignaturesTest,
     testing::ValuesIn(internal::CreateRsaSsaPssTestVectors()));
 
+INSTANTIATE_TEST_SUITE_P(
+    EcdsaTest, RandomizedSignaturesTest,
+    testing::ValuesIn(internal::CreateEcdsaTestVectors()));
+
 
 }  // namespace
 }  // namespace internal

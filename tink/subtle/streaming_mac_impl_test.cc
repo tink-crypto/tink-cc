@@ -25,6 +25,8 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "tink/output_stream_with_result.h"
 #include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/random.h"
@@ -32,17 +34,39 @@
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 namespace {
 
-using ::crypto::tink::test::DummyStatefulMac;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::HasSubstr;
+
+// A dummy implementation of Stateful Mac interface.
+// An instance of DummyStatefulMac can be identified by a name specified
+// as a parameter of the constructor.
+// Over the same inputs, the DummyStatefulMac and DummyMac should give the same
+// output; DummyStatefulMac builds and internal_state_ and calls DummyMac.
+class DummyStatefulMac : public subtle::StatefulMac {
+ public:
+  explicit DummyStatefulMac(const std::string& mac_name)
+      : mac_name_(absl::StrCat("DummyMac:", mac_name)), buffer_("") {}
+
+  util::Status Update(absl::string_view data) override {
+    absl::StrAppend(&buffer_, data);
+    return util::OkStatus();
+  }
+  util::StatusOr<std::string> Finalize() override {
+    return absl::StrCat(mac_name_.size(), ":", buffer_.size(), ":", mac_name_,
+                        buffer_);
+  }
+
+ private:
+  std::string mac_name_;
+  std::string buffer_;
+};
 
 class DummyStatefulMacFactory : public StatefulMacFactory {
  public:

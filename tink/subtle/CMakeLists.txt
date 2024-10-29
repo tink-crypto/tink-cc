@@ -1613,12 +1613,13 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::strings
+    absl::string_view
     tink::core::output_stream_with_result
     tink::subtle::mac::stateful_mac
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_test(

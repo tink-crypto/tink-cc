@@ -659,29 +659,6 @@ class DummyMac : public Mac {
   DummyAead dummy_aead_;
 };
 
-// A dummy implementation of Stateful Mac interface.
-// An instance of DummyStatefulMac can be identified by a name specified
-// as a parameter of the constructor.
-// Over the same inputs, the DummyStatefulMac and DummyMac should give the same
-// output; DummyStatefulMac builds and internal_state_ and calls DummyMac.
-class DummyStatefulMac : public subtle::StatefulMac {
- public:
-  explicit DummyStatefulMac(const std::string& mac_name)
-      : dummy_aead_(absl::StrCat("DummyMac:", mac_name)), buffer_("") {}
-
-  util::Status Update(absl::string_view data) override {
-    absl::StrAppend(&buffer_, data);
-    return util::OkStatus();
-  }
-  util::StatusOr<std::string> Finalize() override {
-    return dummy_aead_.Encrypt("", buffer_);
-  }
-
- private:
-  DummyAead dummy_aead_;
-  std::string buffer_;
-};
-
 // A dummy implementation of KeysetWriter-interface.
 class DummyKeysetWriter : public KeysetWriter {
  public:

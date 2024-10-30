@@ -30,6 +30,7 @@
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
@@ -82,7 +83,10 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
                                      kHashSize, " got ", digest.size()));
   }
   const int kModulusSize = RSA_size(rsa_private_key);
-  std::vector<uint8_t> temporary_buffer(kModulusSize);
+  // We store the signature temporarily in a secret data: it will depend on the
+  // secret key and if we store it in an unprotected buffer, dfsan will notice
+  // in tests.
+  util::SecretData temporary_buffer(kModulusSize);
   // This will write exactly kModulusSize bytes to temporary_buffer.
   if (RSA_padding_add_PKCS1_PSS_mgf1(
           /*rsa=*/rsa_private_key, /*EM=*/temporary_buffer.data(),
@@ -96,6 +100,7 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
   }
   std::string signature;
   ResizeStringUninitialized(&signature, kModulusSize);
+  internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0], kModulusSize);
   int signature_length = RSA_private_encrypt(
       /*flen=*/kModulusSize, /*from=*/temporary_buffer.data(),
       /*to=*/reinterpret_cast<uint8_t*>(&signature[0]),
@@ -106,6 +111,7 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
     return util::Status(absl::StatusCode::kInternal,
                         "RSA_private_encrypt failed.");
   }
+  internal::DfsanClearLabel(&signature[0], kModulusSize);
   signature.resize(signature_length);
   return signature;
 }
@@ -218,8 +224,11 @@ util::StatusOr<std::string> RsaSsaPssSignBoringSsl::SignWithoutPrefix(
     return digest.status();
   }
 
-  util::StatusOr<std::string> signature = SslRsaSsaPssSign(
-      private_key_.get(), *digest, sig_hash_, mgf1_hash_, salt_length_);
+  util::StatusOr<std::string> signature =
+      internal::CallWithCoreDumpProtection([&]() {
+        return SslRsaSsaPssSign(private_key_.get(), *digest, sig_hash_,
+                                mgf1_hash_, salt_length_);
+      });
   if (!signature.ok()) {
     return util::Status(absl::StatusCode::kInternal, "Signing failed.");
   }

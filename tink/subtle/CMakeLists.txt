@@ -320,6 +320,7 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::internal::dfsan_forwarders
     tink::internal::err_util
     tink::internal::fips_utils
     tink::internal::md_util

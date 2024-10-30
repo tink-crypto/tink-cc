@@ -203,7 +203,7 @@ TEST_P(RandomizedSignaturesTest, ComputeSignatureInTestVector) {
   util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
-  EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
+  EXPECT_THAT((*verifier)->Verify(*signature, param.message), IsOk());
 }
 
 TEST_P(RandomizedSignaturesTest, VerifySignatureInTestVector) {

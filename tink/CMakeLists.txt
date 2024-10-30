@@ -1234,6 +1234,7 @@ tink_cc_test(
     tink::core::restricted_big_integer
     gmock
     absl::string_view
+    tink::util::secret_data
     tink::util::test_util
 )
 

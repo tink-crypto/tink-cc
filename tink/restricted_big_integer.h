@@ -46,6 +46,12 @@ class RestrictedBigInteger {
   explicit RestrictedBigInteger(absl::string_view secret_big_integer,
                                 SecretKeyAccessToken token);
 
+  // Creates a new RestrictedBigInteger object that wraps `secret_big_integer`,
+  // after removing the leading zeros. Note that creating a `token` requires
+  // access to InsecureSecretKeyAccess::Get().
+  explicit RestrictedBigInteger(util::SecretData secret_big_integer,
+                                SecretKeyAccessToken token);
+
   // Returns the value of this RestrictedBigInteger object.
   absl::string_view GetSecret(SecretKeyAccessToken token) const {
     return util::SecretDataAsStringView(secret_);

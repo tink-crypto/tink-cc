@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -76,6 +77,33 @@ TEST(RestrictedBigIntegerTest, CreateAndGetSecretPadded) {
                    InsecureSecretKeyAccess::Get()) == padded_secret_bytes);
   EXPECT_THAT(from_padded_big_integer.GetSecret(InsecureSecretKeyAccess::Get()),
               Eq(secret_bytes));
+}
+
+TEST(RestrictedBigIntegerTest, CreateFromSecretData) {
+  const util::SecretData secret_bytes =
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kHexBigInt));
+  RestrictedBigInteger restricted_big_integer(secret_bytes,
+                                              InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(restricted_big_integer.SizeInBytes(), Eq(256));
+  EXPECT_THAT(restricted_big_integer.GetSecret(InsecureSecretKeyAccess::Get()),
+              Eq(util::SecretDataAsStringView(secret_bytes)));
+}
+
+TEST(RestrictedBigIntegerTest, CreateFromPaddedSecretData) {
+  const util::SecretData secret_bytes =
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kHexBigInt));
+  const util::SecretData padded_secret_bytes =
+      util::SecretDataFromStringView(test::HexDecodeOrDie(kHexBigIntPadded));
+  RestrictedBigInteger from_padded_big_integer(padded_secret_bytes,
+                                               InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(from_padded_big_integer.SizeInBytes(), Eq(256));
+  EXPECT_FALSE(
+      from_padded_big_integer.GetSecret(InsecureSecretKeyAccess::Get()) ==
+      util::SecretDataAsStringView(padded_secret_bytes));
+  EXPECT_THAT(from_padded_big_integer.GetSecret(InsecureSecretKeyAccess::Get()),
+              Eq(util::SecretDataAsStringView(secret_bytes)));
 }
 
 TEST(RestrictedBigIntegerTest, CreateAndGetEmptyStringWorks) {

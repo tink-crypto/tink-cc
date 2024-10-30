@@ -41,6 +41,20 @@ RestrictedBigInteger::RestrictedBigInteger(absl::string_view secret_big_integer,
   });
 }
 
+RestrictedBigInteger::RestrictedBigInteger(util::SecretData secret_big_integer,
+                                           SecretKeyAccessToken token) {
+  internal::CallWithCoreDumpProtection([&] {
+    absl::string_view big_integer =
+        util::SecretDataAsStringView(secret_big_integer);
+    size_t padding_pos = big_integer.find_first_not_of('\0');
+    if (padding_pos != std::string::npos) {
+      secret_ = util::SecretDataFromStringView(big_integer.substr(padding_pos));
+    } else {
+      secret_ = util::SecretDataFromStringView("");
+    }
+  });
+}
+
 bool RestrictedBigInteger::operator==(const RestrictedBigInteger& other) const {
   if (secret_.size() != other.secret_.size()) {
     return false;

@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-#include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
+#include "tink/signature/internal/key_creators.h"
 
 #include <memory>
 #include <string>
@@ -22,13 +22,13 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/types/optional.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_proto_serialization.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -56,46 +56,39 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{absl::nullopt, ""}));
 
-TEST_P(KeyCreatorsTest, CreateSlhDsaPrivateKeyWorks) {
+TEST_P(KeyCreatorsTest, CreateMlDsaPrivateKeyWorks) {
   TestCase test_case = GetParam();
 
-  SlhDsaParameters::Variant variant =
-      test_case.id_requirement.has_value()
-          ? SlhDsaParameters::Variant::kTink
-          : SlhDsaParameters::Variant::kNoPrefix;
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/64,
-      SlhDsaParameters::SignatureType::kSmallSignature, variant);
+  MlDsaParameters::Variant variant = test_case.id_requirement.has_value()
+                                         ? MlDsaParameters::Variant::kTink
+                                         : MlDsaParameters::Variant::kNoPrefix;
+  util::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
-      CreateSlhDsaKey(*parameters, test_case.id_requirement);
+  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+      CreateMlDsaKey(*parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
   EXPECT_THAT((*private_key)->GetOutputPrefix(), Eq(test_case.output_prefix));
   EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(test_case.id_requirement));
 }
 
-TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithSlhDsaKeyWorks) {
-  ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
+TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithMlDsaKeyWorks) {
+  ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
   TestCase test_case = GetParam();
 
-  SlhDsaParameters::Variant variant =
-      test_case.id_requirement.has_value()
-          ? SlhDsaParameters::Variant::kTink
-          : SlhDsaParameters::Variant::kNoPrefix;
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
-      SlhDsaParameters::HashType::kSha2,
-      /*private_key_size_in_bytes=*/64,
-      SlhDsaParameters::SignatureType::kSmallSignature, variant);
+  MlDsaParameters::Variant variant = test_case.id_requirement.has_value()
+                                         ? MlDsaParameters::Variant::kTink
+                                         : MlDsaParameters::Variant::kNoPrefix;
+  util::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
   ASSERT_THAT(parameters, IsOk());
 
   KeyGenConfiguration key_creator_config;
-  ASSERT_THAT(
-      internal::KeyGenConfigurationImpl::AddKeyCreator<SlhDsaParameters>(
-          CreateSlhDsaKey, key_creator_config),
-      IsOk());
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<MlDsaParameters>(
+                  CreateMlDsaKey, key_creator_config),
+              IsOk());
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(

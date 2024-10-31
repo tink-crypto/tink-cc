@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/internal/ml_dsa_verify_boringssl.h"
+#include "tink/signature/internal/ml_dsa_verify_boringssl.h"
 
 #include <cstdint>
 #include <memory>
@@ -26,11 +26,11 @@
 #include "openssl/base.h"
 #include "openssl/bytestring.h"
 #include "openssl/mldsa.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_public_key.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 

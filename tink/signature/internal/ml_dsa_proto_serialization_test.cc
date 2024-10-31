@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
 
 #include <memory>
 #include <string>
@@ -25,10 +25,6 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
@@ -38,10 +34,14 @@
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/internal/key_creators.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
+#include "tink/signature/ml_dsa_public_key.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
-#include "proto/experimental/pqcrypto/ml_dsa.pb.h"
+#include "proto/ml_dsa.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_ML_DSA_PARAMETERS_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_ML_DSA_PARAMETERS_H_
+#ifndef TINK_SIGNATURE_ML_DSA_PARAMETERS_H_
+#define TINK_SIGNATURE_ML_DSA_PARAMETERS_H_
 
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
@@ -78,4 +78,4 @@ class MlDsaParameters : public SignatureParameters {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_ML_DSA_PARAMETERS_H_
+#endif  // TINK__SIGNATURE_ML_DSA_PARAMETERS_H_

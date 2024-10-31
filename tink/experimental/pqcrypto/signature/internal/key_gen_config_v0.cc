@@ -17,12 +17,13 @@
 #include "tink/experimental/pqcrypto/signature/internal/key_gen_config_v0.h"
 
 #include "tink/experimental/pqcrypto/signature/internal/key_creators.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_proto_serialization.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_proto_serialization.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/signature/internal/key_creators.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/ml_dsa_parameters.h"
 #include "tink/util/status.h"
 
 namespace crypto {

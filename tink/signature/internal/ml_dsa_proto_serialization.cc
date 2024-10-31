@@ -14,15 +14,12 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
@@ -34,10 +31,13 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
+#include "tink/signature/ml_dsa_public_key.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "proto/experimental/pqcrypto/ml_dsa.pb.h"
+#include "proto/ml_dsa.pb.h"
 
 namespace crypto {
 namespace tink {

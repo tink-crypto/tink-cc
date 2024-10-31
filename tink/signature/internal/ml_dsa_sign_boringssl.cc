@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/internal/ml_dsa_sign_boringssl.h"
+#include "tink/signature/internal/ml_dsa_sign_boringssl.h"
 
 #include <cstdint>
 #include <memory>
@@ -25,12 +25,12 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "openssl/mldsa.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -101,7 +101,7 @@ util::StatusOr<std::string> MlDsaSignBoringSsl::Sign(
       MLDSA65_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
 
   if (!MLDSA65_sign(
-          reinterpret_cast<uint8_t*>(signature.data() +
+          reinterpret_cast<uint8_t*>(&signature[0] +
                                      private_key_.GetOutputPrefix().size()),
           boringssl_private_key_.get(),
           reinterpret_cast<const uint8_t*>(data.data()), data.size(),

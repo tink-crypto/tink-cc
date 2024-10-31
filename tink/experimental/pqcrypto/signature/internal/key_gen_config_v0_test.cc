@@ -21,11 +21,11 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
 #include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/signature/ml_dsa_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"

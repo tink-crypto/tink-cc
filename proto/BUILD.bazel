@@ -220,6 +220,12 @@ proto_library(
 )
 
 proto_library(
+    name = "ml_dsa_proto",
+    srcs = ["ml_dsa.proto"],
+    visibility = ["//visibility:public"],
+)
+
+proto_library(
     name = "empty_proto",
     srcs = ["empty.proto"],
     visibility = ["//visibility:public"],
@@ -417,6 +423,12 @@ cc_proto_library(
     name = "hpke_cc_proto",
     visibility = ["//visibility:public"],
     deps = ["//proto:hpke_proto"],
+)
+
+cc_proto_library(
+    name = "ml_dsa_cc_proto",
+    visibility = ["//visibility:public"],
+    deps = ["//proto:ml_dsa_proto"],
 )
 
 filegroup(

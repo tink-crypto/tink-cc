@@ -14,14 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_ML_DSA_PRIVATE_KEY_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_ML_DSA_PRIVATE_KEY_H_
+#ifndef TINK_SIGNATURE_ML_DSA_PRIVATE_KEY_H_
+#define TINK_SIGNATURE_ML_DSA_PRIVATE_KEY_H_
 
 #include "absl/base/attributes.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
 #include "tink/util/statusor.h"
 
@@ -78,4 +78,4 @@ class MlDsaPrivateKey : public SignaturePrivateKey {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_ML_DSA_PRIVATE_KEY_H_
+#endif  // TINK_SIGNATURE_ML_DSA_PRIVATE_KEY_H_

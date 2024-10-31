@@ -14,13 +14,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_ML_DSA_SIGN_BORINGSSL_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_ML_DSA_SIGN_BORINGSSL_H_
+#ifndef TINK_SIGNATURE_INTERNAL_ML_DSA_SIGN_BORINGSSL_H_
+#define TINK_SIGNATURE_INTERNAL_ML_DSA_SIGN_BORINGSSL_H_
 
 #include <memory>
 
-#include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/ml_dsa_private_key.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {

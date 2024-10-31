@@ -1732,3 +1732,121 @@ tink_cc_test(
     tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME ml_dsa_parameters
+  SRCS
+    ml_dsa_parameters.cc
+    ml_dsa_parameters.h
+  DEPS
+    tink::signature::signature_parameters
+    absl::status
+    tink::core::parameters
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_test(
+  NAME ml_dsa_parameters_test
+  SRCS
+    ml_dsa_parameters_test.cc
+  DEPS
+    tink::signature::ml_dsa_parameters
+    gmock
+    absl::status
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME ml_dsa_private_key
+  SRCS
+    ml_dsa_private_key.cc
+    ml_dsa_private_key.h
+  DEPS
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+    tink::signature::signature_private_key
+    absl::core_headers
+    absl::status
+    absl::strings
+    absl::string_view
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME ml_dsa_private_key_test
+  SRCS
+    ml_dsa_private_key_test.cc
+  DEPS
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    gmock
+    absl::check
+    absl::status
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
+  NAME ml_dsa_public_key
+  SRCS
+    ml_dsa_public_key.cc
+    ml_dsa_public_key.h
+  DEPS
+    tink::signature::ml_dsa_parameters
+    tink::signature::signature_public_key
+    absl::core_headers
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::internal::output_prefix_util
+    tink::util::status
+    tink::util::statusor
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME ml_dsa_public_key_test
+  SRCS
+    ml_dsa_public_key_test.cc
+  DEPS
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_public_key
+    gmock
+    absl::check
+    absl::status
+    absl::strings
+    absl::optional
+    crypto
+    tink::core::partial_key_access
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+  TAGS
+    exclude_if_openssl
+)

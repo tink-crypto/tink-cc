@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/ml_dsa_private_key.h"
+#include "tink/signature/ml_dsa_private_key.h"
 
 #include <cstdint>
 #include <string>
@@ -27,11 +27,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/ml_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/ml_dsa_public_key.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"

@@ -917,6 +917,66 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "ml_dsa_parameters",
+    srcs = ["ml_dsa_parameters.cc"],
+    hdrs = ["ml_dsa_parameters.h"],
+    include_prefix = "tink/signature",
+    deps = [
+        ":signature_parameters",
+        "//tink:parameters",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "ml_dsa_private_key",
+    srcs = ["ml_dsa_private_key.cc"],
+    hdrs = ["ml_dsa_private_key.h"],
+    include_prefix = "tink/signature",
+    deps = [
+        ":ml_dsa_parameters",
+        ":ml_dsa_public_key",
+        ":signature_private_key",
+        "//tink:insecure_secret_key_access",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_library(
+    name = "ml_dsa_public_key",
+    srcs = ["ml_dsa_public_key.cc"],
+    hdrs = ["ml_dsa_public_key.h"],
+    include_prefix = "tink/signature",
+    deps = [
+        ":ml_dsa_parameters",
+        ":signature_public_key",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink/internal:output_prefix_util",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -1784,6 +1844,59 @@ cc_test(
         "@boringssl//:crypto",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ml_dsa_parameters_test",
+    srcs = ["ml_dsa_parameters_test.cc"],
+    deps = [
+        ":ml_dsa_parameters",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ml_dsa_private_key_test",
+    srcs = ["ml_dsa_private_key_test.cc"],
+    deps = [
+        ":ml_dsa_parameters",
+        ":ml_dsa_private_key",
+        ":ml_dsa_public_key",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "ml_dsa_public_key_test",
+    srcs = ["ml_dsa_public_key_test.cc"],
+    deps = [
+        ":ml_dsa_parameters",
+        ":ml_dsa_public_key",
+        "//tink:partial_key_access",
+        "//tink/util:secret_data",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],

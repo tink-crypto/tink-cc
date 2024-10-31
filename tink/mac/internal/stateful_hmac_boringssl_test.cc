@@ -29,10 +29,13 @@
 #include "absl/log/log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "include/rapidjson/document.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/random.h"
+#include "tink/subtle/wycheproof_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -46,18 +49,20 @@ namespace {
 constexpr size_t kTagSize = 16;
 constexpr size_t kSmallTagSize = 10;
 
-using crypto::tink::test::HexDecodeOrDie;
-using crypto::tink::test::HexEncode;
+using ::crypto::tink::subtle::HashType;
+using ::crypto::tink::subtle::WycheproofUtil;
+using ::crypto::tink::test::HexDecodeOrDie;
+using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::SizeIs;
 
 struct TestVector {
-  TestVector(std::string test_name, std::string hex_key,
-             subtle::HashType hash_type, uint32_t tag_size, std::string message,
-             std::string hex_tag)
+  TestVector(std::string test_name, std::string hex_key, HashType hash_type,
+             uint32_t tag_size, std::string message, std::string hex_tag)
       : test_name(test_name),
         hex_key(hex_key),
         hash_type(hash_type),
@@ -78,57 +83,57 @@ std::vector<TestVector> GetTestVectors() {
   return {
       TestVector(/*test_name=*/"EmptyMsgSha224",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA224, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA224, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"4e496054842798a861acb67a9fe85fb7"),
       TestVector(/*test_name=*/"EmptyMsgSha256",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA256, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"07eff8b326b7798c9ccfcbdbe579489a"),
       TestVector(/*test_name=*/"EmptyMsgSha384",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA384, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA384, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"6a0fdc1c54c664ad91c7c157d2670c5d"),
       TestVector(/*test_name=*/"EmptyMsgSha512",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA512, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"2fec800ca276c44985a35aec92067e5e"),
       TestVector(/*test_name=*/"EmptyMsgSha256TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/10,
+                 /*hash_type=*/HashType::SHA256, /*tag_size=*/10,
                  /*message=*/"",
                  /*hex_tag=*/"07eff8b326b7798c9ccf"),
       TestVector(/*test_name=*/"EmptyMsgSha512TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/10,
+                 /*hash_type=*/HashType::SHA512, /*tag_size=*/10,
                  /*message=*/"",
                  /*hex_tag=*/"2fec800ca276c44985a3"),
       TestVector(/*test_name=*/"BasicMessageSha256",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA256, /*tag_size=*/16,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"1d6eb74bc283f7947e92c72bd985ce6e"),
       TestVector(/*test_name=*/"BasicMessageSha512",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA512, /*tag_size=*/16,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"72b8ff800f57f9aeec41265a29b69b6a"),
       TestVector(/*test_name=*/"BasicMessageSha256TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/10,
+                 /*hash_type=*/HashType::SHA256, /*tag_size=*/10,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"1d6eb74bc283f7947e92"),
       TestVector(/*test_name=*/"BasicMessageSha512TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/10,
+                 /*hash_type=*/HashType::SHA512, /*tag_size=*/10,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"72b8ff800f57f9aeec41"),
       TestVector(/*test_name=*/"LongMessageSha224",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA224, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA224, /*tag_size=*/16,
                  /*message=*/
                  "Some very long message which can be split in "
                  "multiple ways. The contents are not really important, "
@@ -136,7 +141,7 @@ std::vector<TestVector> GetTestVectors() {
                  /*hex_tag=*/"0165b6a416a44d1558816f75ff1e13f3"),
       TestVector(/*test_name=*/"LongMessageSha256",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/16,
+                 /*hash_type=*/HashType::SHA256, /*tag_size=*/16,
                  /*message=*/
                  "Some very long message which can be split in "
                  "multiple ways. The contents are not really important, "
@@ -280,11 +285,6 @@ class StatefulHmacBoringSslTestVectorTest
   }
 };
 
-// Wycheproof HMAC tests are not enabled because the test vectors are in
-// "rc" (release candidate) state, and are not yet exported for use.
-// TODO(cathieyun): re-enable Wycheproof HMAC tests once vectors are exported.
-
-/*
 // Test with test vectors from Wycheproof project.
 bool WycheproofTest(const rapidjson::Document &root, HashType hash_type) {
   int errors = 0;
@@ -302,8 +302,8 @@ bool WycheproofTest(const rapidjson::Document &root, HashType hash_type) {
       std::string id = absl::StrCat(test["tcId"].GetInt());
       std::string expected = test["result"].GetString();
 
-      auto create_result =
-          StatefulHmacBoringSsl::New(hash_type, tag.length(), key);
+      auto create_result = StatefulHmacBoringSsl::New(
+          hash_type, tag.length(), SecretDataFromStringView(key));
       EXPECT_THAT(create_result, IsOk());
       auto hmac = std::move(create_result.value());
 
@@ -333,7 +333,7 @@ bool WycheproofTest(const rapidjson::Document &root, HashType hash_type) {
   return errors == 0;
 }
 
-TEST_F(StatefulHmacBoringSslTest, TestVectors) {
+TEST(StatefulHmacBoringSslTest, TestVectors) {
   // Test Hmac with SHA256
   std::unique_ptr<rapidjson::Document> root256 =
       WycheproofUtil::ReadTestVectors("hmac_sha256_test.json");
@@ -344,7 +344,6 @@ TEST_F(StatefulHmacBoringSslTest, TestVectors) {
       WycheproofUtil::ReadTestVectors("hmac_sha512_test.json");
   ASSERT_TRUE(WycheproofTest(*root512, HashType::SHA512));
 }
-*/
 
 }  // namespace
 }  // namespace internal

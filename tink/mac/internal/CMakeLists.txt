@@ -182,15 +182,20 @@ tink_cc_test(
   NAME stateful_hmac_boringssl_test
   SRCS
     stateful_hmac_boringssl_test.cc
+  DATA
+    wycheproof::testvectors
   DEPS
     tink::mac::internal::stateful_hmac_boringssl
     gmock
     absl::log
     absl::memory
     absl::status
+    absl::strings
     absl::string_view
+    rapidjson
     tink::subtle::common_enums
     tink::subtle::random
+    tink::subtle::wycheproof_util
     tink::subtle::mac::stateful_mac
     tink::util::secret_data
     tink::util::statusor

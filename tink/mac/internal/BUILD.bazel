@@ -191,10 +191,12 @@ cc_test(
 cc_test(
     name = "stateful_hmac_boringssl_test",
     srcs = ["stateful_hmac_boringssl_test.cc"],
+    data = ["//testvectors:hmac"],
     deps = [
         ":stateful_hmac_boringssl",
         "//tink/subtle:common_enums",
         "//tink/subtle:random",
+        "//tink/subtle:wycheproof_util",
         "//tink/subtle/mac:stateful_mac",
         "//tink/util:secret_data",
         "//tink/util:statusor",
@@ -203,7 +205,9 @@ cc_test(
         "@com_google_absl//absl/log",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
+        "@rapidjson",
     ],
 )

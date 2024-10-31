@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/subtle/stateful_hmac_boringssl.h"
+#include "tink/mac/internal/stateful_hmac_boringssl.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -40,7 +40,7 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 namespace {
 
 constexpr size_t kTagSize = 16;
@@ -55,8 +55,9 @@ using ::testing::HasSubstr;
 using ::testing::SizeIs;
 
 struct TestVector {
-  TestVector(std::string test_name, std::string hex_key, HashType hash_type,
-              uint32_t tag_size, std::string message, std::string hex_tag)
+  TestVector(std::string test_name, std::string hex_key,
+             subtle::HashType hash_type, uint32_t tag_size, std::string message,
+             std::string hex_tag)
       : test_name(test_name),
         hex_key(hex_key),
         hash_type(hash_type),
@@ -65,7 +66,7 @@ struct TestVector {
         hex_tag(hex_tag) {}
   std::string test_name;
   std::string hex_key;
-  HashType hash_type;
+  subtle::HashType hash_type;
   uint32_t tag_size;
   std::string message;
   std::string hex_tag;
@@ -77,57 +78,57 @@ std::vector<TestVector> GetTestVectors() {
   return {
       TestVector(/*test_name=*/"EmptyMsgSha224",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA224, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA224, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"4e496054842798a861acb67a9fe85fb7"),
       TestVector(/*test_name=*/"EmptyMsgSha256",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA256, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"07eff8b326b7798c9ccfcbdbe579489a"),
       TestVector(/*test_name=*/"EmptyMsgSha384",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA384, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA384, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"6a0fdc1c54c664ad91c7c157d2670c5d"),
       TestVector(/*test_name=*/"EmptyMsgSha512",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA512, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/16,
                  /*message=*/"",
                  /*hex_tag=*/"2fec800ca276c44985a35aec92067e5e"),
       TestVector(/*test_name=*/"EmptyMsgSha256TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA256, /*tag_size=*/10,
+                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/10,
                  /*message=*/"",
                  /*hex_tag=*/"07eff8b326b7798c9ccf"),
       TestVector(/*test_name=*/"EmptyMsgSha512TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA512, /*tag_size=*/10,
+                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/10,
                  /*message=*/"",
                  /*hex_tag=*/"2fec800ca276c44985a3"),
       TestVector(/*test_name=*/"BasicMessageSha256",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA256, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/16,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"1d6eb74bc283f7947e92c72bd985ce6e"),
       TestVector(/*test_name=*/"BasicMessageSha512",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA512, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/16,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"72b8ff800f57f9aeec41265a29b69b6a"),
       TestVector(/*test_name=*/"BasicMessageSha256TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA256, /*tag_size=*/10,
+                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/10,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"1d6eb74bc283f7947e92"),
       TestVector(/*test_name=*/"BasicMessageSha512TagSize10",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA512, /*tag_size=*/10,
+                 /*hash_type=*/subtle::HashType::SHA512, /*tag_size=*/10,
                  /*message=*/"Some data to test.",
                  /*hex_tag=*/"72b8ff800f57f9aeec41"),
       TestVector(/*test_name=*/"LongMessageSha224",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA224, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA224, /*tag_size=*/16,
                  /*message=*/
                  "Some very long message which can be split in "
                  "multiple ways. The contents are not really important, "
@@ -135,7 +136,7 @@ std::vector<TestVector> GetTestVectors() {
                  /*hex_tag=*/"0165b6a416a44d1558816f75ff1e13f3"),
       TestVector(/*test_name=*/"LongMessageSha256",
                  /*hex_key=*/"000102030405060708090a0b0c0d0e0f",
-                 /*hash_type=*/HashType::SHA256, /*tag_size=*/16,
+                 /*hash_type=*/subtle::HashType::SHA256, /*tag_size=*/16,
                  /*message=*/
                  "Some very long message which can be split in "
                  "multiple ways. The contents are not really important, "
@@ -149,7 +150,7 @@ TEST_P(StatefulHmacBoringSslTest, OnlyEmptyMessages) {
   if (!test_vector.message.empty()) {
     GTEST_SKIP() << "Test tests only empty messages";
   }
-  util::StatusOr<std::unique_ptr<StatefulMac>> hmac_result =
+  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> hmac_result =
       StatefulHmacBoringSsl::New(
           test_vector.hash_type, test_vector.tag_size,
           util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
@@ -187,7 +188,7 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdates) {
   absl::string_view remaining_message = test_vector.message;
   LOG(INFO) << "Starting to update";
   while (!remaining_message.empty()) {
-    int random_byte = Random::GetRandomUInt8() % 15;
+    int random_byte = subtle::Random::GetRandomUInt8() % 15;
     int amount_to_consume =
         std::min<int>(remaining_message.size(), random_byte);
     LOG(INFO) << "Consuming " << amount_to_consume << " bytes";
@@ -208,12 +209,11 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdatesObjectFromFactory) {
   auto factory = absl::make_unique<StatefulHmacBoringSslFactory>(
       test_vector.hash_type, test_vector.tag_size,
       util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
-  util::StatusOr<std::unique_ptr<StatefulMac>> hmac =
-      factory->Create();
+  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> hmac = factory->Create();
   ASSERT_THAT(hmac, IsOk());
   absl::string_view remaining_message = test_vector.message;
   while (!remaining_message.empty()) {
-    int random_byte = Random::GetRandomUInt8() % 15;
+    int random_byte = subtle::Random::GetRandomUInt8() % 15;
     int amount_to_consume =
         std::min<int>(remaining_message.size(), random_byte);
     ASSERT_THAT((*hmac)->Update(remaining_message.substr(0, amount_to_consume)),
@@ -239,8 +239,9 @@ TEST(StatefulHmacBoringSslTest, InvalidKeySizes) {
 
   for (int keysize = 0; keysize < 65; keysize++) {
     std::string key(keysize, 'x');
-    auto hmac_result = StatefulHmacBoringSsl::New(
-        HashType::SHA256, tag_size, util::SecretDataFromStringView(key));
+    auto hmac_result =
+        StatefulHmacBoringSsl::New(subtle::HashType::SHA256, tag_size,
+                                   util::SecretDataFromStringView(key));
     if (keysize >= 16) {
       EXPECT_THAT(hmac_result, IsOk());
     } else {
@@ -262,8 +263,9 @@ class StatefulHmacBoringSslTestVectorTest
     std::string key = test::HexDecodeOrDie(key_hex);
     std::string tag = test::HexDecodeOrDie(tag_hex);
     std::string msg = test::HexDecodeOrDie(msg_hex);
-    auto create_result = StatefulHmacBoringSsl::New(
-        HashType::SHA1, tag.size(), util::SecretDataFromStringView(key));
+    auto create_result =
+        StatefulHmacBoringSsl::New(subtle::HashType::SHA1, tag.size(),
+                                   util::SecretDataFromStringView(key));
     EXPECT_THAT(create_result, IsOk());
     auto hmac = std::move(create_result.value());
 
@@ -345,6 +347,6 @@ TEST_F(StatefulHmacBoringSslTest, TestVectors) {
 */
 
 }  // namespace
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

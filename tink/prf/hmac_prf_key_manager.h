@@ -33,11 +33,11 @@
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/key_manager.h"
+#include "tink/mac/internal/stateful_hmac_boringssl.h"
 #include "tink/prf/prf_set.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/prf/prf_set_util.h"
 #include "tink/subtle/random.h"
-#include "tink/subtle/stateful_hmac_boringssl.h"
 #include "tink/util/constants.h"
 #include "tink/util/enums.h"
 #include "tink/util/errors.h"
@@ -69,7 +69,7 @@ class HmacPrfKeyManager
                          HashType_Name(key.params().hash())));
       }
       return subtle::CreatePrfFromStatefulMacFactory(
-          absl::make_unique<subtle::StatefulHmacBoringSslFactory>(
+          absl::make_unique<internal::StatefulHmacBoringSslFactory>(
               hash, *max_output_length,
               util::SecretDataFromStringView(key.key_value())));
     }

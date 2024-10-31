@@ -882,26 +882,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME stateful_hmac_boringssl
-  SRCS
-    stateful_hmac_boringssl.cc
-    stateful_hmac_boringssl.h
-  DEPS
-    tink::subtle::common_enums
-    absl::memory
-    absl::status
-    absl::string_view
-    crypto
-    tink::internal::md_util
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
-    tink::subtle::mac::stateful_mac
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-)
-
-tink_cc_library(
   NAME stateful_cmac_boringssl
   SRCS
     stateful_cmac_boringssl.cc
@@ -1624,28 +1604,6 @@ tink_cc_test(
 )
 
 tink_cc_test(
-  NAME stateful_hmac_boringssl_test
-  SRCS
-    stateful_hmac_boringssl_test.cc
-  DATA
-    wycheproof::testvectors
-  DEPS
-    tink::subtle::common_enums
-    tink::subtle::random
-    tink::subtle::stateful_hmac_boringssl
-    gmock
-    absl::log
-    absl::memory
-    absl::status
-    absl::string_view
-    tink::subtle::mac::stateful_mac
-    tink::util::secret_data
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
-tink_cc_test(
   NAME stateful_cmac_boringssl_test
   SRCS
     stateful_cmac_boringssl_test.cc
@@ -1692,4 +1650,3 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
-

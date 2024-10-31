@@ -25,10 +25,10 @@
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
 #include "tink/chunked_mac.h"
+#include "tink/mac/internal/stateful_hmac_boringssl.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/stateful_cmac_boringssl.h"
-#include "tink/subtle/stateful_hmac_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -124,7 +124,7 @@ util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
   util::SecretData secret_key_data =
       util::SecretDataFromStringView(key.key_value());
   auto stateful_mac_factory =
-      absl::make_unique<subtle::StatefulHmacBoringSslFactory>(
+      absl::make_unique<internal::StatefulHmacBoringSslFactory>(
           hash_type, key.params().tag_size(), secret_key_data);
   return std::unique_ptr<ChunkedMac>(
       new ChunkedMacImpl(std::move(stateful_mac_factory)));

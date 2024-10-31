@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/subtle/stateful_hmac_boringssl.h"
+#include "tink/mac/internal/stateful_hmac_boringssl.h"
 
 #include <cstdint>
 #include <memory>
@@ -36,10 +36,11 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 
-util::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
-    HashType hash_type, uint32_t tag_size, const util::SecretData& key_value) {
+util::StatusOr<std::unique_ptr<subtle::StatefulMac>> StatefulHmacBoringSsl::New(
+    subtle::HashType hash_type, uint32_t tag_size,
+    const util::SecretData& key_value) {
   util::StatusOr<const EVP_MD*> md = internal::EvpHashFromHashType(hash_type);
   if (!md.ok()) {
     return md.status();
@@ -92,14 +93,15 @@ util::StatusOr<std::string> StatefulHmacBoringSsl::Finalize() {
 }
 
 StatefulHmacBoringSslFactory::StatefulHmacBoringSslFactory(
-    HashType hash_type, uint32_t tag_size, const util::SecretData& key_value)
+    subtle::HashType hash_type, uint32_t tag_size,
+    const util::SecretData& key_value)
     : hash_type_(hash_type), tag_size_(tag_size), key_value_(key_value) {}
 
-util::StatusOr<std::unique_ptr<StatefulMac>>
+util::StatusOr<std::unique_ptr<subtle::StatefulMac>>
 StatefulHmacBoringSslFactory::Create() const {
   return StatefulHmacBoringSsl::New(hash_type_, tag_size_, key_value_);
 }
 
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

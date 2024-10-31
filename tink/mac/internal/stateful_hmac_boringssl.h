@@ -35,13 +35,14 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 
 // A BoringSSL HMAC implementation of Stateful Mac interface.
 class StatefulHmacBoringSsl : public subtle::StatefulMac {
  public:
   static util::StatusOr<std::unique_ptr<StatefulMac>> New(
-      HashType hash_type, uint32_t tag_size, const util::SecretData& key_value);
+      subtle::HashType hash_type, uint32_t tag_size,
+      const util::SecretData& key_value);
   util::Status Update(absl::string_view data) override;
   util::StatusOr<std::string> Finalize() override;
 
@@ -58,17 +59,17 @@ class StatefulHmacBoringSsl : public subtle::StatefulMac {
 
 class StatefulHmacBoringSslFactory : public subtle::StatefulMacFactory {
  public:
-  StatefulHmacBoringSslFactory(HashType hash_type, uint32_t tag_size,
+  StatefulHmacBoringSslFactory(subtle::HashType hash_type, uint32_t tag_size,
                                const util::SecretData& key_value);
-  util::StatusOr<std::unique_ptr<StatefulMac>> Create() const override;
+  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> Create() const override;
 
  private:
-  const HashType hash_type_;
+  const subtle::HashType hash_type_;
   const uint32_t tag_size_;
   const util::SecretData key_value_;
 };
 
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 

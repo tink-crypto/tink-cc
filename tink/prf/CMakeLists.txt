@@ -143,9 +143,9 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::key_manager
     tink::internal::fips_utils
+    tink::mac::internal::stateful_hmac_boringssl
     tink::subtle::common_enums
     tink::subtle::random
-    tink::subtle::stateful_hmac_boringssl
     tink::subtle::prf::prf_set_util
     tink::util::constants
     tink::util::enums

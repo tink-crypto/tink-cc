@@ -882,26 +882,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME stateful_cmac_boringssl
-  SRCS
-    stateful_cmac_boringssl.cc
-    stateful_cmac_boringssl.h
-  DEPS
-    tink::subtle::common_enums
-    absl::memory
-    absl::status
-    absl::string_view
-    crypto
-    tink::internal::aes_util
-    tink::internal::ssl_unique_ptr
-    tink::internal::util
-    tink::subtle::mac::stateful_mac
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-)
-
-tink_cc_library(
   NAME pem_parser_boringssl
   SRCS
     pem_parser_boringssl.cc
@@ -1601,29 +1581,6 @@ tink_cc_test(
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
-)
-
-tink_cc_test(
-  NAME stateful_cmac_boringssl_test
-  SRCS
-    stateful_cmac_boringssl_test.cc
-  DATA
-    wycheproof::testvectors
-  DEPS
-    tink::subtle::common_enums
-    tink::subtle::stateful_cmac_boringssl
-    tink::subtle::wycheproof_util
-    gmock
-    absl::memory
-    absl::status
-    absl::strings
-    rapidjson
-    tink::subtle::mac::stateful_mac
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_test(

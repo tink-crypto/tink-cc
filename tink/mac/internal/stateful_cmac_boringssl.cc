@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/subtle/stateful_cmac_boringssl.h"
+#include "tink/mac/internal/stateful_cmac_boringssl.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -36,9 +36,9 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 
-util::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
+util::StatusOr<std::unique_ptr<subtle::StatefulMac>> StatefulCmacBoringSsl::New(
     uint32_t tag_size, const util::SecretData& key_value) {
   util::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesCbcCipherForKeySize(key_value.size());
@@ -92,11 +92,11 @@ StatefulCmacBoringSslFactory::StatefulCmacBoringSslFactory(
     uint32_t tag_size, const util::SecretData& key_value)
     : tag_size_(tag_size), key_value_(key_value) {}
 
-util::StatusOr<std::unique_ptr<StatefulMac>>
+util::StatusOr<std::unique_ptr<subtle::StatefulMac>>
 StatefulCmacBoringSslFactory::Create() const {
   return StatefulCmacBoringSsl::New(tag_size_, key_value_);
 }
 
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

@@ -927,27 +927,6 @@ cc_library(
 )
 
 cc_library(
-    name = "stateful_cmac_boringssl",
-    srcs = ["stateful_cmac_boringssl.cc"],
-    hdrs = ["stateful_cmac_boringssl.h"],
-    include_prefix = "tink/subtle",
-    deps = [
-        ":common_enums",
-        "//tink/internal:aes_util",
-        "//tink/internal:ssl_unique_ptr",
-        "//tink/internal:util",
-        "//tink/subtle/mac:stateful_mac",
-        "//tink/util:secret_data",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@boringssl//:crypto",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
-    ],
-)
-
-cc_library(
     name = "pem_parser_boringssl",
     srcs = ["pem_parser_boringssl.cc"],
     hdrs = ["pem_parser_boringssl.h"],
@@ -1687,29 +1666,6 @@ cc_test(
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
-    ],
-)
-
-cc_test(
-    name = "stateful_cmac_boringssl_test",
-    size = "small",
-    srcs = ["stateful_cmac_boringssl_test.cc"],
-    data = ["//testvectors:aes_cmac"],
-    deps = [
-        ":common_enums",
-        ":stateful_cmac_boringssl",
-        ":wycheproof_util",
-        "//tink/subtle/mac:stateful_mac",
-        "//tink/util:secret_data",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "//tink/util:test_matchers",
-        "//tink/util:test_util",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest_main",
-        "@rapidjson",
     ],
 )
 

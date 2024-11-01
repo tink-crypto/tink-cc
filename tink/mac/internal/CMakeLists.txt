@@ -6,6 +6,7 @@ tink_cc_library(
     chunked_mac_impl.cc
     chunked_mac_impl.h
   DEPS
+    tink::mac::internal::stateful_cmac_boringssl
     tink::mac::internal::stateful_hmac_boringssl
     absl::memory
     absl::status
@@ -13,7 +14,6 @@ tink_cc_library(
     crypto
     tink::core::chunked_mac
     tink::subtle::common_enums
-    tink::subtle::stateful_cmac_boringssl
     tink::subtle::mac::stateful_mac
     tink::util::enums
     tink::util::secret_data
@@ -83,6 +83,26 @@ tink_cc_library(
     absl::string_view
     crypto
     tink::internal::md_util
+    tink::internal::ssl_unique_ptr
+    tink::internal::util
+    tink::subtle::common_enums
+    tink::subtle::mac::stateful_mac
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_library(
+  NAME stateful_cmac_boringssl
+  SRCS
+    stateful_cmac_boringssl.cc
+    stateful_cmac_boringssl.h
+  DEPS
+    absl::memory
+    absl::status
+    absl::string_view
+    crypto
+    tink::internal::aes_util
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::common_enums
@@ -198,6 +218,30 @@ tink_cc_test(
     tink::subtle::wycheproof_util
     tink::subtle::mac::stateful_mac
     tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+)
+
+tink_cc_test(
+  NAME stateful_cmac_boringssl_test
+  SRCS
+    stateful_cmac_boringssl_test.cc
+  DATA
+    wycheproof::testvectors
+  DEPS
+    tink::mac::internal::stateful_cmac_boringssl
+    gmock
+    absl::memory
+    absl::status
+    absl::strings
+    absl::string_view
+    rapidjson
+    tink::subtle::common_enums
+    tink::subtle::wycheproof_util
+    tink::subtle::mac::stateful_mac
+    tink::util::secret_data
+    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

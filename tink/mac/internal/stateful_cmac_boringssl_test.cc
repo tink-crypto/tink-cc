@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/subtle/stateful_cmac_boringssl.h"
+#include "tink/mac/internal/stateful_cmac_boringssl.h"
 
 #include <cstddef>
 #include <memory>
@@ -39,7 +39,7 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 namespace {
 
 constexpr size_t kTagSize = 16;
@@ -55,6 +55,8 @@ constexpr absl::string_view kCmacOnDataRegularTagSizeHex =
     "c856e183e8dee9bb99402d54c34f3222";
 constexpr absl::string_view kCmacOnDataSmallTagSizeHex = "c856e183e8dee9bb9940";
 
+using ::crypto::tink::subtle::StatefulMac;
+using ::crypto::tink::subtle::WycheproofUtil;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::testing::Not;
@@ -202,6 +204,6 @@ INSTANTIATE_TEST_SUITE_P(StatefulCmacBoringSslWycheproofTest,
                          ValuesIn(GetWycheproofCmakeTestVectors()));
 
 }  // namespace
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

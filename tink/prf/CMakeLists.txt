@@ -112,8 +112,8 @@ tink_cc_library(
     tink::core::template_util
     tink::core::input_stream
     tink::core::key_manager
+    tink::mac::internal::stateful_cmac_boringssl
     tink::subtle::random
-    tink::subtle::stateful_cmac_boringssl
     tink::subtle::prf::prf_set_util
     tink::util::constants
     tink::util::errors

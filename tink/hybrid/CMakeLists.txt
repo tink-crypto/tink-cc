@@ -356,6 +356,7 @@ tink_cc_library(
     tink::core::partial_key_access_token
     tink::core::restricted_data
     tink::internal::bn_util
+    tink::internal::call_with_core_dump_protection
     tink::internal::ec_util
     tink::internal::err_util
     tink::internal::ssl_unique_ptr

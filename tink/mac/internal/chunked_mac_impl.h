@@ -23,7 +23,7 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
-#include "tink/subtle/mac/stateful_mac.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/aes_cmac.pb.h"
@@ -35,8 +35,7 @@ namespace internal {
 
 class ChunkedMacComputationImpl : public ChunkedMacComputation {
  public:
-  explicit ChunkedMacComputationImpl(
-      std::unique_ptr<subtle::StatefulMac> stateful_mac)
+  explicit ChunkedMacComputationImpl(std::unique_ptr<StatefulMac> stateful_mac)
       : stateful_mac_(std::move(stateful_mac)) {}
 
   util::Status Update(absl::string_view data) override;
@@ -44,14 +43,14 @@ class ChunkedMacComputationImpl : public ChunkedMacComputation {
   util::StatusOr<std::string> ComputeMac() override;
 
  private:
-  const std::unique_ptr<subtle::StatefulMac> stateful_mac_;
+  const std::unique_ptr<StatefulMac> stateful_mac_;
   util::Status status_ = util::OkStatus();
 };
 
 class ChunkedMacVerificationImpl : public ChunkedMacVerification {
  public:
-  explicit ChunkedMacVerificationImpl(
-      std::unique_ptr<subtle::StatefulMac> stateful_mac, absl::string_view tag)
+  explicit ChunkedMacVerificationImpl(std::unique_ptr<StatefulMac> stateful_mac,
+                                      absl::string_view tag)
       : stateful_mac_(std::move(stateful_mac)), tag_(tag) {}
 
   util::Status Update(absl::string_view data) override;
@@ -59,7 +58,7 @@ class ChunkedMacVerificationImpl : public ChunkedMacVerification {
   util::Status VerifyMac() override;
 
  private:
-  const std::unique_ptr<subtle::StatefulMac> stateful_mac_;
+  const std::unique_ptr<StatefulMac> stateful_mac_;
   const std::string tag_;
   util::Status status_ = util::OkStatus();
 };
@@ -67,7 +66,7 @@ class ChunkedMacVerificationImpl : public ChunkedMacVerification {
 class ChunkedMacImpl : public ChunkedMac {
  public:
   explicit ChunkedMacImpl(
-      std::unique_ptr<subtle::StatefulMacFactory> stateful_mac_factory)
+      std::unique_ptr<StatefulMacFactory> stateful_mac_factory)
       : stateful_mac_factory_(std::move(stateful_mac_factory)) {}
 
   util::StatusOr<std::unique_ptr<ChunkedMacComputation>> CreateComputation()
@@ -77,7 +76,7 @@ class ChunkedMacImpl : public ChunkedMac {
       absl::string_view tag) const override;
 
  private:
-  std::unique_ptr<subtle::StatefulMacFactory> stateful_mac_factory_;
+  std::unique_ptr<StatefulMacFactory> stateful_mac_factory_;
 };
 
 // Create new Chunked CMAC instance from `key`.

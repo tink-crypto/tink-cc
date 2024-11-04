@@ -27,8 +27,8 @@
 #include "openssl/cmac.h"
 #include "openssl/evp.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -38,7 +38,7 @@ namespace tink {
 namespace internal {
 
 // A BoringSSL CMAC implementation of Stateful Mac interface.
-class StatefulCmacBoringSsl : public subtle::StatefulMac {
+class StatefulCmacBoringSsl : public StatefulMac {
  public:
   // Key must be 16 or 32 bytes, all other sizes will be rejected.
   static util::StatusOr<std::unique_ptr<StatefulMac>> New(
@@ -58,11 +58,11 @@ class StatefulCmacBoringSsl : public subtle::StatefulMac {
   const uint32_t tag_size_;
 };
 
-class StatefulCmacBoringSslFactory : public subtle::StatefulMacFactory {
+class StatefulCmacBoringSslFactory : public StatefulMacFactory {
  public:
   StatefulCmacBoringSslFactory(uint32_t tag_size,
                                const util::SecretData& key_value);
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> Create() const override;
+  util::StatusOr<std::unique_ptr<StatefulMac>> Create() const override;
 
  private:
   const uint32_t tag_size_;

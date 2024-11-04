@@ -28,8 +28,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "include/rapidjson/document.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/wycheproof_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -55,7 +55,7 @@ constexpr absl::string_view kCmacOnDataRegularTagSizeHex =
     "c856e183e8dee9bb99402d54c34f3222";
 constexpr absl::string_view kCmacOnDataSmallTagSizeHex = "c856e183e8dee9bb9940";
 
-using ::crypto::tink::subtle::StatefulMac;
+using ::crypto::tink::internal::StatefulMac;
 using ::crypto::tink::subtle::WycheproofUtil;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;

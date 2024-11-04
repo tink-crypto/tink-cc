@@ -1,7 +1,6 @@
 tink_module(subtle)
 
 add_subdirectory(prf)
-add_subdirectory(mac)
 
 tink_cc_library(
   NAME subtle
@@ -876,7 +875,7 @@ tink_cc_library(
     crypto
     tink::core::output_stream_with_result
     tink::core::streaming_mac
-    tink::subtle::mac::stateful_mac
+    tink::mac::internal::stateful_mac
     tink::util::status
     tink::util::statusor
 )
@@ -1577,7 +1576,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     tink::core::output_stream_with_result
-    tink::subtle::mac::stateful_mac
+    tink::mac::internal::stateful_mac
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

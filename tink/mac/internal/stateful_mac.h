@@ -36,7 +36,7 @@
 
 namespace crypto {
 namespace tink {
-namespace subtle {
+namespace internal {
 
 class StatefulMac {
  public:
@@ -54,7 +54,7 @@ class StatefulMacFactory {
   virtual util::StatusOr<std::unique_ptr<StatefulMac>> Create() const = 0;
 };
 
-}  // namespace subtle
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 

@@ -32,8 +32,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "include/rapidjson/document.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/wycheproof_util.h"
 #include "tink/util/secret_data.h"
@@ -155,7 +155,7 @@ TEST_P(StatefulHmacBoringSslTest, OnlyEmptyMessages) {
   if (!test_vector.message.empty()) {
     GTEST_SKIP() << "Test tests only empty messages";
   }
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> hmac_result =
+  util::StatusOr<std::unique_ptr<StatefulMac>> hmac_result =
       StatefulHmacBoringSsl::New(
           test_vector.hash_type, test_vector.tag_size,
           util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
@@ -214,7 +214,7 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdatesObjectFromFactory) {
   auto factory = absl::make_unique<StatefulHmacBoringSslFactory>(
       test_vector.hash_type, test_vector.tag_size,
       util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> hmac = factory->Create();
+  util::StatusOr<std::unique_ptr<StatefulMac>> hmac = factory->Create();
   ASSERT_THAT(hmac, IsOk());
   absl::string_view remaining_message = test_vector.message;
   while (!remaining_message.empty()) {

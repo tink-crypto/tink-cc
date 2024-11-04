@@ -915,7 +915,7 @@ cc_library(
     deps = [
         "//tink:output_stream_with_result",
         "//tink:streaming_mac",
-        "//tink/subtle/mac:stateful_mac",
+        "//tink/mac/internal:stateful_mac",
         "//tink/util:status",
         "//tink/util:statusor",
         "@boringssl//:crypto",
@@ -1657,7 +1657,7 @@ cc_test(
         ":streaming_mac_impl",
         ":test_util",
         "//tink:output_stream_with_result",
-        "//tink/subtle/mac:stateful_mac",
+        "//tink/mac/internal:stateful_mac",
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:test_matchers",

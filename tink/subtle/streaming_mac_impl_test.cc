@@ -27,8 +27,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/output_stream_with_result.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/test_util.h"
 #include "tink/util/status.h"
@@ -49,7 +49,7 @@ using ::testing::HasSubstr;
 // as a parameter of the constructor.
 // Over the same inputs, the DummyStatefulMac and DummyMac should give the same
 // output; DummyStatefulMac builds and internal_state_ and calls DummyMac.
-class DummyStatefulMac : public subtle::StatefulMac {
+class DummyStatefulMac : public internal::StatefulMac {
  public:
   explicit DummyStatefulMac(const std::string& mac_name)
       : mac_name_(absl::StrCat("DummyMac:", mac_name)), buffer_("") {}
@@ -68,15 +68,16 @@ class DummyStatefulMac : public subtle::StatefulMac {
   std::string buffer_;
 };
 
-class DummyStatefulMacFactory : public StatefulMacFactory {
+class DummyStatefulMacFactory : public internal::StatefulMacFactory {
  public:
   DummyStatefulMacFactory() = default;
   ~DummyStatefulMacFactory() override = default;
 
   // Constructs a StatefulMac using the DummyStatefulMac, which creates
   // returns a MAC of the header concatenated with the plaintext.
-  util::StatusOr<std::unique_ptr<StatefulMac>> Create() const override {
-    return std::unique_ptr<StatefulMac>(
+  util::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
+      const override {
+    return std::unique_ptr<internal::StatefulMac>(
         absl::make_unique<DummyStatefulMac>("streaming mac:"));
   }
 };
@@ -85,7 +86,7 @@ class DummyStatefulMacFactory : public StatefulMacFactory {
 // used for test validation for mac computation.
 std::unique_ptr<OutputStreamWithResult<std::string>>
 GetComputeMacOutputStream() {
-  auto mac_factory = std::unique_ptr<StatefulMacFactory>(
+  auto mac_factory = std::unique_ptr<internal::StatefulMacFactory>(
       absl::make_unique<DummyStatefulMacFactory>());
   auto streaming_mac =
       absl::make_unique<StreamingMacImpl>(std::move(mac_factory));
@@ -99,7 +100,7 @@ GetComputeMacOutputStream() {
 // used for test validation for mac verification.
 std::unique_ptr<OutputStreamWithResult<util::Status>> GetVerifyMacOutputStream(
     std::string expected_mac) {
-  auto mac_factory = std::unique_ptr<StatefulMacFactory>(
+  auto mac_factory = std::unique_ptr<internal::StatefulMacFactory>(
       absl::make_unique<DummyStatefulMacFactory>());
   auto streaming_mac =
       absl::make_unique<StreamingMacImpl>(std::move(mac_factory));

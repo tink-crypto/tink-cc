@@ -28,8 +28,8 @@
 #include "tink/internal/md_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -38,7 +38,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<std::unique_ptr<subtle::StatefulMac>> StatefulHmacBoringSsl::New(
+util::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
     subtle::HashType hash_type, uint32_t tag_size,
     const util::SecretData& key_value) {
   util::StatusOr<const EVP_MD*> md = internal::EvpHashFromHashType(hash_type);
@@ -97,7 +97,7 @@ StatefulHmacBoringSslFactory::StatefulHmacBoringSslFactory(
     const util::SecretData& key_value)
     : hash_type_(hash_type), tag_size_(tag_size), key_value_(key_value) {}
 
-util::StatusOr<std::unique_ptr<subtle::StatefulMac>>
+util::StatusOr<std::unique_ptr<StatefulMac>>
 StatefulHmacBoringSslFactory::Create() const {
   return StatefulHmacBoringSsl::New(hash_type_, tag_size_, key_value_);
 }

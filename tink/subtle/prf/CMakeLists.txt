@@ -59,8 +59,8 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
+    tink::mac::internal::stateful_mac
     tink::prf::prf_set
-    tink::subtle::mac::stateful_mac
     tink::util::input_stream_util
     tink::util::status
     tink::util::statusor
@@ -117,8 +117,8 @@ tink_cc_test(
     absl::status
     absl::strings
     tink::core::input_stream
+    tink::mac::internal::stateful_mac
     tink::prf::prf_set
-    tink::subtle::mac::stateful_mac
     tink::util::istream_input_stream
     tink::util::status
     tink::util::statusor

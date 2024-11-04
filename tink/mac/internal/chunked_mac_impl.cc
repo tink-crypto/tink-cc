@@ -27,8 +27,8 @@
 #include "tink/chunked_mac.h"
 #include "tink/mac/internal/stateful_cmac_boringssl.h"
 #include "tink/mac/internal/stateful_hmac_boringssl.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -81,7 +81,7 @@ util::Status ChunkedMacVerificationImpl::VerifyMac() {
 
 util::StatusOr<std::unique_ptr<ChunkedMacComputation>>
 ChunkedMacImpl::CreateComputation() const {
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> stateful_mac =
+  util::StatusOr<std::unique_ptr<StatefulMac>> stateful_mac =
       stateful_mac_factory_->Create();
   if (!stateful_mac.ok()) return stateful_mac.status();
 
@@ -91,7 +91,7 @@ ChunkedMacImpl::CreateComputation() const {
 
 util::StatusOr<std::unique_ptr<ChunkedMacVerification>>
 ChunkedMacImpl::CreateVerification(absl::string_view tag) const {
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> stateful_mac =
+  util::StatusOr<std::unique_ptr<StatefulMac>> stateful_mac =
       stateful_mac_factory_->Create();
   if (!stateful_mac.ok()) return stateful_mac.status();
 

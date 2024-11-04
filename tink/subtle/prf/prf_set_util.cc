@@ -24,8 +24,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/prf/prf_set.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/status.h"
@@ -58,7 +58,7 @@ class PrfFromStreamingPrf : public Prf {
 class PrfFromStatefulMacFactory : public Prf {
  public:
   explicit PrfFromStatefulMacFactory(
-      std::unique_ptr<StatefulMacFactory> stateful_mac_factory)
+      std::unique_ptr<internal::StatefulMacFactory> stateful_mac_factory)
       : stateful_mac_factory_(std::move(stateful_mac_factory)) {}
   util::StatusOr<std::string> Compute(absl::string_view input,
                                       size_t output_length) const override {
@@ -86,7 +86,7 @@ class PrfFromStatefulMacFactory : public Prf {
   }
 
  private:
-  std::unique_ptr<StatefulMacFactory> stateful_mac_factory_;
+  std::unique_ptr<internal::StatefulMacFactory> stateful_mac_factory_;
 };
 
 }  // namespace
@@ -97,7 +97,7 @@ std::unique_ptr<Prf> CreatePrfFromStreamingPrf(
 }
 
 std::unique_ptr<Prf> CreatePrfFromStatefulMacFactory(
-    std::unique_ptr<StatefulMacFactory> stateful_mac_factory) {
+    std::unique_ptr<internal::StatefulMacFactory> stateful_mac_factory) {
   return absl::make_unique<PrfFromStatefulMacFactory>(
       std::move(stateful_mac_factory));
 }

@@ -26,7 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
-#include "tink/subtle/mac/stateful_mac.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -51,15 +51,15 @@ using ::testing::_;
 using ::testing::ByMove;
 using ::testing::Return;
 
-class MockStatefulMac : public subtle::StatefulMac {
+class MockStatefulMac : public StatefulMac {
  public:
   MOCK_METHOD(util::Status, Update, (absl::string_view), (override));
   MOCK_METHOD(util::StatusOr<std::string>, Finalize, (), (override));
 };
 
-class MockStatefulMacFactory : public subtle::StatefulMacFactory {
+class MockStatefulMacFactory : public StatefulMacFactory {
  public:
-  MOCK_METHOD(util::StatusOr<std::unique_ptr<subtle::StatefulMac>>, Create, (),
+  MOCK_METHOD(util::StatusOr<std::unique_ptr<StatefulMac>>, Create, (),
               (const, override));
 };
 
@@ -96,9 +96,8 @@ TEST(ChunkedMacImplTest, CreateComputationSucceeds) {
   auto factory = absl::make_unique<MockStatefulMacFactory>();
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
   EXPECT_CALL(*factory, Create())
-      .WillOnce(
-          Return(ByMove(util::StatusOr<std::unique_ptr<subtle::StatefulMac>>(
-              std::move(stateful_mac)))));
+      .WillOnce(Return(ByMove(util::StatusOr<std::unique_ptr<StatefulMac>>(
+          std::move(stateful_mac)))));
   ChunkedMacImpl chunked_mac(std::move(factory));
 
   EXPECT_THAT(chunked_mac.CreateComputation(), IsOk());
@@ -106,7 +105,7 @@ TEST(ChunkedMacImplTest, CreateComputationSucceeds) {
 
 TEST(ChunkedMacImplTest, CreateComputationWithFactoryErrorFails) {
   auto factory = absl::make_unique<MockStatefulMacFactory>();
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> error_status =
+  util::StatusOr<std::unique_ptr<StatefulMac>> error_status =
       util::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*factory, Create())
       .WillOnce(Return(ByMove(std::move(error_status))));
@@ -120,9 +119,8 @@ TEST(ChunkedMacImplTest, CreateVerificationSucceeds) {
   auto factory = absl::make_unique<MockStatefulMacFactory>();
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
   EXPECT_CALL(*factory, Create())
-      .WillOnce(
-          Return(ByMove(util::StatusOr<std::unique_ptr<subtle::StatefulMac>>(
-              std::move(stateful_mac)))));
+      .WillOnce(Return(ByMove(util::StatusOr<std::unique_ptr<StatefulMac>>(
+          std::move(stateful_mac)))));
   ChunkedMacImpl chunked_mac(std::move(factory));
 
   EXPECT_THAT(chunked_mac.CreateVerification("tag"), IsOk());
@@ -130,7 +128,7 @@ TEST(ChunkedMacImplTest, CreateVerificationSucceeds) {
 
 TEST(ChunkedMacImplTest, CreateVerificationWithFactoryErrorFails) {
   auto factory = absl::make_unique<MockStatefulMacFactory>();
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> error_status =
+  util::StatusOr<std::unique_ptr<StatefulMac>> error_status =
       util::Status(absl::StatusCode::kInternal, "Internal error.");
   EXPECT_CALL(*factory, Create())
       .WillOnce(Return(ByMove(std::move(error_status))));

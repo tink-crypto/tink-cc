@@ -28,8 +28,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/output_stream_with_result.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -43,7 +43,7 @@ constexpr size_t kBufferSize = 4096;
 
 class ComputeMacOutputStream : public OutputStreamWithResult<std::string> {
  public:
-  explicit ComputeMacOutputStream(std::unique_ptr<StatefulMac> mac)
+  explicit ComputeMacOutputStream(std::unique_ptr<internal::StatefulMac> mac)
       : status_(util::OkStatus()),
         mac_(std::move(mac)),
         position_(0),
@@ -61,7 +61,7 @@ class ComputeMacOutputStream : public OutputStreamWithResult<std::string> {
   void WriteIntoMac();
 
   util::Status status_;
-  const std::unique_ptr<StatefulMac> mac_;
+  const std::unique_ptr<internal::StatefulMac> mac_;
   int64_t position_;
   int buffer_position_;
   std::string buffer_;
@@ -69,7 +69,7 @@ class ComputeMacOutputStream : public OutputStreamWithResult<std::string> {
 
 util::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
 StreamingMacImpl::NewComputeMacOutputStream() const {
-  util::StatusOr<std::unique_ptr<StatefulMac>> mac_status =
+  util::StatusOr<std::unique_ptr<internal::StatefulMac>> mac_status =
       mac_factory_->Create();
 
   if (!mac_status.ok()) {
@@ -123,7 +123,7 @@ void ComputeMacOutputStream::WriteIntoMac() {
 class VerifyMacOutputStream : public OutputStreamWithResult<util::Status> {
  public:
   VerifyMacOutputStream(const std::string& expected,
-                        std::unique_ptr<StatefulMac> mac)
+                        std::unique_ptr<internal::StatefulMac> mac)
       : status_(util::OkStatus()),
         mac_(std::move(mac)),
         position_(0),
@@ -146,7 +146,7 @@ class VerifyMacOutputStream : public OutputStreamWithResult<util::Status> {
   // Stream status: Initialized as OK, and
   // changed to ERROR:FAILED_PRECONDITION when the stream is closed.
   util::Status status_;
-  std::unique_ptr<StatefulMac> mac_;
+  std::unique_ptr<internal::StatefulMac> mac_;
   int64_t position_;
   int buffer_position_;
   std::string buffer_;
@@ -206,7 +206,7 @@ void VerifyMacOutputStream::WriteIntoMac() {
 
 util::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
 StreamingMacImpl::NewVerifyMacOutputStream(const std::string& mac_value) const {
-  util::StatusOr<std::unique_ptr<StatefulMac>> mac_status =
+  util::StatusOr<std::unique_ptr<internal::StatefulMac>> mac_status =
       mac_factory_->Create();
   if (!mac_status.ok()) {
     return mac_status.status();

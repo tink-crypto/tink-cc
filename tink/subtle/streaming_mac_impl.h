@@ -21,9 +21,9 @@
 #include <string>
 #include <utility>
 
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/output_stream_with_result.h"
 #include "tink/streaming_mac.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -34,7 +34,8 @@ namespace subtle {
 class StreamingMacImpl : public StreamingMac {
  public:
   // Constructor
-  explicit StreamingMacImpl(std::unique_ptr<StatefulMacFactory> mac_factory)
+  explicit StreamingMacImpl(
+      std::unique_ptr<internal::StatefulMacFactory> mac_factory)
       : mac_factory_(std::move(mac_factory)) {}
 
   // Implement streaming mac class functions
@@ -49,7 +50,7 @@ class StreamingMacImpl : public StreamingMac {
   NewVerifyMacOutputStream(const std::string& mac_value) const override;
 
  private:
-  std::unique_ptr<StatefulMacFactory> mac_factory_;
+  std::unique_ptr<internal::StatefulMacFactory> mac_factory_;
 };
 
 }  // namespace subtle

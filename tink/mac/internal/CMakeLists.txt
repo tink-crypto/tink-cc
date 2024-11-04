@@ -8,13 +8,13 @@ tink_cc_library(
   DEPS
     tink::mac::internal::stateful_cmac_boringssl
     tink::mac::internal::stateful_hmac_boringssl
+    tink::mac::internal::stateful_mac
     absl::memory
     absl::status
     absl::strings
     crypto
     tink::core::chunked_mac
     tink::subtle::common_enums
-    tink::subtle::mac::stateful_mac
     tink::util::enums
     tink::util::secret_data
     tink::util::status
@@ -78,6 +78,7 @@ tink_cc_library(
     stateful_hmac_boringssl.cc
     stateful_hmac_boringssl.h
   DEPS
+    tink::mac::internal::stateful_mac
     absl::memory
     absl::status
     absl::string_view
@@ -86,7 +87,6 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::common_enums
-    tink::subtle::mac::stateful_mac
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -98,6 +98,7 @@ tink_cc_library(
     stateful_cmac_boringssl.cc
     stateful_cmac_boringssl.h
   DEPS
+    tink::mac::internal::stateful_mac
     absl::memory
     absl::status
     absl::string_view
@@ -106,8 +107,17 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::common_enums
-    tink::subtle::mac::stateful_mac
     tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+)
+
+tink_cc_library(
+  NAME stateful_mac
+  SRCS
+    stateful_mac.h
+  DEPS
+    absl::string_view
     tink::util::status
     tink::util::statusor
 )
@@ -120,12 +130,12 @@ tink_cc_test(
     chunked_mac_impl_test.cc
   DEPS
     tink::mac::internal::chunked_mac_impl
+    tink::mac::internal::stateful_mac
     gmock
     absl::memory
     absl::status
     absl::string_view
     tink::core::chunked_mac
-    tink::subtle::mac::stateful_mac
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
@@ -141,13 +151,13 @@ tink_cc_test(
   DEPS
     tink::mac::internal::chunked_mac_impl
     tink::mac::internal::chunked_mac_wrapper
+    tink::mac::internal::stateful_mac
     gmock
     absl::memory
     absl::status
     absl::strings
     tink::core::chunked_mac
     tink::core::primitive_set
-    tink::subtle::mac::stateful_mac
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
@@ -206,6 +216,7 @@ tink_cc_test(
     wycheproof::testvectors
   DEPS
     tink::mac::internal::stateful_hmac_boringssl
+    tink::mac::internal::stateful_mac
     gmock
     absl::log
     absl::memory
@@ -216,7 +227,6 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::wycheproof_util
-    tink::subtle::mac::stateful_mac
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
@@ -231,6 +241,7 @@ tink_cc_test(
     wycheproof::testvectors
   DEPS
     tink::mac::internal::stateful_cmac_boringssl
+    tink::mac::internal::stateful_mac
     gmock
     absl::memory
     absl::status
@@ -239,7 +250,6 @@ tink_cc_test(
     rapidjson
     tink::subtle::common_enums
     tink::subtle::wycheproof_util
-    tink::subtle::mac::stateful_mac
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

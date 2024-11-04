@@ -28,8 +28,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/prf/prf_set.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/status.h"
@@ -57,22 +57,23 @@ class MockPrf : public Prf {
               (absl::string_view input, size_t output_length), (const));
 };
 
-class MockStatefulMac : public StatefulMac {
+class MockStatefulMac : public internal::StatefulMac {
  public:
   MOCK_METHOD(util::Status, Update, (absl::string_view data), (override));
   MOCK_METHOD(util::StatusOr<std::string>, Finalize, (), (override));
 };
 
-class FakeStatefulMacFactory : public StatefulMacFactory {
+class FakeStatefulMacFactory : public internal::StatefulMacFactory {
  public:
   FakeStatefulMacFactory(util::Status update_status,
                          util::StatusOr<std::string> finalize_result)
       : update_status_(update_status), finalize_result_(finalize_result) {}
-  util::StatusOr<std::unique_ptr<StatefulMac>> Create() const override {
+  util::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
+      const override {
     auto mac_mock = absl::make_unique<NiceMock<MockStatefulMac>>();
     ON_CALL(*mac_mock, Update(_)).WillByDefault(Return(update_status_));
     ON_CALL(*mac_mock, Finalize()).WillByDefault(Return(finalize_result_));
-    std::unique_ptr<StatefulMac> result = std::move(mac_mock);
+    std::unique_ptr<internal::StatefulMac> result = std::move(mac_mock);
     return std::move(result);
   }
 

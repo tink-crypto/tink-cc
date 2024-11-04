@@ -29,8 +29,8 @@
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
 #include "tink/mac/internal/chunked_mac_impl.h"
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/primitive_set.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -49,7 +49,7 @@ using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Values;
 
-class FakeStatefulMac : public subtle::StatefulMac {
+class FakeStatefulMac : public StatefulMac {
  public:
   explicit FakeStatefulMac(absl::string_view name) : name_(name) {}
 
@@ -67,12 +67,12 @@ class FakeStatefulMac : public subtle::StatefulMac {
   std::string buffer_ = "";
 };
 
-class FakeStatefulMacFactory : public subtle::StatefulMacFactory {
+class FakeStatefulMacFactory : public StatefulMacFactory {
  public:
   explicit FakeStatefulMacFactory(absl::string_view name) : name_(name) {}
 
-  util::StatusOr<std::unique_ptr<subtle::StatefulMac>> Create() const override {
-    return std::unique_ptr<subtle::StatefulMac>(
+  util::StatusOr<std::unique_ptr<StatefulMac>> Create() const override {
+    return std::unique_ptr<StatefulMac>(
         absl::make_unique<FakeStatefulMac>(name_));
   }
 

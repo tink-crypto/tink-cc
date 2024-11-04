@@ -18,8 +18,8 @@
 
 #include <memory>
 
+#include "tink/mac/internal/stateful_mac.h"
 #include "tink/prf/prf_set.h"
-#include "tink/subtle/mac/stateful_mac.h"
 #include "tink/subtle/prf/streaming_prf.h"
 
 namespace crypto {
@@ -34,7 +34,7 @@ std::unique_ptr<Prf> CreatePrfFromStreamingPrf(
 // like HMAC and CMAC and not with any MACs that are non-deterministic or that
 // do not produce output indistinguishable from random numbers.
 std::unique_ptr<Prf> CreatePrfFromStatefulMacFactory(
-    std::unique_ptr<StatefulMacFactory> mac_factory);
+    std::unique_ptr<internal::StatefulMacFactory> mac_factory);
 
 }  // namespace subtle
 }  // namespace tink

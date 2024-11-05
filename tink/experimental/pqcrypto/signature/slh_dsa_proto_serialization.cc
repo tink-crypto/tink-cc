@@ -37,7 +37,7 @@
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "proto/experimental/pqcrypto/slh_dsa.pb.h"
+#include "proto/slh_dsa.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

@@ -30,7 +30,7 @@ enum SlhDsaSignatureType {
 }
 
 // Protos for the Stateless Hash-Based Digital Signature Algorithm
-// https://csrc.nist.gov/pubs/fips/205/ipd
+// https://csrc.nist.gov/pubs/fips/205/final
 message SlhDsaParams {
   // Required
   int32 key_size = 1;

@@ -41,7 +41,7 @@
 #include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "proto/experimental/pqcrypto/slh_dsa.pb.h"
+#include "proto/slh_dsa.pb.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

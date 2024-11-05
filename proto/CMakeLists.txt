@@ -190,6 +190,11 @@ tink_cc_proto(
 )
 
 tink_cc_proto(
+  NAME slh_dsa_cc_proto
+  SRCS slh_dsa.proto
+)
+
+tink_cc_proto(
   NAME empty_cc_proto
   SRCS empty.proto
 )

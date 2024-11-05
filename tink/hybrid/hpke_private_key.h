@@ -17,6 +17,7 @@
 #ifndef TINK_HYBRID_HPKE_PRIVATE_KEY_H_
 #define TINK_HYBRID_HPKE_PRIVATE_KEY_H_
 
+#include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_public_key.h"
 #include "tink/hybrid/hybrid_private_key.h"
 #include "tink/key.h"
@@ -49,6 +50,10 @@ class HpkePrivateKey : public HybridPrivateKey {
   }
 
   const HpkePublicKey& GetPublicKey() const override { return public_key_; }
+
+  const HpkeParameters& GetParameters() const override {
+    return GetPublicKey().GetParameters();
+  }
 
   bool operator==(const Key& other) const override;
 

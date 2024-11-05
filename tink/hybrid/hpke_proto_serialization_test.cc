@@ -61,6 +61,7 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::internal::ProtoKeySerialization;
+using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::internal::proto_testing::SerializeMessage;
 using ::crypto::tink::test::HexDecodeOrDie;
@@ -75,6 +76,7 @@ using ::google::crypto::tink::HpkeParams;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
+using ::testing::IsNull;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -139,14 +141,15 @@ RestrictedData P521SecretValue() {
   return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
 }
 
+// Taken from Java, HpkeTestUtil
 std::string X25519PublicValue() {
   return HexDecodeOrDie(
-      "b755ced64d4a27ce32afcf199f18a3ed1f31897028b0ff6e55191ea449db2644");
+      "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431");
 }
 
 RestrictedData X25519SecretValue() {
   util::SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
-      "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60"));
+      "52c4a758a802cd8b936eceea314432798d5baf2d7e9235dc084ab1b9cfa2f736"));
   return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
 }
 
@@ -944,7 +947,24 @@ struct KeyAndSerialization {
   ProtoKeySerialization proto_key_serialization;
 };
 
+using SerializationTest = TestWithParam<KeyAndSerialization>;
 using ParseTest = TestWithParam<KeyAndSerialization>;
+
+TEST_P(SerializationTest, SerializesCorrectly) {
+  ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
+  const KeyAndSerialization& test_key = GetParam();
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      internal::MutableSerializationRegistry::GlobalInstance()
+          .SerializeKey<ProtoKeySerialization>(
+              *test_key.key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization.status(), IsOk());
+  ProtoKeySerialization* proto_serialization =
+      dynamic_cast<ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, Not(IsNull()));
+  EXPECT_THAT(*proto_serialization,
+              EqualsProtoKeySerialization(test_key.proto_key_serialization));
+}
 
 TEST_P(ParseTest, ParserCorrectly) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
@@ -1179,6 +1199,225 @@ KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
       serialization);
 }
 
+KeyAndSerialization PublicKeyAndSerializationNistP256() {
+  util::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.HpkePublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(
+                google::crypto::tink::DHKEM_P256_HKDF_SHA256),
+            FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
+            FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
+       FieldWithNumber(3).IsString(P256PointAsString())},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(
+      "PublicKeyP256", std::make_shared<HpkePublicKey>(*public_key),
+      serialization);
+}
+
+KeyAndSerialization PublicKeyAndSerializationNistP384() {
+  util::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kDhkemP384HkdfSha384)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *parameters, P384PointAsString(), /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.HpkePublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(
+                google::crypto::tink::DHKEM_P384_HKDF_SHA384),
+            FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
+            FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
+       FieldWithNumber(3).IsString(P384PointAsString())},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(
+      "PublicKeyP384", std::make_shared<HpkePublicKey>(*public_key),
+      serialization);
+}
+
+KeyAndSerialization PublicKeyAndSerializationNistP521() {
+  util::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kDhkemP521HkdfSha512)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha512)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *parameters, P521PointAsString(), /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.HpkePublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(
+                google::crypto::tink::DHKEM_P521_HKDF_SHA512),
+            FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA512),
+            FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
+       FieldWithNumber(3).IsString(P521PointAsString())},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(
+      "PublicKeyP521", std::make_shared<HpkePublicKey>(*public_key),
+      serialization);
+}
+
+KeyAndSerialization PublicKeyAndSerializationX25519() {
+  util::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha384)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *parameters, X25519PublicValue(), /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.HpkePublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(
+                google::crypto::tink::DHKEM_X25519_HKDF_SHA256),
+            FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
+            FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
+       FieldWithNumber(3).IsString(X25519PublicValue())},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization(
+      "PublicKeyX25519", std::make_shared<HpkePublicKey>(*public_key),
+      serialization);
+}
+
+KeyAndSerialization PublicKeyAndSerializationTink() {
+  util::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *parameters, P256PointAsString(), /*id_requirement=*/0x12341234,
+      GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.HpkePublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(
+                google::crypto::tink::DHKEM_P256_HKDF_SHA256),
+            FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
+            FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
+       FieldWithNumber(3).IsString(P256PointAsString())},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK, 0x12341234);
+
+  return KeyAndSerialization(
+      "PublicKeyTink", std::make_shared<HpkePublicKey>(*public_key),
+      serialization);
+}
+
+KeyAndSerialization PublicKeyAndSerializationCrunchy() {
+  util::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
+          .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *parameters, P256PointAsString(), /*id_requirement=*/0x12341234,
+      GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.HpkePublicKey",
+      {FieldWithNumber(2).IsSubMessage(
+           {FieldWithNumber(1).IsVarint(
+                google::crypto::tink::DHKEM_P256_HKDF_SHA256),
+            FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
+            FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
+       FieldWithNumber(3).IsString(P256PointAsString())},
+      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::CRUNCHY, 0x12341234);
+
+  return KeyAndSerialization(
+      "PublicKeyCrunchy", std::make_shared<HpkePublicKey>(*public_key),
+      serialization);
+}
+
+// We check that some non-standard feature of proto are respected (unknown
+// fields, overwritten fields, explicitly serialized versions)
+KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
+  util::StatusOr<HpkeParameters> parameters =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  CHECK_OK(parameters.status());
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  CHECK_OK(public_key.status());
+  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, P256SecretValue(), GetPartialKeyAccess());
+  CHECK_OK(private_key.status());
+
+  ProtoKeySerialization serialization = SerializeMessage(
+      "type.googleapis.com/google.crypto.tink.HpkePrivateKey",
+      {/* version field with default value*/ FieldWithNumber(1).IsVarint(0),
+       FieldWithNumber(2).IsSubMessage(
+           {/*version field with wrong version, will be overwritten */
+            FieldWithNumber(1).IsVarint(1),
+            FieldWithNumber(2).IsSubMessage(
+                {FieldWithNumber(1).IsVarint(
+                     google::crypto::tink::DHKEM_P256_HKDF_SHA256),
+                 FieldWithNumber(2).IsVarint(
+                     ::google::crypto::tink::HKDF_SHA256),
+                 FieldWithNumber(3).IsVarint(
+                     ::google::crypto::tink::AES_128_GCM)}),
+            /* overwrite version to 0 */
+            FieldWithNumber(1).IsVarint(0),
+            FieldWithNumber(4).IsString("Unknown field"),
+            FieldWithNumber(3).IsString(P256PointAsString())}),
+       FieldWithNumber(3).IsString(
+           P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
+      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+
+  return KeyAndSerialization("NonCanonicalSerialization",
+                             std::make_shared<HpkePrivateKey>(*private_key),
+                             serialization);
+}
+
 INSTANTIATE_TEST_SUITE_P(
     ParseTest, ParseTest,
     testing::Values(PrivateKeyAndSerializationNistP256(),
@@ -1186,10 +1425,31 @@ INSTANTIATE_TEST_SUITE_P(
                     PrivateKeyAndSerializationNistP521(),
                     PrivateKeyAndSerializationX25519(),
                     PrivateKeyAndSerializationTink(),
-                    PrivateKeyAndSerializationCrunchy()),
+                    PrivateKeyAndSerializationCrunchy(),
+                    PublicKeyAndSerializationNistP256(),
+                    PublicKeyAndSerializationNistP384(),
+                    PublicKeyAndSerializationNistP521(),
+                    PublicKeyAndSerializationX25519(),
+                    PublicKeyAndSerializationTink(),
+                    PublicKeyAndSerializationCrunchy(),
+                    PrivateKeyWithNonStandardSerialization()),
     [](testing::TestParamInfo<class KeyAndSerialization> info) {
       return info.param.test_name;
     });
+
+INSTANTIATE_TEST_SUITE_P(SerializationTest, SerializationTest,
+                         testing::Values(PrivateKeyAndSerializationNistP256(),
+                                         PrivateKeyAndSerializationNistP384(),
+                                         PrivateKeyAndSerializationNistP521(),
+                                         PrivateKeyAndSerializationX25519(),
+                                         PrivateKeyAndSerializationTink(),
+                                         PrivateKeyAndSerializationCrunchy(),
+                                         PublicKeyAndSerializationNistP256(),
+                                         PublicKeyAndSerializationNistP384(),
+                                         PublicKeyAndSerializationNistP521(),
+                                         PublicKeyAndSerializationX25519(),
+                                         PublicKeyAndSerializationTink(),
+                                         PublicKeyAndSerializationCrunchy()));
 
 }  // namespace
 }  // namespace tink

@@ -28,7 +28,6 @@
 namespace crypto {
 namespace tink {
 
-
 // An interface for streaming authenticated encryption with associated data.
 // Streaming encryption is typically used for encrypting large plaintexts such
 // as large files.  Tink may eventually contain multiple interfaces for
@@ -37,6 +36,12 @@ namespace tink {
 // authentication. The underlying encryption modes are selected so that partial
 // plaintext can be obtained fast by decrypting and authenticating just a part
 // of the ciphertext.
+//
+// Instances of StreamingAead must follow the nOAE definition as proposed in the
+// paper "Online Authenticated-Encryption and its Nonce-Reuse Misuse-Resistance"
+// by Hoang, Reyhanitabar, Rogaway and Vizár
+// https://eprint.iacr.org/2015/189.pdf
+
 class StreamingAead {
  public:
   // Returns a wrapper around 'ciphertext_destination', such that any bytes

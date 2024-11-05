@@ -30,7 +30,9 @@
 #include <memory>
 #include <string>
 
+#include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -44,7 +46,16 @@ class StatefulMac {
   virtual ~StatefulMac() = default;
 
   virtual util::Status Update(absl::string_view data) = 0;
+
+  ABSL_DEPRECATED("Use FinalizeAsSecretData instead")
   virtual util::StatusOr<std::string> Finalize() = 0;
+  virtual util::StatusOr<util::SecretData> FinalizeAsSecretData() {
+    util::StatusOr<std::string> result = Finalize();
+    if (!result.ok()) {
+      return result.status();
+    }
+    return util::SecretDataFromStringView(*result);
+  }
 };
 
 class StatefulMacFactory {

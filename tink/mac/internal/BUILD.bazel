@@ -125,8 +125,10 @@ cc_library(
     hdrs = ["stateful_mac.h"],
     include_prefix = "tink/mac/internal",
     deps = [
+        "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/strings:string_view",
     ],
 )

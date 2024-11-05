@@ -117,7 +117,9 @@ tink_cc_library(
   SRCS
     stateful_mac.h
   DEPS
+    absl::core_headers
     absl::string_view
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
 )

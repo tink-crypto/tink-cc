@@ -347,6 +347,7 @@ tink_cc_library(
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_public_key
     tink::hybrid::hybrid_private_key
+    absl::log
     absl::status
     absl::strings
     absl::str_format
@@ -384,6 +385,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::internal::call_with_core_dump_protection
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -391,6 +393,8 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
+    tink::util::secret_data
     tink::util::secret_proto
     tink::util::status
     tink::util::statusor
@@ -970,7 +974,9 @@ tink_cc_test(
     tink::hybrid::hpke_proto_serialization
     tink::hybrid::hpke_public_key
     gmock
+    absl::check
     absl::status
+    absl::strings
     absl::string_view
     absl::optional
     crypto
@@ -985,11 +991,14 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
+    tink::internal::testing::equals_proto_key_serialization
+    tink::internal::testing::field_with_number
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
 )

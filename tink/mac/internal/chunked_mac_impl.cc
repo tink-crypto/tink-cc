@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
 #include "tink/chunked_mac.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/mac/internal/stateful_cmac_boringssl.h"
 #include "tink/mac/internal/stateful_hmac_boringssl.h"
 #include "tink/mac/internal/stateful_mac.h"
@@ -43,6 +44,9 @@ namespace internal {
 using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
 
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataAsStringView;
+
 util::Status ChunkedMacComputationImpl::Update(absl::string_view data) {
   if (!status_.ok()) return status_;
   return stateful_mac_->Update(data);
@@ -52,7 +56,12 @@ util::StatusOr<std::string> ChunkedMacComputationImpl::ComputeMac() {
   if (!status_.ok()) return status_;
   status_ = util::Status(absl::StatusCode::kFailedPrecondition,
                          "MAC computation already finalized.");
-  return stateful_mac_->Finalize();
+  util::StatusOr<SecretData> result_tag =
+      stateful_mac_->FinalizeAsSecretData();
+  if (!result_tag.ok()) {
+    return result_tag.status();
+  }
+  return std::string(SecretDataAsStringView(*result_tag));
 }
 
 util::Status ChunkedMacVerificationImpl::Update(absl::string_view data) {
@@ -64,7 +73,8 @@ util::Status ChunkedMacVerificationImpl::VerifyMac() {
   if (!status_.ok()) return status_;
   status_ = util::Status(absl::StatusCode::kFailedPrecondition,
                          "MAC verification already finalized.");
-  util::StatusOr<std::string> computed_mac = stateful_mac_->Finalize();
+  util::StatusOr<SecretData> computed_mac =
+      stateful_mac_->FinalizeAsSecretData();
   if (!computed_mac.ok()) {
     return computed_mac.status();
   }
@@ -72,7 +82,8 @@ util::Status ChunkedMacVerificationImpl::VerifyMac() {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Verification failed.");
   }
-  if (CRYPTO_memcmp(computed_mac->data(), tag_.data(), computed_mac->size())) {
+  if (!SafeCryptoMemEquals(computed_mac->data(), tag_.data(),
+                           computed_mac->size())) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Verification failed.");
   }

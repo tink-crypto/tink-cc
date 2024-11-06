@@ -26,6 +26,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/log/log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -55,6 +56,8 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -161,11 +164,11 @@ TEST_P(StatefulHmacBoringSslTest, OnlyEmptyMessages) {
           util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
   ASSERT_THAT(hmac_result, IsOk());
   auto hmac = std::move(hmac_result.value());
-  util::StatusOr<std::string> tag = hmac->Finalize();
+  util::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
-  EXPECT_THAT(HexEncode(*tag), Eq(test_vector.hex_tag));
+  EXPECT_THAT(HexEncode(SecretDataAsStringView(*tag)), Eq(test_vector.hex_tag));
 }
 
 TEST_P(StatefulHmacBoringSslTest, SingleUpdate) {
@@ -176,11 +179,11 @@ TEST_P(StatefulHmacBoringSslTest, SingleUpdate) {
   ASSERT_THAT(hmac_result, IsOk());
   auto hmac = std::move(hmac_result.value());
   ASSERT_THAT(hmac->Update(test_vector.message), IsOk());
-  util::StatusOr<std::string> tag = hmac->Finalize();
+  util::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
-  EXPECT_THAT(HexEncode(*tag), Eq(test_vector.hex_tag));
+  EXPECT_THAT(HexEncode(SecretDataAsStringView(*tag)), Eq(test_vector.hex_tag));
 }
 
 TEST_P(StatefulHmacBoringSslTest, MultipleUpdates) {
@@ -202,11 +205,11 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdates) {
     remaining_message.remove_prefix(amount_to_consume);
   }
   LOG(INFO) << "Done updating ";
-  util::StatusOr<std::string> tag = hmac->Finalize();
+  util::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
-  EXPECT_THAT(HexEncode(*tag), Eq(test_vector.hex_tag));
+  EXPECT_THAT(HexEncode(SecretDataAsStringView(*tag)), Eq(test_vector.hex_tag));
 }
 
 TEST_P(StatefulHmacBoringSslTest, MultipleUpdatesObjectFromFactory) {
@@ -225,19 +228,18 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdatesObjectFromFactory) {
                 IsOk());
     remaining_message.remove_prefix(amount_to_consume);
   }
-  util::StatusOr<std::string> tag = (*hmac)->Finalize();
+  util::StatusOr<SecretData> tag = (*hmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
-  EXPECT_THAT(HexEncode(*tag), Eq(test_vector.hex_tag));
+  EXPECT_THAT(HexEncode(SecretDataAsStringView(*tag)), Eq(test_vector.hex_tag));
 }
 
-INSTANTIATE_TEST_SUITE_P(
-    StatefulHmacBoringSslTest, StatefulHmacBoringSslTest,
-    testing::ValuesIn(GetTestVectors()),
-    [](const testing::TestParamInfo<TestVector>& info) {
-      return info.param.test_name;
-    });
+INSTANTIATE_TEST_SUITE_P(StatefulHmacBoringSslTest, StatefulHmacBoringSslTest,
+                         testing::ValuesIn(GetTestVectors()),
+                         [](const testing::TestParamInfo<TestVector> &info) {
+                           return info.param.test_name;
+                         });
 
 TEST(StatefulHmacBoringSslTest, InvalidKeySizes) {
   size_t tag_size = 16;
@@ -277,11 +279,10 @@ class StatefulHmacBoringSslTestVectorTest
     auto update_result = hmac->Update(msg);
     EXPECT_THAT(update_result, IsOk());
 
-    auto finalize_result = hmac->Finalize();
+    util::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
     EXPECT_THAT(finalize_result, IsOk());
-    auto result = finalize_result.value();
 
-    EXPECT_EQ(result, tag);
+    EXPECT_EQ(SecretDataAsStringView(*finalize_result), tag);
   }
 };
 
@@ -310,10 +311,9 @@ bool WycheproofTest(const rapidjson::Document &root, HashType hash_type) {
       auto update_result = hmac->Update(msg);
       EXPECT_THAT(update_result, IsOk());
 
-      auto finalize_result = hmac->Finalize();
-      auto result = finalize_result.value();
-
-      bool success = result == tag;
+      util::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
+      CHECK_OK(finalize_result.status());
+      bool success = SecretDataAsStringView(*finalize_result) == tag;
       if (success) {
         // std::string result_tag = result.value();
         if (expected == "invalid") {
@@ -324,7 +324,8 @@ bool WycheproofTest(const rapidjson::Document &root, HashType hash_type) {
         if (expected == "valid") {
           ADD_FAILURE() << "Could not create tag for test with tcId:" << id
                         << " tag_size:" << tag.length()
-                        << " key_size:" << key.length() << " error:" << result;
+                        << " key_size:" << key.length() << " error:"
+                        << SecretDataAsStringView(*finalize_result);
           errors++;
         }
       }

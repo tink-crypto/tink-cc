@@ -14,6 +14,7 @@ tink_cc_library(
     absl::strings
     crypto
     tink::core::chunked_mac
+    tink::internal::safe_stringops
     tink::subtle::common_enums
     tink::util::enums
     tink::util::secret_data
@@ -221,6 +222,7 @@ tink_cc_test(
     tink::mac::internal::stateful_mac
     gmock
     absl::log
+    absl::check
     absl::memory
     absl::status
     absl::strings

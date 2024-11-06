@@ -928,12 +928,17 @@ tink_cc_library(
   DEPS
     tink::internal::key_parser
     tink::internal::key_serializer
+    tink::internal::legacy_proto_key
+    tink::internal::legacy_proto_parameters
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
     tink::internal::parser_index
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serializer_index
     absl::flat_hash_map
+    absl::memory
     absl::status
     absl::str_format
     absl::optional
@@ -953,6 +958,8 @@ tink_cc_test(
     tink::internal::key_serializer
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::serialization_test_util
@@ -962,10 +969,11 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
+    tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(
@@ -976,17 +984,11 @@ tink_cc_library(
   DEPS
     tink::internal::key_parser
     tink::internal::key_serializer
-    tink::internal::legacy_proto_key
-    tink::internal::legacy_proto_parameters
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
     absl::core_headers
-    absl::memory
-    absl::status
     absl::synchronization
     absl::optional
     tink::core::key
@@ -1018,7 +1020,6 @@ tink_cc_test(
     tink::core::parameters
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto

@@ -74,7 +74,7 @@ class MutableSerializationRegistry {
   // Similar to `ParseParameters` but falls back to legacy proto parameters
   // serialization if the corresponding parameters parser is not found.
   util::StatusOr<std::unique_ptr<Parameters>> ParseParametersWithLegacyFallback(
-      const Serialization& serialization);
+      const Serialization& serialization) ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
   // Serializes `parameters` into a `Serialization` instance.
   template <typename SerializationT>
@@ -93,7 +93,8 @@ class MutableSerializationRegistry {
   // Similar to `ParseKey` but falls back to legacy proto key serialization if
   // the corresponding key parser is not found.
   util::StatusOr<std::unique_ptr<Key>> ParseKeyWithLegacyFallback(
-      const Serialization& serialization, SecretKeyAccessToken token);
+      const Serialization& serialization, SecretKeyAccessToken token)
+      ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
   // Serializes `parameters` into a `Serialization` instance.
   template <typename SerializationT>
@@ -105,10 +106,7 @@ class MutableSerializationRegistry {
   }
 
   // Resets to a new empty registry.
-  void Reset() ABSL_LOCKS_EXCLUDED(registry_mutex_) {
-    absl::WriterMutexLock lock(&registry_mutex_);
-    registry_ = SerializationRegistry();
-  }
+  void Reset() ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
  private:
   mutable absl::Mutex registry_mutex_;

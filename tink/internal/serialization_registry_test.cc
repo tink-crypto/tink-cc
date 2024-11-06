@@ -30,14 +30,17 @@
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/parameters_parser.h"
 #include "tink/internal/parameters_serializer.h"
+#include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_test_util.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -45,6 +48,8 @@ namespace internal {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::KeyData;
+using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
@@ -73,6 +78,37 @@ TEST(SerializationRegistryTest, ParseParameters) {
   EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
   EXPECT_THAT(std::type_index(typeid(**id_params)),
               std::type_index(typeid(IdParams)));
+}
+
+TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
+  SerializationRegistry::Builder builder;
+  ParametersParserImpl<IdParamsSerialization, IdParams> parser(kIdTypeUrl,
+                                                               ParseIdParams);
+  ASSERT_THAT(builder.RegisterParametersParser(&parser), IsOk());
+
+  SerializationRegistry registry = std::move(builder).Build();
+
+  // Parse parameters with registered parameters parser.
+  util::StatusOr<std::unique_ptr<Parameters>> id_params =
+      registry.ParseParameters(IdParamsSerialization());
+  ASSERT_THAT(id_params, IsOk());
+  EXPECT_THAT((*id_params)->HasIdRequirement(), IsTrue());
+  EXPECT_THAT(std::type_index(typeid(**id_params)),
+              std::type_index(typeid(IdParams)));
+
+  // Parse parameters without registered parameters parser.
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create("type_url", OutputPrefixType::TINK,
+                                           "serialized_proto");
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT(registry.ParseParameters(*serialization).status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  // Fall back to legacy proto parameters.
+  util::StatusOr<std::unique_ptr<Parameters>> proto_parameters =
+      registry.ParseParametersWithLegacyFallback(*serialization);
+  ASSERT_THAT(proto_parameters, IsOk());
+  EXPECT_THAT((*proto_parameters)->HasIdRequirement(), IsTrue());
 }
 
 TEST(SerializationRegistryTest, ParseParametersWithoutRegistration) {
@@ -177,6 +213,42 @@ TEST(SerializationRegistryTest, ParseKey) {
   EXPECT_THAT(std::type_index(typeid(**id_key)),
               std::type_index(typeid(IdKey)));
   EXPECT_THAT((*id_key)->GetIdRequirement(), Eq(123));
+}
+
+TEST(SerializationRegistryTest, ParseKeyWithLegacyFallback) {
+  SerializationRegistry::Builder builder;
+  KeyParserImpl<IdKeySerialization, IdKey> parser(kIdTypeUrl, ParseIdKey);
+  ASSERT_THAT(builder.RegisterKeyParser(&parser), IsOk());
+
+  SerializationRegistry registry = std::move(builder).Build();
+
+  // Parse key with registered key parser.
+  util::StatusOr<std::unique_ptr<Key>> id_key =
+      registry.ParseKeyWithLegacyFallback(IdKeySerialization(/*id=*/123),
+                                          InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(id_key, IsOk());
+  EXPECT_THAT(std::type_index(typeid(**id_key)),
+              std::type_index(typeid(IdKey)));
+  EXPECT_THAT((*id_key)->GetIdRequirement(), Eq(123));
+
+  // Parse key without registered key parser.
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+  util::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    /*id_requirement=*/456);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT(registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
+
+  // Fall back to legacy proto key.
+  util::StatusOr<std::unique_ptr<Key>> proto_key =
+      registry.ParseKeyWithLegacyFallback(*serialization,
+                                          InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(proto_key, IsOk());
+  EXPECT_THAT((*proto_key)->GetIdRequirement(), Eq(456));
 }
 
 TEST(SerializationRegistryTest, ParseKeyNoSecretAccess) {

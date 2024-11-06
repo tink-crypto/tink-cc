@@ -37,7 +37,6 @@
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
@@ -92,10 +91,13 @@ TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
   EXPECT_THAT(std::type_index(typeid(**id_params)),
               std::type_index(typeid(IdParams)));
 
+  // Parse parameters without registered parameters parser.
   util::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create("type_url", OutputPrefixType::TINK,
                                            "serialized_proto");
   ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT(registry.ParseParameters(*serialization).status(),
+              StatusIs(absl::StatusCode::kNotFound));
 
   // Fall back to legacy proto parameters.
   util::StatusOr<std::unique_ptr<Parameters>> proto_parameters =
@@ -230,13 +232,17 @@ TEST(MutableSerializationRegistryTest, ParseKeyWithLegacyFallback) {
               std::type_index(typeid(IdKey)));
   EXPECT_THAT((*id_key)->GetIdRequirement(), Eq(123));
 
+  // Parse key without registered key parser.
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   util::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/456);
-  ASSERT_THAT(serialization.status(), IsOk());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT(registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get())
+                  .status(),
+              StatusIs(absl::StatusCode::kNotFound));
 
   // Fall back to legacy proto key.
   util::StatusOr<std::unique_ptr<Key>> proto_key =

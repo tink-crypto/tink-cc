@@ -19,18 +19,12 @@
 #include <memory>
 #include <utility>
 
-#include "absl/memory/memory.h"
-#include "absl/status/status.h"
 #include "absl/synchronization/mutex.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
-#include "tink/internal/legacy_proto_key.h"
-#include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/parameters_parser.h"
 #include "tink/internal/parameters_serializer.h"
-#include "tink/internal/proto_key_serialization.h"
-#include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/key.h"
@@ -99,22 +93,8 @@ MutableSerializationRegistry::ParseParameters(
 util::StatusOr<std::unique_ptr<Parameters>>
 MutableSerializationRegistry::ParseParametersWithLegacyFallback(
     const Serialization& serialization) {
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
-      ParseParameters(serialization);
-  if (parameters.status().code() == absl::StatusCode::kNotFound) {
-    const ProtoParametersSerialization* proto_serialization =
-        dynamic_cast<const ProtoParametersSerialization*>(&serialization);
-    if (proto_serialization == nullptr) {
-      return util::Status(
-          absl::StatusCode::kInternal,
-          "Failed to convert serialization to ProtoParametersSerialization.");
-    }
-    return {absl::make_unique<LegacyProtoParameters>(*proto_serialization)};
-  }
-  if (!parameters.ok()) {
-    return parameters.status();
-  }
-  return parameters;
+  absl::ReaderMutexLock lock(&registry_mutex_);
+  return registry_.ParseParametersWithLegacyFallback(serialization);
 }
 
 util::StatusOr<std::unique_ptr<Key>> MutableSerializationRegistry::ParseKey(
@@ -127,24 +107,13 @@ util::StatusOr<std::unique_ptr<Key>> MutableSerializationRegistry::ParseKey(
 util::StatusOr<std::unique_ptr<Key>>
 MutableSerializationRegistry::ParseKeyWithLegacyFallback(
     const Serialization& serialization, SecretKeyAccessToken token) {
-  util::StatusOr<std::unique_ptr<Key>> key = ParseKey(serialization, token);
-  if (key.status().code() == absl::StatusCode::kNotFound) {
-    const ProtoKeySerialization* proto_serialization =
-        dynamic_cast<const ProtoKeySerialization*>(&serialization);
-    if (proto_serialization == nullptr) {
-      return util::Status(
-          absl::StatusCode::kInternal,
-          "Failed to convert serialization to ProtoKeySerialization.");
-    }
-    util::StatusOr<LegacyProtoKey> proto_key = internal::LegacyProtoKey::Create(
-        *proto_serialization, token);
-    if (!proto_key.ok()) {
-      return proto_key.status();
-    }
-    return {absl::make_unique<LegacyProtoKey>(std::move(*proto_key))};
-  }
-  if (!key.ok()) return key.status();
-  return key;
+  absl::ReaderMutexLock lock(&registry_mutex_);
+  return registry_.ParseKeyWithLegacyFallback(serialization, token);
+}
+
+void MutableSerializationRegistry::Reset() {
+  absl::WriterMutexLock lock(&registry_mutex_);
+  registry_ = SerializationRegistry();
 }
 
 }  // namespace internal

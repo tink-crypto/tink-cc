@@ -112,6 +112,11 @@ class SerializationRegistry {
   util::StatusOr<std::unique_ptr<Parameters>> ParseParameters(
       const Serialization& serialization) const;
 
+  // Similar to `ParseParameters` but falls back to legacy proto parameters
+  // serialization if the corresponding parameters parser is not found.
+  util::StatusOr<std::unique_ptr<Parameters>> ParseParametersWithLegacyFallback(
+      const Serialization& serialization) const;
+
   // Serializes `parameters` into a `Serialization` instance.
   template <typename SerializationT>
   util::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
@@ -133,6 +138,11 @@ class SerializationRegistry {
   util::StatusOr<std::unique_ptr<Key>> ParseKey(
       const Serialization& serialization,
       absl::optional<SecretKeyAccessToken> token) const;
+
+  // Similar to `ParseKey` but falls back to legacy proto key serialization if
+  // the corresponding key parser is not found.
+  util::StatusOr<std::unique_ptr<Key>> ParseKeyWithLegacyFallback(
+      const Serialization& serialization, SecretKeyAccessToken token) const;
 
   // Serializes `parameters` into a `Serialization` instance.
   template <typename SerializationT>

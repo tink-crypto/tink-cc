@@ -37,3 +37,26 @@ cc_library(
         "@com_google_absl//absl/strings",
     ],
 )
+
+cc_library(
+    name = "ecies_aead_hkdf_test_vectors",
+    testonly = 1,
+    srcs = ["ecies_aead_hkdf_test_vectors.cc"],
+    hdrs = ["ecies_aead_hkdf_test_vectors.h"],
+    include_prefix = "tink/hybrid/internal/testing",
+    deps = [
+        ":hybrid_test_vectors",
+        "//tink:big_integer",
+        "//tink:ec_point",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_big_integer",
+        "//tink/hybrid:ecies_parameters",
+        "//tink/hybrid:ecies_private_key",
+        "//tink/hybrid:ecies_public_key",
+        "//tink/util:statusor",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/types:optional",
+    ],
+)

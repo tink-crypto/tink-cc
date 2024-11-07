@@ -848,15 +848,23 @@ tink_cc_test(
     tink::hybrid::ecies_aead_hkdf_hybrid_encrypt
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
+    tink::hybrid::hybrid_config
     tink::hybrid::hybrid_key_templates
     gmock
     absl::memory
     absl::status
+    absl::strings
     tink::core::hybrid_decrypt
+    tink::core::hybrid_encrypt
+    tink::core::key_status
+    tink::core::keyset_handle
     tink::core::registry
     tink::aead::aead_key_templates
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_gcm_key_manager
+    tink::config::global_registry
+    tink::hybrid::internal::testing::ecies_aead_hkdf_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
     tink::subtle::hybrid_test_util
     tink::util::status
     tink::util::statusor

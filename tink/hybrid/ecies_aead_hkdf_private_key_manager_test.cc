@@ -15,18 +15,28 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/hybrid/ecies_aead_hkdf_private_key_manager.h"
+#include <memory>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_gcm_key_manager.h"
+#include "tink/config/global_registry.h"
 #include "tink/hybrid/ecies_aead_hkdf_hybrid_encrypt.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
+#include "tink/hybrid/hybrid_config.h"
 #include "tink/hybrid/hybrid_key_templates.h"
+#include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
+#include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
+#include "tink/hybrid_encrypt.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/registry.h"
 #include "tink/subtle/hybrid_test_util.h"
 #include "tink/util/status.h"
@@ -41,7 +51,9 @@
 namespace crypto {
 namespace tink {
 
+using ::crypto::tink::internal::HybridTestVector;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::EciesAeadHkdfKeyFormat;
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
@@ -270,6 +282,75 @@ TEST(EciesAeadHkdfPrivateKeyManagerTest, CreateDifferentKey) {
                                        "some aad"),
               Not(IsOk()));
 }
+
+using EciesTestVectorTest = testing::TestWithParam<HybridTestVector>;
+
+TEST_P(EciesTestVectorTest, DecryptWorks) {
+  ASSERT_THAT(HybridConfig::Register(), IsOk());
+  const HybridTestVector& param = GetParam();
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.hybrid_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+      handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(decrypter, IsOk());
+  EXPECT_THAT((*decrypter)->Decrypt(param.ciphertext, param.context_info),
+              IsOkAndHolds(Eq(param.plaintext)));
+}
+
+TEST_P(EciesTestVectorTest, DecryptDifferentContextInfoFails) {
+  ASSERT_THAT(HybridConfig::Register(), IsOk());
+  const HybridTestVector& param = GetParam();
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.hybrid_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+      handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(decrypter, IsOk());
+  EXPECT_THAT(
+      (*decrypter)
+          ->Decrypt(param.ciphertext, absl::StrCat(param.context_info, "x")),
+      Not(IsOk()));
+}
+
+TEST_P(EciesTestVectorTest, EncryptThenDecryptWorks) {
+  ASSERT_THAT(HybridConfig::Register(), IsOk());
+  const HybridTestVector& param = GetParam();
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.hybrid_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+      handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(decrypter, IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+  ASSERT_THAT(public_handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
+      (*public_handle)->GetPrimitive<HybridEncrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(encrypter, IsOk());
+
+  util::StatusOr<std::string> ciphertext =
+      (*encrypter)->Encrypt(param.plaintext, param.context_info);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT((*decrypter)->Decrypt(*ciphertext, param.context_info),
+              IsOkAndHolds(Eq(param.plaintext)));
+}
+
+INSTANTIATE_TEST_SUITE_P(EciesTestVectorTest, EciesTestVectorTest,
+                         testing::ValuesIn(internal::CreateEciesTestVectors()));
 
 }  // namespace
 }  // namespace tink

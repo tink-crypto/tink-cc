@@ -197,7 +197,7 @@ HybridTestVector CreateTestVector4() {
 HybridTestVector CreateTestVector5() {
   util::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
-          .SetVariant(HpkeParameters::Variant::kTink)
+          .SetVariant(HpkeParameters::Variant::kCrunchy)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
@@ -215,7 +215,7 @@ HybridTestVector CreateTestVector5() {
       std::make_shared<HpkePrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
       HexDecodeOrDie(
-          "01886688aa04d7d800cab3d3c0104899e137656a3a23a58e1efe41310ea5e9ba7423"
+          "00886688aa04d7d800cab3d3c0104899e137656a3a23a58e1efe41310ea5e9ba7423"
           "4494b10da4286d4baf4641c38d509d28cb21c4694461ccd6258864c115cf17875f59"
           "b069dffc8427cfb7f277ed4e370ae78f916e22"));
 }

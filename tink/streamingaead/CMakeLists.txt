@@ -438,16 +438,24 @@ tink_cc_test(
     aes_ctr_hmac_streaming_key_manager_test.cc
   DEPS
     tink::streamingaead::aes_ctr_hmac_streaming_key_manager
+    tink::streamingaead::streaming_aead_config
     gmock
     absl::memory
     absl::status
     absl::strings
+    tink::core::input_stream
+    tink::core::key_status
+    tink::core::keyset_handle
     tink::core::streaming_aead
+    tink::config::global_registry
+    tink::streamingaead::internal::testing::aes_ctr_hmac_streaming_test_vectors
+    tink::streamingaead::internal::testing::streamingaead_test_vector
     tink::subtle::aes_ctr_hmac_streaming
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::streaming_aead_test_util
     tink::subtle::test_util
+    tink::util::input_stream_util
     tink::util::istream_input_stream
     tink::util::ostream_output_stream
     tink::util::secret_data

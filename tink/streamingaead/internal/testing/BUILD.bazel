@@ -1,0 +1,38 @@
+package(
+    default_testonly = 1,
+    default_visibility = ["//:__subpackages__"],
+)
+
+licenses(["notice"])
+
+cc_library(
+    name = "aes_ctr_hmac_streaming_test_vectors",
+    testonly = 1,
+    srcs = ["aes_ctr_hmac_streaming_test_vectors.cc"],
+    hdrs = ["aes_ctr_hmac_streaming_test_vectors.h"],
+    include_prefix = "tink/streamingaead/internal/testing",
+    deps = [
+        ":streamingaead_test_vector",
+        "//tink:insecure_secret_key_access",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/streamingaead:aes_ctr_hmac_streaming_key",
+        "//tink/streamingaead:aes_ctr_hmac_streaming_parameters",
+        "//tink/util:statusor",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_library(
+    name = "streamingaead_test_vector",
+    testonly = 1,
+    hdrs = ["streamingaead_test_vector.h"],
+    include_prefix = "tink/streamingaead/internal/testing",
+    deps = [
+        "//tink/streamingaead:streaming_aead_key",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)

@@ -1,5 +1,7 @@
 tink_module(streamingaead::internal)
 
+add_subdirectory(testing)
+
 tink_cc_library(
   NAME config_v0
   SRCS

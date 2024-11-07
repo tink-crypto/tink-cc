@@ -23,9 +23,18 @@
 #include "gtest/gtest.h"
 #include "absl/container/btree_set.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
+#include "tink/config/global_registry.h"
+#include "tink/hybrid/hpke_config.h"
+#include "tink/hybrid/hpke_proto_serialization.h"
+#include "tink/hybrid/hybrid_config.h"
 #include "tink/hybrid/internal/hpke_encrypt.h"
+#include "tink/hybrid/internal/testing/hpke_test_vectors.h"
+#include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
+#include "tink/key_status.h"
+#include "tink/keyset_handle.h"
 #include "tink/subtle/hybrid_test_util.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -38,6 +47,7 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
@@ -456,6 +466,78 @@ TEST(HpkePrivateKeyManagerTest, EncryptThenDecryptWithDifferentKeysFails) {
                                        "some text", "some aad"),
               Not(IsOk()));
 }
+
+using HpkeTestVectorTest = TestWithParam<HybridTestVector>;
+
+TEST_P(HpkeTestVectorTest, DecryptWorks) {
+  ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHpke(), IsOk());
+  const HybridTestVector& param = GetParam();
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.hybrid_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+      handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(decrypter, IsOk());
+  EXPECT_THAT((*decrypter)->Decrypt(param.ciphertext, param.context_info),
+              IsOkAndHolds(Eq(param.plaintext)));
+}
+
+TEST_P(HpkeTestVectorTest, DecryptDifferentContextInfoFails) {
+  ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHpke(), IsOk());
+  const HybridTestVector& param = GetParam();
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.hybrid_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+      handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(decrypter, IsOk());
+  EXPECT_THAT(
+      (*decrypter)
+          ->Decrypt(param.ciphertext, absl::StrCat(param.context_info, "x")),
+      Not(IsOk()));
+}
+
+TEST_P(HpkeTestVectorTest, EncryptThenDecryptWorks) {
+  ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHpke(), IsOk());
+  const HybridTestVector& param = GetParam();
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.hybrid_private_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+      handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(decrypter, IsOk());
+
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+  ASSERT_THAT(public_handle, IsOk());
+  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
+      (*public_handle)->GetPrimitive<HybridEncrypt>(ConfigGlobalRegistry());
+  ASSERT_THAT(encrypter, IsOk());
+
+  util::StatusOr<std::string> ciphertext =
+      (*encrypter)->Encrypt(param.plaintext, param.context_info);
+  ASSERT_THAT(ciphertext, IsOk());
+  EXPECT_THAT((*decrypter)->Decrypt(*ciphertext, param.context_info),
+              IsOkAndHolds(Eq(param.plaintext)));
+}
+
+INSTANTIATE_TEST_SUITE_P(HpkeTestVectorTest, HpkeTestVectorTest,
+                         testing::ValuesIn(CreateHpkeTestVectors()));
 
 }  // namespace
 }  // namespace internal

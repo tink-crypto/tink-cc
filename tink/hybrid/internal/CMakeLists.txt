@@ -1,5 +1,7 @@
 tink_module(hybrid::internal)
 
+add_subdirectory(testing)
+
 tink_cc_library(
   NAME hpke_context
   SRCS
@@ -397,8 +399,17 @@ tink_cc_test(
     gmock
     absl::btree
     absl::status
+    absl::strings
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::config::global_registry
+    tink::hybrid::hpke_config
+    tink::hybrid::hpke_proto_serialization
+    tink::hybrid::hybrid_config
+    tink::hybrid::internal::testing::hpke_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
     tink::subtle::hybrid_test_util
     tink::util::statusor
     tink::util::test_matchers

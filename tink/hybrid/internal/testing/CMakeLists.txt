@@ -1,0 +1,32 @@
+tink_module(hybrid::internal::testing)
+
+tink_cc_library(
+  NAME hybrid_test_vectors
+  SRCS
+    hybrid_test_vectors.h
+  DEPS
+    absl::string_view
+    tink::hybrid::hybrid_private_key
+  TESTONLY
+)
+
+tink_cc_library(
+  NAME hpke_test_vectors
+  SRCS
+    hpke_test_vectors.cc
+    hpke_test_vectors.h
+  DEPS
+    tink::hybrid::internal::testing::hybrid_test_vectors
+    absl::check
+    absl::strings
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_public_key
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_util
+  TESTONLY
+)

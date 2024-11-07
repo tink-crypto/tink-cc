@@ -71,18 +71,19 @@ class PrfFromStatefulMacFactory : public Prf {
     if (!status.ok()) {
       return status;
     }
-    auto output_result = stateful_mac->Finalize();
-    if (!output_result.ok()) {
-      return output_result.status();
+    util::StatusOr<util::SecretData> output =
+        stateful_mac->FinalizeAsSecretData();
+    if (!output.ok()) {
+      return output.status();
     }
-    std::string output = std::move(output_result.value());
-    if (output.size() < output_length) {
+    if (output->size() < output_length) {
       return util::Status(
           absl::StatusCode::kInvalidArgument,
-          absl::StrCat("PRF only supports outputs up to ", output.size(),
+          absl::StrCat("PRF only supports outputs up to ", output->size(),
                        " bytes, but ", output_length, " bytes were requested"));
     }
-    return output.substr(0, output_length);
+    return std::string(
+        util::SecretDataAsStringView(*output).substr(0, output_length));
   }
 
  private:

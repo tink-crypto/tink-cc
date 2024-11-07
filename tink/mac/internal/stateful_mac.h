@@ -47,15 +47,7 @@ class StatefulMac {
 
   virtual util::Status Update(absl::string_view data) = 0;
 
-  ABSL_DEPRECATED("Use FinalizeAsSecretData instead")
-  virtual util::StatusOr<std::string> Finalize() = 0;
-  virtual util::StatusOr<util::SecretData> FinalizeAsSecretData() {
-    util::StatusOr<std::string> result = Finalize();
-    if (!result.ok()) {
-      return result.status();
-    }
-    return util::SecretDataFromStringView(*result);
-  }
+  virtual util::StatusOr<util::SecretData> FinalizeAsSecretData() = 0;
 };
 
 class StatefulMacFactory {

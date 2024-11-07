@@ -31,6 +31,7 @@
 #include "tink/output_stream_with_result.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/test_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -42,6 +43,8 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::HasSubstr;
 
 // A dummy implementation of Stateful Mac interface.
@@ -58,9 +61,9 @@ class DummyStatefulMac : public internal::StatefulMac {
     absl::StrAppend(&buffer_, data);
     return util::OkStatus();
   }
-  util::StatusOr<std::string> Finalize() override {
-    return absl::StrCat(mac_name_.size(), ":", buffer_.size(), ":", mac_name_,
-                        buffer_);
+  util::StatusOr<SecretData> FinalizeAsSecretData() override {
+    return SecretDataFromStringView(absl::StrCat(
+        mac_name_.size(), ":", buffer_.size(), ":", mac_name_, buffer_));
   }
 
  private:

@@ -875,7 +875,9 @@ tink_cc_library(
     crypto
     tink::core::output_stream_with_result
     tink::core::streaming_mac
+    tink::internal::safe_stringops
     tink::mac::internal::stateful_mac
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
 )
@@ -1577,6 +1579,7 @@ tink_cc_test(
     absl::string_view
     tink::core::output_stream_with_result
     tink::mac::internal::stateful_mac
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

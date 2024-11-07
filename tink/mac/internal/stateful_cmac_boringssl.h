@@ -44,7 +44,7 @@ class StatefulCmacBoringSsl : public StatefulMac {
   static util::StatusOr<std::unique_ptr<StatefulMac>> New(
       uint32_t tag_size, const util::SecretData& key_value);
   util::Status Update(absl::string_view data) override;
-  util::StatusOr<std::string> Finalize() override;
+  util::StatusOr<util::SecretData> FinalizeAsSecretData() override;
 
  private:
   static constexpr size_t kSmallKeySize = 16;

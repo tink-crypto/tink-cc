@@ -44,7 +44,7 @@ class StatefulHmacBoringSsl : public StatefulMac {
       subtle::HashType hash_type, uint32_t tag_size,
       const util::SecretData& key_value);
   util::Status Update(absl::string_view data) override;
-  util::StatusOr<std::string> Finalize() override;
+  util::StatusOr<util::SecretData> FinalizeAsSecretData() override;
 
  private:
   // Minimum HMAC key size in bytes.

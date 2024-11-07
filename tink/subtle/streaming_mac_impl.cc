@@ -28,8 +28,10 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/output_stream_with_result.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -100,7 +102,11 @@ ComputeMacOutputStream::CloseStreamAndComputeResult() {
   WriteIntoMac();
   status_ =
       util::Status(absl::StatusCode::kFailedPrecondition, "Stream Closed");
-  return mac_->Finalize();
+  util::StatusOr<util::SecretData> result = mac_->FinalizeAsSecretData();
+  if (!result.ok()) {
+    return result.status();
+  }
+  return std::string(util::SecretDataAsStringView(*result));
 }
 
 void ComputeMacOutputStream::BackUp(int count) {
@@ -171,7 +177,7 @@ util::Status VerifyMacOutputStream::CloseStreamAndComputeResult() {
   WriteIntoMac();
   status_ =
       util::Status(absl::StatusCode::kFailedPrecondition, "Stream Closed");
-  util::StatusOr<std::string> mac_actual = mac_->Finalize();
+  util::StatusOr<util::SecretData> mac_actual = mac_->FinalizeAsSecretData();
   if (!mac_actual.ok()) {
     return mac_actual.status();
   }
@@ -180,8 +186,8 @@ util::Status VerifyMacOutputStream::CloseStreamAndComputeResult() {
         absl::StrCat("Invalid MAC size; expected ", expected_.size(), ", got ",
                      mac_actual->size()));
   }
-  if (!CRYPTO_memcmp(mac_actual->data(), expected_.data(),
-                     mac_actual->size())) {
+  if (internal::SafeCryptoMemEquals(mac_actual->data(), expected_.data(),
+                                    mac_actual->size())) {
     return util::OkStatus();
   }
   return absl::InvalidArgumentError("Incorrect MAC");

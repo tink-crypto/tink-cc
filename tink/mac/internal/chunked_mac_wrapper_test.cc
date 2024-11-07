@@ -31,6 +31,7 @@
 #include "tink/mac/internal/chunked_mac_impl.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/primitive_set.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -44,6 +45,8 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataFromStringView;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
@@ -58,8 +61,8 @@ class FakeStatefulMac : public StatefulMac {
     return util::OkStatus();
   }
 
-  util::StatusOr<std::string> Finalize() override {
-    return absl::StrCat(name_, buffer_);
+  util::StatusOr<SecretData> FinalizeAsSecretData() override {
+    return SecretDataFromStringView(absl::StrCat(name_, buffer_));
   }
 
  private:

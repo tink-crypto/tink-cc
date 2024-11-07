@@ -139,6 +139,7 @@ tink_cc_test(
     absl::status
     absl::string_view
     tink::core::chunked_mac
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
@@ -161,6 +162,7 @@ tink_cc_test(
     absl::strings
     tink::core::chunked_mac
     tink::core::primitive_set
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

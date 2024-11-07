@@ -38,6 +38,10 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataAsStringView;
+using ::crypto::tink::util::SecretDataFromStringView;
+
 util::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
     subtle::HashType hash_type, uint32_t tag_size,
     const util::SecretData& key_value) {
@@ -81,15 +85,16 @@ util::Status StatefulHmacBoringSsl::Update(absl::string_view data) {
   return util::OkStatus();
 }
 
-util::StatusOr<std::string> StatefulHmacBoringSsl::Finalize() {
-  uint8_t buf[EVP_MAX_MD_SIZE];
+util::StatusOr<SecretData> StatefulHmacBoringSsl::FinalizeAsSecretData() {
+  SecretData buf(EVP_MAX_MD_SIZE);
   unsigned int out_len;
 
-  if (!HMAC_Final(hmac_context_.get(), buf, &out_len)) {
+  if (!HMAC_Final(hmac_context_.get(), buf.data(), &out_len)) {
     return util::Status(absl::StatusCode::kInternal,
                         "HMAC finalization failed");
   }
-  return std::string(reinterpret_cast<char*>(buf), tag_size_);
+  return SecretDataFromStringView(
+      SecretDataAsStringView(buf).substr(0, tag_size_));
 }
 
 StatefulHmacBoringSslFactory::StatefulHmacBoringSslFactory(

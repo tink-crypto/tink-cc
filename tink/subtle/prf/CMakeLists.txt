@@ -120,6 +120,7 @@ tink_cc_test(
     tink::mac::internal::stateful_mac
     tink::prf::prf_set
     tink::util::istream_input_stream
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

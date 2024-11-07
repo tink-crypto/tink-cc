@@ -32,6 +32,7 @@
 #include "tink/prf/prf_set.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/istream_input_stream.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -42,6 +43,7 @@ namespace subtle {
 namespace {
 
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::util::SecretData;
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::DefaultValue;
@@ -60,26 +62,27 @@ class MockPrf : public Prf {
 class MockStatefulMac : public internal::StatefulMac {
  public:
   MOCK_METHOD(util::Status, Update, (absl::string_view data), (override));
-  MOCK_METHOD(util::StatusOr<std::string>, Finalize, (), (override));
+  MOCK_METHOD(util::StatusOr<SecretData>, FinalizeAsSecretData, (), (override));
 };
 
 class FakeStatefulMacFactory : public internal::StatefulMacFactory {
  public:
   FakeStatefulMacFactory(util::Status update_status,
-                         util::StatusOr<std::string> finalize_result)
+                         util::StatusOr<SecretData> finalize_result)
       : update_status_(update_status), finalize_result_(finalize_result) {}
   util::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
       const override {
     auto mac_mock = absl::make_unique<NiceMock<MockStatefulMac>>();
     ON_CALL(*mac_mock, Update(_)).WillByDefault(Return(update_status_));
-    ON_CALL(*mac_mock, Finalize()).WillByDefault(Return(finalize_result_));
+    ON_CALL(*mac_mock, FinalizeAsSecretData())
+        .WillByDefault(Return(finalize_result_));
     std::unique_ptr<internal::StatefulMac> result = std::move(mac_mock);
     return std::move(result);
   }
 
  private:
   util::Status update_status_;
-  util::StatusOr<std::string> finalize_result_;
+  util::StatusOr<SecretData> finalize_result_;
 };
 
 class MockStreamingPrf : public StreamingPrf {
@@ -97,9 +100,14 @@ class PrfFromStatefulMacFactoryTest : public ::testing::Test {
  protected:
   void SetUpWithResult(util::Status update_status,
                        util::StatusOr<std::string> finalize_result) {
+    util::StatusOr<SecretData> finalize_result_secret_data =
+        finalize_result.ok()
+            ? static_cast<util::StatusOr<SecretData>>(
+                  util::SecretDataFromStringView(*finalize_result))
+            : static_cast<util::StatusOr<SecretData>>(finalize_result.status());
     prf_ = CreatePrfFromStatefulMacFactory(
         absl::make_unique<FakeStatefulMacFactory>(update_status,
-                                                  finalize_result));
+                                                  finalize_result_secret_data));
   }
   Prf* prf() { return prf_.get(); }
 

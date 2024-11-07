@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
 #include "tink/mac/internal/stateful_mac.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -42,6 +43,8 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::util::SecretData;
+using ::crypto::tink::util::SecretDataFromStringView;
 using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
 using ::google::crypto::tink::AesCmacParams;
 using ::google::crypto::tink::HashType;
@@ -54,7 +57,7 @@ using ::testing::Return;
 class MockStatefulMac : public StatefulMac {
  public:
   MOCK_METHOD(util::Status, Update, (absl::string_view), (override));
-  MOCK_METHOD(util::StatusOr<std::string>, Finalize, (), (override));
+  MOCK_METHOD(util::StatusOr<SecretData>, FinalizeAsSecretData, (), (override));
 };
 
 class MockStatefulMacFactory : public StatefulMacFactory {
@@ -158,11 +161,11 @@ TEST(ChunkedMacComputationImplTest, UpdateFails) {
 
 TEST(ChunkedMacComputationImplTest, OperationsFailAfterComputeMac) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
-  util::StatusOr<std::string> tag = std::string("tag");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(tag));
+  util::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacComputationImpl mac_computation(std::move(stateful_mac));
 
-  EXPECT_THAT(mac_computation.ComputeMac(), IsOkAndHolds(*tag));
+  EXPECT_THAT(mac_computation.ComputeMac(), IsOkAndHolds("tag"));
 
   EXPECT_THAT(mac_computation.Update("data"),
               StatusIs(absl::StatusCode::kFailedPrecondition));
@@ -172,18 +175,19 @@ TEST(ChunkedMacComputationImplTest, OperationsFailAfterComputeMac) {
 
 TEST(ChunkedMacComputationImplTest, ComputeMacSucceeds) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
-  util::StatusOr<std::string> tag = std::string("tag");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(tag));
+  util::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacComputationImpl mac_computation(std::move(stateful_mac));
 
-  EXPECT_THAT(mac_computation.ComputeMac(), IsOkAndHolds(*tag));
+  EXPECT_THAT(mac_computation.ComputeMac(), IsOkAndHolds("tag"));
 }
 
 TEST(ChunkedMacComputationImplTest, ComputeMacFails) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
   util::Status error_status =
       util::Status(absl::StatusCode::kInternal, "Internal error.");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(error_status));
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData())
+      .WillOnce(Return(error_status));
   ChunkedMacComputationImpl mac_computation(std::move(stateful_mac));
 
   EXPECT_THAT(mac_computation.ComputeMac().status(),
@@ -210,17 +214,17 @@ TEST(ChunkedMacVerificationImplTest, UpdateFails) {
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacSucceeds) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
-  util::StatusOr<std::string> tag = std::string("tag");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(tag));
-  ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), *tag);
+  util::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
+  ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), "tag");
 
   EXPECT_THAT(mac_verification.VerifyMac(), IsOk());
 }
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithInvalidSameLengthTag) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
-  util::StatusOr<std::string> tag = std::string("tag123");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(tag));
+  util::StatusOr<SecretData> tag = SecretDataFromStringView("tag123");
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac),
                                               "tag456");
 
@@ -230,8 +234,8 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithInvalidSameLengthTag) {
 
 TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithDifferentLengthTag) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
-  util::StatusOr<std::string> tag = std::string("tag");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(tag));
+  util::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac),
                                               "tag456");
 
@@ -243,7 +247,8 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithFinalizeError) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
   util::Status error_status =
       util::Status(absl::StatusCode::kInternal, "Internal error.");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(error_status));
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData())
+      .WillOnce(Return(error_status));
   ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), "tag");
 
   EXPECT_THAT(mac_verification.VerifyMac(), StatusIs(error_status.code()));
@@ -251,9 +256,9 @@ TEST(ChunkedMacVerificationImplTest, VerifyMacFailsWithFinalizeError) {
 
 TEST(ChunkedMacVerificationImplTest, OperationsFailAfterVerifyMac) {
   auto stateful_mac = absl::make_unique<MockStatefulMac>();
-  util::StatusOr<std::string> tag = std::string("tag");
-  EXPECT_CALL(*stateful_mac, Finalize()).WillOnce(Return(tag));
-  ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), *tag);
+  util::StatusOr<SecretData> tag = SecretDataFromStringView("tag");
+  EXPECT_CALL(*stateful_mac, FinalizeAsSecretData()).WillOnce(Return(tag));
+  ChunkedMacVerificationImpl mac_verification(std::move(stateful_mac), "tag");
 
   EXPECT_THAT(mac_verification.VerifyMac(), IsOk());
 

@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // A helper for DEM (data encapsulation mechanism) of ECIES-AEAD-HKDF.
 class EciesAeadHkdfDemHelper {
@@ -82,6 +83,7 @@ class EciesAeadHkdfDemHelper {
   const DemKeyParams key_params_;
 };
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 

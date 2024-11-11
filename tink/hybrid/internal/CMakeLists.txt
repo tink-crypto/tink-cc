@@ -539,3 +539,56 @@ tink_cc_test(
   TAGS
     exclude_if_boringssl
 )
+
+tink_cc_library(
+  NAME ecies_aead_hkdf_dem_helper
+  SRCS
+    ecies_aead_hkdf_dem_helper.cc
+    ecies_aead_hkdf_dem_helper.h
+  DEPS
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::string_view
+    tink::core::aead
+    tink::core::deterministic_aead
+    tink::aead::aes_ctr_hmac_aead_key_manager
+    tink::daead::subtle::aead_or_daead
+    tink::subtle::aes_gcm_boringssl
+    tink::subtle::aes_siv_boringssl
+    tink::subtle::xchacha20_poly1305_boringssl
+    tink::util::errors
+    tink::util::protobuf_helper
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::proto::aes_ctr_cc_proto
+    tink::proto::aes_ctr_hmac_aead_cc_proto
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_siv_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::hmac_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+)
+
+tink_cc_test(
+  NAME ecies_aead_hkdf_dem_helper_test
+  SRCS
+    ecies_aead_hkdf_dem_helper_test.cc
+  DEPS
+    tink::hybrid::internal::ecies_aead_hkdf_dem_helper
+    gmock
+    absl::status
+    absl::string_view
+    tink::aead::aes_gcm_key_manager
+    tink::daead::aes_siv_key_manager
+    tink::daead::subtle::aead_or_daead
+    tink::util::secret_data
+    tink::util::status
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_siv_cc_proto
+    tink::proto::tink_cc_proto
+)

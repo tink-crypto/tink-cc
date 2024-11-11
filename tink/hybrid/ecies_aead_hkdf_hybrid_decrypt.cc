@@ -23,7 +23,7 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "tink/hybrid/ecies_aead_hkdf_dem_helper.h"
+#include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/internal/ec_util.h"
 #include "tink/subtle/ecies_hkdf_recipient_kem_boringssl.h"
@@ -77,7 +77,7 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> EciesAeadHkdfHybridDecrypt::New(
       util::SecretDataFromStringView(recipient_key.key_value()));
   if (!kem_result.ok()) return kem_result.status();
 
-  auto dem_result = EciesAeadHkdfDemHelper::New(
+  auto dem_result = internal::EciesAeadHkdfDemHelper::New(
       recipient_key.public_key().params().dem_params().aead_dem());
   if (!dem_result.ok()) return dem_result.status();
 

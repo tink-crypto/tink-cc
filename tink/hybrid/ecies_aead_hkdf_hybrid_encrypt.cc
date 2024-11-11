@@ -25,7 +25,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
-#include "tink/hybrid/ecies_aead_hkdf_dem_helper.h"
+#include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/subtle/ecies_hkdf_sender_kem_boringssl.h"
 #include "tink/util/enums.h"
@@ -78,7 +78,7 @@ util::StatusOr<std::unique_ptr<HybridEncrypt>> EciesAeadHkdfHybridEncrypt::New(
       recipient_key.x(), recipient_key.y());
   if (!kem_result.ok()) return kem_result.status();
 
-  auto dem_result = EciesAeadHkdfDemHelper::New(
+  auto dem_result = internal::EciesAeadHkdfDemHelper::New(
       recipient_key.params().dem_params().aead_dem());
   if (!dem_result.ok()) return dem_result.status();
 

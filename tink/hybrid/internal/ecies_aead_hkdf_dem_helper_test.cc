@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/hybrid/ecies_aead_hkdf_dem_helper.h"
+#include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 
 #include <memory>
 #include <string>
@@ -37,6 +37,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::subtle::AeadOrDaead;
@@ -122,5 +123,6 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeDeterministicAeadKeyType) {
 }
 
 }  // namespace
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

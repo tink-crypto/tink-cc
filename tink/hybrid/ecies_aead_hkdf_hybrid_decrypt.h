@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "absl/strings/string_view.h"
-#include "tink/hybrid/ecies_aead_hkdf_dem_helper.h"
+#include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/subtle/ecies_hkdf_recipient_kem_boringssl.h"
 #include "tink/util/statusor.h"
@@ -48,14 +48,14 @@ class EciesAeadHkdfHybridDecrypt : public HybridDecrypt {
   EciesAeadHkdfHybridDecrypt(
       google::crypto::tink::EciesAeadHkdfParams recipient_key_params,
       std::unique_ptr<const subtle::EciesHkdfRecipientKemBoringSsl> kem,
-      std::unique_ptr<const EciesAeadHkdfDemHelper> dem_helper)
+      std::unique_ptr<const internal::EciesAeadHkdfDemHelper> dem_helper)
       : recipient_key_params_(std::move(recipient_key_params)),
         recipient_kem_(std::move(kem)),
         dem_helper_(std::move(dem_helper)) {}
 
   google::crypto::tink::EciesAeadHkdfParams recipient_key_params_;
   std::unique_ptr<const subtle::EciesHkdfRecipientKemBoringSsl> recipient_kem_;
-  std::unique_ptr<const EciesAeadHkdfDemHelper> dem_helper_;
+  std::unique_ptr<const internal::EciesAeadHkdfDemHelper> dem_helper_;
 };
 
 }  // namespace tink

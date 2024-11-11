@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/hybrid/ecies_aead_hkdf_dem_helper.h"
+#include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 
 #include <stdint.h>
 
@@ -48,6 +48,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::subtle::AeadOrDaead;
@@ -168,5 +169,6 @@ EciesAeadHkdfDemHelper::GetAeadOrDaead(
   }
 }
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

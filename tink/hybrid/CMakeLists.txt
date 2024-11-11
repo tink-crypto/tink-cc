@@ -134,48 +134,16 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME ecies_aead_hkdf_dem_helper
-  SRCS
-    ecies_aead_hkdf_dem_helper.cc
-    ecies_aead_hkdf_dem_helper.h
-  DEPS
-    absl::memory
-    absl::status
-    absl::statusor
-    absl::strings
-    tink::core::aead
-    tink::core::deterministic_aead
-    tink::aead::aes_ctr_hmac_aead_key_manager
-    tink::daead::subtle::aead_or_daead
-    tink::subtle::aes_gcm_boringssl
-    tink::subtle::aes_siv_boringssl
-    tink::subtle::xchacha20_poly1305_boringssl
-    tink::util::errors
-    tink::util::protobuf_helper
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::aes_ctr_cc_proto
-    tink::proto::aes_ctr_hmac_aead_cc_proto
-    tink::proto::aes_gcm_cc_proto
-    tink::proto::aes_siv_cc_proto
-    tink::proto::common_cc_proto
-    tink::proto::hmac_cc_proto
-    tink::proto::tink_cc_proto
-    tink::proto::xchacha20_poly1305_cc_proto
-)
-
-tink_cc_library(
   NAME ecies_aead_hkdf_hybrid_decrypt
   SRCS
     ecies_aead_hkdf_hybrid_decrypt.cc
     ecies_aead_hkdf_hybrid_decrypt.h
   DEPS
-    tink::hybrid::ecies_aead_hkdf_dem_helper
     absl::memory
     absl::status
     absl::string_view
     tink::core::hybrid_decrypt
+    tink::hybrid::internal::ecies_aead_hkdf_dem_helper
     tink::internal::ec_util
     tink::subtle::ecies_hkdf_recipient_kem_boringssl
     tink::util::enums
@@ -191,12 +159,12 @@ tink_cc_library(
     ecies_aead_hkdf_hybrid_encrypt.cc
     ecies_aead_hkdf_hybrid_encrypt.h
   DEPS
-    tink::hybrid::ecies_aead_hkdf_dem_helper
     absl::memory
     absl::status
     absl::strings
     tink::core::aead
     tink::core::hybrid_encrypt
+    tink::hybrid::internal::ecies_aead_hkdf_dem_helper
     tink::subtle::ecies_hkdf_sender_kem_boringssl
     tink::util::enums
     tink::util::status
@@ -768,27 +736,6 @@ tink_cc_test(
     tink::proto::tink_cc_proto
   TAGS
     exclude_if_openssl
-)
-
-tink_cc_test(
-  NAME ecies_aead_hkdf_dem_helper_test
-  SRCS
-    ecies_aead_hkdf_dem_helper_test.cc
-  DEPS
-    tink::hybrid::ecies_aead_hkdf_dem_helper
-    gmock
-    absl::status
-    absl::string_view
-    tink::aead::aes_gcm_key_manager
-    tink::daead::aes_siv_key_manager
-    tink::daead::subtle::aead_or_daead
-    tink::util::secret_data
-    tink::util::status
-    tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::aes_gcm_cc_proto
-    tink::proto::aes_siv_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

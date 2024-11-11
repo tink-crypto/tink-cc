@@ -23,52 +23,40 @@ bazel_dep(
     name = "rules_cc",
     version = "0.0.9",
 )
-
 bazel_dep(
     name = "rules_proto",
     version = "6.0.2",
 )
-
+bazel_dep(
+    name = "rules_license",
+    version = "1.0.0",
+)
 bazel_dep(
     name = "platforms",
     version = "0.0.10",
 )
-
 bazel_dep(
     name = "bazel_skylib",
     version = "1.7.1",
 )
-
 bazel_dep(
     name = "googletest",
     version = "1.15.2",
     repo_name = "com_google_googletest",
 )
-
 bazel_dep(
     name = "protobuf",
     version = "27.3",
     repo_name = "com_google_protobuf",
 )
-
 bazel_dep(
     name = "boringssl",
+    version = "0.20240930.0",
 )
-
-# Required for HPKE DHKEM P-256 HKDF-SHA256.
-# TODO: b/364953575 - Update to BCR version.
-archive_override(
-    module_name = "boringssl",
-    integrity = "sha256-96dd8b9be49a9954db8e3e6f75eae4c1dca1df1081b8598db4166671cfcff445",
-    strip_prefix = "boringssl-3a138e43694c381cbd3d35f3237afed5724a67e8",
-    urls = ["https://github.com/google/boringssl/archive/3a138e43694c381cbd3d35f3237afed5724a67e8.zip"],
-)
-
 bazel_dep(
     name = "rapidjson",
     version = "1.1.0",
 )
-
 bazel_dep(
     name = "abseil-cpp",
     version = "20240722.0",
@@ -80,5 +68,4 @@ wycheproof_extension = use_extension(
     "wycheproof_extension",
     dev_dependency = True,
 )
-
 use_repo(wycheproof_extension, "wycheproof")

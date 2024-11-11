@@ -66,13 +66,24 @@ def tink_cc_deps():
     # -------------------------------------------------------------------------
     # BoringSSL.
     # -------------------------------------------------------------------------
-    # Commit from 2024-08-29.
+    # Release from 2024-10-03.
     maybe(
         http_archive,
         name = "boringssl",
-        sha256 = "96dd8b9be49a9954db8e3e6f75eae4c1dca1df1081b8598db4166671cfcff445",
-        strip_prefix = "boringssl-3a138e43694c381cbd3d35f3237afed5724a67e8",
-        url = "https://github.com/google/boringssl/archive/3a138e43694c381cbd3d35f3237afed5724a67e8.zip",
+        sha256 = "812f77dd57fef845c4ed630430f1f8efc7e255c4d572fa58b71e6e3ce1692a4a",
+        strip_prefix = "boringssl-0.20240930.0/",
+        url = "https://github.com/google/boringssl/releases/download/0.20240930.0/boringssl-0.20240930.0.tar.gz",
+    )
+
+    # -------------------------------------------------------------------------
+    # rules_license.
+    # -------------------------------------------------------------------------
+    # Release from 2024-09-05. Required by BoringSSL.
+    maybe(
+        http_archive,
+        name = "rules_license",
+        sha256 = "26d4021f6898e23b82ef953078389dd49ac2b5618ac564ade4ef87cced147b38",
+        url = "https://github.com/bazelbuild/rules_license/releases/download/1.0.0/rules_license-1.0.0.tar.gz",
     )
 
     # -------------------------------------------------------------------------

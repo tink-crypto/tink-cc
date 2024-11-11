@@ -95,11 +95,11 @@ endif()
 # defined.
 if (NOT TARGET crypto)
   if (NOT TINK_USE_SYSTEM_OPENSSL)
-    # Commit from 2024-08-29.
+    # Release from 2024-10-03.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/archive/3a138e43694c381cbd3d35f3237afed5724a67e8.zip
-      SHA256 96dd8b9be49a9954db8e3e6f75eae4c1dca1df1081b8598db4166671cfcff445
+      URL https://github.com/google/boringssl/releases/download/0.20240930.0/boringssl-0.20240930.0.tar.gz
+      SHA256 812f77dd57fef845c4ed630430f1f8efc7e255c4d572fa58b71e6e3ce1692a4a
     )
     # BoringSSL targets do not carry include directory info, this fixes it.
     target_include_directories(crypto PUBLIC

@@ -51,8 +51,13 @@ tink_cc_library(
     tink::hybrid::internal::hpke_util
     absl::memory
     absl::status
+    absl::strings
     absl::string_view
     tink::core::hybrid_decrypt
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -343,12 +348,24 @@ tink_cc_test(
     tink::hybrid::internal::hpke_encrypt
     tink::hybrid::internal::hpke_test_util
     gmock
+    absl::check
     absl::status
     absl::strings
+    absl::optional
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_public_key
+    tink::hybrid::internal::testing::hpke_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS
     exclude_if_openssl

@@ -14,6 +14,7 @@ cc_library(
         "//proto:aes_cmac_cc_proto",
         "//proto:hmac_cc_proto",
         "//tink:chunked_mac",
+        "//tink/internal:dfsan_forwarders",
         "//tink/internal:safe_stringops",
         "//tink/subtle:common_enums",
         "//tink/util:enums",
@@ -86,6 +87,7 @@ cc_library(
     include_prefix = "tink/mac/internal",
     deps = [
         ":stateful_mac",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:md_util",
         "//tink/internal:ssl_unique_ptr",
         "//tink/internal:util",
@@ -108,6 +110,7 @@ cc_library(
     deps = [
         ":stateful_mac",
         "//tink/internal:aes_util",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:ssl_unique_ptr",
         "//tink/internal:util",
         "//tink/subtle:common_enums",

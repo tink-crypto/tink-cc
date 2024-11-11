@@ -25,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
@@ -62,7 +63,9 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
   // Create and initialize the HMAC context
   internal::SslUniquePtr<HMAC_CTX> ctx(HMAC_CTX_new());
   // Initialize the HMAC
-  if (!HMAC_Init(ctx.get(), key_value.data(), key_value.size(), *md)) {
+  if (!CallWithCoreDumpProtection([&]() {
+        return HMAC_Init(ctx.get(), key_value.data(), key_value.size(), *md);
+      })) {
     return util::Status(absl::StatusCode::kFailedPrecondition,
                         "HMAC initialization failed");
   }
@@ -89,7 +92,9 @@ util::StatusOr<SecretData> StatefulHmacBoringSsl::FinalizeAsSecretData() {
   SecretData buf(EVP_MAX_MD_SIZE);
   unsigned int out_len;
 
-  if (!HMAC_Final(hmac_context_.get(), buf.data(), &out_len)) {
+  if (!CallWithCoreDumpProtection([&]() {
+        return HMAC_Final(hmac_context_.get(), buf.data(), &out_len);
+      })) {
     return util::Status(absl::StatusCode::kInternal,
                         "HMAC finalization failed");
   }

@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/internal/aes_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/mac/internal/stateful_mac.h"
@@ -57,8 +58,10 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
   internal::SslUniquePtr<CMAC_CTX> ctx(CMAC_CTX_new());
 
   // Initialize the CMAC
-  if (!CMAC_Init(ctx.get(), key_value.data(), key_value.size(), *cipher,
-                 nullptr /* engine */)) {
+  if (!CallWithCoreDumpProtection([&]() {
+        return CMAC_Init(ctx.get(), key_value.data(), key_value.size(), *cipher,
+                         nullptr /* engine */);
+      })) {
     return util::Status(absl::StatusCode::kFailedPrecondition,
                         "CMAC initialization failed");
   }
@@ -85,7 +88,9 @@ util::StatusOr<SecretData> StatefulCmacBoringSsl::FinalizeAsSecretData() {
   SecretData buf(EVP_MAX_MD_SIZE);
   size_t out_len;
 
-  if (!CMAC_Final(cmac_context_.get(), buf.data(), &out_len)) {
+  if (!CallWithCoreDumpProtection([&]() {
+        return CMAC_Final(cmac_context_.get(), buf.data(), &out_len);
+      })) {
     return util::Status(absl::StatusCode::kInternal,
                         "CMAC finalization failed");
   }

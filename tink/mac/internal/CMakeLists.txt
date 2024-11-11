@@ -14,6 +14,7 @@ tink_cc_library(
     absl::strings
     crypto
     tink::core::chunked_mac
+    tink::internal::dfsan_forwarders
     tink::internal::safe_stringops
     tink::subtle::common_enums
     tink::util::enums
@@ -84,6 +85,7 @@ tink_cc_library(
     absl::status
     absl::string_view
     crypto
+    tink::internal::call_with_core_dump_protection
     tink::internal::md_util
     tink::internal::ssl_unique_ptr
     tink::internal::util
@@ -105,6 +107,7 @@ tink_cc_library(
     absl::string_view
     crypto
     tink::internal::aes_util
+    tink::internal::call_with_core_dump_protection
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::common_enums

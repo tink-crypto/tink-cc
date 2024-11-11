@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
 #include "tink/chunked_mac.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/mac/internal/stateful_cmac_boringssl.h"
 #include "tink/mac/internal/stateful_hmac_boringssl.h"
@@ -61,6 +62,9 @@ util::StatusOr<std::string> ChunkedMacComputationImpl::ComputeMac() {
   if (!result_tag.ok()) {
     return result_tag.status();
   }
+  // The tag is now safe to release: the API indicates the user anyhow
+  // sends it to the world.
+  DfsanClearLabel(result_tag->data(), result_tag->size());
   return std::string(SecretDataAsStringView(*result_tag));
 }
 

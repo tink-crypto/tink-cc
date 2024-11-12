@@ -830,6 +830,20 @@ tink_cc_library(
     tink::proto::x_aes_gcm_cc_proto
 )
 
+tink_cc_library(
+  NAME legacy_kms_aead_parameters
+  SRCS
+    legacy_kms_aead_parameters.cc
+    legacy_kms_aead_parameters.h
+  DEPS
+    tink::aead::aead_parameters
+    absl::status
+    absl::string_view
+    tink::core::parameters
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -1628,4 +1642,17 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::tink_cc_proto
     tink::proto::x_aes_gcm_cc_proto
+)
+
+tink_cc_test(
+  NAME legacy_kms_aead_parameters_test
+  SRCS
+    legacy_kms_aead_parameters_test.cc
+  DEPS
+    tink::aead::legacy_kms_aead_parameters
+    gmock
+    absl::status
+    absl::string_view
+    tink::util::statusor
+    tink::util::test_matchers
 )

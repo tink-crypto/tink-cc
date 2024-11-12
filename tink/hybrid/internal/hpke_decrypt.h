@@ -30,6 +30,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 class HpkeDecrypt : public HybridDecrypt {
  public:
@@ -71,6 +72,7 @@ class HpkeDecrypt : public HybridDecrypt {
   std::string output_prefix_;
 };
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 

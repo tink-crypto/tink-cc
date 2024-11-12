@@ -47,6 +47,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::internal::CreateHpkeParams;
@@ -428,5 +429,6 @@ TEST(HpkeDecryptNewFromKeyObject, SHA512DoesNotWork) {
 }
 
 }  // namespace
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

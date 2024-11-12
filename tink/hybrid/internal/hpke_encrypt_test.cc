@@ -34,6 +34,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::internal::CreateHpkeParams;
@@ -145,5 +146,6 @@ TEST(HpkeEncryptWithZeroLengthPublicKey, ZeroLengthPublicKeyFails) {
 }
 
 }  // namespace
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

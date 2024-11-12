@@ -27,6 +27,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 class HpkeEncrypt : public HybridEncrypt {
  public:
@@ -51,6 +52,7 @@ class HpkeEncrypt : public HybridEncrypt {
   google::crypto::tink::HpkePublicKey recipient_public_key_;
 };
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 

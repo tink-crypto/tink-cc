@@ -32,10 +32,11 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-using ::google::crypto::tink::HpkeAead;
-using ::google::crypto::tink::HpkeKdf;
-using ::google::crypto::tink::HpkeKem;
+using HpkeAeadProto = ::google::crypto::tink::HpkeAead;
+using HpkeKdfProto = ::google::crypto::tink::HpkeKdf;
+using HpkeKemProto = ::google::crypto::tink::HpkeKem;
 using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 
 util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
@@ -48,17 +49,17 @@ util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is missing HPKE parameters.");
   }
-  HpkeKem kem = recipient_public_key.params().kem();
-  if (kem != HpkeKem::DHKEM_P256_HKDF_SHA256 &&
-      kem != HpkeKem::DHKEM_X25519_HKDF_SHA256) {
+  HpkeKemProto kem = recipient_public_key.params().kem();
+  if (kem != HpkeKemProto::DHKEM_P256_HKDF_SHA256 &&
+      kem != HpkeKemProto::DHKEM_X25519_HKDF_SHA256) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key has an unsupported KEM");
   }
-  if (recipient_public_key.params().kdf() != HpkeKdf::HKDF_SHA256) {
+  if (recipient_public_key.params().kdf() != HpkeKdfProto::HKDF_SHA256) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key has an unsupported KDF");
   }
-  if (recipient_public_key.params().aead() == HpkeAead::AEAD_UNKNOWN) {
+  if (recipient_public_key.params().aead() == HpkeAeadProto::AEAD_UNKNOWN) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is missing AEAD");
   }
@@ -84,5 +85,6 @@ util::StatusOr<std::string> HpkeEncrypt::Encrypt(
                                       *ciphertext);
 }
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

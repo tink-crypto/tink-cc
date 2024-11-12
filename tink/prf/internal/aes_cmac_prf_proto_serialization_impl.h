@@ -14,23 +14,31 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_PRF_AES_CMAC_PRF_PROTO_SERIALIZATION_H_
-#define TINK_PRF_AES_CMAC_PRF_PROTO_SERIALIZATION_H_
+#ifndef TINK_PRF_INTERNAL_AES_CMAC_PRF_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_PRF_INTERNAL_AES_CMAC_PRF_PROTO_SERIALIZATION_IMPL_H_
 
 #include "tink/internal/mutable_serialization_registry.h"
-#include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-// Registers proto parsers and serializers for AES-CMAC-PRF parameters and keys.
-inline crypto::tink::util::Status RegisterAesCmacPrfProtoSerialization() {
-  return internal::RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// Registers proto parsers and serializers for AES-CMAC-PRF parameters and
+// keys into specified mutable serialization `registry`.
+crypto::tink::util::Status
+RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for AES-CMAC-PRF parameters and
+// keys into specified immutable serialization registry `builder`.
+crypto::tink::util::Status
+RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_PRF_AES_CMAC_PRF_PROTO_SERIALIZATION_H_
+#endif  // TINK_PRF_INTERNAL_AES_CMAC_PRF_PROTO_SERIALIZATION_IMPL_H_

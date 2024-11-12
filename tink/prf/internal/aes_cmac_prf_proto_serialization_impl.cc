@@ -14,9 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/prf/aes_cmac_prf_proto_serialization.h"
-
-#include <utility>
+#include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -29,6 +27,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
@@ -43,6 +42,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::util::SecretData;
@@ -187,30 +187,50 @@ AesCmacPrfProtoKeySerializerImpl* AesCmacPrfProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesCmacPrfProtoSerialization() {
+util::Status RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(AesCmacPrfProtoParametersParser());
+      registry.RegisterParametersParser(AesCmacPrfProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersSerializer(AesCmacPrfProtoParametersSerializer());
+  status = registry.RegisterParametersSerializer(
+      AesCmacPrfProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(AesCmacPrfProtoKeyParser());
+  status = registry.RegisterKeyParser(AesCmacPrfProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(AesCmacPrfProtoKeySerializer());
+  return registry.RegisterKeySerializer(AesCmacPrfProtoKeySerializer());
 }
 
+util::Status RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(AesCmacPrfProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterParametersSerializer(
+      AesCmacPrfProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(AesCmacPrfProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(AesCmacPrfProtoKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

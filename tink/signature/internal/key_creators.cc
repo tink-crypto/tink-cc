@@ -26,12 +26,16 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
+#include "openssl/slhdsa.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/insecure_secret_key_access.h"
-#include "tink/partial_key_access.h"
-#include "tink/restricted_data.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_private_key.h"
+#include "tink/signature/slh_dsa_public_key.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -68,6 +72,36 @@ util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
     return key.status();
   }
   return absl::make_unique<MlDsaPrivateKey>(*key);
+}
+
+util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
+    const SlhDsaParameters& params, absl::optional<int> id_requirement) {
+  uint8_t public_key_bytes[SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES];
+  uint8_t private_key_bytes[SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES];
+
+  SLHDSA_SHA2_128S_generate_key(public_key_bytes, private_key_bytes);
+
+  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      params,
+      absl::string_view(reinterpret_cast<const char*>(public_key_bytes),
+                        SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES),
+      id_requirement, GetPartialKeyAccess());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+      *public_key,
+      RestrictedData(
+          absl::string_view(reinterpret_cast<const char*>(private_key_bytes),
+                            SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES),
+          InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  if (!private_key.ok()) {
+    return private_key.status();
+  }
+
+  return absl::make_unique<SlhDsaPrivateKey>(*private_key);
 }
 
 }  // namespace internal

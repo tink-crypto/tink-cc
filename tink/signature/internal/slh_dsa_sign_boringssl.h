@@ -14,16 +14,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_SIGN_BORINGSSL_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_SIGN_BORINGSSL_H_
+#ifndef TINK_SIGNATURE_INTERNAL_SLH_DSA_SIGN_BORINGSSL_H_
+#define TINK_SIGNATURE_INTERNAL_SLH_DSA_SIGN_BORINGSSL_H_
 
 #include <memory>
-#include <string>
 
-#include "absl/strings/string_view.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
-#include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/slh_dsa_private_key.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -39,4 +36,4 @@ NewSlhDsaSignBoringSsl(const SlhDsaPrivateKey& private_key);
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_SLH_DSA_SIGN_BORINGSSL_H_
+#endif  // TINK_SIGNATURE_INTERNAL_SLH_DSA_SIGN_BORINGSSL_H_

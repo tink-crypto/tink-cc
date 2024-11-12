@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
+#ifndef TINK_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
+#define TINK_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
 
 #include <cstdint>
 #include <string>
@@ -23,10 +23,10 @@
 #include "absl/base/attributes.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/signature/signature_public_key.h"
+#include "tink/signature/slh_dsa_parameters.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {

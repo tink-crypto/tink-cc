@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/internal/slh_dsa_verify_boringssl.h"
+#include "tink/signature/internal/slh_dsa_verify_boringssl.h"
 
 #include <cstdint>
 #include <memory>
@@ -24,10 +24,10 @@
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "openssl/slhdsa.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_verify.h"
+#include "tink/signature/slh_dsa_public_key.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 

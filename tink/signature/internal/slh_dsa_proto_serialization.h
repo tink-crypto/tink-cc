@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PROTO_SERIALIZATION_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PROTO_SERIALIZATION_H_
+#ifndef TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_H_
+#define TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_H_
 
 #include "tink/util/status.h"
 
@@ -28,4 +28,4 @@ crypto::tink::util::Status RegisterSlhDsaProtoSerialization();
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PROTO_SERIALIZATION_H_
+#endif  // TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_H_

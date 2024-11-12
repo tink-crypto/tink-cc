@@ -14,20 +14,20 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
+#include "tink/signature/slh_dsa_private_key.h"
 
 #include <cstdint>
 #include <string>
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "openssl/boringssl/src/include/openssl/mem.h"
+#include "openssl/mem.h"
 #include "openssl/slhdsa.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/slh_dsa_public_key.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -53,7 +53,7 @@ util::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   public_key_bytes_regen.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
 
   SLHDSA_SHA2_128S_public_from_private(
-      reinterpret_cast<uint8_t*>(public_key_bytes_regen.data()),
+      reinterpret_cast<uint8_t*>(&public_key_bytes_regen[0]),
       reinterpret_cast<const uint8_t*>(
           private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get()).data()));
 

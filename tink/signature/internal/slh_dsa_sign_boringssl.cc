@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/internal/slh_dsa_sign_boringssl.h"
+#include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 
 #include <cstdint>
 #include <memory>
@@ -24,11 +24,11 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "openssl/slhdsa.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
+#include "tink/signature/slh_dsa_private_key.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/statusor.h"
 
@@ -65,7 +65,7 @@ util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
       SLHDSA_SHA2_128S_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
 
   SLHDSA_SHA2_128S_sign(
-      reinterpret_cast<uint8_t *>(signature.data() +
+      reinterpret_cast<uint8_t *>(&signature[0] +
                                   private_key_.GetOutputPrefix().size()),
       private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
           .Get(InsecureSecretKeyAccess::Get())

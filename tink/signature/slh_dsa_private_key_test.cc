@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
+#include "tink/signature/slh_dsa_private_key.h"
 
 #include <cstdint>
 #include <string>
@@ -24,11 +24,11 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "openssl/slhdsa.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_public_key.h"
 #include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -75,8 +75,8 @@ TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -136,8 +136,8 @@ TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -146,8 +146,8 @@ TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
 
   // Generate a new key pair.
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
   RestrictedData restricted_private_key_bytes =
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
 
@@ -174,8 +174,8 @@ TEST(SlhDsaPrivateKeyTest, CreateWithModifiedPrivateKeyFails) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -211,8 +211,8 @@ TEST_P(SlhDsaPrivateKeyTest, KeyEquals) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
   util::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
@@ -249,8 +249,8 @@ TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
   private_key_bytes.resize(parameters->GetPrivateKeySizeInBytes());
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t *>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t *>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
   util::StatusOr<SlhDsaPublicKey> public_key123 =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,

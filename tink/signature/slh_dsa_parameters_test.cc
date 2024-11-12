@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_parameters.h"
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"

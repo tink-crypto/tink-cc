@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
+#include "tink/signature/slh_dsa_public_key.h"
 
 #include <string>
 
@@ -22,8 +22,8 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
 #include "tink/partial_key_access.h"
+#include "tink/signature/slh_dsa_parameters.h"
 #include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"

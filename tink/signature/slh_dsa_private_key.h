@@ -14,14 +14,14 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_
+#ifndef TINK_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_
+#define TINK_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_
 
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
+#include "tink/signature/slh_dsa_public_key.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -52,7 +52,7 @@ class SlhDsaPrivateKey : public SignaturePrivateKey {
 
  private:
   explicit SlhDsaPrivateKey(const SlhDsaPublicKey& public_key,
-                             const RestrictedData& private_key_bytes)
+                            const RestrictedData& private_key_bytes)
       : public_key_(public_key), private_key_bytes_(private_key_bytes) {}
 
   SlhDsaPublicKey public_key_;
@@ -62,4 +62,4 @@ class SlhDsaPrivateKey : public SignaturePrivateKey {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_
+#endif  // TINK_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_

@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_parameters.h"
 
 #include "absl/status/status.h"
 #include "tink/parameters.h"

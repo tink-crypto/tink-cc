@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/slh_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization.h"
 
 #include <cstdint>
 #include <memory>
@@ -26,9 +26,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "openssl/slhdsa.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_parameters.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_private_key.h"
-#include "tink/experimental/pqcrypto/signature/slh_dsa_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
@@ -38,6 +35,9 @@
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#include "tink/signature/slh_dsa_private_key.h"
+#include "tink/signature/slh_dsa_public_key.h"
 #include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -459,8 +459,8 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePrivateKeyWorks) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t*>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
 
   SlhDsaParams params;
   params.set_sig_type(SlhDsaSignatureType::SMALL_SIGNATURE);
@@ -546,8 +546,8 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t*>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
 
   SlhDsaParams params;
   params.set_sig_type(SlhDsaSignatureType::SMALL_SIGNATURE);
@@ -591,8 +591,8 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t*>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
 
   SlhDsaParams params;
   params.set_sig_type(SlhDsaSignatureType::SMALL_SIGNATURE);
@@ -635,8 +635,8 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePrivateKey) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t*>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
 
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
@@ -700,8 +700,8 @@ TEST_F(SlhDsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   private_key_bytes.resize(SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES);
 
   SLHDSA_SHA2_128S_generate_key(
-      reinterpret_cast<uint8_t*>(public_key_bytes.data()),
-      reinterpret_cast<uint8_t*>(private_key_bytes.data()));
+      reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
 
   util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,

@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PARAMETERS_H_
-#define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PARAMETERS_H_
+#ifndef TINK_SIGNATURE_SLH_DSA_PARAMETERS_H_
+#define TINK_SIGNATURE_SLH_DSA_PARAMETERS_H_
 
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
@@ -26,7 +26,7 @@ namespace tink {
 
 // Representation of the parameters sets for the Stateless Hash-Based Digital
 // Signature Standard (SLH-DSA) described at
-// https://csrc.nist.gov/pubs/fips/205/ipd.
+// https://csrc.nist.gov/pubs/fips/205/final.
 //
 // Note that only the SLH-DSA-SHA2-128s set is currently supported.
 class SlhDsaParameters : public SignatureParameters {
@@ -99,4 +99,4 @@ class SlhDsaParameters : public SignatureParameters {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PARAMETERS_H_
+#endif  // TINK_SIGNATURE_SLH_DSA_PARAMETERS_H_

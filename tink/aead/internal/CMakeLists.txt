@@ -593,3 +593,64 @@ tink_cc_test(
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
+
+tink_cc_library(
+  NAME chacha20_poly1305_proto_serialization_impl
+  SRCS
+    chacha20_poly1305_proto_serialization_impl.cc
+    chacha20_poly1305_proto_serialization_impl.h
+  DEPS
+    absl::core_headers
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
+    tink::internal::call_with_core_dump_protection
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization_registry
+    tink::util::secret_data
+    tink::util::secret_proto
+    tink::util::status
+    tink::util::statusor
+    tink::proto::chacha20_poly1305_cc_proto
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME chacha20_poly1305_proto_serialization_impl_test
+  SRCS
+    chacha20_poly1305_proto_serialization_impl_test.cc
+  DEPS
+    tink::aead::internal::chacha20_poly1305_proto_serialization_impl
+    gmock
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::subtle::random
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::chacha20_poly1305_cc_proto
+    tink::proto::tink_cc_proto
+)

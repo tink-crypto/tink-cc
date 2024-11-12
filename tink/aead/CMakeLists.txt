@@ -650,30 +650,11 @@ tink_cc_library(
 tink_cc_library(
   NAME chacha20_poly1305_proto_serialization
   SRCS
-    chacha20_poly1305_proto_serialization.cc
     chacha20_poly1305_proto_serialization.h
   DEPS
-    tink::aead::chacha20_poly1305_key
-    tink::aead::chacha20_poly1305_parameters
-    absl::core_headers
-    absl::status
-    absl::string_view
-    absl::optional
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_key_access_token
-    tink::internal::key_parser
-    tink::internal::key_serializer
+    tink::aead::internal::chacha20_poly1305_proto_serialization_impl
     tink::internal::mutable_serialization_registry
-    tink::internal::parameters_parser
-    tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
-    tink::util::secret_proto
     tink::util::status
-    tink::util::statusor
-    tink::proto::chacha20_poly1305_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

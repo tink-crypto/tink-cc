@@ -14,24 +14,31 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_AEAD_CHACHA20_POLY1305_PROTO_SERIALIZATION_H_
-#define TINK_AEAD_CHACHA20_POLY1305_PROTO_SERIALIZATION_H_
+#ifndef TINK_AEAD_INTERNAL_CHACHA20_POLY1305_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_AEAD_INTERNAL_CHACHA20_POLY1305_PROTO_SERIALIZATION_IMPL_H_
 
-#include "tink/aead/internal/chacha20_poly1305_proto_serialization_impl.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for ChaCha20-Poly1305 parameters and
-// keys into global serialization registry.
-inline crypto::tink::util::Status RegisterChaCha20Poly1305ProtoSerialization() {
-  return internal::
-      RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
-          internal::MutableSerializationRegistry::GlobalInstance());
-}
+// keys into specified mutable serialization `registry`.
+crypto::tink::util::Status
+RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for ChaCha20-Poly1305 parameters and
+// keys into specified immutable serialization registry `builder`.
+crypto::tink::util::Status
+RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
-#endif  // TINK_AEAD_CHACHA20_POLY1305_PROTO_SERIALIZATION_H_
+
+#endif  // TINK_AEAD_INTERNAL_XCHACHA20_POLY1305_PROTO_SERIALIZATION_IMPL_H_

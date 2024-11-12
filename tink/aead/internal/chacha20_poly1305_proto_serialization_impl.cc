@@ -14,7 +14,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/chacha20_poly1305_proto_serialization.h"
+#include "tink/aead/internal/chacha20_poly1305_proto_serialization_impl.h"
+
+#include <string>
+#include <utility>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
@@ -22,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/chacha20_poly1305_key.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -29,9 +33,11 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -40,8 +46,10 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
+using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::ChaCha20Poly1305KeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
@@ -176,16 +184,22 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required");
   }
 
-  google::crypto::tink::ChaCha20Poly1305Key proto_key;
-  proto_key.set_version(0);
-  proto_key.set_key_value(restricted_input->GetSecret(*token));
+  SecretProto<google::crypto::tink::ChaCha20Poly1305Key> proto_key;
+  proto_key->set_version(0);
+  internal::CallWithCoreDumpProtection(
+      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
+  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
   RestrictedData restricted_output =
-      RestrictedData(proto_key.SerializeAsString(), *token);
+      RestrictedData(*std::move(serialized_key), *token);
+
   return internal::ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
       *output_prefix_type, key.GetIdRequirement());
@@ -219,24 +233,50 @@ ChaCha20Poly1305ProtoKeySerializerImpl* ChaCha20Poly1305ProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterChaCha20Poly1305ProtoSerialization() {
-  util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(ChaCha20Poly1305ProtoParametersParser());
-  if (!status.ok()) return status;
+util::Status RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
+  util::Status status = registry.RegisterParametersParser(
+      ChaCha20Poly1305ProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterParametersSerializer(
-                   ChaCha20Poly1305ProtoParametersSerializer());
-  if (!status.ok()) return status;
+  status = registry.RegisterParametersSerializer(
+      ChaCha20Poly1305ProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(ChaCha20Poly1305ProtoKeyParser());
-  if (!status.ok()) return status;
+  status = registry.RegisterKeyParser(ChaCha20Poly1305ProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(ChaCha20Poly1305ProtoKeySerializer());
+  return registry.RegisterKeySerializer(ChaCha20Poly1305ProtoKeySerializer());
 }
 
+util::Status RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(ChaCha20Poly1305ProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterParametersSerializer(
+      ChaCha20Poly1305ProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(ChaCha20Poly1305ProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(ChaCha20Poly1305ProtoKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

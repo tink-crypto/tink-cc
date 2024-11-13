@@ -78,10 +78,11 @@ util::Status StatefulHmacBoringSsl::Update(absl::string_view data) {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
-
-  if (!HMAC_Update(hmac_context_.get(),
-                   reinterpret_cast<const uint8_t*>(data.data()),
-                   data.size())) {
+  int hmac_update_result = CallWithCoreDumpProtection([&]() {
+    return HMAC_Update(hmac_context_.get(),
+                reinterpret_cast<const uint8_t*>(data.data()), data.size());
+  });
+  if (!hmac_update_result) {
     return util::Status(absl::StatusCode::kFailedPrecondition,
                         "Inputs to HMAC Update invalid");
   }

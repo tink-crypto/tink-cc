@@ -75,9 +75,12 @@ util::Status StatefulCmacBoringSsl::Update(absl::string_view data) {
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
 
-  if (!CMAC_Update(cmac_context_.get(),
-                   reinterpret_cast<const uint8_t*>(data.data()),
-                   data.size())) {
+  int update_result = CallWithCoreDumpProtection([&]() {
+    return CMAC_Update(cmac_context_.get(),
+                       reinterpret_cast<const uint8_t*>(data.data()),
+                       data.size());
+  });
+  if (!update_result) {
     return util::Status(absl::StatusCode::kInternal,
                         "Inputs to CMAC Update invalid");
   }

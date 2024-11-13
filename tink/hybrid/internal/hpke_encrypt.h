@@ -21,6 +21,7 @@
 #include <string>
 
 #include "absl/strings/string_view.h"
+#include "tink/hybrid/hpke_public_key.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/util/statusor.h"
 #include "proto/hpke.pb.h"
@@ -40,16 +41,29 @@ class HpkeEncrypt : public HybridEncrypt {
   static crypto::tink::util::StatusOr<std::unique_ptr<HybridEncrypt>> New(
       const google::crypto::tink::HpkePublicKey& recipient_public_key);
 
+  static crypto::tink::util::StatusOr<std::unique_ptr<HybridEncrypt>> New(
+      const ::crypto::tink::HpkePublicKey& recipient_public_key);
+
   crypto::tink::util::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view context_info) const override;
 
  private:
+  static crypto::tink::util::StatusOr<std::unique_ptr<HybridEncrypt>> New(
+      const google::crypto::tink::HpkePublicKey& recipient_public_key,
+      absl::string_view output_prefix);
+
   explicit HpkeEncrypt(
-      const google::crypto::tink::HpkePublicKey& recipient_public_key)
-      : recipient_public_key_(recipient_public_key) {}
+      const google::crypto::tink::HpkePublicKey& recipient_public_key,
+      absl::string_view output_prefix)
+      : recipient_public_key_(recipient_public_key),
+        output_prefix_(output_prefix) {}
+
+  crypto::tink::util::StatusOr<std::string> EncryptNoPrefix(
+      absl::string_view plaintext, absl::string_view context_info) const;
 
   google::crypto::tink::HpkePublicKey recipient_public_key_;
+  std::string output_prefix_;
 };
 
 }  // namespace internal

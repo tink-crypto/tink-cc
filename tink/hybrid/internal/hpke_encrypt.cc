@@ -22,10 +22,14 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/hybrid/hpke_parameters.h"
+#include "tink/hybrid/hpke_public_key.h"
 #include "tink/hybrid/internal/hpke_context.h"
 #include "tink/hybrid/internal/hpke_util.h"
 #include "tink/hybrid_encrypt.h"
+#include "tink/partial_key_access.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/hpke.pb.h"
@@ -33,14 +37,107 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace {
 
 using HpkeAeadProto = ::google::crypto::tink::HpkeAead;
 using HpkeKdfProto = ::google::crypto::tink::HpkeKdf;
 using HpkeKemProto = ::google::crypto::tink::HpkeKem;
 using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
+using HpkeParamsProto = ::google::crypto::tink::HpkeParams;
+
+util::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
+  switch (kem_id) {
+    case HpkeParameters::KemId::kDhkemP256HkdfSha256:
+      return HpkeKemProto::DHKEM_P256_HKDF_SHA256;
+    case HpkeParameters::KemId::kDhkemP384HkdfSha384:
+      return HpkeKemProto::DHKEM_P384_HKDF_SHA384;
+    case HpkeParameters::KemId::kDhkemP521HkdfSha512:
+      return HpkeKemProto::DHKEM_P521_HKDF_SHA512;
+    case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
+      return HpkeKemProto::DHKEM_X25519_HKDF_SHA256;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "Could not determine KEM.");
+  }
+}
+
+util::StatusOr<HpkeKdfProto> FromKdfId(HpkeParameters::KdfId kdf_id) {
+  switch (kdf_id) {
+    case HpkeParameters::KdfId::kHkdfSha256:
+      return HpkeKdfProto::HKDF_SHA256;
+    case HpkeParameters::KdfId::kHkdfSha384:
+      return HpkeKdfProto::HKDF_SHA384;
+    case HpkeParameters::KdfId::kHkdfSha512:
+      return HpkeKdfProto::HKDF_SHA512;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "Could not determine KDF.");
+  }
+}
+
+util::StatusOr<HpkeAeadProto> FromAeadId(HpkeParameters::AeadId aead_id) {
+  switch (aead_id) {
+    case HpkeParameters::AeadId::kAesGcm128:
+      return HpkeAeadProto::AES_128_GCM;
+    case HpkeParameters::AeadId::kAesGcm256:
+      return HpkeAeadProto::AES_256_GCM;
+    case HpkeParameters::AeadId::kChaCha20Poly1305:
+      return HpkeAeadProto::CHACHA20_POLY1305;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "Could not determine AEAD.");
+  }
+}
+
+util::StatusOr<HpkeParamsProto> FromParameters(HpkeParameters parameters) {
+  util::StatusOr<HpkeKemProto> kem = FromKemId(parameters.GetKemId());
+  if (!kem.ok()) {
+    return kem.status();
+  }
+
+  util::StatusOr<HpkeKdfProto> kdf = FromKdfId(parameters.GetKdfId());
+  if (!kdf.ok()) {
+    return kdf.status();
+  }
+
+  util::StatusOr<HpkeAeadProto> aead = FromAeadId(parameters.GetAeadId());
+  if (!aead.ok()) {
+    return aead.status();
+  }
+
+  HpkeParamsProto params;
+  params.set_kem(*kem);
+  params.set_kdf(*kdf);
+  params.set_aead(*aead);
+
+  return params;
+}
+
+}  // namespace
+
+util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
+    const HpkePublicKey& recipient_public_key) {
+  util::StatusOr<HpkeParamsProto> params =
+      FromParameters(recipient_public_key.GetParameters());
+  if (!params.ok()) {
+    return params.status();
+  }
+  HpkePublicKeyProto proto;
+  proto.set_public_key(
+      recipient_public_key.GetPublicKeyBytes(GetPartialKeyAccess()));
+  *proto.mutable_params() = *params;
+  proto.set_version(0);
+  return New(proto, recipient_public_key.GetOutputPrefix());
+}
 
 util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
     const HpkePublicKeyProto& recipient_public_key) {
+  return New(recipient_public_key, /*output_prefix=*/"");
+}
+
+util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
+    const HpkePublicKeyProto& recipient_public_key,
+    absl::string_view output_prefix) {
   if (recipient_public_key.public_key().empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is empty.");
@@ -63,10 +160,11 @@ util::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is missing AEAD");
   }
-  return {absl::WrapUnique(new HpkeEncrypt(recipient_public_key))};
+  return {
+      absl::WrapUnique(new HpkeEncrypt(recipient_public_key, output_prefix))};
 }
 
-util::StatusOr<std::string> HpkeEncrypt::Encrypt(
+util::StatusOr<std::string> HpkeEncrypt::EncryptNoPrefix(
     absl::string_view plaintext, absl::string_view context_info) const {
   util::StatusOr<internal::HpkeParams> params =
       internal::HpkeParamsProtoToStruct(recipient_public_key_.params());
@@ -83,6 +181,16 @@ util::StatusOr<std::string> HpkeEncrypt::Encrypt(
 
   return internal::ConcatenatePayload((*sender_context)->EncapsulatedKey(),
                                       *ciphertext);
+}
+
+util::StatusOr<std::string> HpkeEncrypt::Encrypt(
+    absl::string_view plaintext, absl::string_view context_info) const {
+  util::StatusOr<std::string> ciphertext_no_prefix =
+      EncryptNoPrefix(plaintext, context_info);
+  if (!ciphertext_no_prefix.ok()) {
+    return ciphertext_no_prefix.status();
+  }
+  return absl::StrCat(output_prefix_, *ciphertext_no_prefix);
 }
 
 }  // namespace internal

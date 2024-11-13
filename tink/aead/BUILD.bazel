@@ -896,6 +896,24 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "legacy_kms_aead_key",
+    srcs = ["legacy_kms_aead_key.cc"],
+    hdrs = ["legacy_kms_aead_key.h"],
+    include_prefix = "tink/aead",
+    deps = [
+        ":aead_key",
+        ":legacy_kms_aead_parameters",
+        "//tink:key",
+        "//tink/internal:output_prefix_util",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -1722,6 +1740,21 @@ cc_test(
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "legacy_kms_aead_key_test",
+    srcs = ["legacy_kms_aead_key_test.cc"],
+    deps = [
+        ":legacy_kms_aead_key",
+        ":legacy_kms_aead_parameters",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

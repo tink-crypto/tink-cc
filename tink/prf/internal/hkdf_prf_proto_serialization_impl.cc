@@ -14,9 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/prf/hkdf_prf_proto_serialization.h"
+#include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
 
-#include <new>
 #include <string>
 #include <utility>
 
@@ -31,6 +30,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
@@ -46,6 +46,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::util::SecretData;
@@ -56,15 +57,13 @@ using ::google::crypto::tink::HkdfPrfParams;
 using ::google::crypto::tink::OutputPrefixType;
 
 using HkdfPrfProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   HkdfPrfParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, HkdfPrfParameters>;
 using HkdfPrfProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<HkdfPrfParameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<HkdfPrfParameters, ProtoParametersSerialization>;
 using HkdfPrfProtoKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, HkdfPrfKey>;
+    KeyParserImpl<ProtoKeySerialization, HkdfPrfKey>;
 using HkdfPrfProtoKeySerializerImpl =
-    internal::KeySerializerImpl<HkdfPrfKey, internal::ProtoKeySerialization>;
+    KeySerializerImpl<HkdfPrfKey, ProtoKeySerialization>;
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.HkdfPrfKey";
@@ -107,7 +106,7 @@ util::StatusOr<HashType> ToProtoHashType(
 }
 
 util::StatusOr<HkdfPrfParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
+    const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing HkdfPrfParameters.");
@@ -145,7 +144,7 @@ util::StatusOr<HkdfPrfParameters> ParseParameters(
                                    absl::nullopt);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const HkdfPrfParameters& parameters) {
   util::StatusOr<HashType> proto_hash_type =
       ToProtoHashType(parameters.GetHashType());
@@ -164,12 +163,12 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   }
   *proto_key_format.mutable_params() = params;
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kTypeUrl, OutputPrefixType::RAW, proto_key_format.SerializeAsString());
 }
 
 util::StatusOr<HkdfPrfKey> ParseKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -218,7 +217,7 @@ util::StatusOr<HkdfPrfKey> ParseKey(
                             GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+util::StatusOr<ProtoKeySerialization> SerializeKey(
     const HkdfPrfKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return util::Status(absl::StatusCode::kPermissionDenied,
@@ -245,7 +244,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   SecretProto<google::crypto::tink::HkdfPrfKey> proto_key;
   proto_key->set_version(0);
   *proto_key->mutable_params() = params;
-  internal::CallWithCoreDumpProtection(
+  CallWithCoreDumpProtection(
       [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
 
   util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
@@ -255,7 +254,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(*std::move(serialized_key), *token);
 
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
       OutputPrefixType::RAW, key.GetIdRequirement());
 }
@@ -284,30 +283,50 @@ HkdfPrfProtoKeySerializerImpl& HkdfPrfProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterHkdfPrfProtoSerialization() {
+util::Status RegisterHkdfPrfProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(&HkdfPrfProtoParametersParser());
+      registry.RegisterParametersParser(&HkdfPrfProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = registry.RegisterParametersSerializer(
+      &HkdfPrfProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = registry.RegisterKeyParser(&HkdfPrfProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return registry.RegisterKeySerializer(&HkdfPrfProtoKeySerializer());
+}
+
+util::Status RegisterHkdfPrfProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(&HkdfPrfProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersSerializer(&HkdfPrfProtoParametersSerializer());
+      builder.RegisterParametersSerializer(&HkdfPrfProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(&HkdfPrfProtoKeyParser());
+  status = builder.RegisterKeyParser(&HkdfPrfProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(&HkdfPrfProtoKeySerializer());
+  return builder.RegisterKeySerializer(&HkdfPrfProtoKeySerializer());
 }
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

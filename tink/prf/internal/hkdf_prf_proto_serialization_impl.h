@@ -14,24 +14,29 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_PRF_HKDF_PRF_PROTO_SERIALIZATION_H_
-#define TINK_PRF_HKDF_PRF_PROTO_SERIALIZATION_H_
+#ifndef TINK_PRF_INTERNAL_HKDF_PRF_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_PRF_INTERNAL_HKDF_PRF_PROTO_SERIALIZATION_IMPL_H_
 
 #include "tink/internal/mutable_serialization_registry.h"
-#include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
-// Registers proto parsers and serializers for HKDF-PRF parameters and keys into
-// global serialization registry.
-inline crypto::tink::util::Status RegisterHkdfPrfProtoSerialization() {
-  return internal::RegisterHkdfPrfProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// Registers proto parsers and serializers for HKDF-PRF parameters and
+// keys into specified mutable serialization `registry`.
+crypto::tink::util::Status RegisterHkdfPrfProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for HKDF-PRF parameters and
+// keys into specified immutable serialization registry `builder`.
+crypto::tink::util::Status RegisterHkdfPrfProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_PRF_HKDF_PRF_PROTO_SERIALIZATION_H_
+#endif  // TINK_PRF_INTERNAL_HKDF_PRF_PROTO_SERIALIZATION_IMPL_H_

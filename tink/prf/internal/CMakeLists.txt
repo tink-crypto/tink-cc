@@ -62,6 +62,38 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME hkdf_prf_proto_serialization_impl
+  SRCS
+    hkdf_prf_proto_serialization_impl.cc
+    hkdf_prf_proto_serialization_impl.h
+  DEPS
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::call_with_core_dump_protection
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization_registry
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+    tink::util::secret_data
+    tink::util::secret_proto
+    tink::util::status
+    tink::util::statusor
+    tink::proto::common_cc_proto
+    tink::proto::hkdf_prf_cc_proto
+    tink::proto::tink_cc_proto
+)
+
 # tests
 
 tink_cc_test(
@@ -115,5 +147,36 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_prf_cc_proto
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME hkdf_prf_proto_serialization_impl_test
+  SRCS
+    hkdf_prf_proto_serialization_impl_test.cc
+  DEPS
+    tink::prf::internal::hkdf_prf_proto_serialization_impl
+    gmock
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+    tink::subtle::random
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::common_cc_proto
+    tink::proto::hkdf_prf_cc_proto
     tink::proto::tink_cc_proto
 )

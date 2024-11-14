@@ -347,32 +347,11 @@ tink_cc_library(
 tink_cc_library(
   NAME hkdf_prf_proto_serialization
   SRCS
-    hkdf_prf_proto_serialization.cc
     hkdf_prf_proto_serialization.h
   DEPS
-    tink::prf::hkdf_prf_key
-    tink::prf::hkdf_prf_parameters
-    absl::status
-    absl::string_view
-    absl::optional
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_key_access_token
-    tink::internal::call_with_core_dump_protection
-    tink::internal::key_parser
-    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
-    tink::internal::parameters_parser
-    tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
-    tink::util::secret_data
-    tink::util::secret_proto
+    tink::prf::internal::hkdf_prf_proto_serialization_impl
     tink::util::status
-    tink::util::statusor
-    tink::proto::common_cc_proto
-    tink::proto::hkdf_prf_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 # tests

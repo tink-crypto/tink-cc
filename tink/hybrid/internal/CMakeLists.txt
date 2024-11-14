@@ -238,16 +238,24 @@ tink_cc_library(
     config_v0.cc
     config_v0.h
   DEPS
+    tink::hybrid::internal::hpke_decrypt
+    tink::hybrid::internal::hpke_encrypt
     tink::hybrid::internal::hpke_private_key_manager
     tink::hybrid::internal::hpke_public_key_manager
     absl::memory
     tink::core::configuration
+    tink::core::hybrid_decrypt
+    tink::core::hybrid_encrypt
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_proto_serialization
+    tink::hybrid::hpke_public_key
     tink::hybrid::hybrid_decrypt_wrapper
     tink::hybrid::hybrid_encrypt_wrapper
     tink::internal::configuration_impl
     tink::util::status
+    tink::util::statusor
   TAGS
     exclude_if_openssl
 )
@@ -511,15 +519,19 @@ tink_cc_test(
   DEPS
     tink::hybrid::internal::config_v0
     tink::hybrid::internal::hpke_private_key_manager
+    tink::hybrid::internal::hpke_test_util
     tink::hybrid::internal::key_gen_config_v0
     gmock
     tink::core::configuration
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
     tink::core::key_gen_configuration
+    tink::core::key_status
     tink::core::keyset_handle
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::hybrid_key_templates
+    tink::hybrid::internal::testing::hpke_test_vectors
+    tink::hybrid::internal::testing::hybrid_test_vectors
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store

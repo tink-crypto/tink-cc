@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/hybrid/internal/config_v0.h"
+#include <memory>
 
 #include "absl/memory/memory.h"
 #include "tink/configuration.h"
@@ -22,7 +23,15 @@
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
 #include "tink/hybrid/hybrid_decrypt_wrapper.h"
 #include "tink/hybrid/hybrid_encrypt_wrapper.h"
+#include "tink/hybrid_decrypt.h"
+#include "tink/hybrid_encrypt.h"
+#include "tink/util/statusor.h"
 #ifdef OPENSSL_IS_BORINGSSL
+#include "tink/hybrid/hpke_private_key.h"
+#include "tink/hybrid/hpke_proto_serialization.h"
+#include "tink/hybrid/hpke_public_key.h"
+#include "tink/hybrid/internal/hpke_decrypt.h"
+#include "tink/hybrid/internal/hpke_encrypt.h"
 #include "tink/hybrid/internal/hpke_private_key_manager.h"
 #include "tink/hybrid/internal/hpke_public_key_manager.h"
 #endif
@@ -32,6 +41,22 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+
+namespace {
+
+#ifdef OPENSSL_IS_BORINGSSL
+util::StatusOr<std::unique_ptr<HybridDecrypt>>
+NewHpkeDecrypt(const HpkePrivateKey& key) {
+  return crypto::tink::internal::HpkeDecrypt::New(key);
+}
+
+util::StatusOr<std::unique_ptr<HybridEncrypt>>
+NewHpkeEncrypt(const HpkePublicKey& key) {
+  return crypto::tink::internal::HpkeEncrypt::New(key);
+}
+#endif
+
+}  // namespace
 
 util::Status AddHybridV0(Configuration& config) {
   util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
@@ -49,6 +74,20 @@ util::Status AddHybridV0(Configuration& config) {
   status = ConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<HpkePrivateKeyManager>(),
       absl::make_unique<HpkePublicKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = RegisterHpkeProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<HybridDecrypt, HpkePrivateKey>(
+      NewHpkeDecrypt, config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = ConfigurationImpl::AddPrimitiveGetter<HybridEncrypt, HpkePublicKey>(
+      NewHpkeEncrypt, config);
   if (!status.ok()) {
     return status;
   }

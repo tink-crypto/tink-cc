@@ -803,31 +803,11 @@ tink_cc_library(
 tink_cc_library(
   NAME x_aes_gcm_proto_serialization
   SRCS
-    x_aes_gcm_proto_serialization.cc
     x_aes_gcm_proto_serialization.h
   DEPS
-    tink::aead::x_aes_gcm_key
-    tink::aead::x_aes_gcm_parameters
-    absl::status
-    absl::string_view
-    absl::optional
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_key_access_token
-    tink::internal::call_with_core_dump_protection
-    tink::internal::key_parser
-    tink::internal::key_serializer
+    tink::aead::internal::x_aes_gcm_proto_serialization_impl
     tink::internal::mutable_serialization_registry
-    tink::internal::parameters_parser
-    tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
-    tink::util::secret_data
-    tink::util::secret_proto
     tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
-    tink::proto::x_aes_gcm_cc_proto
 )
 
 tink_cc_library(

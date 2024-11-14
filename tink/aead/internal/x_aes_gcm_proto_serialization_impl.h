@@ -14,24 +14,31 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_AEAD_X_AES_GCM_PROTO_SERIALIZATION_H_
-#define TINK_AEAD_X_AES_GCM_PROTO_SERIALIZATION_H_
+#ifndef TINK_AEAD_INTERNAL_X_AES_GCM_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_AEAD_INTERNAL_X_AES_GCM_PROTO_SERIALIZATION_IMPL_H_
 
-#include "tink/aead/internal/x_aes_gcm_proto_serialization_impl.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for X-AES-GCM parameters and
-// keys into global serialization registry.
-inline crypto::tink::util::Status RegisterXAesGcmProtoSerialization() {
-  return internal::RegisterXAesGcmProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// keys into specified mutable serialization `registry`.
+crypto::tink::util::Status
+RegisterXAesGcmProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for X-AES-GCM parameters and
+// keys into specified immutable serialization registry `builder`.
+crypto::tink::util::Status
+RegisterXAesGcmProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_AEAD_X_AES_GCM_PROTO_SERIALIZATION_H_
+#endif  // TINK_AEAD_INTERNAL_X_AES_GCM_PROTO_SERIALIZATION_IMPL_H_

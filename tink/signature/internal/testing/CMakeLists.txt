@@ -65,6 +65,8 @@ tink_cc_library(
     tink::signature::internal::testing::signature_test_vector
     absl::check
     absl::memory
+    absl::strings
+    absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access

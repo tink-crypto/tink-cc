@@ -15,11 +15,14 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
+
 #include <string>
 #include <vector>
 
 #include "absl/log/check.h"
 #include "absl/memory/memory.h"
+#include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
@@ -38,16 +41,25 @@ namespace internal {
 namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
 
-RestrictedData Ed25519PrivateKeyBytes(){
+// Test vectors are from
+// https://datatracker.ietf.org/doc/html/rfc8032#section-7.1 - TEST 3.
+
+constexpr absl::string_view kSignatureHex =
+    "6291d657deec24024827e69c3abe01a30ce548a284743a445e3680d7db5ac3ac18ff9b538d"
+    "16f290ae67f760984dc6594a7c15e9716ed28dc027beceea1ec40a";
+
+constexpr absl::string_view kMessageHex = "af82";
+
+RestrictedData Ed25519PrivateKeyBytes() {
   return RestrictedData(
       HexDecodeOrDie(
-          "9cac7d19aeecc563a3dff7bcae0fbbbc28087b986c49a3463077dd5281437e81"),
+          "c5aa8df43f9f837bedb7442f31dcb7b166d38535076f094b85ce3a2e0b4458f7"),
       InsecureSecretKeyAccess::Get());
 }
 
 std::string Ed25519PublicKeyBytes() {
   return HexDecodeOrDie(
-      "ea42941a6dc801484390b2955bc7376d172eeb72640a54e5b50c95efa2fc6ad8");
+      "fc51cd8e6218a1a38da47ed00230f0580816ed13ba3303ac5deb911548908025");
 }
 
 SignatureTestVector CreateTestVector0() {
@@ -60,10 +72,7 @@ SignatureTestVector CreateTestVector0() {
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),
-      HexDecodeOrDie("3431985050f48157551262d591d0f1f25b9c6808fce4345066cb8216d"
-                     "48fcd9feafa4b24949a7f8cabdc16a51030a19d7514c9685c221475bf"
-                     "3cfc363472ee0a"),
-      HexDecodeOrDie("aa"));
+      HexDecodeOrDie(kSignatureHex), HexDecodeOrDie(kMessageHex));
 }
 
 // TINK
@@ -77,11 +86,8 @@ SignatureTestVector CreateTestVector1() {
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),
-      HexDecodeOrDie("0199887766"
-                     "3431985050f48157551262d591d0f1f25b9c6808fce4345066cb8216d"
-                     "48fcd9feafa4b24949a7f8cabdc16a51030a19d7514c9685c221475bf"
-                     "3cfc363472ee0a"),
-      HexDecodeOrDie("aa"));
+      HexDecodeOrDie(absl::StrCat("0199887766", kSignatureHex)),
+      HexDecodeOrDie(kMessageHex));
 }
 
 // Crunchy
@@ -95,13 +101,12 @@ SignatureTestVector CreateTestVector2() {
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),
-      HexDecodeOrDie("0099887766"
-                     "3431985050f48157551262d591d0f1f25b9c6808fce4345066cb8216d"
-                     "48fcd9feafa4b24949a7f8cabdc16a51030a19d7514c9685c221475bf"
-                     "3cfc363472ee0a"),
-      HexDecodeOrDie("aa"));
+      HexDecodeOrDie(absl::StrCat("0099887766", kSignatureHex)),
+      HexDecodeOrDie(kMessageHex));
 }
 
+// NOTE: This test vector has been generated adding a `0x00` suffix to the
+// message.
 SignatureTestVector CreateTestVector3() {
   util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kLegacy).value(),
@@ -112,11 +117,11 @@ SignatureTestVector CreateTestVector3() {
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
                                     GetPartialKeyAccess())
               .value()),
-      HexDecodeOrDie("0099887766"
-                     "e828586415b1226c118617a2b56b923b6717e83c4d265fcb4e2cdf3cb"
-                     "902ce7b9b1ecd8405cb4e6a8e248ef5478891b5b6f80f737df16594f8"
-                     "8662595d8f140e"),
-      HexDecodeOrDie("aa"));
+      HexDecodeOrDie(
+          "0099887766"
+          "afeae7a4fcd7d710a03353dfbe11a9906c6918633bb4dfef655d62d21f7535a1"
+          "108ea3ef5bef2b0d0acefbf0e051f62ee2582652ae769df983ad1b11a95d3a08"),
+      HexDecodeOrDie(kMessageHex));
 }
 
 }  // namespace

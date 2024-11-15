@@ -52,7 +52,7 @@ struct ParsedStruct {
 TEST(SecretDataWithCrcBytesField, ClearMemberWorks) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("hello");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("hello");
   field.ClearMember(s);
   EXPECT_THAT(s.secret_with_crc.UncheckedData(),
               Eq(""));
@@ -62,7 +62,7 @@ TEST(SecretDataWithCrcBytesField, ClearMemberWorks) {
 TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberSuccessCases) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("before");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("before");
 
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
@@ -82,7 +82,7 @@ TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberSuccessCases) {
 TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberRequiresStateWithCrc) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("before");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("before");
 
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
@@ -94,7 +94,7 @@ TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberRequiresStateWithCrc) {
 TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberVarintSaysTooLong) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("before");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("before");
 
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0b"), "1234567890");
@@ -107,7 +107,7 @@ TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberVarintSaysTooLong) {
 TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberEmptyString) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("before");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("before");
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
@@ -124,7 +124,7 @@ TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberEmptyString) {
 TEST(SecretDataWithCrcBytesField, EmptyWithoutVarint) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("before");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("before");
 
   std::string bytes = "";
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
@@ -136,7 +136,7 @@ TEST(SecretDataWithCrcBytesField, EmptyWithoutVarint) {
 TEST(SecretDataWithCrcBytesField, InvalidVarint) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("before");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("before");
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
@@ -149,7 +149,7 @@ TEST(SecretDataWithCrcBytesField, InvalidVarint) {
 TEST(SecretDataWithCrcBytesField, ExistingCRCIsExtendedWhenParsing) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("before");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("before");
 
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
@@ -170,7 +170,7 @@ TEST(SecretDataWithCrcBytesField, ExistingCRCIsExtendedWhenParsing) {
 TEST(SecretDataWithCrcBytesField, SerializeEmpty) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
@@ -183,7 +183,7 @@ TEST(SecretDataWithCrcBytesField, SerializeEmpty) {
 TEST(SecretDataWithCrcBytesField, SerializeRequiresCrc) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -194,7 +194,7 @@ TEST(SecretDataWithCrcBytesField, SerializeNonEmpty) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
   std::string text = "this is some text";
-  s.secret_with_crc = SecretDataWithCrc(text);
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc(text);
 
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
@@ -236,7 +236,7 @@ TEST(SecretDataWithCrcBytesField, SerializeTooSmallBuffer) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
   std::string text = "this is some text";
-  s.secret_with_crc = SecretDataWithCrc(text);
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc(text);
 
   std::string buffer = "BUFFERBUFFERBUFFE";
   absl::crc32c_t crc{};
@@ -249,7 +249,7 @@ TEST(SecretDataWithCrcBytesField, SerializeMuchTooSmallBuffer) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
   std::string text = "this is some text";
-  s.secret_with_crc = SecretDataWithCrc(text);
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc(text);
 
   std::string buffer = "";
   absl::crc32c_t crc{};
@@ -263,7 +263,7 @@ TEST(SecretDataWithCrcBytesField, ExistingCrcIsExtended) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
   std::string text = "this is some text";
-  s.secret_with_crc = SecretDataWithCrc(text);
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc(text);
 
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   absl::crc32c_t crc = absl::ComputeCrc32c("existing");
@@ -281,9 +281,9 @@ TEST(SecretDataWithCrcBytesField, ExistingCrcIsExtended) {
 TEST(SecretDataWithCrcBytesField, RequiresSerialization) {
   SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
   ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc("");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("");
   EXPECT_THAT(field.RequiresSerialization(s), IsFalse());
-  s.secret_with_crc = SecretDataWithCrc("this is some text");
+  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("this is some text");
   EXPECT_THAT(field.RequiresSerialization(s), IsTrue());
 }
 

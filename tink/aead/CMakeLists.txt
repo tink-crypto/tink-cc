@@ -841,6 +841,16 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME legacy_kms_aead_proto_serialization
+  SRCS
+    legacy_kms_aead_proto_serialization.h
+  DEPS
+    tink::aead::internal::legacy_kms_aead_proto_serialization_impl
+    tink::internal::mutable_serialization_registry
+    tink::util::status
+)
+
 # tests
 
 tink_cc_test(
@@ -1667,4 +1677,29 @@ tink_cc_test(
     absl::optional
     tink::util::statusor
     tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME legacy_kms_aead_proto_serialization_test
+  SRCS
+    legacy_kms_aead_proto_serialization_test.cc
+  DEPS
+    tink::aead::legacy_kms_aead_key
+    tink::aead::legacy_kms_aead_parameters
+    tink::aead::legacy_kms_aead_proto_serialization
+    gmock
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::core::parameters
+    tink::core::restricted_data
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::kms_aead_cc_proto
+    tink::proto::tink_cc_proto
 )

@@ -32,9 +32,6 @@ namespace internal {
 
 // A wrapper around a SecretData with a CRC32C.
 //
-// This class makes sure the CRC value is never leaked to core dumps. Data is
-// exposed only through a `data()` method, which may fail if the CRC is invalid.
-//
 // This class is thread-compatible.
 class SecretDataWithCrc final {
  public:
@@ -44,6 +41,16 @@ class SecretDataWithCrc final {
   SecretDataWithCrc& operator=(const SecretDataWithCrc&) = default;
   SecretDataWithCrc(SecretDataWithCrc&& other) = default;
   SecretDataWithCrc& operator=(SecretDataWithCrc&& other) noexcept = default;
+
+  // Creates a new SecretDataWithCrc and computes the CRC (in a
+  // CallWithCoreDumpProtection).
+  static SecretDataWithCrc WithComputedCrc(absl::string_view data);
+
+  // Creates a new SecretDataWithCrc and computes the CRC (in a
+  // CallWithCoreDumpProtection).
+  // Note: this overload will eventually be removed (as users should instead)
+  // call "ComputeAndSetCrc()".
+  static SecretDataWithCrc WithComputedCrc(crypto::tink::util::SecretData data);
 
   // Creates a new SecretDataWithCrc.
   // If an adversary can control the provided crc, they might be able to obtain

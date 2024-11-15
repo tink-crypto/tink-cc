@@ -50,6 +50,40 @@ TEST(SecretDataWitCrcTest, DefaultConstructor) {
   EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), absl::crc32c_t{0});
 }
 
+TEST(SecretDataWitCrcTest, CreateWithComputedCrcEmpty) {
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc("");
+  EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(IsEmpty()));
+  EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), absl::crc32c_t{0});
+}
+
+TEST(SecretDataWitCrcTest, CreateWithComputedCrcNonEmpty) {
+  std::string data = Random::GetRandomBytes(256);
+  absl::crc32c_t crc = absl::ComputeCrc32c(data);
+
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc(data);
+  EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(data));
+  EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), crc);
+}
+
+TEST(SecretDataWitCrcTest, CreateWithComputedCrcSecretDataEmpty) {
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc(SecretData());
+  EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(IsEmpty()));
+  EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), absl::crc32c_t{0});
+}
+
+TEST(SecretDataWitCrcTest, CreateWithComputedCrcSecretDataNonEmpty) {
+  std::string data = Random::GetRandomBytes(256);
+  absl::crc32c_t crc = absl::ComputeCrc32c(data);
+  SecretData secret_data = SecretDataFromStringView(data);
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc(secret_data);
+  EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(data));
+  EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), crc);
+}
+
 TEST(SecretDataWitCrcTest, CreateWithCrc) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);

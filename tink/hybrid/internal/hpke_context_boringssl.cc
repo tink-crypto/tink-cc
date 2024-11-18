@@ -29,6 +29,8 @@
 #include "openssl/hpke.h"
 #include "tink/hybrid/internal/hpke_util.h"
 #include "tink/hybrid/internal/hpke_util_boringssl.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
@@ -38,6 +40,8 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+
+using ::crypto::tink::util::SecretUniquePtr;
 
 util::StatusOr<SenderHpkeContextBoringSsl>
 HpkeContextBoringSsl::SetupSender(const HpkeParams& params,
@@ -91,21 +95,28 @@ HpkeContextBoringSsl::SetupRecipient(
   if (!aead.ok()) {
     return aead.status();
   }
-  bssl::ScopedEVP_HPKE_KEY hpke_key;
-  if (!EVP_HPKE_KEY_init(
-          hpke_key.get(), *kem,
-          reinterpret_cast<const uint8_t *>(recipient_private_key.data()),
-          recipient_private_key.size())) {
+  SecretUniquePtr<bssl::ScopedEVP_HPKE_KEY> hpke_key =
+      util::MakeSecretUniquePtr<bssl::ScopedEVP_HPKE_KEY>();
+  int evp_hpke_key_init_result = CallWithCoreDumpProtection([&]() {
+    return EVP_HPKE_KEY_init(
+        hpke_key->get(), *kem,
+        reinterpret_cast<const uint8_t *>(recipient_private_key.data()),
+        recipient_private_key.size());
+  });
+  if (!evp_hpke_key_init_result) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Unable to initialize BoringSSL HPKE recipient private key.");
   }
   SslUniquePtr<EVP_HPKE_CTX> context(EVP_HPKE_CTX_new());
-  if (!EVP_HPKE_CTX_setup_recipient(
-          context.get(), hpke_key.get(), *kdf, *aead,
-          reinterpret_cast<const uint8_t *>(encapsulated_key.data()),
-          encapsulated_key.size(),
-          reinterpret_cast<const uint8_t *>(info.data()), info.size())) {
+  int evp_hpke_ctx_setup_recipient_result = CallWithCoreDumpProtection([&]() {
+    return EVP_HPKE_CTX_setup_recipient(
+        context.get(), hpke_key->get(), *kdf, *aead,
+        reinterpret_cast<const uint8_t *>(encapsulated_key.data()),
+        encapsulated_key.size(), reinterpret_cast<const uint8_t *>(info.data()),
+        info.size());
+  });
+  if (!evp_hpke_ctx_setup_recipient_result) {
     return util::Status(absl::StatusCode::kUnknown,
                         "Unable to set up BoringSSL HPKE recipient context.");
   }
@@ -120,12 +131,15 @@ util::StatusOr<std::string> HpkeContextBoringSsl::Seal(
       plaintext.size() + EVP_HPKE_CTX_max_overhead(context_.get()));
   size_t max_out_len = ciphertext.size();
   size_t ciphertext_size;
-  if (!EVP_HPKE_CTX_seal(
-          context_.get(), reinterpret_cast<uint8_t *>(&ciphertext[0]),
-          &ciphertext_size, max_out_len,
-          reinterpret_cast<const uint8_t *>(plaintext.data()), plaintext.size(),
-          reinterpret_cast<const uint8_t *>(associated_data.data()),
-          associated_data.size())) {
+  int evp_hpke_ctx_seal_result = CallWithCoreDumpProtection([&]() {
+    return EVP_HPKE_CTX_seal(
+        context_.get(), reinterpret_cast<uint8_t *>(&ciphertext[0]),
+        &ciphertext_size, max_out_len,
+        reinterpret_cast<const uint8_t *>(plaintext.data()), plaintext.size(),
+        reinterpret_cast<const uint8_t *>(associated_data.data()),
+        associated_data.size());
+  });
+  if (!evp_hpke_ctx_seal_result) {
     return util::Status(absl::StatusCode::kUnknown,
                         "BoringSSL HPKE encryption failed.");
   }
@@ -139,17 +153,24 @@ util::StatusOr<std::string> HpkeContextBoringSsl::Open(
     absl::string_view ciphertext, absl::string_view associated_data) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(&plaintext, ciphertext.size());
+  char* plaintext_data = &plaintext[0];
+  ScopedAssumeRegionCoreDumpSafe scope =
+      ScopedAssumeRegionCoreDumpSafe(plaintext_data, ciphertext.size());
+
   size_t plaintext_size;
-  if (!EVP_HPKE_CTX_open(
-          context_.get(), reinterpret_cast<uint8_t *>(&plaintext[0]),
-          &plaintext_size, plaintext.size(),
-          reinterpret_cast<const uint8_t *>(ciphertext.data()),
-          ciphertext.size(),
-          reinterpret_cast<const uint8_t *>(associated_data.data()),
-          associated_data.size())) {
+  int evp_hpke_ctx_open_result = CallWithCoreDumpProtection([&]() {
+    return EVP_HPKE_CTX_open(
+        context_.get(), reinterpret_cast<uint8_t *>(plaintext_data),
+        &plaintext_size, plaintext.size(),
+        reinterpret_cast<const uint8_t *>(ciphertext.data()), ciphertext.size(),
+        reinterpret_cast<const uint8_t *>(associated_data.data()),
+        associated_data.size());
+  });
+  if (!evp_hpke_ctx_open_result) {
     return util::Status(absl::StatusCode::kUnknown,
                         "BoringSSL HPKE decryption failed.");
   }
+  DfsanClearLabel(plaintext_data, ciphertext.size());
   subtle::ResizeStringUninitialized(&plaintext, plaintext_size);
   return plaintext;
 }

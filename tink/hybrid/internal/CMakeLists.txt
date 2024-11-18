@@ -32,6 +32,8 @@ tink_cc_library(
     absl::status
     absl::strings
     crypto
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::ssl_unique_ptr
     tink::subtle::subtle_util
     tink::util::secret_data

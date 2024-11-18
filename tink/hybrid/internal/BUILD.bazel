@@ -30,6 +30,8 @@ cc_library(
     deps = [
         ":hpke_util",
         ":hpke_util_boringssl",
+        "//tink/internal:call_with_core_dump_protection",
+        "//tink/internal:dfsan_forwarders",
         "//tink/internal:ssl_unique_ptr",
         "//tink/subtle:subtle_util",
         "//tink/util:secret_data",

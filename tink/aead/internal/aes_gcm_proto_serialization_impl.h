@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,31 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_AEAD_AES_GCM_PROTO_SERIALIZATION_H_
-#define TINK_AEAD_AES_GCM_PROTO_SERIALIZATION_H_
+#ifndef TINK_AEAD_INTERNAL_AES_GCM_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_AEAD_INTERNAL_AES_GCM_PROTO_SERIALIZATION_IMPL_H_
 
-#include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for AES-GCM parameters and
-// keys into global serialization registry.
-inline crypto::tink::util::Status RegisterAesGcmProtoSerialization() {
-  return internal::RegisterAesGcmProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// keys into specified mutable serialization `registry`.
+crypto::tink::util::Status
+RegisterAesGcmProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for AES-GCM parameters and
+// keys into specified immutable serialization registry `builder`.
+crypto::tink::util::Status
+RegisterAesGcmProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_AEAD_AES_GCM_PROTO_SERIALIZATION_H_
+#endif  // TINK_AEAD_INTERNAL_AES_GCM_PROTO_SERIALIZATION_IMPL_H_

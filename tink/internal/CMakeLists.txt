@@ -1781,6 +1781,7 @@ tink_cc_library(
   DEPS
     tink::internal::serialization_registry
     absl::check
+    tink::aead::internal::aes_gcm_proto_serialization_impl
     tink::aead::internal::chacha20_poly1305_proto_serialization_impl
     tink::aead::internal::legacy_kms_aead_proto_serialization_impl
     tink::aead::internal::x_aes_gcm_proto_serialization_impl
@@ -1806,6 +1807,8 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_parameters
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters
     tink::aead::legacy_kms_aead_key

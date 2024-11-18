@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/aead/aes_gcm_proto_serialization.h"
+#include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 
 #include <string>
 #include <utility>
@@ -33,6 +33,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -45,6 +46,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::util::SecretData;
@@ -53,15 +55,13 @@ using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
 
 using AesGcmProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   AesGcmParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, AesGcmParameters>;
 using AesGcmProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<AesGcmParameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<AesGcmParameters, ProtoParametersSerialization>;
 using AesGcmProtoKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, AesGcmKey>;
+    KeyParserImpl<ProtoKeySerialization, AesGcmKey>;
 using AesGcmProtoKeySerializerImpl =
-    internal::KeySerializerImpl<AesGcmKey, internal::ProtoKeySerialization>;
+    KeySerializerImpl<AesGcmKey, ProtoKeySerialization>;
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesGcmKey";
@@ -115,7 +115,7 @@ util::Status ValidateParamsForProto(const AesGcmParameters& params) {
 }
 
 util::StatusOr<AesGcmParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
+    const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesGcmParameters.");
@@ -146,7 +146,7 @@ util::StatusOr<AesGcmParameters> ParseParameters(
       .Build();
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesGcmParameters& parameters) {
   util::Status valid_params = ValidateParamsForProto(parameters);
   if (!valid_params.ok()) return valid_params;
@@ -158,13 +158,12 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   AesGcmKeyFormat proto_key_format;
   proto_key_format.set_key_size(parameters.KeySizeInBytes());
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
-util::StatusOr<AesGcmKey> ParseKey(
-    const internal::ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
+                                   absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesGcmKey.");
@@ -205,7 +204,7 @@ util::StatusOr<AesGcmKey> ParseKey(
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+util::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesGcmKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::Status valid_params = ValidateParamsForProto(key.GetParameters());
   if (!valid_params.ok()) return valid_params;
@@ -220,7 +219,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
 
   SecretProto<google::crypto::tink::AesGcmKey> proto_key;
   proto_key->set_version(0);
-  internal::CallWithCoreDumpProtection(
+  CallWithCoreDumpProtection(
       [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
@@ -231,7 +230,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
       google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
       key.GetIdRequirement());
@@ -261,23 +260,38 @@ AesGcmProtoKeySerializerImpl* AesGcmProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesGcmProtoSerialization() {
+util::Status RegisterAesGcmProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(AesGcmProtoParametersParser());
+      registry.RegisterParametersParser(AesGcmProtoParametersParser());
   if (!status.ok()) return status;
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterParametersSerializer(AesGcmProtoParametersSerializer());
+  status =
+      registry.RegisterParametersSerializer(AesGcmProtoParametersSerializer());
   if (!status.ok()) return status;
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(AesGcmProtoKeyParser());
+  status = registry.RegisterKeyParser(AesGcmProtoKeyParser());
   if (!status.ok()) return status;
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(AesGcmProtoKeySerializer());
+  return registry.RegisterKeySerializer(AesGcmProtoKeySerializer());
 }
 
+util::Status RegisterAesGcmProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(AesGcmProtoParametersParser());
+  if (!status.ok()) return status;
+
+  status =
+      builder.RegisterParametersSerializer(AesGcmProtoParametersSerializer());
+  if (!status.ok()) return status;
+
+  status = builder.RegisterKeyParser(AesGcmProtoKeyParser());
+  if (!status.ok()) return status;
+
+  return builder.RegisterKeySerializer(AesGcmProtoKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

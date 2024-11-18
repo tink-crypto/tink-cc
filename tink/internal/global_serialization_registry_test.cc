@@ -23,6 +23,8 @@
 #include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
+#include "tink/aead/aes_gcm_key.h"
+#include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/chacha20_poly1305_key.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/legacy_kms_aead_key.h"
@@ -64,6 +66,24 @@ std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
   CHECK_OK(key);
 
   return absl::make_unique<const AesCmacPrfKey>(*key);
+}
+
+std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
+  util::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesGcmParameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters);
+
+  util::StatusOr<AesGcmKey> key =
+      AesGcmKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
+                        /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  return absl::make_unique<const AesGcmKey>(*key);
 }
 
 std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
@@ -144,6 +164,7 @@ using GlobalSerializationRegistryTest = TestWithParam<KeyTestVector>;
 INSTANTIATE_TEST_SUITE_P(GlobalSerializationRegistryTests,
                          GlobalSerializationRegistryTest,
                          Values(KeyTestVector{CreateAesCmacPrfKey()},
+                                KeyTestVector{CreateAesGcmKey()},
                                 KeyTestVector{CreateChaCha20Poly1305Key()},
                                 KeyTestVector{CreateHkdfPrfKey()},
                                 KeyTestVector{CreateHmacPrfKey()},

@@ -73,7 +73,13 @@ class SecretDataWithCrc final {
   absl::StatusOr<absl::string_view> data() const;
 
   // Returns the data without verifying the CRC32C.
-  absl::string_view UncheckedData() const;
+  // Use AsStringView instead.
+  absl::string_view UncheckedData() const {
+    return AsStringView();
+  }
+
+  // Returns the data without verifying the CRC32C.
+  absl::string_view AsStringView() const;
 
   // Returns the data without verifying the CRC32C. Leaves the object in an
   // invalid state.

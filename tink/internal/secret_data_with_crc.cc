@@ -80,7 +80,7 @@ SecretDataWithCrc::SecretDataWithCrc(
     absl::string_view data, absl::optional<SecretValue<absl::crc32c_t>> crc)
     : SecretDataWithCrc(SecretDataFromStringView(data), std::move(crc)) {}
 
-absl::string_view SecretDataWithCrc::UncheckedData() const {
+absl::string_view SecretDataWithCrc::AsStringView() const {
   return SecretDataAsStringView(data_);
 }
 

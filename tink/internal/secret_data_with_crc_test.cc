@@ -163,6 +163,23 @@ TEST(SecretDataWitCrcTest, UncheckedDataWithInvalidCrcSucceeds) {
   EXPECT_EQ(data_3.UncheckedData(), data);
 }
 
+TEST(SecretDataWitCrcTest, AsStringViewWithInvalidCrcSucceeds) {
+  std::string data = Random::GetRandomBytes(256);
+  absl::crc32c_t crc =
+      absl::crc32c_t{static_cast<uint32_t>(absl::ComputeCrc32c(data)) + 1};
+
+  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  EXPECT_EQ(data_1.AsStringView(), data);
+
+  SecretData secret_data = SecretDataFromStringView(data);
+  SecretDataWithCrc data_2(secret_data, SecretValue<absl::crc32c_t>(crc));
+  EXPECT_EQ(data_2.AsStringView(), data);
+
+  SecretDataWithCrc data_3(std::move(secret_data),
+                           SecretValue<absl::crc32c_t>(crc));
+  EXPECT_EQ(data_3.AsStringView(), data);
+}
+
 TEST(SecretDataWitCrcTest, CopyConstructor) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);

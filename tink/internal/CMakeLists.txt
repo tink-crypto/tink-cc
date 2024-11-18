@@ -1772,3 +1772,53 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::secret_key_access_token
 )
+
+tink_cc_library(
+  NAME global_serialization_registry
+  SRCS
+    global_serialization_registry.cc
+    global_serialization_registry.h
+  DEPS
+    tink::internal::serialization_registry
+    absl::check
+    tink::aead::internal::chacha20_poly1305_proto_serialization_impl
+    tink::aead::internal::legacy_kms_aead_proto_serialization_impl
+    tink::aead::internal::x_aes_gcm_proto_serialization_impl
+    tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
+    tink::prf::internal::aes_cmac_prf_proto_serialization_impl
+    tink::prf::internal::hkdf_prf_proto_serialization_impl
+    tink::prf::internal::hmac_prf_proto_serialization_impl
+)
+
+tink_cc_test(
+  NAME global_serialization_registry_test
+  SRCS
+    global_serialization_registry_test.cc
+  DEPS
+    tink::internal::global_serialization_registry
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::proto_key_serialization
+    tink::internal::serialization
+    gmock
+    absl::check
+    absl::memory
+    absl::optional
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::chacha20_poly1305_key
+    tink::aead::chacha20_poly1305_parameters
+    tink::aead::legacy_kms_aead_key
+    tink::aead::legacy_kms_aead_parameters
+    tink::aead::x_aes_gcm_key
+    tink::aead::x_aes_gcm_parameters
+    tink::aead::xchacha20_poly1305_key
+    tink::aead::xchacha20_poly1305_parameters
+    tink::prf::aes_cmac_prf_key
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_parameters
+    tink::util::statusor
+    tink::util::test_matchers
+)

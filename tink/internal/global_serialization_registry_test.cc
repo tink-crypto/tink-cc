@@ -25,6 +25,8 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/aes_gcm_siv_key.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
 #include "tink/aead/chacha20_poly1305_key.h"
 #include "tink/aead/chacha20_poly1305_parameters.h"
 #include "tink/aead/legacy_kms_aead_key.h"
@@ -84,6 +86,19 @@ std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
   CHECK_OK(key);
 
   return absl::make_unique<const AesGcmKey>(*key);
+}
+
+std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
+  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
+  CHECK_OK(parameters);
+
+  util::StatusOr<AesGcmSivKey> key =
+      AesGcmSivKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
+                           /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  return absl::make_unique<const AesGcmSivKey>(*key);
 }
 
 std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
@@ -165,6 +180,7 @@ INSTANTIATE_TEST_SUITE_P(GlobalSerializationRegistryTests,
                          GlobalSerializationRegistryTest,
                          Values(KeyTestVector{CreateAesCmacPrfKey()},
                                 KeyTestVector{CreateAesGcmKey()},
+                                KeyTestVector{CreateAesGcmSivKey()},
                                 KeyTestVector{CreateChaCha20Poly1305Key()},
                                 KeyTestVector{CreateHkdfPrfKey()},
                                 KeyTestVector{CreateHmacPrfKey()},

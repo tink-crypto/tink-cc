@@ -48,6 +48,7 @@ TEST(SecretDataWitCrcTest, DefaultConstructor) {
   SecretDataWithCrc secret_data_with_crc;
   EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(IsEmpty()));
   EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), absl::crc32c_t{0});
+  EXPECT_EQ(secret_data_with_crc.GetCrc32c(), absl::crc32c_t{0});
 }
 
 TEST(SecretDataWitCrcTest, CreateWithComputedCrcEmpty) {
@@ -55,7 +56,8 @@ TEST(SecretDataWitCrcTest, CreateWithComputedCrcEmpty) {
       SecretDataWithCrc::WithComputedCrc("");
   EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(IsEmpty()));
   EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), absl::crc32c_t{0});
-}
+  EXPECT_EQ(secret_data_with_crc.GetCrc32c(), absl::crc32c_t{0});
+  }
 
 TEST(SecretDataWitCrcTest, CreateWithComputedCrcNonEmpty) {
   std::string data = Random::GetRandomBytes(256);
@@ -65,6 +67,7 @@ TEST(SecretDataWitCrcTest, CreateWithComputedCrcNonEmpty) {
       SecretDataWithCrc::WithComputedCrc(data);
   EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(data));
   EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), crc);
+  EXPECT_EQ(secret_data_with_crc.GetCrc32c(), crc);
 }
 
 TEST(SecretDataWitCrcTest, CreateWithComputedCrcSecretDataEmpty) {
@@ -72,6 +75,7 @@ TEST(SecretDataWitCrcTest, CreateWithComputedCrcSecretDataEmpty) {
       SecretDataWithCrc::WithComputedCrc(SecretData());
   EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(IsEmpty()));
   EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), absl::crc32c_t{0});
+  EXPECT_EQ(secret_data_with_crc.GetCrc32c(), absl::crc32c_t{0});
 }
 
 TEST(SecretDataWitCrcTest, CreateWithComputedCrcSecretDataNonEmpty) {
@@ -82,6 +86,7 @@ TEST(SecretDataWitCrcTest, CreateWithComputedCrcSecretDataNonEmpty) {
       SecretDataWithCrc::WithComputedCrc(secret_data);
   EXPECT_THAT(secret_data_with_crc.data(), IsOkAndHolds(data));
   EXPECT_EQ(secret_data_with_crc.SecretCrc().value(), crc);
+  EXPECT_EQ(secret_data_with_crc.GetCrc32c(), crc);
 }
 
 TEST(SecretDataWitCrcTest, CreateWithCrc) {
@@ -91,12 +96,14 @@ TEST(SecretDataWitCrcTest, CreateWithCrc) {
   SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
   EXPECT_THAT(data_1.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_1.SecretCrc().value(), crc);
+  EXPECT_EQ(data_1.GetCrc32c(), crc);
   EXPECT_THAT(data_1, SizeIs(data.size()));
 
   SecretData secret_data_2 = SecretDataFromStringView(data);
   SecretDataWithCrc data_2(secret_data_2, SecretValue<absl::crc32c_t>(crc));
   EXPECT_THAT(data_2.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_2.SecretCrc().value(), crc);
+  EXPECT_EQ(data_2.GetCrc32c(), crc);
   EXPECT_THAT(data_2, SizeIs(data.size()));
 
   SecretData secret_data_3 = SecretDataFromStringView(data);
@@ -104,6 +111,7 @@ TEST(SecretDataWitCrcTest, CreateWithCrc) {
                            SecretValue<absl::crc32c_t>(crc));
   EXPECT_THAT(data_3.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_3.SecretCrc().value(), crc);
+  EXPECT_EQ(data_3.GetCrc32c(), crc);
   EXPECT_THAT(data_3, SizeIs(data.size()));
 }
 
@@ -114,18 +122,21 @@ TEST(SecretDataWitCrcTest, CreateWithoutCrc) {
   SecretDataWithCrc data_1(data);
   EXPECT_THAT(data_1.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_1.SecretCrc().value(), crc);
+  EXPECT_EQ(data_1.GetCrc32c(), crc);
   EXPECT_THAT(data_1, SizeIs(data.size()));
 
   SecretData secret_data_2 = SecretDataFromStringView(data);
   SecretDataWithCrc data_2(secret_data_2);
   EXPECT_THAT(data_2.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_2.SecretCrc().value(), crc);
+  EXPECT_EQ(data_2.GetCrc32c(), crc);
   EXPECT_THAT(data_2, SizeIs(data.size()));
 
   SecretData secret_data_3 = SecretDataFromStringView(data);
   SecretDataWithCrc data_3(std::move(secret_data_3));
   EXPECT_THAT(data_3.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_3.SecretCrc().value(), crc);
+  EXPECT_EQ(data_3.GetCrc32c(), crc);
   EXPECT_THAT(data_3, SizeIs(data.size()));
 }
 
@@ -188,6 +199,7 @@ TEST(SecretDataWitCrcTest, CopyConstructor) {
   SecretDataWithCrc data_2(data_1);
   EXPECT_THAT(data_2.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_2.SecretCrc().value(), crc);
+  EXPECT_EQ(data_2.GetCrc32c(), crc);
   EXPECT_THAT(data_2, SizeIs(data.size()));
 }
 
@@ -200,6 +212,7 @@ TEST(SecretDataWitCrcTest, CopyAssignment) {
   data_2 = data_1;
   EXPECT_THAT(data_2.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_2.SecretCrc().value(), crc);
+  EXPECT_EQ(data_2.GetCrc32c(), crc);
   EXPECT_THAT(data_2, SizeIs(data.size()));
 }
 
@@ -211,6 +224,7 @@ TEST(SecretDataWitCrcTest, MoveConstructor) {
   SecretDataWithCrc data_2(std::move(data_1));
   EXPECT_THAT(data_2.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_2.SecretCrc().value(), crc);
+  EXPECT_EQ(data_2.GetCrc32c(), crc);
   EXPECT_THAT(data_2, SizeIs(data.size()));
 }
 
@@ -223,6 +237,7 @@ TEST(SecretDataWitCrcTest, MoveAssignment) {
   data_2 = data_1;
   EXPECT_THAT(data_2.data(), IsOkAndHolds(data));
   EXPECT_EQ(data_2.SecretCrc().value(), crc);
+  EXPECT_EQ(data_2.GetCrc32c(), crc);
   EXPECT_THAT(data_2, SizeIs(data.size()));
 }
 

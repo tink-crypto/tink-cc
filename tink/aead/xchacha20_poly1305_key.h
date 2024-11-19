@@ -18,6 +18,7 @@
 #define TINK_AEAD_XCHACHA20_POLY1305_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -65,6 +66,10 @@ class XChaCha20Poly1305Key : public AeadKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<XChaCha20Poly1305Key>(*this);
+  }
 
  private:
   XChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& parameters,

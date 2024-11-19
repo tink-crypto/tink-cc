@@ -16,6 +16,7 @@
 
 #include "tink/aead/xchacha20_poly1305_key.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -24,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
@@ -266,6 +268,19 @@ TEST(XChaCha20Poly1305KeyTest, MoveAssignment) {
               Eq(XChaCha20Poly1305Parameters::Variant::kTink));
   EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
   EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(XChaCha20Poly1305KeyTest, Clone) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+      XChaCha20Poly1305Parameters::Variant::kTink, secret,
+      /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

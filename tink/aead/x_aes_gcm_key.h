@@ -18,6 +18,7 @@
 #define TINK_AEAD_X_AES_GCM_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -64,6 +65,10 @@ class XAesGcmKey : public AeadKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<XAesGcmKey>(*this);
+  }
 
  private:
   XAesGcmKey(XAesGcmParameters parameters, const RestrictedData& key_bytes,

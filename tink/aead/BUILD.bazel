@@ -1265,6 +1265,7 @@ cc_test(
     deps = [
         ":aes_gcm_key",
         ":aes_gcm_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -1321,6 +1322,7 @@ cc_test(
     deps = [
         ":aes_gcm_siv_key",
         ":aes_gcm_siv_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -1394,6 +1396,7 @@ cc_test(
     deps = [
         ":aes_eax_key",
         ":aes_eax_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -1450,6 +1453,7 @@ cc_test(
     deps = [
         ":xchacha20_poly1305_key",
         ":xchacha20_poly1305_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -1506,6 +1510,7 @@ cc_test(
     deps = [
         ":chacha20_poly1305_key",
         ":chacha20_poly1305_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -1562,6 +1567,7 @@ cc_test(
     deps = [
         ":aes_ctr_hmac_aead_key",
         ":aes_ctr_hmac_aead_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -1621,6 +1627,7 @@ cc_test(
     deps = [
         ":x_aes_gcm_key",
         ":x_aes_gcm_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -1699,6 +1706,7 @@ cc_test(
     deps = [
         ":legacy_kms_aead_key",
         ":legacy_kms_aead_parameters",
+        "//tink:key",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

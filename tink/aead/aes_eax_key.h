@@ -18,6 +18,7 @@
 #define TINK_AEAD_AES_EAX_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -64,10 +65,13 @@ class AesEaxKey : public AeadKey {
 
   bool operator==(const Key& other) const override;
 
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<AesEaxKey>(*this);
+  }
+
  private:
   AesEaxKey(const AesEaxParameters& parameters, const RestrictedData& key_bytes,
-            absl::optional<int> id_requirement,
-            std::string output_prefix)
+            absl::optional<int> id_requirement, std::string output_prefix)
       : parameters_(parameters),
         key_bytes_(key_bytes),
         id_requirement_(id_requirement),

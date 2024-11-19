@@ -16,6 +16,7 @@
 
 #include "tink/aead/x_aes_gcm_key.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -24,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "tink/aead/x_aes_gcm_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
@@ -330,6 +332,22 @@ TEST(XAesGcmKeyTest, MoveAssignment) {
   EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
   EXPECT_THAT(move->GetParameters(), Eq(*parameters1));
   EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(XAesGcmKeyTest, Clone) {
+  RestrictedData secret = RestrictedData(kKeySize);
+
+  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kSaltSizeBytes);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

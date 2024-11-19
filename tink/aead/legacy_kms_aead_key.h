@@ -18,6 +18,7 @@
 #define TINK_AEAD_LEGACY_KMS_AEAD_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -55,6 +56,10 @@ class LegacyKmsAeadKey : public AeadKey {
   absl::string_view GetOutputPrefix() const override { return output_prefix_; }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<LegacyKmsAeadKey>(*this);
+  }
 
  private:
   LegacyKmsAeadKey(const LegacyKmsAeadParameters& parameters,

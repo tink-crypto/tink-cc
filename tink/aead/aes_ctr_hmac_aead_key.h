@@ -18,6 +18,7 @@
 #define TINK_AEAD_AES_CTR_HMAC_AEAD_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -90,6 +91,10 @@ class AesCtrHmacAeadKey : public AeadKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<AesCtrHmacAeadKey>(*this);
+  }
 
  private:
   AesCtrHmacAeadKey(const AesCtrHmacAeadParameters& parameters,

@@ -16,6 +16,7 @@
 
 #include "tink/aead/aes_eax_key.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -24,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_eax_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
@@ -385,6 +387,28 @@ TEST(AesEaxKeyTest, MoveAssignment) {
   EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
   EXPECT_THAT(move->GetParameters(), Eq(*parameters1));
   EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(AesEaxKeyTest, Clone) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

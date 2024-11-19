@@ -16,6 +16,7 @@
 
 #include "tink/aead/aes_gcm_siv_key.h"
 
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -25,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
@@ -323,6 +325,23 @@ TEST(AesGcmSivKeyTest, MoveAssignment) {
   EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret1));
   EXPECT_THAT(move->GetParameters(), Eq(*parameters1));
   EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(AesGcmSivKeyTest, Clone) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+      *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

@@ -18,6 +18,7 @@
 #define TINK_AEAD_AES_GCM_SIV_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -64,6 +65,10 @@ class AesGcmSivKey : public AeadKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<AesGcmSivKey>(*this);
+  }
 
  private:
   AesGcmSivKey(const AesGcmSivParameters& parameters,

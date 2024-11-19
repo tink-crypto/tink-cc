@@ -16,6 +16,7 @@
 
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -24,6 +25,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
@@ -130,8 +132,8 @@ TEST(AesCtrHmacAeadKeyTest, BuildKeyWithMismatchedAesKeySizeFails) {
                   .SetIdRequirement(123)
                   .Build(GetPartialKeyAccess())
                   .status(),
-                  StatusIs(absl::StatusCode::kInvalidArgument,
-                           HasSubstr("AES key size does not match")));
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("AES key size does not match")));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildKeyWithoutSettingAParametersFails) {
@@ -145,8 +147,8 @@ TEST(AesCtrHmacAeadKeyTest, BuildKeyWithoutSettingAParametersFails) {
           .SetIdRequirement(123)
           .Build(GetPartialKeyAccess())
           .status(),
-          StatusIs(absl::StatusCode::kInvalidArgument,
-                   HasSubstr("Cannot build without setting the parameters")));
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Cannot build without setting the parameters")));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildKeyWithoutSettingAesKeySizeFails) {
@@ -169,8 +171,8 @@ TEST(AesCtrHmacAeadKeyTest, BuildKeyWithoutSettingAesKeySizeFails) {
                   .SetIdRequirement(123)
                   .Build(GetPartialKeyAccess())
                   .status(),
-                  StatusIs(absl::StatusCode::kInvalidArgument,
-                           HasSubstr("Cannot build without AES key material")));
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Cannot build without AES key material")));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildKeyWithoutSettingHmacKeySizeFails) {
@@ -187,15 +189,14 @@ TEST(AesCtrHmacAeadKeyTest, BuildKeyWithoutSettingHmacKeySizeFails) {
 
   RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/32);
 
-  EXPECT_THAT(
-      AesCtrHmacAeadKey::Builder()
-          .SetParameters(*parameters)
-          .SetAesKeyBytes(aes_secret)
-          .SetIdRequirement(123)
-          .Build(GetPartialKeyAccess())
-          .status(),
-          StatusIs(absl::StatusCode::kInvalidArgument,
-                   HasSubstr("Cannot build without HMAC key material")));
+  EXPECT_THAT(AesCtrHmacAeadKey::Builder()
+                  .SetParameters(*parameters)
+                  .SetAesKeyBytes(aes_secret)
+                  .SetIdRequirement(123)
+                  .Build(GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Cannot build without HMAC key material")));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildKeyWithMismatchedHmacKeySizeFails) {
@@ -222,8 +223,8 @@ TEST(AesCtrHmacAeadKeyTest, BuildKeyWithMismatchedHmacKeySizeFails) {
                   .SetIdRequirement(123)
                   .Build(GetPartialKeyAccess())
                   .status(),
-                  StatusIs(absl::StatusCode::kInvalidArgument,
-                           HasSubstr("HMAC key size does not match")));
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("HMAC key size does not match")));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildNoPrefixKeyWithIdRequirementFails) {
@@ -241,17 +242,16 @@ TEST(AesCtrHmacAeadKeyTest, BuildNoPrefixKeyWithIdRequirementFails) {
   RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/32);
   RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/32);
 
-  EXPECT_THAT(
-      AesCtrHmacAeadKey::Builder()
-          .SetParameters(*parameters)
-          .SetAesKeyBytes(aes_secret)
-          .SetHmacKeyBytes(hmac_secret)
-          .SetIdRequirement(123)
-          .Build(GetPartialKeyAccess())
-          .status(),
-          StatusIs(absl::StatusCode::kInvalidArgument,
-                   HasSubstr("Cannot create key with ID requirement with "
-                             "parameters without ID requirement")));
+  EXPECT_THAT(AesCtrHmacAeadKey::Builder()
+                  .SetParameters(*parameters)
+                  .SetAesKeyBytes(aes_secret)
+                  .SetHmacKeyBytes(hmac_secret)
+                  .SetIdRequirement(123)
+                  .Build(GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Cannot create key with ID requirement with "
+                                 "parameters without ID requirement")));
 }
 
 TEST(AesCtrHmacAeadKeyTest, BuildTinkKeyWithoutIdRequirementFails) {
@@ -275,9 +275,9 @@ TEST(AesCtrHmacAeadKeyTest, BuildTinkKeyWithoutIdRequirementFails) {
                   .SetHmacKeyBytes(hmac_secret)
                   .Build(GetPartialKeyAccess())
                   .status(),
-                  StatusIs(absl::StatusCode::kInvalidArgument,
-                           HasSubstr("Cannot create key without ID requirement "
-                                     "with parameters with ID requirement")));
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Cannot create key without ID requirement "
+                                 "with parameters with ID requirement")));
 }
 
 TEST_P(AesCtrHmacAeadKeyTest, KeyEquals) {
@@ -631,6 +631,35 @@ TEST(AesCtrHmacAeadKeyTest, MoveAssignment) {
   EXPECT_THAT(move->GetAesKeyBytes(GetPartialKeyAccess()), Eq(aes_secret1));
   EXPECT_THAT(move->GetHmacKeyBytes(GetPartialKeyAccess()), Eq(hmac_secret1));
   EXPECT_THAT(move->GetIdRequirement(), Eq(0x01020304));
+}
+
+TEST(AesCtrHmacAeadKeyTest, Clone) {
+  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(16)
+          .SetHmacKeySizeInBytes(16)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(32)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData aes_secret = RestrictedData(/*num_random_bytes=*/16);
+  RestrictedData hmac_secret = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<AesCtrHmacAeadKey> key = AesCtrHmacAeadKey::Builder()
+                                              .SetParameters(*parameters)
+                                              .SetAesKeyBytes(aes_secret)
+                                              .SetHmacKeyBytes(hmac_secret)
+                                              .SetIdRequirement(0x01020304)
+                                              .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

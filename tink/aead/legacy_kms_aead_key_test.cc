@@ -16,6 +16,7 @@
 
 #include "tink/aead/legacy_kms_aead_key.h"
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -25,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/legacy_kms_aead_parameters.h"
+#include "tink/key.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -244,6 +246,21 @@ TEST(LegacyKmsAeadKeyTest, MoveAssignment) {
 
   EXPECT_THAT(move->GetParameters(), Eq(*tink_parameters));
   EXPECT_THAT(move->GetIdRequirement(), Eq(0x123));
+}
+
+TEST(LegacyKmsAeadKeyTest, Clone) {
+  util::StatusOr<LegacyKmsAeadParameters> parameters =
+      LegacyKmsAeadParameters::Create(kKeyUri,
+                                      LegacyKmsAeadParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<LegacyKmsAeadKey> key =
+      LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/0x123);
+  ASSERT_THAT(key, IsOk());
+
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

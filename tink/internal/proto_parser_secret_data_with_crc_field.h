@@ -99,7 +99,7 @@ class SecretDataWithCrcField : public Field<Struct> {
           "Can only serialize parse as SecretDataWithCrcField when CRC is "
           "maintained");
     }
-    absl::string_view data_view = (values.*data_).UncheckedData();
+    absl::string_view data_view = (values.*data_).AsStringView();
     absl::Status s = SerializeVarint(data_view.size(), serialization_state);
     if (!s.ok()) {
       return s;
@@ -117,7 +117,7 @@ class SecretDataWithCrcField : public Field<Struct> {
   }
 
   size_t GetSerializedSize(const Struct& values) const override {
-    size_t size = (values.*data_).UncheckedData().size();
+    size_t size = (values.*data_).AsStringView().size();
     return VarintLength(size) + size;
   }
 

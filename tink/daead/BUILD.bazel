@@ -384,6 +384,7 @@ cc_test(
     deps = [
         ":aes_siv_key",
         ":aes_siv_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",

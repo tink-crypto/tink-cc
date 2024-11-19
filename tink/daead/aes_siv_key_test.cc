@@ -16,6 +16,7 @@
 
 #include "tink/daead/aes_siv_key.h"
 
+#include <memory>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -25,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
@@ -324,6 +326,24 @@ TEST(AesSivKeyTest, MoveAssignment) {
   EXPECT_THAT(move->GetParameters(), Eq(*parameters));
   EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
   EXPECT_THAT(move->GetIdRequirement(), Eq(123));
+}
+
+TEST(AesSivKeyTest, Clone) {
+  const int key_size = 64;
+  util::StatusOr<AesSivParameters> parameters =
+      AesSivParameters::Create(key_size, AesSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/key_size);
+
+  util::StatusOr<AesSivKey> key = AesSivKey::Create(
+      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

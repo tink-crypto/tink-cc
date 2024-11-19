@@ -18,6 +18,7 @@
 #define TINK_DAEAD_AES_SIV_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -63,6 +64,10 @@ class AesSivKey : public DeterministicAeadKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<AesSivKey>(*this);
+  }
 
  private:
   AesSivKey(const AesSivParameters& parameters, const RestrictedData& key_bytes,

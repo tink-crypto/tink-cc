@@ -66,6 +66,7 @@ tink_cc_library(
     tink::aead::chacha20_poly1305_proto_serialization
     tink::aead::kms_aead_key_manager
     tink::aead::kms_envelope_aead_key_manager
+    tink::aead::legacy_kms_aead_proto_serialization
     tink::aead::x_aes_gcm_key_manager
     tink::aead::x_aes_gcm_proto_serialization
     tink::aead::xchacha20_poly1305_key_manager
@@ -857,11 +858,15 @@ tink_cc_test(
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters
     tink::aead::key_gen_config_v0
+    tink::aead::kms_aead_key_manager
+    tink::aead::legacy_kms_aead_key
+    tink::aead::legacy_kms_aead_parameters
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
     gmock
+    absl::memory
     absl::status
     tink::core::aead
     tink::core::insecure_secret_key_access
@@ -871,12 +876,14 @@ tink_cc_test(
     tink::core::keyset_handle_builder
     tink::core::parameters
     tink::core::partial_key_access
+    tink::core::proto_parameters_format
     tink::core::registry
     tink::core::restricted_data
     tink::config::global_registry
     tink::config::tink_fips
     tink::internal::fips_utils
     tink::internal::legacy_proto_key
+    tink::internal::legacy_proto_parameters
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
@@ -888,6 +895,7 @@ tink_cc_test(
     tink::proto::aes_gcm_cc_proto
     tink::proto::aes_gcm_siv_cc_proto
     tink::proto::chacha20_poly1305_cc_proto
+    tink::proto::kms_aead_cc_proto
     tink::proto::tink_cc_proto
     tink::proto::x_aes_gcm_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto

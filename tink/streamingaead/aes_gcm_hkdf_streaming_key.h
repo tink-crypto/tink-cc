@@ -17,6 +17,8 @@
 #ifndef TINK_STREAMINGAEAD_AES_GCM_HKDF_STREAMING_KEY_H_
 #define TINK_STREAMINGAEAD_AES_GCM_HKDF_STREAMING_KEY_H_
 
+#include <memory>
+
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
@@ -52,6 +54,10 @@ class AesGcmHkdfStreamingKey : public StreamingAeadKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<AesGcmHkdfStreamingKey>(*this);
+  }
 
  private:
   AesGcmHkdfStreamingKey(const AesGcmHkdfStreamingParameters& parameters,

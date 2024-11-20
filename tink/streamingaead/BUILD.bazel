@@ -700,6 +700,7 @@ cc_test(
     deps = [
         ":aes_ctr_hmac_streaming_key",
         ":aes_ctr_hmac_streaming_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -758,6 +759,7 @@ cc_test(
     deps = [
         ":aes_gcm_hkdf_streaming_key",
         ":aes_gcm_hkdf_streaming_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",

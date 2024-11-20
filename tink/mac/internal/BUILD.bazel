@@ -137,6 +137,36 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "aes_cmac_proto_serialization_impl",
+    srcs = ["aes_cmac_proto_serialization_impl.cc"],
+    hdrs = ["aes_cmac_proto_serialization_impl.h"],
+    include_prefix = "tink/mac/internal",
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink:secret_key_access_token",
+        "//tink/internal:key_parser",
+        "//tink/internal:key_serializer",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:parameters_parser",
+        "//tink/internal:parameters_serializer",
+        "//tink/internal:proto_key_serialization",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:proto_parser",
+        "//tink/internal:serialization_registry",
+        "//tink/mac:aes_cmac_key",
+        "//tink/mac:aes_cmac_parameters",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -273,5 +303,38 @@ cc_test(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_googletest//:gtest_main",
         "@rapidjson",
+    ],
+)
+
+cc_test(
+    name = "aes_cmac_proto_serialization_impl_test",
+    srcs = ["aes_cmac_proto_serialization_impl_test.cc"],
+    deps = [
+        ":aes_cmac_proto_serialization_impl",
+        "//proto:aes_cmac_cc_proto",
+        "//proto:tink_cc_proto",
+        "//tink:insecure_secret_key_access_testonly",
+        "//tink:key",
+        "//tink:parameters",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_key_serialization",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//tink/internal:serialization_registry",
+        "//tink/internal/testing:equals_proto_key_serialization",
+        "//tink/internal/testing:field_with_number",
+        "//tink/mac:aes_cmac_key",
+        "//tink/mac:aes_cmac_parameters",
+        "//tink/subtle:random",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
     ],
 )

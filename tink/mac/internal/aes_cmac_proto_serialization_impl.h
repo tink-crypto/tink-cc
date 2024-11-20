@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2024 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,29 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_MAC_AES_CMAC_PROTO_SERIALIZATION_H_
-#define TINK_MAC_AES_CMAC_PROTO_SERIALIZATION_H_
+#ifndef TINK_MAC_INTERNAL_AES_CMAC_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_MAC_INTERNAL_AES_CMAC_PROTO_SERIALIZATION_IMPL_H_
 
 #include "tink/internal/mutable_serialization_registry.h"
-#include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for AES-CMAC parameters and
-// keys into global serialization registry.
-inline crypto::tink::util::Status RegisterAesCmacProtoSerialization() {
-  return internal::RegisterAesCmacProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// keys into specified mutable serialization `registry`.
+crypto::tink::util::Status RegisterAesCmacProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for AES-CMAC parameters and
+// keys into specified immutable serialization registry `builder`.
+crypto::tink::util::Status RegisterAesCmacProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_MAC_AES_CMAC_PROTO_SERIALIZATION_H_
+#endif  // TINK_MAC_INTERNAL_AES_CMAC_PROTO_SERIALIZATION_IMPL_H_

@@ -218,30 +218,12 @@ cc_library(
 
 cc_library(
     name = "aes_cmac_proto_serialization",
-    srcs = ["aes_cmac_proto_serialization.cc"],
     hdrs = ["aes_cmac_proto_serialization.h"],
     include_prefix = "tink/mac",
     deps = [
-        ":aes_cmac_key",
-        ":aes_cmac_parameters",
-        "//proto:tink_cc_proto",
-        "//tink:partial_key_access",
-        "//tink:restricted_data",
-        "//tink:secret_key_access_token",
-        "//tink/internal:key_parser",
-        "//tink/internal:key_serializer",
         "//tink/internal:mutable_serialization_registry",
-        "//tink/internal:parameters_parser",
-        "//tink/internal:parameters_serializer",
-        "//tink/internal:proto_key_serialization",
-        "//tink/internal:proto_parameters_serialization",
-        "//tink/internal:proto_parser",
-        "//tink/util:secret_data",
+        "//tink/mac/internal:aes_cmac_proto_serialization_impl",
         "//tink/util:status",
-        "//tink/util:statusor",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
     ],
 )
 

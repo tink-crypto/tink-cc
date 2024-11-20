@@ -207,29 +207,11 @@ tink_cc_library(
 tink_cc_library(
   NAME aes_cmac_proto_serialization
   SRCS
-    aes_cmac_proto_serialization.cc
     aes_cmac_proto_serialization.h
   DEPS
-    tink::mac::aes_cmac_key
-    tink::mac::aes_cmac_parameters
-    absl::status
-    absl::string_view
-    absl::optional
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_key_access_token
-    tink::internal::key_parser
-    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
-    tink::internal::parameters_parser
-    tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
-    tink::util::secret_data
+    tink::mac::internal::aes_cmac_proto_serialization_impl
     tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

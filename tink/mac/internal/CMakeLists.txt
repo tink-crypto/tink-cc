@@ -128,6 +128,35 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME aes_cmac_proto_serialization_impl
+  SRCS
+    aes_cmac_proto_serialization_impl.cc
+    aes_cmac_proto_serialization_impl.h
+  DEPS
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
+    tink::internal::serialization_registry
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
+    tink::util::secret_data
+    tink::util::status
+    tink::util::statusor
+    tink::proto::tink_cc_proto
+)
+
 # tests
 
 tink_cc_test(
@@ -264,4 +293,37 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
+)
+
+tink_cc_test(
+  NAME aes_cmac_proto_serialization_impl_test
+  SRCS
+    aes_cmac_proto_serialization_impl_test.cc
+  DEPS
+    tink::mac::internal::aes_cmac_proto_serialization_impl
+    gmock
+    absl::check
+    absl::memory
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::internal::testing::equals_proto_key_serialization
+    tink::internal::testing::field_with_number
+    tink::mac::aes_cmac_key
+    tink::mac::aes_cmac_parameters
+    tink::subtle::random
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::aes_cmac_cc_proto
+    tink::proto::tink_cc_proto
 )

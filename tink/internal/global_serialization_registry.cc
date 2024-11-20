@@ -28,6 +28,7 @@
 #include "tink/aead/internal/x_aes_gcm_proto_serialization_impl.h"
 #include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
 #include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
 #include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
 #include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
@@ -63,6 +64,7 @@ const SerializationRegistry& GlobalSerializationRegistry() {
     // Key derivation
 
     // MAC
+    CHECK_OK(RegisterAesCmacProtoSerializationWithRegistryBuilder(builder));
 
     // PRF
     CHECK_OK(RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(builder));

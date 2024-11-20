@@ -14,10 +14,9 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/mac/aes_cmac_proto_serialization.h"
+#include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
 
 #include <cstdint>
-#include <new>
 #include <string>
 #include <utility>
 
@@ -32,6 +31,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/partial_key_access.h"
@@ -44,10 +44,9 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
@@ -102,15 +101,13 @@ const ProtoParser<AesCmacKeyFormatStruct>& GetFormatParser() {
 }
 
 using AesCmacProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   AesCmacParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, AesCmacParameters>;
 using AesCmacProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<AesCmacParameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<AesCmacParameters, ProtoParametersSerialization>;
 using AesCmacProtoKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, AesCmacKey>;
+    KeyParserImpl<ProtoKeySerialization, AesCmacKey>;
 using AesCmacProtoKeySerializerImpl =
-    internal::KeySerializerImpl<AesCmacKey, internal::ProtoKeySerialization>;
+    KeySerializerImpl<AesCmacKey, ProtoKeySerialization>;
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCmacKey";
@@ -150,7 +147,7 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
 }
 
 util::StatusOr<AesCmacParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
+    const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesCmacParameters.");
@@ -170,7 +167,7 @@ util::StatusOr<AesCmacParameters> ParseParameters(
                                    proto_key_format->params.tag_size, *variant);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesCmacParameters& parameters) {
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
@@ -185,12 +182,12 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   if (!serialized.ok()) {
     return serialized.status();
   }
-  return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, *serialized);
+  return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
+                                              *serialized);
 }
 
 util::StatusOr<AesCmacKey> ParseKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -227,7 +224,7 @@ util::StatusOr<AesCmacKey> ParseKey(
   return *key;
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+util::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesCmacKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
@@ -254,7 +251,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   }
   RestrictedData restricted_output =
       RestrictedData(*std::move(serialized_key), *token);
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
       *output_prefix_type, key.GetIdRequirement());
 }
@@ -283,24 +280,50 @@ AesCmacProtoKeySerializerImpl* AesCmacProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesCmacProtoSerialization() {
+util::Status RegisterAesCmacProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(AesCmacProtoParametersParser());
-  if (!status.ok()) return status;
+      registry.RegisterParametersParser(AesCmacProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
 
   status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersSerializer(AesCmacProtoParametersSerializer());
-  if (!status.ok()) return status;
+      registry.RegisterParametersSerializer(AesCmacProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(AesCmacProtoKeyParser());
-  if (!status.ok()) return status;
+  status = registry.RegisterKeyParser(AesCmacProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(AesCmacProtoKeySerializer());
+  return registry.RegisterKeySerializer(AesCmacProtoKeySerializer());
 }
 
+util::Status RegisterAesCmacProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(AesCmacProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status =
+      builder.RegisterParametersSerializer(AesCmacProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(AesCmacProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(AesCmacProtoKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

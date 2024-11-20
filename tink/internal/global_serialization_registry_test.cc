@@ -43,6 +43,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/key.h"
+#include "tink/mac/aes_cmac_key.h"
+#include "tink/mac/aes_cmac_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/hkdf_prf_key.h"
@@ -65,6 +67,20 @@ using ::testing::Values;
 struct KeyTestVector {
   std::shared_ptr<const Key> key;
 };
+
+std::unique_ptr<const AesCmacKey> CreateAesCmacKey() {
+  util::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      AesCmacParameters::Variant::kTink);
+  CHECK_OK(parameters);
+
+  util::StatusOr<AesCmacKey> key =
+      AesCmacKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
+                         /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  return absl::make_unique<const AesCmacKey>(*key);
+}
 
 std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
   util::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
@@ -221,19 +237,18 @@ std::unique_ptr<const XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key() {
 
 using GlobalSerializationRegistryTest = TestWithParam<KeyTestVector>;
 
-INSTANTIATE_TEST_SUITE_P(GlobalSerializationRegistryTests,
-                         GlobalSerializationRegistryTest,
-                         Values(KeyTestVector{CreateAesCmacPrfKey()},
-                                KeyTestVector{CreateAesCtrHmacAeadKey()},
-                                KeyTestVector{CreateAesEaxKey()},
-                                KeyTestVector{CreateAesGcmKey()},
-                                KeyTestVector{CreateAesGcmSivKey()},
-                                KeyTestVector{CreateChaCha20Poly1305Key()},
-                                KeyTestVector{CreateHkdfPrfKey()},
-                                KeyTestVector{CreateHmacPrfKey()},
-                                KeyTestVector{CreateLegacyKmsAeadKey()},
-                                KeyTestVector{CreateXAesGcmKey()},
-                                KeyTestVector{CreateXChaCha20Poly1305Key()}));
+INSTANTIATE_TEST_SUITE_P(
+    GlobalSerializationRegistryTests, GlobalSerializationRegistryTest,
+    Values(KeyTestVector{CreateAesCmacKey()},
+           KeyTestVector{CreateAesCmacPrfKey()},
+           KeyTestVector{CreateAesCtrHmacAeadKey()},
+           KeyTestVector{CreateAesEaxKey()}, KeyTestVector{CreateAesGcmKey()},
+           KeyTestVector{CreateAesGcmSivKey()},
+           KeyTestVector{CreateChaCha20Poly1305Key()},
+           KeyTestVector{CreateHkdfPrfKey()}, KeyTestVector{CreateHmacPrfKey()},
+           KeyTestVector{CreateLegacyKmsAeadKey()},
+           KeyTestVector{CreateXAesGcmKey()},
+           KeyTestVector{CreateXChaCha20Poly1305Key()}));
 
 TEST_P(GlobalSerializationRegistryTest, SerializeAndParse) {
   const KeyTestVector& test_case = GetParam();

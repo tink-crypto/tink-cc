@@ -19,6 +19,7 @@
 #include <utility>
 
 #include "absl/log/check.h"
+#include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
 #include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 #include "tink/aead/internal/aes_gcm_siv_proto_serialization_impl.h"
 #include "tink/aead/internal/chacha20_poly1305_proto_serialization_impl.h"
@@ -39,6 +40,8 @@ const SerializationRegistry& GlobalSerializationRegistry() {
     SerializationRegistry::Builder builder;
 
     // AEAD
+    CHECK_OK(
+        RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder));
     CHECK_OK(RegisterAesGcmProtoSerializationWithRegistryBuilder(builder));
     CHECK_OK(RegisterAesGcmSivProtoSerializationWithRegistryBuilder(builder));
     CHECK_OK(

@@ -23,6 +23,8 @@
 #include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
+#include "tink/aead/aes_ctr_hmac_aead_key.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_siv_key.h"
@@ -68,6 +70,29 @@ std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
   CHECK_OK(key);
 
   return absl::make_unique<const AesCmacPrfKey>(*key);
+}
+
+std::unique_ptr<const AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey() {
+  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(32)
+          .SetHmacKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(32)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters);
+
+  util::StatusOr<AesCtrHmacAeadKey> key =
+      AesCtrHmacAeadKey::Builder()
+          .SetParameters(*parameters)
+          .SetAesKeyBytes(RestrictedData(/*num_random_bytes=*/32))
+          .SetHmacKeyBytes(RestrictedData(/*num_random_bytes=*/32))
+          .SetIdRequirement(123)
+          .Build(GetPartialKeyAccess());
+
+  return absl::make_unique<const AesCtrHmacAeadKey>(*key);
 }
 
 std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
@@ -179,6 +204,7 @@ using GlobalSerializationRegistryTest = TestWithParam<KeyTestVector>;
 INSTANTIATE_TEST_SUITE_P(GlobalSerializationRegistryTests,
                          GlobalSerializationRegistryTest,
                          Values(KeyTestVector{CreateAesCmacPrfKey()},
+                                KeyTestVector{CreateAesCtrHmacAeadKey()},
                                 KeyTestVector{CreateAesGcmKey()},
                                 KeyTestVector{CreateAesGcmSivKey()},
                                 KeyTestVector{CreateChaCha20Poly1305Key()},

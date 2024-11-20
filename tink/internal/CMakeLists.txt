@@ -1688,6 +1688,7 @@ tink_cc_library(
   SRCS
     proto_parser_secret_data_with_crc_field.h
   DEPS
+    tink::internal::call_with_core_dump_protection
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers

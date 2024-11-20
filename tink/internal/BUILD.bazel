@@ -1755,6 +1755,7 @@ cc_library(
     hdrs = ["proto_parser_secret_data_with_crc_field.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":call_with_core_dump_protection",
         ":proto_parser_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",

@@ -141,23 +141,23 @@ class SerializationState final {
       output_buffer_.remove_prefix(length);
       return;
     }
-    util::SecretValue<absl::crc32c_t> crc;
     CallWithCoreDumpProtection([&]() {
-      crc.value() = absl::ComputeCrc32c(
-          absl::string_view(output_buffer_.data(), length));
+      absl::crc32c_t crc =
+          absl::ComputeCrc32c(absl::string_view(output_buffer_.data(), length));
+      AdvanceWithCrc(length, crc);
     });
-    AdvanceWithCrc(length, crc.value());
   }
 
   // Removes the next `length` bytes from the data to be parsed and updates the
   // internal CRC, if any, with `crc`.
   //
   // NOTE:
-  //  *  This method takes `crc` by reference to allow it being in core dump
-  //     protected memory.
   //  *  This method does not compute the actual CRC of the removed data, only
   //     uses `crc`.
-  void AdvanceWithCrc(size_t length, const absl::crc32c_t& crc);
+  //  *  This passes the CRC in a register or on the stack, and hence should
+  //     only be called in CallWithCoreDumpProtection in case the CRC is
+  //     sensitive.
+  void AdvanceWithCrc(size_t length, absl::crc32c_t crc);
 
  private:
   absl::Span<char> output_buffer_;

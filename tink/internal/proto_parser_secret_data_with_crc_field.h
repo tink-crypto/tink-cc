@@ -25,6 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
@@ -111,8 +112,11 @@ class SecretDataWithCrcField : public Field<Struct> {
     }
     SafeMemCopy(serialization_state.GetBuffer().data(), data_view.data(),
                 data_view.size());
-    serialization_state.AdvanceWithCrc(data_view.size(),
-                                       (values.*data_).SecretCrc().value());
+    // Note: we checked serialization_state.HasCrc() above.
+    CallWithCoreDumpProtection([&]() {
+      serialization_state.AdvanceWithCrc(data_view.size(),
+                                         (values.*data_).GetCrc32c());
+    });
     return absl::OkStatus();
   }
 

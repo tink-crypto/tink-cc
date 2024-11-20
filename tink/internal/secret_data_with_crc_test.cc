@@ -115,31 +115,6 @@ TEST(SecretDataWitCrcTest, CreateWithCrc) {
   EXPECT_THAT(data_3, SizeIs(data.size()));
 }
 
-TEST(SecretDataWitCrcTest, CreateWithoutCrc) {
-  std::string data = Random::GetRandomBytes(256);
-  absl::crc32c_t crc = absl::ComputeCrc32c(data);
-
-  SecretDataWithCrc data_1(data);
-  EXPECT_THAT(data_1.data(), IsOkAndHolds(data));
-  EXPECT_EQ(data_1.SecretCrc().value(), crc);
-  EXPECT_EQ(data_1.GetCrc32c(), crc);
-  EXPECT_THAT(data_1, SizeIs(data.size()));
-
-  SecretData secret_data_2 = SecretDataFromStringView(data);
-  SecretDataWithCrc data_2(secret_data_2);
-  EXPECT_THAT(data_2.data(), IsOkAndHolds(data));
-  EXPECT_EQ(data_2.SecretCrc().value(), crc);
-  EXPECT_EQ(data_2.GetCrc32c(), crc);
-  EXPECT_THAT(data_2, SizeIs(data.size()));
-
-  SecretData secret_data_3 = SecretDataFromStringView(data);
-  SecretDataWithCrc data_3(std::move(secret_data_3));
-  EXPECT_THAT(data_3.data(), IsOkAndHolds(data));
-  EXPECT_EQ(data_3.SecretCrc().value(), crc);
-  EXPECT_EQ(data_3.GetCrc32c(), crc);
-  EXPECT_THAT(data_3, SizeIs(data.size()));
-}
-
 TEST(SecretDataWitCrcTest, DataWithInvalidCrcFails) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc =

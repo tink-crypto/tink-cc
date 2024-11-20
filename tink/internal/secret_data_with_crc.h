@@ -58,16 +58,14 @@ class SecretDataWithCrc final {
   // call will fail). The caller needs to ensure that this is not the case.
   explicit SecretDataWithCrc(
       absl::string_view data,
-      absl::optional<crypto::tink::util::SecretValue<absl::crc32c_t>> crc =
-          absl::nullopt);
+      crypto::tink::util::SecretValue<absl::crc32c_t> crc);
   // Creates a new SecretDataWithCrc.
   // If an adversary can control the provided crc, they might be able to obtain
   // information about the secret (since they can provide a wrong CRC and some
   // call will fail). The caller needs to ensure that this is not the case.
   explicit SecretDataWithCrc(
       crypto::tink::util::SecretData data,
-      absl::optional<crypto::tink::util::SecretValue<absl::crc32c_t>> crc =
-          absl::nullopt);
+      crypto::tink::util::SecretValue<absl::crc32c_t> crc);
 
   // Verifies the CRC32C of the data before returning it.
   absl::StatusOr<absl::string_view> data() const;

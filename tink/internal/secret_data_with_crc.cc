@@ -69,15 +69,12 @@ SecretDataWithCrc SecretDataWithCrc::WithComputedCrc(SecretData data) {
   return SecretDataWithCrc(std::move(data), std::move(crc));
 }
 
-SecretDataWithCrc::SecretDataWithCrc(
-    SecretData data, absl::optional<SecretValue<absl::crc32c_t>> crc)
-    : data_(std::move(data)),
-      crc_(crc.has_value()
-               ? crc.value()
-               : ComputeSecretCrc32c(SecretDataAsStringView(data_))) {}
+SecretDataWithCrc::SecretDataWithCrc(SecretData data,
+                                     SecretValue<absl::crc32c_t> crc)
+    : data_(std::move(data)), crc_(crc) {}
 
-SecretDataWithCrc::SecretDataWithCrc(
-    absl::string_view data, absl::optional<SecretValue<absl::crc32c_t>> crc)
+SecretDataWithCrc::SecretDataWithCrc(absl::string_view data,
+                                     SecretValue<absl::crc32c_t> crc)
     : SecretDataWithCrc(SecretDataFromStringView(data), std::move(crc)) {}
 
 absl::string_view SecretDataWithCrc::AsStringView() const {

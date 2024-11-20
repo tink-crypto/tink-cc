@@ -17,25 +17,27 @@
 #include "tink/hybrid/ecies_public_key.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#include "tink/big_integer.h"
-#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
+#include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/internal/ec_util.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -494,6 +496,30 @@ TEST(EciesPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(EciesPublicKeyTest, Clone) {
+  util::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes256SivRaw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  util::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
+                                           /*id_requirement=*/absl::nullopt,
+                                           GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
 }
 
 }  // namespace

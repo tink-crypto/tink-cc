@@ -17,6 +17,8 @@
 #ifndef TINK_HYBRID_HPKE_PRIVATE_KEY_H_
 #define TINK_HYBRID_HPKE_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_public_key.h"
 #include "tink/hybrid/hybrid_private_key.h"
@@ -56,6 +58,10 @@ class HpkePrivateKey : public HybridPrivateKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<HpkePrivateKey>(*this);
+  }
 
  private:
   explicit HpkePrivateKey(const HpkePublicKey& public_key,

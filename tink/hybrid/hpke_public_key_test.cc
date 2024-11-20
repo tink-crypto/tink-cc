@@ -24,18 +24,19 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
-#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -409,6 +410,29 @@ TEST(HpkePublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(HpkePublicKeyTest, Clone) {
+  util::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
 }
 
 }  // namespace

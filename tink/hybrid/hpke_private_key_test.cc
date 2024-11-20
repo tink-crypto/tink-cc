@@ -25,7 +25,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -35,6 +34,7 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
@@ -42,6 +42,7 @@
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -465,6 +466,43 @@ TEST(HpkePrivateKeyTest, DifferentKeyTypesNotEqual) {
   EXPECT_TRUE(*public_key != *private_key);
   EXPECT_FALSE(*private_key == *public_key);
   EXPECT_FALSE(*public_key == *private_key);
+}
+
+TEST(HpkePrivateKeyTest, Clone) {
+  util::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  util::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+      internal::NewX25519Key();
+  ASSERT_THAT(x25519_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
+                  internal::X25519KeyPubKeySize());
+  RestrictedData private_key_bytes = RestrictedData(
+      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
+                  internal::X25519KeyPrivKeySize()),
+      InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = private_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
 }  // namespace

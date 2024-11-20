@@ -16,6 +16,8 @@
 #ifndef TINK_PRF_HKDF_PRF_KEY_H_
 #define TINK_PRF_HKDF_PRF_KEY_H_
 
+#include <memory>
+
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/hkdf_prf_parameters.h"
@@ -49,6 +51,10 @@ class HkdfPrfKey : public PrfKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<HkdfPrfKey>(*this);
+  }
 
  private:
   HkdfPrfKey(const HkdfPrfParameters& parameters,

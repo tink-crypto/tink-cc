@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
+#include "tink/key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -348,6 +349,24 @@ TEST(HmacKeyTest, MoveAssignment) {
   EXPECT_THAT(move->GetParameters(), Eq(*parameters));
   EXPECT_THAT(move->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
   EXPECT_THAT(move->GetIdRequirement(), Eq(123));
+}
+
+TEST(HmacKeyTest, Clone) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<HmacKey> key = HmacKey::Create(
+      *parameters, secret, /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

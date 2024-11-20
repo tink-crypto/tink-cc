@@ -573,6 +573,7 @@ cc_test(
     deps = [
         ":aes_cmac_prf_key",
         ":aes_cmac_prf_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -629,6 +630,7 @@ cc_test(
     deps = [
         ":hmac_prf_key",
         ":hmac_prf_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -689,6 +691,7 @@ cc_test(
     deps = [
         ":hkdf_prf_key",
         ":hkdf_prf_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",

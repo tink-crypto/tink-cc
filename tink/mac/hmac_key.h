@@ -18,6 +18,7 @@
 #define TINK_MAC_HMAC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -62,6 +63,10 @@ class HmacKey : public MacKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<HmacKey>(*this);
+  }
 
  private:
   HmacKey(const HmacParameters& parameters, const RestrictedData& key_bytes,

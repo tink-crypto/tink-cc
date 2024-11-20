@@ -18,6 +18,7 @@
 #define TINK_MAC_AES_CMAC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -65,9 +66,12 @@ class AesCmacKey : public MacKey {
 
   bool operator==(const Key& other) const override;
 
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<AesCmacKey>(*this);
+  }
+
  private:
-  AesCmacKey(const AesCmacParameters& parameters,
-             RestrictedData key_bytes,
+  AesCmacKey(const AesCmacParameters& parameters, RestrictedData key_bytes,
              absl::optional<int> id_requirement, std::string output_prefix)
       : parameters_(parameters),
         key_bytes_(std::move(key_bytes)),

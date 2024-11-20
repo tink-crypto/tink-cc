@@ -16,10 +16,13 @@
 
 #include "tink/prf/hmac_prf_key.h"
 
+#include <memory>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/restricted_data.h"
@@ -149,6 +152,23 @@ TEST(HmacPrfKeyTest, DifferentParametersNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(HmacPrfKeyTest, Clone) {
+  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<HmacPrfKey> key =
+      HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

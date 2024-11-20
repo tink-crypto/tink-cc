@@ -534,6 +534,7 @@ cc_test(
     deps = [
         ":aes_cmac_key",
         ":aes_cmac_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",
@@ -596,6 +597,7 @@ cc_test(
     deps = [
         ":hmac_key",
         ":hmac_parameters",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:statusor",

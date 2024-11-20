@@ -17,6 +17,7 @@
 #ifndef TINK_PRF_AES_CMAC_PRF_KEY_H_
 #define TINK_PRF_AES_CMAC_PRF_KEY_H_
 
+#include <memory>
 #include <utility>
 
 #include "tink/key.h"
@@ -51,6 +52,10 @@ class AesCmacPrfKey : public PrfKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<AesCmacPrfKey>(*this);
+  }
 
  private:
   AesCmacPrfKey(const AesCmacPrfParameters& parameters,

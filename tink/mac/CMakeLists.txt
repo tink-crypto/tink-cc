@@ -509,6 +509,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::optional
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::util::statusor
@@ -569,6 +570,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::optional
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::util::statusor

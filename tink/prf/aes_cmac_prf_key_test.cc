@@ -16,10 +16,13 @@
 
 #include "tink/prf/aes_cmac_prf_key.h"
 
+#include <memory>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/restricted_data.h"
@@ -103,6 +106,19 @@ TEST(AesCmacPrfKeyTest, DifferentSecretDataNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesCmacPrfKeyTest, Clone) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
+
+  util::StatusOr<AesCmacPrfKey> key =
+      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

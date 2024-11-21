@@ -1733,6 +1733,7 @@ tink_cc_library(
     absl::string_view
     absl::optional
     tink::util::secret_data
+    tink::util::status
 )
 
 tink_cc_test(

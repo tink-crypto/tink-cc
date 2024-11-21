@@ -34,6 +34,7 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::subtle::Random;
+using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
@@ -147,6 +148,42 @@ TEST(SecretDataWitCrcTest, UncheckedDataWithInvalidCrcSucceeds) {
   SecretDataWithCrc data_3(std::move(secret_data),
                            SecretValue<absl::crc32c_t>(crc));
   EXPECT_EQ(data_3.UncheckedData(), data);
+}
+
+TEST(SecretDataWitCrcTest, ValidateCrcSucceeds) {
+  std::string data = Random::GetRandomBytes(256);
+  absl::crc32c_t crc = absl::ComputeCrc32c(data);
+
+  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  EXPECT_THAT(data_1.AsStringView(), Eq(data));
+  EXPECT_THAT(data_1.ValidateCrc(), IsOk());
+
+  SecretData secret_data = SecretDataFromStringView(data);
+  SecretDataWithCrc data_2(secret_data, SecretValue<absl::crc32c_t>(crc));
+  EXPECT_THAT(data_2.AsStringView(), Eq(data));
+  EXPECT_THAT(data_2.ValidateCrc(), IsOk());
+
+  SecretDataWithCrc data_3(std::move(secret_data),
+                           SecretValue<absl::crc32c_t>(crc));
+  EXPECT_THAT(data_3.AsStringView(), Eq(data));
+  EXPECT_THAT(data_3.ValidateCrc(), IsOk());
+}
+
+TEST(SecretDataWitCrcTest, ValidateCrcFailsIfWrong) {
+  std::string data = Random::GetRandomBytes(256);
+  absl::crc32c_t crc =
+      absl::crc32c_t{static_cast<uint32_t>(absl::ComputeCrc32c(data)) + 1};
+
+  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  EXPECT_THAT(data_1.ValidateCrc(), StatusIs(absl::StatusCode::kDataLoss));
+
+  SecretData secret_data = SecretDataFromStringView(data);
+  SecretDataWithCrc data_2(secret_data, SecretValue<absl::crc32c_t>(crc));
+  EXPECT_THAT(data_2.ValidateCrc(), StatusIs(absl::StatusCode::kDataLoss));
+
+  SecretDataWithCrc data_3(std::move(secret_data),
+                           SecretValue<absl::crc32c_t>(crc));
+  EXPECT_THAT(data_3.ValidateCrc(), StatusIs(absl::StatusCode::kDataLoss));
 }
 
 TEST(SecretDataWitCrcTest, AsStringViewWithInvalidCrcSucceeds) {

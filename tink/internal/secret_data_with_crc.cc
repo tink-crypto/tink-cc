@@ -27,6 +27,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/util/secret_data.h"
+#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
@@ -86,6 +87,13 @@ absl::StatusOr<absl::string_view> SecretDataWithCrc::data() const {
     return absl::DataLossError("data CRC verification failed");
   }
   return SecretDataAsStringView(data_);
+}
+
+crypto::tink::util::Status SecretDataWithCrc::ValidateCrc() const {
+  if (!IsValidSecretcCrc32c(SecretDataAsStringView(data_), crc_)) {
+    return absl::DataLossError("data CRC verification failed");
+  }
+  return absl::OkStatus();
 }
 
 }  // namespace internal

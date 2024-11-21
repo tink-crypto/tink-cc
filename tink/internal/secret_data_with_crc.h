@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/util/secret_data.h"
+#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
@@ -99,6 +100,8 @@ class SecretDataWithCrc final {
   // secret data -- the CRC -- on the stack or in the register).
   // Runtime: O(1)
   absl::crc32c_t GetCrc32c() const { return crc_.value(); }
+
+  crypto::tink::util::Status ValidateCrc() const;
 
   size_t size() const { return data_.size(); }
 

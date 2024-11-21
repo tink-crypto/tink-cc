@@ -1796,6 +1796,7 @@ cc_library(
         ":call_with_core_dump_protection",
         ":dfsan_forwarders",
         "//tink/util:secret_data",
+        "//tink/util:status",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

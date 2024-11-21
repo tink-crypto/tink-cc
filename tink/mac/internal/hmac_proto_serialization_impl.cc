@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/mac/hmac_proto_serialization.h"
+#include "tink/mac/internal/hmac_proto_serialization_impl.h"
 
 #include <string>
 #include <utility>
@@ -31,6 +31,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/partial_key_access.h"
@@ -46,6 +47,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::util::SecretData;
@@ -56,15 +58,12 @@ using ::google::crypto::tink::HmacParams;
 using ::google::crypto::tink::OutputPrefixType;
 
 using HmacProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   HmacParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, HmacParameters>;
 using HmacProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<HmacParameters,
-                                       internal::ProtoParametersSerialization>;
-using HmacProtoKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, HmacKey>;
+    ParametersSerializerImpl<HmacParameters, ProtoParametersSerialization>;
+using HmacProtoKeyParserImpl = KeyParserImpl<ProtoKeySerialization, HmacKey>;
 using HmacProtoKeySerializerImpl =
-    internal::KeySerializerImpl<HmacKey, internal::ProtoKeySerialization>;
+    KeySerializerImpl<HmacKey, ProtoKeySerialization>;
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.HmacKey";
@@ -140,7 +139,7 @@ util::StatusOr<HashType> ToProtoHashType(HmacParameters::HashType hash_type) {
 }
 
 util::StatusOr<HmacParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
+    const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing HmacParameters.");
@@ -171,7 +170,7 @@ util::StatusOr<HmacParameters> ParseParameters(
                                 *hash_type, *variant);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const HmacParameters& parameters) {
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
@@ -188,13 +187,12 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   proto_key_format.set_version(0);
   *proto_key_format.mutable_params() = proto_params;
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
-util::StatusOr<HmacKey> ParseKey(
-    const internal::ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+util::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
+                                 absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing HmacKey.");
@@ -233,7 +231,7 @@ util::StatusOr<HmacKey> ParseKey(
                          serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+util::StatusOr<ProtoKeySerialization> SerializeKey(
     const HmacKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
@@ -252,7 +250,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   SecretProto<google::crypto::tink::HmacKey> proto_key;
   *proto_key->mutable_params() = proto_params;
   proto_key->set_version(0);
-  internal::CallWithCoreDumpProtection(
+  CallWithCoreDumpProtection(
       [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
@@ -265,7 +263,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   }
   RestrictedData restricted_output =
       RestrictedData(*std::move(serialized_key), *token);
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
       *output_prefix_type, key.GetIdRequirement());
 }
@@ -294,23 +292,50 @@ HmacProtoKeySerializerImpl* HmacProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterHmacProtoSerialization() {
+util::Status RegisterHmacProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(HmacProtoParametersParser());
-  if (!status.ok()) return status;
+      registry.RegisterParametersParser(HmacProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterParametersSerializer(HmacProtoParametersSerializer());
-  if (!status.ok()) return status;
+  status =
+      registry.RegisterParametersSerializer(HmacProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(HmacProtoKeyParser());
-  if (!status.ok()) return status;
+  status = registry.RegisterKeyParser(HmacProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(HmacProtoKeySerializer());
+  return registry.RegisterKeySerializer(HmacProtoKeySerializer());
 }
 
+util::Status RegisterHmacProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(HmacProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status =
+      builder.RegisterParametersSerializer(HmacProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(HmacProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(HmacProtoKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

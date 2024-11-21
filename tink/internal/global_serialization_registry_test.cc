@@ -45,6 +45,8 @@
 #include "tink/key.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
+#include "tink/mac/hmac_key.h"
+#include "tink/mac/hmac_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/hkdf_prf_key.h"
@@ -186,6 +188,20 @@ std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
   return absl::make_unique<const HkdfPrfKey>(*key);
 }
 
+std::unique_ptr<const HmacKey> CreateHmacKey() {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
+      HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
+  CHECK_OK(parameters);
+
+  util::StatusOr<HmacKey> key =
+      HmacKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
+                      /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  return absl::make_unique<const HmacKey>(*key);
+}
+
 std::unique_ptr<const HmacPrfKey> CreateHmacPrfKey() {
   util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
@@ -242,10 +258,13 @@ INSTANTIATE_TEST_SUITE_P(
     Values(KeyTestVector{CreateAesCmacKey()},
            KeyTestVector{CreateAesCmacPrfKey()},
            KeyTestVector{CreateAesCtrHmacAeadKey()},
-           KeyTestVector{CreateAesEaxKey()}, KeyTestVector{CreateAesGcmKey()},
+           KeyTestVector{CreateAesEaxKey()},
+           KeyTestVector{CreateAesGcmKey()},
            KeyTestVector{CreateAesGcmSivKey()},
            KeyTestVector{CreateChaCha20Poly1305Key()},
-           KeyTestVector{CreateHkdfPrfKey()}, KeyTestVector{CreateHmacPrfKey()},
+           KeyTestVector{CreateHkdfPrfKey()},
+           KeyTestVector{CreateHmacKey()},
+           KeyTestVector{CreateHmacPrfKey()},
            KeyTestVector{CreateLegacyKmsAeadKey()},
            KeyTestVector{CreateXAesGcmKey()},
            KeyTestVector{CreateXChaCha20Poly1305Key()}));

@@ -1792,6 +1792,7 @@ tink_cc_library(
     tink::aead::internal::x_aes_gcm_proto_serialization_impl
     tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
     tink::mac::internal::aes_cmac_proto_serialization_impl
+    tink::mac::internal::hmac_proto_serialization_impl
     tink::prf::internal::aes_cmac_prf_proto_serialization_impl
     tink::prf::internal::hkdf_prf_proto_serialization_impl
     tink::prf::internal::hmac_prf_proto_serialization_impl
@@ -1831,6 +1832,8 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
+    tink::mac::hmac_key
+    tink::mac::hmac_parameters
     tink::prf::aes_cmac_prf_key
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters

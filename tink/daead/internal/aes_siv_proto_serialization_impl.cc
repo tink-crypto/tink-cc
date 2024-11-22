@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/daead/aes_siv_proto_serialization.h"
+#include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 
 #include <string>
 
@@ -33,6 +33,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -45,6 +46,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::util::SecretProto;
@@ -52,15 +54,13 @@ using ::google::crypto::tink::AesSivKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
 
 using AesSivProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   AesSivParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, AesSivParameters>;
 using AesSivProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<AesSivParameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<AesSivParameters, ProtoParametersSerialization>;
 using AesSivProtoKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, AesSivKey>;
+    KeyParserImpl<ProtoKeySerialization, AesSivKey>;
 using AesSivProtoKeySerializerImpl =
-    internal::KeySerializerImpl<AesSivKey, internal::ProtoKeySerialization>;
+    KeySerializerImpl<AesSivKey, ProtoKeySerialization>;
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesSivKey";
@@ -98,7 +98,7 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
 }
 
 util::StatusOr<AesSivParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
+    const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesSivParameters.");
@@ -122,7 +122,7 @@ util::StatusOr<AesSivParameters> ParseParameters(
   return AesSivParameters::Create(proto_key_format.key_size(), *variant);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesSivParameters& parameters) {
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
@@ -131,13 +131,12 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   AesSivKeyFormat proto_key_format;
   proto_key_format.set_key_size(parameters.KeySizeInBytes());
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
-util::StatusOr<AesSivKey> ParseKey(
-    const internal::ProtoKeySerialization& serialization,
-    absl::optional<SecretKeyAccessToken> token) {
+util::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
+                                   absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesSivKey.");
@@ -171,7 +170,7 @@ util::StatusOr<AesSivKey> ParseKey(
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+util::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesSivKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
@@ -184,7 +183,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   SecretProto<google::crypto::tink::AesSivKey> proto_key;
   proto_key->set_version(0);
 
-  internal::CallWithCoreDumpProtection(
+  CallWithCoreDumpProtection(
       [&] { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -195,7 +194,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
   }
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(*serialized_proto, *token),
       google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
       key.GetIdRequirement());
@@ -225,23 +224,50 @@ AesSivProtoKeySerializerImpl* AesSivProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesSivProtoSerialization() {
+util::Status RegisterAesSivProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(AesSivProtoParametersParser());
-  if (!status.ok()) return status;
+      registry.RegisterParametersParser(AesSivProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterParametersSerializer(AesSivProtoParametersSerializer());
-  if (!status.ok()) return status;
+  status =
+      registry.RegisterParametersSerializer(AesSivProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(AesSivProtoKeyParser());
-  if (!status.ok()) return status;
+  status = registry.RegisterKeyParser(AesSivProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(AesSivProtoKeySerializer());
+  return registry.RegisterKeySerializer(AesSivProtoKeySerializer());
 }
 
+util::Status RegisterAesSivProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(AesSivProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status =
+      builder.RegisterParametersSerializer(AesSivProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(AesSivProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(AesSivProtoKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

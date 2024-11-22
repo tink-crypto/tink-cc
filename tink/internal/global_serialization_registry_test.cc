@@ -39,6 +39,8 @@
 #include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/daead/aes_siv_key.h"
+#include "tink/daead/aes_siv_parameters.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
@@ -167,6 +169,19 @@ std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
   CHECK_OK(key);
 
   return absl::make_unique<const AesGcmSivKey>(*key);
+}
+
+std::unique_ptr<const AesSivKey> CreateAesSivKey() {
+  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+      /*key_size_in_bytes=*/32, AesSivParameters::Variant::kTink);
+  CHECK_OK(parameters);
+
+  util::StatusOr<AesSivKey> key =
+      AesSivKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
+                        /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  return absl::make_unique<const AesSivKey>(*key);
 }
 
 std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
@@ -303,6 +318,7 @@ INSTANTIATE_TEST_SUITE_P(
            KeyTestVector{CreateAesEaxKey()},
            KeyTestVector{CreateAesGcmKey()},
            KeyTestVector{CreateAesGcmSivKey()},
+           KeyTestVector{CreateAesSivKey()},
            KeyTestVector{CreateChaCha20Poly1305Key()},
            KeyTestVector{CreateEd25519PrivateKey()},
            KeyTestVector{CreateEd25519PublicKey()},

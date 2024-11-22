@@ -27,6 +27,7 @@
 #include "tink/aead/internal/legacy_kms_aead_proto_serialization_impl.h"
 #include "tink/aead/internal/x_aes_gcm_proto_serialization_impl.h"
 #include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
+#include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
 #include "tink/mac/internal/hmac_proto_serialization_impl.h"
@@ -58,6 +59,7 @@ const SerializationRegistry& GlobalSerializationRegistry() {
         builder));
 
     // Deterministic AEAD
+    CHECK_OK(RegisterAesSivProtoSerializationWithRegistryBuilder(builder));
 
     // Hybrid
 

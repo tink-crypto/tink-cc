@@ -27,6 +27,41 @@ tink_cc_library(
     tink::util::status
 )
 
+tink_cc_library(
+  NAME aes_siv_proto_serialization_impl
+  SRCS
+    aes_siv_proto_serialization_impl.cc
+    aes_siv_proto_serialization_impl.h
+  DEPS
+    absl::core_headers
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::internal::call_with_core_dump_protection
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization_registry
+    tink::util::secret_data
+    tink::util::secret_proto
+    tink::util::status
+    tink::util::statusor
+    tink::proto::aes_siv_cc_proto
+    tink::proto::tink_cc_proto
+)
+
+# tests
+
 tink_cc_test(
   NAME config_v0_test
   SRCS
@@ -47,5 +82,34 @@ tink_cc_test(
     tink::internal::keyset_wrapper_store
     tink::util::statusor
     tink::util::test_matchers
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME aes_siv_proto_serialization_impl_test
+  SRCS
+    aes_siv_proto_serialization_impl_test.cc
+  DEPS
+    tink::daead::internal::aes_siv_proto_serialization_impl
+    gmock
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::daead::aes_siv_key
+    tink::daead::aes_siv_parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::subtle::random
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::aes_siv_cc_proto
     tink::proto::tink_cc_proto
 )

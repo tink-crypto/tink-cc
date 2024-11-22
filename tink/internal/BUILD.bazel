@@ -1865,6 +1865,7 @@ cc_library(
         "//tink/prf/internal:aes_cmac_prf_proto_serialization_impl",
         "//tink/prf/internal:hkdf_prf_proto_serialization_impl",
         "//tink/prf/internal:hmac_prf_proto_serialization_impl",
+        "//tink/signature/internal:ed25519_proto_serialization_impl",
         "@com_google_absl//absl/log:check",
     ],
 )
@@ -1873,6 +1874,7 @@ cc_test(
     name = "global_serialization_registry_test",
     srcs = ["global_serialization_registry_test.cc"],
     deps = [
+        ":ec_util",
         ":global_serialization_registry",
         ":internal_insecure_secret_key_access",
         ":proto_key_serialization",
@@ -1905,6 +1907,10 @@ cc_test(
         "//tink/prf:hkdf_prf_parameters",
         "//tink/prf:hmac_prf_key",
         "//tink/prf:hmac_prf_parameters",
+        "//tink/signature:ed25519_parameters",
+        "//tink/signature:ed25519_private_key",
+        "//tink/signature:ed25519_public_key",
+        "//tink/subtle:random",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/log:check",

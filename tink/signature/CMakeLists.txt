@@ -513,34 +513,11 @@ tink_cc_library(
 tink_cc_library(
   NAME ed25519_proto_serialization
   SRCS
-    ed25519_proto_serialization.cc
     ed25519_proto_serialization.h
   DEPS
-    tink::signature::ed25519_parameters
-    tink::signature::ed25519_private_key
-    tink::signature::ed25519_public_key
-    absl::status
-    absl::statusor
-    absl::strings
-    absl::optional
-    tink::core::insecure_secret_key_access
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_key_access_token
-    tink::internal::call_with_core_dump_protection
-    tink::internal::key_parser
-    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
-    tink::internal::parameters_parser
-    tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
-    tink::util::secret_data
-    tink::util::secret_proto
+    tink::signature::internal::ed25519_proto_serialization_impl
     tink::util::status
-    tink::util::statusor
-    tink::proto::ed25519_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

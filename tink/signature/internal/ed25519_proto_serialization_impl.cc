@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/ed25519_proto_serialization.h"
+#include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 
 #include <string>
 #include <utility>
@@ -32,6 +32,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -47,6 +48,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::util::SecretProto;
@@ -55,21 +57,17 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 
 using Ed25519ProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   Ed25519Parameters>;
+    ParametersParserImpl<ProtoParametersSerialization, Ed25519Parameters>;
 using Ed25519ProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<Ed25519Parameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<Ed25519Parameters, ProtoParametersSerialization>;
 using Ed25519ProtoPublicKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, Ed25519PublicKey>;
+    KeyParserImpl<ProtoKeySerialization, Ed25519PublicKey>;
 using Ed25519ProtoPublicKeySerializerImpl =
-    internal::KeySerializerImpl<Ed25519PublicKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<Ed25519PublicKey, ProtoKeySerialization>;
 using Ed25519ProtoPrivateKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, Ed25519PrivateKey>;
+    KeyParserImpl<ProtoKeySerialization, Ed25519PrivateKey>;
 using Ed25519ProtoPrivateKeySerializerImpl =
-    internal::KeySerializerImpl<Ed25519PrivateKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<Ed25519PrivateKey, ProtoKeySerialization>;
 
 const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.Ed25519PublicKey";
@@ -111,7 +109,7 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
 }
 
 util::StatusOr<Ed25519Parameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
+    const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing Ed25519Parameters.");
@@ -138,7 +136,7 @@ util::StatusOr<Ed25519Parameters> ParseParameters(
 }
 
 util::StatusOr<Ed25519PublicKey> ParsePublicKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -175,7 +173,7 @@ util::StatusOr<Ed25519PublicKey> ParsePublicKey(
 }
 
 util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -225,7 +223,7 @@ util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
       GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const Ed25519Parameters& parameters) {
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
@@ -236,12 +234,12 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   Ed25519KeyFormat proto_key_format;
   proto_key_format.set_version(0);
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kPrivateTypeUrl, *output_prefix_type,
       proto_key_format.SerializeAsString());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+util::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const Ed25519PublicKey& key, absl::optional<SecretKeyAccessToken> token) {
   google::crypto::tink::Ed25519PublicKey proto_key;
   proto_key.set_version(0);
@@ -255,12 +253,12 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
 
   RestrictedData restricted_output = RestrictedData(
       proto_key.SerializeAsString(), InsecureSecretKeyAccess::Get());
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
       *output_prefix_type, key.GetIdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     const Ed25519PrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::StatusOr<RestrictedData> restricted_input =
       key.GetPrivateKeyBytes(GetPartialKeyAccess());
@@ -280,7 +278,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   SecretProto<google::crypto::tink::Ed25519PrivateKey> proto_private_key;
   proto_private_key->set_version(0);
   *proto_private_key->mutable_public_key() = proto_public_key;
-  internal::CallWithCoreDumpProtection([&] {
+  CallWithCoreDumpProtection([&] {
     proto_private_key->set_key_value(
         util::SecretDataAsStringView(restricted_input->Get(*token)));
   });
@@ -296,7 +294,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   if (!proto_private_key_secret_data.ok()) {
     return proto_private_key_secret_data.status();
   }
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kPrivateTypeUrl,
       RestrictedData(*std::move(proto_private_key_secret_data), *token),
       KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
@@ -340,42 +338,70 @@ Ed25519ProtoPrivateKeySerializerImpl* Ed25519ProtoPrivateKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterEd25519ProtoSerialization() {
+util::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(Ed25519ProtoParametersParser());
+      registry.RegisterParametersParser(Ed25519ProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersSerializer(Ed25519ProtoParametersSerializer());
+      registry.RegisterParametersSerializer(Ed25519ProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(Ed25519ProtoPublicKeyParser());
+  status = registry.RegisterKeyParser(Ed25519ProtoPublicKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeySerializer(Ed25519ProtoPublicKeySerializer());
+  status = registry.RegisterKeySerializer(Ed25519ProtoPublicKeySerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(Ed25519ProtoPrivateKeyParser());
+  status = registry.RegisterKeyParser(Ed25519ProtoPrivateKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(Ed25519ProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(Ed25519ProtoPrivateKeySerializer());
 }
 
+util::Status RegisterEd25519ProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(Ed25519ProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status =
+      builder.RegisterParametersSerializer(Ed25519ProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(Ed25519ProtoPublicKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeySerializer(Ed25519ProtoPublicKeySerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(Ed25519ProtoPrivateKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(Ed25519ProtoPrivateKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

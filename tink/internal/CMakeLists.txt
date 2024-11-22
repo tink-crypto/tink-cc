@@ -1796,6 +1796,7 @@ tink_cc_library(
     tink::prf::internal::aes_cmac_prf_proto_serialization_impl
     tink::prf::internal::hkdf_prf_proto_serialization_impl
     tink::prf::internal::hmac_prf_proto_serialization_impl
+    tink::signature::internal::ed25519_proto_serialization_impl
 )
 
 tink_cc_test(
@@ -1803,6 +1804,7 @@ tink_cc_test(
   SRCS
     global_serialization_registry_test.cc
   DEPS
+    tink::internal::ec_util
     tink::internal::global_serialization_registry
     tink::internal::internal_insecure_secret_key_access
     tink::internal::proto_key_serialization
@@ -1839,6 +1841,10 @@ tink_cc_test(
     tink::prf::hkdf_prf_parameters
     tink::prf::hmac_prf_key
     tink::prf::hmac_prf_parameters
+    tink::signature::ed25519_parameters
+    tink::signature::ed25519_private_key
+    tink::signature::ed25519_public_key
+    tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
 )

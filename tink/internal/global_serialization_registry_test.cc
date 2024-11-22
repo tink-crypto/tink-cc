@@ -39,6 +39,7 @@
 #include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/internal/ec_util.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/serialization.h"
@@ -54,6 +55,10 @@
 #include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ed25519_parameters.h"
+#include "tink/signature/ed25519_private_key.h"
+#include "tink/signature/ed25519_public_key.h"
+#include "tink/subtle/random.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -174,6 +179,43 @@ std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
   return absl::make_unique<const ChaCha20Poly1305Key>(*key);
 }
 
+std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
+  util::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  CHECK_OK(parameters);
+
+  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  CHECK_OK(key_pair);
+
+  util::StatusOr<Ed25519PublicKey> public_key =
+      Ed25519PublicKey::Create(*parameters, (*key_pair)->public_key,
+                               /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(public_key);
+
+  RestrictedData private_key_bytes = RestrictedData(
+      (*key_pair)->private_key, GetInsecureSecretKeyAccessInternal());
+
+  util::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  CHECK_OK(private_key);
+
+  return absl::make_unique<const Ed25519PrivateKey>(*private_key);
+}
+
+std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
+  util::StatusOr<Ed25519Parameters> parameters =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  CHECK_OK(parameters);
+
+  util::StatusOr<Ed25519PublicKey> key =
+      Ed25519PublicKey::Create(*parameters, subtle::Random::GetRandomBytes(32),
+                               /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  return absl::make_unique<const Ed25519PublicKey>(*key);
+}
+
 std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
   util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
@@ -262,6 +304,8 @@ INSTANTIATE_TEST_SUITE_P(
            KeyTestVector{CreateAesGcmKey()},
            KeyTestVector{CreateAesGcmSivKey()},
            KeyTestVector{CreateChaCha20Poly1305Key()},
+           KeyTestVector{CreateEd25519PrivateKey()},
+           KeyTestVector{CreateEd25519PublicKey()},
            KeyTestVector{CreateHkdfPrfKey()},
            KeyTestVector{CreateHmacKey()},
            KeyTestVector{CreateHmacPrfKey()},

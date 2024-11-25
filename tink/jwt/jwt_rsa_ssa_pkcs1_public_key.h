@@ -18,6 +18,7 @@
 #define TINK_JWT_JWT_RSA_SSA_PKCS1_PUBLIC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -86,6 +87,10 @@ class JwtRsaSsaPkcs1PublicKey : public JwtSignaturePublicKey {
   absl::optional<std::string> GetKid() const override { return kid_; }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<JwtRsaSsaPkcs1PublicKey> Clone() const {
+    return std::make_unique<JwtRsaSsaPkcs1PublicKey>(*this);
+  }
 
  private:
   explicit JwtRsaSsaPkcs1PublicKey(const JwtRsaSsaPkcs1Parameters& parameters,

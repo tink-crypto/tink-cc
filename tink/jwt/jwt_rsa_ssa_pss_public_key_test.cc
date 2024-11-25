@@ -16,6 +16,7 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -27,6 +28,7 @@
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -482,6 +484,30 @@ TEST(JwtRsaSsaPssPublicKeyTest, DifferentCustomKidNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(JwtRsaSsaPssPublicKeyTest, Clone) {
+  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+      JwtRsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
+          .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kCustom)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
+  util::StatusOr<JwtRsaSsaPssPublicKey> key = JwtRsaSsaPssPublicKey::Builder()
+                                                  .SetParameters(*parameters)
+                                                  .SetModulus(modulus)
+                                                  .SetCustomKid("custom_kid")
+                                                  .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key,
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

@@ -17,6 +17,8 @@
 #ifndef TINK_JWT_JWT_RSA_SSA_PSS_PRIVATE_KEY_H_
 #define TINK_JWT_JWT_RSA_SSA_PSS_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 #include "tink/jwt/jwt_signature_private_key.h"
@@ -69,8 +71,7 @@ class JwtRsaSsaPssPrivateKey : public JwtSignaturePrivateKey {
   JwtRsaSsaPssPrivateKey& operator=(const JwtRsaSsaPssPrivateKey& other) =
       default;
   JwtRsaSsaPssPrivateKey(JwtRsaSsaPssPrivateKey&& other) = default;
-  JwtRsaSsaPssPrivateKey& operator=(JwtRsaSsaPssPrivateKey&& other) =
-      default;
+  JwtRsaSsaPssPrivateKey& operator=(JwtRsaSsaPssPrivateKey&& other) = default;
 
   const RestrictedBigInteger& GetPrimeP(PartialKeyAccessToken token) const {
     return p_;
@@ -94,14 +95,18 @@ class JwtRsaSsaPssPrivateKey : public JwtSignaturePrivateKey {
 
   bool operator==(const Key& other) const override;
 
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<JwtRsaSsaPssPrivateKey>(*this);
+  }
+
  private:
   explicit JwtRsaSsaPssPrivateKey(const JwtRsaSsaPssPublicKey& public_key,
-                                    const RestrictedBigInteger& p,
-                                    const RestrictedBigInteger& q,
-                                    const RestrictedBigInteger& dp,
-                                    const RestrictedBigInteger& dq,
-                                    const RestrictedBigInteger& d,
-                                    const RestrictedBigInteger& q_inv)
+                                  const RestrictedBigInteger& p,
+                                  const RestrictedBigInteger& q,
+                                  const RestrictedBigInteger& dp,
+                                  const RestrictedBigInteger& dq,
+                                  const RestrictedBigInteger& d,
+                                  const RestrictedBigInteger& q_inv)
       : public_key_(public_key),
         p_(p),
         q_(q),

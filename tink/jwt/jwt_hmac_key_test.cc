@@ -16,6 +16,7 @@
 
 #include "tink/jwt/jwt_hmac_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -23,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
@@ -411,6 +413,27 @@ TEST(JwtHmacKeyTest, DifferentCustomKidNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(JwtHmacKeyTest, Clone) {
+  util::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  util::StatusOr<JwtHmacKey> key = JwtHmacKey::Builder()
+                                       .SetParameters(*params)
+                                       .SetKeyBytes(secret)
+                                       .SetCustomKid("custom_kid")
+                                       .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 }  // namespace

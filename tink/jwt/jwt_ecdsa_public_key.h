@@ -18,6 +18,7 @@
 #define TINK_JWT_JWT_ECDSA_PUBLIC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -86,6 +87,10 @@ class JwtEcdsaPublicKey : public JwtSignaturePublicKey {
   absl::optional<std::string> GetKid() const override { return kid_; }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<JwtEcdsaPublicKey> Clone() const {
+    return std::make_unique<JwtEcdsaPublicKey>(*this);
+  }
 
  private:
   JwtEcdsaPublicKey(const JwtEcdsaParameters& parameters,

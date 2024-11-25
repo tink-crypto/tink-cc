@@ -17,6 +17,8 @@
 #ifndef TINK_JWT_JWT_RSA_SSA_PKCS1_PRIVATE_KEY_H_
 #define TINK_JWT_JWT_RSA_SSA_PKCS1_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
 #include "tink/jwt/jwt_signature_private_key.h"
@@ -93,6 +95,10 @@ class JwtRsaSsaPkcs1PrivateKey : public JwtSignaturePrivateKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<JwtRsaSsaPkcs1PrivateKey>(*this);
+  }
 
  private:
   explicit JwtRsaSsaPkcs1PrivateKey(const JwtRsaSsaPkcs1PublicKey& public_key,

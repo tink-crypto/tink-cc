@@ -16,6 +16,7 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -25,6 +26,7 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/key.h"
 #include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -851,6 +853,33 @@ TEST(JwtRsaSsaPkcs1PrivateKeyTest, DifferentKeyTypesNotEqual) {
   EXPECT_TRUE(public_key != *private_key);
   EXPECT_FALSE(*private_key == public_key);
   EXPECT_FALSE(public_key == *private_key);
+}
+
+TEST(JwtRsaSsaPkcs1PrivateKeyTest, Clone) {
+  JwtRsaSsaPkcs1PublicKey public_key = GetValidPublicKey(
+      JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
+      JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
+      /*id_requirement=*/absl::nullopt, /*custom_kid=*/absl::nullopt);
+
+  PrivateValues private_values = GetValidPrivateValues();
+
+  util::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
+      JwtRsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(public_key)
+          .SetPrimeP(private_values.p)
+          .SetPrimeQ(private_values.q)
+          .SetPrimeExponentP(private_values.dp)
+          .SetPrimeExponentQ(private_values.dq)
+          .SetPrivateExponent(private_values.d)
+          .SetCrtCoefficient(private_values.q_inv)
+          .Build(GetPartialKeyAccess());
+
+  ASSERT_THAT(private_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = private_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
 }  // namespace

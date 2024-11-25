@@ -17,6 +17,8 @@
 #ifndef TINK_JWT_JWT_ECDSA_PRIVATE_KEY_H_
 #define TINK_JWT_JWT_ECDSA_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 #include "tink/jwt/jwt_signature_private_key.h"
 #include "tink/key.h"
@@ -49,6 +51,10 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
   const JwtEcdsaPublicKey& GetPublicKey() const override { return public_key_; }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<JwtEcdsaPrivateKey>(*this);
+  }
 
  private:
   explicit JwtEcdsaPrivateKey(const JwtEcdsaPublicKey& public_key,

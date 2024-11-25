@@ -16,12 +16,14 @@
 
 #include "tink/signature/ed25519_public_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/subtle/random.h"
@@ -211,6 +213,24 @@ TEST(Ed25519PublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(Ed25519PublicKeyTest, Clone) {
+  util::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
 }
 
 }  // namespace

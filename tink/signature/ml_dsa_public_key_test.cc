@@ -17,6 +17,7 @@
 #include "tink/signature/ml_dsa_public_key.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -26,6 +27,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/util/secret_data.h"
@@ -225,6 +227,24 @@ TEST(MlDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(MlDsaPublicKeyTest, Clone) {
+  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes = GeneratePublicKey();
+
+  util::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
 }
 
 }  // namespace

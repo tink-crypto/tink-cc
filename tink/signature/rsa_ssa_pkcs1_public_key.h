@@ -18,6 +18,7 @@
 #define TINK_SIGNATURE_RSA_SSA_PKCS1_PUBLIC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -64,6 +65,10 @@ class RsaSsaPkcs1PublicKey : public SignaturePublicKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<RsaSsaPkcs1PublicKey>(*this);
+  }
 
  private:
   explicit RsaSsaPkcs1PublicKey(const RsaSsaPkcs1Parameters& parameters,

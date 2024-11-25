@@ -17,6 +17,8 @@
 #ifndef TINK_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_
 #define TINK_SIGNATURE_SLH_DSA_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
@@ -49,6 +51,10 @@ class SlhDsaPrivateKey : public SignaturePrivateKey {
   const SlhDsaPublicKey& GetPublicKey() const override { return public_key_; }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<SlhDsaPrivateKey>(*this);
+  }
 
  private:
   explicit SlhDsaPrivateKey(const SlhDsaPublicKey& public_key,

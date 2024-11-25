@@ -18,6 +18,7 @@
 #define TINK_SIGNATURE_ED25519_PUBLIC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -61,6 +62,10 @@ class Ed25519PublicKey : public SignaturePublicKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<Ed25519PublicKey>(*this);
+  };
 
  private:
   explicit Ed25519PublicKey(const Ed25519Parameters& parameters,

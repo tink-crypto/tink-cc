@@ -17,6 +17,7 @@
 #include "tink/signature/ml_dsa_private_key.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -28,6 +29,7 @@
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ml_dsa_parameters.h"
@@ -276,6 +278,29 @@ TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_private_key != *private_key);
   EXPECT_FALSE(*private_key == *other_private_key);
   EXPECT_FALSE(*other_private_key == *private_key);
+}
+
+TEST_P(MlDsaPrivateKeyTest, Clone) {
+  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  ASSERT_THAT(key_pair, IsOk());
+
+  util::StatusOr<MlDsaPublicKey> public_key =
+      MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = private_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
 }  // namespace

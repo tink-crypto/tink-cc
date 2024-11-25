@@ -18,6 +18,7 @@
 #define TINK_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "absl/base/attributes.h"
@@ -63,6 +64,10 @@ class SlhDsaPublicKey : public SignaturePublicKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<SlhDsaPublicKey>(*this);
+  }
 
  private:
   explicit SlhDsaPublicKey(const SlhDsaParameters& parameters,

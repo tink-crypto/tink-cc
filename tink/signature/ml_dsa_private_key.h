@@ -17,6 +17,8 @@
 #ifndef TINK_SIGNATURE_ML_DSA_PRIVATE_KEY_H_
 #define TINK_SIGNATURE_ML_DSA_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "absl/base/attributes.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -65,6 +67,10 @@ class MlDsaPrivateKey : public SignaturePrivateKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<MlDsaPrivateKey>(*this);
+  }
 
  private:
   explicit MlDsaPrivateKey(const MlDsaPublicKey& public_key,

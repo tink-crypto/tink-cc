@@ -16,6 +16,7 @@
 
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -24,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/util/statusor.h"
@@ -344,6 +346,31 @@ TEST(RsaSsaPssPublicKeyTest, PaddedWithZerosModulusEqual) {
   EXPECT_FALSE(*public_key != *other_public_key);
   EXPECT_FALSE(*other_public_key != *public_key);
 }
+
+TEST(RsaSsaPssPublicKeyTest, Clone) {
+  util::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
+          .SetSaltLengthInBytes(32)
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  BigInteger modulus(test::HexDecodeOrDie(kHex2048BitRsaModulus));
+
+  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+      *parameters, modulus,
+      /*id_requirement=*/0x02030400, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // CLone the key
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

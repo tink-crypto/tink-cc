@@ -1343,6 +1343,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::optional
+    tink::core::key
     tink::core::partial_key_access
     tink::subtle::random
     tink::util::statusor
@@ -1361,6 +1362,7 @@ tink_cc_test(
     absl::status
     absl::optional
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::internal::ec_util
@@ -1428,6 +1430,7 @@ tink_cc_test(
     absl::optional
     crypto
     tink::core::big_integer
+    tink::core::key
     tink::core::partial_key_access
     tink::util::statusor
     tink::util::test_matchers
@@ -1450,13 +1453,13 @@ tink_cc_test(
     crypto
     tink::core::big_integer
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::statusor
     tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1545,6 +1548,7 @@ tink_cc_test(
     absl::string_view
     absl::optional
     tink::core::big_integer
+    tink::core::key
     tink::core::partial_key_access
     tink::util::statusor
     tink::util::test_matchers
@@ -1568,6 +1572,7 @@ tink_cc_test(
     crypto
     tink::core::big_integer
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::internal::bn_util
@@ -1642,6 +1647,7 @@ tink_cc_test(
     crypto
     tink::core::big_integer
     tink::core::ec_point
+    tink::core::key
     tink::core::partial_key_access
     tink::internal::ec_util
     tink::subtle::common_enums
@@ -1665,6 +1671,7 @@ tink_cc_test(
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::internal::ec_util
@@ -1775,6 +1782,7 @@ tink_cc_test(
     absl::optional
     crypto
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::util::secret_data
@@ -1820,6 +1828,7 @@ tink_cc_test(
     absl::strings
     absl::optional
     crypto
+    tink::core::key
     tink::core::partial_key_access
     tink::util::secret_data
     tink::util::statusor
@@ -1887,6 +1896,7 @@ tink_cc_test(
     absl::optional
     crypto
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::subtle::random
@@ -1928,6 +1938,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::optional
+    tink::core::key
     tink::core::partial_key_access
     tink::subtle::random
     tink::util::statusor

@@ -18,15 +18,16 @@
 #define TINK_SIGNATURE_ECDSA_PUBLIC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/ec_point.h"
-#include "tink/signature/ecdsa_parameters.h"
-#include "tink/signature/signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/signature_public_key.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -59,6 +60,10 @@ class EcdsaPublicKey : public SignaturePublicKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<EcdsaPublicKey>(*this);
+  };
 
  private:
   explicit EcdsaPublicKey(const EcdsaParameters& parameters,

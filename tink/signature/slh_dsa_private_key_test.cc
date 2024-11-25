@@ -17,6 +17,7 @@
 #include "tink/signature/slh_dsa_private_key.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -25,6 +26,7 @@
 #include "absl/types/optional.h"
 #include "openssl/slhdsa.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/slh_dsa_parameters.h"
@@ -277,6 +279,40 @@ TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
   EXPECT_TRUE(*other_private_key != *private_key);
   EXPECT_FALSE(*private_key == *other_private_key);
   EXPECT_FALSE(*other_private_key == *private_key);
+}
+
+TEST(SlhDsaPrivateKeyTest, Clone) {
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2,
+      /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes;
+  public_key_bytes.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
+  std::string private_key_bytes;
+  private_key_bytes.resize(parameters->GetPrivateKeySizeInBytes());
+
+  SLHDSA_SHA2_128S_generate_key(
+      reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
+      reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
+
+  util::StatusOr<SlhDsaPublicKey> public_key =
+      SlhDsaPublicKey::Create(*parameters, public_key_bytes,
+                              /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData restricted_private_key_bytes =
+      RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+      *public_key, restricted_private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = private_key->Clone();
+  ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
 }  // namespace

@@ -17,6 +17,8 @@
 #ifndef TINK_SIGNATURE_ED25519_PRIVATE_KEY_H_
 #define TINK_SIGNATURE_ED25519_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
@@ -53,6 +55,10 @@ class Ed25519PrivateKey : public SignaturePrivateKey {
     return public_key_.GetParameters();
   }
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<Ed25519PrivateKey>(*this);
+  };
 
  private:
   explicit Ed25519PrivateKey(const Ed25519PublicKey& public_key,

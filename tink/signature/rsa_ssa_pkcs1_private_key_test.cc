@@ -16,6 +16,7 @@
 
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -25,7 +26,6 @@
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -35,6 +35,7 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
@@ -796,6 +797,43 @@ TEST(RsaSsaPkcs1PrivateKeyTest, DifferentKeyTypesNotEqual) {
   EXPECT_TRUE(*public_key != *private_key);
   EXPECT_FALSE(*private_key == *public_key);
   EXPECT_FALSE(*public_key == *private_key);
+}
+
+TEST(RsaSsaPkcs1PrivateKeyTest, Clone) {
+  util::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
+  util::StatusOr<RsaSsaPkcs1PublicKey> public_key =
+      RsaSsaPkcs1PublicKey::Create(*parameters, modulus,
+                                   /*id_requirement=*/absl::nullopt,
+                                   GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  PrivateValues private_values = GetValidPrivateValues();
+
+  util::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
+      RsaSsaPkcs1PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetPrimeP(private_values.p)
+          .SetPrimeQ(private_values.q)
+          .SetPrimeExponentP(private_values.dp)
+          .SetPrimeExponentQ(private_values.dq)
+          .SetPrivateExponent(private_values.d)
+          .SetCrtCoefficient(private_values.q_inv)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = private_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
 }  // namespace

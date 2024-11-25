@@ -25,6 +25,7 @@
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ed25519_parameters.h"
@@ -131,8 +132,8 @@ TEST(Ed25519PrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   ASSERT_THAT(public_key, IsOk());
 
   (*key_pair)->private_key.resize(31);
-  RestrictedData private_key_bytes = RestrictedData(
-      (*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(Ed25519PrivateKey::Create(*public_key, private_key_bytes,
                                         GetPartialKeyAccess())
@@ -209,6 +210,32 @@ TEST(Ed25519PrivateKeyTest, DifferentPublicKeyNotEqual) {
   EXPECT_TRUE(*other_private_key != *private_key);
   EXPECT_FALSE(*private_key == *other_private_key);
   EXPECT_FALSE(*other_private_key == *private_key);
+}
+
+TEST(Ed25519PrivateKeyTest, Clone) {
+  util::StatusOr<Ed25519Parameters> params =
+      Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
+  ASSERT_THAT(params, IsOk());
+
+  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+      internal::NewEd25519Key();
+  ASSERT_THAT(key_pair, IsOk());
+
+  util::StatusOr<Ed25519PublicKey> public_key =
+      Ed25519PublicKey::Create(*params, (*key_pair)->public_key,
+                               /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  std::unique_ptr<Key> cloned_key = private_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
 }  // namespace

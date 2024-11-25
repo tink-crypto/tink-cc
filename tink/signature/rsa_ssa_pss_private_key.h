@@ -17,6 +17,8 @@
 #ifndef TINK_SIGNATURE_RSA_SSA_PSS_PRIVATE_KEY_H_
 #define TINK_SIGNATURE_RSA_SSA_PSS_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -96,6 +98,10 @@ class RsaSsaPssPrivateKey : public SignaturePrivateKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<RsaSsaPssPrivateKey>(*this);
+  };
 
  private:
   explicit RsaSsaPssPrivateKey(const RsaSsaPssPublicKey& public_key,

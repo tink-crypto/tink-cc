@@ -16,12 +16,14 @@
 
 #include "tink/signature/slh_dsa_public_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/subtle/random.h"
@@ -205,6 +207,26 @@ TEST(SlhDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(SlhDsaPublicKeyTest, Clone) {
+  util::StatusOr<SlhDsaParameters> params =
+      SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
+                               /*private_key_size_in_bytes=*/64,
+                               SlhDsaParameters::SignatureType::kSmallSignature,
+                               SlhDsaParameters::Variant::kTink);
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/0x01020304,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
 }
 
 }  // namespace

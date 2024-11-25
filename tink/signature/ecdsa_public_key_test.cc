@@ -16,6 +16,7 @@
 
 #include "tink/signature/ecdsa_public_key.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -23,18 +24,19 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/big_integer.h"
-#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
+#include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -314,6 +316,27 @@ TEST(EcdsaPublicKeyTest, DifferentIdRequirementsNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(EcdsaPublicKeyTest, Clone) {
+  util::StatusOr<EcdsaParameters> params =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+      *params, kP256EcPoint,
+      /*id_requirement=*/0x01020304, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
 }
 
 }  // namespace

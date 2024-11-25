@@ -54,7 +54,7 @@ TEST(SecretDataWithCrcBytesField, ClearMemberWorks) {
   ParsedStruct s;
   s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("hello");
   field.ClearMember(s);
-  EXPECT_THAT(s.secret_with_crc.UncheckedData(),
+  EXPECT_THAT(s.secret_with_crc.AsStringView(),
               Eq(""));
   EXPECT_THAT(s.secret_with_crc.GetCrc32c(), Eq(absl::crc32c_t{}));
 }
@@ -71,7 +71,7 @@ TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberSuccessCases) {
 
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
 
-  EXPECT_THAT(s.secret_with_crc.UncheckedData(),
+  EXPECT_THAT(s.secret_with_crc.AsStringView(),
               Eq("1234567890"));
   EXPECT_THAT(s.secret_with_crc.GetCrc32c(),
               Eq(absl::ComputeCrc32c("1234567890")));
@@ -115,7 +115,7 @@ TEST(SecretDataWithCrcBytesField, ConsumeIntoMemberEmptyString) {
 
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
 
-  EXPECT_THAT(s.secret_with_crc.UncheckedData(), Eq(""));
+  EXPECT_THAT(s.secret_with_crc.AsStringView(), Eq(""));
   EXPECT_THAT(s.secret_with_crc.GetCrc32c(), Eq(absl::crc32c_t{0}));
   EXPECT_THAT(parsing_state.RemainingData(), Eq("abcde"));
   EXPECT_THAT(crc_to_maintain, absl::ComputeCrc32c(HexDecodeOrDie("00")));
@@ -158,7 +158,7 @@ TEST(SecretDataWithCrcBytesField, ExistingCRCIsExtendedWhenParsing) {
 
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
 
-  EXPECT_THAT(s.secret_with_crc.UncheckedData(), Eq("1234567890"));
+  EXPECT_THAT(s.secret_with_crc.AsStringView(), Eq("1234567890"));
   EXPECT_THAT(s.secret_with_crc.GetCrc32c(),
               Eq(absl::ComputeCrc32c("1234567890")));
   EXPECT_THAT(parsing_state.RemainingData(), Eq("XYZ"));

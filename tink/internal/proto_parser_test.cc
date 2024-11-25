@@ -592,7 +592,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcParsingWorks) {
       parser->ParseWithCrc(serialization);
   ASSERT_THAT(parsed, IsOk());
 
-  EXPECT_THAT(parsed->first.secret_data_with_crc_member_1.UncheckedData(),
+  EXPECT_THAT(parsed->first.secret_data_with_crc_member_1.AsStringView(),
               Eq("some text"));
   EXPECT_THAT(parsed->first.secret_data_with_crc_member_1.GetCrc32c(),
               Eq(absl::ComputeCrc32c("some text")));
@@ -988,7 +988,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcWrongCRC) {
       FieldWithNumber(kBytesField1Tag).IsString(text1);
   std::string serialization_of_computed_crc =
       FieldWithNumber(kBytesField1Tag).IsString(text2);
-  EXPECT_THAT(serialized->UncheckedData(), Eq(expected_serialization));
+  EXPECT_THAT(serialized->AsStringView(), Eq(expected_serialization));
   EXPECT_THAT(serialized->GetCrc32c(),
               Eq(absl::ComputeCrc32c(serialization_of_computed_crc)));
 }

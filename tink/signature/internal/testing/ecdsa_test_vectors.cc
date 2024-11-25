@@ -42,7 +42,6 @@ namespace internal {
 
 namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::util::SecretDataAsStringView;
 
 // Point from https://www.ietf.org/rfc/rfc6979.txt, A.2.5
 EcPoint P256Point() {

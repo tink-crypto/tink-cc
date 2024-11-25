@@ -59,7 +59,6 @@ using ::crypto::tink::internal::StatefulMac;
 using ::crypto::tink::subtle::WycheproofUtil;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::testing::Eq;

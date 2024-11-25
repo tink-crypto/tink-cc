@@ -56,7 +56,6 @@ using ::crypto::tink::internal::ProtoParserBuilder;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
-using ::google::crypto::tink::HpkeParams;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 

@@ -1092,6 +1092,7 @@ cc_test(
     deps = [
         ":serialization_test_util",
         "//tink:insecure_secret_key_access",
+        "//tink:key",
         "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",

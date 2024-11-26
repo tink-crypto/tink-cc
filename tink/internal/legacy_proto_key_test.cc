@@ -16,6 +16,7 @@
 
 #include "tink/internal/legacy_proto_key.h"
 
+#include <memory>
 #include <string>
 #include <tuple>
 
@@ -261,6 +262,25 @@ TEST_F(LegacyProtoKeyTest, IdRequirementNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST_F(LegacyProtoKeyTest, Clone) {
+  RestrictedData serialized_key =
+      RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create("type_url", serialized_key,
+                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    /*id_requirement=*/12345);
+  ASSERT_THAT(serialization.status(), IsOk());
+  util::StatusOr<LegacyProtoKey> key =
+      LegacyProtoKey::Create(*serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(key.status(), IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
 using AllOutputPrefixTypesTest =

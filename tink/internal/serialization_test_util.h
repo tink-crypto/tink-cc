@@ -18,6 +18,7 @@
 #define TINK_INTERNAL_SERIALIZATION_TEST_UTIL_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -101,6 +102,10 @@ class NoIdKey : public Key {
            absl::nullopt == other.GetIdRequirement();
   }
 
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<NoIdKey>(*this);
+  }
+
  private:
   NoIdParams params_;
 };
@@ -127,6 +132,8 @@ class IdKey : public Key {
   bool operator==(const Key& other) const override {
     return params_ == other.GetParameters() && id_ == other.GetIdRequirement();
   }
+
+  std::unique_ptr<Key> Clone() const { return std::make_unique<IdKey>(*this); }
 
  private:
   IdParams params_;

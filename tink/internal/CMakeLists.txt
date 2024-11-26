@@ -1049,6 +1049,7 @@ tink_cc_test(
     gmock
     absl::optional
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers

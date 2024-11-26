@@ -305,6 +305,7 @@ tink_cc_test(
     absl::optional
     crypto
     tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::util::secret_data
@@ -324,6 +325,7 @@ tink_cc_test(
     absl::strings
     absl::optional
     crypto
+    tink::core::key
     tink::core::partial_key_access
     tink::util::secret_data
     tink::util::statusor

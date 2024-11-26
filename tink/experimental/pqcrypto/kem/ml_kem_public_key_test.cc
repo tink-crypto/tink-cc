@@ -17,6 +17,7 @@
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -26,6 +27,7 @@
 #include "absl/types/optional.h"
 #include "openssl/mlkem.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
@@ -208,6 +210,23 @@ TEST_P(MlKemPublicKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_public_key != *public_key);
   EXPECT_FALSE(*public_key == *other_public_key);
   EXPECT_FALSE(*other_public_key == *public_key);
+}
+
+TEST(MlKemPublicKeyTest, Clone) {
+  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::string public_key_bytes = GeneratePublicKey();
+  util::StatusOr<MlKemPublicKey> public_key =
+      MlKemPublicKey::Create(*parameters, public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = public_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*public_key));
 }
 
 }  // namespace

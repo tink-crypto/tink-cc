@@ -318,6 +318,7 @@ cc_test(
         ":ml_kem_private_key",
         ":ml_kem_public_key",
         "//tink:insecure_secret_key_access",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink/util:secret_data",
@@ -337,6 +338,7 @@ cc_test(
     deps = [
         ":ml_kem_parameters",
         ":ml_kem_public_key",
+        "//tink:key",
         "//tink:partial_key_access",
         "//tink/util:secret_data",
         "//tink/util:statusor",

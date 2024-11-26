@@ -17,6 +17,7 @@
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -29,6 +30,7 @@
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/secret_data.h"
@@ -273,6 +275,29 @@ TEST_P(MlKemPrivateKeyTest, DifferentIdRequirementNotEqual) {
   EXPECT_TRUE(*other_private_key != *private_key);
   EXPECT_FALSE(*private_key == *other_private_key);
   EXPECT_FALSE(*other_private_key == *private_key);
+}
+
+TEST(MlKemPrivateKeyTest, Clone) {
+  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+      /*key_size=*/768, MlKemParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  ASSERT_THAT(key_pair, IsOk());
+
+  util::StatusOr<MlKemPublicKey> public_key =
+      MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+      *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  // Clone the key.
+  std::unique_ptr<Key> cloned_key = private_key->Clone();
+
+  ASSERT_THAT(*cloned_key, Eq(*private_key));
 }
 
 }  // namespace

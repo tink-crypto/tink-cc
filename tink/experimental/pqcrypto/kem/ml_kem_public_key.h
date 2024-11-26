@@ -18,6 +18,7 @@
 #define TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_PUBLIC_KEY_H_
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "absl/base/attributes.h"
@@ -69,6 +70,10 @@ class MlKemPublicKey : public KemPublicKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<MlKemPublicKey>(*this);
+  }
 
  private:
   explicit MlKemPublicKey(const MlKemParameters& parameters,

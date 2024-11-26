@@ -17,6 +17,8 @@
 #ifndef TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_PRIVATE_KEY_H_
 #define TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_PRIVATE_KEY_H_
 
+#include <memory>
+
 #include "absl/base/attributes.h"
 #include "tink/experimental/kem/kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
@@ -56,6 +58,10 @@ class MlKemPrivateKey : public KemPrivateKey {
   }
 
   bool operator==(const Key& other) const override;
+
+  std::unique_ptr<Key> Clone() const {
+    return std::make_unique<MlKemPrivateKey>(*this);
+  }
 
  private:
   explicit MlKemPrivateKey(const MlKemPublicKey& public_key,

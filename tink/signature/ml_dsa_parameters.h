@@ -78,4 +78,4 @@ class MlDsaParameters : public SignatureParameters {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK__SIGNATURE_ML_DSA_PARAMETERS_H_
+#endif  // TINK_SIGNATURE_ML_DSA_PARAMETERS_H_

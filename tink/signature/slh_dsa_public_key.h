@@ -88,4 +88,4 @@ class SlhDsaPublicKey : public SignaturePublicKey {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_
+#endif  // TINK_SIGNATURE_SLH_DSA_PUBLIC_KEY_H_

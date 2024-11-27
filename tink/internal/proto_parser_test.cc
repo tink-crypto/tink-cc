@@ -631,12 +631,24 @@ TEST(ProtoParserTest, MultipleBytesFieldSecretDataWithCrcParsingWorks) {
       parser.ParseWithCrc(serialization);
   ASSERT_THAT(parsed, IsOk());
 
-  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_1.data(),
-              IsOkAndHolds(Eq(text11)));
-  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_2.data(),
-              IsOkAndHolds(Eq(text12)));
-  EXPECT_THAT(parsed->first.inner_member_2.secret_data_with_crc_member_1.data(),
-              IsOkAndHolds(Eq(text21)));
+  EXPECT_THAT(
+      parsed->first.inner_member_1.secret_data_with_crc_member_1.ValidateCrc(),
+      IsOk());
+  EXPECT_THAT(
+      parsed->first.inner_member_1.secret_data_with_crc_member_1.AsStringView(),
+      Eq(text11));
+  EXPECT_THAT(
+      parsed->first.inner_member_1.secret_data_with_crc_member_2.ValidateCrc(),
+      IsOk());
+  EXPECT_THAT(
+      parsed->first.inner_member_1.secret_data_with_crc_member_2.AsStringView(),
+      Eq(text12));
+  EXPECT_THAT(
+      parsed->first.inner_member_2.secret_data_with_crc_member_1.ValidateCrc(),
+      IsOk());
+  EXPECT_THAT(
+      parsed->first.inner_member_2.secret_data_with_crc_member_1.AsStringView(),
+      Eq(text21));
 }
 
 // Found by a prototype fuzzer.

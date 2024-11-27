@@ -18,6 +18,7 @@
 #define TINK_AEAD_AEAD_KEY_TEMPLATES_H_
 
 #include "absl/base/attributes.h"
+#include "absl/base/macros.h"
 #include "absl/strings/string_view.h"
 #include "proto/tink.pb.h"
 
@@ -129,22 +130,66 @@ class AeadKeyTemplates {
   static const google::crypto::tink::KeyTemplate& XChaCha20Poly1305();
 
   // Returns a KeyTemplate that generates new instances of XAesGcmKey
-  // with the following parameters:
+  // This follows the algorithm defined in the XAES-256-GCM specification:
+  // https://github.com/C2SP/C2SP/blob/main/XAES-256-GCM.md.
+  // Has the following parameters:
   //   - key size: 32 bytes
+  //   - nonce size: 24 bytes (12 bytes of salt, 12 bytes of AES-GCM IV)
+  //   - salt size: 12 bytes
+  //   - IV size: 12 bytes
+  //   - tag size: 16 bytes
+  //   - OutputPrefixType: TINK
+  static const google::crypto::tink::KeyTemplate& XAes256Gcm192BitNonce();
+
+  // Returns a KeyTemplate that generates new instances of XAesGcmKey
+  // This follows the algorithm defined in the XAES-256-GCM specification:
+  // https://github.com/C2SP/C2SP/blob/main/XAES-256-GCM.md.
+  // Has the following parameters:
+  //   - key size: 32 bytes
+  //   - nonce size: 24 bytes (12 bytes of salt, 12 bytes of (AES-GCM IV)
+  //   - salt size: 12 bytes
+  //   - tag size: 16 bytes
+  //   - OutputPrefixType: RAW
+  static const google::crypto::tink::KeyTemplate&
+  XAes256Gcm192BitNonceNoPrefix();
+
+  // Returns a KeyTemplate that generates new instances of XAesGcmKey
+  // This follows the algorithm defined in the XAES-256-GCM specification:
+  // https://github.com/C2SP/C2SP/blob/main/XAES-256-GCM.md. Except that the
+  // nonce size is 160 bits instead of 192 bits. The remaining 4 bytes are
+  // padded with zeros. Has the following parameters:
+  //   - key size: 32 bytes
+  //   - nonce size: 20 bytes (8 bytes of salt, 12 bytes of AES-GCM IV)
   //   - salt size: 8 bytes
   //   - IV size: 12 bytes
   //   - tag size: 16 bytes
   //   - OutputPrefixType: TINK
-  static const google::crypto::tink::KeyTemplate& XAes256Gcm8ByteSalt();
+  static const google::crypto::tink::KeyTemplate& XAes256Gcm160BitNonce();
 
   // Returns a KeyTemplate that generates new instances of XAesGcmKey
-  // with the following parameters:
+  // This follows the algorithm defined in the XAES-256-GCM specification:
+  // https://github.com/C2SP/C2SP/blob/main/XAES-256-GCM.md. Except that the
+  // nonce size is 160 bits instead of 192 bits. The remaining 4 bytes are
+  // padded with zeros. Has the following parameters:
   //   - key size: 32 bytes
+  //   - nonce size: 20 bytes (8 bytes of salt, 12 bytes of AES-GCM IV)
   //   - salt size: 8 bytes
   //   - IV size: 12 bytes
   //   - tag size: 16 bytes
   //   - OutputPrefixType: RAW
-  static const google::crypto::tink::KeyTemplate& XAes256Gcm8ByteSaltNoPrefix();
+  static const google::crypto::tink::KeyTemplate&
+  XAes256Gcm160BitNonceNoPrefix();
+
+  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  static const google::crypto::tink::KeyTemplate& XAes256Gcm8ByteSalt() {
+    return XAes256Gcm160BitNonce();
+  }
+
+  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  static const google::crypto::tink::KeyTemplate&
+  XAes256Gcm8ByteSaltNoPrefix() {
+    return XAes256Gcm160BitNonceNoPrefix();
+  }
 
   // Returns a KeyTemplate that generates new instances of KmsEnvelopeAeadKey
   // with the following parameters:

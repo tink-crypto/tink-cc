@@ -210,13 +210,25 @@ const KeyTemplate& AeadKeyTemplates::XChaCha20Poly1305() {
   return *key_template;
 }
 
-const KeyTemplate& AeadKeyTemplates::XAes256Gcm8ByteSalt() {
+const KeyTemplate& AeadKeyTemplates::XAes256Gcm192BitNonce() {
+  static const KeyTemplate* key_template =
+      NewXAes256GcmKeyTemplate(OutputPrefixType::TINK, /*salt_size=*/12);
+  return *key_template;
+}
+
+const KeyTemplate& AeadKeyTemplates::XAes256Gcm192BitNonceNoPrefix() {
+  static const KeyTemplate* key_template =
+      NewXAes256GcmKeyTemplate(OutputPrefixType::RAW, /*salt_size=*/12);
+  return *key_template;
+}
+
+const KeyTemplate& AeadKeyTemplates::XAes256Gcm160BitNonce() {
   static const KeyTemplate* key_template =
       NewXAes256GcmKeyTemplate(OutputPrefixType::TINK, /*salt_size=*/8);
   return *key_template;
 }
 
-const KeyTemplate& AeadKeyTemplates::XAes256Gcm8ByteSaltNoPrefix() {
+const KeyTemplate& AeadKeyTemplates::XAes256Gcm160BitNonceNoPrefix() {
   static const KeyTemplate* key_template =
       NewXAes256GcmKeyTemplate(OutputPrefixType::RAW, /*salt_size=*/8);
   return *key_template;

@@ -427,10 +427,14 @@ TEST_P(XAesGcmKeyTemplateTest, CreateKeyAndPrimitive) {
 INSTANTIATE_TEST_SUITE_P(
     XAesGcmKeyTemplateTests, XAesGcmKeyTemplateTest,
     ValuesIn<XAesGcmKeyTemplateTestCase>({
+        {/*salt_size=*/12, OutputPrefixType::TINK,
+         AeadKeyTemplates::XAes256Gcm192BitNonce()},
+        {/*salt_size=*/12, OutputPrefixType::RAW,
+         AeadKeyTemplates::XAes256Gcm192BitNonceNoPrefix()},
         {/*salt_size=*/8, OutputPrefixType::TINK,
-         AeadKeyTemplates::XAes256Gcm8ByteSalt()},
+         AeadKeyTemplates::XAes256Gcm160BitNonce()},
         {/*salt_size=*/8, OutputPrefixType::RAW,
-         AeadKeyTemplates::XAes256Gcm8ByteSaltNoPrefix()},
+         AeadKeyTemplates::XAes256Gcm160BitNonceNoPrefix()},
     }),
     [](const testing::TestParamInfo<XAesGcmKeyTemplateTest::ParamType>& info) {
       return absl::StrFormat(

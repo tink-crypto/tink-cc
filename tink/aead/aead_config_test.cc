@@ -146,7 +146,8 @@ TEST_F(AeadConfigTest, RegisterNonFipsTemplates) {
       AeadKeyTemplates::Aes128GcmSiv(),
       AeadKeyTemplates::Aes256GcmSiv(),
       AeadKeyTemplates::XChaCha20Poly1305(),
-      AeadKeyTemplates::XAes256Gcm8ByteSalt(),
+      AeadKeyTemplates::XAes256Gcm192BitNonce(),
+      AeadKeyTemplates::XAes256Gcm160BitNonce(),
   };
 
   for (auto key_template : non_fips_key_templates) {
@@ -788,7 +789,7 @@ TEST_F(AeadConfigTest, XAesGcmProtoParamsSerializationRegistered) {
   util::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
-              AeadKeyTemplates::XAes256Gcm8ByteSalt());
+              AeadKeyTemplates::XAes256Gcm160BitNonce());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
   ASSERT_THAT(internal::MutableSerializationRegistry::GlobalInstance()

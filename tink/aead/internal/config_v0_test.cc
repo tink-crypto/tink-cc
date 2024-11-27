@@ -106,7 +106,8 @@ INSTANTIATE_TEST_SUITE_P(AeadV0BoringSslKeyTypesTestSuite,
                                 AeadKeyTemplates::XChaCha20Poly1305()));
 INSTANTIATE_TEST_SUITE_P(CordAeadV0KeyTypesTestSuite, CordAeadV0KeyTypesTest,
                          Values(AeadKeyTemplates::Aes256Gcm(),
-                                AeadKeyTemplates::XAes256Gcm8ByteSalt()));
+                                AeadKeyTemplates::XAes256Gcm160BitNonce(),
+                                AeadKeyTemplates::XAes256Gcm192BitNonce()));
 
 TEST_P(AeadV0KeyTypesTest, GetPrimitive) {
   KeyGenConfiguration key_gen_config;

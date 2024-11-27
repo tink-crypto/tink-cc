@@ -71,7 +71,7 @@ class MlKemPublicKey : public KemPublicKey {
 
   bool operator==(const Key& other) const override;
 
-  std::unique_ptr<Key> Clone() const {
+  std::unique_ptr<Key> Clone() const override {
     return std::make_unique<MlKemPublicKey>(*this);
   }
 

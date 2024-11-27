@@ -63,7 +63,7 @@ class HpkePublicKey : public HybridPublicKey {
 
   bool operator==(const Key& other) const override;
 
-  std::unique_ptr<Key> Clone() const {
+  std::unique_ptr<Key> Clone() const override {
     return std::make_unique<HpkePublicKey>(*this);
   }
 

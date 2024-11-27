@@ -18,6 +18,8 @@
 #define TINK_KEY_H_
 
 #include <cstdint>
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
 
@@ -72,6 +74,9 @@ class Key {
   // NOTE: Implementations must perform equality checks in constant time.
   virtual bool operator==(const Key& other) const = 0;
   bool operator!=(const Key& other) const { return !(*this == other); }
+
+  // Creates a deep copy of the `Key` object.
+  virtual std::unique_ptr<Key> Clone() const = 0;
 
   virtual ~Key() = default;
 };

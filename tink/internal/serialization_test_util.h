@@ -102,7 +102,7 @@ class NoIdKey : public Key {
            absl::nullopt == other.GetIdRequirement();
   }
 
-  std::unique_ptr<Key> Clone() const {
+  std::unique_ptr<Key> Clone() const override {
     return std::make_unique<NoIdKey>(*this);
   }
 
@@ -133,7 +133,9 @@ class IdKey : public Key {
     return params_ == other.GetParameters() && id_ == other.GetIdRequirement();
   }
 
-  std::unique_ptr<Key> Clone() const { return std::make_unique<IdKey>(*this); }
+  std::unique_ptr<Key> Clone() const override {
+    return std::make_unique<IdKey>(*this);
+  }
 
  private:
   IdParams params_;

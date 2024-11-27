@@ -949,7 +949,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
 
   std::string expected_serialization =
       FieldWithNumber(kBytesField1Tag).IsString("some text");
-  EXPECT_THAT(serialized->data(), test::IsOkAndHolds(expected_serialization));
+  EXPECT_THAT(serialized->AsStringView(), Eq(expected_serialization));
 }
 
 TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
@@ -974,7 +974,8 @@ TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
   std::string expected_serialization =
       absl::StrCat(FieldWithNumber(kBytesField1Tag).IsString("some text"),
                    FieldWithNumber(kBytesField2Tag).IsString("another text"));
-  EXPECT_THAT(serialized->data(), IsOkAndHolds(expected_serialization));
+  EXPECT_THAT(serialized->ValidateCrc(), IsOk());
+  EXPECT_THAT(serialized->AsStringView(), Eq(expected_serialization));
 }
 
 // Tests that in order to compute the overall CRC, the CRC field is used (and
@@ -1038,7 +1039,7 @@ TEST(ProtoParserTest, CrcOfInnerFieldSerializationWorks) {
   std::string expected_serialization = absl::StrCat(
       FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(text1)}),
       FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsString(text2)}));
-  EXPECT_THAT(serialized->data(), IsOkAndHolds(expected_serialization));
+  EXPECT_THAT(serialized->AsStringView(), Eq(expected_serialization));
 }
 
 TEST(ProtoParserTest, SerializeMessageField) {

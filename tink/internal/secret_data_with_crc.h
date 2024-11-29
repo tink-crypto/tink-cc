@@ -68,9 +68,6 @@ class SecretDataWithCrc final {
       crypto::tink::util::SecretData data,
       crypto::tink::util::SecretValue<absl::crc32c_t> crc);
 
-  // Verifies the CRC32C of the data before returning it.
-  absl::StatusOr<absl::string_view> data() const;
-
   // Returns the data without verifying the CRC32C.
   absl::string_view AsStringView() const;
 

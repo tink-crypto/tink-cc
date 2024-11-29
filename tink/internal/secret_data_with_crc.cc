@@ -82,13 +82,6 @@ absl::string_view SecretDataWithCrc::AsStringView() const {
   return SecretDataAsStringView(data_);
 }
 
-absl::StatusOr<absl::string_view> SecretDataWithCrc::data() const {
-  if (!IsValidSecretcCrc32c(SecretDataAsStringView(data_), crc_)) {
-    return absl::DataLossError("data CRC verification failed");
-  }
-  return SecretDataAsStringView(data_);
-}
-
 crypto::tink::util::Status SecretDataWithCrc::ValidateCrc() const {
   if (!IsValidSecretcCrc32c(SecretDataAsStringView(data_), crc_)) {
     return absl::DataLossError("data CRC verification failed");

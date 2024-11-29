@@ -25,7 +25,9 @@
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/key_gen_config_v0.h"
+#include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/signature_key_templates.h"
+#include "tink/signature/slh_dsa_parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
@@ -67,6 +69,60 @@ TEST_P(ConfigV0Test, GetPrimitive) {
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
+
+#ifdef OPENSSL_IS_BORINGSSL
+TEST(PqcSignatureConfigV0Test, SlhDsaGetPrimitive) {
+  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+      SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
+      SlhDsaParameters::SignatureType::kSmallSignature,
+      SlhDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*parameters,
+                                              KeyGenConfigSignatureV0());
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      (*handle)->GetPublicKeysetHandle(KeyGenConfigSignatureV0());
+  ASSERT_THAT(public_handle, IsOk());
+
+  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+      (*handle)->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+  ASSERT_THAT(sign, IsOk());
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+  ASSERT_THAT(verify, IsOk());
+
+  std::string data = "data";
+  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
+}
+
+TEST(PqcSignatureConfigV0Test, MlDsaGetPrimitive) {
+  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNewFromParameters(*parameters,
+                                              KeyGenConfigSignatureV0());
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+      (*handle)->GetPublicKeysetHandle(KeyGenConfigSignatureV0());
+  ASSERT_THAT(public_handle, IsOk());
+
+  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+      (*handle)->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
+  ASSERT_THAT(sign, IsOk());
+  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+      (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
+  ASSERT_THAT(verify, IsOk());
+
+  std::string data = "data";
+  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  ASSERT_THAT(signature, IsOk());
+  EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
+}
+#endif
 
 }  // namespace
 }  // namespace tink

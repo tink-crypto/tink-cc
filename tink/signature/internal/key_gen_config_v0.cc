@@ -23,6 +23,13 @@
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#ifdef OPENSSL_IS_BORINGSSL
+#include "tink/signature/internal/key_creators.h"
+#include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization.h"
+#include "tink/signature/ml_dsa_parameters.h"
+#include "tink/signature/slh_dsa_parameters.h"
+#endif
 #include "tink/signature/rsa_ssa_pkcs1_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pkcs1_verify_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
@@ -52,9 +59,33 @@ util::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
-  return KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+  status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<Ed25519SignKeyManager>(),
       absl::make_unique<Ed25519VerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+
+  // Tink implements PQC signatures with BoringSSL, not OpenSSL.
+#ifdef OPENSSL_IS_BORINGSSL
+  // SLH-DSA
+  status = RegisterSlhDsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = KeyGenConfigurationImpl::AddKeyCreator<SlhDsaParameters>(
+      CreateSlhDsaKey, config);
+  if (!status.ok()) {
+    return status;
+  }
+  // ML-DSA
+  status = RegisterMlDsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  return KeyGenConfigurationImpl::AddKeyCreator<MlDsaParameters>(CreateMlDsaKey,
+                                                                 config);
+#endif
 }
 
 }  // namespace internal

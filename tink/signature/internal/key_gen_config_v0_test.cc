@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/internal/key_gen_config_v0.h"
+#include "tink/signature/internal/key_gen_config_v0.h"
 
 #include <memory>
 #include <utility>
@@ -39,7 +39,7 @@ using ::crypto::tink::test::IsOk;
 
 TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
   KeyGenConfiguration key_gen_config;
-  ASSERT_THAT(AddPqcSignatureKeyGenV0(key_gen_config), IsOk());
+  ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
 
   util::StatusOr<SlhDsaParameters> slhdsa_parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,

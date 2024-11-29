@@ -103,3 +103,27 @@ tink_cc_library(
     tink::util::test_util
   TESTONLY
 )
+
+tink_cc_library(
+  NAME ml_dsa_test_vectors
+  SRCS
+    ml_dsa_test_vectors.cc
+    ml_dsa_test_vectors.h
+  DEPS
+    tink::signature::internal::testing::signature_test_vector
+    absl::check
+    absl::memory
+    absl::strings
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::signature::ml_dsa_parameters
+    tink::signature::ml_dsa_private_key
+    tink::signature::ml_dsa_public_key
+    tink::util::statusor
+    tink::util::test_util
+  TESTONLY
+  TAGS
+    exclude_if_openssl
+)

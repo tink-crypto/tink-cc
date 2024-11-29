@@ -1338,7 +1338,10 @@ cc_test(
     name = "signature_config_test",
     size = "small",
     srcs = ["signature_config_test.cc"],
-    tags = ["fips"],
+    tags = [
+        "fips",
+        "requires_boringcrypto_update",
+    ],
     deps = [
         ":ecdsa_parameters",
         ":ecdsa_private_key",
@@ -1630,7 +1633,9 @@ cc_test(
     deps = [
         ":config_v0",
         ":key_gen_config_v0",
+        ":ml_dsa_parameters",
         ":signature_key_templates",
+        ":slh_dsa_parameters",
         "//proto:tink_cc_proto",
         "//tink:keyset_handle",
         "//tink:public_key_sign",

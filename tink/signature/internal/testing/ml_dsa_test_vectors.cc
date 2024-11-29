@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/experimental/pqcrypto/signature/internal/testing/ml_dsa_test_vectors.h"
+#include "tink/signature/internal/testing/ml_dsa_test_vectors.h"
 
 #include <string>
 #include <vector>

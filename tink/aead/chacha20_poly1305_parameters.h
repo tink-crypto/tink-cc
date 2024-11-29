@@ -17,6 +17,8 @@
 #ifndef TINK_AEAD_CHACHA20_POLY1305_PARAMETERS_H_
 #define TINK_AEAD_CHACHA20_POLY1305_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -58,6 +60,10 @@ class ChaCha20Poly1305Parameters : public AeadParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<ChaCha20Poly1305Parameters>(*this);
+  }
 
  private:
   explicit ChaCha20Poly1305Parameters(Variant variant) : variant_(variant) {}

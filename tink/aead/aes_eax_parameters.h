@@ -17,6 +17,8 @@
 #ifndef TINK_AEAD_AES_EAX_PARAMETERS_H_
 #define TINK_AEAD_AES_EAX_PARAMETERS_H_
 
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
@@ -100,6 +102,10 @@ class AesEaxParameters : public AeadParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<AesEaxParameters>(*this);
+  }
 
  private:
   AesEaxParameters(int key_size_in_bytes, int iv_size_in_bytes,

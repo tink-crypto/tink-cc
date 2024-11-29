@@ -16,11 +16,13 @@
 
 #include "tink/aead/aes_eax_parameters.h"
 
+#include <memory>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -476,6 +478,20 @@ TEST(AesEaxParametersTest, DifferentVariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(AesEaxParametersTest, Clone) {
+  util::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetIvSizeInBytes(16)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

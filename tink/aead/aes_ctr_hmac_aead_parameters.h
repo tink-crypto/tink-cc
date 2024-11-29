@@ -133,6 +133,10 @@ class AesCtrHmacAeadParameters : public AeadParameters {
 
   bool operator==(const Parameters& other) const override;
 
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<AesCtrHmacAeadParameters>(*this);
+  }
+
  private:
   AesCtrHmacAeadParameters(int aes_key_size_in_bytes,
                            int hmac_key_size_in_bytes, int iv_size_in_bytes,

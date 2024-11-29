@@ -17,6 +17,8 @@
 #ifndef TINK_AEAD_X_AES_GCM_PARAMETERS_H_
 #define TINK_AEAD_X_AES_GCM_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -55,6 +57,10 @@ class XAesGcmParameters : public AeadParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<XAesGcmParameters>(*this);
+  }
 
  private:
   XAesGcmParameters(Variant variant, int salt_size_bytes)

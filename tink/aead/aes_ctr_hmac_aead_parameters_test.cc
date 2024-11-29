@@ -16,11 +16,13 @@
 
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
 
+#include <memory>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -656,6 +658,22 @@ TEST(AesCtrHmacAeadParametersTest, DifferentVariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(AesCtrHmacAeadParametersTest, Clone) {
+  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(16)
+          .SetHmacKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

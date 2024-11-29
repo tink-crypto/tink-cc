@@ -16,11 +16,13 @@
 
 #include "tink/aead/x_aes_gcm_parameters.h"
 
+#include <memory>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -45,8 +47,7 @@ struct TestCase {
 
 using XAesGcmParametersTest = TestWithParam<TestCase>;
 
-INSTANTIATE_TEST_SUITE_P(XAesGcmParametersTestSuite,
-                         XAesGcmParametersTest,
+INSTANTIATE_TEST_SUITE_P(XAesGcmParametersTestSuite, XAesGcmParametersTest,
                          Values(TestCase{XAesGcmParameters::Variant::kTink,
                                          /*salt_size=*/8,
                                          /*has_id_requirement=*/true},
@@ -186,6 +187,15 @@ TEST(XAesGcmParametersTest, DifferentSaltSizeNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(XAesGcmParametersTest, Clone) {
+  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+      XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

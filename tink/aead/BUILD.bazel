@@ -1213,6 +1213,7 @@ cc_test(
     srcs = ["aes_gcm_parameters_test.cc"],
     deps = [
         ":aes_gcm_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1270,6 +1271,7 @@ cc_test(
     srcs = ["aes_gcm_siv_parameters_test.cc"],
     deps = [
         ":aes_gcm_siv_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1344,6 +1346,7 @@ cc_test(
     srcs = ["aes_eax_parameters_test.cc"],
     deps = [
         ":aes_eax_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1458,6 +1461,7 @@ cc_test(
     srcs = ["chacha20_poly1305_parameters_test.cc"],
     deps = [
         ":chacha20_poly1305_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1515,6 +1519,7 @@ cc_test(
     srcs = ["aes_ctr_hmac_aead_parameters_test.cc"],
     deps = [
         ":aes_ctr_hmac_aead_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1575,6 +1580,7 @@ cc_test(
     srcs = ["x_aes_gcm_parameters_test.cc"],
     deps = [
         ":x_aes_gcm_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1653,6 +1659,7 @@ cc_test(
     srcs = ["legacy_kms_aead_parameters_test.cc"],
     deps = [
         ":legacy_kms_aead_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

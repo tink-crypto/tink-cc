@@ -17,6 +17,7 @@
 #ifndef TINK_AEAD_LEGACY_KMS_AEAD_PARAMETERS_H_
 #define TINK_AEAD_LEGACY_KMS_AEAD_PARAMETERS_H_
 
+#include <memory>
 #include <string>
 
 #include "absl/strings/string_view.h"
@@ -59,6 +60,10 @@ class LegacyKmsAeadParameters : public AeadParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<LegacyKmsAeadParameters>(*this);
+  }
 
  private:
   explicit LegacyKmsAeadParameters(absl::string_view key_uri, Variant variant)

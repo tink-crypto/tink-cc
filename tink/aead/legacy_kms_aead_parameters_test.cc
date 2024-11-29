@@ -16,12 +16,14 @@
 
 #include "tink/aead/legacy_kms_aead_parameters.h"
 
+#include <memory>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -180,6 +182,16 @@ TEST(LegacyKmsAeadParametersTest, DifferentVariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(LegacyKmsAeadParametersTest, Clone) {
+  util::StatusOr<LegacyKmsAeadParameters> parameters =
+      LegacyKmsAeadParameters::Create(kKeyUri,
+                                      LegacyKmsAeadParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

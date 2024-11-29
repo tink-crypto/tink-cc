@@ -16,12 +16,14 @@
 
 #include "tink/aead/aes_gcm_siv_parameters.h"
 
+#include <memory>
 #include <tuple>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -208,6 +210,15 @@ TEST(AesGcmParametersTest, VariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(AesGcmParametersTest, Clone) {
+  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

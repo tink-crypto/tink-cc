@@ -17,6 +17,8 @@
 #ifndef TINK_AEAD_AES_GCM_SIV_PARAMETERS_H_
 #define TINK_AEAD_AES_GCM_SIV_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/aead/aead_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -59,6 +61,10 @@ class AesGcmSivParameters : public AeadParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<AesGcmSivParameters>(*this);
+  }
 
  private:
   AesGcmSivParameters(int key_size_in_bytes, Variant variant)

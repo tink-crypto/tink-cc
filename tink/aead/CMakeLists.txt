@@ -1147,6 +1147,7 @@ tink_cc_test(
     tink::aead::aes_gcm_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -1203,6 +1204,7 @@ tink_cc_test(
     tink::aead::aes_gcm_siv_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -1276,6 +1278,7 @@ tink_cc_test(
     tink::aead::aes_eax_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -1390,6 +1393,7 @@ tink_cc_test(
     tink::aead::chacha20_poly1305_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -1447,6 +1451,7 @@ tink_cc_test(
     tink::aead::aes_ctr_hmac_aead_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -1507,6 +1512,7 @@ tink_cc_test(
     tink::aead::x_aes_gcm_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -1586,6 +1592,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::string_view
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )

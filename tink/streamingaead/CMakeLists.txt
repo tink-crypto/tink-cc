@@ -657,6 +657,7 @@ tink_cc_test(
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -716,6 +717,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )

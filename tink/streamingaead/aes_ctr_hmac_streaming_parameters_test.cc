@@ -16,9 +16,12 @@
 
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 
+#include <memory>
+
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -583,6 +586,22 @@ TEST(AesCtrHmacStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(AesCtrHmacStreamingParametersTest, Clone) {
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

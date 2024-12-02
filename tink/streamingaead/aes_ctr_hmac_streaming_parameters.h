@@ -17,6 +17,8 @@
 #ifndef TINK_STREAMINGAEAD_AES_CTR_HMAC_STREAMING_PARAMETERS_H_
 #define TINK_STREAMINGAEAD_AES_CTR_HMAC_STREAMING_PARAMETERS_H_
 
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
 #include "tink/streamingaead/streaming_aead_parameters.h"
@@ -85,6 +87,10 @@ class AesCtrHmacStreamingParameters : public StreamingAeadParameters {
   int CiphertextSegmentSizeInBytes() const { return segment_size_in_bytes_; }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<AesCtrHmacStreamingParameters>(*this);
+  }
 
  private:
   explicit AesCtrHmacStreamingParameters(int key_size_in_bytes,

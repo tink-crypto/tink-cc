@@ -687,6 +687,7 @@ cc_test(
     srcs = ["aes_ctr_hmac_streaming_parameters_test.cc"],
     deps = [
         ":aes_ctr_hmac_streaming_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -746,6 +747,7 @@ cc_test(
     srcs = ["aes_gcm_hkdf_streaming_parameters_test.cc"],
     deps = [
         ":aes_gcm_hkdf_streaming_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

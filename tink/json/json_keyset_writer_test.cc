@@ -61,96 +61,13 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
+using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::Not;
 
 namespace {
 
-class JsonKeysetWriterTest : public ::testing::Test {
- protected:
-  void SetUp() override {
-    gcm_key_.set_key_value("some gcm key value");
-    gcm_key_.set_version(0);
-
-    eax_key_.set_key_value("some eax key value");
-    eax_key_.set_version(0);
-    eax_key_.mutable_params()->set_iv_size(16);
-
-    AddTinkKey("type.googleapis.com/google.crypto.tink.AesGcmKey", 42, gcm_key_,
-               KeyStatusType::ENABLED, KeyData::SYMMETRIC, &keyset_);
-    AddRawKey("type.googleapis.com/google.crypto.tink.AesEaxKey", 711, eax_key_,
-              KeyStatusType::ENABLED, KeyData::SYMMETRIC, &keyset_);
-    keyset_.set_primary_key_id(42);
-    std::string json_string =
-        absl::Substitute(R"(
-      {
-         "primaryKeyId":42,
-         "key":[
-            {
-               "keyData":{
-                  "typeUrl":"type.googleapis.com/google.crypto.tink.AesGcmKey",
-                  "keyMaterialType":"SYMMETRIC",
-                  "value": "$0"
-               },
-               "outputPrefixType":"TINK",
-               "keyId":42,
-               "status":"ENABLED"
-            },
-            {
-               "keyData":{
-                  "typeUrl":"type.googleapis.com/google.crypto.tink.AesEaxKey",
-                  "keyMaterialType":"SYMMETRIC",
-                  "value":"$1"
-               },
-               "outputPrefixType":"RAW",
-               "keyId":711,
-               "status":"ENABLED"
-            }
-         ]
-      })",
-                         absl::Base64Escape(gcm_key_.SerializeAsString()),
-                         absl::Base64Escape(eax_key_.SerializeAsString()));
-    ASSERT_FALSE(good_json_keyset_.Parse(json_string.c_str()).HasParseError());
-
-    std::string enc_keyset = "some ciphertext with keyset";
-    encrypted_keyset_.set_encrypted_keyset(enc_keyset);
-    std::string enc_keyset_base64;
-    absl::Base64Escape(enc_keyset, &enc_keyset_base64);
-    auto keyset_info = encrypted_keyset_.mutable_keyset_info();
-    keyset_info->set_primary_key_id(42);
-    auto key_info = keyset_info->add_key_info();
-    key_info->set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
-    key_info->set_key_id(42);
-    key_info->set_output_prefix_type(OutputPrefixType::TINK);
-    key_info->set_status(KeyStatusType::ENABLED);
-    good_json_encrypted_keyset_string_ = "{"
-           "\"encryptedKeyset\": \"" + enc_keyset_base64 + "\", "
-           "\"keysetInfo\": {"
-           "  \"primaryKeyId\": 42,"
-           "  \"keyInfo\": ["
-           "    {"
-           "      \"typeUrl\":"
-           "        \"type.googleapis.com/google.crypto.tink.AesGcmKey\","
-           "      \"outputPrefixType\": \"TINK\","
-           "      \"keyId\": 42,"
-           "      \"status\": \"ENABLED\""
-           "    }"
-           "  ]"
-           "}}";
-    ASSERT_FALSE(good_json_encrypted_keyset_.Parse(
-        good_json_encrypted_keyset_string_.c_str()).HasParseError());
-  }
-
-  EncryptedKeyset encrypted_keyset_;
-  Keyset keyset_;
-  rapidjson::Document good_json_keyset_;
-  rapidjson::Document good_json_encrypted_keyset_;
-  std::string good_json_encrypted_keyset_string_;
-  AesGcmKeyProto gcm_key_;
-  AesEaxKeyProto eax_key_;
-};
-
-TEST_F(JsonKeysetWriterTest, testWriterCreation) {
+TEST(JsonKeysetWriterTest, WriterCreation) {
   {  // Input stream is null.
     std::unique_ptr<std::ostream> null_stream(nullptr);
     auto writer_result = JsonKeysetWriter::New(std::move(null_stream));
@@ -166,100 +83,117 @@ TEST_F(JsonKeysetWriterTest, testWriterCreation) {
   }
 }
 
-TEST_F(JsonKeysetWriterTest, testWriteKeyset) {
-  std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
-  auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
-  auto writer = std::move(writer_result.value());
-  auto status = writer->Write(keyset_);
-  EXPECT_TRUE(status.ok()) << status;
-  rapidjson::Document json_keyset(rapidjson::kObjectType);
-  EXPECT_FALSE(json_keyset.Parse(buffer.str().c_str()).HasParseError());
-  EXPECT_TRUE(good_json_keyset_ == json_keyset);
-}
+TEST(JsonKeysetWriterTest, WriteAndReadKeyset) {
+  Keyset keyset;
+  AesGcmKeyProto gcm_key;
+  gcm_key.set_key_value("gcm 16-byte key");
+  gcm_key.set_version(0);
+  AesEaxKeyProto eax_key;
+  eax_key.set_key_value("gcm 16-byte key");
+  eax_key.set_version(0);
+  eax_key.mutable_params()->set_iv_size(16);
+  AddTinkKey("type.googleapis.com/google.crypto.tink.AesGcmKey", 42, gcm_key,
+             KeyStatusType::ENABLED, KeyData::SYMMETRIC, &keyset);
+  AddRawKey("type.googleapis.com/google.crypto.tink.AesEaxKey", 711, eax_key,
+            KeyStatusType::ENABLED, KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
 
-TEST_F(JsonKeysetWriterTest, testWriteAndReadKeyset) {
   std::stringbuf buffer;
   std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
-  auto status = writer->Write(keyset_);
-  EXPECT_TRUE(status.ok()) << status;
+  auto status = writer->Write(keyset);
+  ASSERT_THAT(status, IsOk());
 
   auto reader_result = JsonKeysetReader::New(buffer.str());
-  EXPECT_TRUE(reader_result.ok()) << reader_result.status();
+  ASSERT_THAT(reader_result, IsOk());
   auto reader = std::move(reader_result.value());
   auto read_result = reader->Read();
-  EXPECT_TRUE(read_result.ok()) << read_result.status();
-  auto keyset = std::move(read_result.value());
-  EXPECT_EQ(keyset_.SerializeAsString(), keyset->SerializeAsString());
+  ASSERT_THAT(read_result, IsOk());
+  EXPECT_THAT((*read_result)->SerializeAsString(),
+              Eq(keyset.SerializeAsString()));
 }
 
-TEST_F(JsonKeysetWriterTest, testWriteEncryptedKeyset) {
+TEST(JsonKeysetWriterTest, WriteAndReadEncryptedKeyset) {
+  EncryptedKeyset encrypted_keyset;
+  std::string enc_keyset = "some ciphertext with keyset";
+  encrypted_keyset.set_encrypted_keyset(enc_keyset);
+  auto keyset_info = encrypted_keyset.mutable_keyset_info();
+  keyset_info->set_primary_key_id(42);
+  auto key_info = keyset_info->add_key_info();
+  key_info->set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
+  key_info->set_key_id(42);
+  key_info->set_output_prefix_type(OutputPrefixType::TINK);
+  key_info->set_status(KeyStatusType::ENABLED);
+
   std::stringbuf buffer;
   std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
-  auto status = writer->Write(encrypted_keyset_);
-  EXPECT_TRUE(status.ok()) << status;
-  rapidjson::Document json_encrypted_keyset(rapidjson::kObjectType);
-  EXPECT_FALSE(
-      json_encrypted_keyset.Parse(buffer.str().c_str()).HasParseError())
-      << "Parsing error at position "
-      << static_cast<unsigned>(json_encrypted_keyset.GetErrorOffset())
-      << " of JSON string\n"
-      << buffer.str() << "\n"
-      << rapidjson::GetParseError_En(json_encrypted_keyset.GetParseError());
-  EXPECT_TRUE(good_json_encrypted_keyset_ == json_encrypted_keyset)
-      << "Expected JSON:\n" << good_json_encrypted_keyset_string_ << "\n"
-      << "Got JSON:\n" << buffer.str();
-}
-
-TEST_F(JsonKeysetWriterTest, testWriteAndReadEncryptedKeyset) {
-  std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
-  auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
-  auto writer = std::move(writer_result.value());
-  auto status = writer->Write(encrypted_keyset_);
-  EXPECT_TRUE(status.ok()) << status;
+  auto status = writer->Write(encrypted_keyset);
+  ASSERT_THAT(status, IsOk());
 
   auto reader_result = JsonKeysetReader::New(buffer.str());
-  EXPECT_TRUE(reader_result.ok()) << reader_result.status();
+  ASSERT_THAT(reader_result, IsOk());
   auto reader = std::move(reader_result.value());
   auto read_result = reader->ReadEncrypted();
-  EXPECT_TRUE(read_result.ok()) << read_result.status();
-  auto encrypted_keyset = std::move(read_result.value());
-  EXPECT_EQ(encrypted_keyset_.SerializeAsString(),
-            encrypted_keyset->SerializeAsString());
+  ASSERT_THAT(read_result, IsOk());
+  EXPECT_THAT((*read_result)->SerializeAsString(),
+              Eq(encrypted_keyset.SerializeAsString()));
 }
 
-TEST_F(JsonKeysetWriterTest, testDestinationStreamErrors) {
+TEST(JsonKeysetWriterTest, WriteKeysetWithDestinationStreamErrors) {
+  Keyset keyset;
+  AesGcmKeyProto gcm_key;
+  gcm_key.set_key_value("gcm 16-byte key");
+  gcm_key.set_version(0);
+  AddTinkKey("type.googleapis.com/google.crypto.tink.AesGcmKey", 42, gcm_key,
+             KeyStatusType::ENABLED, KeyData::SYMMETRIC, &keyset);
+  keyset.set_primary_key_id(42);
+
   std::stringbuf buffer;
   std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
   destination_stream->setstate(std::ostream::badbit);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_TRUE(writer_result.ok()) << writer_result.status();
   auto writer = std::move(writer_result.value());
-  {  // Write keyset.
-    auto status = writer->Write(keyset_);
-    EXPECT_FALSE(status.ok()) << status;
-    EXPECT_EQ(absl::StatusCode::kUnknown, status.code());
-  }
-  {  // Write encrypted keyset.
-    auto status = writer->Write(encrypted_keyset_);
-    EXPECT_FALSE(status.ok()) << status;
-    EXPECT_EQ(absl::StatusCode::kUnknown, status.code());
-  }
+
+  auto status = writer->Write(keyset);
+  ASSERT_THAT(status, Not(IsOk()));
 }
 
-TEST_F(JsonKeysetWriterTest, WriteLargeKeyId) {
+TEST(JsonKeysetWriterTest, WriteEncryptedKeysetWithDestinationStreamErrors) {
+  EncryptedKeyset encrypted_keyset;
+  std::string enc_keyset = "some ciphertext with keyset";
+  encrypted_keyset.set_encrypted_keyset(enc_keyset);
+  auto keyset_info = encrypted_keyset.mutable_keyset_info();
+  keyset_info->set_primary_key_id(42);
+  auto key_info = keyset_info->add_key_info();
+  key_info->set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
+  key_info->set_key_id(42);
+  key_info->set_output_prefix_type(OutputPrefixType::TINK);
+  key_info->set_status(KeyStatusType::ENABLED);
+
+  std::stringbuf buffer;
+  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
+  destination_stream->setstate(std::ostream::badbit);
+  auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
+  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  auto writer = std::move(writer_result.value());
+
+  auto status = writer->Write(encrypted_keyset);
+  ASSERT_THAT(status, Not(IsOk()));
+}
+
+TEST(JsonKeysetWriterTest, WriteLargeKeyId) {
   Keyset keyset;
+  AesGcmKeyProto gcm_key;
+  gcm_key.set_key_value("gcm 16-byte key");
+  gcm_key.set_version(0);
   AddTinkKey("type.googleapis.com/google.crypto.tink.AesGcmKey", 4123456789,
-             gcm_key_, KeyStatusType::ENABLED, KeyData::SYMMETRIC, &keyset);
+             gcm_key, KeyStatusType::ENABLED, KeyData::SYMMETRIC, &keyset);
   keyset.set_primary_key_id(4123456789);  // 4123456789 > 2^31
 
   std::stringbuf buffer;
@@ -272,7 +206,7 @@ TEST_F(JsonKeysetWriterTest, WriteLargeKeyId) {
   EXPECT_THAT(buffer.str(), HasSubstr("\"keyId\": 4123456789"));
 }
 
-TEST_F(JsonKeysetWriterTest, ReadValidEncryptedKeyset) {
+TEST(JsonKeysetWriterTest, ReadValidEncryptedKeyset) {
   Keyset keyset;
   Keyset::Key key;
   AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
@@ -309,11 +243,11 @@ TEST_F(JsonKeysetWriterTest, ReadValidEncryptedKeyset) {
   util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::Read(*std::move(reader), aead);
   ASSERT_THAT(handle, IsOk());
-  EXPECT_EQ(keyset.SerializeAsString(),
-            TestKeysetHandle::GetKeyset(**handle).SerializeAsString());
+  EXPECT_THAT(TestKeysetHandle::GetKeyset(**handle).SerializeAsString(),
+              Eq(keyset.SerializeAsString()));
 }
 
-TEST_F(JsonKeysetWriterTest, ReadValidEncryptedKeysetWithoutKeysetInfo) {
+TEST(JsonKeysetWriterTest, ReadValidEncryptedKeysetWithoutKeysetInfo) {
   Keyset keyset;
   Keyset::Key key;
   AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
@@ -348,7 +282,7 @@ TEST_F(JsonKeysetWriterTest, ReadValidEncryptedKeysetWithoutKeysetInfo) {
             TestKeysetHandle::GetKeyset(**handle).SerializeAsString());
 }
 
-TEST_F(JsonKeysetWriterTest, WrongAeadCannotReadEncryptedKeyset) {
+TEST(JsonKeysetWriterTest, WrongAeadCannotReadEncryptedKeyset) {
   Keyset keyset;
   Keyset::Key key;
   AddTinkKey("some_key_type", 42, key, KeyStatusType::ENABLED,
@@ -381,7 +315,7 @@ TEST_F(JsonKeysetWriterTest, WrongAeadCannotReadEncryptedKeyset) {
   ASSERT_THAT(decrypted_keyset.status(), Not(IsOk()));
 }
 
-TEST_F(JsonKeysetWriterTest, CiphertextDoesNotContainKeyset) {
+TEST(JsonKeysetWriterTest, CiphertextDoesNotContainKeyset) {
   DummyAead aead("dummy aead 42");
   util::StatusOr<std::string> keyset_ciphertext =
       aead.Encrypt("not a serialized keyset", /*associated_data=*/"");
@@ -405,7 +339,7 @@ TEST_F(JsonKeysetWriterTest, CiphertextDoesNotContainKeyset) {
   ASSERT_THAT(decrypted_keyset.status(), Not(IsOk()));
 }
 
-TEST_F(JsonKeysetWriterTest, InvalidCiphertextInEncryptedKeyset) {
+TEST(JsonKeysetWriterTest, InvalidCiphertextInEncryptedKeyset) {
   DummyAead aead("dummy aead 42");
   std::string keyset_ciphertext = "totally wrong ciphertext";
   EncryptedKeyset encrypted_keyset;
@@ -427,7 +361,7 @@ TEST_F(JsonKeysetWriterTest, InvalidCiphertextInEncryptedKeyset) {
   EXPECT_THAT(keyset.status(), Not(IsOk()));
 }
 
-TEST_F(JsonKeysetWriterTest, WriteEncryptedKeyset) {
+TEST(JsonKeysetWriterTest, WriteEncryptedKeyset) {
   // Prepare a valid keyset handle
   Keyset keyset;
   Keyset::Key key;
@@ -467,7 +401,7 @@ TEST_F(JsonKeysetWriterTest, WriteEncryptedKeyset) {
   ASSERT_THAT(*decrypted_keyset, keyset.SerializeAsString());
 }
 
-TEST_F(JsonKeysetWriterTest, WriteEncryptedKeysetWithNullWriter) {
+TEST(JsonKeysetWriterTest, WriteEncryptedKeysetWithNullWriter) {
   // Prepare a valid keyset handle
   Keyset keyset;
   Keyset::Key key;

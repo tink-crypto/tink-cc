@@ -876,6 +876,7 @@ cc_test(
     srcs = ["hpke_parameters_test.cc"],
     deps = [
         ":hpke_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

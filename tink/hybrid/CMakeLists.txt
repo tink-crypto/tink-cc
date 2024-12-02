@@ -867,6 +867,7 @@ tink_cc_test(
     tink::hybrid::hpke_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )

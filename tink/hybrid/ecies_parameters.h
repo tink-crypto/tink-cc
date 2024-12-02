@@ -145,6 +145,10 @@ class EciesParameters : public HybridParameters {
 
   bool operator==(const Parameters& other) const override;
 
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<EciesParameters>(*this);
+  }
+
  private:
   explicit EciesParameters(CurveType curve_type, HashType hash_type,
                            absl::optional<PointFormat> point_format,

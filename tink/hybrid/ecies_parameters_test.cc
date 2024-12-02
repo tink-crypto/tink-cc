@@ -750,6 +750,23 @@ TEST_P(AesCtrHmacDemTest, CreateAesCtrHmacSha256RawDemParameters) {
               Eq(AesCtrHmacAeadParameters::Variant::kNoPrefix));
 }
 
+TEST(EciesParametersTest, Clone) {
+  util::StatusOr<EciesParameters> ecies_parameters =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kNistP256)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetNistCurvePointFormat(EciesParameters::PointFormat::kUncompressed)
+          .SetDemId(EciesParameters::DemId::kXChaCha20Poly1305Raw)
+          .SetSalt(test::HexDecodeOrDie(kSalt))
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  ASSERT_THAT(ecies_parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_ecies_parameters =
+      ecies_parameters->Clone();
+  ASSERT_THAT(*cloned_ecies_parameters, Eq(*ecies_parameters));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

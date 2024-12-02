@@ -17,6 +17,8 @@
 #ifndef TINK_HYBRID_HPKE_PARAMETERS_H_
 #define TINK_HYBRID_HPKE_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/hybrid/hybrid_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -112,6 +114,10 @@ class HpkeParameters : public HybridParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<HpkeParameters>(*this);
+  }
 
  private:
   explicit HpkeParameters(KemId kem_id, KdfId kdf_id, AeadId aead_id,

@@ -17,6 +17,8 @@
 #ifndef TINK_DAEAD_AES_SIV_PARAMETERS_H_
 #define TINK_DAEAD_AES_SIV_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/daead/deterministic_aead_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -59,6 +61,10 @@ class AesSivParameters : public DeterministicAeadParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<AesSivParameters>(*this);
+  }
 
  private:
   AesSivParameters(int key_size_in_bytes, Variant variant)

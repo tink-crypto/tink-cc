@@ -349,6 +349,7 @@ cc_test(
     srcs = ["aes_siv_parameters_test.cc"],
     deps = [
         ":aes_siv_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

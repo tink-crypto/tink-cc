@@ -480,6 +480,7 @@ cc_test(
     srcs = ["aes_cmac_parameters_test.cc"],
     deps = [
         ":aes_cmac_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -544,6 +545,7 @@ cc_test(
     srcs = ["hmac_parameters_test.cc"],
     deps = [
         ":hmac_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

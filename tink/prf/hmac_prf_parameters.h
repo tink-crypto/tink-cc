@@ -17,6 +17,7 @@
 #ifndef TINK_PRF_HMAC_PRF_PARAMETERS_H_
 #define TINK_PRF_HMAC_PRF_PARAMETERS_H_
 
+#include <memory>
 #include "tink/parameters.h"
 #include "tink/prf/prf_parameters.h"
 #include "tink/util/statusor.h"
@@ -52,6 +53,10 @@ class HmacPrfParameters : public PrfParameters {
   HashType GetHashType() const { return hash_type_; }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<HmacPrfParameters>(*this);
+  }
 
  private:
   explicit HmacPrfParameters(int key_size_in_bytes, HashType hash_type)

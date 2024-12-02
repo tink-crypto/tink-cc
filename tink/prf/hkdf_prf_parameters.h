@@ -17,6 +17,7 @@
 #ifndef TINK_PRF_HKDF_PRF_PARAMETERS_H_
 #define TINK_PRF_HKDF_PRF_PARAMETERS_H_
 
+#include <memory>
 #include <string>
 #include <utility>
 
@@ -64,6 +65,10 @@ class HkdfPrfParameters : public PrfParameters {
   absl::optional<absl::string_view> GetSalt() const { return salt_; }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<HkdfPrfParameters>(*this);
+  }
 
  private:
   explicit HkdfPrfParameters(int key_size_in_bytes, HashType hash_type,

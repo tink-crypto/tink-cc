@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -314,6 +315,17 @@ TEST(HmacParametersTest, VariantNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(HmacParametersTest, Clone) {
+  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      /*key_size_in_bytes=*/32,
+      /*cryptographic_tag_size_in_bytes=*/10, HmacParameters::HashType::kSha256,
+      HmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

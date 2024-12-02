@@ -16,12 +16,14 @@
 
 #include "tink/mac/aes_cmac_parameters.h"
 
+#include <memory>
 #include <tuple>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -295,6 +297,18 @@ TEST(AesCmacParametersTest, VariantNotEqual) {
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
 }
+
+TEST(AesCmacParametersTest, Clone) {
+  util::StatusOr<AesCmacParameters> parameters =
+      AesCmacParameters::Create(/*key_size_in_bytes=*/32,
+                                /*cryptographic_tag_size_in_bytes=*/10,
+                                AesCmacParameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
+}
+
 
 }  // namespace
 }  // namespace tink

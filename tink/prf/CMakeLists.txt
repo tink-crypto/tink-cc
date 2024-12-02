@@ -536,6 +536,7 @@ tink_cc_test(
     tink::prf::aes_cmac_prf_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -593,6 +594,7 @@ tink_cc_test(
     tink::prf::hmac_prf_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -653,6 +655,7 @@ tink_cc_test(
     absl::status
     absl::string_view
     absl::optional
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

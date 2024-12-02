@@ -17,6 +17,7 @@
 #ifndef TINK_PRF_AES_CMAC_PRF_PARAMETERS_H_
 #define TINK_PRF_AES_CMAC_PRF_PARAMETERS_H_
 
+#include <memory>
 #include "tink/parameters.h"
 #include "tink/prf/prf_parameters.h"
 #include "tink/util/statusor.h"
@@ -40,6 +41,10 @@ class AesCmacPrfParameters : public PrfParameters {
   int KeySizeInBytes() const { return key_size_in_bytes_; }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<AesCmacPrfParameters>(*this);
+  }
 
  private:
   explicit AesCmacPrfParameters(int key_size_in_bytes)

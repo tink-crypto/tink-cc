@@ -83,6 +83,10 @@ class AesCmacParameters : public MacParameters {
 
   bool operator==(const Parameters& other) const override;
 
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<AesCmacParameters>(*this);
+  }
+
  private:
   AesCmacParameters(int key_size_in_bytes, int cryptographic_tag_size_in_bytes,
                     Variant variant)

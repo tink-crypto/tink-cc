@@ -96,6 +96,10 @@ class HmacParameters : public MacParameters {
 
   bool operator==(const Parameters& other) const override;
 
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<HmacParameters>(*this);
+  }
+
  private:
   HmacParameters(int key_size_in_bytes, int cryptographic_tag_size_in_bytes,
                  HashType hash_type, Variant variant)

@@ -16,6 +16,7 @@
 
 #include "tink/prf/hkdf_prf_parameters.h"
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -23,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -212,6 +214,17 @@ TEST(HkdfPrfParametersTest, DifferentSaltNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(HkdfPrfParametersTest, Clone) {
+  std::string salt1 = test::HexDecodeOrDie("2023ab");
+  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
+      /*salt=*/salt1);
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

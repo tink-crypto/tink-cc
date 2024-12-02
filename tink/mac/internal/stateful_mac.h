@@ -24,8 +24,8 @@
 // and non-streaming MACs. It does not enforce thread-safety in order to avoid
 // an unnecessary performance overhead for non-streaming MAC implementations.
 
-#ifndef TINK_SUBTLE_MAC_STATEFUL_MAC_H_
-#define TINK_SUBTLE_MAC_STATEFUL_MAC_H_
+#ifndef TINK_MAC_INTERNAL_STATEFUL_MAC_H_
+#define TINK_MAC_INTERNAL_STATEFUL_MAC_H_
 
 #include <memory>
 #include <string>
@@ -61,4 +61,4 @@ class StatefulMacFactory {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SUBTLE_MAC_STATEFUL_MAC_H_
+#endif  // TINK_MAC_INTERNAL_STATEFUL_MAC_H_

@@ -14,8 +14,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SUBTLE_STATEFUL_HMAC_BORINGSSL_H_
-#define TINK_SUBTLE_STATEFUL_HMAC_BORINGSSL_H_
+#ifndef TINK_MAC_INTERNAL_STATEFUL_HMAC_BORINGSSL_H_
+#define TINK_MAC_INTERNAL_STATEFUL_HMAC_BORINGSSL_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -73,4 +73,4 @@ class StatefulHmacBoringSslFactory : public StatefulMacFactory {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SUBTLE_STATEFUL_HMAC_BORINGSSL_H_
+#endif  // TINK_MAC_INTERNAL_STATEFUL_HMAC_BORINGSSL_H_

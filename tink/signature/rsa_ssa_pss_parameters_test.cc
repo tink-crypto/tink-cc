@@ -17,6 +17,7 @@
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
@@ -30,6 +31,7 @@
 #include "tink/big_integer.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -582,6 +584,22 @@ TEST(RsaSsaPssParametersTest, PublicExponentNotEqual) {
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST(RsaSsaPssParametersTest, Clone) {
+  util::StatusOr<RsaSsaPssParameters> parameters =
+      RsaSsaPssParameters::Builder()
+          .SetVariant(RsaSsaPssParameters::Variant::kTink)
+          .SetModulusSizeInBits(2048)
+          .SetSigHashType(RsaSsaPssParameters::HashType::kSha512)
+          .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
+          .SetSaltLengthInBytes(64)
+          .SetPublicExponent(kF4)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
+  ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
 }  // namespace

@@ -17,6 +17,7 @@
 #ifndef TINK_SIGNATURE_ML_DSA_PARAMETERS_H_
 #define TINK_SIGNATURE_ML_DSA_PARAMETERS_H_
 
+#include <memory>
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
 #include "tink/util/statusor.h"
@@ -66,6 +67,10 @@ class MlDsaParameters : public SignatureParameters {
   bool HasIdRequirement() const override { return variant_ == Variant::kTink; }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<MlDsaParameters>(*this);
+  }
 
  private:
   explicit MlDsaParameters(Instance instance, Variant variant)

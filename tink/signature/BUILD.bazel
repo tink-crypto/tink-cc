@@ -973,6 +973,7 @@ cc_test(
     srcs = ["slh_dsa_parameters_test.cc"],
     deps = [
         ":slh_dsa_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1491,6 +1492,7 @@ cc_test(
     srcs = ["ed25519_parameters_test.cc"],
     deps = [
         ":ed25519_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1572,6 +1574,7 @@ cc_test(
     deps = [
         ":rsa_ssa_pkcs1_parameters",
         "//tink:big_integer",
+        "//tink:parameters",
         "//tink/internal:bn_util",
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:statusor",
@@ -1693,6 +1696,7 @@ cc_test(
     deps = [
         ":rsa_ssa_pss_parameters",
         "//tink:big_integer",
+        "//tink:parameters",
         "//tink/internal:bn_util",
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:statusor",
@@ -1793,6 +1797,7 @@ cc_test(
     srcs = ["ecdsa_parameters_test.cc"],
     deps = [
         ":ecdsa_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -1889,6 +1894,7 @@ cc_test(
     srcs = ["ml_dsa_parameters_test.cc"],
     deps = [
         ":ml_dsa_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",

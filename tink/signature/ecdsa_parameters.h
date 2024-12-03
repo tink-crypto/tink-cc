@@ -17,6 +17,8 @@
 #ifndef TINK_SIGNATURE_ECDSA_PARAMETERS_H_
 #define TINK_SIGNATURE_ECDSA_PARAMETERS_H_
 
+#include <memory>
+
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
@@ -105,6 +107,10 @@ class EcdsaParameters : public SignatureParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<EcdsaParameters>(*this);
+  }
 
  private:
   explicit EcdsaParameters(CurveType curve_type, HashType hash_type,

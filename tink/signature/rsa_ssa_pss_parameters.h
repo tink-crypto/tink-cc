@@ -17,6 +17,7 @@
 #ifndef TINK_SIGNATURE_RSA_SSA_PSS_PARAMETERS_H_
 #define TINK_SIGNATURE_RSA_SSA_PSS_PARAMETERS_H_
 
+#include <memory>
 #include <string>
 
 #include "absl/types/optional.h"
@@ -110,6 +111,10 @@ class RsaSsaPssParameters : public SignatureParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<RsaSsaPssParameters>(*this);
+  }
 
  private:
   explicit RsaSsaPssParameters(int modulus_size_in_bits,

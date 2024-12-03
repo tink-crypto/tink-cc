@@ -17,6 +17,8 @@
 #ifndef TINK_SIGNATURE_SLH_DSA_PARAMETERS_H_
 #define TINK_SIGNATURE_SLH_DSA_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
 #include "tink/util/statusor.h"
@@ -81,6 +83,10 @@ class SlhDsaParameters : public SignatureParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<SlhDsaParameters>(*this);
+  }
 
  private:
   explicit SlhDsaParameters(HashType hash_type, int private_key_size_in_bytes,

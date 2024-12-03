@@ -791,6 +791,7 @@ tink_cc_test(
     tink::jwt::jwt_hmac_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -849,6 +850,7 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )
@@ -945,6 +947,7 @@ tink_cc_test(
     absl::status
     crypto
     tink::core::big_integer
+    tink::core::parameters
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::statusor
@@ -1044,6 +1047,7 @@ tink_cc_test(
     absl::status
     crypto
     tink::core::big_integer
+    tink::core::parameters
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
     tink::util::statusor

@@ -17,6 +17,8 @@
 #ifndef TINK_JWT_JWT_ECDSA_PARAMETERS_H_
 #define TINK_JWT_JWT_ECDSA_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/jwt/jwt_signature_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -76,7 +78,7 @@ class JwtEcdsaParameters : public JwtSignatureParameters {
   // Creates JWT ECDSA parameters object. Returns an error status if
   // if either `kid_strategy` is invalid or `algorithm` is invalid.
   static util::StatusOr<JwtEcdsaParameters> Create(KidStrategy kid_strategy,
-                                                  Algorithm algorithm);
+                                                   Algorithm algorithm);
 
   KidStrategy GetKidStrategy() const { return kid_strategy_; }
 
@@ -92,6 +94,10 @@ class JwtEcdsaParameters : public JwtSignatureParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<JwtEcdsaParameters>(*this);
+  }
 
  private:
   JwtEcdsaParameters(KidStrategy kid_strategy, Algorithm algorithm)

@@ -829,6 +829,7 @@ cc_test(
     srcs = ["jwt_hmac_parameters_test.cc"],
     deps = [
         ":jwt_hmac_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -887,6 +888,7 @@ cc_test(
     srcs = ["jwt_ecdsa_parameters_test.cc"],
     deps = [
         ":jwt_ecdsa_parameters",
+        "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
@@ -982,6 +984,7 @@ cc_test(
     deps = [
         ":jwt_rsa_ssa_pkcs1_parameters",
         "//tink:big_integer",
+        "//tink:parameters",
         "//tink/internal:bn_util",
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:statusor",
@@ -1081,6 +1084,7 @@ cc_test(
     deps = [
         ":jwt_rsa_ssa_pss_parameters",
         "//tink:big_integer",
+        "//tink:parameters",
         "//tink/internal:bn_util",
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:statusor",

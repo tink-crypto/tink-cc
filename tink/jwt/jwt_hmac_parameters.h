@@ -17,6 +17,8 @@
 #ifndef TINK_JWT_JWT_HMAC_PARAMETERS_H_
 #define TINK_JWT_JWT_HMAC_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/jwt/jwt_mac_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -96,6 +98,10 @@ class JwtHmacParameters : public JwtMacParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<JwtHmacParameters>(*this);
+  }
 
  private:
   JwtHmacParameters(int key_size_in_bytes, KidStrategy kid_strategy,

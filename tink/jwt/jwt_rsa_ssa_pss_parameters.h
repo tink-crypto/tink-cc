@@ -17,6 +17,7 @@
 #ifndef TINK_JWT_JWT_RSA_SSA_PSS_PARAMETERS_H_
 #define TINK_JWT_JWT_RSA_SSA_PSS_PARAMETERS_H_
 
+#include <memory>
 #include <string>
 
 #include "absl/types/optional.h"
@@ -107,8 +108,7 @@ class JwtRsaSsaPssParameters : public JwtSignatureParameters {
   JwtRsaSsaPssParameters& operator=(const JwtRsaSsaPssParameters& other) =
       default;
   JwtRsaSsaPssParameters(JwtRsaSsaPssParameters&& other) = default;
-  JwtRsaSsaPssParameters& operator=(JwtRsaSsaPssParameters&& other) =
-      default;
+  JwtRsaSsaPssParameters& operator=(JwtRsaSsaPssParameters&& other) = default;
 
   Algorithm GetAlgorithm() const { return algorithm_; }
 
@@ -129,11 +129,14 @@ class JwtRsaSsaPssParameters : public JwtSignatureParameters {
 
   bool operator==(const Parameters& other) const override;
 
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<JwtRsaSsaPssParameters>(*this);
+  }
+
  private:
-  explicit JwtRsaSsaPssParameters(Algorithm algorithm,
-                                    KidStrategy kid_strategy,
-                                    int modulus_size_in_bits,
-                                    const BigInteger& public_exponent)
+  explicit JwtRsaSsaPssParameters(Algorithm algorithm, KidStrategy kid_strategy,
+                                  int modulus_size_in_bits,
+                                  const BigInteger& public_exponent)
       : algorithm_(algorithm),
         kid_strategy_(kid_strategy),
         modulus_size_in_bits_(modulus_size_in_bits),

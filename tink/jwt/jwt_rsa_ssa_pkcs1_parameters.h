@@ -17,6 +17,7 @@
 #ifndef TINK_JWT_JWT_RSA_SSA_PKCS1_PARAMETERS_H_
 #define TINK_JWT_JWT_RSA_SSA_PKCS1_PARAMETERS_H_
 
+#include <memory>
 #include <string>
 
 #include "absl/types/optional.h"
@@ -128,6 +129,10 @@ class JwtRsaSsaPkcs1Parameters : public JwtSignatureParameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<JwtRsaSsaPkcs1Parameters>(*this);
+  }
 
  private:
   explicit JwtRsaSsaPkcs1Parameters(Algorithm algorithm,

@@ -1746,6 +1746,7 @@ tink_cc_test(
     gmock
     absl::crc32c
     absl::status
+    absl::strings
     tink::subtle::random
     tink::util::secret_data
     tink::util::test_matchers

@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -43,6 +44,8 @@ using ::crypto::tink::util::SecretDataFromStringView;
 using ::crypto::tink::util::SecretValue;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::SizeIs;
 
 TEST(SecretDataWithCrcTest, DefaultConstructor) {
@@ -239,6 +242,33 @@ TEST(SecretDataWithCrcTest, UncheckedAsSecretDataConstRefOverload) {
   SecretData secret_data = secret_data_with_crc.UncheckedAsSecretData();
   EXPECT_THAT(SecretDataAsStringView(secret_data), Eq(data));
   EXPECT_THAT(secret_data_with_crc.AsStringView(), Eq(data));
+}
+
+TEST(SecretDataWithCrcTest, EqualityEqual) {
+  SecretDataWithCrc secret_data_with_crc_1 =
+      SecretDataWithCrc::WithComputedCrc("Some data");
+  SecretDataWithCrc secret_data_with_crc_1_copy =
+      SecretDataWithCrc::WithComputedCrc("Some data");
+  EXPECT_THAT(secret_data_with_crc_1 == secret_data_with_crc_1_copy, IsTrue());
+  EXPECT_THAT(secret_data_with_crc_1 != secret_data_with_crc_1_copy, IsFalse());
+}
+
+TEST(SecretDataWithCrcTest, EqualitySameSizeDifferentData) {
+  SecretDataWithCrc secret_data_with_crc_1 =
+      SecretDataWithCrc::WithComputedCrc("Some data");
+  SecretDataWithCrc secret_data_with_crc_2 =
+      SecretDataWithCrc::WithComputedCrc("SOME DATA");
+  EXPECT_THAT(secret_data_with_crc_1 == secret_data_with_crc_2, IsFalse());
+  EXPECT_THAT(secret_data_with_crc_1 != secret_data_with_crc_2, IsTrue());
+}
+
+TEST(SecretDataWithCrcTest, EqualityDifferentSize) {
+  SecretDataWithCrc secret_data_with_crc_1 =
+      SecretDataWithCrc::WithComputedCrc("Some data");
+  SecretDataWithCrc secret_data_with_crc_2 =
+      SecretDataWithCrc::WithComputedCrc("Some data 2");
+  EXPECT_THAT(secret_data_with_crc_1 == secret_data_with_crc_2, IsFalse());
+  EXPECT_THAT(secret_data_with_crc_1 != secret_data_with_crc_2, IsTrue());
 }
 
 }  // namespace

@@ -24,6 +24,8 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 
@@ -95,6 +97,20 @@ class SecretDataWithCrc final {
   crypto::tink::util::Status ValidateCrc() const;
 
   size_t size() const { return data_.size(); }
+
+  bool operator==(const SecretDataWithCrc& other) const {
+    if (!util::SecretDataEquals(data_, other.data_)) {
+      return false;
+    }
+    return internal::CallWithCoreDumpProtection([&]() {
+      bool result = crc_.value() == other.crc_.value();
+      DfsanClearLabel(&result, sizeof(result));
+      return result;
+    });
+  }
+  bool operator!=(const SecretDataWithCrc& other) const {
+    return !(*this == other);
+  }
 
  private:
   crypto::tink::util::SecretData data_;

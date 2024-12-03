@@ -1816,6 +1816,7 @@ cc_test(
         "//tink/util:test_matchers",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )

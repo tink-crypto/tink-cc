@@ -41,4 +41,4 @@ RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_AEAD_INTERNAL_XCHACHA20_POLY1305_PROTO_SERIALIZATION_IMPL_H_
+#endif  // TINK_AEAD_INTERNAL_CHACHA20_POLY1305_PROTO_SERIALIZATION_IMPL_H_

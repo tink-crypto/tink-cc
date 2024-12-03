@@ -86,6 +86,10 @@ class NoIdParams : public Parameters {
   bool operator==(const Parameters& other) const override {
     return !other.HasIdRequirement();
   }
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<NoIdParams>(*this);
+  }
 };
 
 // Key without an ID requirement.
@@ -117,6 +121,10 @@ class IdParams : public Parameters {
 
   bool operator==(const Parameters& other) const override {
     return other.HasIdRequirement();
+  }
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<IdParams>(*this);
   }
 };
 

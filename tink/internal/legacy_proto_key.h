@@ -59,6 +59,10 @@ class UnusableLegacyProtoParameters : public Parameters {
 
   bool operator==(const Parameters& other) const override;
 
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<UnusableLegacyProtoParameters>(*this);
+  }
+
  private:
   std::string type_url_;
   google::crypto::tink::OutputPrefixType output_prefix_type_;

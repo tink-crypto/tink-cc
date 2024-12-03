@@ -17,6 +17,8 @@
 #ifndef TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_PARAMETERS_H_
 #define TINK_EXPERIMENTAL_PQCRYPTO_KEM_ML_KEM_PARAMETERS_H_
 
+#include <memory>
+
 #include "tink/experimental/kem/kem_parameters.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
@@ -59,6 +61,10 @@ class MlKemParameters : public KemParameters {
   bool HasIdRequirement() const override { return variant_ == Variant::kTink; }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<MlKemParameters>(*this);
+  }
 
  private:
   explicit MlKemParameters(int key_size, Variant variant)

@@ -243,6 +243,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     gmock
     absl::status
+    tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
 )

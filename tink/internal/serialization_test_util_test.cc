@@ -64,6 +64,13 @@ TEST(NoIdParamsTest, ParseAndSerialize) {
               IsOkAndHolds(NoIdSerialization()));
 }
 
+TEST(NoIdParamsTest, Clone) {
+  NoIdParams params;
+  std::unique_ptr<Parameters> cloned_params = params.Clone();
+
+  EXPECT_THAT(*cloned_params, Eq(params));
+}
+
 TEST(IdParamsTest, Create) {
   IdParams params;
 
@@ -76,6 +83,13 @@ TEST(IdParamsTest, ParseAndSerialize) {
   EXPECT_THAT(ParseIdParams(IdParamsSerialization()), IsOkAndHolds(IdParams()));
   EXPECT_THAT(SerializeIdParams(IdParams()),
               IsOkAndHolds(IdParamsSerialization()));
+}
+
+TEST(IdParamsTest, Clone) {
+  NoIdParams params;
+  std::unique_ptr<Parameters> cloned_params = params.Clone();
+
+  EXPECT_THAT(*cloned_params, Eq(params));
 }
 
 TEST(NoIdKeyTest, Create) {

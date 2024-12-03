@@ -17,6 +17,7 @@
 #ifndef TINK_INTERNAL_LEGACY_PROTO_PARAMETERS_H_
 #define TINK_INTERNAL_LEGACY_PROTO_PARAMETERS_H_
 
+#include <memory>
 #include <utility>
 
 #include "tink/internal/proto_parameters_serialization.h"
@@ -45,6 +46,10 @@ class LegacyProtoParameters : public Parameters {
   }
 
   bool operator==(const Parameters& other) const override;
+
+  std::unique_ptr<Parameters> Clone() const {
+    return std::make_unique<LegacyProtoParameters>(*this);
+  }
 
   const ProtoParametersSerialization& Serialization() const {
     return serialization_;

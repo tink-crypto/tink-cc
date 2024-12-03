@@ -83,11 +83,6 @@ class SecretDataWithCrc final {
     return data_;
   }
 
-  // Use GetCrc32c instead (if necessary in a CallWithCoreDumpProtection)
-  crypto::tink::util::SecretValue<absl::crc32c_t> SecretCrc() const {
-    return crc_;
-  }
-
   // Returns the currently stored CRC.
   // Should only be called within CallWithCoreDumpProtection (as it passes
   // secret data -- the CRC -- on the stack or in the register).

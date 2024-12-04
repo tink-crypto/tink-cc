@@ -74,6 +74,10 @@ SecretDataWithCrc::SecretDataWithCrc(SecretData data,
                                      SecretValue<absl::crc32c_t> crc)
     : data_(std::move(data)), crc_(crc) {}
 
+SecretDataWithCrc::SecretDataWithCrc(absl::string_view data, absl::crc32c_t crc)
+    : SecretDataWithCrc(SecretDataFromStringView(data),
+                        SecretValue<absl::crc32c_t>(crc)) {}
+
 SecretDataWithCrc::SecretDataWithCrc(absl::string_view data,
                                      SecretValue<absl::crc32c_t> crc)
     : SecretDataWithCrc(SecretDataFromStringView(data), std::move(crc)) {}

@@ -111,6 +111,21 @@ TEST(SecretDataWithCrcTest, CreateWithCrc) {
   EXPECT_THAT(data_3, SizeIs(data.size()));
 }
 
+TEST(SecretDataWithCrcTest, CreateWithCrcNonSecretValueConstructor) {
+  std::string data = "Hello";
+  absl::crc32c_t crc = absl::ComputeCrc32c(data);
+
+  SecretDataWithCrc data_1(data, crc);
+  EXPECT_THAT(data_1.AsStringView(), Eq(data));
+  EXPECT_EQ(data_1.GetCrc32c(), crc);
+  EXPECT_THAT(data_1.ValidateCrc(), IsOk());
+
+  SecretDataWithCrc data_2(data, absl::ComputeCrc32c("World"));
+  EXPECT_THAT(data_2.AsStringView(), Eq(data));
+  EXPECT_EQ(data_2.GetCrc32c(), absl::ComputeCrc32c("World"));
+  EXPECT_THAT(data_2.ValidateCrc(), StatusIs(absl::StatusCode::kDataLoss));
+}
+
 TEST(SecretDataWithCrcTest, ValidateCrcSucceeds) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);

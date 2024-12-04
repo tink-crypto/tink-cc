@@ -259,6 +259,17 @@ TEST(SecretDataWithCrcTest, EqualityDifferentSize) {
   EXPECT_THAT(secret_data_with_crc_1 != secret_data_with_crc_2, IsTrue());
 }
 
+TEST(SecretDataWithCrcTest, SizeAndEmpty) {
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc("");
+  EXPECT_THAT(secret_data_with_crc.size(), Eq(0));
+  EXPECT_THAT(secret_data_with_crc.empty(), IsTrue());
+
+  secret_data_with_crc = SecretDataWithCrc::WithComputedCrc("text");
+  EXPECT_THAT(secret_data_with_crc.size(), Eq(4));
+  EXPECT_THAT(secret_data_with_crc.empty(), IsFalse());
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

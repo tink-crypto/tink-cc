@@ -91,6 +91,7 @@ class SecretDataWithCrc final {
 
   crypto::tink::util::Status ValidateCrc() const;
 
+  bool empty() const { return data_.empty(); }
   size_t size() const { return data_.size(); }
 
   bool operator==(const SecretDataWithCrc& other) const {

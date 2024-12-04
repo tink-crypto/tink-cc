@@ -45,6 +45,7 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::restricted_data
     tink::internal::proto_key_serialization
+    tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
 )
 
@@ -65,4 +66,35 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME wycheproof_util
+  SRCS
+    wycheproof_util.cc
+    wycheproof_util.h
+  DEPS
+    protobuf::libprotobuf
+    absl::log
+    absl::status
+    absl::strings
+    absl::string_view
+    tink::internal::test_file_util
+    tink::subtle::common_enums
+    tink::util::status
+    tink::util::statusor
+  TESTONLY
+)
+
+tink_cc_test(
+  NAME wycheproof_util_test
+  SRCS
+    wycheproof_util_test.cc
+  DATA
+    wycheproof::testvectors
+  DEPS
+    tink::internal::testing::wycheproof_util
+    gmock
+    tink::subtle::common_enums
+    tink::util::test_matchers
 )

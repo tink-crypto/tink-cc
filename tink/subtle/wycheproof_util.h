@@ -30,6 +30,7 @@ namespace subtle {
 // WycheproofUtil is a util that is used to read test vectors from project
 // Wycheproof and convert the values in the test vectors into corresponding
 // values for tink.
+// TODO(b/339355094): Remove this class.
 class WycheproofUtil {
  public:
   // Converts a JSON value into a byte array.

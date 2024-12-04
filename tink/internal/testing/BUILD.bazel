@@ -45,6 +45,7 @@ cc_library(
         "//tink:insecure_secret_key_access",
         "//tink:restricted_data",
         "//tink/internal:proto_key_serialization",
+        "//tink/internal:proto_parser_state",
         "//tink/internal:proto_parsing_helpers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status:statusor",
@@ -70,6 +71,37 @@ cc_test(
         "//tink/util:test_util",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "wycheproof_util",
+    testonly = 1,
+    srcs = ["wycheproof_util.cc"],
+    hdrs = ["wycheproof_util.h"],
+    include_prefix = "tink/internal/testing",
+    deps = [
+        "//tink/internal:test_file_util",
+        "//tink/subtle:common_enums",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/log",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
+cc_test(
+    name = "wycheproof_util_test",
+    srcs = ["wycheproof_util_test.cc"],
+    data = ["//testvectors:rsa_pss"],
+    deps = [
+        ":wycheproof_util",
+        "//tink/subtle:common_enums",
+        "//tink/util:test_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

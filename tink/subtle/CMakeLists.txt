@@ -1296,18 +1296,17 @@ tink_cc_test(
   DEPS
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    tink::subtle::wycheproof_util
     gmock
+    absl::check
     absl::status
     absl::strings
     crypto
-    rapidjson
-    tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::err_util
     tink::internal::fips_utils
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
+    tink::internal::testing::wycheproof_util
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector

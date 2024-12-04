@@ -19,28 +19,26 @@
 #include <cstddef>
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
-#include "include/rapidjson/document.h"
 #include "tink/internal/err_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
-#include "tink/public_key_sign.h"
+#include "tink/internal/testing/wycheproof_util.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/wycheproof_util.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -59,6 +57,11 @@ using ::testing::Not;
 using ::testing::NotNull;
 using ::testing::TestParamInfo;
 using ::testing::ValuesIn;
+
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::GetHashTypeFromValue;
+using ::crypto::tink::internal::wycheproof_testing::GetIntegerFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 
 // Test vector from
 // https://csrc.nist.gov/Projects/Cryptographic-Algorithm-Validation-Program/Digital-Signatures
@@ -215,28 +218,39 @@ struct RsaSsaPssWycheproofTestVector {
 
 // Reads the RSA-SSA PSS wycheproof test vectors from a given `file_name` and
 // returns a vector of RsaSsaPssWycheproofTestVector.
-std::vector<RsaSsaPssWycheproofTestVector> ReadTestVectors(
+std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
     absl::string_view file_name) {
   std::vector<RsaSsaPssWycheproofTestVector> test_vectors;
-  std::unique_ptr<rapidjson::Document> root =
-      WycheproofUtil::ReadTestVectors(std::string(file_name));
-  for (const rapidjson::Value& test_group : (*root)["testGroups"].GetArray()) {
-    for (const rapidjson::Value& test : test_group["tests"].GetArray()) {
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors(std::string(file_name));
+  CHECK_OK(parsed_input.status());
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    auto test_group_fields = test_group.struct_value().fields();
+    for (const google::protobuf::Value& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      auto test_fields = test.struct_value().fields();
       test_vectors.push_back({
           /*file_name=*/std::string(file_name),
           /*key=*/
           {
-              WycheproofUtil::GetInteger(test_group["n"]),
-              WycheproofUtil::GetInteger(test_group["e"]),
+              GetIntegerFromHexValue(test_group_fields.at("n")),
+              GetIntegerFromHexValue(test_group_fields.at("e")),
           },
-          /*hash_type=*/WycheproofUtil::GetHashType(test_group["sha"]),
-          /*mgf_hash_type=*/WycheproofUtil::GetHashType(test_group["mgfSha"]),
-          /*salt_length=*/test_group["sLen"].GetInt(),
-          /*expected=*/test["result"].GetString(),
-          /*msg=*/WycheproofUtil::GetBytes(test["msg"]),
-          /*sig=*/WycheproofUtil::GetBytes(test["sig"]),
-          /*id=*/absl::StrCat(test["tcId"].GetInt()),
-          /*comment=*/test["comment"].GetString(),
+          /*hash_type=*/GetHashTypeFromValue(test_group_fields.at("sha")),
+          /*mgf_hash_type=*/
+          GetHashTypeFromValue(test_group_fields.at("mgfSha")),
+          /*salt_length=*/
+          (int)test_group_fields.at("sLen").number_value(),
+          /*expected=*/test.struct_value().fields().at("result").string_value(),
+          /*msg=*/GetBytesFromHexValue(test_fields.at("msg")),
+          /*sig=*/GetBytesFromHexValue(test_fields.at("sig")),
+          /*id=*/
+          absl::StrCat(test_fields.at("tcId").number_value()),
+          /*comment=*/
+          test_fields.at("comment").string_value(),
       });
     }
   }
@@ -283,18 +297,19 @@ TEST_P(RsaSsaPssWycheproofTest, SignatureVerify) {
 }
 
 std::vector<RsaSsaPssWycheproofTestVector> GetTestParameters() {
-  std::vector<RsaSsaPssWycheproofTestVector> test_vectors = ReadTestVectors(
-      /*file_name=*/"rsa_pss_2048_sha256_mgf1_0_test.json");
-  std::vector<RsaSsaPssWycheproofTestVector> others = ReadTestVectors(
+  std::vector<RsaSsaPssWycheproofTestVector> test_vectors =
+      ReadWycheproofTestVectors(
+          /*file_name=*/"rsa_pss_2048_sha256_mgf1_0_test.json");
+  std::vector<RsaSsaPssWycheproofTestVector> others = ReadWycheproofTestVectors(
       /*file_name=*/"rsa_pss_2048_sha256_mgf1_32_test.json");
   test_vectors.insert(test_vectors.end(), others.begin(), others.end());
-  others = ReadTestVectors(
+  others = ReadWycheproofTestVectors(
       /*file_name=*/"rsa_pss_3072_sha256_mgf1_32_test.json");
   test_vectors.insert(test_vectors.end(), others.begin(), others.end());
-  others = ReadTestVectors(
+  others = ReadWycheproofTestVectors(
       /*file_name=*/"rsa_pss_4096_sha256_mgf1_32_test.json");
   test_vectors.insert(test_vectors.end(), others.begin(), others.end());
-  others = ReadTestVectors(
+  others = ReadWycheproofTestVectors(
       /*file_name=*/"rsa_pss_4096_sha512_mgf1_32_test.json");
   test_vectors.insert(test_vectors.end(), others.begin(), others.end());
   return test_vectors;

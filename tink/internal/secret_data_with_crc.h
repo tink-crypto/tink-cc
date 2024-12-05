@@ -18,6 +18,7 @@
 #define TINK_INTERNAL_SECRET_DATA_WITH_CRC_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <utility>
 
 #include "absl/crc/crc32c.h"
@@ -83,6 +84,9 @@ class SecretDataWithCrc final {
 
   // Returns the data without verifying the CRC32C.
   absl::string_view AsStringView() const;
+
+  const uint8_t& operator[](size_t pos) const { return data_[pos]; }
+  const uint8_t* data() const { return data_.data(); }
 
   // Returns the data without verifying the CRC32C. Leaves the object in an
   // invalid state.

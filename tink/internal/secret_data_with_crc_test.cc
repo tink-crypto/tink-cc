@@ -25,9 +25,11 @@
 #include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -35,6 +37,7 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::subtle::Random;
+using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
@@ -177,6 +180,25 @@ TEST(SecretDataWithCrcTest, AsStringViewWithInvalidCrcSucceeds) {
   SecretDataWithCrc data_3(std::move(secret_data),
                            SecretValue<absl::crc32c_t>(crc));
   EXPECT_EQ(data_3.AsStringView(), data);
+}
+
+TEST(SecretDataWithCrcTest, OperatorBracket) {
+  std::string data = HexDecodeOrDie("17ab88bb");
+
+  SecretDataWithCrc secret_data = SecretDataWithCrc::WithComputedCrc(data);
+  EXPECT_THAT(secret_data[0], Eq(0x17));
+  EXPECT_THAT(secret_data[1], Eq(0xab));
+  EXPECT_THAT(secret_data[2], Eq(0x88));
+  EXPECT_THAT(secret_data[3], Eq(0xbb));
+}
+
+TEST(SecretDataWithCrcTest, Data) {
+  std::string data = HexDecodeOrDie("17ab88bb");
+
+  SecretDataWithCrc secret_data = SecretDataWithCrc::WithComputedCrc(data);
+  EXPECT_THAT(
+      absl::string_view(reinterpret_cast<const char*>(secret_data.data()), 4),
+      Eq(data));
 }
 
 TEST(SecretDataWithCrcTest, CopyConstructor) {

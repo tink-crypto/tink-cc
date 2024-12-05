@@ -1110,15 +1110,14 @@ tink_cc_test(
     wycheproof::testvectors
   DEPS
     tink::subtle::aes_eax_boringssl
-    tink::subtle::wycheproof_util
     gmock
+    absl::check
     absl::status
     absl::strings
     crypto
-    rapidjson
     tink::config::tink_fips
+    tink::internal::testing::wycheproof_util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
@@ -1167,12 +1166,12 @@ tink_cc_test(
     wycheproof::testvectors
   DEPS
     tink::subtle::aes_siv_boringssl
-    tink::subtle::wycheproof_util
     gmock
+    absl::check
     absl::status
     absl::string_view
-    rapidjson
     tink::config::tink_fips
+    tink::internal::testing::wycheproof_util
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
@@ -1215,21 +1214,18 @@ tink_cc_test(
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
     tink::subtle::subtle_util_boringssl
-    tink::subtle::wycheproof_util
     gmock
+    absl::check
     absl::status
     absl::strings
-    rapidjson
-    tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::fips_utils
+    tink::internal::testing::wycheproof_util
     tink::signature::ecdsa_private_key
     tink::signature::internal::testing::ecdsa_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_test(
@@ -1267,21 +1263,19 @@ tink_cc_test(
     wycheproof::testvectors
   DEPS
     tink::subtle::ed25519_verify_boringssl
-    tink::subtle::wycheproof_util
     gmock
+    absl::check
     absl::status
     absl::strings
     crypto
-    rapidjson
     tink::core::public_key_verify
     tink::config::tink_fips
     tink::internal::ec_util
     tink::internal::fips_utils
+    tink::internal::testing::wycheproof_util
     tink::signature::ed25519_private_key
     tink::signature::internal::testing::ed25519_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
@@ -1350,22 +1344,20 @@ tink_cc_test(
   DEPS
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
-    tink::subtle::wycheproof_util
     gmock
+    absl::check
     absl::status
     absl::strings
     crypto
-    rapidjson
-    tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::err_util
     tink::internal::fips_utils
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
+    tink::internal::testing::wycheproof_util
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::signature_test_vector
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

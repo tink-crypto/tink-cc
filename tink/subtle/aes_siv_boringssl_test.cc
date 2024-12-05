@@ -21,15 +21,14 @@
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "include/rapidjson/document.h"
 #include "tink/config/tink_fips.h"
-#include "tink/subtle/wycheproof_util.h"
+#include "tink/internal/testing/wycheproof_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -40,6 +39,9 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 
 TEST(AesSivBoringSslTest, testCarryComputation) {
@@ -213,22 +215,31 @@ TEST(AesSivBoringSslTest, testDecryptModification) {
 }
 
 // Test with test vectors from project Wycheproof.
-void WycheproofTest(const rapidjson::Document& root) {
-  for (const rapidjson::Value& test_group : root["testGroups"].GetArray()) {
-    const size_t key_size = test_group["keySize"].GetInt();
+void WycheproofTest(const google::protobuf::Struct& parsed_input,
+                    int expected_skipped_tests_groups) {
+  int skipped_test_groups = 0;
+  const google::protobuf::Value& test_groups =
+      parsed_input.fields().at("testGroups");
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    const auto& test_group_fields = test_group.struct_value().fields();
+    const size_t key_size = test_group_fields.at("keySize").number_value();
     if (!AesSivBoringSsl::IsValidKeySizeInBytes(key_size / 8)) {
       // Currently the key size is restricted to two 256-bit AES keys.
+      skipped_test_groups++;
       continue;
     }
-    for (const rapidjson::Value& test : test_group["tests"].GetArray()) {
-      std::string comment = test["comment"].GetString();
-      util::SecretData key =
-          util::SecretDataFromStringView(WycheproofUtil::GetBytes(test["key"]));
-      std::string msg = WycheproofUtil::GetBytes(test["msg"]);
-      std::string ct = WycheproofUtil::GetBytes(test["ct"]);
-      std::string associated_data = WycheproofUtil::GetBytes(test["aad"]);
-      int id = test["tcId"].GetInt();
-      std::string result = test["result"].GetString();
+    for (const google::protobuf::Value& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      auto test_fields = test.struct_value().fields();
+      std::string comment = test_fields.at("comment").string_value();
+      util::SecretData key = util::SecretDataFromStringView(
+          GetBytesFromHexValue(test_fields.at("key")));
+      std::string msg = GetBytesFromHexValue(test_fields.at("msg"));
+      std::string ct = GetBytesFromHexValue(test_fields.at("ct"));
+      std::string associated_data = GetBytesFromHexValue(test_fields.at("aad"));
+      int id = (int)test_fields.at("tcId").number_value();
+      std::string result = test_fields.at("result").string_value();
       auto cipher = std::move(AesSivBoringSsl::New(key).value());
 
       // Test encryption.
@@ -260,18 +271,20 @@ void WycheproofTest(const rapidjson::Document& root) {
       }
     }
   }
+  EXPECT_EQ(skipped_test_groups, expected_skipped_tests_groups);
 }
 
 TEST(AesSivBoringSslTest, TestVectors) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  std::unique_ptr<rapidjson::Document> root =
-      WycheproofUtil::ReadTestVectors("aes_siv_cmac_test.json");
-  WycheproofTest(*root);
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors("aes_siv_cmac_test.json");
+  ASSERT_THAT(parsed_input, IsOk());
+  WycheproofTest(*parsed_input, /*expected_skipped_tests_groups=*/2);
 }
 
-TEST(AesEaxBoringSslTest, TestFipsOnly) {
+TEST(AesSivBoringSslTest, TestFipsOnly) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }

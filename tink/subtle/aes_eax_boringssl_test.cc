@@ -24,15 +24,14 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/err.h"
-#include "include/rapidjson/document.h"
 #include "tink/config/tink_fips.h"
-#include "tink/subtle/wycheproof_util.h"
+#include "tink/internal/testing/wycheproof_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -42,6 +41,9 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
+using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 
 TEST(AesEaxBoringSslTest, TestBasic) {
@@ -259,35 +261,46 @@ static std::string GetError() {
 // Currently AesEaxBoringSsl is restricted to encryption with 12 byte
 // IVs and 16 byte tags. Therefore it is necessary to skip tests with
 // other parameter sizes.
-bool WycheproofTest(const rapidjson::Document& root) {
+bool WycheproofTest(const google::protobuf::Struct& parsed_input,
+                    int expected_skipped_tests_groups) {
   int errors = 0;
-  for (const rapidjson::Value& test_group : root["testGroups"].GetArray()) {
-    const size_t iv_size = test_group["ivSize"].GetInt();
-    const size_t key_size = test_group["keySize"].GetInt();
-    const size_t tag_size = test_group["tagSize"].GetInt();
+  int skipped_test_groups = 0;
+  const google::protobuf::Value& test_groups =
+      parsed_input.fields().at("testGroups");
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    const auto& test_group_fields = test_group.struct_value().fields();
+    const size_t iv_size = (int)test_group_fields.at("ivSize").number_value();
+    const size_t key_size = (int)test_group_fields.at("keySize").number_value();
+    const size_t tag_size = (int)test_group_fields.at("tagSize").number_value();
     if (key_size != 128 && key_size != 256) {
       // Not supported
+      skipped_test_groups++;
       continue;
     }
     if (iv_size != 128 && iv_size != 96) {
       // Not supported
+      skipped_test_groups++;
       continue;
     }
     if (tag_size != 128) {
       // Not supported
+      skipped_test_groups++;
       continue;
     }
-    for (const rapidjson::Value& test : test_group["tests"].GetArray()) {
-      std::string comment = test["comment"].GetString();
-      util::SecretData key =
-          util::SecretDataFromStringView(WycheproofUtil::GetBytes(test["key"]));
-      std::string iv = WycheproofUtil::GetBytes(test["iv"]);
-      std::string msg = WycheproofUtil::GetBytes(test["msg"]);
-      std::string ct = WycheproofUtil::GetBytes(test["ct"]);
-      std::string associated_data = WycheproofUtil::GetBytes(test["aad"]);
-      std::string tag = WycheproofUtil::GetBytes(test["tag"]);
-      std::string id = absl::StrCat(test["tcId"].GetInt());
-      std::string expected = test["result"].GetString();
+    for (const google::protobuf::Value& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      const auto& test_fields = test.struct_value().fields();
+      std::string comment = test_fields.at("comment").string_value();
+      util::SecretData key = util::SecretDataFromStringView(
+          GetBytesFromHexValue(test_fields.at("key")));
+      std::string iv = GetBytesFromHexValue(test_fields.at("iv"));
+      std::string msg = GetBytesFromHexValue(test_fields.at("msg"));
+      std::string ct = GetBytesFromHexValue(test_fields.at("ct"));
+      std::string associated_data = GetBytesFromHexValue(test_fields.at("aad"));
+      std::string tag = GetBytesFromHexValue(test_fields.at("tag"));
+      std::string id = absl::StrCat(test_fields.at("tcId").number_value());
+      std::string expected = test_fields.at("result").string_value();
       auto cipher = std::move(AesEaxBoringSsl::New(key, iv_size / 8).value());
       auto result = cipher->Decrypt(iv + ct + tag, associated_data);
       bool success = result.ok();
@@ -310,6 +323,7 @@ bool WycheproofTest(const rapidjson::Document& root) {
       }
     }
   }
+  EXPECT_EQ(skipped_test_groups, expected_skipped_tests_groups);
   return errors == 0;
 }
 
@@ -317,10 +331,11 @@ TEST(AesEaxBoringSslTest, TestVectors) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-
-  std::unique_ptr<rapidjson::Document> root =
-      WycheproofUtil::ReadTestVectors("aes_eax_test.json");
-  ASSERT_TRUE(WycheproofTest(*root));
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors("aes_eax_test.json");
+  ASSERT_THAT(parsed_input, IsOk());
+  ASSERT_TRUE(WycheproofTest(*parsed_input,
+                             /* expected_skipped_tests_groups = */ 26));
 }
 
 TEST(AesEaxBoringSslTest, TestFipsOnly) {

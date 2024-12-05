@@ -24,20 +24,18 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "include/rapidjson/document.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/testing/wycheproof_util.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/internal/testing/ed25519_test_vectors.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#include "tink/subtle/wycheproof_util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -47,6 +45,8 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Not;
@@ -236,8 +236,11 @@ INSTANTIATE_TEST_SUITE_P(Ed25519VerifyBoringSslParamsTests,
                          ValuesIn(GetTestVectors()));
 
 static util::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
-    const rapidjson::Value& test_group) {
-  std::string public_key = WycheproofUtil::GetBytes(test_group["key"]["pk"]);
+    const google::protobuf::Value& test_group) {
+  const google::protobuf::Value& key =
+      test_group.struct_value().fields().at("key");
+  std::string public_key =
+      GetBytesFromHexValue(key.struct_value().fields().at("pk"));
   auto result = Ed25519VerifyBoringSsl::New(public_key);
   if (!result.ok()) {
     std::cout << "Failed: " << result.status() << "\n";
@@ -250,35 +253,29 @@ static util::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
 // a verfier cannot be constructed. This option can be used for
 // if a file contains test vectors that are not necessarily supported
 // by tink.
-bool TestSignatures(const std::string& filename, bool allow_skipping) {
-  std::unique_ptr<rapidjson::Document> root =
-      WycheproofUtil::ReadTestVectors(filename);
-  std::cout << (*root)["algorithm"].GetString();
-  std::cout << "generator version " << (*root)["generatorVersion"].GetString();
+bool TestSignatures(const std::string& filename) {
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors(filename);
+  CHECK_OK(parsed_input.status());
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
   int passed_tests = 0;
   int failed_tests = 0;
-  for (const rapidjson::Value& test_group : (*root)["testGroups"].GetArray()) {
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    auto test_group_fields = test_group.struct_value().fields();
     auto verifier_result = GetVerifier(test_group);
-    if (!verifier_result.ok()) {
-      std::string curve = test_group["key"]["curve"].GetString();
-      if (allow_skipping) {
-        std::cout << "Could not construct verifier for curve " << curve
-                  << verifier_result.status();
-      } else {
-        ADD_FAILURE() << "Could not construct verifier for curve " << curve
-                      << verifier_result.status();
-        failed_tests += test_group["tests"].GetArray().Size();
-      }
-      continue;
-    }
+    CHECK_OK(verifier_result.status());
 
     auto verifier = std::move(verifier_result.value());
-    for (const rapidjson::Value& test : test_group["tests"].GetArray()) {
-      std::string expected = test["result"].GetString();
-      std::string msg = WycheproofUtil::GetBytes(test["msg"]);
-      std::string sig = WycheproofUtil::GetBytes(test["sig"]);
-      std::string id =
-          absl::StrCat(test["tcId"].GetInt(), " ", test["comment"].GetString());
+    for (const google::protobuf::Value& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      auto test_fields = test.struct_value().fields();
+      std::string expected = test_fields.at("result").string_value();
+      std::string msg = GetBytesFromHexValue(test_fields.at("msg"));
+      std::string sig = GetBytesFromHexValue(test_fields.at("sig"));
+      std::string id = absl::StrCat(test_fields.at("tcId").number_value(), " ",
+                                    test_fields.at("comment").string_value());
       auto status = verifier->Verify(sig, msg);
       if (expected == "valid") {
         if (status.ok()) {
@@ -307,7 +304,9 @@ bool TestSignatures(const std::string& filename, bool allow_skipping) {
       }
     }
   }
-  int num_tests = (*root)["numberOfTests"].GetInt();
+  int num_tests =
+      (int)parsed_input->fields().at("numberOfTests").number_value();
+  CHECK_EQ(num_tests, passed_tests + failed_tests);
   std::cout << "total number of tests: " << num_tests;
   std::cout << "number of tests passed:" << passed_tests;
   std::cout << "number of tests failed:" << failed_tests;
@@ -315,7 +314,7 @@ bool TestSignatures(const std::string& filename, bool allow_skipping) {
 }
 
 TEST_F(Ed25519VerifyBoringSslTest, WycheproofCurve25519) {
-  ASSERT_TRUE(TestSignatures("eddsa_test.json", false));
+  ASSERT_TRUE(TestSignatures("eddsa_test.json"));
 }
 
 TEST(Ed25519VerifyBoringSslFipsTest, testFipsMode) {

@@ -63,9 +63,11 @@ cc_library(
     include_prefix = "tink/subtle/prf",
     deps = [
         ":streaming_prf",
+        "//tink/internal:dfsan_forwarders",
         "//tink/mac/internal:stateful_mac",
         "//tink/prf:prf_set",
         "//tink/util:input_stream_util",
+        "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/memory",

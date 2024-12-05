@@ -24,10 +24,12 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/prf/prf_set.h"
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/input_stream_util.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -76,6 +78,8 @@ class PrfFromStatefulMacFactory : public Prf {
     if (!output.ok()) {
       return output.status();
     }
+    // Clear the label on output -- this can now be given out.
+    internal::DfsanClearLabel(output->data(), output->size());
     if (output->size() < output_length) {
       return util::Status(
           absl::StatusCode::kInvalidArgument,

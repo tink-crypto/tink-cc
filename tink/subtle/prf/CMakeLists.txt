@@ -61,9 +61,11 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
+    tink::internal::dfsan_forwarders
     tink::mac::internal::stateful_mac
     tink::prf::prf_set
     tink::util::input_stream_util
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
 )

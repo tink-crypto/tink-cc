@@ -43,10 +43,10 @@ namespace proto_parsing {
 template <typename OuterStruct, typename InnerStruct>
 class MessageField : public Field<OuterStruct> {
  public:
-  explicit MessageField(int tag, InnerStruct OuterStruct::*value,
+  explicit MessageField(int field_number, InnerStruct OuterStruct::*value,
                         LowLevelParser<InnerStruct> low_level_parser)
       : value_(value),
-        tag_(tag),
+        field_number_(field_number),
         low_level_parser_(std::move(low_level_parser)) {}
   // Not copyable, not movable.
   MessageField(const MessageField&) = delete;
@@ -96,11 +96,11 @@ class MessageField : public Field<OuterStruct> {
     return VarintLength(size) + size;
   }
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetTag() const override { return tag_; }
+  int GetFieldNumber() const override { return field_number_; }
 
  private:
   InnerStruct OuterStruct::*value_;
-  int tag_;
+  int field_number_;
   LowLevelParser<InnerStruct> low_level_parser_;
 };
 

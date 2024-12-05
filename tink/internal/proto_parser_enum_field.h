@@ -42,10 +42,10 @@ namespace proto_parsing {
 template <typename Struct, typename Enum>
 class EnumField : public Field<Struct> {
  public:
-  explicit EnumField(int tag, Enum Struct::*value,
+  explicit EnumField(int field_number, Enum Struct::*value,
                      absl::AnyInvocable<bool(uint32_t) const> is_valid,
                      ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : tag_(tag),
+      : field_number_(field_number),
         value_(value),
         is_valid_(std::move(is_valid)),
         options_(options) {
@@ -93,10 +93,10 @@ class EnumField : public Field<Struct> {
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }
-  int GetTag() const override { return tag_; }
+  int GetFieldNumber() const override { return field_number_; }
 
  private:
-  int tag_;
+  int field_number_;
   Enum Struct::*value_;
   absl::AnyInvocable<bool(uint32_t) const> is_valid_;
   ProtoFieldOptions options_;

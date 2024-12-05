@@ -324,12 +324,12 @@ template <typename Struct>
 absl::StatusOr<ProtoParser<Struct>> ProtoParserBuilder<Struct>::Build() {
   absl::btree_map<int, std::unique_ptr<proto_parsing::Field<Struct>>> fields;
   for (auto& field : fields_) {
-    auto it = fields.find(field->GetTag());
+    auto it = fields.find(field->GetFieldNumber());
     if (it != fields.end()) {
       return absl::InvalidArgumentError(
-          absl::StrCat("Duplicate field ", field->GetTag()));
+          absl::StrCat("Duplicate field ", field->GetFieldNumber()));
     }
-    fields.emplace(field->GetTag(), std::move(field));
+    fields.emplace(field->GetFieldNumber(), std::move(field));
   }
   return ProtoParser<Struct>(std::move(fields));
 }

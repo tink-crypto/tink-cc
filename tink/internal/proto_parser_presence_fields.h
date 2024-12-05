@@ -37,9 +37,9 @@ namespace proto_parsing {
 template <typename Struct>
 class Uint32FieldWithPresence : public Field<Struct> {
  public:
-  explicit Uint32FieldWithPresence(int tag,
+  explicit Uint32FieldWithPresence(int field_number,
                                    absl::optional<uint32_t> Struct::*value)
-      : value_(value), tag_(tag) {}
+      : value_(value), field_number_(field_number) {}
 
   // Not copyable, not movable.
   Uint32FieldWithPresence(const Uint32FieldWithPresence&) = delete;
@@ -82,11 +82,11 @@ class Uint32FieldWithPresence : public Field<Struct> {
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }
-  int GetTag() const override { return tag_; }
+  int GetFieldNumber() const override { return field_number_; }
 
  private:
   absl::optional<uint32_t> Struct::*value_;
-  int tag_;
+  int field_number_;
 };
 
 }  // namespace proto_parsing

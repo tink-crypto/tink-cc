@@ -139,13 +139,13 @@ TEST(Uint32FieldWithPresence, SerializeLeavesRemainingData) {
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(Uint32FieldWithPresence, GetTag) {
+TEST(Uint32FieldWithPresence, GetFieldNumber) {
   Uint32FieldWithPresence<ParsedStruct> field(1,
                                               &ParsedStruct::uint32_member_1);
-  ASSERT_THAT(field.GetTag(), Eq(1));
+  ASSERT_THAT(field.GetFieldNumber(), Eq(1));
   Uint32FieldWithPresence<ParsedStruct> field2(2,
                                                &ParsedStruct::uint32_member_1);
-  ASSERT_THAT(field2.GetTag(), Eq(2));
+  ASSERT_THAT(field2.GetFieldNumber(), Eq(2));
 }
 
 TEST(Uint32FieldWithPresence, RequiresSerialization) {

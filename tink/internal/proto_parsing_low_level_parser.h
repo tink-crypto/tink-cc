@@ -44,7 +44,8 @@ template <typename Struct>
 class LowLevelParser {
  public:
   // Creates a new LowLevelParser with the given fields. Behavior is undefined
-  // if there are two fields with the same tag or if fields[i]->GetTag() != i.
+  // if there are two fields with the same tag or if fields[i]->GetFieldNUmber()
+  // != i.
   explicit LowLevelParser(
       absl::btree_map<int, std::unique_ptr<Field<Struct>>> fields)
       : fields_(std::move(fields)) {}

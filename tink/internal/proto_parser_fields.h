@@ -102,7 +102,7 @@ class Field {
   virtual size_t GetSerializedSize(const Struct& values) const = 0;
 
   virtual WireType GetWireType() const = 0;
-  virtual int GetTag() const = 0;
+  virtual int GetFieldNumber() const = 0;
 };
 
 // A field where the member variable is a uint32_t and the wire type is
@@ -110,9 +110,9 @@ class Field {
 template <typename Struct>
 class Uint32Field : public Field<Struct> {
  public:
-  explicit Uint32Field(int tag, uint32_t Struct::*value,
+  explicit Uint32Field(int field_number, uint32_t Struct::*value,
                        ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : value_(value), tag_(tag), options_(options) {}
+      : value_(value), field_number_(field_number), options_(options) {}
 
   // Not copyable, not movable.
   Uint32Field(const Uint32Field&) = delete;
@@ -147,11 +147,11 @@ class Uint32Field : public Field<Struct> {
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }
-  int GetTag() const override { return tag_; }
+  int GetFieldNumber() const override { return field_number_; }
 
  private:
   uint32_t Struct::*value_;
-  int tag_;
+  int field_number_;
   ProtoFieldOptions options_;
 };
 
@@ -160,7 +160,7 @@ class BytesField : public Field<Struct> {
  public:
   explicit BytesField(int tag, StringLike Struct::*value,
                       ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : value_(value), tag_(tag), options_(options) {}
+      : value_(value), field_number_(tag), options_(options) {}
   // Not copyable and movable.
   BytesField(const BytesField&) = delete;
   BytesField& operator=(const BytesField&) = delete;
@@ -210,11 +210,11 @@ class BytesField : public Field<Struct> {
   }
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetTag() const override { return tag_; }
+  int GetFieldNumber() const override { return field_number_; }
 
  private:
   StringLike Struct::*value_;
-  int tag_;
+  int field_number_;
   ProtoFieldOptions options_;
 };
 

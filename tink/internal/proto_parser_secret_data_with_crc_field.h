@@ -42,8 +42,8 @@ template <typename Struct>
 class SecretDataWithCrcField : public Field<Struct> {
  public:
   explicit SecretDataWithCrcField(
-      int tag, SecretDataWithCrc Struct::*data)
-      : data_(data), tag_(tag) {}
+      int field_number, SecretDataWithCrc Struct::*data)
+      : data_(data), field_number_(field_number) {}
   // Not copyable and movable.
   SecretDataWithCrcField(const SecretDataWithCrcField&) = delete;
   SecretDataWithCrcField& operator=(const SecretDataWithCrcField&) = delete;
@@ -126,11 +126,11 @@ class SecretDataWithCrcField : public Field<Struct> {
   }
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetTag() const override { return tag_; }
+  int GetFieldNumber() const override { return field_number_; }
 
  private:
   SecretDataWithCrc Struct::*data_;
-  int tag_;
+  int field_number_;
 };
 
 }  // namespace proto_parsing

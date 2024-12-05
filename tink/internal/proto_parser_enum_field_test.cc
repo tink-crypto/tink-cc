@@ -172,13 +172,13 @@ TEST(EnumField, SerializeVarintLeavesRemainingData) {
   EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(EnumField, GetTag) {
+TEST(EnumField, GetFieldNumber) {
   EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
                                          &AlwaysValid);
-  ASSERT_THAT(field.GetTag(), Eq(1));
+  ASSERT_THAT(field.GetFieldNumber(), Eq(1));
   EnumField<ExampleStruct, MyEnum> field2(2, &ExampleStruct::enum_field,
                                           &IsZeroOrOne);
-  ASSERT_THAT(field2.GetTag(), Eq(2));
+  ASSERT_THAT(field2.GetFieldNumber(), Eq(2));
 }
 
 TEST(EnumField, RequiresSerialization) {

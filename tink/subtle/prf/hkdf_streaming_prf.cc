@@ -30,6 +30,8 @@
 #include "openssl/evp.h"
 #include "openssl/hmac.h"
 #include "tink/input_stream.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -45,6 +47,7 @@ namespace tink {
 namespace subtle {
 
 namespace {
+using ::crypto::tink::internal::CallWithCoreDumpProtection;
 
 class HkdfInputStream : public InputStream {
  public:
@@ -66,7 +69,7 @@ class HkdfInputStream : public InputStream {
           crypto::tink::util::Status(absl::StatusCode::kOutOfRange, "EOF");
       return stream_status_;
     }
-    stream_status_ = UpdateTi();
+    stream_status_ = CallWithCoreDumpProtection([&]() { return UpdateTi(); });
     if (!stream_status_.ok()) {
       return stream_status_;
     }
@@ -104,21 +107,27 @@ class HkdfInputStream : public InputStream {
     //
     // [1] https://github.com/google/boringssl/blob/master/crypto/hkdf/hkdf.c#L42
     unsigned prk_len;
-    if (HMAC(digest, reinterpret_cast<const uint8_t *>(salt.data()),
-             salt.size(), secret.data(), secret.size(), prk.data(),
-             &prk_len) == nullptr ||
-        prk_len != digest_size) {
+    int hmac_result = CallWithCoreDumpProtection([&]() {
+      return HMAC(digest, reinterpret_cast<const uint8_t *>(salt.data()),
+                  salt.size(), secret.data(), secret.size(), prk.data(),
+                  &prk_len) != nullptr &&
+             prk_len == digest_size;
+    });
+    if (!hmac_result) {
       return util::Status(absl::StatusCode::kInternal, "HKDF-Extract failed");
     }
     prk.resize(prk_len);
     if (!hmac_ctx_) {
       return util::Status(absl::StatusCode::kInternal, "HMAC_CTX_new failed");
     }
-    if (!HMAC_Init_ex(hmac_ctx_.get(), prk.data(), prk.size(), digest,
-                      nullptr)) {
+    int hmac_init_ex_result = CallWithCoreDumpProtection([&]() {
+      return HMAC_Init_ex(hmac_ctx_.get(), prk.data(), prk.size(), digest,
+                          nullptr);
+    });
+    if (!hmac_init_ex_result) {
       return util::Status(absl::StatusCode::kInternal, "HMAC_Init_ex failed");
     }
-    return UpdateTi();
+    return CallWithCoreDumpProtection([&] { return UpdateTi(); });
   }
 
   int returnDataFromPosition(const void **data) {
@@ -157,6 +166,8 @@ class HkdfInputStream : public InputStream {
     }
     i_++;
     position_in_ti_ = 0;
+    // Clear the label on ti_ -- this is the output and can now be given out.
+    internal::DfsanClearLabel(ti_.data(), ti_.size());
     return util::OkStatus();
   }
 

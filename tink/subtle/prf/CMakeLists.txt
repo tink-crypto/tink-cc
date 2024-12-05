@@ -39,6 +39,8 @@ tink_cc_library(
     absl::strings
     crypto
     tink::core::input_stream
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::md_util
     tink::internal::ssl_unique_ptr

@@ -34,6 +34,7 @@
 #include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
 #include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
 #include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 #include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 
 namespace crypto {
@@ -77,6 +78,7 @@ const SerializationRegistry& GlobalSerializationRegistry() {
     CHECK_OK(RegisterHmacPrfProtoSerializationWithRegistryBuilder(builder));
 
     // Signature
+    CHECK_OK(RegisterEcdsaProtoSerializationWithRegistryBuilder(builder));
     CHECK_OK(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder));
 
     // Streaming AEAD

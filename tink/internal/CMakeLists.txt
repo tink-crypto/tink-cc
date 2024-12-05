@@ -1799,6 +1799,7 @@ tink_cc_library(
     tink::prf::internal::aes_cmac_prf_proto_serialization_impl
     tink::prf::internal::hkdf_prf_proto_serialization_impl
     tink::prf::internal::hmac_prf_proto_serialization_impl
+    tink::signature::internal::ecdsa_proto_serialization_impl
     tink::signature::internal::ed25519_proto_serialization_impl
 )
 
@@ -1816,8 +1817,11 @@ tink_cc_test(
     absl::check
     absl::memory
     absl::optional
+    tink::core::big_integer
+    tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
+    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
@@ -1846,10 +1850,15 @@ tink_cc_test(
     tink::prf::hkdf_prf_parameters
     tink::prf::hmac_prf_key
     tink::prf::hmac_prf_parameters
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
+    tink::subtle::common_enums
     tink::subtle::random
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
 )

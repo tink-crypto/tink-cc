@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/ecdsa_proto_serialization.h"
+#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 
 #include <string>
 
@@ -34,6 +34,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
@@ -51,6 +52,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::util::SecretProto;
@@ -63,21 +65,17 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 
 using EcdsaProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   EcdsaParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, EcdsaParameters>;
 using EcdsaProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<EcdsaParameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<EcdsaParameters, ProtoParametersSerialization>;
 using EcdsaProtoPublicKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, EcdsaPublicKey>;
+    KeyParserImpl<ProtoKeySerialization, EcdsaPublicKey>;
 using EcdsaProtoPublicKeySerializerImpl =
-    internal::KeySerializerImpl<EcdsaPublicKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<EcdsaPublicKey, ProtoKeySerialization>;
 using EcdsaProtoPrivateKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, EcdsaPrivateKey>;
+    KeyParserImpl<ProtoKeySerialization, EcdsaPrivateKey>;
 using EcdsaProtoPrivateKeySerializerImpl =
-    internal::KeySerializerImpl<EcdsaPrivateKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<EcdsaPrivateKey, ProtoKeySerialization>;
 
 const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.EcdsaPublicKey";
@@ -281,7 +279,7 @@ util::StatusOr<EcdsaParams> FromParameters(const EcdsaParameters& parameters) {
 }
 
 util::StatusOr<EcdsaParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
+    const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing EcdsaParameters.");
@@ -307,7 +305,7 @@ util::StatusOr<EcdsaParameters> ParseParameters(
 }
 
 util::StatusOr<EcdsaPublicKey> ParsePublicKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -339,7 +337,7 @@ util::StatusOr<EcdsaPublicKey> ParsePublicKey(
 }
 
 util::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -389,7 +387,7 @@ util::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
                                  GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const EcdsaParameters& parameters) {
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
@@ -405,12 +403,12 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   *proto_key_format.mutable_params() = *params;
   proto_key_format.set_version(0);
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kPrivateTypeUrl, *output_prefix_type,
       proto_key_format.SerializeAsString());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+util::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const EcdsaPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::StatusOr<EcdsaParams> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
@@ -423,14 +421,14 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     return enc_length.status();
   }
 
-  util::StatusOr<std::string> x = internal::GetValueOfFixedLength(
+  util::StatusOr<std::string> x = GetValueOfFixedLength(
       key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue(),
       enc_length.value());
   if (!x.ok()) {
     return x.status();
   }
 
-  util::StatusOr<std::string> y = internal::GetValueOfFixedLength(
+  util::StatusOr<std::string> y = GetValueOfFixedLength(
       key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue(),
       enc_length.value());
   if (!y.ok()) {
@@ -451,12 +449,12 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
 
   RestrictedData restricted_output = RestrictedData(
       proto_key.SerializeAsString(), InsecureSecretKeyAccess::Get());
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
       *output_prefix_type, key.GetIdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     const EcdsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::StatusOr<RestrictedBigInteger> restricted_input =
       key.GetPrivateKeyValue(GetPartialKeyAccess());
@@ -483,29 +481,28 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   google::crypto::tink::EcdsaPublicKey proto_public_key;
   proto_public_key.set_version(0);
   *proto_public_key.mutable_params() = *params;
-  proto_public_key.set_x(*internal::GetValueOfFixedLength(
-      key.GetPublicKey()
-          .GetPublicPoint(GetPartialKeyAccess())
-          .GetX()
-          .GetValue(),
-      enc_length.value()));
-  proto_public_key.set_y(*internal::GetValueOfFixedLength(
-      key.GetPublicKey()
-          .GetPublicPoint(GetPartialKeyAccess())
-          .GetY()
-          .GetValue(),
-      enc_length.value()));
+  proto_public_key.set_x(
+      *GetValueOfFixedLength(key.GetPublicKey()
+                                 .GetPublicPoint(GetPartialKeyAccess())
+                                 .GetX()
+                                 .GetValue(),
+                             enc_length.value()));
+  proto_public_key.set_y(
+      *GetValueOfFixedLength(key.GetPublicKey()
+                                 .GetPublicPoint(GetPartialKeyAccess())
+                                 .GetY()
+                                 .GetValue(),
+                             enc_length.value()));
 
   SecretProto<google::crypto::tink::EcdsaPrivateKey> proto_private_key;
   proto_private_key->set_version(0);
   *proto_private_key->mutable_public_key() = proto_public_key;
   util::StatusOr<util::SecretData> fixed_length_key =
-      internal::GetSecretValueOfFixedLength(*restricted_input, *enc_length,
-                                            *token);
+      GetSecretValueOfFixedLength(*restricted_input, *enc_length, *token);
   if (!fixed_length_key.ok()) {
     return fixed_length_key.status();
   }
-  internal::CallWithCoreDumpProtection([&] {
+  CallWithCoreDumpProtection([&] {
     proto_private_key->set_key_value(
         util::SecretDataAsStringView(*fixed_length_key));
   });
@@ -520,7 +517,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
   }
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
       KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
 }
@@ -562,41 +559,70 @@ EcdsaProtoPrivateKeySerializerImpl& EcdsaProtoPrivateKeySerializer() {
 }
 }  // namespace
 
-util::Status RegisterEcdsaProtoSerialization() {
+util::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
   util::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(&EcdsaProtoParametersParser());
+      registry.RegisterParametersParser(&EcdsaProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterParametersSerializer(&EcdsaProtoParametersSerializer());
+  status =
+      registry.RegisterParametersSerializer(&EcdsaProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(&EcdsaProtoPublicKeyParser());
+  status = registry.RegisterKeyParser(&EcdsaProtoPublicKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeySerializer(&EcdsaProtoPublicKeySerializer());
+  status = registry.RegisterKeySerializer(&EcdsaProtoPublicKeySerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(&EcdsaProtoPrivateKeyParser());
+  status = registry.RegisterKeyParser(&EcdsaProtoPrivateKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(&EcdsaProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(&EcdsaProtoPrivateKeySerializer());
 }
 
+util::Status RegisterEcdsaProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  util::Status status =
+      builder.RegisterParametersParser(&EcdsaProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status =
+      builder.RegisterParametersSerializer(&EcdsaProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(&EcdsaProtoPublicKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeySerializer(&EcdsaProtoPublicKeySerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(&EcdsaProtoPrivateKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(&EcdsaProtoPrivateKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

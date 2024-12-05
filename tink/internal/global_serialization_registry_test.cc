@@ -39,8 +39,10 @@
 #include "tink/aead/x_aes_gcm_parameters.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/big_integer.h"
 #include "tink/daead/aes_siv_key.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
@@ -56,11 +58,17 @@
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_parameters.h"
+#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -194,13 +202,66 @@ std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
   return absl::make_unique<const ChaCha20Poly1305Key>(*key);
 }
 
+std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
+  util::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters);
+
+  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  CHECK_OK(ec_key);
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  util::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(public_key);
+
+  RestrictedBigInteger private_key_value =
+      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
+                           GetInsecureSecretKeyAccessInternal());
+
+  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+      *public_key, private_key_value, GetPartialKeyAccess());
+  CHECK_OK(private_key);
+
+  return absl::make_unique<const EcdsaPrivateKey>(*private_key);
+}
+
+std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
+  util::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  CHECK_OK(parameters);
+
+  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  CHECK_OK(ec_key);
+
+  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
+
+  util::StatusOr<EcdsaPublicKey> public_key =
+      EcdsaPublicKey::Create(*parameters, public_point,
+                             /*id_requirement=*/123, GetPartialKeyAccess());
+  CHECK_OK(public_key);
+
+  return absl::make_unique<const EcdsaPublicKey>(*public_key);
+}
+
 std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
   util::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
-      internal::NewEd25519Key();
+  util::StatusOr<std::unique_ptr<Ed25519Key>> key_pair = NewEd25519Key();
   CHECK_OK(key_pair);
 
   util::StatusOr<Ed25519PublicKey> public_key =
@@ -320,6 +381,8 @@ INSTANTIATE_TEST_SUITE_P(
            KeyTestVector{CreateAesGcmSivKey()},
            KeyTestVector{CreateAesSivKey()},
            KeyTestVector{CreateChaCha20Poly1305Key()},
+           KeyTestVector{CreateEcdsaPrivateKey()},
+           KeyTestVector{CreateEcdsaPublicKey()},
            KeyTestVector{CreateEd25519PrivateKey()},
            KeyTestVector{CreateEd25519PublicKey()},
            KeyTestVector{CreateHkdfPrfKey()},

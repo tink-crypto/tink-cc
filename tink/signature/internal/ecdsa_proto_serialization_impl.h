@@ -14,24 +14,29 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SIGNATURE_ECDSA_PROTO_SERIALIZATION_H_
-#define TINK_SIGNATURE_ECDSA_PROTO_SERIALIZATION_H_
+#ifndef TINK_SIGNATURE_INTERNAL_ECDSA_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_SIGNATURE_INTERNAL_ECDSA_PROTO_SERIALIZATION_IMPL_H_
 
 #include "tink/internal/mutable_serialization_registry.h"
-#include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for ECDSA parameters and keys into
-// global serialization registry.
-inline crypto::tink::util::Status RegisterEcdsaProtoSerialization() {
-  return internal::RegisterEcdsaProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// specified mutable serialization `registry`.
+crypto::tink::util::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for ECDSA parameters and keys into
+// specified immutable serialization registry `builder`.
+crypto::tink::util::Status RegisterEcdsaProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SIGNATURE_ECDSA_PROTO_SERIALIZATION_H_
+#endif  // TINK_SIGNATURE_INTERNAL_ECDSA_PROTO_SERIALIZATION_IMPL_H_

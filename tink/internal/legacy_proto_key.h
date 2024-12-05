@@ -59,7 +59,7 @@ class UnusableLegacyProtoParameters : public Parameters {
 
   bool operator==(const Parameters& other) const override;
 
-  std::unique_ptr<Parameters> Clone() const {
+  std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<UnusableLegacyProtoParameters>(*this);
   }
 

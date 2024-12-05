@@ -87,7 +87,7 @@ class NoIdParams : public Parameters {
     return !other.HasIdRequirement();
   }
 
-  std::unique_ptr<Parameters> Clone() const {
+  std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<NoIdParams>(*this);
   }
 };
@@ -123,7 +123,7 @@ class IdParams : public Parameters {
     return other.HasIdRequirement();
   }
 
-  std::unique_ptr<Parameters> Clone() const {
+  std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<IdParams>(*this);
   }
 };

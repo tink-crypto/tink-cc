@@ -62,7 +62,7 @@ class MlKemParameters : public KemParameters {
 
   bool operator==(const Parameters& other) const override;
 
-  std::unique_ptr<Parameters> Clone() const {
+  std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<MlKemParameters>(*this);
   }
 

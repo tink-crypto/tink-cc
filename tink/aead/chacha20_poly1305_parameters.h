@@ -61,7 +61,7 @@ class ChaCha20Poly1305Parameters : public AeadParameters {
 
   bool operator==(const Parameters& other) const override;
 
-  std::unique_ptr<Parameters> Clone() const {
+  std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<ChaCha20Poly1305Parameters>(*this);
   }
 

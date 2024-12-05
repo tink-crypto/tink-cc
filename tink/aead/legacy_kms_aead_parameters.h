@@ -61,7 +61,7 @@ class LegacyKmsAeadParameters : public AeadParameters {
 
   bool operator==(const Parameters& other) const override;
 
-  std::unique_ptr<Parameters> Clone() const {
+  std::unique_ptr<Parameters> Clone() const override {
     return std::make_unique<LegacyKmsAeadParameters>(*this);
   }
 

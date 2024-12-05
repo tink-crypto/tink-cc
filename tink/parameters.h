@@ -17,6 +17,8 @@
 #ifndef TINK_PARAMETERS_H_
 #define TINK_PARAMETERS_H_
 
+#include <memory>
+
 namespace crypto {
 namespace tink {
 
@@ -48,6 +50,9 @@ class Parameters {
   // returns false.
   virtual bool operator==(const Parameters& other) const = 0;
   bool operator!=(const Parameters& other) const { return !(*this == other); }
+
+  // Creates a deep copy of the `Parameters` object.
+  virtual std::unique_ptr<Parameters> Clone() const = 0;
 
   virtual ~Parameters() = default;
 };

@@ -393,11 +393,12 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::internal::ssl_util
     gmock
+    absl::check
     absl::status
     absl::strings
     absl::span
     crypto
-    rapidjson
+    tink::internal::testing::wycheproof_util
     tink::subtle::common_enums
     tink::subtle::subtle_util
     tink::subtle::wycheproof_util

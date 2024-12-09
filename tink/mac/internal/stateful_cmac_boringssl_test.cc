@@ -23,16 +23,13 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/memory/memory.h"
-#include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "include/rapidjson/document.h"
+#include "tink/internal/testing/wycheproof_util.h"
 #include "tink/mac/internal/stateful_mac.h"
-#include "tink/subtle/common_enums.h"
-#include "tink/subtle/wycheproof_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -56,7 +53,8 @@ constexpr absl::string_view kCmacOnDataRegularTagSizeHex =
 constexpr absl::string_view kCmacOnDataSmallTagSizeHex = "c856e183e8dee9bb9940";
 
 using ::crypto::tink::internal::StatefulMac;
-using ::crypto::tink::subtle::WycheproofUtil;
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretData;
@@ -170,25 +168,35 @@ struct StatefulCmacTestVector {
 
 // Reads the Wycheproof test vectors for AES-CMAC.
 std::vector<StatefulCmacTestVector> GetWycheproofCmakeTestVectors() {
-  std::unique_ptr<rapidjson::Document> root =
-      WycheproofUtil::ReadTestVectors("aes_cmac_test.json");
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors("aes_cmac_test.json");
+  CHECK_OK(parsed_input.status());
   std::vector<StatefulCmacTestVector> test_vectors;
-  for (const rapidjson::Value &test_group : (*root)["testGroups"].GetArray()) {
+  const google::protobuf::Value &test_groups =
+      parsed_input->fields().at("testGroups");
+  int skipped_test_groups = 0;
+  for (const google::protobuf::Value &test_group :
+       test_groups.list_value().values()) {
+    const auto &test_group_fields = test_group.struct_value().fields();
     // Ignore test vectors of invalid key sizes; valid sizes are {16, 32} bytes.
-    int key_size_bits = test_group["keySize"].GetInt();
+    int key_size_bits = test_group_fields.at("keySize").number_value();
     if (key_size_bits != 128 && key_size_bits != 256) {
+      skipped_test_groups++;
       continue;
     }
-    for (const rapidjson::Value &test : test_group["tests"].GetArray()) {
+    for (const google::protobuf::Value &test :
+         test_group_fields.at("tests").list_value().values()) {
+      const auto &test_fields = test.struct_value().fields();
       test_vectors.push_back({
-          /*key=*/WycheproofUtil::GetBytes(test["key"]),
-          /*msg=*/WycheproofUtil::GetBytes(test["msg"]),
-          /*tag=*/WycheproofUtil::GetBytes(test["tag"]),
-          /*id=*/absl::StrCat(test["tcId"].GetInt()),
-          /*expected_result=*/test["result"].GetString(),
+          /*key=*/GetBytesFromHexValue(test_fields.at("key")),
+          /*msg=*/GetBytesFromHexValue(test_fields.at("msg")),
+          /*tag=*/GetBytesFromHexValue(test_fields.at("tag")),
+          /*id=*/absl::StrCat(test_fields.at("tcId").number_value()),
+          /*expected_result=*/test_fields.at("result").string_value(),
       });
     }
   }
+  CHECK_EQ(skipped_test_groups, 6);
   return test_vectors;
 }
 

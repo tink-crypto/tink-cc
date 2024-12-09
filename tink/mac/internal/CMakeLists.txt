@@ -261,10 +261,9 @@ tink_cc_test(
     absl::status
     absl::strings
     absl::string_view
-    rapidjson
+    tink::internal::testing::wycheproof_util
     tink::subtle::common_enums
     tink::subtle::random
-    tink::subtle::wycheproof_util
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
@@ -281,15 +280,12 @@ tink_cc_test(
     tink::mac::internal::stateful_cmac_boringssl
     tink::mac::internal::stateful_mac
     gmock
+    absl::check
     absl::memory
-    absl::status
     absl::strings
     absl::string_view
-    rapidjson
-    tink::subtle::common_enums
-    tink::subtle::wycheproof_util
+    tink::internal::testing::wycheproof_util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

@@ -33,15 +33,16 @@
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
 #endif
+#include "absl/log/check.h"
 #include "openssl/bn.h"
 #include "openssl/ec.h"
 #include "openssl/ecdsa.h"
 #include "openssl/evp.h"
-#include "include/rapidjson/document.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/internal/testing/wycheproof_util.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/subtle/wycheproof_util.h"
@@ -54,6 +55,10 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::
+    GetEllipticCurveTypeFromValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
 using ::crypto::tink::subtle::WycheproofUtil;
@@ -78,15 +83,22 @@ using ::testing::ValuesIn;
 // Use wycheproof test vectors to verify Ed25519 key generation from a seed (the
 // private key) results in the public/private key.
 TEST(EcUtilTest, NewEd25519KeyWithWycheproofTestVectors) {
-  std::unique_ptr<rapidjson::Document> test_vectors =
-      WycheproofUtil::ReadTestVectors("eddsa_test.json");
-  ASSERT_THAT(test_vectors, Not(IsNull()));
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors("eddsa_test.json");
+  ASSERT_THAT(parsed_input, IsOk());
+
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
 
   // For this test we are only interested in Ed25519 keys.
-  for (const auto& test_group : (*test_vectors)["testGroups"].GetArray()) {
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    const google::protobuf::Value& key_value =
+        test_group.struct_value().fields().at("key");
     util::SecretData private_key = util::SecretDataFromStringView(
-        WycheproofUtil::GetBytes(test_group["key"]["sk"]));
-    std::string public_key = WycheproofUtil::GetBytes(test_group["key"]["pk"]);
+        GetBytesFromHexValue(key_value.struct_value().fields().at("sk")));
+    std::string public_key =
+        GetBytesFromHexValue(key_value.struct_value().fields().at("pk"));
 
     util::StatusOr<std::unique_ptr<Ed25519Key>> key =
         NewEd25519Key(private_key);
@@ -665,12 +677,16 @@ TEST(EcUtilTest, GetEcPointReturnsAValidPoint) {
 }
 
 TEST(EcUtilTest, EcSignatureIeeeToDer) {
-  std::unique_ptr<rapidjson::Document> test_vectors =
-      WycheproofUtil::ReadTestVectors("ecdsa_webcrypto_test.json");
-  ASSERT_THAT(test_vectors, Not(IsNull()));
-  for (const auto& test_group : (*test_vectors)["testGroups"].GetArray()) {
-    EllipticCurveType curve =
-        WycheproofUtil::GetEllipticCurveType(test_group["key"]["curve"]);
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors("ecdsa_webcrypto_test.json");
+  ASSERT_THAT(parsed_input, IsOk());
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    EllipticCurveType curve = GetEllipticCurveTypeFromValue(
+        test_group.struct_value().fields().at("key").struct_value().fields().at(
+            "curve"));
     if (curve == EllipticCurveType::UNKNOWN_CURVE) {
       continue;
     }
@@ -678,12 +694,14 @@ TEST(EcUtilTest, EcSignatureIeeeToDer) {
         EcGroupFromCurveType(curve);
     ASSERT_THAT(ec_group, IsOk());
     // Read all the valid signatures.
-    for (const auto& test : test_group["tests"].GetArray()) {
-      std::string result = test["result"].GetString();
+    for (const auto& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      const auto& test_fields = test.struct_value().fields();
+      std::string result = test_fields.at("result").string_value();
       if (result != "valid") {
         continue;
       }
-      std::string sig = WycheproofUtil::GetBytes(test["sig"]);
+      std::string sig = GetBytesFromHexValue(test_fields.at("sig"));
       util::StatusOr<std::string> der_encoded =
           EcSignatureIeeeToDer(ec_group->get(), sig);
       ASSERT_THAT(der_encoded, IsOk());
@@ -765,12 +783,12 @@ struct EcdhWycheproofTestVector {
 };
 
 // Utility function to look for a `value` inside an array of flags `flags`.
-bool HasFlag(const rapidjson::Value& flags, absl::string_view value) {
-  if (!flags.IsArray()) {
+bool HasFlag(const google::protobuf::Value& flags, absl::string_view value) {
+  if (!flags.has_list_value()) {
     return false;
   }
-  for (const rapidjson::Value& flag : flags.GetArray()) {
-    if (std::string(flag.GetString()) == value) {
+  for (const google::protobuf::Value& flag : flags.list_value().values()) {
+    if (flag.string_value() == value) {
       return true;
     }
   }
@@ -780,18 +798,25 @@ bool HasFlag(const rapidjson::Value& flags, absl::string_view value) {
 // Reads Wycheproof's ECDH test vectors from the given file `file_name`.
 std::vector<EcdhWycheproofTestVector> ReadEcdhWycheproofTestVectors(
     absl::string_view file_name) {
-  std::unique_ptr<rapidjson::Document> root =
-      WycheproofUtil::ReadTestVectors(std::string(file_name));
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors(std::string(file_name));
+  CHECK_OK(parsed_input.status());
   std::vector<EcdhWycheproofTestVector> test_vectors;
-  for (const rapidjson::Value& test_group : (*root)["testGroups"].GetArray()) {
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    const auto& test_group_fields = test_group.struct_value().fields();
     // Tink only supports secp256r1, secp384r1 or secp521r1.
     EllipticCurveType curve =
-        WycheproofUtil::GetEllipticCurveType(test_group["curve"]);
+        GetEllipticCurveTypeFromValue(test_group_fields.at("curve"));
     if (curve == EllipticCurveType::UNKNOWN_CURVE) {
       continue;
     }
 
-    for (const rapidjson::Value& test : test_group["tests"].GetArray()) {
+    for (const google::protobuf::Value& test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      auto test_fields = test.struct_value().fields();
       // Wycheproof's ECDH public key uses ASN encoding while Tink uses X9.62
       // format point encoding. For the purpose of testing, we note the
       // followings:
@@ -799,26 +824,27 @@ std::vector<EcdhWycheproofTestVector> ReadEcdhWycheproofTestVectors(
       //  vector with "UnnamedCurve".
       //  + The suffix of ASN encoding is X9.62 format point encoding.
       // TODO(quannguyen): Use X9.62 test vectors once it's available.
-      if (HasFlag(test["flags"], /*value=*/"UnnamedCurve")) {
+      if (HasFlag(test_fields.at("flags"), /*value=*/"UnnamedCurve")) {
         continue;
       }
       // Get the format from "flags".
       EcPointFormat format = EcPointFormat::UNCOMPRESSED;
-      if (HasFlag(test["flags"], /*value=*/"CompressedPoint")) {
+      if (HasFlag(test_fields.at("flags"), /*value=*/"CompressedPoint")) {
         format = EcPointFormat::COMPRESSED;
       }
       // Testcase name is of the form: <file_name_without_extension>_tcid<tcid>.
       std::vector<std::string> file_name_tokens =
           absl::StrSplit(file_name, '.');
       test_vectors.push_back({
-          absl::StrCat(file_name_tokens[0], "_tcid", test["tcId"].GetInt()),
+          absl::StrCat(file_name_tokens[0], "_tcid",
+                       test_fields.at("tcId").number_value()),
           curve,
-          absl::StrCat(test["tcId"].GetInt()),
-          test["comment"].GetString(),
-          WycheproofUtil::GetBytes(test["public"]),
-          WycheproofUtil::GetBytes(test["private"]),
-          WycheproofUtil::GetBytes(test["shared"]),
-          test["result"].GetString(),
+          absl::StrCat(test_fields["tcId"].number_value()),
+          test_fields.at("comment").string_value(),
+          GetBytesFromHexValue(test_fields.at("public")),
+          GetBytesFromHexValue(test_fields.at("private")),
+          GetBytesFromHexValue(test_fields.at("shared")),
+          test_fields.at("result").string_value(),
           format,
       });
     }

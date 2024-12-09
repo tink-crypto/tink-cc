@@ -32,11 +32,10 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "include/rapidjson/document.h"
+#include "tink/internal/testing/wycheproof_util.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
-#include "tink/subtle/wycheproof_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -47,11 +46,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-constexpr size_t kTagSize = 16;
-constexpr size_t kSmallTagSize = 10;
-
 using ::crypto::tink::subtle::HashType;
-using ::crypto::tink::subtle::WycheproofUtil;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
@@ -62,6 +57,9 @@ using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::SizeIs;
+
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 
 struct TestVector {
   TestVector(std::string test_name, std::string hex_key, HashType hash_type,
@@ -287,21 +285,22 @@ class StatefulHmacBoringSslTestVectorTest
 };
 
 // Test with test vectors from Wycheproof project.
-bool WycheproofTest(const rapidjson::Document &root, HashType hash_type) {
+bool WycheproofTest(const google::protobuf::Struct &parsed_input,
+                    HashType hash_type) {
   int errors = 0;
-  for (const rapidjson::Value &test_group : root["testGroups"].GetArray()) {
-    // Get the key size in bytes. Wycheproof contains tests for keys smaller
-    // than MIN_KEY_SIZE, which is 16, so the test will skip those.
-    if (test_group["keySize"].GetInt() / 8 < 16) {
-      continue;
-    }
-    for (const rapidjson::Value &test : test_group["tests"].GetArray()) {
-      std::string comment = test["comment"].GetString();
-      std::string key = WycheproofUtil::GetBytes(test["key"]);
-      std::string msg = WycheproofUtil::GetBytes(test["msg"]);
-      std::string tag = WycheproofUtil::GetBytes(test["tag"]);
-      std::string id = absl::StrCat(test["tcId"].GetInt());
-      std::string expected = test["result"].GetString();
+  const google::protobuf::Value &test_groups =
+      parsed_input.fields().at("testGroups");
+  for (const google::protobuf::Value &test_group :
+       test_groups.list_value().values()) {
+    for (const google::protobuf::Value &test :
+         test_group.struct_value().fields().at("tests").list_value().values()) {
+      auto test_fields = test.struct_value().fields();
+      std::string comment = test_fields.at("comment").string_value();
+      std::string key = GetBytesFromHexValue(test_fields.at("key"));
+      std::string msg = GetBytesFromHexValue(test_fields.at("msg"));
+      std::string tag = GetBytesFromHexValue(test_fields.at("tag"));
+      std::string id = absl::StrCat(test_fields.at("tcId").number_value());
+      std::string expected = test_fields.at("result").string_value();
 
       auto create_result = StatefulHmacBoringSsl::New(
           hash_type, tag.length(), SecretDataFromStringView(key));
@@ -336,14 +335,16 @@ bool WycheproofTest(const rapidjson::Document &root, HashType hash_type) {
 
 TEST(StatefulHmacBoringSslTest, TestVectors) {
   // Test Hmac with SHA256
-  std::unique_ptr<rapidjson::Document> root256 =
-      WycheproofUtil::ReadTestVectors("hmac_sha256_test.json");
-  ASSERT_TRUE(WycheproofTest(*root256, HashType::SHA256));
+  util::StatusOr<google::protobuf::Struct> parsed_input_256 =
+      ReadTestVectors("hmac_sha256_test.json");
+  ASSERT_THAT(parsed_input_256, IsOk());
+  ASSERT_TRUE(WycheproofTest(*parsed_input_256, HashType::SHA256));
 
   // Test Hmac with SHA512
-  std::unique_ptr<rapidjson::Document> root512 =
-      WycheproofUtil::ReadTestVectors("hmac_sha512_test.json");
-  ASSERT_TRUE(WycheproofTest(*root512, HashType::SHA512));
+  util::StatusOr<google::protobuf::Struct> parsed_input_sha512 =
+      ReadTestVectors("hmac_sha512_test.json");
+  ASSERT_THAT(parsed_input_sha512, IsOk());
+  ASSERT_TRUE(WycheproofTest(*parsed_input_sha512, HashType::SHA512));
 }
 
 }  // namespace

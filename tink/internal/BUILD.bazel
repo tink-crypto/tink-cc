@@ -436,6 +436,7 @@ cc_test(
         ":fips_utils",
         ":ssl_unique_ptr",
         ":ssl_util",
+        "//tink/internal/testing:wycheproof_util",
         "//tink/subtle:common_enums",
         "//tink/subtle:subtle_util",
         "//tink/subtle:wycheproof_util",
@@ -444,11 +445,11 @@ cc_test(
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@boringssl//:crypto",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
-        "@rapidjson",
     ],
 )
 

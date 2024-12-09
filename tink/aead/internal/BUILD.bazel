@@ -24,8 +24,9 @@ cc_library(
     hdrs = ["wycheproof_aead.h"],
     include_prefix = "tink/aead/internal",
     deps = [
-        "//tink/subtle:wycheproof_util",
+        "//tink/internal/testing:wycheproof_util",
         "//tink/util:statusor",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
     ],
 )
@@ -1048,6 +1049,17 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "wycheproof_aead_test",
+    srcs = ["wycheproof_aead_test.cc"],
+    data = ["//testvectors:aes_gcm"],
+    deps = [
+        ":wycheproof_aead",
+        "//tink/util:test_util",
         "@com_google_googletest//:gtest_main",
     ],
 )

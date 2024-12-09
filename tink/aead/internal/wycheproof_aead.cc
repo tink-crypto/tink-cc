@@ -15,37 +15,46 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/aead/internal/wycheproof_aead.h"
 
-#include <memory>
 #include <string>
 #include <vector>
 
+#include "absl/log/check.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "tink/subtle/wycheproof_util.h"
+#include "tink/internal/testing/wycheproof_util.h"
+#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::crypto::tink::subtle::WycheproofUtil;
+using ::crypto::tink::internal::wycheproof_testing::GetBytesFromHexValue;
+using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 
 std::vector<WycheproofTestVector> ReadWycheproofTestVectors(
     absl::string_view file_name) {
-  std::unique_ptr<rapidjson::Document> root =
-      WycheproofUtil::ReadTestVectors(std::string(file_name));
+  util::StatusOr<google::protobuf::Struct> parsed_input =
+      ReadTestVectors(std::string(file_name));
+  CHECK_OK(parsed_input.status());
+  const google::protobuf::Value& test_groups =
+      parsed_input->fields().at("testGroups");
   std::vector<WycheproofTestVector> test_vectors;
-  for (const rapidjson::Value& test_group : (*root)["testGroups"].GetArray()) {
-    for (const rapidjson::Value& test : test_group["tests"].GetArray()) {
+  for (const google::protobuf::Value& test_group :
+       test_groups.list_value().values()) {
+    const auto& test_group_fields = test_group.struct_value().fields();
+    for (const google::protobuf::Value& test :
+         test_group_fields.at("tests").list_value().values()) {
+      const auto& test_fields = test.struct_value().fields();
       test_vectors.push_back(WycheproofTestVector{
-          test["comment"].GetString(),
-          WycheproofUtil::GetBytes(test["key"]),
-          WycheproofUtil::GetBytes(test["iv"]),
-          WycheproofUtil::GetBytes(test["msg"]),
-          WycheproofUtil::GetBytes(test["ct"]),
-          WycheproofUtil::GetBytes(test["aad"]),
-          WycheproofUtil::GetBytes(test["tag"]),
-          absl::StrCat(test["tcId"].GetInt()),
-          test["result"].GetString(),
+          test_fields.at("comment").string_value(),
+          GetBytesFromHexValue(test_fields.at("key")),
+          GetBytesFromHexValue(test_fields.at("iv")),
+          GetBytesFromHexValue(test_fields.at("msg")),
+          GetBytesFromHexValue(test_fields.at("ct")),
+          GetBytesFromHexValue(test_fields.at("aad")),
+          GetBytesFromHexValue(test_fields.at("tag")),
+          absl::StrCat(test_fields.at("tcId").number_value()),
+          test_fields.at("result").string_value(),
       });
     }
   }

@@ -20,8 +20,9 @@ tink_cc_library(
     wycheproof_aead.cc
     wycheproof_aead.h
   DEPS
+    absl::check
     absl::strings
-    tink::subtle::wycheproof_util
+    tink::internal::testing::wycheproof_util
     tink::util::statusor
   TESTONLY
 )
@@ -1019,4 +1020,16 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::aes_eax_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME wycheproof_aead_test
+  SRCS
+    wycheproof_aead_test.cc
+  DATA
+    wycheproof::testvectors
+  DEPS
+    tink::aead::internal::wycheproof_aead
+    gmock
+    tink::util::test_util
 )

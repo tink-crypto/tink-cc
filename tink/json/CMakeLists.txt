@@ -1,5 +1,7 @@
 tink_module(json)
 
+add_subdirectory(internal)
+
 tink_cc_library(
   NAME json_keyset_reader
   SRCS
@@ -8,11 +10,10 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
-    absl::strings
     absl::string_view
-    rapidjson
+    protobuf::libprotobuf
     tink::core::keyset_reader
-    tink::util::enums
+    tink::json::internal::tink_type_resolver
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -25,11 +26,10 @@ tink_cc_library(
     json_keyset_writer.h
   DEPS
     absl::status
-    absl::strings
     absl::string_view
-    rapidjson
+    protobuf::libprotobuf
     tink::core::keyset_writer
-    tink::util::enums
+    tink::json::internal::tink_type_resolver
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -63,7 +63,6 @@ tink_cc_test(
     gmock
     absl::status
     absl::strings
-    rapidjson
     tink::core::binary_keyset_reader
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle

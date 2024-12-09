@@ -16,6 +16,7 @@
 
 #include "tink/json/json_keyset_writer.h"
 
+#include <iostream>
 #include <memory>
 #include <ostream>
 #include <sstream>
@@ -26,10 +27,6 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "absl/strings/substitute.h"
-#include "include/rapidjson/document.h"
-#include "include/rapidjson/error/en.h"
-#include "include/rapidjson/rapidjson.h"
 #include "tink/binary_keyset_reader.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/json/json_keyset_reader.h"
@@ -202,8 +199,9 @@ TEST(JsonKeysetWriterTest, WriteLargeKeyId) {
   ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
   ASSERT_THAT(writer->Write(keyset), IsOk());
-  EXPECT_THAT(buffer.str(), HasSubstr("\"primaryKeyId\": 4123456789"));
-  EXPECT_THAT(buffer.str(), HasSubstr("\"keyId\": 4123456789"));
+  EXPECT_THAT(buffer.str(), HasSubstr("\"primaryKeyId\":"));
+  EXPECT_THAT(buffer.str(), HasSubstr("\"keyId\":"));
+  EXPECT_THAT(buffer.str(), HasSubstr("4123456789"));
 }
 
 TEST(JsonKeysetWriterTest, ReadValidEncryptedKeyset) {

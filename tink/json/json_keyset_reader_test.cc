@@ -416,7 +416,7 @@ TEST_F(JsonKeysetReaderTest, parseRecursiveJsonStringFails) {
   EXPECT_THAT(keyset, Not(IsOk()));
 }
 
-TEST_F(JsonKeysetReaderTest, ReadRejectsKeysetsWithoutPrimaryKeyId) {
+TEST_F(JsonKeysetReaderTest, MissingPrimaryKeyHasValueZero) {
   std::string keyset_without_primary = R"(
       {
          "key":[
@@ -437,7 +437,8 @@ TEST_F(JsonKeysetReaderTest, ReadRejectsKeysetsWithoutPrimaryKeyId) {
   ASSERT_THAT(reader, IsOk());
   StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
       keyset = (*reader)->Read();
-  EXPECT_THAT(keyset, Not(IsOk()));
+  EXPECT_THAT(keyset, IsOk());
+  EXPECT_THAT((*keyset)->primary_key_id(), Eq(0));
 }
 
 TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidStatus) {
@@ -462,8 +463,7 @@ TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidStatus) {
   ASSERT_THAT(reader, IsOk());
   StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
       keyset = (*reader)->Read();
-  EXPECT_THAT(keyset, IsOk());
-  EXPECT_THAT((*keyset)->key(0).status(), Eq(KeyStatusType::UNKNOWN_STATUS));
+  EXPECT_THAT(keyset, Not(IsOk()));
 }
 
 TEST_F(JsonKeysetReaderTest, ReadKeysetsWithTailingCommaInArray) {
@@ -488,7 +488,7 @@ TEST_F(JsonKeysetReaderTest, ReadKeysetsWithTailingCommaInArray) {
   ASSERT_THAT(reader, IsOk());
   StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
       keyset = (*reader)->Read();
-  EXPECT_THAT(keyset, Not(IsOk()));
+  EXPECT_THAT(keyset, IsOk());
 }
 
 TEST_F(JsonKeysetReaderTest, ReadKeysetsWithTailingCommaInObject) {
@@ -513,7 +513,7 @@ TEST_F(JsonKeysetReaderTest, ReadKeysetsWithTailingCommaInObject) {
   ASSERT_THAT(reader, IsOk());
   StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
       keyset = (*reader)->Read();
-  EXPECT_THAT(keyset, Not(IsOk()));
+  EXPECT_THAT(keyset, IsOk());
 }
 
 TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidOutputPrefixType) {
@@ -538,9 +538,7 @@ TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidOutputPrefixType) {
   ASSERT_THAT(reader, IsOk());
   StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
       keyset = (*reader)->Read();
-  EXPECT_THAT(keyset, IsOk());
-  EXPECT_THAT((*keyset)->key(0).output_prefix_type(),
-              Eq(OutputPrefixType::UNKNOWN_PREFIX));
+  EXPECT_THAT(keyset, Not(IsOk()));
 }
 
 
@@ -566,9 +564,7 @@ TEST_F(JsonKeysetReaderTest, ReadKeysetsWithInvalidKeyMaterialType) {
   ASSERT_THAT(reader, IsOk());
   StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
       keyset = (*reader)->Read();
-  EXPECT_THAT(keyset, IsOk());
-  EXPECT_THAT((*keyset)->key(0).key_data().key_material_type(),
-              Eq(::google::crypto::tink::KeyData::UNKNOWN_KEYMATERIAL));
+  EXPECT_THAT(keyset, Not(IsOk()));
 }
 
 TEST_F(JsonKeysetReaderTest, ReadKeysetsWithKeyNotArray) {
@@ -592,7 +588,7 @@ TEST_F(JsonKeysetReaderTest, ReadKeysetsWithKeyNotArray) {
   ASSERT_THAT(reader, IsOk());
   StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
       keyset = (*reader)->Read();
-  EXPECT_THAT(keyset, Not(IsOk()));
+  EXPECT_THAT(keyset, IsOk());
 }
 
 TEST_F(JsonKeysetReaderTest, ReadKeysetsWithKeyEntryIsNotObject) {

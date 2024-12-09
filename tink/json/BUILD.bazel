@@ -7,14 +7,13 @@ cc_library(
     deps = [
         "//proto:tink_cc_proto",
         "//tink:keyset_reader",
-        "//tink/util:enums",
+        "//tink/json/internal:tink_type_resolver",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
-        "@rapidjson",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -27,13 +26,12 @@ cc_library(
     deps = [
         "//proto:tink_cc_proto",
         "//tink:keyset_writer",
-        "//tink/util:enums",
+        "//tink/json/internal:tink_type_resolver",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
-        "@rapidjson",
+        "@com_google_protobuf//:protobuf",
     ],
 )
 
@@ -79,6 +77,5 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
-        "@rapidjson",
     ],
 )

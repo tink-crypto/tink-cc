@@ -88,16 +88,6 @@ class SecretDataWithCrc final {
   const uint8_t& operator[](size_t pos) const { return data_[pos]; }
   const uint8_t* data() const { return data_.data(); }
 
-  // Returns the data without verifying the CRC32C. Leaves the object in an
-  // invalid state.
-  crypto::tink::util::SecretData UncheckedAsSecretData() && {
-    return std::move(data_);
-  }
-
-  const crypto::tink::util::SecretData& UncheckedAsSecretData() const& {
-    return data_;
-  }
-
   // Returns the currently stored CRC.
   // Should only be called within CallWithCoreDumpProtection (as it passes
   // secret data -- the CRC -- on the stack or in the register).

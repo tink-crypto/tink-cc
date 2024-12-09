@@ -247,28 +247,6 @@ TEST(SecretDataWithCrcTest, MoveAssignment) {
   EXPECT_THAT(data_2, SizeIs(data.size()));
 }
 
-TEST(SecretDataWithCrcTest, UncheckedAsSecretDataRvalueOverload) {
-  std::string data = Random::GetRandomBytes(256);
-  absl::crc32c_t crc = absl::ComputeCrc32c(data);
-
-  SecretDataWithCrc secret_data_with_crc(data,
-                                         SecretValue<absl::crc32c_t>(crc));
-  SecretData secret_data =
-      std::move(secret_data_with_crc).UncheckedAsSecretData();
-  EXPECT_THAT(SecretDataAsStringView(secret_data), Eq(data));
-}
-
-TEST(SecretDataWithCrcTest, UncheckedAsSecretDataConstRefOverload) {
-  std::string data = Random::GetRandomBytes(256);
-  absl::crc32c_t crc = absl::ComputeCrc32c(data);
-
-  SecretDataWithCrc secret_data_with_crc(data,
-                                         SecretValue<absl::crc32c_t>(crc));
-  SecretData secret_data = secret_data_with_crc.UncheckedAsSecretData();
-  EXPECT_THAT(SecretDataAsStringView(secret_data), Eq(data));
-  EXPECT_THAT(secret_data_with_crc.AsStringView(), Eq(data));
-}
-
 TEST(SecretDataWithCrcTest, EqualityEqual) {
   SecretDataWithCrc secret_data_with_crc_1 =
       SecretDataWithCrc::WithComputedCrc("Some data");

@@ -95,14 +95,41 @@ class Field {
   // Returns true if the field needs to be serialized (i.e. is not the default).
   virtual bool RequiresSerialization(const Struct& values) const = 0;
   // Serializes the member into out, and removes the part which was written
-  // on from out.
-  virtual absl::Status SerializeInto(SerializationState& out,
-                                     const Struct& values) const = 0;
-  // Returns the required size for SerializeInto.
-  virtual size_t GetSerializedSize(const Struct& values) const = 0;
+  // on from out. Includes the tag of the field (the encoded wiretype/field
+  // number). This is different from the parsing function "ConsumeIntoMember".
+  virtual absl::Status SerializeWithTagInto(SerializationState& out,
+                                            const Struct& values) const {
+    if (RequiresSerialization(values)) {
+      absl::Status status =
+          SerializeWireTypeAndFieldNumber(GetWireType(), GetFieldNumber(), out);
+      if (!status.ok()) {
+        return status;
+      }
+      return SerializeInto(out, values);
+    }
+    return absl::OkStatus();
+  }
+
+  // Returns the required size for SerializeWithTagInto.
+  virtual size_t GetSerializedSizeIncludingTag(const Struct& values) const {
+    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
+           GetSerializedSize(values);
+  }
 
   virtual WireType GetWireType() const = 0;
   virtual int GetFieldNumber() const = 0;
+
+ protected:
+  // Returns the required size for SerializeInto.
+  // Do not use, instead override GetSerializedSizeIncludingTag and return an
+  // error here.
+  virtual size_t GetSerializedSize(const Struct& values) const = 0;
+
+  // Serializes the member into out, and removes the part which was written
+  // on from out.
+  // Do not use, instead override SerializeWithTagInto and return an error here.
+  virtual absl::Status SerializeInto(SerializationState& out,
+                                     const Struct& values) const = 0;
 };
 
 // A field where the member variable is a uint32_t and the wire type is

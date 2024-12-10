@@ -104,16 +104,9 @@ class LowLevelParser {
   absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const {
     for (const auto& pair : fields_) {
-      if (pair.second->RequiresSerialization(values)) {
-        absl::Status status = SerializeWireTypeAndFieldNumber(
-            pair.second->GetWireType(), pair.first, out);
-        if (!status.ok()) {
-          return status;
-        }
-        status = pair.second->SerializeInto(out, values);
-        if (!status.ok()) {
-          return status;
-        }
+      absl::Status status = pair.second->SerializeWithTagInto(out, values);
+      if (!status.ok()) {
+        return status;
       }
     }
     return absl::OkStatus();
@@ -124,9 +117,7 @@ class LowLevelParser {
     size_t result = 0;
     for (const auto& pair : fields_) {
       if (pair.second->RequiresSerialization(values)) {
-        result += WireTypeAndFieldNumberLength(pair.second->GetWireType(),
-                                               pair.first);
-        result += pair.second->GetSerializedSize(values);
+        result += pair.second->GetSerializedSizeIncludingTag(values);
       }
     }
     return result;

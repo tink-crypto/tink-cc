@@ -99,6 +99,25 @@ tink_cc_library(
   PUBLIC
 )
 
+tink_cc_library(
+  NAME prf_based_key_derivation_key
+  SRCS
+    prf_based_key_derivation_key.cc
+    prf_based_key_derivation_key.h
+  DEPS
+    tink::keyderivation::key_derivation_key
+    tink::keyderivation::prf_based_key_derivation_parameters
+    absl::memory
+    absl::status
+    absl::optional
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::prf::prf_key
+    tink::util::status
+    tink::util::statusor
+  PUBLIC
+)
+
 # tests
 
 tink_cc_test(
@@ -245,6 +264,27 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     tink::prf::aes_cmac_prf_parameters
     tink::prf::hmac_prf_parameters
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME prf_based_key_derivation_key_test
+  SRCS
+    prf_based_key_derivation_key_test.cc
+  DEPS
+    tink::keyderivation::prf_based_key_derivation_key
+    tink::keyderivation::prf_based_key_derivation_parameters
+    gmock
+    absl::status
+    absl::optional
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::chacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_parameters
+    tink::prf::aes_cmac_prf_key
+    tink::prf::aes_cmac_prf_parameters
     tink::util::statusor
     tink::util::test_matchers
 )

@@ -106,6 +106,26 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "prf_based_key_derivation_key",
+    srcs = ["prf_based_key_derivation_key.cc"],
+    hdrs = ["prf_based_key_derivation_key.h"],
+    include_prefix = "tink/keyderivation",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":key_derivation_key",
+        ":prf_based_key_derivation_parameters",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink/prf:prf_key",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -252,6 +272,27 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "prf_based_key_derivation_key_test",
+    srcs = ["prf_based_key_derivation_key_test.cc"],
+    deps = [
+        ":prf_based_key_derivation_key",
+        ":prf_based_key_derivation_parameters",
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink:restricted_data",
+        "//tink/aead:chacha20_poly1305_parameters",
+        "//tink/aead:xchacha20_poly1305_parameters",
+        "//tink/prf:aes_cmac_prf_key",
+        "//tink/prf:aes_cmac_prf_parameters",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],
 )

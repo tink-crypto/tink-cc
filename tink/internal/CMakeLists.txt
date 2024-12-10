@@ -401,7 +401,6 @@ tink_cc_test(
     tink::internal::testing::wycheproof_util
     tink::subtle::common_enums
     tink::subtle::subtle_util
-    tink::subtle::wycheproof_util
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers

@@ -45,7 +45,6 @@
 #include "tink/internal/testing/wycheproof_util.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/subtle/wycheproof_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -61,7 +60,6 @@ using ::crypto::tink::internal::wycheproof_testing::
 using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 using ::crypto::tink::subtle::EcPointFormat;
 using ::crypto::tink::subtle::EllipticCurveType;
-using ::crypto::tink::subtle::WycheproofUtil;
 using ::crypto::tink::test::EqualsSecretData;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;

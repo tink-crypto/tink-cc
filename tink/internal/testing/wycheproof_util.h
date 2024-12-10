@@ -35,14 +35,14 @@ util::StatusOr<google::protobuf::Struct> ReadTestVectors(
 
 std::string GetBytesFromHexValue(const google::protobuf::Value &val);
 
-// Integers in Wycheproof are represented as signed bigendian hexadecimal
-// strings in twos complement representation.
+// Integers in Wycheproof are represented as signed big-endian hexadecimal
+// strings in two's complement representation.
 // Integers in EcKey are unsigned and are represented as an array of bytes
-// using bigendian order.
-// GetInteger can assume that val is always 0 or a positive integer, since
-// they are values from the key: a convention in Wycheproof is that parameters
-// in the test group are valid, only values in the test vector itself may
-// be invalid.
+// using big-endian order.
+// GetIntegerFromHexValue can assume that val is always 0 or a positive integer,
+// since they are values from the key: a convention in Wycheproof is that
+// parameters in the test group are valid, only values in the test vector itself
+// may be invalid.
 std::string GetIntegerFromHexValue(const google::protobuf::Value &val);
 
 crypto::tink::subtle::HashType GetHashTypeFromValue(

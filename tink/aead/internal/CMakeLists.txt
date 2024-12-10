@@ -237,11 +237,11 @@ tink_cc_test(
     wycheproof::testvectors
   DEPS
     tink::aead::internal::cord_aes_gcm_boringssl
+    tink::aead::internal::wycheproof_aead
     gmock
     absl::strings
     absl::cord
     crypto
-    rapidjson
     tink::core::aead
     tink::aead::cord_aead
     tink::subtle::aes_gcm_boringssl

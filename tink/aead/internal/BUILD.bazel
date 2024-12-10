@@ -214,6 +214,7 @@ cc_test(
     data = ["//testvectors:aes_gcm"],
     deps = [
         ":cord_aes_gcm_boringssl",
+        ":wycheproof_aead",
         "//tink:aead",
         "//tink/aead:cord_aead",
         "//tink/subtle:aes_gcm_boringssl",
@@ -227,7 +228,6 @@ cc_test(
         "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:cord_test_helpers",
         "@com_google_googletest//:gtest_main",
-        "@rapidjson",
     ],
 )
 

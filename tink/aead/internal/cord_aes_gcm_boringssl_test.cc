@@ -20,20 +20,19 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_test_helpers.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "openssl/err.h"
-#include "include/rapidjson/document.h"
 #include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
+#include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
-#include "tink/subtle/wycheproof_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -179,63 +178,50 @@ static std::string GetError() {
   return lib + ":" + func + ":" + reason;
 }
 
-// Test with test vectors from Wycheproof project.
-bool WycheproofTest(const rapidjson::Document& root) {
+TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
+  std::vector<WycheproofTestVector> all_test_vectors =
+      ReadWycheproofTestVectors("aes_gcm_test.json");
+
   int errors = 0;
-  for (const rapidjson::Value& test_group : root["testGroups"].GetArray()) {
-    const size_t iv_size = test_group["ivSize"].GetInt();
-    const size_t key_size = test_group["keySize"].GetInt();
-    const size_t tag_size = test_group["tagSize"].GetInt();
+  int skipped = 0;
+  for (const WycheproofTestVector& tc : all_test_vectors) {
+    int iv_size = tc.nonce.size();
+    int tag_size = tc.tag.size();
+    int key_size = tc.key.size();
     // CordAesGcmBoringSsl only supports 12-byte IVs and 16-byte
     // authentication tag. Also 24-byte keys are not supported.
-    if (iv_size != 96 || tag_size != 128 || key_size == 192) {
+    if (iv_size != 12 || tag_size != 16 || key_size == 24) {
       // Not supported
+      skipped++;
       continue;
     }
-    for (const rapidjson::Value& test : test_group["tests"].GetArray()) {
-      std::string comment = test["comment"].GetString();
-      std::string key = subtle::WycheproofUtil::GetBytes(test["key"]);
-      std::string iv = subtle::WycheproofUtil::GetBytes(test["iv"]);
-      std::string msg = subtle::WycheproofUtil::GetBytes(test["msg"]);
-      std::string ct = subtle::WycheproofUtil::GetBytes(test["ct"]);
-      std::string ad = subtle::WycheproofUtil::GetBytes(test["aad"]);
-      std::string tag = subtle::WycheproofUtil::GetBytes(test["tag"]);
-      std::string id = absl::StrCat(test["tcId"].GetInt());
-      std::string expected = test["result"].GetString();
-
-      std::unique_ptr<CordAead> cipher = std::move(
-          *CordAesGcmBoringSsl::New(util::SecretDataFromStringView(key)));
-      // Convert the ciphertext to cord.
-      absl::Cord ct_cord = absl::Cord(iv + ct + tag);
-      absl::Cord associated_data_cord = absl::Cord(ad);
-      util::StatusOr<absl::Cord> result =
-          cipher->Decrypt(ct_cord, associated_data_cord);
-      if (result.ok()) {
-        std::string decrypted = std::string(result->Flatten());
-        if (expected == "invalid") {
-          ADD_FAILURE() << "Decrypted invalid ciphertext:" << id;
-          errors++;
-        } else if (msg != decrypted) {
-          ADD_FAILURE() << "Incorrect decryption:" << id;
-          errors++;
-        }
-      } else {
-        if (expected == "valid" || expected == "acceptable") {
-          ADD_FAILURE() << "Could not decrypt test with tcId:" << id
-                        << " iv_size:" << iv_size << " tag_size:" << tag_size
-                        << " key_size:" << key_size << " error:" << GetError();
-          errors++;
-        }
+    std::unique_ptr<CordAead> cipher = std::move(
+        *CordAesGcmBoringSsl::New(util::SecretDataFromStringView(tc.key)));
+    // Convert the ciphertext to cord.
+    absl::Cord ct_cord = absl::Cord(tc.nonce + tc.ct + tc.tag);
+    absl::Cord associated_data_cord = absl::Cord(tc.aad);
+    util::StatusOr<absl::Cord> result =
+        cipher->Decrypt(ct_cord, associated_data_cord);
+    if (result.ok()) {
+      std::string decrypted = std::string(result->Flatten());
+      if (tc.expected == "invalid") {
+        ADD_FAILURE() << "Decrypted invalid ciphertext:" << tc.id;
+        errors++;
+      } else if (tc.msg != decrypted) {
+        ADD_FAILURE() << "Incorrect decryption:" << tc.id;
+        errors++;
+      }
+    } else {
+      if (tc.expected == "valid" || tc.expected == "acceptable") {
+        ADD_FAILURE() << "Could not decrypt test with tcId:" << tc.id
+                      << " iv_size:" << iv_size << " tag_size:" << tag_size
+                      << " key_size:" << key_size << " error:" << GetError();
+        errors++;
       }
     }
   }
-  return errors == 0;
-}
-
-TEST(CordAesGcmBoringSslWycheproofTest, TestVectors) {
-  std::unique_ptr<rapidjson::Document> root =
-      subtle::WycheproofUtil::ReadTestVectors("aes_gcm_test.json");
-  ASSERT_TRUE(WycheproofTest(*root));
+  EXPECT_EQ(skipped, 159);
+  EXPECT_EQ(errors, 0);
 }
 
 }  // namespace

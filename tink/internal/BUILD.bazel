@@ -1628,6 +1628,7 @@ cc_test(
         ":proto_parser_message_field",
         ":proto_parser_state",
         ":proto_parsing_low_level_parser",
+        "//tink/internal/testing:field_with_number",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@com_google_absl//absl/container:btree",

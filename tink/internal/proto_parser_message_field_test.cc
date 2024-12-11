@@ -30,6 +30,7 @@
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
+#include "tink/internal/testing/field_with_number.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -40,6 +41,7 @@ namespace proto_parsing {
 
 namespace {
 
+using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
@@ -192,10 +194,10 @@ TEST(MessageField, SerializeEmpty) {
 
   std::string buffer = "abc";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.GetSerializedSize(s), Eq(1));
-  EXPECT_THAT(field.SerializeInto(state, s), IsOk());
-  EXPECT_THAT(state.GetBuffer().size(), Eq(2));
-  EXPECT_THAT(HexEncode(buffer.substr(0, 1)), Eq("00"));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(s), Eq(0));
+  EXPECT_THAT(field.SerializeWithTagInto(state, s), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(3));
+  EXPECT_THAT(buffer, Eq("abc"));
 }
 
 TEST(MessageField, SerializeNonEmpty) {
@@ -206,16 +208,16 @@ TEST(MessageField, SerializeNonEmpty) {
   s.inner_member.uint32_member_2 = 0x7a;
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.GetSerializedSize(s), Eq(5));
-  EXPECT_THAT(field.SerializeInto(state, s), IsOk());
-  EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 5));
-  EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[5]));
-  EXPECT_THAT(HexEncode(buffer.substr(0, 5)),
-              Eq(absl::StrCat(/* 4 bytes */ ("04"),
-                              /* Int field, tag 1, value 0x23 */ ("0823"),
-                              /* Int field, tag 2, value 0x7a */ ("107a"))));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(s), Eq(6));
+  EXPECT_THAT(field.SerializeWithTagInto(state, s), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 6));
+  EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[6]));
+  EXPECT_THAT(
+      buffer.substr(0, 6),
+      Eq(FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
+                                          FieldWithNumber(2).IsVarint(0x7a)})));
   // Rest is untouched
-  EXPECT_THAT(buffer.substr(5), Eq("RBUFFERBUFFERBUFFER"));
+  EXPECT_THAT(buffer.substr(6), Eq("BUFFERBUFFERBUFFER"));
 }
 
 TEST(MessageField, SerializeTooSmallBuffer) {
@@ -224,10 +226,24 @@ TEST(MessageField, SerializeTooSmallBuffer) {
   OuterStruct s;
   s.inner_member.uint32_member_1 = 0x23;
   s.inner_member.uint32_member_2 = 0x7a;
-  std::string buffer = "BUFF";
+  std::string buffer = "BUFFE";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeInto(state, s), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state, s), Not(IsOk()));
 }
+
+// The buffer can hold the tag, but not the varint of the length.
+TEST(MessageField, SerializeSmallerBuffer) {
+  MessageField<OuterStruct, InnerStruct> field(1, &OuterStruct::inner_member,
+                                               InnerStructFields());
+  OuterStruct s;
+  s.inner_member.uint32_member_1 = 0x23;
+  s.inner_member.uint32_member_2 = 0x7a;
+  std::string buffer = "B";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state, s), Not(IsOk()));
+}
+
+
 
 // The buffer won't even hold the varint.
 TEST(MessageField, SerializeVerySmallBuffer) {
@@ -238,7 +254,7 @@ TEST(MessageField, SerializeVerySmallBuffer) {
   s.inner_member.uint32_member_2 = 0x7a;
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeInto(state, s), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state, s), Not(IsOk()));
 }
 
 TEST(MessageField, RequiresSerialization) {

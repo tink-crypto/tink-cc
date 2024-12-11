@@ -150,11 +150,12 @@ TEST(SerializeStringLikeValue, BigInteger) {
 std::vector<std::pair<std::string, uint32_t>>
 Uint32TestCasesParseAndSerialize() {
   return std::vector<std::pair<std::string, uint32_t>>{
-      {"00", 0}, {"01", 1}, {"7f", 127}, {"8001", 128}, {"a274", 14882}};
+      {"01", 1}, {"7f", 127}, {"8001", 128}, {"a274", 14882}};
 }
 
 std::vector<std::pair<std::string, uint32_t>> Uint32TestCasesParseOnly() {
   std::vector<std::pair<std::string, uint32_t>> result;
+  result.push_back({"00", 0});
   // Padded up to 10 bytes.
   result.push_back({"8000", 0});
   result.push_back({"8100", 1});
@@ -224,14 +225,17 @@ TEST(Uint32Field, SerializeVarintSuccessCases) {
   for (std::pair<std::string, uint32_t> test_case :
        Uint32TestCasesParseAndSerialize()) {
     SCOPED_TRACE(test_case.first);
+    std::string expected_serialization =
+        HexDecodeOrDie("08") + HexDecodeOrDie(test_case.first);
     s.uint32_member_1 = test_case.second;
-    ASSERT_THAT(field.GetSerializedSize(s), Eq(test_case.first.size() / 2));
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(s),
+                Eq(expected_serialization.size()));
 
     std::string buffer;
-    buffer.resize(test_case.first.size() / 2);
+    buffer.resize(expected_serialization.size());
     SerializationState state = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeInto(state, s), IsOk());
-    EXPECT_THAT(buffer, Eq(HexDecodeOrDie(test_case.first)));
+    EXPECT_THAT(field.SerializeWithTagInto(state, s), IsOk());
+    EXPECT_THAT(HexEncode(buffer), Eq(HexEncode(expected_serialization)));
     EXPECT_THAT(state.GetBuffer().size(), Eq(0));
   }
 }
@@ -244,12 +248,13 @@ TEST(Uint32Field, SerializeVarintBufferTooSmall) {
        Uint32TestCasesParseAndSerialize()) {
     SCOPED_TRACE(test_case.first);
     s.uint32_member_1 = test_case.second;
-    ASSERT_THAT(field.GetSerializedSize(s), Eq(test_case.first.size() / 2));
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(s),
+                Eq(test_case.first.size() / 2 + 1));
 
     std::string buffer;
-    buffer.resize(test_case.first.size() / 2 - 1);
+    buffer.resize(test_case.first.size() / 2);
     SerializationState state = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeInto(state, s), Not(IsOk()));
+    EXPECT_THAT(field.SerializeWithTagInto(state, s), Not(IsOk()));
   }
 }
 
@@ -261,11 +266,43 @@ TEST(Uint32Field, SerializeVarintLeavesRemainingData) {
   ParsedStruct s;
   s.uint32_member_1 = 14882;
   // Will overwrite the first two bytes with 0xa274
-  EXPECT_THAT(field.SerializeInto(buffer_span, s), IsOk());
-  EXPECT_THAT(HexEncode(buffer), Eq("a27463646566"));
-  std::string expected = "cdef";
-  // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span, s), IsOk());
+  EXPECT_THAT(HexEncode(buffer), Eq("08a274646566"));
+  std::string expected = "def";
+  // Note: absl::MakeSpan("def").size() == 4 (will add null terminator).
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+}
+
+TEST(Uint32Field, Empty) {
+  Uint32Field<ParsedStruct> field(kUint32Field1Number,
+                                  &ParsedStruct::uint32_member_1);
+  std::string buffer = "abcdef";
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  ParsedStruct s;
+  s.uint32_member_1 = 0;
+
+  ASSERT_THAT(field.GetSerializedSizeIncludingTag(s), Eq(0));
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span, s), IsOk());
+  std::string expected = "abcdef";
+  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
+  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+}
+
+TEST(Uint32Field, EmptyAlwaysSerialize) {
+  Uint32Field<ParsedStruct> field(kUint32Field1Number,
+                                  &ParsedStruct::uint32_member_1,
+                                  ProtoFieldOptions::kAlwaysSerialize);
+  std::string buffer = "abcdef";
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  ParsedStruct s;
+  s.uint32_member_1 = 0;
+
+  ASSERT_THAT(field.GetSerializedSizeIncludingTag(s), Eq(2));
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span, s), IsOk());
+  std::string expected = "cdef";
+  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
+  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
 }
 
 TEST(Uint32Field, GetFieldNumber) {

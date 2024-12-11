@@ -167,6 +167,10 @@ class Uint32Field : public Field<Struct> {
            values.*value_ != 0;
   }
 
+  WireType GetWireType() const override { return WireType::kVarint; }
+  int GetFieldNumber() const override { return field_number_; }
+
+ protected:
   absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     return SerializeVarint(values.*value_, out);
@@ -175,9 +179,6 @@ class Uint32Field : public Field<Struct> {
   size_t GetSerializedSize(const Struct& values) const override {
     return VarintLength(values.*value_);
   }
-
-  WireType GetWireType() const override { return WireType::kVarint; }
-  int GetFieldNumber() const override { return field_number_; }
 
  private:
   uint32_t Struct::*value_;

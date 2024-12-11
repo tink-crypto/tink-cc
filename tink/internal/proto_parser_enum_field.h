@@ -83,6 +83,10 @@ class EnumField : public Field<Struct> {
            values.*value_ != static_cast<Enum>(0);
   }
 
+  WireType GetWireType() const override { return WireType::kVarint; }
+  int GetFieldNumber() const override { return field_number_; }
+
+ protected:
   absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     return SerializeVarint(static_cast<uint32_t>(values.*value_), out);
@@ -91,9 +95,6 @@ class EnumField : public Field<Struct> {
   size_t GetSerializedSize(const Struct& values) const override {
     return VarintLength(static_cast<uint32_t>(values.*value_));
   }
-
-  WireType GetWireType() const override { return WireType::kVarint; }
-  int GetFieldNumber() const override { return field_number_; }
 
  private:
   int field_number_;

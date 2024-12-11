@@ -116,9 +116,7 @@ class LowLevelParser {
   size_t GetSerializedSize(const Struct& values) const {
     size_t result = 0;
     for (const auto& pair : fields_) {
-      if (pair.second->RequiresSerialization(values)) {
-        result += pair.second->GetSerializedSizeIncludingTag(values);
-      }
+      result += pair.second->GetSerializedSizeIncludingTag(values);
     }
     return result;
   }

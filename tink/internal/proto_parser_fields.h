@@ -112,6 +112,9 @@ class Field {
 
   // Returns the required size for SerializeWithTagInto.
   virtual size_t GetSerializedSizeIncludingTag(const Struct& values) const {
+    if (!RequiresSerialization(values)) {
+      return 0;
+    }
     return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
            GetSerializedSize(values);
   }

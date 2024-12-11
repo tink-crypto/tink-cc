@@ -218,6 +218,10 @@ class BytesField : public Field<Struct> {
            SizeOfStringLikeValue(values.*value_) != 0;
   }
 
+  WireType GetWireType() const override { return WireType::kLengthDelimited; }
+  int GetFieldNumber() const override { return field_number_; }
+
+ protected:
   absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     size_t size = SizeOfStringLikeValue(values.*value_);
@@ -239,9 +243,6 @@ class BytesField : public Field<Struct> {
     size_t size = SizeOfStringLikeValue(values.*value_);
     return VarintLength(size) + size;
   }
-
-  WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetFieldNumber() const override { return field_number_; }
 
  private:
   StringLike Struct::*value_;

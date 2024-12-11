@@ -64,6 +64,10 @@ class Uint32FieldWithPresence : public Field<Struct> {
     return (values.*value_).has_value();
   }
 
+  WireType GetWireType() const override { return WireType::kVarint; }
+  int GetFieldNumber() const override { return field_number_; }
+
+ protected:
   absl::Status SerializeInto(SerializationState& out,
                              const Struct& values) const override {
     if (!(values.*value_).has_value()) {
@@ -80,9 +84,6 @@ class Uint32FieldWithPresence : public Field<Struct> {
     }
     return VarintLength(*(values.*value_));
   }
-
-  WireType GetWireType() const override { return WireType::kVarint; }
-  int GetFieldNumber() const override { return field_number_; }
 
  private:
   absl::optional<uint32_t> Struct::*value_;

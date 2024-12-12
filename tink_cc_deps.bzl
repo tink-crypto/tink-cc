@@ -86,19 +86,6 @@ def tink_cc_deps():
         url = "https://github.com/bazelbuild/rules_license/releases/download/1.0.0/rules_license-1.0.0.tar.gz",
     )
 
-    # -------------------------------------------------------------------------
-    # Rapidjson.
-    # -------------------------------------------------------------------------
-    # Release from 2016-08-25 (still the latest release as of 2022-05-05).
-    maybe(
-        http_archive,
-        build_file = "@tink_cc//:third_party/rapidjson.BUILD.bazel",
-        name = "rapidjson",
-        sha256 = "bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e",
-        strip_prefix = "rapidjson-1.1.0",
-        url = "https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz",
-    )
-
 def tink_cc_testonly_deps():
     """Test only dependencies for tink-cc."""
 

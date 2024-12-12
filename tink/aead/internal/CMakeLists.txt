@@ -245,7 +245,6 @@ tink_cc_test(
     tink::core::aead
     tink::aead::cord_aead
     tink::subtle::aes_gcm_boringssl
-    tink::subtle::wycheproof_util
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers

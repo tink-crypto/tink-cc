@@ -694,23 +694,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME wycheproof_util
-  SRCS
-    wycheproof_util.cc
-    wycheproof_util.h
-  DEPS
-    tink::subtle::common_enums
-    absl::log
-    absl::status
-    absl::strings
-    rapidjson
-    tink::internal::test_file_util
-    tink::util::status
-    tink::util::statusor
-  TESTONLY
-)
-
-tink_cc_library(
   NAME stream_segment_decrypter
   SRCS
     stream_segment_decrypter.h

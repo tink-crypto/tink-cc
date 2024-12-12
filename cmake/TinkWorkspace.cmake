@@ -115,19 +115,6 @@ else()
   message(STATUS "crypto Include Dir: ${crypto_INCLUDE_DIR}")
 endif()
 
-set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Tink dependency override" FORCE)
-set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Tink dependency override" FORCE)
-set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Tink dependency override" FORCE)
-
-http_archive(
-  NAME rapidjson
-  URL https://github.com/Tencent/rapidjson/archive/v1.1.0.tar.gz
-  SHA256 bf7ced29704a1e696fbccf2a2b4ea068e7774fa37f6d7dd4039d0787f8bed98e
-)
-# Rapidjson is a header-only library with no explicit target. Here we create one.
-add_library(rapidjson INTERFACE)
-target_include_directories(rapidjson INTERFACE "${rapidjson_SOURCE_DIR}")
-
 if (NOT TINK_USE_INSTALLED_PROTOBUF)
   set(protobuf_BUILD_TESTS OFF CACHE BOOL "Tink dependency override" FORCE)
   set(protobuf_BUILD_EXAMPLES OFF CACHE BOOL "Tink dependency override" FORCE)

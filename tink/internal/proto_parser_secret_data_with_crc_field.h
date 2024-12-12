@@ -87,6 +87,10 @@ class SecretDataWithCrcField : public Field<Struct> {
     return (values.*data_).size() > 0;
   }
 
+  WireType GetWireType() const override { return WireType::kLengthDelimited; }
+  int GetFieldNumber() const override { return field_number_; }
+
+ protected:
   absl::Status SerializeInto(SerializationState& serialization_state,
                              const Struct& values) const override {
     if (!serialization_state.HasCrc()) {
@@ -124,9 +128,6 @@ class SecretDataWithCrcField : public Field<Struct> {
     size_t size = (values.*data_).AsStringView().size();
     return VarintLength(size) + size;
   }
-
-  WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetFieldNumber() const override { return field_number_; }
 
  private:
   SecretDataWithCrc Struct::*data_;

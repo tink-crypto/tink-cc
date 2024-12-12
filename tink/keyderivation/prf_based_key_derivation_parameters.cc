@@ -55,14 +55,16 @@ PrfBasedKeyDerivationParameters::Builder::Build() {
   }
 
   const PrfParameters* prf_params =
-      dynamic_cast<const PrfParameters*>(prf_parameters_.release());
+      dynamic_cast<const PrfParameters*>(prf_parameters_.get());
   if (prf_params == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "PRF parameters cannot be set to non-PRF parameters.");
   }
 
-  return PrfBasedKeyDerivationParameters(absl::WrapUnique(prf_params),
-                                         std::move(derived_key_parameters_));
+  return PrfBasedKeyDerivationParameters(
+      absl::WrapUnique(
+          dynamic_cast<const PrfParameters*>(prf_parameters_.release())),
+      std::move(derived_key_parameters_));
 }
 
 bool PrfBasedKeyDerivationParameters::operator==(

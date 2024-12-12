@@ -111,6 +111,7 @@ tink_cc_library(
     absl::status
     absl::optional
     tink::core::key
+    tink::core::parameters
     tink::core::partial_key_access_token
     tink::prf::prf_key
     tink::util::status

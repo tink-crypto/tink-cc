@@ -116,6 +116,7 @@ cc_library(
         ":key_derivation_key",
         ":prf_based_key_derivation_parameters",
         "//tink:key",
+        "//tink:parameters",
         "//tink:partial_key_access_token",
         "//tink/prf:prf_key",
         "//tink/util:status",

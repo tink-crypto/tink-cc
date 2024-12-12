@@ -83,9 +83,13 @@ util::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
-  return KeyGenConfigurationImpl::AddKeyCreator<MlDsaParameters>(CreateMlDsaKey,
-                                                                 config);
+  status = KeyGenConfigurationImpl::AddKeyCreator<MlDsaParameters>(
+      CreateMlDsaKey, config);
+  if (!status.ok()) {
+    return status;
+  }
 #endif
+  return util::OkStatus();
 }
 
 }  // namespace internal

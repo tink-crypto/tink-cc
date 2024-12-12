@@ -224,7 +224,7 @@ util::Status AddSignatureV0(Configuration& config) {
   }
 
   // Tink implements PQC signatures with BoringSSL, not OpenSSL.
-  #ifdef OPENSSL_IS_BORINGSSL
+#ifdef OPENSSL_IS_BORINGSSL
   // SLH DSA
   status = RegisterSlhDsaProtoSerialization();
   if (!status.ok()) {
@@ -254,9 +254,14 @@ util::Status AddSignatureV0(Configuration& config) {
   if (!status.ok()) {
     return status;
   }
-  return ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify, MlDsaPublicKey>(
-      NewMlDsaVerifyBoringSsl, config);
-  #endif
+  status =
+      ConfigurationImpl::AddPrimitiveGetter<PublicKeyVerify, MlDsaPublicKey>(
+          NewMlDsaVerifyBoringSsl, config);
+  if (!status.ok()) {
+    return status;
+  }
+#endif
+  return util::OkStatus();
 }
 
 }  // namespace internal

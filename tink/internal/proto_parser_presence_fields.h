@@ -67,9 +67,16 @@ class Uint32FieldWithPresence : public Field<Struct> {
   WireType GetWireType() const override { return WireType::kVarint; }
   int GetFieldNumber() const override { return field_number_; }
 
- protected:
-  absl::Status SerializeInto(SerializationState& out,
+  absl::Status SerializeWithTagInto(SerializationState& out,
                              const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return absl::OkStatus();
+    }
+    absl::Status status =
+        SerializeWireTypeAndFieldNumber(GetWireType(), GetFieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
     if (!(values.*value_).has_value()) {
       return absl::InvalidArgumentError(
           "Must not call SerializeInto on absent Uint32FieldWithPresence");
@@ -77,12 +84,16 @@ class Uint32FieldWithPresence : public Field<Struct> {
     return SerializeVarint(*(values.*value_), out);
   }
 
-  size_t GetSerializedSize(const Struct& values) const override {
+  size_t GetSerializedSizeIncludingTag(const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return 0;
+    }
     if (!(values.*value_).has_value()) {
       // We should never get here.
       return 0;
     }
-    return VarintLength(*(values.*value_));
+    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
+           VarintLength(*(values.*value_));
   }
 
  private:

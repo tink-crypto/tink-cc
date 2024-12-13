@@ -81,9 +81,16 @@ class MessageField : public Field<OuterStruct> {
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
   int GetFieldNumber() const override { return field_number_; }
 
- protected:
-  absl::Status SerializeInto(SerializationState& out,
-                             const OuterStruct& values) const override {
+  absl::Status SerializeWithTagInto(SerializationState& out,
+                                    const OuterStruct& values) const {
+    if (!RequiresSerialization(values)) {
+      return absl::OkStatus();
+    }
+    absl::Status status =
+        SerializeWireTypeAndFieldNumber(GetWireType(), GetFieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
     size_t size = low_level_parser_.GetSerializedSize(values.*value_);
     absl::Status s = SerializeVarint(size, out);
     if (!s.ok()) {
@@ -95,9 +102,14 @@ class MessageField : public Field<OuterStruct> {
     }
     return low_level_parser_.SerializeInto(out, values.*value_);
   }
-  size_t GetSerializedSize(const OuterStruct& values) const override {
+  size_t GetSerializedSizeIncludingTag(
+      const OuterStruct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return 0;
+    }
     size_t size = low_level_parser_.GetSerializedSize(values.*value_);
-    return VarintLength(size) + size;
+    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
+           VarintLength(size) + size;
   }
 
  private:

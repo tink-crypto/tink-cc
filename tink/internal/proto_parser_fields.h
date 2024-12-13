@@ -98,41 +98,12 @@ class Field {
   // on from out. Includes the tag of the field (the encoded wiretype/field
   // number). This is different from the parsing function "ConsumeIntoMember".
   virtual absl::Status SerializeWithTagInto(SerializationState& out,
-                                            const Struct& values) const {
-    if (RequiresSerialization(values)) {
-      absl::Status status =
-          SerializeWireTypeAndFieldNumber(GetWireType(), GetFieldNumber(), out);
-      if (!status.ok()) {
-        return status;
-      }
-      return SerializeInto(out, values);
-    }
-    return absl::OkStatus();
-  }
+                                            const Struct& values) const = 0;
 
   // Returns the required size for SerializeWithTagInto.
-  virtual size_t GetSerializedSizeIncludingTag(const Struct& values) const {
-    if (!RequiresSerialization(values)) {
-      return 0;
-    }
-    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
-           GetSerializedSize(values);
-  }
-
+  virtual size_t GetSerializedSizeIncludingTag(const Struct& values) const = 0;
   virtual WireType GetWireType() const = 0;
   virtual int GetFieldNumber() const = 0;
-
- protected:
-  // Returns the required size for SerializeInto.
-  // Do not use, instead override GetSerializedSizeIncludingTag and return an
-  // error here.
-  virtual size_t GetSerializedSize(const Struct& values) const = 0;
-
-  // Serializes the member into out, and removes the part which was written
-  // on from out.
-  // Do not use, instead override SerializeWithTagInto and return an error here.
-  virtual absl::Status SerializeInto(SerializationState& out,
-                                     const Struct& values) const = 0;
 };
 
 // A field where the member variable is a uint32_t and the wire type is
@@ -170,14 +141,25 @@ class Uint32Field : public Field<Struct> {
   WireType GetWireType() const override { return WireType::kVarint; }
   int GetFieldNumber() const override { return field_number_; }
 
- protected:
-  absl::Status SerializeInto(SerializationState& out,
-                             const Struct& values) const override {
+  absl::Status SerializeWithTagInto(SerializationState& out,
+                                    const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return absl::OkStatus();
+    }
+    absl::Status status =
+        SerializeWireTypeAndFieldNumber(GetWireType(), GetFieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
     return SerializeVarint(values.*value_, out);
   }
 
-  size_t GetSerializedSize(const Struct& values) const override {
-    return VarintLength(values.*value_);
+  size_t GetSerializedSizeIncludingTag(const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return 0;
+    }
+    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
+           VarintLength(values.*value_);
   }
 
  private:
@@ -221,9 +203,16 @@ class BytesField : public Field<Struct> {
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
   int GetFieldNumber() const override { return field_number_; }
 
- protected:
-  absl::Status SerializeInto(SerializationState& out,
-                             const Struct& values) const override {
+  absl::Status SerializeWithTagInto(SerializationState& out,
+                                    const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return absl::OkStatus();
+    }
+    absl::Status status =
+        SerializeWireTypeAndFieldNumber(GetWireType(), GetFieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
     size_t size = SizeOfStringLikeValue(values.*value_);
     absl::Status s = SerializeVarint(size, out);
     if (!s.ok()) {
@@ -239,9 +228,13 @@ class BytesField : public Field<Struct> {
     return absl::OkStatus();
   }
 
-  size_t GetSerializedSize(const Struct& values) const override {
+  size_t GetSerializedSizeIncludingTag(const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return 0;
+    }
     size_t size = SizeOfStringLikeValue(values.*value_);
-    return VarintLength(size) + size;
+    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
+           VarintLength(size) + size;
   }
 
  private:

@@ -90,9 +90,16 @@ class SecretDataWithCrcField : public Field<Struct> {
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
   int GetFieldNumber() const override { return field_number_; }
 
- protected:
-  absl::Status SerializeInto(SerializationState& serialization_state,
+  absl::Status SerializeWithTagInto(SerializationState& serialization_state,
                              const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return absl::OkStatus();
+    }
+    absl::Status status = SerializeWireTypeAndFieldNumber(
+        GetWireType(), GetFieldNumber(), serialization_state);
+    if (!status.ok()) {
+      return status;
+    }
     if (!serialization_state.HasCrc()) {
       // We currently disallow serialization if the serialization_state doesn't
       // have CRC maintenance. This means one cannot serialize a struct which
@@ -124,9 +131,13 @@ class SecretDataWithCrcField : public Field<Struct> {
     return absl::OkStatus();
   }
 
-  size_t GetSerializedSize(const Struct& values) const override {
+  size_t GetSerializedSizeIncludingTag(const Struct& values) const override {
+    if (!RequiresSerialization(values)) {
+      return 0;
+    }
     size_t size = (values.*data_).AsStringView().size();
-    return VarintLength(size) + size;
+    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
+           VarintLength(size) + size;
   }
 
  private:

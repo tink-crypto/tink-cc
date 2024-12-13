@@ -279,3 +279,54 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME prf_based_key_derivation_proto_serialization_impl
+  SRCS
+    prf_based_key_derivation_proto_serialization_impl.cc
+    prf_based_key_derivation_proto_serialization_impl.h
+  DEPS
+    absl::check
+    absl::status
+    absl::string_view
+    tink::core::parameters
+    tink::internal::global_serialization_registry
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::keyderivation::prf_based_key_derivation_parameters
+    tink::prf::prf_parameters
+    tink::util::status
+    tink::util::statusor
+    tink::proto::prf_based_deriver_cc_proto
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME prf_based_key_derivation_proto_serialization_impl_test
+  SRCS
+    prf_based_key_derivation_proto_serialization_impl_test.cc
+  DEPS
+    tink::keyderivation::internal::prf_based_key_derivation_proto_serialization_impl
+    gmock
+    absl::check
+    absl::status
+    absl::string_view
+    tink::core::parameters
+    tink::aead::xchacha20_poly1305_parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::keyderivation::prf_based_key_derivation_parameters
+    tink::prf::aes_cmac_prf_parameters
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::aes_cmac_prf_cc_proto
+    tink::proto::prf_based_deriver_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+)

@@ -287,18 +287,32 @@ tink_cc_library(
     prf_based_key_derivation_proto_serialization_impl.h
   DEPS
     absl::check
+    absl::memory
     absl::status
     absl::string_view
+    absl::optional
+    tink::core::key
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::call_with_core_dump_protection
     tink::internal::global_serialization_registry
+    tink::internal::key_parser
+    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
+    tink::prf::prf_key
     tink::prf::prf_parameters
+    tink::util::secret_data
+    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::prf_based_deriver_cc_proto
@@ -315,13 +329,21 @@ tink_cc_test(
     absl::check
     absl::status
     absl::string_view
+    absl::optional
+    tink::core::key
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::aead::xchacha20_poly1305_parameters
+    tink::internal::internal_insecure_secret_key_access
     tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
+    tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
     tink::util::statusor
     tink::util::test_matchers

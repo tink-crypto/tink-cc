@@ -39,7 +39,6 @@ tink_cc_library(
     key_derivation_config.h
   DEPS
     tink::keyderivation::keyset_deriver_wrapper
-    tink::keyderivation::prf_based_key_derivation_proto_serialization
     absl::memory
     tink::core::registry
     tink::config::tink_fips
@@ -162,42 +161,19 @@ tink_cc_test(
     tink::keyderivation::key_derivation_config
     tink::keyderivation::key_derivation_key_templates
     tink::keyderivation::keyset_deriver
-    tink::keyderivation::prf_based_key_derivation_key
-    tink::keyderivation::prf_based_key_derivation_parameters
     gmock
-    absl::check
     absl::memory
-    absl::status
-    absl::string_view
     tink::core::aead
-    tink::core::key_status
     tink::core::keyset_handle
-    tink::core::parameters
-    tink::core::partial_key_access
-    tink::core::proto_parameters_format
     tink::core::registry
-    tink::core::restricted_data
     tink::aead::aead_config
     tink::aead::aead_key_templates
     tink::aead::aes_gcm_key_manager
-    tink::aead::xchacha20_poly1305_parameters
     tink::config::global_registry
-    tink::internal::fips_utils
-    tink::internal::internal_insecure_secret_key_access
-    tink::internal::legacy_proto_key
-    tink::internal::legacy_proto_parameters
-    tink::internal::mutable_serialization_registry
-    tink::keyderivation::internal::prf_based_deriver_key_manager
-    tink::prf::aes_cmac_prf_key
-    tink::prf::aes_cmac_prf_parameters
-    tink::prf::prf_config
     tink::prf::prf_key_templates
     tink::util::statusor
     tink::util::test_matchers
-    tink::proto::aes_cmac_prf_cc_proto
-    tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto
-    tink::proto::xchacha20_poly1305_cc_proto
 )
 
 tink_cc_test(

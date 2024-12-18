@@ -783,6 +783,24 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME legacy_kms_envelope_aead_key
+  SRCS
+    legacy_kms_envelope_aead_key.cc
+    legacy_kms_envelope_aead_key.h
+  DEPS
+    tink::aead::aead_key
+    tink::aead::legacy_kms_envelope_aead_parameters
+    absl::status
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::key
+    tink::internal::output_prefix_util
+    tink::util::status
+    tink::util::statusor
+)
+
 # tests
 
 tink_cc_test(
@@ -1674,6 +1692,24 @@ tink_cc_test(
     absl::status
     absl::string_view
     tink::core::parameters
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME legacy_kms_envelope_aead_key_test
+  SRCS
+    legacy_kms_envelope_aead_key_test.cc
+  DEPS
+    tink::aead::legacy_kms_envelope_aead_key
+    tink::aead::legacy_kms_envelope_aead_parameters
+    tink::aead::xchacha20_poly1305_parameters
+    gmock
+    absl::check
+    absl::status
+    absl::string_view
+    absl::optional
+    tink::core::key
     tink::util::statusor
     tink::util::test_matchers
 )

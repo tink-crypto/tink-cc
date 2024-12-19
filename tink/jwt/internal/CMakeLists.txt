@@ -1049,3 +1049,54 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME jwt_mac_config_v0
+  SRCS
+    jwt_mac_config_v0.cc
+    jwt_mac_config_v0.h
+  DEPS
+    tink::jwt::internal::jwt_hmac_key_manager
+    tink::jwt::internal::jwt_mac_wrapper
+    absl::memory
+    tink::core::configuration
+    tink::internal::configuration_impl
+    tink::util::status
+)
+
+tink_cc_library(
+  NAME jwt_mac_key_gen_config_v0
+  SRCS
+    jwt_mac_key_gen_config_v0.cc
+    jwt_mac_key_gen_config_v0.h
+  DEPS
+    tink::jwt::internal::jwt_hmac_key_manager
+    absl::memory
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+    tink::util::status
+)
+
+tink_cc_test(
+  NAME jwt_mac_config_v0_test
+  SRCS
+    jwt_mac_config_v0_test.cc
+  DEPS
+    tink::jwt::internal::jwt_hmac_key_manager
+    tink::jwt::internal::jwt_mac_config_v0
+    tink::jwt::internal::jwt_mac_key_gen_config_v0
+    gmock
+    absl::time
+    tink::core::configuration
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+    tink::internal::keyset_wrapper_store
+    tink::jwt::jwt_key_templates
+    tink::jwt::jwt_mac
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::util::statusor
+    tink::util::test_matchers
+)

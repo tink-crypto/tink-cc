@@ -586,6 +586,28 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME jwt_mac_config_v0
+  SRCS
+    jwt_mac_config_v0.cc
+    jwt_mac_config_v0.h
+  DEPS
+    absl::check
+    tink::core::configuration
+    tink::jwt::internal::jwt_mac_config_v0
+)
+
+tink_cc_library(
+  NAME jwt_mac_key_gen_config_v0
+  SRCS
+    jwt_mac_key_gen_config_v0.cc
+    jwt_mac_key_gen_config_v0.h
+  DEPS
+    absl::check
+    tink::core::key_gen_configuration
+    tink::jwt::internal::jwt_mac_key_gen_config_v0
+)
+
 # tests
 
 tink_cc_test(
@@ -1135,4 +1157,22 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME jwt_mac_config_v0_test
+  SRCS
+    jwt_mac_config_v0_test.cc
+  DEPS
+    tink::jwt::jwt_key_templates
+    tink::jwt::jwt_mac
+    tink::jwt::jwt_mac_config_v0
+    tink::jwt::jwt_mac_key_gen_config_v0
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    gmock
+    absl::time
+    tink::core::keyset_handle
+    tink::util::statusor
+    tink::util::test_matchers
 )

@@ -14,8 +14,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_HYBRID_ECIES_AEAD_HKDF_DEM_HELPER_H_
-#define TINK_HYBRID_ECIES_AEAD_HKDF_DEM_HELPER_H_
+#ifndef TINK_HYBRID_INTERNAL_ECIES_AEAD_HKDF_DEM_HELPER_H_
+#define TINK_HYBRID_INTERNAL_ECIES_AEAD_HKDF_DEM_HELPER_H_
 
 #include <stdint.h>
 
@@ -87,4 +87,4 @@ class EciesAeadHkdfDemHelper {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_HYBRID_ECIES_AEAD_HKDF_DEM_HELPER_H_
+#endif  // TINK_HYBRID_INTERNAL_ECIES_AEAD_HKDF_DEM_HELPER_H_

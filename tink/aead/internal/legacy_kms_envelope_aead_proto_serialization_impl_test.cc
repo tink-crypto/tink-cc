@@ -1,0 +1,561 @@
+// Copyright 2024 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+////////////////////////////////////////////////////////////////////////////////
+
+#include "tink/aead/internal/legacy_kms_envelope_aead_proto_serialization_impl.h"
+
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "gmock/gmock.h"
+#include "gtest/gtest.h"
+#include "absl/log/check.h"
+#include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
+#include "tink/aead/aead_parameters.h"
+#include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/aes_eax_parameters.h"
+#include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/legacy_kms_envelope_aead_parameters.h"
+#include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
+#include "tink/internal/serialization_registry.h"
+#include "tink/parameters.h"
+#include "tink/util/statusor.h"
+#include "tink/util/test_matchers.h"
+#include "proto/aes_cmac.pb.h"
+#include "proto/aes_ctr.pb.h"
+#include "proto/aes_ctr_hmac_aead.pb.h"
+#include "proto/aes_eax.pb.h"
+#include "proto/aes_gcm.pb.h"
+#include "proto/aes_gcm_siv.pb.h"
+#include "proto/chacha20_poly1305.pb.h"
+#include "proto/common.pb.h"
+#include "proto/hmac.pb.h"
+#include "proto/kms_envelope.pb.h"
+#include "proto/tink.pb.h"
+#include "proto/xchacha20_poly1305.pb.h"
+
+namespace crypto {
+namespace tink {
+namespace internal {
+namespace {
+
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::AesCmacKeyFormat;
+using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
+using ::google::crypto::tink::AesCtrKeyFormat;
+using ::google::crypto::tink::AesCtrParams;
+using ::google::crypto::tink::AesEaxKeyFormat;
+using ::google::crypto::tink::AesGcmKeyFormat;
+using ::google::crypto::tink::AesGcmSivKeyFormat;
+using ::google::crypto::tink::ChaCha20Poly1305KeyFormat;
+using ::google::crypto::tink::HashType;
+using ::google::crypto::tink::HmacKeyFormat;
+using ::google::crypto::tink::HmacParams;
+using ::google::crypto::tink::KeyTemplate;
+using ::google::crypto::tink::KmsEnvelopeAeadKeyFormat;
+using ::google::crypto::tink::OutputPrefixType;
+using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
+using ::testing::Eq;
+using ::testing::HasSubstr;
+using ::testing::IsTrue;
+using ::testing::NotNull;
+using ::testing::TestWithParam;
+using ::testing::Values;
+
+constexpr absl::string_view kTypeUrl =
+    "type.googleapis.com/google.crypto.tink.KmsEnvelopeAeadKey";
+
+const absl::string_view kKekUri = "some://arbitrary.key.uri?q=123#xyz";
+
+KeyTemplate GetXChaCha20Poly1305KeyTemplate() {
+  XChaCha20Poly1305KeyFormat key_format;
+  key_format.set_version(0);
+  KeyTemplate key_template;
+  key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key");
+  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::RAW);
+  return key_template;
+}
+
+XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
+  util::StatusOr<XChaCha20Poly1305Parameters> parameters =
+      XChaCha20Poly1305Parameters::Create(
+          XChaCha20Poly1305Parameters::Variant::kNoPrefix);
+  CHECK_OK(parameters);
+  return *parameters;
+}
+
+KeyTemplate GetAesGcmKeyTemplate() {
+  AesGcmKeyFormat key_format;
+  key_format.set_version(0);
+  key_format.set_key_size(16);
+  KeyTemplate key_template;
+  key_template.set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
+  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::RAW);
+  return key_template;
+}
+
+AesGcmParameters GetAesGcmParameters() {
+  util::StatusOr<AesGcmParameters> parameters =
+      AesGcmParameters::Builder()
+          .SetVariant(AesGcmParameters::Variant::kNoPrefix)
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .Build();
+  CHECK_OK(parameters);
+  return *parameters;
+}
+
+KeyTemplate GetAesGcmSivKeyTemplate() {
+  AesGcmSivKeyFormat key_format;
+  key_format.set_version(0);
+  key_format.set_key_size(16);
+  KeyTemplate key_template;
+  key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesGcmSivKey");
+  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::RAW);
+  return key_template;
+}
+
+AesGcmSivParameters GetAesGcmSivParameters() {
+  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+      /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
+  CHECK_OK(parameters);
+  return *parameters;
+}
+
+KeyTemplate GetAesCtrHmacAeadKeyTemplate() {
+  AesCtrHmacAeadKeyFormat key_format;
+  HmacKeyFormat& hmac_key_format = *key_format.mutable_hmac_key_format();
+  AesCtrKeyFormat& aes_ctr_key_format =
+      *key_format.mutable_aes_ctr_key_format();
+
+  HmacParams& hmac_params = *hmac_key_format.mutable_params();
+  hmac_key_format.set_key_size(16);
+  hmac_params.set_hash(HashType::SHA256);
+  hmac_params.set_tag_size(32);
+  hmac_key_format.set_version(0);
+
+  AesCtrParams& aes_ctr_params = *aes_ctr_key_format.mutable_params();
+  aes_ctr_params.set_iv_size(12);
+  aes_ctr_key_format.set_key_size(16);
+
+  KeyTemplate key_template;
+  key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey");
+  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::RAW);
+  return key_template;
+}
+
+AesCtrHmacAeadParameters GetAesCtrHmacAeadParameters() {
+  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(16)
+          .SetHmacKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(32)
+          .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
+          .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
+          .Build();
+  CHECK_OK(parameters);
+  return *parameters;
+}
+
+KeyTemplate GetAesEaxKeyTemplate() {
+  AesEaxKeyFormat key_format;
+  key_format.set_key_size(16);
+  key_format.mutable_params()->set_iv_size(12);
+  KeyTemplate key_template;
+  key_template.set_type_url("type.googleapis.com/google.crypto.tink.AesEaxKey");
+  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::RAW);
+  return key_template;
+}
+
+AesEaxParameters GetAesEaxParameters() {
+  util::StatusOr<AesEaxParameters> parameters =
+      AesEaxParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetIvSizeInBytes(12)
+          .SetTagSizeInBytes(16)
+          .SetVariant(AesEaxParameters::Variant::kNoPrefix)
+          .Build();
+  CHECK_OK(parameters);
+  return *parameters;
+}
+
+struct TestCase {
+  LegacyKmsEnvelopeAeadParameters::Variant variant;
+  OutputPrefixType output_prefix_type;
+  absl::optional<int> id;
+  std::string output_prefix;
+  LegacyKmsEnvelopeAeadParameters::DekParsingStrategy dek_parsing_strategy;
+  std::shared_ptr<AeadParameters> dek_parameters;
+  KeyTemplate dek_template;
+};
+
+using LegacyKmsEnvelopeAeadProtoSerializationTest = TestWithParam<TestCase>;
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       RegisterTwiceSucceedsWithMutableRegistry) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+}
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       RegisterTwiceSucceedsWithRegistryBuilder) {
+  // TODO: b/378091229 - Consider disallowing duplicate registrations.
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
+          builder),
+      IsOk());
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
+          builder),
+      IsOk());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    LegacyKmsEnvelopeAeadProtoSerializationTestSuite,
+    LegacyKmsEnvelopeAeadProtoSerializationTest,
+    Values(
+        TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kTink,
+                 OutputPrefixType::TINK,
+                 /*id=*/0x02030400,
+                 /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5),
+                 LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
+                     kAssumeXChaCha20Poly1305,
+                 absl::make_unique<XChaCha20Poly1305Parameters>(
+                     GetXChaCha20Poly1305Parameters()),
+                 GetXChaCha20Poly1305KeyTemplate()},
+        TestCase{
+            LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
+            OutputPrefixType::RAW,
+            /*id=*/absl::nullopt,
+            /*output_prefix=*/"",
+            LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm,
+            absl::make_unique<AesGcmParameters>(GetAesGcmParameters()),
+            GetAesGcmKeyTemplate()},
+        TestCase{
+            LegacyKmsEnvelopeAeadParameters::Variant::kTink,
+            OutputPrefixType::TINK,
+            /*id=*/0x01030005,
+            /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5),
+            LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
+                kAssumeAesGcmSiv,
+            absl::make_unique<AesGcmSivParameters>(GetAesGcmSivParameters()),
+            GetAesGcmSivKeyTemplate()},
+        TestCase{LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
+                 OutputPrefixType::RAW,
+                 /*id=*/absl::nullopt,
+                 /*output_prefix=*/"",
+                 LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
+                     kAssumeAesCtrHmac,
+                 absl::make_unique<AesCtrHmacAeadParameters>(
+                     GetAesCtrHmacAeadParameters()),
+                 GetAesCtrHmacAeadKeyTemplate()},
+        TestCase{
+            LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
+            OutputPrefixType::RAW,
+            /*id=*/absl::nullopt,
+            /*output_prefix=*/"",
+            LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax,
+            absl::make_unique<AesEaxParameters>(GetAesEaxParameters()),
+            GetAesEaxKeyTemplate()}));
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseParametersWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  KeyTemplate dek_template = test_case.dek_template;
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = dek_template;
+
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(
+          kTypeUrl, test_case.output_prefix_type,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+      registry.ParseParameters(*serialization);
+  ASSERT_THAT(parameters, IsOk());
+  EXPECT_THAT((*parameters)->HasIdRequirement(), test_case.id.has_value());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> expected_parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  EXPECT_THAT(**parameters, Eq(*expected_parameters));
+}
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseParametersWithImmutableRegistry) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
+          builder),
+      IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = test_case.dek_template;
+
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(
+          kTypeUrl, test_case.output_prefix_type,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+      registry.ParseParameters(*serialization);
+  ASSERT_THAT(parameters, IsOk());
+  EXPECT_THAT((*parameters)->HasIdRequirement(), test_case.id.has_value());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> expected_parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  EXPECT_THAT(**parameters, Eq(*expected_parameters));
+}
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseParametersWithInvalidSerialization) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixType::RAW,
+                                           "invalid_serialization");
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> params =
+      registry.ParseParameters(*serialization);
+  EXPECT_THAT(
+      params.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Failed to parse KmsEnvelopeAeadKeyFormat proto")));
+}
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseParametersWithUnkownOutputPrefix) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = GetXChaCha20Poly1305KeyTemplate();
+
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(
+          kTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> params =
+      registry.ParseParameters(*serialization);
+  EXPECT_THAT(
+      params.status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr(
+              "Could not determine LegacyKmsEnvelopeAeadParameters::Variant")));
+}
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseParametersWithNonAeadDekKeyTemplate) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  AesCmacKeyFormat aes_cmac_key_format;
+  aes_cmac_key_format.set_key_size(32);
+  aes_cmac_key_format.mutable_params()->set_tag_size(16);
+  KeyTemplate key_template;
+  key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.AesCmacKey");
+  key_template.set_value(aes_cmac_key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::RAW);
+
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = key_template;
+
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(
+          kTypeUrl, OutputPrefixType::TINK,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> params =
+      registry.ParseParameters(*serialization);
+  EXPECT_THAT(
+      params.status(),
+      StatusIs(
+          absl::StatusCode::kInvalidArgument,
+          HasSubstr("Non-AEAD parameters stored in the `dek_template` field")));
+}
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseParametersWithUnsupportedDekKeyTemplate) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  ChaCha20Poly1305KeyFormat key_format;
+  KeyTemplate key_template;
+  key_template.set_type_url(
+      "type.googleapis.com/google.crypto.tink.ChaCha20Poly1305Key");
+  key_template.set_value(key_format.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::RAW);
+
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = key_template;
+
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(
+          kTypeUrl, OutputPrefixType::TINK,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Parameters>> params =
+      registry.ParseParameters(*serialization);
+  EXPECT_THAT(params.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Unsupported DEK parameters when parsing")));
+}
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       SerializeParametersWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
+
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(), Eq(kTypeUrl));
+  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
+              Eq(test_case.output_prefix_type));
+
+  KmsEnvelopeAeadKeyFormat key_format;
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
+  EXPECT_THAT(key_format.kek_uri(), Eq(kKekUri));
+  EXPECT_THAT(key_format.dek_template().type_url(),
+              Eq(test_case.dek_template.type_url()));
+}
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       SerializeParametersWithImmutableRegistry) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
+          builder),
+      IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
+
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(), Eq(kTypeUrl));
+  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
+              Eq(test_case.output_prefix_type));
+
+  KmsEnvelopeAeadKeyFormat key_format;
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
+  EXPECT_THAT(key_format.kek_uri(), Eq(kKekUri));
+  EXPECT_THAT(key_format.dek_template().type_url(),
+              Eq(test_case.dek_template.type_url()));
+}
+
+}  // namespace
+}  // namespace internal
+}  // namespace tink
+}  // namespace crypto

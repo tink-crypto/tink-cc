@@ -36,4 +36,4 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_INTERNAL_ML_DSA_SIGN_BORINGSSL_H_
+#endif  // TINK_SIGNATURE_INTERNAL_ML_DSA_SIGN_BORINGSSL_H_

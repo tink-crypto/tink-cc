@@ -202,18 +202,26 @@ tink_cc_library(
   DEPS
     absl::status
     absl::string_view
+    absl::optional
     tink::core::parameters
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
     tink::aead::aead_parameters
     tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_eax_parameters
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_siv_parameters
+    tink::aead::legacy_kms_envelope_aead_key
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::xchacha20_poly1305_parameters
     tink::internal::global_serialization_registry
+    tink::internal::internal_insecure_secret_key_access
+    tink::internal::key_parser
+    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
@@ -1075,15 +1083,20 @@ tink_cc_test(
     absl::status
     absl::string_view
     absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::parameters
+    tink::core::restricted_data
     tink::aead::aead_parameters
     tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_eax_parameters
     tink::aead::aes_gcm_parameters
     tink::aead::aes_gcm_siv_parameters
+    tink::aead::legacy_kms_envelope_aead_key
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::xchacha20_poly1305_parameters
     tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry

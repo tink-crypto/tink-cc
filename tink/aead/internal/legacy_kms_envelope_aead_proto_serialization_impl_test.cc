@@ -32,13 +32,18 @@
 #include "tink/aead/aes_eax_parameters.h"
 #include "tink/aead/aes_gcm_parameters.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
+#include "tink/aead/legacy_kms_envelope_aead_key.h"
 #include "tink/aead/legacy_kms_envelope_aead_parameters.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/key.h"
 #include "tink/parameters.h"
+#include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_cmac.pb.h"
@@ -72,7 +77,9 @@ using ::google::crypto::tink::ChaCha20Poly1305KeyFormat;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::HmacKeyFormat;
 using ::google::crypto::tink::HmacParams;
+using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
+using ::google::crypto::tink::KmsEnvelopeAeadKey;
 using ::google::crypto::tink::KmsEnvelopeAeadKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
@@ -552,6 +559,238 @@ TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
       IsTrue());
   EXPECT_THAT(key_format.kek_uri(), Eq(kKekUri));
   EXPECT_THAT(key_format.dek_template().type_url(),
+              Eq(test_case.dek_template.type_url()));
+}
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseKeyWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = test_case.dek_template;
+  KmsEnvelopeAeadKey key_proto;
+  key_proto.set_version(0);
+  *key_proto.mutable_params() = key_format_proto;
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kTypeUrl, serialized_key, KeyData::REMOTE,
+                                    test_case.output_prefix_type, test_case.id);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
+  EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
+              test_case.id.has_value());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> expected_parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadKey> expected_key =
+      LegacyKmsEnvelopeAeadKey::Create(*expected_parameters, test_case.id);
+  ASSERT_THAT(expected_key, IsOk());
+
+  EXPECT_THAT(**key, Eq(*expected_key));
+}
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseKeyWithImmutableRegistry) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
+          builder),
+      IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = test_case.dek_template;
+  KmsEnvelopeAeadKey key_proto;
+  key_proto.set_version(0);
+  *key_proto.mutable_params() = key_format_proto;
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kTypeUrl, serialized_key, KeyData::REMOTE,
+                                    test_case.output_prefix_type, test_case.id);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+  ASSERT_THAT(key, IsOk());
+  EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
+  EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
+              test_case.id.has_value());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> expected_parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(expected_parameters, IsOk());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadKey> expected_key =
+      LegacyKmsEnvelopeAeadKey::Create(*expected_parameters, test_case.id);
+  ASSERT_THAT(expected_key, IsOk());
+
+  EXPECT_THAT(**key, Eq(*expected_key));
+}
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseKeyWithInvalidSerialization) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  RestrictedData serialized_key =
+      RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kTypeUrl, serialized_key, KeyData::REMOTE,
+                                    OutputPrefixType::TINK,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Failed to parse KmsEnvelopeAeadKey proto")));
+}
+
+TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       ParseKeyWithInvalidVersion) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  KmsEnvelopeAeadKeyFormat key_format_proto;
+  key_format_proto.set_kek_uri(kKekUri);
+  *key_format_proto.mutable_dek_template() = GetXChaCha20Poly1305KeyTemplate();
+  KmsEnvelopeAeadKey key_proto;
+  key_proto.set_version(1);  // Invalid version number.
+  *key_proto.mutable_params() = key_format_proto;
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  util::StatusOr<ProtoKeySerialization> serialization =
+      ProtoKeySerialization::Create(kTypeUrl, serialized_key, KeyData::REMOTE,
+                                    OutputPrefixType::TINK,
+                                    /*id_requirement=*/0x23456789);
+  ASSERT_THAT(serialization, IsOk());
+
+  util::StatusOr<std::unique_ptr<Key>> key =
+      registry.ParseKey(*serialization, /*token=*/absl::nullopt);
+  EXPECT_THAT(key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Only version 0 keys are accepted")));
+}
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       SerializeKeyWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+          registry),
+      IsOk());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+      LegacyKmsEnvelopeAeadKey::Create(*parameters, test_case.id);
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(*key,
+                                                   /*token=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
+
+  const ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
+  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::REMOTE));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
+
+  KmsEnvelopeAeadKey proto_key;
+  ASSERT_THAT(proto_key.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  EXPECT_THAT(proto_key.version(), Eq(0));
+  EXPECT_THAT(proto_key.params().kek_uri(), Eq(kKekUri));
+  EXPECT_THAT(proto_key.params().dek_template().type_url(),
+              Eq(test_case.dek_template.type_url()));
+}
+
+TEST_P(LegacyKmsEnvelopeAeadProtoSerializationTest,
+       SerializeKeyWithImmutableRegistry) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(
+      RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
+          builder),
+      IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+      LegacyKmsEnvelopeAeadParameters::Create(kKekUri, test_case.variant,
+                                              test_case.dek_parsing_strategy,
+                                              *test_case.dek_parameters);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+      LegacyKmsEnvelopeAeadKey::Create(*parameters, test_case.id);
+  ASSERT_THAT(key, IsOk());
+
+  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(*key,
+                                                   /*token=*/absl::nullopt);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
+
+  const ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
+  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::REMOTE));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
+
+  KmsEnvelopeAeadKey proto_key;
+  ASSERT_THAT(proto_key.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  EXPECT_THAT(proto_key.version(), Eq(0));
+  EXPECT_THAT(proto_key.params().kek_uri(), Eq(kKekUri));
+  EXPECT_THAT(proto_key.params().dek_template().type_url(),
               Eq(test_case.dek_template.type_url()));
 }
 

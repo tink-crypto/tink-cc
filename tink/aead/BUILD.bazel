@@ -857,6 +857,17 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "legacy_kms_envelope_aead_proto_serialization",
+    hdrs = ["legacy_kms_envelope_aead_proto_serialization.h"],
+    include_prefix = "tink/aead",
+    deps = [
+        "//tink/aead/internal:legacy_kms_envelope_aead_proto_serialization_impl",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/util:status",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -1781,6 +1792,47 @@ cc_test(
         "//tink/util:test_matchers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "legacy_kms_envelope_aead_proto_serialization_test",
+    srcs = ["legacy_kms_envelope_aead_proto_serialization_test.cc"],
+    deps = [
+        ":aead_parameters",
+        ":aes_ctr_hmac_aead_parameters",
+        ":aes_eax_parameters",
+        ":aes_gcm_parameters",
+        ":aes_gcm_siv_parameters",
+        ":legacy_kms_envelope_aead_key",
+        ":legacy_kms_envelope_aead_parameters",
+        ":legacy_kms_envelope_aead_proto_serialization",
+        ":xchacha20_poly1305_parameters",
+        "//proto:aes_ctr_cc_proto",
+        "//proto:aes_ctr_hmac_aead_cc_proto",
+        "//proto:aes_eax_cc_proto",
+        "//proto:aes_gcm_cc_proto",
+        "//proto:aes_gcm_siv_cc_proto",
+        "//proto:common_cc_proto",
+        "//proto:hmac_cc_proto",
+        "//proto:kms_envelope_cc_proto",
+        "//proto:tink_cc_proto",
+        "//proto:xchacha20_poly1305_cc_proto",
+        "//tink:insecure_secret_key_access",
+        "//tink:key",
+        "//tink:parameters",
+        "//tink:restricted_data",
+        "//tink/internal:mutable_serialization_registry",
+        "//tink/internal:proto_key_serialization",
+        "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:serialization",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",

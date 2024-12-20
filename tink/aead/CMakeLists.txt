@@ -801,6 +801,16 @@ tink_cc_library(
     tink::util::statusor
 )
 
+tink_cc_library(
+  NAME legacy_kms_envelope_aead_proto_serialization
+  SRCS
+    legacy_kms_envelope_aead_proto_serialization.h
+  DEPS
+    tink::aead::internal::legacy_kms_envelope_aead_proto_serialization_impl
+    tink::internal::mutable_serialization_registry
+    tink::util::status
+)
+
 # tests
 
 tink_cc_test(
@@ -1712,4 +1722,45 @@ tink_cc_test(
     tink::core::key
     tink::util::statusor
     tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME legacy_kms_envelope_aead_proto_serialization_test
+  SRCS
+    legacy_kms_envelope_aead_proto_serialization_test.cc
+  DEPS
+    tink::aead::aead_parameters
+    tink::aead::aes_ctr_hmac_aead_parameters
+    tink::aead::aes_eax_parameters
+    tink::aead::aes_gcm_parameters
+    tink::aead::aes_gcm_siv_parameters
+    tink::aead::legacy_kms_envelope_aead_key
+    tink::aead::legacy_kms_envelope_aead_parameters
+    tink::aead::legacy_kms_envelope_aead_proto_serialization
+    tink::aead::xchacha20_poly1305_parameters
+    gmock
+    absl::check
+    absl::memory
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::parameters
+    tink::core::restricted_data
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::aes_ctr_cc_proto
+    tink::proto::aes_ctr_hmac_aead_cc_proto
+    tink::proto::aes_eax_cc_proto
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_gcm_siv_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::hmac_cc_proto
+    tink::proto::kms_envelope_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
 )

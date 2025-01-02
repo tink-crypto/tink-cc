@@ -646,6 +646,30 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "jwt_signature_config_v0",
+    srcs = ["jwt_signature_config_v0.cc"],
+    hdrs = ["jwt_signature_config_v0.h"],
+    include_prefix = "tink/jwt",
+    deps = [
+        "//tink:configuration",
+        "//tink/jwt/internal:jwt_signature_config_v0",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
+cc_library(
+    name = "jwt_signature_key_gen_config_v0",
+    srcs = ["jwt_signature_key_gen_config_v0.cc"],
+    hdrs = ["jwt_signature_key_gen_config_v0.h"],
+    include_prefix = "tink/jwt",
+    deps = [
+        "//tink:key_gen_configuration",
+        "//tink/jwt/internal:jwt_signature_key_gen_config_v0",
+        "@com_google_absl//absl/log:check",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -1216,6 +1240,24 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/time",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "jwt_signature_config_v0_test",
+    srcs = ["jwt_signature_config_v0_test.cc"],
+    deps = [
+        ":jwt_key_templates",
+        ":jwt_public_key_sign",
+        ":jwt_public_key_verify",
+        ":jwt_signature_config_v0",
+        ":jwt_signature_key_gen_config_v0",
+        ":jwt_validator",
+        ":raw_jwt",
+        "//tink:keyset_handle",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
         "@com_google_googletest//:gtest_main",
     ],
 )

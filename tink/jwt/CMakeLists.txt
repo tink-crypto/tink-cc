@@ -608,6 +608,28 @@ tink_cc_library(
     tink::jwt::internal::jwt_mac_key_gen_config_v0
 )
 
+tink_cc_library(
+  NAME jwt_signature_config_v0
+  SRCS
+    jwt_signature_config_v0.cc
+    jwt_signature_config_v0.h
+  DEPS
+    absl::check
+    tink::core::configuration
+    tink::jwt::internal::jwt_signature_config_v0
+)
+
+tink_cc_library(
+  NAME jwt_signature_key_gen_config_v0
+  SRCS
+    jwt_signature_key_gen_config_v0.cc
+    jwt_signature_key_gen_config_v0.h
+  DEPS
+    absl::check
+    tink::core::key_gen_configuration
+    tink::jwt::internal::jwt_signature_key_gen_config_v0
+)
+
 # tests
 
 tink_cc_test(
@@ -1172,6 +1194,24 @@ tink_cc_test(
     tink::jwt::raw_jwt
     gmock
     absl::time
+    tink::core::keyset_handle
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_test(
+  NAME jwt_signature_config_v0_test
+  SRCS
+    jwt_signature_config_v0_test.cc
+  DEPS
+    tink::jwt::jwt_key_templates
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_signature_config_v0
+    tink::jwt::jwt_signature_key_gen_config_v0
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    gmock
     tink::core::keyset_handle
     tink::util::statusor
     tink::util::test_matchers

@@ -1100,3 +1100,71 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME jwt_signature_config_v0
+  SRCS
+    jwt_signature_config_v0.cc
+    jwt_signature_config_v0.h
+  DEPS
+    tink::jwt::internal::jwt_ecdsa_sign_key_manager
+    tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_public_key_sign_wrapper
+    tink::jwt::internal::jwt_public_key_verify_wrapper
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
+    absl::memory
+    tink::core::configuration
+    tink::internal::configuration_impl
+    tink::util::status
+)
+
+tink_cc_test(
+  NAME jwt_signature_config_v0_test
+  SRCS
+    jwt_signature_config_v0_test.cc
+  DEPS
+    tink::jwt::internal::jwt_ecdsa_sign_key_manager
+    tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
+    tink::jwt::internal::jwt_signature_config_v0
+    tink::jwt::internal::jwt_signature_key_gen_config_v0
+    gmock
+    tink::core::configuration
+    tink::core::key_gen_configuration
+    tink::core::keyset_handle
+    tink::internal::configuration_impl
+    tink::internal::key_gen_configuration_impl
+    tink::internal::key_type_info_store
+    tink::internal::keyset_wrapper_store
+    tink::jwt::jwt_key_templates
+    tink::jwt::jwt_public_key_sign
+    tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_validator
+    tink::jwt::raw_jwt
+    tink::util::statusor
+    tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME jwt_signature_key_gen_config_v0
+  SRCS
+    jwt_signature_key_gen_config_v0.cc
+    jwt_signature_key_gen_config_v0.h
+  DEPS
+    tink::jwt::internal::jwt_ecdsa_sign_key_manager
+    tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
+    tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
+    absl::memory
+    tink::core::key_gen_configuration
+    tink::internal::key_gen_configuration_impl
+    tink::util::status
+)

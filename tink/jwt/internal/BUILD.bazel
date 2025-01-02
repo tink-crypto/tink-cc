@@ -1137,3 +1137,73 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "jwt_signature_config_v0",
+    srcs = ["jwt_signature_config_v0.cc"],
+    hdrs = ["jwt_signature_config_v0.h"],
+    include_prefix = "tink/jwt/internal",
+    deps = [
+        ":jwt_ecdsa_sign_key_manager",
+        ":jwt_ecdsa_verify_key_manager",
+        ":jwt_public_key_sign_wrapper",
+        ":jwt_public_key_verify_wrapper",
+        ":jwt_rsa_ssa_pkcs1_sign_key_manager",
+        ":jwt_rsa_ssa_pkcs1_verify_key_manager",
+        ":jwt_rsa_ssa_pss_sign_key_manager",
+        ":jwt_rsa_ssa_pss_verify_key_manager",
+        "//tink:configuration",
+        "//tink/internal:configuration_impl",
+        "//tink/util:status",
+        "@com_google_absl//absl/memory",
+    ],
+)
+
+cc_test(
+    name = "jwt_signature_config_v0_test",
+    srcs = ["jwt_signature_config_v0_test.cc"],
+    deps = [
+        ":jwt_ecdsa_sign_key_manager",
+        ":jwt_ecdsa_verify_key_manager",
+        ":jwt_rsa_ssa_pkcs1_sign_key_manager",
+        ":jwt_rsa_ssa_pkcs1_verify_key_manager",
+        ":jwt_rsa_ssa_pss_sign_key_manager",
+        ":jwt_rsa_ssa_pss_verify_key_manager",
+        ":jwt_signature_config_v0",
+        ":jwt_signature_key_gen_config_v0",
+        "//tink:configuration",
+        "//tink:key_gen_configuration",
+        "//tink:keyset_handle",
+        "//tink/internal:configuration_impl",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/internal:key_type_info_store",
+        "//tink/internal:keyset_wrapper_store",
+        "//tink/jwt:jwt_key_templates",
+        "//tink/jwt:jwt_public_key_sign",
+        "//tink/jwt:jwt_public_key_verify",
+        "//tink/jwt:jwt_validator",
+        "//tink/jwt:raw_jwt",
+        "//tink/util:statusor",
+        "//tink/util:test_matchers",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "jwt_signature_key_gen_config_v0",
+    srcs = ["jwt_signature_key_gen_config_v0.cc"],
+    hdrs = ["jwt_signature_key_gen_config_v0.h"],
+    include_prefix = "tink/jwt/internal",
+    deps = [
+        ":jwt_ecdsa_sign_key_manager",
+        ":jwt_ecdsa_verify_key_manager",
+        ":jwt_rsa_ssa_pkcs1_sign_key_manager",
+        ":jwt_rsa_ssa_pkcs1_verify_key_manager",
+        ":jwt_rsa_ssa_pss_sign_key_manager",
+        ":jwt_rsa_ssa_pss_verify_key_manager",
+        "//tink:key_gen_configuration",
+        "//tink/internal:key_gen_configuration_impl",
+        "//tink/util:status",
+        "@com_google_absl//absl/memory",
+    ],
+)

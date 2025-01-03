@@ -31,6 +31,7 @@
 #include "tink/aead/kms_aead_key_manager.h"
 #include "tink/aead/kms_envelope_aead_key_manager.h"
 #include "tink/aead/legacy_kms_aead_proto_serialization.h"
+#include "tink/aead/legacy_kms_envelope_aead_proto_serialization.h"
 #include "tink/aead/x_aes_gcm_key_manager.h"
 #include "tink/aead/x_aes_gcm_proto_serialization.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
@@ -145,7 +146,12 @@ util::Status AeadConfig::Register() {
     return status;
   }
 
-  return RegisterLegacyKmsAeadProtoSerialization();
+  status = RegisterLegacyKmsAeadProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+
+  return RegisterLegacyKmsEnvelopeAeadProtoSerialization();
 }
 
 }  // namespace tink

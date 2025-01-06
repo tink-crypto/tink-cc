@@ -217,27 +217,6 @@ TEST(EnumField, GetFieldNumber) {
   ASSERT_THAT(field2.GetFieldNumber(), Eq(2));
 }
 
-TEST(EnumField, RequiresSerialization) {
-  EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
-                                         &AlwaysValid);
-  ExampleStruct s;
-  s.enum_field = MyEnum::k0;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
-  s.enum_field = MyEnum::k1;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
-TEST(EnumField, RequiresSerializationAlwaysSerialize) {
-  EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
-                                         &AlwaysValid,
-                                         ProtoFieldOptions::kAlwaysSerialize);
-  ExampleStruct s;
-  s.enum_field = MyEnum::k0;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-  s.enum_field = MyEnum::k1;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
 }  // namespace
 }  // namespace proto_parsing
 }  // namespace internal

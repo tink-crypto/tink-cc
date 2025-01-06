@@ -74,10 +74,6 @@ class MessageField : public Field<OuterStruct> {
                                                   s.*value_);
   }
 
-  bool RequiresSerialization(const OuterStruct& values) const override {
-    return low_level_parser_.RequiresSerialization(values.*value_);
-  }
-
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
   int GetFieldNumber() const override { return field_number_; }
 
@@ -113,6 +109,10 @@ class MessageField : public Field<OuterStruct> {
   }
 
  private:
+  bool RequiresSerialization(const OuterStruct& values) const {
+    return low_level_parser_.RequiresSerialization(values.*value_);
+  }
+
   InnerStruct OuterStruct::*value_;
   int field_number_;
   LowLevelParser<InnerStruct> low_level_parser_;

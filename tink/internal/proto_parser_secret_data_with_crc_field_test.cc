@@ -281,15 +281,6 @@ TEST(SecretDataWithCrcBytesField, ExistingCrcIsExtended) {
                        "existing", HexDecodeOrDie("0a11"), text))));
 }
 
-TEST(SecretDataWithCrcBytesField, RequiresSerialization) {
-  SecretDataWithCrcField<ParsedStruct> field(1, &ParsedStruct::secret_with_crc);
-  ParsedStruct s;
-  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("");
-  EXPECT_THAT(field.RequiresSerialization(s), IsFalse());
-  s.secret_with_crc = SecretDataWithCrc::WithComputedCrc("this is some text");
-  EXPECT_THAT(field.RequiresSerialization(s), IsTrue());
-}
-
 }  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink

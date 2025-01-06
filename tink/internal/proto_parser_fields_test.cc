@@ -314,27 +314,6 @@ TEST(Uint32Field, GetFieldNumber) {
   ASSERT_THAT(field2.GetFieldNumber(), Eq(kUint32Field2Number));
 }
 
-TEST(Uint32Field, RequiresSerialization) {
-  Uint32Field<ParsedStruct> field(kUint32Field1Number,
-                                  &ParsedStruct::uint32_member_1);
-  ParsedStruct s;
-  s.uint32_member_1 = 0;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
-  s.uint32_member_1 = 1;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
-TEST(Uint32Field, RequiresSerializationWithAlwaysSerialize) {
-  Uint32Field<ParsedStruct> field(kUint32Field1Number,
-                                  &ParsedStruct::uint32_member_1,
-                                  ProtoFieldOptions::kAlwaysSerialize);
-  ParsedStruct s;
-  s.uint32_member_1 = 0;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-  s.uint32_member_1 = 1;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
   BytesField<ParsedStruct, std::string> field(kBytesField1Number,
@@ -454,27 +433,6 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(buffer_span, s), Not(IsOk()));
-}
-
-TEST(StringBytesField, RequiresSerialization) {
-  BytesField<ParsedStruct, std::string> field(kBytesField1Number,
-                                              &ParsedStruct::string_member_1);
-  ParsedStruct s;
-  s.string_member_1 = "";
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
-  s.string_member_1 = "This is some text";
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
-TEST(StringBytesField, RequiresSerializationAlwaysSerialize) {
-  BytesField<ParsedStruct, std::string> field(
-      kBytesField1Number, &ParsedStruct::string_member_1,
-      ProtoFieldOptions::kAlwaysSerialize);
-  ParsedStruct s;
-  s.string_member_1 = "";
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-  s.string_member_1 = "This is some text";
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
 }
 
 // SecretDataBytesField ========================================================
@@ -597,27 +555,6 @@ TEST(SecretDataBytesField, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(state, s), Not(IsOk()));
-}
-
-TEST(SecretDataBytesField, RequiresSerialization) {
-  BytesField<ParsedStruct, SecretData> field(
-      kBytesField1Number, &ParsedStruct::secret_data_member_1);
-  ParsedStruct s;
-  s.secret_data_member_1 = SecretDataFromStringView("");
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
-  s.secret_data_member_1 = SecretDataFromStringView("This is some text");
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
-TEST(SecretDataBytesField, RequiresSerializationAlwaysSerialize) {
-  BytesField<ParsedStruct, SecretData> field(
-      kBytesField1Number, &ParsedStruct::secret_data_member_1,
-      ProtoFieldOptions::kAlwaysSerialize);
-  ParsedStruct s;
-  s.secret_data_member_1 = SecretDataFromStringView("");
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-  s.secret_data_member_1 = SecretDataFromStringView("This is some text");
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
 }
 
 }  // namespace

@@ -83,10 +83,6 @@ class SecretDataWithCrcField : public Field<Struct> {
     return absl::OkStatus();
   }
 
-  bool RequiresSerialization(const Struct& values) const override {
-    return (values.*data_).size() > 0;
-  }
-
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
   int GetFieldNumber() const override { return field_number_; }
 
@@ -141,6 +137,10 @@ class SecretDataWithCrcField : public Field<Struct> {
   }
 
  private:
+  bool RequiresSerialization(const Struct& values) const {
+    return (values.*data_).size() > 0;
+  }
+
   SecretDataWithCrc Struct::*data_;
   int field_number_;
 };

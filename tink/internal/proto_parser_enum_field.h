@@ -78,11 +78,6 @@ class EnumField : public Field<Struct> {
     return absl::OkStatus();
   }
 
-  bool RequiresSerialization(const Struct& values) const override {
-    return (options_ == ProtoFieldOptions::kAlwaysSerialize) ||
-           values.*value_ != static_cast<Enum>(0);
-  }
-
   WireType GetWireType() const override { return WireType::kVarint; }
   int GetFieldNumber() const override { return field_number_; }
 
@@ -108,6 +103,11 @@ class EnumField : public Field<Struct> {
   }
 
  private:
+  bool RequiresSerialization(const Struct& values) const {
+    return (options_ == ProtoFieldOptions::kAlwaysSerialize) ||
+           values.*value_ != static_cast<Enum>(0);
+  }
+
   int field_number_;
   Enum Struct::*value_;
   absl::AnyInvocable<bool(uint32_t) const> is_valid_;

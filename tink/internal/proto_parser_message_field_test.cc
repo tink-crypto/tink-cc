@@ -257,20 +257,6 @@ TEST(MessageField, SerializeVerySmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(state, s), Not(IsOk()));
 }
 
-TEST(MessageField, RequiresSerialization) {
-  MessageField<OuterStruct, InnerStruct> field(1, &OuterStruct::inner_member,
-                                               InnerStructFields());
-  OuterStruct s;
-  s.inner_member.uint32_member_1 = 0;
-  s.inner_member.uint32_member_2 = 0;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
-  s.inner_member.uint32_member_1 = 1;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-  s.inner_member.uint32_member_1 = 0;
-  s.inner_member.uint32_member_2 = 2;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
 }  // namespace
 
 }  // namespace proto_parsing

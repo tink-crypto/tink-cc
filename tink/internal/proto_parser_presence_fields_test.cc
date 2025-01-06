@@ -166,18 +166,6 @@ TEST(Uint32FieldWithPresence, GetFieldNumber) {
   ASSERT_THAT(field2.GetFieldNumber(), Eq(2));
 }
 
-TEST(Uint32FieldWithPresence, RequiresSerialization) {
-  Uint32FieldWithPresence<ParsedStruct> field(1,
-                                              &ParsedStruct::uint32_member_1);
-  ParsedStruct s;
-  s.uint32_member_1 = absl::nullopt;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(false));
-  s.uint32_member_1 = 0;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-  s.uint32_member_1 = 1;
-  EXPECT_THAT(field.RequiresSerialization(s), Eq(true));
-}
-
 }  // namespace
 }  // namespace proto_parsing
 }  // namespace internal

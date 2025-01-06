@@ -92,8 +92,6 @@ class Field {
   virtual absl::Status ConsumeIntoMember(ParsingState& serialized,
                                          Struct& values) const = 0;
 
-  // Returns true if the field needs to be serialized (i.e. is not the default).
-  virtual bool RequiresSerialization(const Struct& values) const = 0;
   // Serializes the member into out, and removes the part which was written
   // on from out. Includes the tag of the field (the encoded wiretype/field
   // number). This is different from the parsing function "ConsumeIntoMember".
@@ -133,11 +131,6 @@ class Uint32Field : public Field<Struct> {
     return absl::OkStatus();
   }
 
-  bool RequiresSerialization(const Struct& values) const override {
-    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
-           values.*value_ != 0;
-  }
-
   WireType GetWireType() const override { return WireType::kVarint; }
   int GetFieldNumber() const override { return field_number_; }
 
@@ -163,6 +156,11 @@ class Uint32Field : public Field<Struct> {
   }
 
  private:
+  bool RequiresSerialization(const Struct& values) const {
+    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
+           values.*value_ != 0;
+  }
+
   uint32_t Struct::*value_;
   int field_number_;
   ProtoFieldOptions options_;
@@ -193,11 +191,6 @@ class BytesField : public Field<Struct> {
     }
     CopyIntoStringLikeValue(*result, s.*value_);
     return absl::OkStatus();
-  }
-
-  bool RequiresSerialization(const Struct& values) const override {
-    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
-           SizeOfStringLikeValue(values.*value_) != 0;
   }
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }
@@ -238,6 +231,11 @@ class BytesField : public Field<Struct> {
   }
 
  private:
+  bool RequiresSerialization(const Struct& values) const {
+    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
+           SizeOfStringLikeValue(values.*value_) != 0;
+  }
+
   StringLike Struct::*value_;
   int field_number_;
   ProtoFieldOptions options_;

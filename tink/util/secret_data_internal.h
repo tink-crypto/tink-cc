@@ -31,10 +31,6 @@ namespace tink {
 namespace util {
 namespace internal {
 
-inline void SafeZeroMemory(void* ptr, std::size_t size) {
-  OPENSSL_cleanse(ptr, size);
-}
-
 template <typename T>
 struct SanitizingAllocatorImpl {
   // If aligned operator new is not supported this only supports under aligned
@@ -62,7 +58,7 @@ struct SanitizingAllocatorImpl {
   }
 
   static void deallocate(void* ptr, std::size_t n) {
-    SafeZeroMemory(ptr, n * sizeof(T));
+    OPENSSL_cleanse(ptr, n * sizeof(T));
 #ifdef __cpp_aligned_new
     ::operator delete(ptr, std::align_val_t(alignof(T)));
 #else
@@ -76,7 +72,7 @@ template <>
 struct SanitizingAllocatorImpl<void> {
   static void* allocate(std::size_t n) { return std::malloc(n); }
   static void deallocate(void* ptr, std::size_t n) {
-    SafeZeroMemory(ptr, n);
+    OPENSSL_cleanse(ptr, n);
     return std::free(ptr);
   }
 };

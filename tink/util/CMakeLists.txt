@@ -477,6 +477,7 @@ tink_cc_library(
     absl::string_view
     tink::internal::dfsan_forwarders
     tink::internal::safe_stringops
+    crypto
 )
 
 tink_cc_test(

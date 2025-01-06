@@ -45,6 +45,7 @@ cc_library(
         ":secret_data_internal",
         "//tink/internal:dfsan_forwarders",
         "//tink/internal:safe_stringops",
+        "@boringssl//:crypto",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
     ],

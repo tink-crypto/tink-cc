@@ -707,7 +707,6 @@ tink_cc_library(
     tink::core::secret_key_access_token
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
-    tink::internal::call_with_core_dump_protection
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -715,9 +714,9 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::util::secret_data
-    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto

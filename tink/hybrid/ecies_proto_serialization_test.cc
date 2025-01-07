@@ -78,6 +78,7 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
+using ::testing::_;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -362,10 +363,7 @@ TEST_F(EciesProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(
-      params.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse EciesAeadHkdfKeyFormat proto")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument, _));
 }
 
 TEST_F(EciesProtoSerializationTest,
@@ -413,10 +411,8 @@ TEST_F(EciesProtoSerializationTest, ParseParametersWithMissingKemFails) {
   util::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(
-      parameters.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Missing EciesAeadHkdfParams.kem_params field")));
+  EXPECT_THAT(parameters.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument, _));
 }
 
 TEST_F(EciesProtoSerializationTest, ParseParametersWithMissingDemFails) {
@@ -441,7 +437,7 @@ TEST_F(EciesProtoSerializationTest, ParseParametersWithMissingDemFails) {
   EXPECT_THAT(
       parameters.status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Missing EciesAeadHkdfParams.dem_params field")));
+               HasSubstr("proto DEM params")));
 }
 
 TEST_F(EciesProtoSerializationTest,
@@ -513,11 +509,8 @@ TEST_F(EciesProtoSerializationTest, ParseParametersWithMissingParamsFails) {
   util::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(
-      parameters.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("EciesAeadHkdfKeyFormat proto is missing params field")));
+  EXPECT_THAT(parameters.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument, _));
 }
 
 TEST_F(EciesProtoSerializationTest,
@@ -543,8 +536,7 @@ TEST_F(EciesProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing EciesAeadDemParams.aead_dem field")));
+              StatusIs(absl::StatusCode::kInvalidArgument, _));
 }
 
 TEST_F(EciesProtoSerializationTest, ParseParametersWithUnkownCurveTypeFails) {
@@ -1065,10 +1057,7 @@ TEST_F(EciesProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      key.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse EciesAeadHkdfPublicKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument, _));
 }
 
 TEST_F(EciesProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
@@ -1301,10 +1290,7 @@ TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      key.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse EciesAeadHkdfPrivateKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument, _));
 }
 
 TEST_F(EciesProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {

@@ -507,6 +507,7 @@ tink_cc_library(
     tink::hybrid::ecies_private_key
     tink::hybrid::ecies_public_key
     absl::core_headers
+    absl::no_destructor
     absl::status
     absl::statusor
     absl::strings
@@ -527,6 +528,8 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
+    tink::util::secret_data
     tink::util::secret_proto
     tink::util::status
     tink::util::statusor

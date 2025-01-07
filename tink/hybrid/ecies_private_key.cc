@@ -23,6 +23,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -110,14 +111,18 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
   if (!priv_big_num.ok()) {
     return priv_big_num.status();
   }
-  if (!EC_KEY_set_private_key(key.get(), priv_big_num->get())) {
+  int ec_key_set_private_key_result = internal::CallWithCoreDumpProtection(
+      [&]() { return EC_KEY_set_private_key(key.get(), priv_big_num->get()); });
+  if (!ec_key_set_private_key_result) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
   }
 
   // Check that EC_KEY is valid.
-  if (!EC_KEY_check_key(key.get())) {
+  int ec_key_check_key_result = internal::CallWithCoreDumpProtection(
+      [&]() { return EC_KEY_check_key(key.get()); });
+  if (!ec_key_check_key_result) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid EC key pair: ", internal::GetSslErrors()));

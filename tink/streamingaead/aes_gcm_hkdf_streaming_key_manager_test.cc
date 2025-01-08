@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,12 +26,18 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/input_stream.h"
+#include "tink/keyset_handle.h"
 #include "tink/streaming_aead.h"
+#include "tink/streamingaead/internal/testing/aes_gcm_hkdf_streaming_test_vectors.h"
+#include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
+#include "tink/streamingaead/streaming_aead_config.h"
 #include "tink/subtle/aes_gcm_hkdf_streaming.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/streaming_aead_test_util.h"
 #include "tink/subtle/test_util.h"
+#include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/ostream_output_stream.h"
 #include "tink/util/secret_data.h"
@@ -46,6 +52,7 @@
 namespace crypto {
 namespace tink {
 
+using ::crypto::tink::internal::StreamingAeadTestVector;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
@@ -275,6 +282,46 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, DeriveKeyWrongVersion) {
           .status(),
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("version")));
 }
+
+using AesGcmHkdfStreamingKeyManagerTestVectorTest =
+    testing::TestWithParam<StreamingAeadTestVector>;
+
+TEST_P(AesGcmHkdfStreamingKeyManagerTestVectorTest, Decrypt) {
+  ASSERT_THAT(StreamingAeadConfig::Register(), IsOk());
+  const StreamingAeadTestVector& param = GetParam();
+  // Prepare an InputStream with the ciphertext.
+  auto ct_bytes = absl::make_unique<std::stringstream>(param.ciphertext);
+  auto ct_source =
+      absl::make_unique<util::IstreamInputStream>(std::move(ct_bytes));
+  util::StatusOr<KeysetHandle> handle =
+      KeysetHandleBuilder()
+          .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
+              param.streamingaead_key, KeyStatus::kEnabled,
+              /*is_primary=*/true))
+          .Build();
+  ASSERT_THAT(handle, IsOk());
+  util::StatusOr<std::unique_ptr<StreamingAead>> decrypter =
+      handle->GetPrimitive<StreamingAead>(ConfigGlobalRegistry());
+  ASSERT_THAT(decrypter, IsOk());
+  // Decrypt the ciphertext using the decrypter.
+  util::StatusOr<std::unique_ptr<InputStream>> plaintext_stream =
+      (*decrypter)
+          ->NewDecryptingStream(std::move(ct_source), param.associated_data);
+  ASSERT_THAT(plaintext_stream, IsOk());
+
+  util::StatusOr<std::string> decryption =
+      ReadBytesFromStream(param.plaintext.size(), plaintext_stream->get());
+  ASSERT_THAT(decryption, IsOk());
+  EXPECT_THAT(*decryption, Eq(param.plaintext));
+
+  EXPECT_THAT(ReadBytesFromStream(1, plaintext_stream->get()),
+              StatusIs(absl::StatusCode::kOutOfRange));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AesGcmHkdfStreamingKeyManagerTestVectorTest,
+    AesGcmHkdfStreamingKeyManagerTestVectorTest,
+    testing::ValuesIn(internal::CreateAesGcmHkdfStreamingTestVectors()));
 
 }  // namespace
 }  // namespace tink

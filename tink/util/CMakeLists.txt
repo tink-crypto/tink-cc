@@ -458,26 +458,17 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME secret_data_internal
-  SRCS
-    secret_data_internal.h
-  DEPS
-    absl::config
-    absl::core_headers
-    crypto
-)
-
-tink_cc_library(
   NAME secret_data
   SRCS
     secret_data.h
   DEPS
-    tink::util::secret_data_internal
-    absl::span
+    absl::check
     absl::string_view
-    tink::internal::dfsan_forwarders
-    tink::internal::safe_stringops
+    absl::span
     crypto
+    tink::internal::call_with_core_dump_protection
+    tink::internal::safe_stringops
+    tink::internal::sanitizing_allocator
 )
 
 tink_cc_test(

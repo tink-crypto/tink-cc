@@ -14,9 +14,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_UTIL_SECRET_DATA_INTERNAL_H_
-#define TINK_UTIL_SECRET_DATA_INTERNAL_H_
+#ifndef TINK_INTERNAL_SANITIZING_ALLOCATOR_H_
+#define TINK_INTERNAL_SANITIZING_ALLOCATOR_H_
 
+#if 1 // Marker 1
 #include <cstddef>
 #include <cstdlib>
 #include <limits>
@@ -25,11 +26,14 @@
 #include "absl/base/attributes.h"
 #include "absl/base/config.h"
 #include "openssl/crypto.h"
+#endif  // TINK_USE_CORONER
 
 namespace crypto {
 namespace tink {
 namespace util {
 namespace internal {
+
+#if 1 // Marker 2
 
 template <typename T>
 struct SanitizingAllocatorImpl {
@@ -99,9 +103,11 @@ struct SanitizingAllocator {
   bool operator!=(const SanitizingAllocator&) { return false; }
 };
 
+#endif  // TINK_USE_CORONER
+
 }  // namespace internal
 }  // namespace util
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_UTIL_SECRET_DATA_INTERNAL_H_
+#endif  // TINK_INTERNAL_SANITIZING_ALLOCATOR_H_

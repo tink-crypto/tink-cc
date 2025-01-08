@@ -1864,3 +1864,22 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME sanitizing_allocator
+  SRCS
+    sanitizing_allocator.h
+  DEPS
+    absl::config
+    absl::core_headers
+    crypto
+)
+
+tink_cc_test(
+  NAME sanitizing_allocator_test
+  SRCS
+    sanitizing_allocator_test.cc
+  DEPS
+    tink::internal::sanitizing_allocator
+    gmock
+)

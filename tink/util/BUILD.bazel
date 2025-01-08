@@ -25,27 +25,16 @@ cc_library(
 )
 
 cc_library(
-    name = "secret_data_internal",
-    hdrs = ["secret_data_internal.h"],
-    include_prefix = "tink/util",
-    visibility = ["//visibility:private"],
-    deps = [
-        "@boringssl//:crypto",
-        "@com_google_absl//absl/base:config",
-        "@com_google_absl//absl/base:core_headers",
-    ],
-)
-
-cc_library(
     name = "secret_data",
     hdrs = ["secret_data.h"],
     include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
-        ":secret_data_internal",
-        "//tink/internal:dfsan_forwarders",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:safe_stringops",
+        "//tink/internal:sanitizing_allocator",
         "@boringssl//:crypto",
+        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
     ],

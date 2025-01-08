@@ -29,7 +29,8 @@
 #include "openssl/crypto.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/safe_stringops.h"
-#include "tink/util/secret_data_internal.h"
+#include "tink/internal/sanitizing_allocator.h"
+// SecretDataClassInclude
 
 namespace crypto {
 namespace tink {

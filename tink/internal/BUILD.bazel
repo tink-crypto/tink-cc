@@ -1935,3 +1935,23 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "sanitizing_allocator",
+    hdrs = ["sanitizing_allocator.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:config",
+        "@com_google_absl//absl/base:core_headers",
+    ],
+)
+
+cc_test(
+    name = "sanitizing_allocator_test",
+    srcs = ["sanitizing_allocator_test.cc"],
+    deps = [
+        ":sanitizing_allocator",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

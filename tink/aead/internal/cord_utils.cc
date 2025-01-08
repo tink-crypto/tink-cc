@@ -79,7 +79,7 @@ absl::Cord CordWriter::data() && {
 
 absl::string_view CordReader::Peek() {
   if (current_chunk_.empty() && next_chunk_it_ != cord_.chunk_end()) {
-    current_chunk_ = next_chunk_it_->substr();
+    current_chunk_ = *next_chunk_it_;
     ++next_chunk_it_;
   }
   return current_chunk_;

@@ -31,7 +31,7 @@ CD "build"
 
 %CMAKE_BIN% -G"Visual Studio 17 2022" -A x64 -S .. -B . ^
   -DCMAKE_CXX_STANDARD_REQUIRED=ON ^
-  -DCMAKE_CXX_STANDARD=14 ^
+  -DCMAKE_CXX_STANDARD=17 ^
   -DTINK_BUILD_TESTS=ON
 IF %errorlevel% neq 0 EXIT /B 1
 

@@ -26,16 +26,11 @@
 #include "absl/strings/cord_buffer.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/aead/internal/base_x_aes_gcm.h"
 #include "tink/aead/internal/cord_aes_gcm_boringssl.h"
 #include "tink/aead/internal/cord_utils.h"
 #include "tink/aead/x_aes_gcm_key.h"
-#include "tink/aead/x_aes_gcm_parameters.h"
-#include "tink/insecure_secret_key_access.h"
-#include "tink/partial_key_access.h"
-#include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
@@ -48,7 +43,6 @@ namespace {
 using ::crypto::tink::CordAead;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::util::SecretData;
-
 
 class CordXAesGcmBoringSsl : public CordAead {
  public:
@@ -95,7 +89,7 @@ class CordXAesGcmBoringSsl : public CordAead {
     }
     util::StatusOr<std::unique_ptr<CordAead>> aead =
         CordAesGcmBoringSsl::New(*derived_key);
-    return (*aead)->Decrypt(ciphertext, associated_data);
+    return (*aead)->Decrypt(std::move(ciphertext), associated_data);
   }
 
  private:
@@ -110,7 +104,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
   if (!base_x_aes_gcm.ok()) {
     return base_x_aes_gcm.status();
   }
-  return std::make_unique<CordXAesGcmBoringSsl>(std::move(*base_x_aes_gcm));
+  return std::make_unique<CordXAesGcmBoringSsl>(*std::move(base_x_aes_gcm));
 }
 
 }  // namespace internal

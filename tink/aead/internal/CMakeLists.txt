@@ -443,14 +443,9 @@ tink_cc_library(
     absl::cord
     absl::str_format
     absl::string_view
-    absl::optional
     crypto
-    tink::core::insecure_secret_key_access
-    tink::core::partial_key_access
-    tink::core::restricted_data
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key
-    tink::aead::x_aes_gcm_parameters
     tink::subtle::random
     tink::util::secret_data
     tink::util::statusor

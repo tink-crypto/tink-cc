@@ -51,6 +51,7 @@ cc_library(
         "//tink:insecure_secret_key_access",
         "//tink:partial_key_access",
         "//tink:restricted_big_integer",
+        "//tink:restricted_data",
         "//tink/hybrid:ecies_parameters",
         "//tink/hybrid:ecies_private_key",
         "//tink/hybrid:ecies_public_key",

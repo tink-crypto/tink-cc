@@ -28,6 +28,7 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_util.h"
 
@@ -513,14 +514,49 @@ HybridTestVector CreateTestVector13() {
           "566d2b0718aed41bb763cb29e3e2ca1df63e46f859fa98478ea9"));
 }
 
+// X25519
+// Test vector created with the implementation here.
+HybridTestVector CreateTestVector14() {
+  util::StatusOr<EciesParameters> params =
+      EciesParameters::Builder()
+          .SetCurveType(EciesParameters::CurveType::kX25519)
+          .SetHashType(EciesParameters::HashType::kSha256)
+          .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
+          .SetVariant(EciesParameters::Variant::kNoPrefix)
+          .Build();
+  CHECK_OK(params);
+
+  util::StatusOr<EciesPublicKey> public_key =
+      EciesPublicKey::CreateForCurveX25519(
+          *params,
+          HexDecodeOrDie("90c5b6d9b337cc6c9c2e8ac44f1c0e7c41f23bdf7a04df3b9c808"
+                         "1c0c278352a"),
+          /*id_requirement*/ absl::nullopt, GetPartialKeyAccess());
+  CHECK_OK(public_key);
+  RestrictedData private_key_material = RestrictedData(
+      HexDecodeOrDie(
+          "97d2e385c9968fbe2dc0b85a182199ed7e0b5b4bb6060f76583c0893241f698d"),
+      InsecureSecretKeyAccess::Get());
+  util::StatusOr<EciesPrivateKey> private_key =
+      EciesPrivateKey::CreateForCurveX25519(*public_key, private_key_material,
+                                          GetPartialKeyAccess());
+  CHECK_OK(private_key);
+  return HybridTestVector(
+      std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
+      HexDecodeOrDie("02"),
+      HexDecodeOrDie(
+          "fa797599d9031eece63baf6a8da112cc73dd8b977c504ef28c548070292e40094640"
+          "6667ba0360d2fe35b5d2adae56d5cccd93c407f8a37926fe0da688"));
+}
+
 }  // namespace
 
 std::vector<HybridTestVector> CreateEciesTestVectors() {
-  return {CreateTestVector0(), CreateTestVector1(),  CreateTestVector2(),
-          CreateTestVector3(), CreateTestVector4(),  CreateTestVector5(),
-          CreateTestVector6(), CreateTestVector7(),  CreateTestVector8(),
-          CreateTestVector9(), CreateTestVector10(), CreateTestVector11(),
-          CreateTestVector12(), CreateTestVector13()};
+  return {CreateTestVector0(),  CreateTestVector1(),  CreateTestVector2(),
+          CreateTestVector3(),  CreateTestVector4(),  CreateTestVector5(),
+          CreateTestVector6(),  CreateTestVector7(),  CreateTestVector8(),
+          CreateTestVector9(),  CreateTestVector10(), CreateTestVector11(),
+          CreateTestVector12(), CreateTestVector13(), CreateTestVector14()};
 }
 
 }  // namespace internal

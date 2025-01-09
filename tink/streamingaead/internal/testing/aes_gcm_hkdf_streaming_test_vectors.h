@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef fdd
-#define fdd
+#ifndef TINK_STREAMINGAEAD_INTERNAL_TESTING_AES_GCM_HKDF_STREAMING_TEST_VECTORS_H_
+#define TINK_STREAMINGAEAD_INTERNAL_TESTING_AES_GCM_HKDF_STREAMING_TEST_VECTORS_H_
 
 #include <vector>
 
@@ -31,4 +31,4 @@ std::vector<StreamingAeadTestVector> CreateAesGcmHkdfStreamingTestVectors();
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_STREAMINGAEAD_INTERNAL_TESTING_AES_CTR_HMAC_STREAMING_TEST_VECTORS_H_
+#endif  // TINK_STREAMINGAEAD_INTERNAL_TESTING_AES_GCM_HKDF_STREAMING_TEST_VECTORS_H_

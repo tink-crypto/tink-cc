@@ -62,6 +62,7 @@ tink_cc_library(
     absl::status
     absl::strings
     crypto
+    tink::internal::call_with_core_dump_protection
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
@@ -164,12 +165,13 @@ tink_cc_library(
   DEPS
     tink::subtle::common_enums
     tink::subtle::subtle_util
-    absl::algorithm_container
     absl::status
     absl::strings
     absl::span
     crypto
+    tink::internal::call_with_core_dump_protection
     tink::internal::md_util
+    tink::internal::safe_stringops
     tink::internal::ssl_unique_ptr
     tink::util::secret_data
     tink::util::status

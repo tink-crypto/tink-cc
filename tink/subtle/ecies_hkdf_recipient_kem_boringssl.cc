@@ -26,6 +26,7 @@
 #include "openssl/bn.h"
 #include "openssl/ec.h"
 #include "openssl/evp.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -100,8 +101,11 @@ EciesHkdfNistPCurveRecipientKemBoringSsl::GenerateKey(
   }
   internal::SslUniquePtr<EC_POINT> pub_key =
       std::move(status_or_ec_point.value());
-  internal::SslUniquePtr<BIGNUM> priv_key(
-      BN_bin2bn(priv_key_value_.data(), priv_key_value_.size(), nullptr));
+  internal::SslUniquePtr<BIGNUM> priv_key =
+      internal::CallWithCoreDumpProtection([&]() {
+        return internal::SslUniquePtr<BIGNUM>(
+            BN_bin2bn(priv_key_value_.data(), priv_key_value_.size(), nullptr));
+      });
   auto shared_secret_or =
       internal::ComputeEcdhSharedSecret(curve_, priv_key.get(), pub_key.get());
   if (!shared_secret_or.ok()) {

@@ -65,6 +65,7 @@ cc_library(
     deps = [
         ":common_enums",
         ":hkdf",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:ec_util",
         "//tink/internal:fips_utils",
         "//tink/internal:ssl_unique_ptr",
@@ -177,13 +178,14 @@ cc_library(
     deps = [
         ":common_enums",
         ":subtle_util",
+        "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:md_util",
+        "//tink/internal:safe_stringops",
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",

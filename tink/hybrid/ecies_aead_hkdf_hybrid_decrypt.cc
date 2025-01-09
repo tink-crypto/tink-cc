@@ -101,13 +101,14 @@ util::StatusOr<std::string> EciesAeadHkdfHybridDecrypt::Decrypt(
   }
 
   // Use KEM to get a symmetric key.
-  auto symmetric_key_result = recipient_kem_->GenerateKey(
-      absl::string_view(ciphertext).substr(0, header_size),
-      util::Enums::ProtoToSubtle(
-          recipient_key_params_.kem_params().hkdf_hash_type()),
-      recipient_key_params_.kem_params().hkdf_salt(), context_info,
-      dem_helper_->dem_key_size_in_bytes(),
-      util::Enums::ProtoToSubtle(recipient_key_params_.ec_point_format()));
+  crypto::tink::util::StatusOr<util::SecretData> symmetric_key_result =
+      recipient_kem_->GenerateKey(
+          absl::string_view(ciphertext).substr(0, header_size),
+          util::Enums::ProtoToSubtle(
+              recipient_key_params_.kem_params().hkdf_hash_type()),
+          recipient_key_params_.kem_params().hkdf_salt(), context_info,
+          dem_helper_->dem_key_size_in_bytes(),
+          util::Enums::ProtoToSubtle(recipient_key_params_.ec_point_format()));
   if (!symmetric_key_result.ok()) return symmetric_key_result.status();
   auto symmetric_key = std::move(symmetric_key_result.value());
 

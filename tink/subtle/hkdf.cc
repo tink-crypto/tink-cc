@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <string>
 
-#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -36,7 +35,9 @@
 #else
 #include "openssl/kdf.h"
 #endif
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/safe_stringops.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/subtle_util.h"
@@ -47,6 +48,9 @@
 namespace crypto {
 namespace tink {
 namespace subtle {
+
+using crypto::tink::internal::CallWithCoreDumpProtection;
+
 namespace {
 
 // Compute HKDF using `evp_md` hashing, key `ikm`, salt `salt` and info `info`.
@@ -95,9 +99,10 @@ util::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
   }
 
   util::SecretData out_key(out_len);
-  util::Status result =
-      SslHkdf(*evp_md, util::SecretDataAsStringView(ikm), salt, info,
-              absl::MakeSpan(out_key.data(), out_key.size()));
+  util::Status result = CallWithCoreDumpProtection([&]() {
+    return SslHkdf(*evp_md, util::SecretDataAsStringView(ikm), salt, info,
+                   absl::MakeSpan(out_key.data(), out_key.size()));
+  });
   if (!result.ok()) {
     return result;
   }
@@ -129,8 +134,9 @@ util::StatusOr<util::SecretData> Hkdf::ComputeEciesHkdfSymmetricKey(
     const util::SecretData &shared_secret, absl::string_view salt,
     absl::string_view info, size_t out_len) {
   util::SecretData ikm(kem_bytes.size() + shared_secret.size());
-  absl::c_copy(kem_bytes, ikm.data());
-  absl::c_copy(shared_secret, ikm.data() + kem_bytes.size());
+  internal::SafeMemCopy(ikm.data(), kem_bytes.data(), kem_bytes.size());
+  internal::SafeMemCopy(ikm.data() + kem_bytes.size(), shared_secret.data(),
+                        shared_secret.size());
   return Hkdf::ComputeHkdf(hash, ikm, salt, info, out_len);
 }
 

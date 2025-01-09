@@ -78,7 +78,7 @@ class MessageField : public Field<OuterStruct> {
   int GetFieldNumber() const override { return field_number_; }
 
   absl::Status SerializeWithTagInto(SerializationState& out,
-                                    const OuterStruct& values) const {
+                                    const OuterStruct& values) const override {
     if (!RequiresSerialization(values)) {
       return absl::OkStatus();
     }

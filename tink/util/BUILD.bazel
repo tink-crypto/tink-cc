@@ -30,6 +30,7 @@ cc_library(
     include_prefix = "tink/util",
     visibility = ["//visibility:public"],
     deps = [
+        ":secret_data_internal_class",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:safe_stringops",
         "//tink/internal:sanitizing_allocator",
@@ -606,5 +607,17 @@ cc_test(
         ":test_matchers",
         "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "secret_data_internal_class",
+    hdrs = ["secret_data_internal_class.h"],
+    include_prefix = "tink/util",
+    deps = [
+        "//tink/internal:safe_stringops",
+        "//tink/internal:sanitizing_allocator",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )

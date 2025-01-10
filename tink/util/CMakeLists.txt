@@ -466,6 +466,7 @@ tink_cc_library(
     absl::string_view
     absl::span
     crypto
+    tink::util::secret_data_internal_class
     tink::internal::call_with_core_dump_protection
     tink::internal::safe_stringops
     tink::internal::sanitizing_allocator
@@ -565,4 +566,15 @@ tink_cc_test(
     tink::util::test_matchers
     gmock
     absl::status
+)
+
+tink_cc_library(
+  NAME secret_data_internal_class
+  SRCS
+    secret_data_internal_class.h
+  DEPS
+    absl::check
+    absl::string_view
+    tink::internal::safe_stringops
+    tink::internal::sanitizing_allocator
 )

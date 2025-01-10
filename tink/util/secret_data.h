@@ -30,7 +30,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/sanitizing_allocator.h"
-// SecretDataClassInclude
+#include "tink/util/secret_data_internal_class.h"  // IWYU pragma: export
 
 namespace crypto {
 namespace tink {
@@ -60,7 +60,19 @@ struct SanitizingDeleter {
 //  private:
 //   const util::SecretData key_;
 // }
+
+// TINK-PENDING-REMOVAL-IN-3.0.0-START
+#ifndef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+#define TINK_CPP_SECRET_DATA_IS_STD_VECTOR 1
+#endif
+// TINK-PENDING-REMOVAL-IN-3.0.0-END
+
+#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 using SecretData = std::vector<uint8_t, internal::SanitizingAllocator<uint8_t>>;
+#else
+using SecretData = internal::SecretDataInternalClass;
+#endif
+
 
 // Constant-time comparison for SecretData
 // SecretDataEquals should be used instead of regular operator== in most cases.
@@ -137,7 +149,11 @@ inline absl::string_view SecretDataAsStringView(const SecretData& secret) {
 }
 
 inline SecretData SecretDataFromStringView(absl::string_view secret) {
+#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
   return {secret.begin(), secret.end()};
+#else
+  return internal::SecretDataInternalClassFromStringView(secret);
+#endif
 }
 
 inline SecretData SecretDataFromSpan(absl::Span<const uint8_t> span) {

@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,8 +51,6 @@ class SubtleUtilBoringSSL {
  public:
   using EcKey ABSL_DEPRECATED("Use of this type is dicouraged outside Tink.") =
       internal::EcKey;
-  using X25519Key ABSL_DEPRECATED(
-      "Use of this type is dicouraged outside Tink.") = internal::X25519Key;
   struct ABSL_DEPRECATED("Use of this type is dicouraged outside Tink.")
       Ed25519Key {
     std::string public_key;
@@ -140,30 +138,6 @@ class SubtleUtilBoringSSL {
   static inline crypto::tink::util::StatusOr<EcKey> GetNewEcKeyFromSeed(
       EllipticCurveType curve_type, const util::SecretData &secret_seed) {
     return internal::NewEcKey(curve_type, secret_seed);
-  }
-
-  // Returns a new X25519 key, or nullptr if generation fails.
-  ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline std::unique_ptr<X25519Key> GenerateNewX25519Key() {
-    util::StatusOr<std::unique_ptr<internal::X25519Key>> key =
-        internal::NewX25519Key();
-    if (!key.ok()) {
-      return nullptr;
-    }
-    return *std::move(key);
-  }
-
-  // Returns a X25519Key matching the specified EcKey.
-  ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<std::unique_ptr<X25519Key>>
-  X25519KeyFromEcKey(const EcKey &ec_key) {
-    return internal::X25519KeyFromEcKey(ec_key);
-  }
-
-  // Returns an EcKey matching the specified X25519Key.
-  ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline EcKey EcKeyFromX25519Key(const X25519Key *x25519_key) {
-    return internal::EcKeyFromX25519Key(x25519_key);
   }
 
   // Returns a new ED25519 key.

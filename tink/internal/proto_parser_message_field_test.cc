@@ -43,7 +43,6 @@ namespace {
 
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::Not;

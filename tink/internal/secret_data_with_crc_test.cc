@@ -39,10 +39,8 @@ namespace {
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::crypto::tink::util::SecretValue;
 using ::testing::Eq;

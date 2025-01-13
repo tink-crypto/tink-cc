@@ -219,6 +219,7 @@ cc_library(
         "//tink/util:statusor",
         "@boringssl//:crypto",
         "@com_google_absl//absl/base:config",
+        "@com_google_absl//absl/log",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",

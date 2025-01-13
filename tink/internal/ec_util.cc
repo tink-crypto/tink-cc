@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "absl/base/config.h"
+#include "absl/log/log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -228,6 +229,7 @@ util::StatusOr<SslUniquePtr<EVP_PKEY>> SslNewEvpKey(SslEvpPkeyType key_type) {
   return {SslUniquePtr<EVP_PKEY>(private_key)};
 }
 
+namespace {
 // Given a private EVP_PKEY `evp_key` of key type `key_type` fills `priv_key`
 // and `pub_key` with raw private and public keys, respectively.
 util::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
@@ -249,7 +251,12 @@ util::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
   }
 
   len = pub_key.size();
-  if (EVP_PKEY_get_raw_public_key(&evp_key, pub_key.data(), &len) != 1) {
+  // The public key will depend on the private key but is safe to leak. We
+  // assume that BoringSSL will not write intermediate values into the buffer.
+  ScopedAssumeRegionCoreDumpSafe scope(pub_key.data(), len);
+  if (CallWithCoreDumpProtection([&] {
+        return EVP_PKEY_get_raw_public_key(&evp_key, pub_key.data(), &len);
+      }) != 1) {
     return util::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_get_raw_public_key failed");
   }
@@ -258,9 +265,10 @@ util::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
                         absl::StrCat("Invalid public key size; expected ",
                                      pub_key.size(), " got ", len));
   }
-
+  DfsanClearLabel(pub_key.data(), len);
   return util::OkStatus();
 }
+}  // namespace
 
 util::StatusOr<std::string> SslEcdsaSignatureToBytes(
     const ECDSA_SIG *ecdsa_signature) {
@@ -477,8 +485,6 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   uint8_t *priv_key_ptr = key->private_key.data();
   uint8_t *pub_key_ptr = reinterpret_cast<uint8_t *>(&key->public_key[0]);
 
-  // While the public key depends on the private key, it is safe to leak it.
-  ScopedAssumeRegionCoreDumpSafe scope(pub_key_ptr, Ed25519KeyPubKeySize());
   util::Status res = internal::CallWithCoreDumpProtection([&]() {
     SslUniquePtr<EVP_PKEY> priv_key =
         SslUniquePtr<EVP_PKEY>(EVP_PKEY_new_raw_private_key(
@@ -497,8 +503,6 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
         absl::MakeSpan(pub_key_ptr, Ed25519KeyPubKeySize()));
     return res;
   });
-  // Safe to declassify the public key.
-  crypto::tink::internal::DfsanClearLabel(pub_key_ptr, Ed25519KeyPubKeySize());
   if (!res.ok()) {
     return res;
   }
@@ -556,9 +560,10 @@ util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
                         "Invalid length for private key");
   }
 
-  internal::SslUniquePtr<EVP_PKEY> pkey(
-      EVP_PKEY_new_raw_private_key(SslEvpPkeyType::kX25519Key, nullptr,
-                                   private_key.data(), private_key.size()));
+  internal::SslUniquePtr<EVP_PKEY> pkey(CallWithCoreDumpProtection([&]() {
+    return EVP_PKEY_new_raw_private_key(SslEvpPkeyType::kX25519Key, nullptr,
+                                        private_key.data(), private_key.size());
+  }));
   auto key = absl::make_unique<X25519Key>();
   util::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, *pkey,

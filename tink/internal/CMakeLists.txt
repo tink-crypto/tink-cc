@@ -153,6 +153,7 @@ tink_cc_library(
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     absl::config
+    absl::log
     absl::memory
     absl::status
     absl::strings

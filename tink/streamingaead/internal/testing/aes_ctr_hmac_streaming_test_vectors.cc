@@ -102,10 +102,155 @@ StreamingAeadTestVector CreateTestVector0() {
                                  plaintext, associated_data, ciphertext);
 }
 
+// Created in Java.
+StreamingAeadTestVector CreateTestVector1() {
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha1)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(32)
+          .SetCiphertextSegmentSizeInBytes(64)
+          .Build();
+  CHECK_OK(parameters);
+  RestrictedData initial_key_material =
+      RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+                     InsecureSecretKeyAccess::Get());
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  std::string plaintext = "";
+  std::string associated_data = "";
+  std::string ciphertext = HexDecodeOrDie(
+      "1874eaeea1260b1cf44d00bfec6d7f58878ce2dd70d5844e2f4410a04703ec4c17ca8c88"
+      "31be0f1711da64b5b893ca9f3ba643d6764fd787");
+  return StreamingAeadTestVector(std::make_shared<AesCtrHmacStreamingKey>(*key),
+                                 plaintext, associated_data, ciphertext);
+}
+
+// Created in Java, Use SHA256/SHA512
+StreamingAeadTestVector CreateTestVector2() {
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacTagSizeInBytes(32)
+          .SetCiphertextSegmentSizeInBytes(64)
+          .Build();
+  CHECK_OK(parameters);
+  RestrictedData initial_key_material =
+      RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+                     InsecureSecretKeyAccess::Get());
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  std::string plaintext = "";
+  std::string associated_data = HexDecodeOrDie("000102030405");
+  std::string ciphertext = HexDecodeOrDie(
+      "18ae4fc7af4ed0433d33110793196ead8a77d2ae3f42db8425dc9e0789bdba7d5c23d612"
+      "87fbe108224fbf11da38c8eaf5c9feab7deb9c62");
+  return StreamingAeadTestVector(std::make_shared<AesCtrHmacStreamingKey>(*key),
+                                 plaintext, associated_data, ciphertext);
+}
+
+// Created in Java, Use SHA512/SHA1
+StreamingAeadTestVector CreateTestVector3() {
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(16)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha1)
+          .SetHmacTagSizeInBytes(20)
+          .SetCiphertextSegmentSizeInBytes(64)
+          .Build();
+  CHECK_OK(parameters);
+  RestrictedData initial_key_material =
+      RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
+                     InsecureSecretKeyAccess::Get());
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  std::string plaintext = "";
+  std::string associated_data = HexDecodeOrDie("000102030405");
+  std::string ciphertext = HexDecodeOrDie(
+      "180d87a22c8979d8eb90163aa33aa09a02bab964d5bb2d7a035e62206d62807b3e9bb498"
+      "4109ebeb3dfcbf43");
+  return StreamingAeadTestVector(std::make_shared<AesCtrHmacStreamingKey>(*key),
+                                 plaintext, associated_data, ciphertext);
+}
+
+// Created in Java, Use KeySizeBytes=32
+StreamingAeadTestVector CreateTestVector4() {
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacTagSizeInBytes(20)
+          .SetCiphertextSegmentSizeInBytes(64)
+          .Build();
+  CHECK_OK(parameters);
+  RestrictedData initial_key_material = RestrictedData(
+      HexDecodeOrDie(
+          "00112233445566778899aabbccddeeff000102030405060708090a0b0c0d0e0f"),
+      InsecureSecretKeyAccess::Get());
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  std::string plaintext = "";
+  std::string associated_data =
+      HexDecodeOrDie("012345678901234567890123456789");
+  std::string ciphertext = HexDecodeOrDie(
+      "18290c66c47a6095d947aa1671bd7b6d9c306e24d51d4b8a4f1b9db123a01226ebd2b6f7"
+      "e05298a9f5908072");
+  return StreamingAeadTestVector(std::make_shared<AesCtrHmacStreamingKey>(*key),
+                                 plaintext, associated_data, ciphertext);
+}
+
+// Created in Java, Use DerivedKeySizeBytes=32
+StreamingAeadTestVector CreateTestVector5() {
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(32)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacTagSizeInBytes(20)
+          .SetCiphertextSegmentSizeInBytes(64)
+          .Build();
+  CHECK_OK(parameters);
+  RestrictedData initial_key_material = RestrictedData(
+      HexDecodeOrDie(
+          "00112233445566778899aabbccddeeff000102030405060708090a0b0c0d0e0f"),
+      InsecureSecretKeyAccess::Get());
+  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  CHECK_OK(key);
+
+  std::string plaintext = "";
+  std::string associated_data =
+      HexDecodeOrDie("012345678901234567890123456789");
+  std::string ciphertext = HexDecodeOrDie(
+      "28f7bcc58e83e8e24bf833d8586c889ef465f52fdebcad6deb18be062c180e466de959eb"
+      "a1a884926692e496d85e1873a1bf9b46e56d76d83772bfc6");
+  return StreamingAeadTestVector(std::make_shared<AesCtrHmacStreamingKey>(*key),
+                                 plaintext, associated_data, ciphertext);
+}
+
 }  // namespace
 
 std::vector<StreamingAeadTestVector> CreateAesCtrHmacStreamingTestVectors() {
-  return {CreateTestVector0()};
+  return {CreateTestVector0(), CreateTestVector1(), CreateTestVector2(),
+          CreateTestVector3(), CreateTestVector4(), CreateTestVector5()};
 }
 
 }  // namespace internal

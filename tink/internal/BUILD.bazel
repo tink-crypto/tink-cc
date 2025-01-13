@@ -1955,3 +1955,24 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "secret_buffer",
+    hdrs = ["secret_buffer.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":safe_stringops",
+        ":sanitizing_allocator",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "secret_buffer_test",
+    srcs = ["secret_buffer_test.cc"],
+    deps = [
+        ":secret_buffer",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

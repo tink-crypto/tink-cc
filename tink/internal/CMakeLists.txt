@@ -1883,3 +1883,23 @@ tink_cc_test(
     tink::internal::sanitizing_allocator
     gmock
 )
+
+tink_cc_library(
+  NAME secret_buffer
+  SRCS
+    secret_buffer.h
+  DEPS
+    tink::internal::safe_stringops
+    tink::internal::sanitizing_allocator
+    absl::check
+    absl::string_view
+)
+
+tink_cc_test(
+  NAME secret_buffer_test
+  SRCS
+    secret_buffer_test.cc
+  DEPS
+    tink::internal::secret_buffer
+    gmock
+)

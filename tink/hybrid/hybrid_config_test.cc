@@ -326,8 +326,7 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   const std::string private_key_bytes =
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize());
+      std::string(util::SecretDataAsStringView((*x25519_key)->private_key));
 
   EciesAeadHkdfPublicKey public_key_proto;
   public_key_proto.set_version(0);

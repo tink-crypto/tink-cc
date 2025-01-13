@@ -162,9 +162,7 @@ TEST(EciesPublicKeyTest, CreateX25519PublicKey) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
@@ -268,8 +266,7 @@ TEST(EciesPrivateKeyTest, CreateX25519PrivateKeyWithInvalidKeyLengthFails) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   std::string private_key_input =
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize());
+      std::string(util::SecretDataAsStringView((*x25519_key)->private_key));
   RestrictedData expanded_private_key_bytes = RestrictedData(
       absl::StrCat(test::HexDecodeOrDie("00"), private_key_input),
       InsecureSecretKeyAccess::Get());
@@ -349,9 +346,7 @@ TEST(EciesPrivateKeyTest, X25519PrivateKeyEquals) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
@@ -393,9 +388,7 @@ TEST(EciesPrivateKeyTest, DifferentPublicKeyNotEqual) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<EciesPublicKey> public_key123 =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
@@ -443,9 +436,7 @@ TEST(EciesPrivateKeyTest, DifferentKeyTypesNotEqual) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,
@@ -482,9 +473,7 @@ TEST(EciesPrivateKeyTest, Clone) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*params, public_key_bytes,

@@ -52,7 +52,8 @@ util::Status GenerateX25519Key(HpkePublicKeyProto& public_key,
     return key.status();
   }
   public_key.set_public_key((*key)->public_value, X25519KeyPubKeySize());
-  private_key.set_private_key((*key)->private_key, X25519KeyPrivKeySize());
+  private_key.set_private_key(
+      util::SecretDataAsStringView((*key)->private_key));
   return util::OkStatus();
 }
 

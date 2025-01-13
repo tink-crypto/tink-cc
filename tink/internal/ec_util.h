@@ -50,7 +50,8 @@ struct EcKey {
 
 struct X25519Key {
   uint8_t public_value[X25519KeyPubKeySize()];
-  uint8_t private_key[X25519KeyPrivKeySize()];
+  crypto::tink::util::SecretData private_key =
+      crypto::tink::util::SecretData(X25519KeyPrivKeySize());
 };
 
 struct Ed25519Key {

@@ -434,7 +434,7 @@ util::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key() {
   auto key = absl::make_unique<X25519Key>();
   util::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, **private_key,
-      absl::MakeSpan(key->private_key, X25519KeyPrivKeySize()),
+      absl::MakeSpan(key->private_key.data(), X25519KeyPrivKeySize()),
       absl::MakeSpan(key->public_value, X25519KeyPubKeySize()));
   if (!res.ok()) {
     return res;
@@ -449,10 +449,7 @@ EcKey EcKeyFromX25519Key(const X25519Key *x25519_key) {
   ec_key.pub_x =
       std::string(reinterpret_cast<const char *>(x25519_key->public_value),
                   X25519KeyPubKeySize());
-  ec_key.priv = util::SecretDataFromStringView(
-      absl::string_view(reinterpret_cast<const char *>(x25519_key->private_key),
-                        std::distance(std::begin(x25519_key->private_key),
-                                      std::end(x25519_key->private_key))));
+  ec_key.priv = x25519_key->private_key;
   return ec_key;
 }
 
@@ -565,7 +562,7 @@ util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
   auto key = absl::make_unique<X25519Key>();
   util::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, *pkey,
-      absl::MakeSpan(key->private_key, X25519KeyPrivKeySize()),
+      absl::MakeSpan(key->private_key.data(), X25519KeyPrivKeySize()),
       absl::MakeSpan(key->public_value, X25519KeyPubKeySize()));
   if (!res.ok()) {
     return res;

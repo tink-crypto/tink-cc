@@ -148,9 +148,7 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
@@ -284,11 +282,9 @@ TEST(HpkePrivateKeyTest, CreateX25519PrivateKeyWithInvalidKeyLengthFails) {
   std::string public_key_bytes =
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
-  std::string private_key_input =
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize());
   RestrictedData expanded_private_key_bytes = RestrictedData(
-      absl::StrCat(test::HexDecodeOrDie("00"), private_key_input),
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView((*x25519_key)->private_key)),
       InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
@@ -362,9 +358,7 @@ TEST(HpkePrivateKeyTest, X25519PrivateKeyEquals) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
@@ -403,9 +397,7 @@ TEST(HpkePrivateKeyTest, DifferentPublicKeyNotEqual) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key123 =
       HpkePublicKey::Create(*params, public_key_bytes,
@@ -449,9 +441,7 @@ TEST(HpkePrivateKeyTest, DifferentKeyTypesNotEqual) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key =
       HpkePublicKey::Create(*params, public_key_bytes,
@@ -486,9 +476,7 @@ TEST(HpkePrivateKeyTest, Clone) {
       std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+      (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,

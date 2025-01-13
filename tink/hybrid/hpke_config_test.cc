@@ -227,8 +227,7 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
   google::crypto::tink::HpkePrivateKey private_key_proto;
   private_key_proto.set_version(0);
   private_key_proto.set_private_key(
-      std::string(reinterpret_cast<const char*>((*key_pair)->private_key),
-                  internal::X25519KeyPrivKeySize()));
+      util::SecretDataAsStringView((*key_pair)->private_key));
   *private_key_proto.mutable_public_key() = public_key_proto;
 
   util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
@@ -261,10 +260,8 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
       /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  RestrictedData private_key_bytes = RestrictedData(
-      std::string(reinterpret_cast<const char*>((*key_pair)->private_key),
-                  internal::X25519KeyPrivKeySize()),
-      InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_bytes =
+      RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
 
   util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, private_key_bytes, GetPartialKeyAccess());

@@ -183,7 +183,7 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
 
   internal::SslUniquePtr<EVP_PKEY> ssl_priv_key(EVP_PKEY_new_raw_private_key(
       /*type=*/EVP_PKEY_X25519, /*unused=*/nullptr,
-      /*in=*/(*ephemeral_key)->private_key,
+      /*in=*/(*ephemeral_key)->private_key.data(),
       /*len=*/internal::Ed25519KeyPrivKeySize()));
   if (ssl_priv_key == nullptr) {
     return util::Status(absl::StatusCode::kInternal,

@@ -226,15 +226,12 @@ TEST(EcUtilTest, NewX25519KeyGeneratesNewKeyEveryTime) {
   util::StatusOr<std::unique_ptr<X25519Key>> keypair2 = NewX25519Key();
   ASSERT_THAT(keypair2, IsOk());
 
-  auto priv_key1 =
-      absl::MakeSpan((*keypair1)->private_key, X25519KeyPrivKeySize());
-  auto priv_key2 =
-      absl::MakeSpan((*keypair2)->private_key, X25519KeyPrivKeySize());
+  EXPECT_THAT((*keypair1)->private_key,
+              Not(EqualsSecretData((*keypair2)->private_key)));
   auto pub_key1 =
       absl::MakeSpan((*keypair1)->public_value, X25519KeyPubKeySize());
   auto pub_key2 =
       absl::MakeSpan((*keypair2)->public_value, X25519KeyPubKeySize());
-  EXPECT_THAT(priv_key1, Not(ElementsAreArray(priv_key2)));
   EXPECT_THAT(pub_key1, Not(ElementsAreArray(pub_key2)));
 }
 
@@ -247,10 +244,8 @@ TEST(EcUtilTest, X25519KeyToEcKeyAndBack) {
   util::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
       X25519KeyFromEcKey(ec_key);
   ASSERT_THAT(roundtrip_key, IsOk());
-  EXPECT_THAT(
-      absl::MakeSpan((*x25519_key)->private_key, X25519KeyPrivKeySize()),
-      ElementsAreArray(absl::MakeSpan((*roundtrip_key)->private_key,
-                                      X25519KeyPrivKeySize())));
+  EXPECT_THAT((*x25519_key)->private_key,
+              EqualsSecretData((*roundtrip_key)->private_key));
   EXPECT_THAT(
       absl::MakeSpan((*x25519_key)->public_value, X25519KeyPubKeySize()),
       ElementsAreArray(absl::MakeSpan((*roundtrip_key)->public_value,
@@ -262,14 +257,10 @@ TEST(EcUtilTest, X25519KeyFromRandomPrivateKey) {
   ASSERT_THAT(x25519_key, IsOk());
 
   util::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
-      X25519KeyFromPrivateKey(util::SecretDataFromStringView(absl::string_view(
-          reinterpret_cast<const char*>((*x25519_key)->private_key),
-          X25519KeyPrivKeySize())));
+      X25519KeyFromPrivateKey((*x25519_key)->private_key);
   ASSERT_THAT(roundtrip_key, IsOk());
-  EXPECT_THAT(
-      absl::MakeSpan((*x25519_key)->private_key, X25519KeyPrivKeySize()),
-      ElementsAreArray(absl::MakeSpan((*roundtrip_key)->private_key,
-                                      X25519KeyPrivKeySize())));
+  EXPECT_THAT((*roundtrip_key)->private_key,
+              EqualsSecretData((*x25519_key)->private_key));
   EXPECT_THAT(
       absl::MakeSpan((*x25519_key)->public_value, X25519KeyPubKeySize()),
       ElementsAreArray(absl::MakeSpan((*roundtrip_key)->public_value,

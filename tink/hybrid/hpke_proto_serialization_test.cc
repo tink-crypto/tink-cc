@@ -442,8 +442,7 @@ util::StatusOr<KeyPair> GenerateKeyPair(subtle::EllipticCurveType curve) {
     return KeyPair{
         std::string(reinterpret_cast<const char*>((*x25519_key)->public_value),
                     internal::X25519KeyPubKeySize()),
-        std::string(reinterpret_cast<const char*>((*x25519_key)->private_key),
-                    internal::X25519KeyPrivKeySize())};
+        std::string(util::SecretDataAsStringView((*x25519_key)->private_key))};
   }
   util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(curve);
   if (!ec_key.ok()) {

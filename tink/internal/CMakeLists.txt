@@ -910,6 +910,7 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_key_manager
     tink::aead::xchacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_proto_serialization
     tink::config::global_registry
     tink::config::tink_config
     tink::mac::aes_cmac_key

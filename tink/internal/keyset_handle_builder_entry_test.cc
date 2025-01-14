@@ -26,6 +26,7 @@
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
+#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_config.h"
 #include "tink/insecure_secret_key_access.h"
@@ -185,6 +186,8 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
 
 TEST(CreateKeysetKeyCustomConfigTest,
      CreateKeysetKeyFromParametersCustomConfig) {
+  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
+
   util::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);

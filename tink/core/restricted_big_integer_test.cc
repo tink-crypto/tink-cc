@@ -63,6 +63,9 @@ TEST(RestrictedBigIntegerTest, CreateAndGetSecret) {
   EXPECT_THAT(restricted_big_integer.SizeInBytes(), Eq(256));
   EXPECT_THAT(restricted_big_integer.GetSecret(InsecureSecretKeyAccess::Get()),
               Eq(secret_bytes));
+  EXPECT_THAT(util::SecretDataAsStringView(restricted_big_integer.GetSecretData(
+                  InsecureSecretKeyAccess::Get())),
+              Eq(secret_bytes));
 }
 
 TEST(RestrictedBigIntegerTest, CreateAndGetSecretPadded) {

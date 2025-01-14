@@ -57,6 +57,11 @@ class RestrictedBigInteger {
     return util::SecretDataAsStringView(secret_);
   }
 
+  // Returns the secret data of this RestrictedBigInteger object.
+  const util::SecretData& GetSecretData(SecretKeyAccessToken token) const {
+    return secret_;
+  }
+
   int64_t SizeInBytes() const { return secret_.size(); }
 
   bool operator==(const RestrictedBigInteger& other) const;

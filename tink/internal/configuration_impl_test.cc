@@ -308,7 +308,9 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrap) {
 }
 
 TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
+  Registry::Reset();
   ASSERT_THAT(AeadConfig::Register(), IsOk());
+
   Configuration config;
   ASSERT_THAT((ConfigurationImpl::AddPrimitiveWrapper(
                   absl::make_unique<FakePrimitiveWrapper>(), config)),

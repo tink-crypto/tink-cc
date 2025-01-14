@@ -546,7 +546,10 @@ util::StatusOr<util::SecretData> ComputeX25519SharedSecret(
   size_t out_key_length = shared_secret.size();
   if (EVP_PKEY_derive_init(pctx.get()) <= 0 ||
       EVP_PKEY_derive_set_peer(pctx.get(), peer_public_key) <= 0 ||
-      EVP_PKEY_derive(pctx.get(), shared_secret.data(), &out_key_length) <= 0) {
+      CallWithCoreDumpProtection([&]() {
+        return EVP_PKEY_derive(pctx.get(), shared_secret.data(),
+                               &out_key_length);
+      }) <= 0) {
     return util::Status(absl::StatusCode::kInternal,
                         "Secret generation failed");
   }

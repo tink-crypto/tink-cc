@@ -26,12 +26,15 @@
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
-#include "tink/signature/internal/slh_dsa_proto_serialization.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -149,6 +152,66 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithSlhDsaKeyWorks) {
       internal::KeyGenConfigurationImpl::AddKeyCreator<SlhDsaParameters>(
           CreateSlhDsaKey, key_creator_config),
       IsOk());
+
+  KeysetHandleBuilder::Entry entry =
+      KeysetHandleBuilder::Entry::CreateFromCopyableParams(
+          *parameters, KeyStatus::kEnabled, /*is_primary=*/true,
+          /*id=*/123);
+  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+                                            .AddEntry(std::move(entry))
+                                            .Build(key_creator_config);
+  ASSERT_THAT(handle.status(), IsOk());
+
+  EXPECT_THAT(*handle, SizeIs(1));
+  EXPECT_THAT((*handle)[0].GetStatus(), Eq(KeyStatus::kEnabled));
+  EXPECT_THAT((*handle)[0].GetId(), Eq(123));
+  EXPECT_THAT((*handle)[0].IsPrimary(), IsTrue());
+  EXPECT_THAT((*handle)[0].GetKey()->GetParameters(), Eq(*parameters));
+}
+
+TEST_P(KeyCreatorsTest, CreateEcdsaPrivateKeyWorks) {
+  TestCase test_case = GetParam();
+
+  EcdsaParameters::Variant variant = test_case.id_requirement.has_value()
+                                         ? EcdsaParameters::Variant::kTink
+                                         : EcdsaParameters::Variant::kNoPrefix;
+  util::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(variant)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> private_key =
+      CreateEcdsaKey(*parameters, test_case.id_requirement);
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_THAT((*private_key)->GetOutputPrefix(), Eq(test_case.output_prefix));
+  EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(test_case.id_requirement));
+}
+
+TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithEcdsaKeyWorks) {
+  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
+  TestCase test_case = GetParam();
+
+  EcdsaParameters::Variant variant = test_case.id_requirement.has_value()
+                                         ? EcdsaParameters::Variant::kTink
+                                         : EcdsaParameters::Variant::kNoPrefix;
+  util::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
+          .SetHashType(EcdsaParameters::HashType::kSha384)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
+          .SetVariant(variant)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  KeyGenConfiguration key_creator_config;
+  ASSERT_THAT(internal::KeyGenConfigurationImpl::AddKeyCreator<EcdsaParameters>(
+                  CreateEcdsaKey, key_creator_config),
+              IsOk());
 
   KeysetHandleBuilder::Entry entry =
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(

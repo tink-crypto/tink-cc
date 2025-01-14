@@ -304,15 +304,23 @@ tink_cc_library(
     absl::string_view
     absl::optional
     crypto
-    tink::core::insecure_secret_key_access
+    tink::core::big_integer
+    tink::core::ec_point
     tink::core::partial_key_access
+    tink::core::restricted_big_integer
     tink::core::restricted_data
+    tink::internal::ec_util
+    tink::internal::internal_insecure_secret_key_access
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
+    tink::subtle::common_enums
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -334,6 +342,9 @@ tink_cc_test(
     tink::core::key_status
     tink::core::keyset_handle
     tink::internal::key_gen_configuration_impl
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_proto_serialization
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::slh_dsa_parameters

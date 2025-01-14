@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "absl/types/optional.h"
+#include "tink/signature/ecdsa_parameters.h"
+#include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
@@ -40,6 +42,12 @@ util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
 // have no ID requirement.
 util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     const SlhDsaParameters& params, absl::optional<int> id_requirement);
+
+// Creates a new ECDSA private key from `parameters`. If `id_requirement` is
+// set, the key will have the specified ID requirement. Otherwise, the key will
+// have no ID requirement.
+util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
+    const EcdsaParameters& params, absl::optional<int> id_requirement);
 
 }  // namespace internal
 }  // namespace tink

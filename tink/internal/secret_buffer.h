@@ -22,6 +22,7 @@
 #include <cstring>
 #include <iterator>
 #include <limits>
+#include <utility>
 
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
@@ -39,6 +40,24 @@ namespace internal {
 class SecretBuffer {
  public:
   SecretBuffer() = default;
+  SecretBuffer(const SecretBuffer& other) {
+    *this = other;
+  }
+  SecretBuffer(SecretBuffer&& other) noexcept {
+    *this = std::move(other);
+  }
+  SecretBuffer& operator=(const SecretBuffer& other) {
+    if (this != &other) {
+      reserve(other.size_);
+      ::crypto::tink::internal::SafeMemCopy(data_, other.data_, other.size_);
+      size_ = other.size_;
+    }
+    return *this;
+  }
+  SecretBuffer& operator=(SecretBuffer&& other) noexcept {
+    swap(other);
+    return *this;
+  }
 
   explicit SecretBuffer(absl::string_view in) {
     reserve(in.size());
@@ -95,6 +114,13 @@ class SecretBuffer {
     }
     data_ = new_data;
     capacity_ = new_cap;
+  }
+
+  void swap(SecretBuffer& other) noexcept {
+    using std::swap;
+    swap(data_, other.data_);
+    swap(size_, other.size_);
+    swap(capacity_, other.capacity_);
   }
 
   bool operator==(const SecretBuffer& other) const {

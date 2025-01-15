@@ -17,6 +17,7 @@
 #include "tink/internal/secret_buffer.h"
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -95,6 +96,57 @@ TEST(SecretBufferTest, EqualityForNonEqualObjects) {
   EXPECT_THAT(buffer1 == buffer3, IsFalse());
   EXPECT_THAT(buffer1 != buffer2, IsTrue());
   EXPECT_THAT(buffer1 != buffer3, IsTrue());
+}
+
+TEST(SecretBufferTest, CopyConstructor) {
+  SecretBuffer buffer1("some data");
+  SecretBuffer buffer2(buffer1);
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data")));
+  EXPECT_THAT(buffer2, Eq(SecretBuffer("some data")));
+}
+
+TEST(SecretBufferTest, CopyAssignment) {
+  SecretBuffer buffer1("some data");
+  SecretBuffer buffer2;
+  buffer2 = buffer1;
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data")));
+  EXPECT_THAT(buffer2, Eq(SecretBuffer("some data")));
+}
+
+TEST(SecretBufferTest, MoveConstructor) {
+  SecretBuffer buffer1("some data");
+  SecretBuffer buffer2(std::move(buffer1));
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  EXPECT_THAT(buffer1.size(), Eq(0));
+  EXPECT_THAT(buffer2, Eq(SecretBuffer("some data")));
+}
+
+TEST(SecretBufferTest, MoveAssignment) {
+  SecretBuffer buffer1("some data");
+  SecretBuffer buffer2;
+  buffer2 = std::move(buffer1);
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  EXPECT_THAT(buffer1.size(), Eq(0));
+  EXPECT_THAT(buffer2, Eq(SecretBuffer("some data")));
+}
+
+TEST(SecretBufferTest, Swap) {
+  SecretBuffer buffer1("some data1");
+  SecretBuffer buffer2("some data2");
+  buffer1.swap(buffer2);
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data2")));
+  EXPECT_THAT(buffer2.AsStringView(), Eq("some data1"));
+}
+
+TEST(SecretBufferTest, SwapWithEmpty) {
+  SecretBuffer buffer1("some data");
+  SecretBuffer buffer2;
+  buffer1.swap(buffer2);
+  EXPECT_THAT(buffer1.AsStringView(), Eq(""));
+  EXPECT_THAT(buffer2.AsStringView(), Eq("some data"));
+  buffer1.swap(buffer2);
+  EXPECT_THAT(buffer1.AsStringView(), Eq("some data"));
+  EXPECT_THAT(buffer2.AsStringView(), Eq(""));
 }
 
 }  // namespace

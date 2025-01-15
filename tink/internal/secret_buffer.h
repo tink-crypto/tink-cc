@@ -56,6 +56,9 @@ class SecretBuffer {
     return data_[pos];
   }
 
+  uint8_t* data() { return data_; }
+  const uint8_t* data() const { return data_; }
+
   size_t size() const { return size_; }
 
   void resize(size_t size, uint8_t val = 0) {

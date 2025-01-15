@@ -34,11 +34,24 @@ TEST(SecretBufferTest, ResizeAndSize) {
   EXPECT_THAT(buffer.size(), Eq(10));
 }
 
-TEST(SecretBufferTest, ReadAndWrite) {
+TEST(SecretBufferTest, WriteAndReadWithAllMethods) {
   SecretBuffer buffer;
   buffer.resize(100);
   for (int i = 0; i < 100; ++i) {
     buffer[i] = static_cast<uint8_t>((11 * i + 17) % 256);
+  }
+  for (int i = 0; i < 100; ++i) {
+    EXPECT_THAT(buffer[i], Eq(static_cast<uint8_t>((11 * i + 17) % 256)));
+    EXPECT_THAT(*(buffer.data() + i),
+                Eq(static_cast<uint8_t>((11 * i + 17) % 256)));
+  }
+}
+
+TEST(SecretBufferTest, WriteWithData) {
+  SecretBuffer buffer;
+  buffer.resize(100);
+  for (int i = 0; i < 100; ++i) {
+    *(buffer.data() + i) = static_cast<uint8_t>((11 * i + 17) % 256);
   }
   for (int i = 0; i < 100; ++i) {
     EXPECT_THAT(buffer[i], Eq(static_cast<uint8_t>((11 * i + 17) % 256)));

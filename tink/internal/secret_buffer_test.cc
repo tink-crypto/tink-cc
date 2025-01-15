@@ -16,9 +16,11 @@
 
 #include "tink/internal/secret_buffer.h"
 #include <cstdint>
+#include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
@@ -26,6 +28,8 @@ namespace internal {
 namespace {
 
 using testing::Eq;
+using testing::IsFalse;
+using testing::IsTrue;
 
 TEST(SecretBufferTest, ResizeAndSize) {
   SecretBuffer buffer;
@@ -56,6 +60,41 @@ TEST(SecretBufferTest, WriteWithData) {
   for (int i = 0; i < 100; ++i) {
     EXPECT_THAT(buffer[i], Eq(static_cast<uint8_t>((11 * i + 17) % 256)));
   }
+}
+
+TEST(SecretBufferTest, StringViewAccessor) {
+  SecretBuffer buffer;
+  buffer.resize(30);
+  for (int i = 0; i < 30; ++i) {
+    *(buffer.data() + i) = static_cast<uint8_t>((11 * i + 17) % 256);
+  }
+  EXPECT_THAT(
+      test::HexEncode(buffer.AsStringView()),
+      Eq("111c27323d48535e69747f8a95a0abb6c1ccd7e2edf8030e19242f3a4550"));
+}
+
+TEST(SecretBufferTest, StringViewConstructor) {
+  std::string data = "Some data to construct a secret buffer";
+  SecretBuffer buffer(data);
+  EXPECT_THAT(buffer.size(), Eq(data.size()));
+  EXPECT_THAT(buffer.AsStringView(), Eq(data));
+}
+
+TEST(SecretBufferTest, EqualityForEqualObjects) {
+  SecretBuffer buffer1("some data");
+  SecretBuffer buffer2("some data");
+  EXPECT_THAT(buffer1 == buffer2, IsTrue());
+  EXPECT_THAT(buffer1 != buffer2, IsFalse());
+}
+
+TEST(SecretBufferTest, EqualityForNonEqualObjects) {
+  SecretBuffer buffer1("some data1");
+  SecretBuffer buffer2("some data2");
+  SecretBuffer buffer3("s");
+  EXPECT_THAT(buffer1 == buffer2, IsFalse());
+  EXPECT_THAT(buffer1 == buffer3, IsFalse());
+  EXPECT_THAT(buffer1 != buffer2, IsTrue());
+  EXPECT_THAT(buffer1 != buffer3, IsTrue());
 }
 
 }  // namespace

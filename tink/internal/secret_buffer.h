@@ -39,6 +39,13 @@ namespace internal {
 class SecretBuffer {
  public:
   SecretBuffer() = default;
+
+  explicit SecretBuffer(absl::string_view in) {
+    reserve(in.size());
+    SafeMemCopy(data_, in.data(), in.size());
+    size_ = in.size();
+  }
+
   ~SecretBuffer() {
     if (data_ != nullptr) {
       crypto::tink::util::internal::SanitizingAllocator<uint8_t>().deallocate(
@@ -58,6 +65,10 @@ class SecretBuffer {
 
   uint8_t* data() { return data_; }
   const uint8_t* data() const { return data_; }
+
+  absl::string_view AsStringView() const {
+    return absl::string_view(reinterpret_cast<const char*>(data_), size());
+  }
 
   size_t size() const { return size_; }
 
@@ -85,6 +96,15 @@ class SecretBuffer {
     data_ = new_data;
     capacity_ = new_cap;
   }
+
+  bool operator==(const SecretBuffer& other) const {
+    if (size() != other.size()) {
+      return false;
+    }
+    return SafeCryptoMemEquals(data(), other.data(), size());
+  }
+
+  bool operator!=(const SecretBuffer& other) const { return !(*this == other); }
 
  private:
   uint8_t* data_ = nullptr;

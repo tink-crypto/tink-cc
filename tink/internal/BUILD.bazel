@@ -1975,6 +1975,7 @@ cc_test(
     srcs = ["secret_buffer_test.cc"],
     deps = [
         ":secret_buffer",
+        "//tink/util:test_util",
         "@com_google_googletest//:gtest_main",
     ],
 )

@@ -27,7 +27,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aes_gcm_key.h"
-#include "tink/aead/aead_config.h"
+#include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/configuration.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/core/key_type_manager.h"
@@ -308,8 +308,7 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrap) {
 }
 
 TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
-  Registry::Reset();
-  ASSERT_THAT(AeadConfig::Register(), IsOk());
+  ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
 
   Configuration config;
   ASSERT_THAT((ConfigurationImpl::AddPrimitiveWrapper(

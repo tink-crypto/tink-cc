@@ -1131,8 +1131,8 @@ tink_cc_test(
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::core::registry
-    tink::aead::aead_config
     tink::aead::aes_gcm_key
+    tink::aead::aes_gcm_proto_serialization
     tink::subtle::random
     tink::util::status
     tink::util::statusor

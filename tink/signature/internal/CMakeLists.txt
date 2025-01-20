@@ -675,15 +675,14 @@ tink_cc_library(
     ed25519_proto_serialization_impl.cc
     ed25519_proto_serialization_impl.h
   DEPS
+    absl::no_destructor
     absl::status
-    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::internal::call_with_core_dump_protection
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -691,12 +690,12 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
     tink::util::secret_data
-    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::ed25519_cc_proto

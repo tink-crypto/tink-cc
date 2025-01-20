@@ -16,15 +16,15 @@
 
 #include "tink/signature/internal/ed25519_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -32,6 +32,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -40,7 +41,6 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/ed25519.pb.h"
@@ -51,10 +51,66 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::Ed25519KeyFormat;
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::util::SecretData;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
+
+struct Ed25519KeyFormatStruct {
+  uint32_t version;
+
+  static ProtoParser<Ed25519KeyFormatStruct> CreateParser() {
+    return ProtoParserBuilder<Ed25519KeyFormatStruct>()
+        .AddUint32Field(1, &Ed25519KeyFormatStruct::version)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<Ed25519KeyFormatStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<Ed25519KeyFormatStruct>> parser{
+        CreateParser()};
+    return *parser;
+  }
+};
+
+struct Ed25519PublicKeyStruct {
+  uint32_t version;
+  std::string key_value;
+
+  static ProtoParser<Ed25519PublicKeyStruct> CreateParser() {
+    return ProtoParserBuilder<Ed25519PublicKeyStruct>()
+        .AddUint32Field(1, &Ed25519PublicKeyStruct::version)
+        .AddBytesStringField(2, &Ed25519PublicKeyStruct::key_value)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<Ed25519PublicKeyStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<Ed25519PublicKeyStruct>> parser{
+        CreateParser()};
+    return *parser;
+  }
+};
+
+struct Ed25519PrivateKeyStruct {
+  uint32_t version;
+  util::SecretData key_value;
+  Ed25519PublicKeyStruct public_key;
+
+  static ProtoParser<Ed25519PrivateKeyStruct> CreateParser() {
+    return ProtoParserBuilder<Ed25519PrivateKeyStruct>()
+        .AddUint32Field(1, &Ed25519PrivateKeyStruct::version)
+        .AddBytesSecretDataField(2, &Ed25519PrivateKeyStruct::key_value)
+        .AddMessageField(3, &Ed25519PrivateKeyStruct::public_key,
+                         Ed25519PublicKeyStruct::CreateParser())
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<Ed25519PrivateKeyStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<Ed25519PrivateKeyStruct>> parser{
+        CreateParser()};
+    return *parser;
+  }
+};
 
 using Ed25519ProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, Ed25519Parameters>;
@@ -115,13 +171,14 @@ util::StatusOr<Ed25519Parameters> ParseParameters(
                         "Wrong type URL when parsing Ed25519Parameters.");
   }
 
-  Ed25519KeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
+  util::StatusOr<Ed25519KeyFormatStruct> proto_key_format =
+      Ed25519KeyFormatStruct::GetParser().Parse(
+          serialization.GetKeyTemplate().value());
+  if (!proto_key_format.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse Ed25519KeyFormat proto");
   }
-  if (proto_key_format.version() != 0) {
+  if (proto_key_format->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -143,14 +200,15 @@ util::StatusOr<Ed25519PublicKey> ParsePublicKey(
                         "Wrong type URL when parsing Ed25519PublicKey.");
   }
 
-  google::crypto::tink::Ed25519PublicKey proto_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(
-          restricted_data.GetSecret(InsecureSecretKeyAccess::Get()))) {
+  util::StatusOr<Ed25519PublicKeyStruct> proto_key =
+      Ed25519PublicKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(
+              InsecureSecretKeyAccess::Get()));
+  if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse Ed25519PublicKey proto");
   }
-  if (proto_key.version() != 0) {
+  if (proto_key->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -167,7 +225,7 @@ util::StatusOr<Ed25519PublicKey> ParsePublicKey(
     return parameters.status();
   }
 
-  return Ed25519PublicKey::Create(*parameters, proto_key.key_value(),
+  return Ed25519PublicKey::Create(*parameters, proto_key->key_value,
                                   serialization.IdRequirement(),
                                   GetPartialKeyAccess());
 }
@@ -183,18 +241,18 @@ util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
-  absl::StatusOr<SecretProto<google::crypto::tink::Ed25519PrivateKey>>
-      proto_key = SecretProto<google::crypto::tink::Ed25519PrivateKey>::
-          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
+  util::StatusOr<Ed25519PrivateKeyStruct> proto_key =
+      Ed25519PrivateKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse Ed25519PrivateKey proto");
   }
-  if ((*proto_key)->version() != 0) {
+  if (proto_key->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
-  if ((*proto_key)->public_key().version() != 0) {
+  if (proto_key->public_key.version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 public keys are accepted.");
   }
@@ -212,15 +270,15 @@ util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
   }
 
   util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
-      *parameters, (*proto_key)->public_key().key_value(),
+      *parameters, proto_key->public_key.key_value,
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
-  return Ed25519PrivateKey::Create(
-      *public_key, RestrictedData((*proto_key)->key_value(), *token),
-      GetPartialKeyAccess());
+  return Ed25519PrivateKey::Create(*public_key,
+                                   RestrictedData(proto_key->key_value, *token),
+                                   GetPartialKeyAccess());
 }
 
 util::StatusOr<ProtoParametersSerialization> SerializeParameters(
@@ -231,19 +289,24 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  Ed25519KeyFormat proto_key_format;
-  proto_key_format.set_version(0);
+  Ed25519KeyFormatStruct proto_key_format;
+  proto_key_format.version = 0;
 
-  return ProtoParametersSerialization::Create(
-      kPrivateTypeUrl, *output_prefix_type,
-      proto_key_format.SerializeAsString());
+  util::StatusOr<std::string> serialized =
+      Ed25519KeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
+  if (!serialized.ok()) {
+    return serialized.status();
+  }
+
+  return ProtoParametersSerialization::Create(kPrivateTypeUrl,
+                                              *output_prefix_type, *serialized);
 }
 
 util::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const Ed25519PublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  google::crypto::tink::Ed25519PublicKey proto_key;
-  proto_key.set_version(0);
-  proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
+  Ed25519PublicKeyStruct proto_key;
+  proto_key.version = 0;
+  proto_key.key_value = key.GetPublicKeyBytes(GetPartialKeyAccess());
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -251,8 +314,14 @@ util::StatusOr<ProtoKeySerialization> SerializePublicKey(
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output = RestrictedData(
-      proto_key.SerializeAsString(), InsecureSecretKeyAccess::Get());
+  util::StatusOr<std::string> serialized =
+      Ed25519PublicKeyStruct::GetParser().SerializeIntoString(proto_key);
+  if (!serialized.ok()) {
+    return serialized.status();
+  }
+
+  RestrictedData restricted_output =
+      RestrictedData(*serialized, InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
       kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
       *output_prefix_type, key.GetIdRequirement());
@@ -270,18 +339,12 @@ util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
                         "SecretKeyAccess is required");
   }
 
-  google::crypto::tink::Ed25519PublicKey proto_public_key;
-  proto_public_key.set_version(0);
-  proto_public_key.set_key_value(
-      key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
-
-  SecretProto<google::crypto::tink::Ed25519PrivateKey> proto_private_key;
-  proto_private_key->set_version(0);
-  *proto_private_key->mutable_public_key() = proto_public_key;
-  CallWithCoreDumpProtection([&] {
-    proto_private_key->set_key_value(
-        util::SecretDataAsStringView(restricted_input->Get(*token)));
-  });
+  Ed25519PrivateKeyStruct proto_private_key;
+  proto_private_key.version = 0;
+  proto_private_key.public_key.version = 0;
+  proto_private_key.public_key.key_value =
+      key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
+  proto_private_key.key_value = restricted_input->Get(*token);
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
@@ -290,7 +353,8 @@ util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   }
 
   util::StatusOr<util::SecretData> proto_private_key_secret_data =
-      proto_private_key.SerializeAsSecretData();
+      Ed25519PrivateKeyStruct::GetParser().SerializeIntoSecretData(
+          proto_private_key);
   if (!proto_private_key_secret_data.ok()) {
     return proto_private_key_secret_data.status();
   }

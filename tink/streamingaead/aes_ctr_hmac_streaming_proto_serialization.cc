@@ -16,14 +16,17 @@
 
 #include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
 
+#include <sys/types.h>
+
+#include <cstdint>
+#include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -31,13 +34,13 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/aes_ctr_hmac_streaming.pb.h"
@@ -50,11 +53,92 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::AesCtrHmacStreamingKeyFormat;
-using ::google::crypto::tink::AesCtrHmacStreamingParams;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
+
+struct HmacParamsStruct {
+  google::crypto::tink::HashType hash;
+  uint32_t tag_size;
+
+  static internal::ProtoParser<HmacParamsStruct> CreateParser() {
+    return internal::ProtoParserBuilder<HmacParamsStruct>()
+        .AddEnumField(
+            1, &HmacParamsStruct::hash,
+            +[](uint32_t hash_type) {
+              return google::crypto::tink::HashType_IsValid(hash_type);
+            })
+        .AddUint32Field(2, &HmacParamsStruct::tag_size)
+        .BuildOrDie();
+  }
+};
+
+struct AesCtrHmacStreamingParamsStruct {
+  uint32_t ciphertext_segment_size;
+  uint32_t derived_key_size;
+  google::crypto::tink::HashType hkdf_hash_type;
+  HmacParamsStruct hmac_params;
+
+  static internal::ProtoParser<AesCtrHmacStreamingParamsStruct> CreateParser() {
+    return internal::ProtoParserBuilder<AesCtrHmacStreamingParamsStruct>()
+        .AddUint32Field(
+            1, &AesCtrHmacStreamingParamsStruct::ciphertext_segment_size)
+        .AddUint32Field(2, &AesCtrHmacStreamingParamsStruct::derived_key_size)
+        .AddEnumField(
+            3, &AesCtrHmacStreamingParamsStruct::hkdf_hash_type,
+            +[](uint32_t hash_type) {
+              return google::crypto::tink::HashType_IsValid(hash_type);
+            })
+        .AddMessageField(4, &AesCtrHmacStreamingParamsStruct::hmac_params,
+                         HmacParamsStruct::CreateParser())
+        .BuildOrDie();
+  }
+};
+
+struct AesCtrHmacStreamingKeyFormatStruct {
+  uint32_t version;
+  AesCtrHmacStreamingParamsStruct params;
+  uint32_t key_size;
+
+  static internal::ProtoParser<AesCtrHmacStreamingKeyFormatStruct>
+  CreateParser() {
+    return internal::ProtoParserBuilder<AesCtrHmacStreamingKeyFormatStruct>()
+        .AddUint32Field(3, &AesCtrHmacStreamingKeyFormatStruct::version)
+        .AddMessageField(1, &AesCtrHmacStreamingKeyFormatStruct::params,
+                         AesCtrHmacStreamingParamsStruct::CreateParser())
+        .AddUint32Field(2, &AesCtrHmacStreamingKeyFormatStruct::key_size)
+        .BuildOrDie();
+  }
+
+  static const internal::ProtoParser<AesCtrHmacStreamingKeyFormatStruct>&
+  Parser() {
+    static absl::NoDestructor<
+        internal::ProtoParser<AesCtrHmacStreamingKeyFormatStruct>>
+        parser{AesCtrHmacStreamingKeyFormatStruct::CreateParser()};
+    return *parser;
+  }
+};
+
+struct AesCtrHmacStreamingKeyStruct {
+  uint32_t version;
+  AesCtrHmacStreamingParamsStruct params;
+  SecretData key_value;
+
+  static internal::ProtoParser<AesCtrHmacStreamingKeyStruct> CreateParser() {
+    return internal::ProtoParserBuilder<AesCtrHmacStreamingKeyStruct>()
+        .AddUint32Field(1, &AesCtrHmacStreamingKeyStruct::version)
+        .AddMessageField(2, &AesCtrHmacStreamingKeyStruct::params,
+                         AesCtrHmacStreamingParamsStruct::CreateParser())
+        .AddBytesSecretDataField(3, &AesCtrHmacStreamingKeyStruct::key_value)
+        .BuildOrDie();
+  }
+
+  static const internal::ProtoParser<AesCtrHmacStreamingKeyStruct>& Parser() {
+    static absl::NoDestructor<
+        internal::ProtoParser<AesCtrHmacStreamingKeyStruct>>
+        parser{AesCtrHmacStreamingKeyStruct::CreateParser()};
+    return *parser;
+  }
+};
 
 using AesCtrHmacStreamingProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -84,7 +168,8 @@ util::StatusOr<AesCtrHmacStreamingParameters::HashType> FromProtoHashType(
     default:
       return util::Status(
           absl::StatusCode::kInvalidArgument,
-          absl::StrCat("Unsupported proto hash type: ", hash_type));
+          absl::StrCat("Unsupported proto hash type: ",
+                       google::crypto::tink::HashType_Name(hash_type)));
   }
 }
 
@@ -103,34 +188,30 @@ util::StatusOr<google::crypto::tink::HashType> ToProtoHashType(
   }
 }
 
-util::StatusOr<AesCtrHmacStreamingParameters> FromProtoParams(
-    const AesCtrHmacStreamingParams& proto_params, int key_size) {
-  if (!proto_params.has_hmac_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Missing AesCtrHmacStreamingParams.hmac_params.");
-  }
+util::StatusOr<AesCtrHmacStreamingParameters> ToParameters(
+    const AesCtrHmacStreamingParamsStruct& params_struct, int key_size) {
   util::StatusOr<AesCtrHmacStreamingParameters::HashType> hkdf_hash_type =
-      FromProtoHashType(proto_params.hkdf_hash_type());
+      FromProtoHashType(params_struct.hkdf_hash_type);
   if (!hkdf_hash_type.ok()) {
     return hkdf_hash_type.status();
   }
   util::StatusOr<AesCtrHmacStreamingParameters::HashType> hmac_hash_type =
-      FromProtoHashType(proto_params.hmac_params().hash());
+      FromProtoHashType(params_struct.hmac_params.hash);
   if (!hmac_hash_type.ok()) {
     return hmac_hash_type.status();
   }
 
   return AesCtrHmacStreamingParameters::Builder()
       .SetKeySizeInBytes(key_size)
-      .SetDerivedKeySizeInBytes(proto_params.derived_key_size())
+      .SetDerivedKeySizeInBytes(params_struct.derived_key_size)
       .SetHkdfHashType(*hkdf_hash_type)
       .SetHmacHashType(*hmac_hash_type)
-      .SetHmacTagSizeInBytes(proto_params.hmac_params().tag_size())
-      .SetCiphertextSegmentSizeInBytes(proto_params.ciphertext_segment_size())
+      .SetHmacTagSizeInBytes(params_struct.hmac_params.tag_size)
+      .SetCiphertextSegmentSizeInBytes(params_struct.ciphertext_segment_size)
       .Build();
 }
 
-util::StatusOr<AesCtrHmacStreamingParams> ToProtoParams(
+util::StatusOr<AesCtrHmacStreamingParamsStruct> FromParameters(
     const AesCtrHmacStreamingParameters& parameters) {
   util::StatusOr<google::crypto::tink::HashType> hkdf_hash_type =
       ToProtoHashType(parameters.HkdfHashType());
@@ -143,12 +224,12 @@ util::StatusOr<AesCtrHmacStreamingParams> ToProtoParams(
     return hmac_hash_type.status();
   }
 
-  AesCtrHmacStreamingParams params;
-  params.set_derived_key_size(parameters.DerivedKeySizeInBytes());
-  params.set_hkdf_hash_type(*hkdf_hash_type);
-  params.mutable_hmac_params()->set_hash(*hmac_hash_type);
-  params.mutable_hmac_params()->set_tag_size(parameters.HmacTagSizeInBytes());
-  params.set_ciphertext_segment_size(parameters.CiphertextSegmentSizeInBytes());
+  AesCtrHmacStreamingParamsStruct params;
+  params.derived_key_size = parameters.DerivedKeySizeInBytes();
+  params.hkdf_hash_type = *hkdf_hash_type;
+  params.hmac_params.hash = *hmac_hash_type;
+  params.hmac_params.tag_size = parameters.HmacTagSizeInBytes();
+  params.ciphertext_segment_size = parameters.CiphertextSegmentSizeInBytes();
   return params;
 }
 
@@ -159,40 +240,40 @@ util::StatusOr<AesCtrHmacStreamingParameters> ParseParameters(
         absl::StatusCode::kInvalidArgument,
         "Wrong type URL when parsing AesCtrHmacStreamingParameters.");
   }
-  AesCtrHmacStreamingKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesCtrHmacStreamingKeyFormat proto.");
+  util::StatusOr<AesCtrHmacStreamingKeyFormatStruct> key_format_struct =
+      AesCtrHmacStreamingKeyFormatStruct::Parser().Parse(
+          serialization.GetKeyTemplate().value());
+  if (!key_format_struct.ok()) {
+    return key_format_struct.status();
   }
-  if (proto_key_format.version() != 0) {
+  if (key_format_struct->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Parsing AesCtrHmacStreamingKeyFormat failed: only "
                         "version 0 is accepted.");
   }
-
-  if (!proto_key_format.has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Missing AesCtrHmacStreamingParams.");
-  }
-  return FromProtoParams(proto_key_format.params(),
-                         proto_key_format.key_size());
+  return ToParameters(key_format_struct->params, key_format_struct->key_size);
 }
 
 util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const AesCtrHmacStreamingParameters& parameters) {
-  AesCtrHmacStreamingKeyFormat format;
-  format.set_version(0);
-  format.set_key_size(parameters.KeySizeInBytes());
-  util::StatusOr<AesCtrHmacStreamingParams> proto_params =
-      ToProtoParams(parameters);
-  if (!proto_params.ok()) {
-    return proto_params.status();
+  util::StatusOr<AesCtrHmacStreamingParamsStruct> params_struct =
+      FromParameters(parameters);
+  if (!params_struct.ok()) {
+    return params_struct.status();
   }
-  *format.mutable_params() = *proto_params;
+  AesCtrHmacStreamingKeyFormatStruct format;
+  format.version = 0;
+  format.key_size = parameters.KeySizeInBytes();
+  format.params = *params_struct;
+
+  util::StatusOr<std::string> serialized_format =
+      AesCtrHmacStreamingKeyFormatStruct::Parser().SerializeIntoString(format);
+  if (!serialized_format.ok()) {
+    return serialized_format.status();
+  }
 
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
+      kTypeUrl, OutputPrefixType::RAW, *serialized_format);
 }
 
 util::StatusOr<AesCtrHmacStreamingKey> ParseKey(
@@ -206,31 +287,28 @@ util::StatusOr<AesCtrHmacStreamingKey> ParseKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesCtrHmacStreamingKey.");
   }
-  absl::StatusOr<SecretProto<google::crypto::tink::AesCtrHmacStreamingKey>>
-      proto_key = SecretProto<google::crypto::tink::AesCtrHmacStreamingKey>::
-          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
-  if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesCtrHmacStreamingKey proto.");
+
+  util::StatusOr<AesCtrHmacStreamingKeyStruct> parsed_key_struct =
+      AesCtrHmacStreamingKeyStruct::Parser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
+  if (!parsed_key_struct.ok()) {
+    return parsed_key_struct.status();
   }
-  if ((*proto_key)->version() != 0) {
+
+  if (parsed_key_struct->version != 0) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsing AesCtrHmacStreamingKey failed: only version 0 is accepted.");
   }
 
-  if (!(*proto_key)->has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Missing AesCtrHmacStreamingParams.");
-  }
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
-      FromProtoParams((*proto_key)->params(), (*proto_key)->key_value().size());
+  util::StatusOr<AesCtrHmacStreamingParameters> parameters = ToParameters(
+      parsed_key_struct->params, parsed_key_struct->key_value.size());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return AesCtrHmacStreamingKey::Create(
-      *parameters, RestrictedData((*proto_key)->key_value(), *token),
+      *parameters, RestrictedData(parsed_key_struct->key_value, *token),
       GetPartialKeyAccess());
 }
 
@@ -241,24 +319,26 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required.");
   }
-  util::StatusOr<RestrictedData> restricted_input =
+  util::StatusOr<RestrictedData> initial_key_material =
       key.GetInitialKeyMaterial(GetPartialKeyAccess());
-  if (!restricted_input.ok()) {
-    return restricted_input.status();
+  if (!initial_key_material.ok()) {
+    return initial_key_material.status();
   }
-  util::StatusOr<AesCtrHmacStreamingParams> proto_params =
-      ToProtoParams(key.GetParameters());
-  if (!proto_params.ok()) {
-    return proto_params.status();
+  util::StatusOr<AesCtrHmacStreamingParamsStruct> params_struct =
+      FromParameters(key.GetParameters());
+  if (!params_struct.ok()) {
+    return params_struct.status();
   }
 
-  SecretProto<google::crypto::tink::AesCtrHmacStreamingKey> proto_key;
-  proto_key->set_version(0);
-  internal::CallWithCoreDumpProtection(
-      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
-  *proto_key->mutable_params() = *proto_params;
+  AesCtrHmacStreamingKeyStruct key_struct;
+  key_struct.version = 0;
+  key_struct.params = *params_struct;
+  key_struct.key_value =
+      util::SecretDataFromStringView(initial_key_material->GetSecret(*token));
 
-  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  util::StatusOr<SecretData> serialized_key =
+      AesCtrHmacStreamingKeyStruct::Parser().SerializeIntoSecretData(
+          key_struct);
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }

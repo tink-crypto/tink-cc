@@ -175,11 +175,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(
-      params.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("Failed to parse AesCtrHmacStreamingKeyFormat proto")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 using AesCtrHmacStreamingParsePrefixTest = TestWithParam<OutputPrefixType>;
@@ -234,10 +230,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(params.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Parsing AesCtrHmacStreamingKeyFormat failed: "
-                                 "only version 0 is accepted")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesCtrHmacStreamingProtoSerializationTest,
@@ -256,9 +249,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(params.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing AesCtrHmacStreamingParams")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesCtrHmacStreamingProtoSerializationTest,
@@ -279,10 +270,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(
-      params.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Missing AesCtrHmacStreamingParams.hmac_params")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesCtrHmacStreamingProtoSerializationTest,
@@ -464,10 +452,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      key.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse AesCtrHmacStreamingKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesCtrHmacStreamingProtoSerializationTest,
@@ -516,9 +501,7 @@ TEST_F(AesCtrHmacStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing AesCtrHmacStreamingParams")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_P(AesCtrHmacStreamingParsePrefixTest,

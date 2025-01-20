@@ -29,6 +29,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/sanitizing_allocator.h"
+#include "tink/internal/secret_buffer.h"
 
 namespace crypto {
 namespace tink {
@@ -77,6 +78,15 @@ class SecretDataInternalClass {
     swap(other);
     return *this;
   }
+
+  explicit SecretDataInternalClass(
+      crypto::tink::internal::SecretBuffer other) noexcept {
+    using std::swap;
+    swap(data_, other.data_);
+    swap(size_, other.size_);
+    swap(capacity_, other.capacity_);
+  }
+
   ~SecretDataInternalClass() {
     if (data_ != nullptr) {
       internal::SanitizingAllocator<uint8_t>().deallocate(data_, capacity_);
@@ -137,6 +147,19 @@ class SecretDataInternalClass {
     swap(data_, other.data_);
     swap(size_, other.size_);
     swap(capacity_, other.capacity_);
+  }
+
+  ::crypto::tink::internal::SecretBuffer AsSecretBuffer() const& {
+    return ::crypto::tink::internal::SecretBuffer(AsStringView());
+  }
+
+  ::crypto::tink::internal::SecretBuffer AsSecretBuffer() && {
+    ::crypto::tink::internal::SecretBuffer result;
+    using std::swap;
+    swap(result.data_, data_);
+    swap(result.size_, size_);
+    swap(result.capacity_, capacity_);
+    return result;
   }
 
   // Semantics of std::string::substr

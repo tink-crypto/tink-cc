@@ -31,6 +31,13 @@
 
 namespace crypto {
 namespace tink {
+
+namespace util {
+namespace internal {
+class SecretDataInternalClass;
+}  // namespace internal
+}  // namespace util
+
 namespace internal {
 
 // SecretBuffer stores data which can be mutated and should not be leaked in
@@ -133,6 +140,8 @@ class SecretBuffer {
   bool operator!=(const SecretBuffer& other) const { return !(*this == other); }
 
  private:
+  friend class ::crypto::tink::util::internal::SecretDataInternalClass;
+
   uint8_t* data_ = nullptr;
   size_t size_ = 0;
   size_t capacity_ = 0;

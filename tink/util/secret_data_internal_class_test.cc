@@ -20,6 +20,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -33,6 +34,7 @@ absl::string_view SecretDataInternalClassAsStringView(
   return {reinterpret_cast<const char*>(secret.data()), secret.size()};
 }
 
+using ::crypto::tink::internal::SecretBuffer;
 using ::testing::Eq;
 using ::testing::Ge;
 using ::testing::Le;
@@ -248,6 +250,35 @@ TEST(SecretDataInternalClassTest, Append) {
       SecretDataInternalClassFromStringView("world!");
   hello.append(world);
   EXPECT_EQ(SecretDataInternalClassAsStringView(hello), "Hello world!");
+}
+
+TEST(SecretDataInternalClassTest, FromSecretBuffer) {
+  SecretBuffer buffer("some data");
+  SecretDataInternalClass c(buffer);
+  EXPECT_THAT(c.AsStringView(), Eq("some data"));
+}
+
+TEST(SecretDataInternalClassTest, FromSecretBufferMove) {
+  SecretBuffer buffer("some data");
+  SecretDataInternalClass c(std::move(buffer));
+  EXPECT_THAT(c.AsStringView(), Eq("some data"));
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  EXPECT_THAT(buffer.AsStringView(), Eq(""));
+}
+
+TEST(SecretDataInternalClassTest, ToSecretBuffer) {
+  SecretDataInternalClass c(SecretBuffer("arbitrary data"));
+  SecretBuffer buffer = c.AsSecretBuffer();
+  EXPECT_THAT(buffer, Eq(SecretBuffer("arbitrary data")));
+  EXPECT_THAT(c.AsStringView(), Eq("arbitrary data"));
+}
+
+TEST(SecretDataInternalClassTest, ToSecretBufferMove) {
+  SecretDataInternalClass c(SecretBuffer("arbitrary data"));
+  SecretBuffer buffer = std::move(c).AsSecretBuffer();
+  EXPECT_THAT(buffer, Eq(SecretBuffer("arbitrary data")));
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  EXPECT_THAT(c.AsStringView(), Eq(""));
 }
 
 }  // namespace

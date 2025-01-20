@@ -577,4 +577,5 @@ tink_cc_library(
     absl::string_view
     tink::internal::safe_stringops
     tink::internal::sanitizing_allocator
+    tink::internal::secret_buffer
 )

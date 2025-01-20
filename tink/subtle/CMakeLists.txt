@@ -496,12 +496,13 @@ tink_cc_library(
     absl::memory
     absl::status
     absl::strings
+    absl::span
     crypto
     tink::core::mac
     tink::internal::aes_util
+    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
-    tink::util::errors
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

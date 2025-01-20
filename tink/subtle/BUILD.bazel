@@ -521,9 +521,9 @@ cc_library(
         ":subtle_util",
         "//tink:mac",
         "//tink/internal:aes_util",
+        "//tink/internal:dfsan_forwarders",
         "//tink/internal:fips_utils",
         "//tink/internal:ssl_unique_ptr",
-        "//tink/util:errors",
         "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
@@ -531,6 +531,7 @@ cc_library(
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:span",
     ],
 )
 

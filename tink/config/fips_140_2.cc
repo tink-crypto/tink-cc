@@ -29,6 +29,7 @@
 #include "tink/mac/mac_wrapper.h"
 #include "tink/prf/hmac_prf_key_manager.h"
 #include "tink/prf/prf_set_wrapper.h"
+#include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/public_key_sign_wrapper.h"
 #include "tink/signature/public_key_verify_wrapper.h"
@@ -37,7 +38,6 @@
 #include "tink/signature/rsa_ssa_pss_sign_key_manager.h"
 #include "tink/signature/rsa_ssa_pss_verify_key_manager.h"
 #include "tink/util/status.h"
-#include "tink/signature/ecdsa_sign_key_manager.h"
 
 namespace crypto {
 namespace tink {

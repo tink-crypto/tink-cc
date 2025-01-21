@@ -74,6 +74,7 @@ tink_cc_library(
     tink::mac::internal::chunked_mac_wrapper
     tink::prf::hmac_prf_key_manager
     tink::prf::prf_set_wrapper
+    tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::public_key_sign_wrapper
     tink::signature::public_key_verify_wrapper
@@ -82,7 +83,6 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::util::status
-    tink::signature::ecdsa_sign_key_manager
 )
 
 tink_cc_library(
@@ -100,13 +100,13 @@ tink_cc_library(
     tink::internal::key_gen_configuration_impl
     tink::mac::hmac_key_manager
     tink::prf::hmac_prf_key_manager
+    tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::rsa_ssa_pkcs1_sign_key_manager
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     tink::signature::rsa_ssa_pss_sign_key_manager
     tink::signature::rsa_ssa_pss_verify_key_manager
     tink::util::status
-    tink::signature::ecdsa_sign_key_manager
 )
 
 tink_cc_library(

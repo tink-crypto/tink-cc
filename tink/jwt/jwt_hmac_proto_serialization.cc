@@ -17,11 +17,13 @@
 #include "tink/jwt/jwt_hmac_proto_serialization.h"
 
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -34,6 +36,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -254,13 +257,14 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return proto_algorithm.status();
   }
 
-  google::crypto::tink::JwtHmacKey proto_key;
-  proto_key.set_version(0);
-  proto_key.set_key_value(restricted_input->GetSecret(*token));
-  proto_key.set_algorithm(*proto_algorithm);
+  SecretProto<google::crypto::tink::JwtHmacKey> proto_key;
+  proto_key->set_version(0);
+  internal::CallWithCoreDumpProtection(
+      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
+  proto_key->set_algorithm(*proto_algorithm);
   if (key.GetParameters().GetKidStrategy() ==
       JwtHmacParameters::KidStrategy::kCustom) {
-    proto_key.mutable_custom_kid()->set_value(*key.GetKid());
+    proto_key->mutable_custom_kid()->set_value(*key.GetKid());
   }
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
@@ -269,8 +273,14 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return output_prefix_type.status();
   }
 
+  util::StatusOr<util::SecretData> serialized_key =
+      proto_key.SerializeAsSecretData();
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
+
   RestrictedData restricted_output =
-      RestrictedData(proto_key.SerializeAsString(), *token);
+      RestrictedData(*std::move(serialized_key), *token);
   return internal::ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
       *output_prefix_type, key.GetIdRequirement());

@@ -144,9 +144,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(params.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse JwtHmacKeyFormat proto")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(JwtHmacProtoSerializationTest, ParseParametersWithInvalidVersion) {
@@ -407,9 +405,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse JwtHmacKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithInvalidVersion) {

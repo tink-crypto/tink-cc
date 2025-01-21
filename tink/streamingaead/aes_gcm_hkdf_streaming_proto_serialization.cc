@@ -16,15 +16,16 @@
 
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
 
-#include <new>
+#include <cstdint>
+#include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -32,13 +33,13 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/aes_gcm_hkdf_streaming.pb.h"
@@ -50,11 +51,73 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;
-using ::google::crypto::tink::AesGcmHkdfStreamingParams;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
+
+struct AesGcmHkdfStreamingParamsStruct {
+  uint32_t ciphertext_segment_size;
+  uint32_t derived_key_size;
+  google::crypto::tink::HashType hkdf_hash_type;
+
+  static internal::ProtoParser<AesGcmHkdfStreamingParamsStruct> CreateParser() {
+    return internal::ProtoParserBuilder<AesGcmHkdfStreamingParamsStruct>()
+        .AddUint32Field(
+            1, &AesGcmHkdfStreamingParamsStruct::ciphertext_segment_size)
+        .AddUint32Field(2, &AesGcmHkdfStreamingParamsStruct::derived_key_size)
+        .AddEnumField(
+            3, &AesGcmHkdfStreamingParamsStruct::hkdf_hash_type,
+            +[](uint32_t hash_type) {
+              return google::crypto::tink::HashType_IsValid(hash_type);
+            })
+        .BuildOrDie();
+  }
+};
+
+struct AesGcmHkdfStreamingKeyFormatStruct {
+  uint32_t version;
+  AesGcmHkdfStreamingParamsStruct params;
+  uint32_t key_size;
+
+  static internal::ProtoParser<AesGcmHkdfStreamingKeyFormatStruct>
+  CreateParser() {
+    return internal::ProtoParserBuilder<AesGcmHkdfStreamingKeyFormatStruct>()
+        .AddMessageField(1, &AesGcmHkdfStreamingKeyFormatStruct::params,
+                         AesGcmHkdfStreamingParamsStruct::CreateParser())
+        .AddUint32Field(2, &AesGcmHkdfStreamingKeyFormatStruct::key_size)
+        .AddUint32Field(3, &AesGcmHkdfStreamingKeyFormatStruct::version)
+        .BuildOrDie();
+  }
+
+  static const internal::ProtoParser<AesGcmHkdfStreamingKeyFormatStruct>&
+  Parser() {
+    static absl::NoDestructor<
+        internal::ProtoParser<AesGcmHkdfStreamingKeyFormatStruct>>
+        parser{AesGcmHkdfStreamingKeyFormatStruct::CreateParser()};
+    return *parser;
+  }
+};
+
+struct AesGcmHkdfStreamingKeyStruct {
+  uint32_t version;
+  AesGcmHkdfStreamingParamsStruct params;
+  SecretData key_value;
+
+  static internal::ProtoParser<AesGcmHkdfStreamingKeyStruct> CreateParser() {
+    return internal::ProtoParserBuilder<AesGcmHkdfStreamingKeyStruct>()
+        .AddUint32Field(1, &AesGcmHkdfStreamingKeyStruct::version)
+        .AddMessageField(2, &AesGcmHkdfStreamingKeyStruct::params,
+                         AesGcmHkdfStreamingParamsStruct::CreateParser())
+        .AddBytesSecretDataField(3, &AesGcmHkdfStreamingKeyStruct::key_value)
+        .BuildOrDie();
+  }
+
+  static const internal::ProtoParser<AesGcmHkdfStreamingKeyStruct>& Parser() {
+    static absl::NoDestructor<
+        internal::ProtoParser<AesGcmHkdfStreamingKeyStruct>>
+        parser{AesGcmHkdfStreamingKeyStruct::CreateParser()};
+    return *parser;
+  }
+};
 
 using AesGcmHkdfStreamingProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -103,23 +166,23 @@ util::StatusOr<google::crypto::tink::HashType> ToProtoHashType(
   }
 }
 
-util::StatusOr<AesGcmHkdfStreamingParameters> FromProtoParams(
-    const AesGcmHkdfStreamingParams& proto_params, int key_size) {
+util::StatusOr<AesGcmHkdfStreamingParameters> ToParameters(
+    const AesGcmHkdfStreamingParamsStruct& params, int key_size) {
   util::StatusOr<AesGcmHkdfStreamingParameters::HashType> hash_type =
-      FromProtoHashType(proto_params.hkdf_hash_type());
+      FromProtoHashType(params.hkdf_hash_type);
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   return AesGcmHkdfStreamingParameters::Builder()
       .SetKeySizeInBytes(key_size)
-      .SetDerivedKeySizeInBytes(proto_params.derived_key_size())
+      .SetDerivedKeySizeInBytes(params.derived_key_size)
       .SetHashType(*hash_type)
-      .SetCiphertextSegmentSizeInBytes(proto_params.ciphertext_segment_size())
+      .SetCiphertextSegmentSizeInBytes(params.ciphertext_segment_size)
       .Build();
 }
 
-util::StatusOr<AesGcmHkdfStreamingParams> ToProtoParams(
+util::StatusOr<AesGcmHkdfStreamingParamsStruct> FromParameters(
     const AesGcmHkdfStreamingParameters& parameters) {
   util::StatusOr<google::crypto::tink::HashType> hash_type =
       ToProtoHashType(parameters.GetHashType());
@@ -127,10 +190,10 @@ util::StatusOr<AesGcmHkdfStreamingParams> ToProtoParams(
     return hash_type.status();
   }
 
-  AesGcmHkdfStreamingParams params;
-  params.set_derived_key_size(parameters.DerivedKeySizeInBytes());
-  params.set_hkdf_hash_type(*hash_type);
-  params.set_ciphertext_segment_size(parameters.CiphertextSegmentSizeInBytes());
+  AesGcmHkdfStreamingParamsStruct params;
+  params.derived_key_size = parameters.DerivedKeySizeInBytes();
+  params.hkdf_hash_type = *hash_type;
+  params.ciphertext_segment_size = parameters.CiphertextSegmentSizeInBytes();
   return params;
 }
 
@@ -141,40 +204,42 @@ util::StatusOr<AesGcmHkdfStreamingParameters> ParseParameters(
         absl::StatusCode::kInvalidArgument,
         "Wrong type URL when parsing AesGcmHkdfStreamingParameters.");
   }
-  AesGcmHkdfStreamingKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesGcmHkdfStreamingKeyFormat proto.");
+
+  absl::StatusOr<AesGcmHkdfStreamingKeyFormatStruct> parsed_key_format =
+      AesGcmHkdfStreamingKeyFormatStruct::Parser().Parse(
+          serialization.GetKeyTemplate().value());
+  if (!parsed_key_format.ok()) {
+    return parsed_key_format.status();
   }
-  if (proto_key_format.version() != 0) {
+
+  if (parsed_key_format->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Parsing AesGcmHkdfStreamingKeyFormat failed: only "
                         "version 0 is accepted.");
   }
 
-  if (!proto_key_format.has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Missing AesGcmHkdfStreamingParams.");
-  }
-  return FromProtoParams(proto_key_format.params(),
-                         proto_key_format.key_size());
+  return ToParameters(parsed_key_format->params, parsed_key_format->key_size);
 }
 
 util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const AesGcmHkdfStreamingParameters& parameters) {
-  AesGcmHkdfStreamingKeyFormat format;
-  format.set_version(0);
-  format.set_key_size(parameters.KeySizeInBytes());
-  util::StatusOr<AesGcmHkdfStreamingParams> proto_params =
-      ToProtoParams(parameters);
-  if (!proto_params.ok()) {
-    return proto_params.status();
+  util::StatusOr<AesGcmHkdfStreamingParamsStruct> params_struct =
+      FromParameters(parameters);
+  if (!params_struct.ok()) {
+    return params_struct.status();
   }
-  *format.mutable_params() = *proto_params;
+  AesGcmHkdfStreamingKeyFormatStruct format;
+  format.version = 0;
+  format.key_size = parameters.KeySizeInBytes();
+  format.params = *params_struct;
 
+  util::StatusOr<std::string> serialized =
+      AesGcmHkdfStreamingKeyFormatStruct::Parser().SerializeIntoString(format);
+  if (!serialized.ok()) {
+    return serialized.status();
+  }
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
+      kTypeUrl, OutputPrefixType::RAW, *serialized);
 }
 
 util::StatusOr<AesGcmHkdfStreamingKey> ParseKey(
@@ -188,31 +253,28 @@ util::StatusOr<AesGcmHkdfStreamingKey> ParseKey(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesGcmHkdfStreamingKey.");
   }
-  absl::StatusOr<SecretProto<google::crypto::tink::AesGcmHkdfStreamingKey>>
-      proto_key = SecretProto<google::crypto::tink::AesGcmHkdfStreamingKey>::
-          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
-  if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesGcmHkdfStreamingKey proto.");
+
+  absl::StatusOr<AesGcmHkdfStreamingKeyStruct> parsed_key =
+      AesGcmHkdfStreamingKeyStruct::Parser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
+  if (!parsed_key.ok()) {
+    return parsed_key.status();
   }
-  if ((*proto_key)->version() != 0) {
+
+  if (parsed_key->version != 0) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsing AesGcmHkdfStreamingKey failed: only version 0 is accepted.");
   }
 
-  if (!(*proto_key)->has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Missing AesGcmHkdfStreamingParams.");
-  }
   util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
-      FromProtoParams((*proto_key)->params(), (*proto_key)->key_value().size());
+      ToParameters(parsed_key->params, parsed_key->key_value.size());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return AesGcmHkdfStreamingKey::Create(
-      *parameters, RestrictedData((*proto_key)->key_value(), *token),
+      *parameters, RestrictedData(parsed_key->key_value, *token),
       GetPartialKeyAccess());
 }
 
@@ -223,24 +285,26 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required.");
   }
-  util::StatusOr<RestrictedData> restricted_input =
+  util::StatusOr<RestrictedData> initial_key_material =
       key.GetInitialKeyMaterial(GetPartialKeyAccess());
-  if (!restricted_input.ok()) {
-    return restricted_input.status();
-  }
-  util::StatusOr<AesGcmHkdfStreamingParams> proto_params =
-      ToProtoParams(key.GetParameters());
-  if (!proto_params.ok()) {
-    return proto_params.status();
+  if (!initial_key_material.ok()) {
+    return initial_key_material.status();
   }
 
-  SecretProto<google::crypto::tink::AesGcmHkdfStreamingKey> proto_key;
-  proto_key->set_version(0);
-  internal::CallWithCoreDumpProtection(
-      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
-  *proto_key->mutable_params() = *proto_params;
+  util::StatusOr<AesGcmHkdfStreamingParamsStruct> params_struct =
+      FromParameters(key.GetParameters());
+  if (!params_struct.ok()) {
+    return params_struct.status();
+  }
+  AesGcmHkdfStreamingKeyStruct key_struct;
+  key_struct.version = 0;
+  key_struct.params = *params_struct;
+  key_struct.key_value =
+      util::SecretDataFromStringView(initial_key_material->GetSecret(*token));
 
-  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  util::StatusOr<SecretData> serialized_key =
+      AesGcmHkdfStreamingKeyStruct::Parser().SerializeIntoSecretData(
+          key_struct);
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }

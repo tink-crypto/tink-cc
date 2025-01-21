@@ -151,11 +151,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(
-      params.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("Failed to parse AesGcmHkdfStreamingKeyFormat proto")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 using AesGcmHkdfStreamingParsePrefixTest = TestWithParam<OutputPrefixType>;
@@ -228,9 +224,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(params.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing AesGcmHkdfStreamingParams")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
@@ -254,9 +248,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(params.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Unsupported proto hash type")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeParameters) {
@@ -364,10 +356,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      key.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse AesGcmHkdfStreamingKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
@@ -416,9 +405,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing AesGcmHkdfStreamingParams")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_P(AesGcmHkdfStreamingParsePrefixTest,

@@ -39,7 +39,7 @@ namespace subtle {
 class EcdsaSignBoringSsl : public PublicKeySign {
  public:
   static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> New(
-      const EcdsaPrivateKey& public_key);
+      const EcdsaPrivateKey& private_key);
 
   static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> New(
       const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,

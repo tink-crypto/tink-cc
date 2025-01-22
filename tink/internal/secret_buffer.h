@@ -66,6 +66,12 @@ class SecretBuffer {
     return *this;
   }
 
+  explicit SecretBuffer(size_t size, uint8_t value = 0) {
+    reserve(size);
+    memset(data_, value, size);
+    size_ = size;
+  }
+
   explicit SecretBuffer(absl::string_view in) {
     reserve(in.size());
     SafeMemCopy(data_, in.data(), in.size());

@@ -39,6 +39,14 @@ TEST(SecretBufferTest, ResizeAndSize) {
   EXPECT_THAT(buffer.size(), Eq(10));
 }
 
+TEST(SecretBufferTest, ConstructorWithSizeAndVal) {
+  SecretBuffer buffer(100, 0x99);
+  EXPECT_THAT(buffer.size(), Eq(100));
+  for (int i = 0; i < buffer.size(); ++i) {
+    EXPECT_THAT(buffer[i], Eq(0x99)) << i;
+  }
+}
+
 TEST(SecretBufferTest, WriteAndReadWithAllMethods) {
   SecretBuffer buffer;
   buffer.resize(100);

@@ -26,6 +26,7 @@
 #include "openssl/rsa.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
@@ -34,6 +35,7 @@
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -148,21 +150,27 @@ TEST_F(RsaPssSignBoringsslTest, RejectsInvalidCrtParams) {
   // Flip a few bits in the CRT parameters; check that creation fails.
   {
     internal::RsaPrivateKey key = private_key_;
-    key.crt[0] ^= 0x80;
+    internal::SecretBuffer crt_buffer = util::internal::AsSecretBuffer(key.crt);
+    crt_buffer[0] ^= 0x80;
+    key.crt = util::internal::AsSecretData(crt_buffer);
     auto signer_or = RsaSsaPssSignBoringSsl::New(key, params);
     EXPECT_THAT(signer_or.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     internal::RsaPrivateKey key = private_key_;
-    key.dq[0] ^= 0x08;
+    internal::SecretBuffer dq_buffer = util::internal::AsSecretBuffer(key.dq);
+    dq_buffer[0] ^= 0x08;
+    key.dq = util::internal::AsSecretData(dq_buffer);
     auto signer_or = RsaSsaPssSignBoringSsl::New(key, params);
     EXPECT_THAT(signer_or.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
   }
   {
     internal::RsaPrivateKey key = private_key_;
-    key.dp[0] ^= 0x04;
+    internal::SecretBuffer dp_buffer = util::internal::AsSecretBuffer(key.dp);
+    dp_buffer[0] ^= 0x04;
+    key.dp = util::internal::AsSecretData(dp_buffer);
     auto signer_or = RsaSsaPssSignBoringSsl::New(key, params);
     EXPECT_THAT(signer_or.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));

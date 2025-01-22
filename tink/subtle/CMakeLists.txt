@@ -1312,10 +1312,12 @@ tink_cc_test(
     tink::core::public_key_verify
     tink::internal::fips_utils
     tink::internal::rsa_util
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::internal::testing::rsa_ssa_pss_test_vectors
     tink::signature::internal::testing::signature_test_vector
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
@@ -1362,9 +1364,11 @@ tink_cc_test(
     crypto
     tink::internal::fips_utils
     tink::internal::rsa_util
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::signature::internal::testing::rsa_ssa_pkcs1_test_vectors
     tink::signature::internal::testing::signature_test_vector
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

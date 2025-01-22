@@ -480,6 +480,7 @@ tink_cc_test(
     tink::util::secret_data
     gmock
     absl::strings
+    tink::internal::secret_buffer
 )
 
 tink_cc_library(

@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>  // IWYU pragma: keep
 
 #include "absl/strings/string_view.h"
@@ -30,6 +31,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/sanitizing_allocator.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/util/secret_data_internal_class.h"  // IWYU pragma: export
 
 namespace crypto {
@@ -160,6 +162,61 @@ inline SecretData SecretDataFromSpan(absl::Span<const uint8_t> span) {
   return SecretDataFromStringView(absl::string_view(
       reinterpret_cast<const char*>(span.data()), span.size()));
 }
+
+namespace internal {
+
+// This function is needed within Tink because the open source implementation
+// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
+// SecretData(buffer);
+inline SecretData AsSecretData(
+    const ::crypto::tink::internal::SecretBuffer& buffer) {
+#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+  return SecretDataFromStringView(buffer.AsStringView());
+#else
+  return SecretData(buffer);
+#endif
+}
+
+// This function is needed within Tink because the open source implementation
+// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
+// SecretData(std::move(buffer));
+inline SecretData AsSecretData(
+    ::crypto::tink::internal::SecretBuffer&& buffer) {
+#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+  // This needs to make a copy since we cannot give a vector an already
+  // allocated slice.
+  return SecretDataFromStringView(buffer.AsStringView());
+#else
+  return SecretData(std::move(buffer));
+#endif
+}
+
+// This function is needed within Tink because the open source implementation
+// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
+// data.AsSecretBuffer()
+inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
+    const ::crypto::tink::util::SecretData& data) {
+#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+  return crypto::tink::internal::SecretBuffer(SecretDataAsStringView(data));
+#else
+  return data.AsSecretBuffer();
+#endif
+}
+
+// This function is needed within Tink because the open source implementation
+// of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
+// std::move(data).AsSecretBuffer()
+inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
+    ::crypto::tink::util::SecretData&& data) {
+#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+  // This needs to make a copy since we cannot steal the data from a vector
+  return crypto::tink::internal::SecretBuffer(SecretDataAsStringView(data));
+#else
+  return std::move(data).AsSecretBuffer();
+#endif
+}
+
+}  // namespace internal
 
 // The same as SecretUniquePtr, but with value semantics.
 //

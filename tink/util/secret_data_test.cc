@@ -23,16 +23,17 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/secret_buffer.h"
 
 namespace crypto {
 namespace tink {
 namespace util {
 namespace {
 
+using ::crypto::tink::internal::SecretBuffer;
 using ::testing::AnyOf;
 using ::testing::ElementsAreArray;
 using ::testing::Eq;
-
 
 constexpr int kEightKb = 8192;
 struct alignas(kEightKb) TwoMbAlignedStruct {
@@ -107,6 +108,30 @@ TEST(SecretDataTest, SecretDataEqualsFalseSize) {
   EXPECT_THAT(SecretDataEquals(d1, d2), Eq(false));
 }
 
+TEST(SecretDataTest, ToSecretBuffer) {
+  SecretData data = SecretDataFromStringView("abc");
+  SecretBuffer buffer = internal::AsSecretBuffer(data);
+  EXPECT_THAT(buffer.AsStringView(), Eq("abc"));
+}
+
+TEST(SecretDataTest, ToSecretBufferRvalue) {
+  SecretData data = SecretDataFromStringView("abc");
+  SecretBuffer buffer = internal::AsSecretBuffer(std::move(data));
+  EXPECT_THAT(buffer.AsStringView(), Eq("abc"));
+}
+
+TEST(SecretDataTest, FromSecretBuffer) {
+  SecretBuffer buffer = SecretBuffer("abc");
+  SecretData data = internal::AsSecretData(buffer);
+  EXPECT_THAT(SecretDataAsStringView(data), Eq("abc"));
+}
+
+TEST(SecretDataTest, FromSecretBufferRvalue) {
+  SecretBuffer buffer = SecretBuffer("abc");
+  SecretData data = internal::AsSecretData(std::move(buffer));
+  EXPECT_THAT(SecretDataAsStringView(data), Eq("abc"));
+}
+
 TEST(SecretValueTest, DefaultConstructor) {
   SecretValue<int> s;
   EXPECT_THAT(s.value(), Eq(0));
@@ -146,6 +171,7 @@ TEST(SecretValueTest, MoveAssignment) {
   // NOLINTNEXTLINE(bugprone-use-after-move)
   EXPECT_THAT(s.value(), AnyOf(Eq(0), Eq(102)));
 }
+
 
 }  // namespace
 }  // namespace util

@@ -190,9 +190,10 @@ TEST_F(MlDsaProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
 
-  ASSERT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("MlDsaKeyFormat proto is missing params")));
+  ASSERT_THAT(
+      parameters.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Could not determine MlDsaParameters::Instance")));
 }
 
 TEST_F(MlDsaProtoSerializationTest,

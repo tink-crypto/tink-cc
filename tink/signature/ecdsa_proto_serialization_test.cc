@@ -258,7 +258,7 @@ TEST_F(EcdsaProtoSerializationTest,
 
   ASSERT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("EcdsaKeyFormat proto is missing params")));
+                       HasSubstr("Could not determine HashType")));
 }
 
 TEST_F(EcdsaProtoSerializationTest, ParseParametersWithUnkownCurveTypeFails) {

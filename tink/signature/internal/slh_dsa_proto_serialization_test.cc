@@ -187,9 +187,10 @@ TEST_F(SlhDsaProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
 
-  ASSERT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("SlhDsaKeyFormat proto is missing params")));
+  ASSERT_THAT(
+      parameters.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Could not determine SlhDsaParameters::HashType")));
 }
 
 TEST_F(SlhDsaProtoSerializationTest,

@@ -522,8 +522,8 @@ tink_cc_library(
     slh_dsa_proto_serialization.cc
     slh_dsa_proto_serialization.h
   DEPS
+    absl::no_destructor
     absl::status
-    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -537,10 +537,11 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
-    tink::util::secret_proto
+    tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::proto::slh_dsa_cc_proto

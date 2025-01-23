@@ -17,6 +17,7 @@
 #ifndef TINK_INTERNAL_SECRET_BUFFER_H_
 #define TINK_INTERNAL_SECRET_BUFFER_H_
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -134,6 +135,31 @@ class SecretBuffer {
     swap(data_, other.data_);
     swap(size_, other.size_);
     swap(capacity_, other.capacity_);
+  }
+
+  SecretBuffer substr(
+      size_t pos, size_t count = std::numeric_limits<size_t>::max()) const& {
+    CHECK(pos <= size());
+    count = std::min(count, size() - pos);
+    SecretBuffer result;
+    result.reserve(count);
+    SafeMemCopy(result.data_, data_ + pos, count);
+    result.size_ = count;
+    return result;
+  }
+
+  SecretBuffer substr(size_t pos,
+                      size_t count = std::numeric_limits<size_t>::max()) && {
+    CHECK(pos <= size());
+    count = std::min(count, size() - pos);
+    SecretBuffer result;
+    result.swap(*this);
+    if (pos != 0) {
+      crypto::tink::internal::SafeMemMove(result.data(), result.data() + pos,
+                                          count);
+    }
+    result.resize(count);
+    return result;
   }
 
   bool operator==(const SecretBuffer& other) const {

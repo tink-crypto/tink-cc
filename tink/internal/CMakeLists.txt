@@ -1904,6 +1904,7 @@ tink_cc_test(
   DEPS
     tink::internal::secret_buffer
     gmock
+    absl::string_view
     tink::util::test_util
 )
 

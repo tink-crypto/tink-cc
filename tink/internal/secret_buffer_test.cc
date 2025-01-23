@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/strings/string_view.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -155,6 +156,31 @@ TEST(SecretBufferTest, SwapWithEmpty) {
   buffer1.swap(buffer2);
   EXPECT_THAT(buffer1.AsStringView(), Eq("some data"));
   EXPECT_THAT(buffer2.AsStringView(), Eq(""));
+}
+
+TEST(SecretBufferTest, SubstrConstRef) {
+  constexpr absl::string_view kData = "Some arbitrary data";
+  SecretBuffer buffer(kData);
+  for (int start = 0; start <= kData.size(); ++start) {
+    for (int num = 0; num <= kData.size(); ++num) {
+      EXPECT_THAT(buffer.substr(start, num),
+                  Eq(SecretBuffer(kData.substr(start, num))))
+          << "substr(" << start << ", " << num << ")";
+    }
+  }
+}
+
+TEST(SecretBufferTest, SubstrRvalueRef) {
+  constexpr absl::string_view kData = "Some arbitrary data";
+  SecretBuffer buffer(kData);
+  for (int start = 0; start <= kData.size(); ++start) {
+    for (int num = 0; num <= kData.size(); ++num) {
+      SecretBuffer tmp_buffer = buffer;
+      EXPECT_THAT(std::move(tmp_buffer).substr(start, num),
+                  Eq(SecretBuffer(kData.substr(start, num))))
+          << "substr(" << start << ", " << num << ")";
+    }
+  }
 }
 
 }  // namespace

@@ -316,6 +316,7 @@ cc_library(
         ":secret_data",
         ":statusor",
         "//tink:input_stream",
+        "//tink/internal:secret_buffer",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",

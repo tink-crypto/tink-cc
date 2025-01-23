@@ -259,6 +259,7 @@ tink_cc_library(
     absl::strings
     absl::span
     tink::core::input_stream
+    tink::internal::secret_buffer
 )
 
 tink_cc_library(

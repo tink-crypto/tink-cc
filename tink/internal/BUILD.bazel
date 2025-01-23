@@ -1979,3 +1979,42 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "proto_parser_message_field_with_presence",
+    hdrs = ["proto_parser_message_field_with_presence.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":proto_parser_fields",
+        ":proto_parser_state",
+        ":proto_parsing_helpers",
+        ":proto_parsing_low_level_parser",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_absl//absl/types:span",
+    ],
+)
+
+cc_test(
+    name = "proto_parser_message_field_with_presence_test",
+    srcs = ["proto_parser_message_field_with_presence_test.cc"],
+    deps = [
+        ":proto_parser_fields",
+        ":proto_parser_message_field_with_presence",
+        ":proto_parser_state",
+        ":proto_parsing_low_level_parser",
+        "//tink/internal/testing:field_with_number",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/container:btree",
+        "@com_google_absl//absl/crc:crc32c",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

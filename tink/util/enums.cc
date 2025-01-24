@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -232,6 +232,8 @@ const char* Enums::OutputPrefixName(pb::OutputPrefixType output_prefix_type) {
       return "RAW";
     case pb::OutputPrefixType::CRUNCHY:
       return "CRUNCHY";
+    case pb::OutputPrefixType::WITH_ID_REQUIREMENT:
+      return "WITH_ID_REQUIREMENT";
     default:
       return "UNKNOWN_PREFIX";
   }
@@ -270,6 +272,8 @@ pb::OutputPrefixType Enums::OutputPrefix(absl::string_view name) {
   if (name == "LEGACY") return pb::OutputPrefixType::LEGACY;
   if (name == "RAW") return pb::OutputPrefixType::RAW;
   if (name == "CRUNCHY") return pb::OutputPrefixType::CRUNCHY;
+  if (name == "WITH_ID_REQUIREMENT")
+    return pb::OutputPrefixType::WITH_ID_REQUIREMENT;
   return pb::OutputPrefixType::UNKNOWN_PREFIX;
 }
 

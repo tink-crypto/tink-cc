@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -291,11 +291,16 @@ TEST_F(EnumsTest, testOutputPrefixName) {
       std::string(Enums::OutputPrefixName(pb::OutputPrefixType::CRUNCHY)));
   EXPECT_EQ("UNKNOWN_PREFIX", std::string(Enums::OutputPrefixName(
                                   pb::OutputPrefixType::UNKNOWN_PREFIX)));
+  EXPECT_EQ("WITH_ID_REQUIREMENT",
+            std::string(Enums::OutputPrefixName(
+                pb::OutputPrefixType::WITH_ID_REQUIREMENT)));
 
   EXPECT_EQ(pb::OutputPrefixType::TINK, Enums::OutputPrefix("TINK"));
   EXPECT_EQ(pb::OutputPrefixType::LEGACY, Enums::OutputPrefix("LEGACY"));
   EXPECT_EQ(pb::OutputPrefixType::RAW, Enums::OutputPrefix("RAW"));
   EXPECT_EQ(pb::OutputPrefixType::CRUNCHY, Enums::OutputPrefix("CRUNCHY"));
+  EXPECT_EQ(pb::OutputPrefixType::WITH_ID_REQUIREMENT,
+            Enums::OutputPrefix("WITH_ID_REQUIREMENT"));
   EXPECT_EQ(pb::OutputPrefixType::UNKNOWN_PREFIX,
             Enums::OutputPrefix("Other string"));
   EXPECT_EQ(pb::OutputPrefixType::UNKNOWN_PREFIX,
@@ -311,7 +316,7 @@ TEST_F(EnumsTest, testOutputPrefixName) {
       count++;
     }
   }
-  EXPECT_EQ(5, count);
+  EXPECT_EQ(6, count);
 }
 
 }  // namespace

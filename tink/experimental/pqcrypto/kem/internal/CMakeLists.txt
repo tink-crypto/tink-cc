@@ -105,6 +105,7 @@ tink_cc_library(
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::experimental::pqcrypto::kem::ml_kem_public_key
+    tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

@@ -30,6 +30,7 @@
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -71,7 +72,7 @@ struct KeyPair {
 util::StatusOr<KeyPair> GenerateKeyPair() {
   std::string public_key_bytes;
   public_key_bytes.resize(MLKEM768_PUBLIC_KEY_BYTES);
-  util::SecretData private_seed_bytes(MLKEM_SEED_BYTES);
+  internal::SecretBuffer private_seed_bytes(MLKEM_SEED_BYTES);
   auto bssl_private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
 
   MLKEM768_generate_key(reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
@@ -79,8 +80,9 @@ util::StatusOr<KeyPair> GenerateKeyPair() {
 
   return KeyPair{
       public_key_bytes,
-      RestrictedData(std::move(private_seed_bytes),
-                     InsecureSecretKeyAccess::Get()),
+      RestrictedData(
+          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          InsecureSecretKeyAccess::Get()),
   };
 }
 

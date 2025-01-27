@@ -12,6 +12,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tink/internal:fips_utils",
+        "//tink/internal:secret_buffer",
         "//tink/subtle:common_enums",
         "//tink/subtle:hkdf",
         "//tink/subtle:random",
@@ -35,6 +36,7 @@ cc_library(
     deps = [
         ":cecpq2_hkdf_sender_kem_boringssl",
         "//tink/internal:fips_utils",
+        "//tink/internal:secret_buffer",
         "//tink/subtle:common_enums",
         "//tink/subtle:hkdf",
         "//tink/util:errors",
@@ -55,6 +57,7 @@ cc_library(
     include_prefix = "tink/experimental/pqcrypto/kem/subtle",
     visibility = ["//visibility:public"],
     deps = [
+        "//tink/internal:secret_buffer",
         "//tink/subtle",
         "//tink/subtle:subtle_util",
         "//tink/util:secret_data",

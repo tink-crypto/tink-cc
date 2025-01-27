@@ -21,6 +21,7 @@
 
 #include "openssl/curve25519.h"
 #include "openssl/hrss.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/subtle_util.h"
@@ -60,12 +61,14 @@ GenerateCecpq2Keypair(subtle::EllipticCurveType curve_type) {
   crypto::tink::pqc::Cecpq2KeyPair cecpq2_key_pair;
 
   // Generating a X25519 key pair
-  cecpq2_key_pair.x25519_key_pair.priv.resize(X25519_PRIVATE_KEY_LEN);
+  internal::SecretBuffer priv_key_buffer(X25519_PRIVATE_KEY_LEN);
   subtle::ResizeStringUninitialized(&(cecpq2_key_pair.x25519_key_pair.pub_x),
                                     X25519_PUBLIC_VALUE_LEN);
   X25519_keypair(const_cast<uint8_t *>(reinterpret_cast<const uint8_t *>(
                      cecpq2_key_pair.x25519_key_pair.pub_x.data())),
-                 cecpq2_key_pair.x25519_key_pair.priv.data());
+                 priv_key_buffer.data());
+  cecpq2_key_pair.x25519_key_pair.priv =
+      util::internal::AsSecretData(std::move(priv_key_buffer));
 
   // Generating a HRSS key pair
   util::SecretData generate_hrss_key_entropy =

@@ -30,6 +30,7 @@
 #include "openssl/hrss.h"
 #include "tink/experimental/pqcrypto/kem/subtle/cecpq2_hkdf_sender_kem_boringssl.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hkdf.h"
 #include "tink/util/errors.h"
@@ -105,7 +106,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
   }
 
   // Recover X25519 shared secret
-  util::SecretData x25519_shared_secret(X25519_SHARED_KEY_LEN);
+  internal::SecretBuffer x25519_shared_secret(X25519_SHARED_KEY_LEN);
   X25519(x25519_shared_secret.data(), private_key_x25519_.data(),
          reinterpret_cast<const uint8_t*>(kem_bytes.data()));
 
@@ -117,7 +118,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
                     private_key_hrss_seed_.data());
 
   // Recover HRSS shared secret from kem_bytes and private key
-  util::SecretData hrss_shared_secret(HRSS_KEY_BYTES);
+  internal::SecretBuffer hrss_shared_secret(HRSS_KEY_BYTES);
   HRSS_decap(reinterpret_cast<uint8_t*>(hrss_shared_secret.data()),
              hrss_private_key.get(),
              reinterpret_cast<const uint8_t*>(kem_bytes.data() +
@@ -125,9 +126,9 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
              HRSS_CIPHERTEXT_BYTES);
 
   // Concatenate both shared secrets and kem_bytes
-  util::SecretData ikm = util::SecretDataFromStringView(absl::StrCat(
-      kem_bytes, util::SecretDataAsStringView(x25519_shared_secret),
-      util::SecretDataAsStringView(hrss_shared_secret)));
+  util::SecretData ikm = util::SecretDataFromStringView(
+      absl::StrCat(kem_bytes, x25519_shared_secret.AsStringView(),
+                   hrss_shared_secret.AsStringView()));
 
   // Compute symmetric key from both shared secrets, kem_bytes, hkdf_salt and
   // hkdf_info using HKDF

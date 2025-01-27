@@ -309,6 +309,7 @@ tink_cc_test(
     tink::core::key
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers

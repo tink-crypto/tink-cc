@@ -30,6 +30,7 @@
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/util/secret_data.h"
@@ -48,7 +49,7 @@ util::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
   }
 
   std::string public_key_bytes(MLKEM768_PUBLIC_KEY_BYTES, '\0');
-  util::SecretData private_seed_bytes(MLKEM_SEED_BYTES);
+  internal::SecretBuffer private_seed_bytes(MLKEM_SEED_BYTES);
   auto private_key = util::MakeSecretUniquePtr<MLKEM768_private_key>();
   MLKEM768_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
                         private_seed_bytes.data(), private_key.get());
@@ -56,10 +57,12 @@ util::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
   util::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       key_parameters, public_key_bytes, id_requirement, GetPartialKeyAccess());
 
-  return MlKemPrivateKey::Create(*public_key,
-                                 RestrictedData(std::move(private_seed_bytes),
-                                                InsecureSecretKeyAccess::Get()),
-                                 GetPartialKeyAccess());
+  return MlKemPrivateKey::Create(
+      *public_key,
+      RestrictedData(
+          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
 }
 
 }  // namespace internal

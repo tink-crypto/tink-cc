@@ -109,13 +109,14 @@ util::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
                         "Decapsulation failed: invalid output prefix");
   }
 
-  util::SecretData shared_secret(MLKEM_SHARED_SECRET_BYTES);
+  internal::SecretBuffer shared_secret(MLKEM_SHARED_SECRET_BYTES);
   MLKEM768_decap(
       shared_secret.data(),
       reinterpret_cast<const uint8_t*>(&ciphertext[output_prefix_size]),
       MLKEM768_CIPHERTEXT_BYTES, boringssl_private_key_.get());
 
-  return RestrictedData(shared_secret, InsecureSecretKeyAccess::Get());
+  return RestrictedData(util::internal::AsSecretData(shared_secret),
+                        InsecureSecretKeyAccess::Get());
 }
 
 }  // namespace

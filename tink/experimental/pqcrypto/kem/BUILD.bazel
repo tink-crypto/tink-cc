@@ -322,6 +322,7 @@ cc_test(
         "//tink:key",
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink/internal:secret_buffer",
         "//tink/util:secret_data",
         "//tink/util:statusor",
         "//tink/util:test_matchers",

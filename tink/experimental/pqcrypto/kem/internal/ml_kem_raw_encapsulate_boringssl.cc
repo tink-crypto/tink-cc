@@ -101,13 +101,14 @@ util::StatusOr<RawKemEncapsulation> MlKemRawEncapsulateBoringSsl::Encapsulate()
   subtle::ResizeStringUninitialized(
       &ciphertext, output_prefix_size + MLKEM768_CIPHERTEXT_BYTES);
 
-  util::SecretData shared_secret(MLKEM_SHARED_SECRET_BYTES);
+  internal::SecretBuffer shared_secret(MLKEM_SHARED_SECRET_BYTES);
   MLKEM768_encap(reinterpret_cast<uint8_t*>(&ciphertext[output_prefix_size]),
                  shared_secret.data(), boringssl_public_key_.get());
 
   return RawKemEncapsulation{
       std::move(ciphertext),
-      RestrictedData(shared_secret, InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::internal::AsSecretData(std::move(shared_secret)),
+                     InsecureSecretKeyAccess::Get()),
   };
 }
 

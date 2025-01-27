@@ -120,6 +120,7 @@ cc_library(
     name = "deterministic_aead_parameters",
     hdrs = ["deterministic_aead_parameters.h"],
     include_prefix = "tink/daead",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -127,6 +128,7 @@ cc_library(
     name = "deterministic_aead_key",
     hdrs = ["deterministic_aead_key.h"],
     include_prefix = "tink/daead",
+    visibility = ["//visibility:public"],
     deps = [
         ":deterministic_aead_parameters",
         "//tink:key",
@@ -139,6 +141,7 @@ cc_library(
     srcs = ["aes_siv_parameters.cc"],
     hdrs = ["aes_siv_parameters.h"],
     include_prefix = "tink/daead",
+    visibility = ["//visibility:public"],
     deps = [
         ":deterministic_aead_parameters",
         "//tink:parameters",
@@ -154,6 +157,7 @@ cc_library(
     srcs = ["aes_siv_key.cc"],
     hdrs = ["aes_siv_key.h"],
     include_prefix = "tink/daead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aes_siv_parameters",
         ":deterministic_aead_key",

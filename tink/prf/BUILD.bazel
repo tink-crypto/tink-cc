@@ -217,6 +217,7 @@ cc_library(
     name = "prf_parameters",
     hdrs = ["prf_parameters.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -224,6 +225,7 @@ cc_library(
     name = "prf_key",
     hdrs = ["prf_key.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = [
         ":prf_parameters",
         "//tink:key",
@@ -236,6 +238,7 @@ cc_library(
     srcs = ["aes_cmac_prf_parameters.cc"],
     hdrs = ["aes_cmac_prf_parameters.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = [
         ":prf_parameters",
         "//tink:parameters",
@@ -250,6 +253,7 @@ cc_library(
     srcs = ["aes_cmac_prf_key.cc"],
     hdrs = ["aes_cmac_prf_key.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = [
         ":aes_cmac_prf_parameters",
         ":prf_key",
@@ -276,6 +280,7 @@ cc_library(
     srcs = ["hmac_prf_parameters.cc"],
     hdrs = ["hmac_prf_parameters.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = [
         ":prf_parameters",
         "//tink:parameters",
@@ -291,6 +296,7 @@ cc_library(
     srcs = ["hmac_prf_key.cc"],
     hdrs = ["hmac_prf_key.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = [
         ":hmac_prf_parameters",
         ":prf_key",
@@ -319,6 +325,7 @@ cc_library(
     srcs = ["hkdf_prf_parameters.cc"],
     hdrs = ["hkdf_prf_parameters.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = [
         ":prf_parameters",
         "//tink:parameters",
@@ -336,6 +343,7 @@ cc_library(
     srcs = ["hkdf_prf_key.cc"],
     hdrs = ["hkdf_prf_key.h"],
     include_prefix = "tink/prf",
+    visibility = ["//visibility:public"],
     deps = [
         ":hkdf_prf_parameters",
         ":prf_key",

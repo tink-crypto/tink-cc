@@ -237,6 +237,7 @@ cc_library(
     name = "streaming_aead_parameters",
     hdrs = ["streaming_aead_parameters.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -244,6 +245,7 @@ cc_library(
     name = "streaming_aead_key",
     hdrs = ["streaming_aead_key.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = [
         ":streaming_aead_parameters",
         "//tink:key",
@@ -256,6 +258,7 @@ cc_library(
     srcs = ["aes_ctr_hmac_streaming_parameters.cc"],
     hdrs = ["aes_ctr_hmac_streaming_parameters.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = [
         ":streaming_aead_parameters",
         "//tink:parameters",
@@ -272,6 +275,7 @@ cc_library(
     srcs = ["aes_ctr_hmac_streaming_key.cc"],
     hdrs = ["aes_ctr_hmac_streaming_key.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aes_ctr_hmac_streaming_parameters",
         ":streaming_aead_key",
@@ -323,6 +327,7 @@ cc_library(
     srcs = ["aes_gcm_hkdf_streaming_parameters.cc"],
     hdrs = ["aes_gcm_hkdf_streaming_parameters.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = [
         ":streaming_aead_parameters",
         "//tink:parameters",
@@ -340,6 +345,7 @@ cc_library(
     srcs = ["aes_gcm_hkdf_streaming_key.cc"],
     hdrs = ["aes_gcm_hkdf_streaming_key.h"],
     include_prefix = "tink/streamingaead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aes_gcm_hkdf_streaming_parameters",
         ":streaming_aead_key",

@@ -29,6 +29,7 @@ cc_library(
     srcs = ["cord_aead_wrapper.cc"],
     hdrs = ["cord_aead_wrapper.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":cord_aead",
         "//tink:crypto_format",
@@ -368,6 +369,7 @@ cc_library(
     name = "aead_parameters",
     hdrs = ["aead_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -375,6 +377,7 @@ cc_library(
     name = "aead_key",
     hdrs = ["aead_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:key",
@@ -387,6 +390,7 @@ cc_library(
     srcs = ["aes_gcm_parameters.cc"],
     hdrs = ["aes_gcm_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -402,6 +406,7 @@ cc_library(
     srcs = ["aes_gcm_key.cc"],
     hdrs = ["aes_gcm_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":aes_gcm_parameters",
@@ -433,6 +438,7 @@ cc_library(
     srcs = ["aes_gcm_siv_parameters.cc"],
     hdrs = ["aes_gcm_siv_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -448,6 +454,7 @@ cc_library(
     srcs = ["aes_gcm_siv_key.cc"],
     hdrs = ["aes_gcm_siv_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":aes_gcm_siv_parameters",
@@ -505,6 +512,7 @@ cc_library(
     srcs = ["aes_eax_parameters.cc"],
     hdrs = ["aes_eax_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -522,6 +530,7 @@ cc_library(
     srcs = ["aes_eax_key.cc"],
     hdrs = ["aes_eax_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":aes_eax_parameters",
@@ -554,6 +563,7 @@ cc_library(
     srcs = ["xchacha20_poly1305_parameters.cc"],
     hdrs = ["xchacha20_poly1305_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -568,6 +578,7 @@ cc_library(
     srcs = ["xchacha20_poly1305_key.cc"],
     hdrs = ["xchacha20_poly1305_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":xchacha20_poly1305_parameters",
@@ -599,6 +610,7 @@ cc_library(
     srcs = ["chacha20_poly1305_parameters.cc"],
     hdrs = ["chacha20_poly1305_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -613,6 +625,7 @@ cc_library(
     srcs = ["chacha20_poly1305_key.cc"],
     hdrs = ["chacha20_poly1305_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":chacha20_poly1305_parameters",
@@ -644,6 +657,7 @@ cc_library(
     srcs = ["aes_ctr_hmac_aead_parameters.cc"],
     hdrs = ["aes_ctr_hmac_aead_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -662,6 +676,7 @@ cc_library(
     srcs = ["aes_ctr_hmac_aead_key.cc"],
     hdrs = ["aes_ctr_hmac_aead_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":aes_ctr_hmac_aead_parameters",
@@ -694,6 +709,7 @@ cc_library(
     srcs = ["x_aes_gcm_parameters.cc"],
     hdrs = ["x_aes_gcm_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -709,6 +725,7 @@ cc_library(
     srcs = ["x_aes_gcm_key.cc"],
     hdrs = ["x_aes_gcm_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":x_aes_gcm_parameters",
@@ -779,6 +796,7 @@ cc_library(
     srcs = ["legacy_kms_aead_parameters.cc"],
     hdrs = ["legacy_kms_aead_parameters.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_parameters",
         "//tink:parameters",
@@ -794,6 +812,7 @@ cc_library(
     srcs = ["legacy_kms_aead_key.cc"],
     hdrs = ["legacy_kms_aead_key.h"],
     include_prefix = "tink/aead",
+    visibility = ["//visibility:public"],
     deps = [
         ":aead_key",
         ":legacy_kms_aead_parameters",

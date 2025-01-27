@@ -263,6 +263,7 @@ cc_library(
     name = "hybrid_parameters",
     hdrs = ["hybrid_parameters.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -270,6 +271,7 @@ cc_library(
     name = "hybrid_public_key",
     hdrs = ["hybrid_public_key.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
         "//tink:key",
@@ -281,6 +283,7 @@ cc_library(
     name = "hybrid_private_key",
     hdrs = ["hybrid_private_key.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
         ":hybrid_public_key",
@@ -296,6 +299,7 @@ cc_library(
     srcs = ["hpke_parameters.cc"],
     hdrs = ["hpke_parameters.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
         "//tink:parameters",
@@ -310,6 +314,7 @@ cc_library(
     srcs = ["hpke_public_key.cc"],
     hdrs = ["hpke_public_key.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":hpke_parameters",
         ":hybrid_public_key",
@@ -332,6 +337,7 @@ cc_library(
     srcs = ["hpke_private_key.cc"],
     hdrs = ["hpke_private_key.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":hpke_parameters",
         ":hpke_public_key",
@@ -426,6 +432,7 @@ cc_library(
     srcs = ["ecies_parameters.cc"],
     hdrs = ["ecies_parameters.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":hybrid_parameters",
         "//tink:parameters",
@@ -447,6 +454,7 @@ cc_library(
     srcs = ["ecies_public_key.cc"],
     hdrs = ["ecies_public_key.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":ecies_parameters",
         ":hybrid_public_key",
@@ -472,6 +480,7 @@ cc_library(
     srcs = ["ecies_private_key.cc"],
     hdrs = ["ecies_private_key.h"],
     include_prefix = "tink/hybrid",
+    visibility = ["//visibility:public"],
     deps = [
         ":ecies_parameters",
         ":ecies_public_key",

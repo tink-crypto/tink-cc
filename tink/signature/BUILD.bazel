@@ -447,6 +447,7 @@ cc_library(
     name = "signature_parameters",
     hdrs = ["signature_parameters.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -466,6 +467,7 @@ cc_library(
     name = "signature_private_key",
     hdrs = ["signature_private_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         ":signature_public_key",
@@ -481,6 +483,7 @@ cc_library(
     srcs = ["ed25519_parameters.cc"],
     hdrs = ["ed25519_parameters.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         "//tink:parameters",
@@ -495,6 +498,7 @@ cc_library(
     srcs = ["ed25519_public_key.cc"],
     hdrs = ["ed25519_public_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":ed25519_parameters",
         ":signature_public_key",
@@ -515,6 +519,7 @@ cc_library(
     srcs = ["ed25519_private_key.cc"],
     hdrs = ["ed25519_private_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":ed25519_parameters",
         ":ed25519_public_key",
@@ -549,6 +554,7 @@ cc_library(
     srcs = ["rsa_ssa_pkcs1_parameters.cc"],
     hdrs = ["rsa_ssa_pkcs1_parameters.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         "//tink:big_integer",
@@ -570,6 +576,7 @@ cc_library(
     srcs = ["rsa_ssa_pkcs1_public_key.cc"],
     hdrs = ["rsa_ssa_pkcs1_public_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pkcs1_parameters",
         ":signature_public_key",
@@ -593,6 +600,7 @@ cc_library(
     srcs = ["rsa_ssa_pkcs1_private_key.cc"],
     hdrs = ["rsa_ssa_pkcs1_private_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":rsa_ssa_pkcs1_parameters",
         ":rsa_ssa_pkcs1_public_key",

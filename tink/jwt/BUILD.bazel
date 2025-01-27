@@ -201,6 +201,7 @@ cc_library(
     name = "jwt_mac_parameters",
     hdrs = ["jwt_mac_parameters.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -208,6 +209,7 @@ cc_library(
     name = "jwt_mac_key",
     hdrs = ["jwt_mac_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_mac_parameters",
         "//tink:key",
@@ -220,6 +222,7 @@ cc_library(
     srcs = ["jwt_hmac_parameters.cc"],
     hdrs = ["jwt_hmac_parameters.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_mac_parameters",
         "//tink:parameters",
@@ -235,6 +238,7 @@ cc_library(
     srcs = ["jwt_hmac_key.cc"],
     hdrs = ["jwt_hmac_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_hmac_parameters",
         ":jwt_mac_key",
@@ -288,6 +292,7 @@ cc_library(
     name = "jwt_signature_parameters",
     hdrs = ["jwt_signature_parameters.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -295,6 +300,7 @@ cc_library(
     name = "jwt_signature_public_key",
     hdrs = ["jwt_signature_public_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
         "//tink:key",
@@ -306,6 +312,7 @@ cc_library(
     name = "jwt_signature_private_key",
     hdrs = ["jwt_signature_private_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
         ":jwt_signature_public_key",
@@ -320,6 +327,7 @@ cc_library(
     srcs = ["jwt_ecdsa_parameters.cc"],
     hdrs = ["jwt_ecdsa_parameters.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_signature_parameters",
         "//tink:parameters",
@@ -334,6 +342,7 @@ cc_library(
     srcs = ["jwt_ecdsa_public_key.cc"],
     hdrs = ["jwt_ecdsa_public_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_ecdsa_parameters",
         ":jwt_signature_public_key",
@@ -359,6 +368,7 @@ cc_library(
     srcs = ["jwt_ecdsa_private_key.cc"],
     hdrs = ["jwt_ecdsa_private_key.h"],
     include_prefix = "tink/jwt",
+    visibility = ["//visibility:public"],
     deps = [
         ":jwt_ecdsa_parameters",
         ":jwt_ecdsa_public_key",

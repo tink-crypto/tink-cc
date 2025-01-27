@@ -144,6 +144,7 @@ cc_library(
     name = "mac_parameters",
     hdrs = ["mac_parameters.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = ["//tink:parameters"],
 )
 
@@ -151,6 +152,7 @@ cc_library(
     name = "mac_key",
     hdrs = ["mac_key.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = [
         ":mac_parameters",
         "//tink:key",
@@ -181,6 +183,7 @@ cc_library(
     srcs = ["aes_cmac_parameters.cc"],
     hdrs = ["aes_cmac_parameters.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = [
         ":mac_parameters",
         "//tink:crypto_format",
@@ -199,6 +202,7 @@ cc_library(
     srcs = ["aes_cmac_key.cc"],
     hdrs = ["aes_cmac_key.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = [
         ":aes_cmac_parameters",
         ":mac_key",
@@ -232,6 +236,7 @@ cc_library(
     srcs = ["hmac_parameters.cc"],
     hdrs = ["hmac_parameters.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = [
         ":mac_parameters",
         "//tink:crypto_format",
@@ -250,6 +255,7 @@ cc_library(
     srcs = ["hmac_key.cc"],
     hdrs = ["hmac_key.h"],
     include_prefix = "tink/mac",
+    visibility = ["//visibility:public"],
     deps = [
         ":hmac_parameters",
         ":mac_key",

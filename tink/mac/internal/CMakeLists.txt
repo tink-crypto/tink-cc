@@ -87,6 +87,7 @@ tink_cc_library(
     crypto
     tink::internal::call_with_core_dump_protection
     tink::internal::md_util
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::common_enums
@@ -108,6 +109,7 @@ tink_cc_library(
     crypto
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::subtle::common_enums

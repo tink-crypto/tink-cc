@@ -27,6 +27,7 @@
 #include "openssl/evp.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/mac/internal/stateful_mac.h"
@@ -90,7 +91,7 @@ util::Status StatefulHmacBoringSsl::Update(absl::string_view data) {
 }
 
 util::StatusOr<SecretData> StatefulHmacBoringSsl::FinalizeAsSecretData() {
-  SecretData buf(EVP_MAX_MD_SIZE);
+  SecretBuffer buf(EVP_MAX_MD_SIZE);
   unsigned int out_len;
 
   if (!CallWithCoreDumpProtection([&]() {
@@ -99,8 +100,7 @@ util::StatusOr<SecretData> StatefulHmacBoringSsl::FinalizeAsSecretData() {
     return util::Status(absl::StatusCode::kInternal,
                         "HMAC finalization failed");
   }
-  return SecretDataFromStringView(
-      SecretDataAsStringView(buf).substr(0, tag_size_));
+  return util::internal::AsSecretData(std::move(buf).substr(0, tag_size_));
 }
 
 StatefulHmacBoringSslFactory::StatefulHmacBoringSslFactory(

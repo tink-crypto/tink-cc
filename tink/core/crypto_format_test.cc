@@ -17,18 +17,22 @@
 #include "tink/crypto_format.h"
 
 #include <cstdint>
+#include <string>
 
+#include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
-
-using google::crypto::tink::KeysetInfo;
-using google::crypto::tink::OutputPrefixType;
 
 namespace crypto {
 namespace tink {
 namespace {
 
-// static
+using ::crypto::tink::test::StatusIs;
+using ::google::crypto::tink::KeysetInfo;
+using ::google::crypto::tink::OutputPrefixType;
+using ::testing::HasSubstr;
 
 void TestNonRawPrefix(const KeysetInfo::KeyInfo& key_info, int prefix_size,
                       uint8_t prefix_first_byte) {
@@ -96,6 +100,18 @@ TEST_F(CryptoFormatTest, testRawPrefix) {
   EXPECT_TRUE(prefix_result.ok()) << prefix_result.status();
   auto prefix = prefix_result.value();
   EXPECT_EQ(CryptoFormat::kRawPrefixSize, prefix.length());
+}
+
+TEST_F(CryptoFormatTest, GetOutputPrefixFailsWithIdRequirementPrefix) {
+  uint32_t key_id = 7662387;
+  KeysetInfo::KeyInfo key_info;
+  key_info.set_output_prefix_type(OutputPrefixType::WITH_ID_REQUIREMENT);
+  key_info.set_key_id(key_id);
+
+  EXPECT_THAT(
+      CryptoFormat::GetOutputPrefix(key_info),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("The given key has invalid OutputPrefixType")));
 }
 
 }  // namespace

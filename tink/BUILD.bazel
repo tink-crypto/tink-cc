@@ -950,6 +950,8 @@ cc_test(
     deps = [
         ":crypto_format",
         "//proto:tink_cc_proto",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
 )

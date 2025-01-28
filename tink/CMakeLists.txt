@@ -877,6 +877,8 @@ tink_cc_test(
   DEPS
     tink::core::crypto_format
     gmock
+    absl::status
+    tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
 

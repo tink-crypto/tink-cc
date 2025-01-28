@@ -111,8 +111,7 @@ util::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "incorrect tag size");
   }
-  util::SecretData buf;
-  buf.resize(EVP_MAX_MD_SIZE);
+  internal::SecretBuffer buf(EVP_MAX_MD_SIZE);
   unsigned int out_len;
   const uint8_t* res = internal::CallWithCoreDumpProtection([&]() {
     return HMAC(md_, key_.data(), key_.size(),

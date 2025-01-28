@@ -24,12 +24,14 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/aes.h"
 #include "openssl/evp.h"
 #include "tink/aead.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -94,8 +96,8 @@ class AesEaxBoringSsl : public Aead {
                           const uint8_t y[kBlockSize]);
 
   // Encrypts a single block with AES.
-  void EncryptBlock(Block* block) const;
-  void EncryptBlock(util::SecretData* block) const;
+  void EncryptBlock(absl::Nonnull<Block*> block) const;
+  void EncryptBlock(absl::Nonnull<internal::SecretBuffer*> block) const;
 
   // Pads a partial data block of size 0 <= len <= kBlockSize.
   Block Pad(absl::Span<const uint8_t> data) const;

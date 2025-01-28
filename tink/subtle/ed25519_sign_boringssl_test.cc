@@ -70,12 +70,14 @@ util::StatusOr<Ed25519KeyPair> NewKeyPair() {
     return key.status();
   }
 
-  util::SecretData key_pair = (*key)->private_key;
+  internal::SecretBuffer key_pair =
+      util::internal::AsSecretBuffer((*key)->private_key);
   key_pair.resize(key_pair.size() + (*key)->public_key.size());
   memcpy(key_pair.data() + (*key)->private_key.size(),
          (*key)->public_key.data(), (*key)->public_key.size());
 
-  return {{(*key)->public_key, key_pair}};
+  return {
+      {(*key)->public_key, util::internal::AsSecretData(std::move(key_pair))}};
 }
 
 TEST_F(Ed25519SignBoringSslTest, testBasicSign) {

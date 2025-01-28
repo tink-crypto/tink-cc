@@ -36,6 +36,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/errors.h"
 #include "tink/util/secret_data.h"
@@ -89,18 +90,18 @@ AesSivBoringSsl::New(const util::SecretData& key) {
 }
 
 util::SecretData AesSivBoringSsl::ComputeCmacK1() const {
-  util::SecretData cmac_k1(kBlockSize, 0);
+  internal::SecretBuffer cmac_k1(kBlockSize, 0);
   CallWithCoreDumpProtection([&]() {
     EncryptBlock(cmac_k1.data(), cmac_k1.data());
     MultiplyByX(cmac_k1.data());
   });
-  return cmac_k1;
+  return util::internal::AsSecretData(std::move(cmac_k1));
 }
 
 util::SecretData AesSivBoringSsl::ComputeCmacK2() const {
-  util::SecretData cmac_k2(cmac_k1_);
+  internal::SecretBuffer cmac_k2 = util::internal::AsSecretBuffer(cmac_k1_);
   CallWithCoreDumpProtection([&]() { MultiplyByX(cmac_k2.data()); });
-  return cmac_k2;
+  return util::internal::AsSecretData(cmac_k2);
 }
 
 void AesSivBoringSsl::EncryptBlock(const uint8_t in[kBlockSize],
@@ -277,7 +278,7 @@ util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
     return res;
   }
 
-  util::SecretData s2v(kBlockSize);
+  internal::SecretBuffer s2v(kBlockSize);
 
   // Note that we very much need to protect the calculation of the IV even when
   // the plaintext may be leaked.

@@ -32,6 +32,7 @@
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/safe_stringops.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/mac.h"
@@ -127,8 +128,7 @@ util::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
                      "Incorrect tag size: expected %d, found %d", tag_size_,
                      mac.size());
   }
-  util::SecretData computed_mac;
-  computed_mac.resize(kMaxTagSize);
+  internal::SecretBuffer computed_mac(kMaxTagSize);
 
   if (!ComputeMacInternal(key_, computed_mac.data(), data)) {
     return util::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");

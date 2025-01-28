@@ -19,11 +19,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "openssl/rand.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -80,11 +82,11 @@ uint16_t Random::GetRandomUInt16() { return GetRandomUint<uint16_t>(); }
 uint8_t Random::GetRandomUInt8() { return GetRandomUint<uint8_t>(); }
 
 util::SecretData Random::GetRandomKeyBytes(size_t length) {
-  util::SecretData buf(length, 0);
+  internal::SecretBuffer buf(length, 0);
   GetRandomBytes(
       absl::MakeSpan(reinterpret_cast<char *>(buf.data()), buf.size()))
       .IgnoreError();
-  return buf;
+  return util::internal::AsSecretData(std::move(buf));
 }
 
 }  // namespace subtle

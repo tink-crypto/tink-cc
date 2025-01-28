@@ -26,6 +26,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/config.h"
+#include "absl/base/nullability.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -37,6 +38,7 @@
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/util.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/subtle_util.h"
@@ -138,16 +140,16 @@ bool AesEaxBoringSsl::IsValidNonceSize(size_t nonce_size_in_bytes) {
 }
 
 util::SecretData AesEaxBoringSsl::ComputeB() const {
-  util::SecretData block(kBlockSize, 0);
+  internal::SecretBuffer block(kBlockSize, 0);
   EncryptBlock(&block);
   MultiplyByX(block.data(), block.data());
-  return block;
+  return util::internal::AsSecretData(std::move(block));
 }
 
 util::SecretData AesEaxBoringSsl::ComputeP() const {
-  util::SecretData rv(kBlockSize, 0);
+  internal::SecretBuffer rv(kBlockSize, 0);
   MultiplyByX(B_.data(), rv.data());
-  return rv;
+  return util::internal::AsSecretData(std::move(rv));
 }
 
 crypto::tink::util::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
@@ -190,11 +192,12 @@ AesEaxBoringSsl::Block AesEaxBoringSsl::Pad(
   return padded_block;
 }
 
-void AesEaxBoringSsl::EncryptBlock(util::SecretData* block) const {
+void AesEaxBoringSsl::EncryptBlock(
+    absl::Nonnull<internal::SecretBuffer*> block) const {
   AES_encrypt(block->data(), block->data(), aeskey_.get());
 }
 
-void AesEaxBoringSsl::EncryptBlock(Block* block) const {
+void AesEaxBoringSsl::EncryptBlock(absl::Nonnull<Block*> block) const {
   AES_encrypt(block->data(), block->data(), aeskey_.get());
 }
 

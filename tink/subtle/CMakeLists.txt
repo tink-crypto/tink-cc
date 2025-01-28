@@ -195,6 +195,7 @@ tink_cc_library(
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::safe_stringops
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::util::errors
@@ -326,6 +327,7 @@ tink_cc_library(
     tink::internal::fips_utils
     tink::internal::md_util
     tink::internal::rsa_util
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::signature::rsa_ssa_pss_parameters
@@ -518,6 +520,7 @@ tink_cc_library(
     tink::subtle::subtle_util
     absl::algorithm_container
     absl::config
+    absl::nullability
     absl::memory
     absl::status
     absl::strings
@@ -528,6 +531,7 @@ tink_cc_library(
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
+    tink::internal::secret_buffer
     tink::internal::util
     tink::util::errors
     tink::util::secret_data
@@ -587,6 +591,7 @@ tink_cc_library(
     absl::strings
     absl::span
     crypto
+    tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::status
 )
@@ -631,6 +636,7 @@ tink_cc_library(
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
+    tink::internal::secret_buffer
     tink::util::errors
     tink::util::secret_data
     tink::util::status

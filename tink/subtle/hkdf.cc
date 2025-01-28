@@ -98,7 +98,7 @@ util::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
     return evp_md.status();
   }
 
-  util::SecretData out_key(out_len);
+  internal::SecretBuffer out_key(out_len);
   util::Status result = CallWithCoreDumpProtection([&]() {
     return SslHkdf(*evp_md, util::SecretDataAsStringView(ikm), salt, info,
                    absl::MakeSpan(out_key.data(), out_key.size()));
@@ -106,7 +106,7 @@ util::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
   if (!result.ok()) {
     return result;
   }
-  return out_key;
+  return util::internal::AsSecretData(std::move(out_key));
 }
 
 util::StatusOr<std::string> Hkdf::ComputeHkdf(HashType hash,
@@ -133,11 +133,12 @@ util::StatusOr<util::SecretData> Hkdf::ComputeEciesHkdfSymmetricKey(
     HashType hash, absl::string_view kem_bytes,
     const util::SecretData &shared_secret, absl::string_view salt,
     absl::string_view info, size_t out_len) {
-  util::SecretData ikm(kem_bytes.size() + shared_secret.size());
+  internal::SecretBuffer ikm(kem_bytes.size() + shared_secret.size());
   internal::SafeMemCopy(ikm.data(), kem_bytes.data(), kem_bytes.size());
   internal::SafeMemCopy(ikm.data() + kem_bytes.size(), shared_secret.data(),
                         shared_secret.size());
-  return Hkdf::ComputeHkdf(hash, ikm, salt, info, out_len);
+  return Hkdf::ComputeHkdf(hash, util::internal::AsSecretData(std::move(ikm)),
+                           salt, info, out_len);
 }
 
 }  // namespace subtle

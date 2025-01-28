@@ -35,6 +35,7 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
 #include "tink/internal/rsa_util.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/partial_key_access.h"
@@ -86,7 +87,7 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
   // We store the signature temporarily in a secret data: it will depend on the
   // secret key and if we store it in an unprotected buffer, dfsan will notice
   // in tests.
-  util::SecretData temporary_buffer(kModulusSize);
+  internal::SecretBuffer temporary_buffer(kModulusSize);
   // This will write exactly kModulusSize bytes to temporary_buffer.
   if (RSA_padding_add_PKCS1_PSS_mgf1(
           /*rsa=*/rsa_private_key, /*EM=*/temporary_buffer.data(),

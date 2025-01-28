@@ -59,6 +59,13 @@ bazel_dep(
     repo_name = "com_google_absl",
 )
 
+bazel_dep(
+    name = "benchmark",
+    version = "1.9.1",
+    dev_dependency = True,
+    repo_name = "com_google_benchmark",
+)
+
 wycheproof_extension = use_extension(
     "//:extensions.bzl",
     "wycheproof_extension",

@@ -18,16 +18,21 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 
+#include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/mac.h"
 #include "tink/subtle/common_enums.h"
+#include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -39,7 +44,9 @@ namespace tink {
 namespace subtle {
 namespace {
 
+using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::StatusIs;
+using ::crypto::tink::test::IsOk;
 
 class HmacBoringSslTest : public ::testing::Test {
  public:
@@ -197,6 +204,63 @@ TEST_F(HmacBoringSslTest, TestFipsFailWithoutBoringCrypto) {
 //  - Hmac key size must not be 0 (see RFC)
 //  - Generate test vectors with key sizes larger than the block size of the
 //    hash. (HMAC hashes these keys).
+
+void HmacComputeBenchmark(benchmark::State &state, HashType hash,
+                          int key_size) {
+  absl::StatusOr<std::unique_ptr<Mac>> hmac = HmacBoringSsl::New(
+      hash, /*tag_size=*/key_size, Random::GetRandomKeyBytes(key_size));
+  CHECK_OK(hmac.status());
+  std::string data(state.range(0), 'x');
+  benchmark::DoNotOptimize(data);
+  for (auto s : state) {
+    absl::StatusOr<std::string> tag = (*hmac)->ComputeMac(data);
+    benchmark::DoNotOptimize(tag);
+    CHECK_OK(tag.status());
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_HmacSha256Compute(benchmark::State &state) {
+  HmacComputeBenchmark(state, HashType::SHA256,
+                       /*key_size=*/32);
+}
+
+void BM_HmacSha512Compute(benchmark::State &state) {
+  HmacComputeBenchmark(state, HashType::SHA512,
+                       /*key_size=*/64);
+}
+
+constexpr int64_t kMaxDataSize = 1 << 23;  // 4 MiB
+
+BENCHMARK(BM_HmacSha256Compute)->RangeMultiplier(128)->Range(32, kMaxDataSize);
+BENCHMARK(BM_HmacSha512Compute)->RangeMultiplier(128)->Range(32, kMaxDataSize);
+
+void HmacVerifyBenchmark(benchmark::State &state, HashType hash, int key_size) {
+  absl::StatusOr<std::unique_ptr<Mac>> hmac = HmacBoringSsl::New(
+      hash, /*tag_size=*/key_size, Random::GetRandomKeyBytes(key_size));
+  ASSERT_THAT(hmac.status(), IsOk());
+
+  std::string data(state.range(0), 'x');
+  absl::StatusOr<std::string> tag = (*hmac)->ComputeMac(data);
+  ASSERT_THAT(tag.status(), IsOk());
+  absl::Status status;
+  for (auto s : state) {
+    benchmark::DoNotOptimize(status = (*hmac)->VerifyMac(*tag, data));
+    CHECK_OK(status);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_HmacSha256Verify(benchmark::State &state) {
+  HmacVerifyBenchmark(state, HashType::SHA256, /*key_size=*/32);
+}
+
+void BM_HmacSha512Verify(benchmark::State &state) {
+  HmacVerifyBenchmark(state, HashType::SHA512, /*key_size=*/64);
+}
+
+BENCHMARK(BM_HmacSha256Verify)->RangeMultiplier(128)->Range(32, kMaxDataSize);
+BENCHMARK(BM_HmacSha512Verify)->RangeMultiplier(128)->Range(32, kMaxDataSize);
 
 }  // namespace
 }  // namespace subtle

@@ -975,9 +975,13 @@ tink_cc_test(
   DEPS
     tink::subtle::common_enums
     tink::subtle::hmac_boringssl
+    tink::subtle::random
     gmock
+    absl::check
     absl::status
+    absl::statusor
     absl::strings
+    benchmark::benchmark_main
     tink::core::mac
     tink::internal::fips_utils
     tink::util::secret_data

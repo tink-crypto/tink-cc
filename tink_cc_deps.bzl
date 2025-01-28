@@ -112,3 +112,17 @@ def tink_cc_testonly_deps():
         strip_prefix = "googletest-1.15.2",
         url = "https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz",
     )
+
+    # -------------------------------------------------------------------------
+    # Google Benchmark.
+    # -------------------------------------------------------------------------
+    # Release from 2024-11-28.
+    maybe(
+        http_archive,
+        name = "com_google_benchmark",
+        sha256 = "32131c08ee31eeff2c8968d7e874f3cb648034377dfc32a4c377fa8796d84981",
+        strip_prefix = "benchmark-1.9.1",
+        urls = [
+            "https://github.com/google/benchmark/archive/refs/tags/v1.9.1.tar.gz",
+        ],
+    )

@@ -66,6 +66,14 @@ if (TINK_BUILD_TESTS)
     )
   endif()
 
+  set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Tink dependency override" FORCE)
+
+  http_archive(
+      NAME benchmark
+      URL https://github.com/google/benchmark/archive/refs/tags/v1.9.1.tar.gz
+      SHA256 32131c08ee31eeff2c8968d7e874f3cb648034377dfc32a4c377fa8796d84981
+    )
+
   http_archive(
     NAME wycheproof
     URL https://github.com/google/wycheproof/archive/d8ed1ba95ac4c551db67f410c06131c3bc00a97c.zip

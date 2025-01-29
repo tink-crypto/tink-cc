@@ -1895,6 +1895,7 @@ tink_cc_library(
     tink::internal::sanitizing_allocator
     absl::check
     absl::string_view
+    absl::span
 )
 
 tink_cc_test(
@@ -1905,6 +1906,7 @@ tink_cc_test(
     tink::internal::secret_buffer
     gmock
     absl::string_view
+    absl::span
     tink::util::test_util
 )
 

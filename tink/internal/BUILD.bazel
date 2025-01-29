@@ -1967,6 +1967,7 @@ cc_library(
         ":sanitizing_allocator",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
     ],
 )
 
@@ -1977,6 +1978,7 @@ cc_test(
         ":secret_buffer",
         "//tink/util:test_util",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
     ],
 )

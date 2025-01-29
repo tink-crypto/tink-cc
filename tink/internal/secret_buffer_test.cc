@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -86,6 +87,14 @@ TEST(SecretBufferTest, StringViewAccessor) {
 TEST(SecretBufferTest, StringViewConstructor) {
   std::string data = "Some data to construct a secret buffer";
   SecretBuffer buffer(data);
+  EXPECT_THAT(buffer.size(), Eq(data.size()));
+  EXPECT_THAT(buffer.AsStringView(), Eq(data));
+}
+
+TEST(SecretBufferTest, SpanConstructor) {
+  std::string data = "Some data to construct a secret buffer";
+  SecretBuffer buffer(absl::Span<const uint8_t>(
+      reinterpret_cast<uint8_t*>(data.data()), data.size()));
   EXPECT_THAT(buffer.size(), Eq(data.size()));
   EXPECT_THAT(buffer.AsStringView(), Eq(data));
 }

@@ -27,6 +27,7 @@
 
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/sanitizing_allocator.h"
 #include "tink/internal/secret_buffer.h"
@@ -78,6 +79,12 @@ class SecretDataInternalClass {
     swap(other);
     return *this;
   }
+
+  explicit SecretDataInternalClass(absl::string_view view)
+      : SecretDataInternalClass(crypto::tink::internal::SecretBuffer(view)) {}
+
+  explicit SecretDataInternalClass(absl::Span<const uint8_t> span)
+      : SecretDataInternalClass(crypto::tink::internal::SecretBuffer(span)) {}
 
   explicit SecretDataInternalClass(
       crypto::tink::internal::SecretBuffer other) noexcept {

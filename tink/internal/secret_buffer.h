@@ -27,6 +27,7 @@
 
 #include "absl/log/check.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/sanitizing_allocator.h"
 
@@ -74,6 +75,12 @@ class SecretBuffer {
   }
 
   explicit SecretBuffer(absl::string_view in) {
+    reserve(in.size());
+    SafeMemCopy(data_, in.data(), in.size());
+    size_ = in.size();
+  }
+
+  explicit SecretBuffer(absl::Span<const uint8_t> in) {
     reserve(in.size());
     SafeMemCopy(data_, in.data(), in.size());
     size_ = in.size();

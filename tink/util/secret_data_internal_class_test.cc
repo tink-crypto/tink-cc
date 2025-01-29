@@ -14,12 +14,14 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
+#include <cstdint>
 #include <cstring>
 #include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/span.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/util/secret_data.h"
 
@@ -250,6 +252,19 @@ TEST(SecretDataInternalClassTest, Append) {
       SecretDataInternalClassFromStringView("world!");
   hello.append(world);
   EXPECT_EQ(SecretDataInternalClassAsStringView(hello), "Hello world!");
+}
+
+TEST(SecretDataInternalClassTest, StringViewConstructor) {
+  absl::string_view view = "some data";
+  SecretDataInternalClass c(view);
+  EXPECT_THAT(c.AsStringView(), Eq("some data"));
+}
+
+TEST(SecretDataInternalClassTest, SpanConstructor) {
+  absl::string_view view = "some data";
+  SecretDataInternalClass c(absl::Span<const uint8_t>(
+      reinterpret_cast<const uint8_t*>(view.data()), view.size()));
+  EXPECT_THAT(c.AsStringView(), Eq("some data"));
 }
 
 TEST(SecretDataInternalClassTest, FromSecretBuffer) {

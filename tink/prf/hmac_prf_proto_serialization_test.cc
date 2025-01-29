@@ -137,7 +137,7 @@ TEST_F(HmacPrfProtoSerializationTest,
           *serialization);
   EXPECT_THAT(params.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse HmacPrfKeyFormat proto")));
+                       HasSubstr("Not enough data to read kFixed64")));
 }
 
 using HmacPrfParsePrefixTest = TestWithParam<OutputPrefixType>;
@@ -305,7 +305,7 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse HmacPrfKey proto")));
+                       HasSubstr("Not enough data to read kFixed64")));
 }
 
 TEST_P(HmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {

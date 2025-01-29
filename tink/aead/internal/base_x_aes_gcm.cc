@@ -32,6 +32,7 @@
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/partial_key_access.h"
 #include "tink/secret_key_access_token.h"
@@ -102,7 +103,7 @@ absl::StatusOr<SecretData> DerivePerMessageKeyImpl(const CMAC_CTX& cmac_ctx,
   std::memcpy(derivation_block_1 + kSaltOffset, salt.data(), salt.size());
   std::memcpy(derivation_block_2 + kSaltOffset, salt.data(), salt.size());
 
-  SecretData derived_key(kAesKeySize);
+  SecretBuffer derived_key(kAesKeySize);
   absl::StatusOr<SslUniquePtr<CMAC_CTX>> local_cmac_ctx =
       CloneCmacContext(cmac_ctx);
   if (!local_cmac_ctx.ok()) {
@@ -127,7 +128,7 @@ absl::StatusOr<SecretData> DerivePerMessageKeyImpl(const CMAC_CTX& cmac_ctx,
   if (!status.ok()) {
     return status;
   }
-  return derived_key;
+  return util::internal::AsSecretData(std::move(derived_key));
 }
 
 absl::Status InitializeCmacContext(SslUniquePtr<CMAC_CTX>& cmac_ctx,

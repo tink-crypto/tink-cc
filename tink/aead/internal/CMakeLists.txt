@@ -493,6 +493,7 @@ tink_cc_library(
     tink::core::secret_key_access_token
     tink::aead::x_aes_gcm_key
     tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::util::secret_data
 )

@@ -40,7 +40,7 @@ def tink_cc_deps():
     #   * @com_google_protobuf//:cc_toolchain
     #   * @com_google_protobuf//:java_toolchain
     # This statement defines the @com_google_protobuf repo.
-    # Release X.26.1 from 2024-03-26.
+    # Release X.27.4 from 2024-08-27.
     maybe(
         http_archive,
         name = "com_google_protobuf",

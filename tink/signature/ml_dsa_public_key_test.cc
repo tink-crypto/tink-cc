@@ -27,6 +27,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/signature/ml_dsa_parameters.h"
@@ -66,7 +67,7 @@ using MlDsaPublicKeyTest = TestWithParam<TestCase>;
 std::string GeneratePublicKey() {
   std::string public_key_bytes;
   public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
-  util::SecretData private_seed_bytes(MLDSA_SEED_BYTES);
+  internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
   auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
 
   CHECK_EQ(1, MLDSA65_generate_key(

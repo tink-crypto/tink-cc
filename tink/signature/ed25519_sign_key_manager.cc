@@ -16,7 +16,9 @@
 
 #include "tink/signature/ed25519_sign_key_manager.h"
 
+#include <cstdint>
 #include <memory>
+#include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -41,6 +43,7 @@
 namespace crypto {
 namespace tink {
 
+using ::crypto::tink::internal::SecretBuffer;
 using ::crypto::tink::util::Status;
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::Ed25519KeyFormat;
@@ -72,9 +75,8 @@ Ed25519SignKeyManager::PublicKeySignFactory::Create(
     const Ed25519PrivateKeyProto& private_key) const {
   // BoringSSL expects a 64-byte private key which contains the public key as a
   // suffix.
-  util::SecretData sk;
-  sk.resize(private_key.key_value().size() +
-            private_key.public_key().key_value().size());
+  SecretBuffer sk(private_key.key_value().size() +
+                  private_key.public_key().key_value().size());
   internal::SafeMemCopy(
       sk.data(),
       reinterpret_cast<const uint8_t*>(private_key.key_value().data()),
@@ -84,7 +86,8 @@ Ed25519SignKeyManager::PublicKeySignFactory::Create(
                             private_key.public_key().key_value().data()),
                         private_key.public_key().key_value().size());
 
-  return subtle::Ed25519SignBoringSsl::New(sk);
+  return subtle::Ed25519SignBoringSsl::New(
+      util::internal::AsSecretData(std::move(sk)));
 }
 
 Status Ed25519SignKeyManager::ValidateKey(

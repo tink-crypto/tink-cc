@@ -195,6 +195,7 @@ cc_library(
         "//tink:restricted_data",
         "//tink/internal:ec_util",
         "//tink/internal:internal_insecure_secret_key_access",
+        "//tink/internal:secret_buffer",
         "//tink/signature:ecdsa_parameters",
         "//tink/signature:ecdsa_private_key",
         "//tink/signature:ecdsa_public_key",

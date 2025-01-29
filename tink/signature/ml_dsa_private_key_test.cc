@@ -29,6 +29,7 @@
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -73,7 +74,7 @@ struct KeyPair {
 util::StatusOr<KeyPair> GenerateKeyPair() {
   std::string public_key_bytes;
   public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
-  util::SecretData private_seed_bytes(MLDSA_SEED_BYTES);
+  internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
   auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
 
   CHECK_EQ(1, MLDSA65_generate_key(
@@ -82,8 +83,9 @@ util::StatusOr<KeyPair> GenerateKeyPair() {
 
   return KeyPair{
       public_key_bytes,
-      RestrictedData(std::move(private_seed_bytes),
-                     InsecureSecretKeyAccess::Get()),
+      RestrictedData(
+          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          InsecureSecretKeyAccess::Get()),
   };
 }
 

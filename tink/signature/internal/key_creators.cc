@@ -31,6 +31,7 @@
 #include "tink/ec_point.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
@@ -78,7 +79,7 @@ util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
   }
 
   std::string public_key_bytes(MLDSA65_PUBLIC_KEY_BYTES, '\0');
-  util::SecretData private_seed_bytes(MLDSA_SEED_BYTES);
+  internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
   auto private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
   if (!MLDSA65_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
                             private_seed_bytes.data(), private_key.get())) {
@@ -91,8 +92,9 @@ util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
 
   util::StatusOr<MlDsaPrivateKey> key = MlDsaPrivateKey::Create(
       *public_key,
-      RestrictedData(std::move(private_seed_bytes),
-                     GetInsecureSecretKeyAccessInternal()),
+      RestrictedData(
+          util::internal::AsSecretData(std::move(private_seed_bytes)),
+          GetInsecureSecretKeyAccessInternal()),
       GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();

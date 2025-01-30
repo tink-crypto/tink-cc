@@ -196,9 +196,8 @@ TEST(BnUtil, BignumToSecretData) {
     util::StatusOr<util::SecretData> result =
         BignumToSecretData(expected_bn->get(), bn_bytes.size());
     ASSERT_THAT(result, IsOk());
-    auto result_data = absl::string_view(
-        reinterpret_cast<char*>(result->data()), result->size());
-    EXPECT_EQ(absl::string_view(bn_bytes), result_data);
+    EXPECT_EQ(absl::string_view(bn_bytes),
+              util::SecretDataAsStringView(*result));
   }
 }
 

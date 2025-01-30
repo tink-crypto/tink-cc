@@ -44,6 +44,7 @@
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/secret_data_with_crc.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
@@ -284,8 +285,7 @@ template <typename Struct>
 absl::StatusOr<crypto::tink::util::SecretData>
 ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
   size_t size = low_level_parser_.GetSerializedSize(s);
-  crypto::tink::util::SecretData result;
-  result.resize(size);
+  crypto::tink::internal::SecretBuffer result(size);
   proto_parsing::SerializationState serialization_state =
       proto_parsing::SerializationState(absl::MakeSpan(
           reinterpret_cast<char*>(result.data()), result.size()));
@@ -296,14 +296,14 @@ ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
   if (!serialization_state.GetBuffer().empty()) {
     return absl::InternalError("Resulting buffer expected to be empty");
   }
-  return result;
+  return util::internal::AsSecretData(std::move(result));
 }
 
 template <typename Struct>
 absl::StatusOr<SecretDataWithCrc>
 ProtoParser<Struct>::SerializeIntoSecretDataWithCrc(const Struct& s) const {
   size_t size = low_level_parser_.GetSerializedSize(s);
-  crypto::tink::util::SecretData result_data;
+  crypto::tink::internal::SecretBuffer result_data;
   crypto::tink::util::SecretValue<absl::crc32c_t> result_crc;
   result_data.resize(size);
   absl::Span<char> buffer = absl::MakeSpan(
@@ -317,7 +317,8 @@ ProtoParser<Struct>::SerializeIntoSecretDataWithCrc(const Struct& s) const {
   if (!serialization_state.GetBuffer().empty()) {
     return absl::InternalError("Resulting buffer expected to be empty");
   }
-  return SecretDataWithCrc(std::move(result_data), std::move(result_crc));
+  return SecretDataWithCrc(util::internal::AsSecretData(std::move(result_data)),
+                           std::move(result_crc));
 }
 
 template <typename Struct>

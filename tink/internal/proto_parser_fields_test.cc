@@ -30,6 +30,7 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -131,11 +132,11 @@ TEST(SerializeStringLikeValue, String) {
 
 TEST(SerializeStringLikeValue, SecretData) {
   std::string s = "1234567";
-  SecretData t;
+  SecretBuffer t;
   t.resize(100);
   SerializeStringLikeValue(
       s, absl::MakeSpan(reinterpret_cast<char*>(t.data()), t.size()));
-  EXPECT_THAT(SecretDataAsStringView(t).substr(0, 7), Eq("1234567"));
+  EXPECT_THAT(t.AsStringView().substr(0, 7), Eq("1234567"));
 }
 
 TEST(SerializeStringLikeValue, BigInteger) {

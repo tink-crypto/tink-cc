@@ -26,6 +26,7 @@
 #include "absl/types/span.h"
 #include "openssl/bn.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
@@ -75,7 +76,7 @@ util::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
   if (bn == nullptr) {
     return util::Status(absl::StatusCode::kInvalidArgument, "BIGNUM is NULL");
   }
-  util::SecretData secret_data(len);
+  SecretBuffer secret_data(len);
   util::Status res = internal::CallWithCoreDumpProtection([&] {
     return BignumToBinaryPadded(
         absl::MakeSpan(reinterpret_cast<char *>(secret_data.data()),
@@ -85,7 +86,7 @@ util::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
   if (!res.ok()) {
     return res;
   }
-  return secret_data;
+  return util::internal::AsSecretData(std::move(secret_data));
 }
 
 util::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(

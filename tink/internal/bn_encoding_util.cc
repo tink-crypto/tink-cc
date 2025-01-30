@@ -23,6 +23,7 @@
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/safe_stringops.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
@@ -66,11 +67,11 @@ util::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
             big_integer.SizeInBytes()));
   }
 
-  util::SecretData padded(length, 0);
+  internal::SecretBuffer padded(length, 0);
   crypto::tink::internal::SafeMemCopy(
       padded.data() + length - big_integer.SizeInBytes(),
       big_integer.GetSecret(token).data(), big_integer.GetSecret(token).size());
-  return padded;
+  return util::internal::AsSecretData(padded);
 }
 
 }  // namespace internal

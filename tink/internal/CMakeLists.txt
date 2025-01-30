@@ -151,6 +151,8 @@ tink_cc_library(
     tink::internal::dfsan_forwarders
     tink::internal::err_util
     tink::internal::fips_utils
+    tink::internal::safe_stringops
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     absl::config
     absl::log
@@ -174,6 +176,7 @@ tink_cc_library(
     bn_util.h
   DEPS
     tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     absl::status
     absl::strings
@@ -1340,6 +1343,7 @@ tink_cc_library(
     bn_encoding_util.h
   DEPS
     tink::internal::safe_stringops
+    tink::internal::secret_buffer
     absl::status
     absl::strings
     absl::str_format
@@ -1392,6 +1396,7 @@ tink_cc_library(
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::proto_parsing_low_level_parser
+    tink::internal::secret_buffer
     tink::internal::secret_data_with_crc
     absl::btree
     absl::crc32c
@@ -1497,6 +1502,7 @@ tink_cc_test(
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_options
     tink::internal::proto_parser_state
+    tink::internal::secret_buffer
     gmock
     absl::strings
     absl::string_view

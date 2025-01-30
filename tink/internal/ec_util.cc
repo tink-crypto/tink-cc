@@ -34,6 +34,8 @@
 #include "openssl/bn.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/dfsan_forwarders.h"
+#include "tink/internal/safe_stringops.h"
+#include "tink/internal/secret_buffer.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -440,13 +442,16 @@ util::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key() {
   }
 
   auto key = absl::make_unique<X25519Key>();
+  internal::SecretBuffer x22519_priv_key_buffer(X25519KeyPrivKeySize());
   util::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, **private_key,
-      absl::MakeSpan(key->private_key.data(), X25519KeyPrivKeySize()),
+      absl::MakeSpan(x22519_priv_key_buffer.data(), X25519KeyPrivKeySize()),
       absl::MakeSpan(key->public_value, X25519KeyPubKeySize()));
   if (!res.ok()) {
     return res;
   }
+  key->private_key =
+      util::internal::AsSecretData(std::move(x22519_priv_key_buffer));
   return std::move(key);
 }
 
@@ -480,9 +485,9 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   // with EVP_PKEY_get_raw_public_key returns the last 32 bytes of the private
   // key stored by BoringSSL.
   auto key = absl::make_unique<Ed25519Key>();
-  key->private_key.resize(Ed25519KeyPrivKeySize());
+  internal::SecretBuffer priv_key_buffer(Ed25519KeyPrivKeySize());
   subtle::ResizeStringUninitialized(&key->public_key, Ed25519KeyPubKeySize());
-  uint8_t *priv_key_ptr = key->private_key.data();
+  uint8_t *priv_key_ptr = priv_key_buffer.data();
   uint8_t *pub_key_ptr = reinterpret_cast<uint8_t *>(&key->public_key[0]);
 
   util::Status res = internal::CallWithCoreDumpProtection([&]() {
@@ -506,6 +511,7 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   if (!res.ok()) {
     return res;
   }
+  key->private_key = util::internal::AsSecretData(std::move(priv_key_buffer));
   return std::move(key);
 }
 
@@ -523,8 +529,9 @@ util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
   // Curve25519 public key is x, not (x,y).
   std::copy_n(ec_key.pub_x.begin(), X25519KeyPubKeySize(),
               std::begin(x25519_key->public_value));
-  std::copy_n(ec_key.priv.data(), X25519KeyPrivKeySize(),
-              std::begin(x25519_key->private_key));
+  SecretBuffer buffer(X25519KeyPrivKeySize());
+  SafeMemCopy(buffer.data(), ec_key.priv.data(), X25519KeyPrivKeySize());
+  x25519_key->private_key = util::internal::AsSecretData(std::move(buffer));
   return std::move(x25519_key);
 }
 
@@ -542,7 +549,7 @@ util::StatusOr<util::SecretData> ComputeX25519SharedSecret(
 
   internal::SslUniquePtr<EVP_PKEY_CTX> pctx(
       EVP_PKEY_CTX_new(private_key, nullptr));
-  util::SecretData shared_secret(internal::X25519KeySharedKeySize());
+  internal::SecretBuffer shared_secret(internal::X25519KeySharedKeySize());
   size_t out_key_length = shared_secret.size();
   if (EVP_PKEY_derive_init(pctx.get()) <= 0 ||
       EVP_PKEY_derive_set_peer(pctx.get(), peer_public_key) <= 0 ||
@@ -553,7 +560,7 @@ util::StatusOr<util::SecretData> ComputeX25519SharedSecret(
     return util::Status(absl::StatusCode::kInternal,
                         "Secret generation failed");
   }
-  return shared_secret;
+  return util::internal::AsSecretData(std::move(shared_secret));
 }
 
 util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
@@ -568,13 +575,15 @@ util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
                                         private_key.data(), private_key.size());
   }));
   auto key = absl::make_unique<X25519Key>();
+  internal::SecretBuffer priv_key_buffer(X25519KeyPrivKeySize());
   util::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, *pkey,
-      absl::MakeSpan(key->private_key.data(), X25519KeyPrivKeySize()),
+      absl::MakeSpan(priv_key_buffer.data(), X25519KeyPrivKeySize()),
       absl::MakeSpan(key->public_value, X25519KeyPubKeySize()));
   if (!res.ok()) {
     return res;
   }
+  key->private_key = util::internal::AsSecretData(priv_key_buffer);
   return std::move(key);
 }
 

@@ -440,6 +440,7 @@ tink_cc_library(
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
     tink::jwt::jwt_signature_private_key
     absl::status
+    absl::statusor
     absl::optional
     crypto
     tink::core::big_integer
@@ -447,7 +448,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_big_integer
-    tink::internal::bn_util
+    tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::util::status
     tink::util::statusor
@@ -540,6 +541,7 @@ tink_cc_library(
     tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::jwt_signature_private_key
     absl::status
+    absl::statusor
     absl::optional
     crypto
     tink::core::big_integer
@@ -547,7 +549,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_big_integer
-    tink::internal::bn_util
+    tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
     tink::util::status
     tink::util::statusor

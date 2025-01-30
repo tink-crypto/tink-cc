@@ -367,7 +367,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesModulus) {
 
   EXPECT_THAT(private_key_modified_modulus.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Modulus size is")));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeP) {
@@ -392,7 +392,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeP) {
 
   EXPECT_THAT(private_key_modified_prime_p.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Could not load RSA key")));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeQ) {
@@ -417,7 +417,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeQ) {
 
   EXPECT_THAT(private_key_modified_prime_q.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Could not load RSA key")));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentP) {
@@ -442,7 +442,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentP) {
 
   EXPECT_THAT(private_key_modified_prime_exponent_p.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Could not load RSA key")));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentQ) {
@@ -467,7 +467,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentQ) {
 
   EXPECT_THAT(private_key_modified_prime_exponent_q.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Could not load RSA key")));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrivateExponent) {
@@ -492,7 +492,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrivateExponent) {
 
   EXPECT_THAT(private_key_modified_private_exponent.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Could not load RSA key")));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesCrtCoefficient) {
@@ -517,7 +517,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesCrtCoefficient) {
 
   EXPECT_THAT(private_key_modified_crt_coefficient.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Could not load RSA key")));
 }
 
 TEST(JwtRsaSsaPssPrivateKeyTest, BuildPublicKeyNotSetFails) {
@@ -718,7 +718,7 @@ TEST(JwtRsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
 
   EXPECT_THAT(private_key.status(),
               StatusIs(absl::StatusCode ::kInvalidArgument,
-                       HasSubstr("RSA key pair is not valid")));
+                       HasSubstr("Could not load RSA key")));
 }
 
 TEST_P(JwtRsaSsaPssPrivateKeyTest, PrivateKeyEquals) {

@@ -16,16 +16,17 @@
 
 #include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -33,12 +34,12 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/aes_gcm.pb.h"
@@ -49,10 +50,46 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::OutputPrefixType;
+
+struct AesGcmKeyFormatStruct {
+  uint32_t key_size = 0;
+  uint32_t version = 0;
+
+  static ProtoParser<AesGcmKeyFormatStruct> CreateParser() {
+    return ProtoParserBuilder<AesGcmKeyFormatStruct>()
+        .AddUint32Field(2, &AesGcmKeyFormatStruct::key_size)
+        .AddUint32Field(3, &AesGcmKeyFormatStruct::version)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<AesGcmKeyFormatStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<AesGcmKeyFormatStruct>> parser{
+        CreateParser()};
+    return *parser;
+  }
+};
+
+struct AesGcmKeyStruct {
+  uint32_t version = 0;
+  SecretData key_value = {};
+
+  static ProtoParser<AesGcmKeyStruct> CreateParser() {
+    return ProtoParserBuilder<AesGcmKeyStruct>()
+        .AddUint32Field(1, &AesGcmKeyStruct::version)
+        .AddBytesSecretDataField(3, &AesGcmKeyStruct::key_value)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<AesGcmKeyStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<AesGcmKeyStruct>> parser{
+        CreateParser()};
+    return *parser;
+  }
+};
 
 using AesGcmProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesGcmParameters>;
@@ -121,13 +158,13 @@ util::StatusOr<AesGcmParameters> ParseParameters(
                         "Wrong type URL when parsing AesGcmParameters.");
   }
 
-  AesGcmKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesGcmKeyFormat proto");
+  util::StatusOr<AesGcmKeyFormatStruct> proto_key_format =
+      AesGcmKeyFormatStruct::GetParser().Parse(
+          serialization.GetKeyTemplate().value());
+  if (!proto_key_format.ok()) {
+    return proto_key_format.status();
   }
-  if (proto_key_format.version() != 0) {
+  if (proto_key_format->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -140,7 +177,7 @@ util::StatusOr<AesGcmParameters> ParseParameters(
   // tags.
   return AesGcmParameters::Builder()
       .SetVariant(*variant)
-      .SetKeySizeInBytes(proto_key_format.key_size())
+      .SetKeySizeInBytes(proto_key_format->key_size)
       .SetIvSizeInBytes(12)
       .SetTagSizeInBytes(16)
       .Build();
@@ -155,11 +192,17 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  AesGcmKeyFormat proto_key_format;
-  proto_key_format.set_key_size(parameters.KeySizeInBytes());
+  AesGcmKeyFormatStruct proto_key_format;
+  proto_key_format.key_size = parameters.KeySizeInBytes();
+  proto_key_format.version = 0;
+  util::StatusOr<std::string> serialized_proto =
+      AesGcmKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
 
-  return ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
+  return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
+                                              *serialized_proto);
 }
 
 util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
@@ -172,14 +215,14 @@ util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
-  util::StatusOr<SecretProto<google::crypto::tink::AesGcmKey>> proto_key =
-      SecretProto<google::crypto::tink::AesGcmKey>::ParseFromSecretData(
-          serialization.SerializedKeyProto().Get(*token));
+
+  util::StatusOr<AesGcmKeyStruct> proto_key =
+      AesGcmKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesGcmKey proto");
+    return proto_key.status();
   }
-  if ((*proto_key)->version() != 0) {
+  if (proto_key->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
@@ -193,14 +236,14 @@ util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
   util::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetVariant(*variant)
-          .SetKeySizeInBytes((*proto_key)->key_value().length())
+          .SetKeySizeInBytes(proto_key->key_value.size())
           .SetIvSizeInBytes(12)
           .SetTagSizeInBytes(16)
           .Build();
   if (!parameters.ok()) return parameters.status();
 
   return AesGcmKey::Create(
-      *parameters, RestrictedData((*proto_key)->key_value(), *token),
+      *parameters, RestrictedData(proto_key->key_value, *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -217,16 +260,16 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required");
   }
 
-  SecretProto<google::crypto::tink::AesGcmKey> proto_key;
-  proto_key->set_version(0);
-  CallWithCoreDumpProtection(
-      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
+  AesGcmKeyStruct proto_key;
+  proto_key.version = 0;
+  proto_key.key_value = restricted_input->Get(*token);
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  util::StatusOr<SecretData> serialized_key =
+      AesGcmKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }

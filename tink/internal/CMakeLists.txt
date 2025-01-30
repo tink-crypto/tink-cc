@@ -1390,6 +1390,7 @@ tink_cc_library(
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message_field
+    tink::internal::proto_parser_message_field_with_presence
     tink::internal::proto_parser_options
     tink::internal::proto_parser_presence_fields
     tink::internal::proto_parser_secret_data_with_crc_field
@@ -1428,8 +1429,6 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
-    tink::core::big_integer
-    tink::core::insecure_secret_key_access
     tink::internal::testing::field_with_number
     tink::util::secret_data
     tink::util::test_matchers

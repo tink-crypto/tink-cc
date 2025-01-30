@@ -16,9 +16,7 @@
 
 #include "tink/internal/proto_parser.h"
 
-#include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <string>
 #include <utility>
 #include <vector>
@@ -31,8 +29,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/big_integer.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_test_proto.pb.h"
 #include "tink/internal/secret_data_with_crc.h"
@@ -68,6 +64,7 @@ constexpr int32_t kUint32Field2Tag = 2;
 constexpr int32_t kBytesField1Tag = 3;
 constexpr int32_t kBytesField2Tag = 4;
 constexpr int32_t kInnerMessageField = 10;
+constexpr int32_t kInnerMessageField2 = 11;
 constexpr int32_t kEnumField = 111;
 constexpr int32_t kUint32FieldWithLargeTag = 536870911;
 
@@ -94,6 +91,8 @@ struct ParsedStruct {
   SecretData secret_data_member_2;
   InnerStruct inner_member_1;
   InnerStruct inner_member_2;
+  absl::optional<InnerStruct> optional_inner_member_1;
+  absl::optional<InnerStruct> optional_inner_member_2;
   MyEnum enum_member;
 
   SecretDataWithCrc secret_data_with_crc_member_1;
@@ -107,8 +106,7 @@ TEST(ProtoParserTest, Uint32AbsentWorks) {
           .AddUint32Field(kUint32Field1Tag, &ParsedStruct::uint32_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
-  absl::StatusOr<ParsedStruct> parsed =
-      parser->Parse("");
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse("");
   ASSERT_THAT(parsed, IsOk());
   EXPECT_THAT(parsed->uint32_member_1, Eq(0));
 }
@@ -216,7 +214,6 @@ TEST(ProtoParserTest, EnumAlwaysSerializeWorks) {
   // 08 = "kVarint Field, Field number 1"
   ASSERT_THAT(HexEncode(*serialized), Eq("0800"));
 }
-
 
 TEST(ProtoParserTest, SingleBytesFieldStringWorks) {
   ProtoTestProto proto;
@@ -370,6 +367,39 @@ TEST(ProtoParserTest, ParseMessageField) {
   EXPECT_THAT(outer_parsed->inner_member_1.uint32_member_1, Eq(123));
 }
 
+TEST(ProtoParserTest, ParseMessageFieldWithPresence) {
+  ProtoTestProto proto;
+  proto.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_3(123);
+
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser1 =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(123456, &InnerStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(inner_parser1.status(), IsOk());
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser2 =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(123456, &InnerStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(inner_parser2.status(), IsOk());
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageFieldWithPresence<InnerStruct>(
+              kInnerMessageField, &ParsedStruct::optional_inner_member_1,
+              *std::move(inner_parser1))
+          .AddMessageFieldWithPresence<InnerStruct>(
+              kInnerMessageField2, &ParsedStruct::optional_inner_member_2,
+              *std::move(inner_parser2))
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+
+  absl::StatusOr<ParsedStruct> outer_parsed =
+      parser->Parse(proto.SerializeAsString());
+  ASSERT_THAT(outer_parsed, IsOk());
+  ASSERT_THAT(outer_parsed->optional_inner_member_1.has_value(), IsTrue());
+  ASSERT_THAT(outer_parsed->optional_inner_member_2.has_value(), IsFalse());
+  EXPECT_THAT(outer_parsed->optional_inner_member_1->uint32_member_1, Eq(123));
+}
+
 TEST(ProtoParserTest, ParseDoubleMessageField) {
   ProtoParser<ParsedStruct> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -392,6 +422,32 @@ TEST(ProtoParserTest, ParseDoubleMessageField) {
   ASSERT_THAT(outer_parsed, IsOk());
   EXPECT_THAT(outer_parsed->inner_member_1.uint32_member_1, Eq(100));
   EXPECT_THAT(outer_parsed->inner_member_2.uint32_member_1, Eq(20));
+}
+
+TEST(ProtoParserTest, ParseDoubleMessageFieldWithPresence) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageFieldWithPresence<InnerStruct>(
+              1, &ParsedStruct::optional_inner_member_1,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(10, &InnerStruct::uint32_member_1)
+                  .BuildOrDie())
+          .AddMessageFieldWithPresence<InnerStruct>(
+              2, &ParsedStruct::optional_inner_member_2,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(10, &InnerStruct::uint32_member_1)
+                  .BuildOrDie())
+          .BuildOrDie();
+  std::string serialization = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(10).IsVarint(100)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(10).IsVarint(20)}));
+
+  absl::StatusOr<ParsedStruct> outer_parsed = parser.Parse(serialization);
+  ASSERT_THAT(outer_parsed, IsOk());
+  ASSERT_THAT(outer_parsed->optional_inner_member_1.has_value(), IsTrue());
+  ASSERT_THAT(outer_parsed->optional_inner_member_2.has_value(), IsTrue());
+  EXPECT_THAT(outer_parsed->optional_inner_member_1->uint32_member_1, Eq(100));
+  EXPECT_THAT(outer_parsed->optional_inner_member_2->uint32_member_1, Eq(20));
 }
 
 TEST(ProtoParserTest, EmptyMessageAlwaysWorks) {
@@ -547,6 +603,47 @@ TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessages) {
   ASSERT_THAT(parsed, IsOk());
   EXPECT_THAT(parsed->inner_member_1.uint32_member_1, Eq(77));
   EXPECT_THAT(parsed->inner_member_1.uint32_member_2, Eq(55));
+}
+
+TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessagesWithPresence) {
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(20, &InnerStruct::uint32_member_1)
+          .AddUint32Field(21, &InnerStruct::uint32_member_2)
+          .Build();
+  ASSERT_THAT(inner_parser.status(), IsOk());
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageFieldWithPresence<InnerStruct>(
+              kInnerMessageField, &ParsedStruct::optional_inner_member_1,
+              *std::move(inner_parser))
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+
+  ProtoTestProto proto1;
+  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_1(77);
+  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(66);
+
+  ProtoTestProto proto2;
+  proto2.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(55);
+
+  std::string serialized =
+      absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString());
+
+  ProtoTestProto parsed_proto;
+  ASSERT_THAT(parsed_proto.ParseFromString(serialized), IsTrue());
+  // The 77 from the first instance stays
+  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_1(),
+              Eq(77));
+  // The 55 is overwritten
+  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_2(),
+              Eq(55));
+
+  absl::StatusOr<ParsedStruct> parsed = parser->Parse(serialized);
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->optional_inner_member_1->uint32_member_1, Eq(77));
+  EXPECT_THAT(parsed->optional_inner_member_1->uint32_member_2, Eq(55));
 }
 
 TEST(ProtoParserTest, SkipUnknownFields) {
@@ -784,8 +881,7 @@ TEST(ProtoParserTest, SerializeIntoSecretData) {
   absl::StatusOr<crypto::tink::util::SecretData> serialized =
       parser->SerializeIntoSecretData(s);
   ASSERT_THAT(serialized, IsOk());
-  EXPECT_THAT(SecretDataAsStringView(*serialized),
-  Eq(HexDecodeOrDie("087a")));
+  EXPECT_THAT(SecretDataAsStringView(*serialized), Eq(HexDecodeOrDie("087a")));
 }
 TEST(ProtoParserTest, SerializeTagVariations) {
   ParsedStruct s;
@@ -1068,6 +1164,33 @@ TEST(ProtoParserTest, SerializeMessageField) {
                               /* uint32_member_1 (varint)*/ "bef792840b")));
 }
 
+TEST(ProtoParserTest, SerializeMessageFieldWithPresence) {
+  ParsedStruct s;
+  // Varint encoding: bef792840b
+  s.optional_inner_member_1 = {2961488830, 0};
+
+  absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
+      ProtoParserBuilder<InnerStruct>()
+          .AddUint32Field(123456, &InnerStruct::uint32_member_1)
+          .Build();
+  ASSERT_THAT(inner_parser.status(), IsOk());
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageFieldWithPresence<InnerStruct>(
+              kInnerMessageField, &ParsedStruct::optional_inner_member_1,
+              *std::move(inner_parser))
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<std::string> serialized = parser->SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(HexEncode(*serialized),
+              Eq(absl::StrCat(/* length delimited field with tag 10*/ "52",
+                              /* length 8 */ "08",
+                              /* varint field with tag 123456 */ "80a43c",
+                              /* uint32_member_1 (varint)*/ "bef792840b")));
+}
+
 TEST(ProtoParserTest, SerializeEmpty) {
   ParsedStruct s;
   s.uint32_member_1 = 0;
@@ -1113,9 +1236,8 @@ TEST(ProtoParserTest, SerializeStringView) {
           .BuildOrDie();
   absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
   ASSERT_THAT(serialized, IsOk());
-  EXPECT_THAT(
-      HexEncode(*serialized),
-      Eq(absl::StrCat("0a14", HexEncode("data which is copied"))));
+  EXPECT_THAT(HexEncode(*serialized),
+              Eq(absl::StrCat("0a14", HexEncode("data which is copied"))));
 }
 
 TEST(ProtoParserTest, ParseStringView) {
@@ -1145,14 +1267,14 @@ TEST(ProtoParserTest, ParseEmptyStringView) {
 
 // Comments give encoding length for values < 128
 enum WeirdEncodingType {
-  kNormal = 1,               // Length: 1
-  kPadWithZeros = 2,         // Length: 2
-  kAdd2To32 = 3,             // Length: 5
-  kAdd2To32PadZero = 4,      // Length: 6
-  kAdd2To35 = 5,             // Length: 6
-  kAdd2To64 = 6,             // Length: 10
-  kAdd2To64PadZeros = 7,     // Length: 11
-  kAdd2To70 = 8,             // Length: 11
+  kNormal = 1,            // Length: 1
+  kPadWithZeros = 2,      // Length: 2
+  kAdd2To32 = 3,          // Length: 5
+  kAdd2To32PadZero = 4,   // Length: 6
+  kAdd2To35 = 5,          // Length: 6
+  kAdd2To64 = 6,          // Length: 10
+  kAdd2To64PadZeros = 7,  // Length: 11
+  kAdd2To70 = 8,          // Length: 11
 };
 
 // Encode the varint in a non-standard way.
@@ -1194,26 +1316,26 @@ std::string EncodeVarintWeirdly(uint64_t value, WeirdEncodingType t) {
 
 TEST(EncodeVarintWeirdly, EncodeVarintWeirdlyTest) {
   auto encode = [](uint64_t value, WeirdEncodingType t) {
-    return HexEncode (EncodeVarintWeirdly(value, t));
+    return HexEncode(EncodeVarintWeirdly(value, t));
   };
 
-  EXPECT_THAT(encode(0, kNormal),           Eq("00"));
-  EXPECT_THAT(encode(0, kPadWithZeros),     Eq("8000"));
-  EXPECT_THAT(encode(0, kAdd2To32),         Eq("8080808010"));
-  EXPECT_THAT(encode(0, kAdd2To32PadZero),  Eq("808080809000"));
-  EXPECT_THAT(encode(0, kAdd2To35),         Eq("808080808001"));
-  EXPECT_THAT(encode(0, kAdd2To64),         Eq("80808080808080808002"));
+  EXPECT_THAT(encode(0, kNormal), Eq("00"));
+  EXPECT_THAT(encode(0, kPadWithZeros), Eq("8000"));
+  EXPECT_THAT(encode(0, kAdd2To32), Eq("8080808010"));
+  EXPECT_THAT(encode(0, kAdd2To32PadZero), Eq("808080809000"));
+  EXPECT_THAT(encode(0, kAdd2To35), Eq("808080808001"));
+  EXPECT_THAT(encode(0, kAdd2To64), Eq("80808080808080808002"));
   EXPECT_THAT(encode(0, kAdd2To64PadZeros), Eq("8080808080808080808200"));
-  EXPECT_THAT(encode(0, kAdd2To70),         Eq("8080808080808080808001"));
+  EXPECT_THAT(encode(0, kAdd2To70), Eq("8080808080808080808001"));
 
-  EXPECT_THAT(encode(1, kNormal),           Eq("01"));
-  EXPECT_THAT(encode(1, kPadWithZeros),     Eq("8100"));
-  EXPECT_THAT(encode(1, kAdd2To32),         Eq("8180808010"));
-  EXPECT_THAT(encode(1, kAdd2To32PadZero),  Eq("818080809000"));
-  EXPECT_THAT(encode(1, kAdd2To35),         Eq("818080808001"));
-  EXPECT_THAT(encode(1, kAdd2To64),         Eq("81808080808080808002"));
+  EXPECT_THAT(encode(1, kNormal), Eq("01"));
+  EXPECT_THAT(encode(1, kPadWithZeros), Eq("8100"));
+  EXPECT_THAT(encode(1, kAdd2To32), Eq("8180808010"));
+  EXPECT_THAT(encode(1, kAdd2To32PadZero), Eq("818080809000"));
+  EXPECT_THAT(encode(1, kAdd2To35), Eq("818080808001"));
+  EXPECT_THAT(encode(1, kAdd2To64), Eq("81808080808080808002"));
   EXPECT_THAT(encode(1, kAdd2To64PadZeros), Eq("8180808080808080808200"));
-  EXPECT_THAT(encode(1, kAdd2To70),         Eq("8180808080808080808001"));
+  EXPECT_THAT(encode(1, kAdd2To70), Eq("8180808080808080808001"));
 }
 
 TEST(ProtoParserTest, VarintInTagSuccess) {

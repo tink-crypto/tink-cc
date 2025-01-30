@@ -496,6 +496,7 @@ tink_cc_library(
     absl::memory
     absl::status
     tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
 )
 
 tink_cc_test(
@@ -509,6 +510,7 @@ tink_cc_test(
     protobuf::libprotobuf
     gmock
     absl::memory
+    tink::internal::secret_buffer
     tink::proto::test_proto_cc_proto
 )
 

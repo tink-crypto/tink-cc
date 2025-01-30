@@ -111,6 +111,7 @@ class SecretBuffer {
   }
 
   size_t size() const { return size_; }
+  bool empty() const { return size() == 0; }
 
   void resize(size_t size, uint8_t val = 0) {
     if (size > size_) {

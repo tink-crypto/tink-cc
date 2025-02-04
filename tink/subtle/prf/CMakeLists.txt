@@ -43,6 +43,7 @@ tink_cc_library(
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::md_util
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::subtle::subtle
     tink::subtle::subtle_util

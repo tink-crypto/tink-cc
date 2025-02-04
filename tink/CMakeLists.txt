@@ -816,6 +816,7 @@ tink_cc_library(
     absl::status
     absl::strings
     tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::secret_proto
     tink::util::status

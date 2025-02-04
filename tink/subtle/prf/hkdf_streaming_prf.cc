@@ -34,6 +34,7 @@
 #include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/md_util.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/prf/streaming_prf.h"
@@ -89,7 +90,7 @@ class HkdfInputStream : public InputStream {
   util::Status Init(const EVP_MD *digest, const util::SecretData &secret,
                     absl::string_view salt) {
     // PRK as by RFC 5869, Section 2.2
-    util::SecretData prk(EVP_MAX_MD_SIZE);
+    internal::SecretBuffer prk(EVP_MAX_MD_SIZE);
 
     if (!digest) {
       return util::Status(absl::StatusCode::kInvalidArgument, "Invalid digest");
@@ -178,7 +179,7 @@ class HkdfInputStream : public InputStream {
   internal::SslUniquePtr<HMAC_CTX> hmac_ctx_{HMAC_CTX_new()};
 
   // Current value T(i).
-  util::SecretData ti_;
+  internal::SecretBuffer ti_;
   // By RFC 5869: 0 <= i_ <= 255*HashLen
   int i_ = 0;
 

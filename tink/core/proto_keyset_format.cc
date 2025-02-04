@@ -33,6 +33,7 @@
 #include "tink/binary_keyset_writer.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
 #include "tink/secret_key_access_token.h"
@@ -44,6 +45,8 @@
 
 namespace crypto {
 namespace tink {
+
+using ::crypto::tink::internal::SecretBuffer;
 
 util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     absl::string_view serialized_keyset, SecretKeyAccessToken token) {
@@ -69,14 +72,14 @@ util::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
     const KeysetHandle& keyset_handle, SecretKeyAccessToken token) {
   const google::crypto::tink::Keyset& keyset =
       CleartextKeysetHandle::GetKeyset(keyset_handle);
-  util::SecretData result(keyset.ByteSizeLong());
+  SecretBuffer result(keyset.ByteSizeLong());
   bool serialized = internal::CallWithCoreDumpProtection(
       [&]() { return keyset.SerializeToArray(result.data(), result.size()); });
   if (!serialized) {
     return util::Status(absl::StatusCode::kInternal,
                         "Failed to serialize keyset");
   }
-  return result;
+  return util::internal::AsSecretData(std::move(result));
 }
 
 util::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(

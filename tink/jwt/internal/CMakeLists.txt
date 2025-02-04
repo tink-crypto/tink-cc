@@ -1135,13 +1135,29 @@ tink_cc_test(
     tink::jwt::internal::jwt_signature_config_v0
     tink::jwt::internal::jwt_signature_key_gen_config_v0
     gmock
+    absl::check
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::time
+    tink::core::big_integer
     tink::core::configuration
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
+    tink::core::key
     tink::core::key_gen_configuration
+    tink::core::key_status
     tink::core::keyset_handle
+    tink::core::partial_key_access
+    tink::core::restricted_big_integer
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_ecdsa_proto_serialization
+    tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_key_templates
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify

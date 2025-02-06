@@ -145,6 +145,14 @@ class SecretBuffer {
     swap(capacity_, other.capacity_);
   }
 
+  SecretBuffer& append(const SecretBuffer& other) {
+    reserve(size_ + other.size_);
+    crypto::tink::internal::SafeMemCopy(data_ + size_, other.data_,
+                                        other.size_);
+    size_ += other.size_;
+    return *this;
+  }
+
   SecretBuffer substr(
       size_t pos, size_t count = std::numeric_limits<size_t>::max()) const& {
     CHECK(pos <= size());

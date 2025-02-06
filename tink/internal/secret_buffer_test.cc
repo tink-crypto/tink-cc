@@ -174,6 +174,27 @@ TEST(SecretBufferTest, SwapWithEmpty) {
   EXPECT_THAT(buffer2.AsStringView(), Eq(""));
 }
 
+TEST(SecretBufferTest, Append) {
+  SecretBuffer buffer1("some data;");
+  SecretBuffer buffer2("some other data;");
+  buffer1.append(buffer2);
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;some other data;")));
+}
+
+TEST(SecretBufferTest, AppendWithEmpty) {
+  SecretBuffer buffer1("some data;");
+  SecretBuffer buffer2;
+  buffer1.append(buffer2);
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;")));
+}
+
+TEST(SecretBufferTest, AppendWithEmpty2) {
+  SecretBuffer buffer1;
+  SecretBuffer buffer2("some data;");
+  buffer1.append(buffer2);
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;")));
+}
+
 TEST(SecretBufferTest, SubstrConstRef) {
   constexpr absl::string_view kData = "Some arbitrary data";
   SecretBuffer buffer(kData);

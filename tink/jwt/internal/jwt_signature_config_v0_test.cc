@@ -16,7 +16,6 @@
 
 #include "tink/jwt/internal/jwt_signature_config_v0.h"
 
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
@@ -150,10 +149,10 @@ TEST_P(JwtSignatureV0KeyTypesTest, GetPrimitive) {
   EXPECT_THAT((*verify)->VerifyAndDecode(*compact, *validator), IsOk());
 }
 
-// From https://datatracker.ietf.org/doc/html/rfc7515.
 struct JwtSignatureTestVector {
   std::shared_ptr<const Key> private_key;
   std::string signed_jwt;
+  JwtValidator signed_jwt_validator;
 };
 
 using JwtDeterministicSignatureTest = TestWithParam<JwtSignatureTestVector>;
@@ -188,26 +187,18 @@ TEST_P(JwtDeterministicSignatureTest, SignAndVerify) {
   util::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
-
+  util::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
+  ASSERT_THAT(compact, IsOk());
   util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectIssuer("issuer")
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-
-  util::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
-  ASSERT_THAT(compact, IsOk());
-
   EXPECT_THAT((*verify)->VerifyAndDecode(*compact, *validator), IsOk());
 
-  // Verify the test vector signed JWT.
-  util::StatusOr<JwtValidator> test_vector_validator =
-      JwtValidatorBuilder()
-          .ExpectIssuer("joe")
-          .SetFixedNow(absl::FromUnixSeconds(1300819380 - 3600))
-          .Build();
+  // Verify the test vector signed JWT with the JWT validator.
   EXPECT_THAT((*verify)->VerifyAndDecode(test_vector.signed_jwt,
-                                         *test_vector_validator),
+                                         test_vector.signed_jwt_validator),
               IsOk());
 }
 
@@ -219,45 +210,145 @@ std::string Base64WebSafeDecode(absl::string_view base64_string) {
   return dest;
 }
 
+// ES256, https://datatracker.ietf.org/doc/html/rfc7515#appendix-A.3
+constexpr absl::string_view kEs256X =
+    "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU";
+constexpr absl::string_view kEs256Y =
+    "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0";
+constexpr absl::string_view kEs256S =
+    "jpsQnnGQmL-YBIffH1136cspYG6-0iY7X1fCE9-E9LI";
+
 std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
   CHECK_OK(RegisterJwtEcdsaProtoSerialization());
-
   std::vector<JwtSignatureTestVector> res;
 
-  // ES256, https://datatracker.ietf.org/doc/html/rfc7515#appendix-A.3
-  absl::StatusOr<JwtEcdsaParameters> params =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  CHECK_OK(params);
-  EcPoint public_point(/*x=*/BigInteger(Base64WebSafeDecode(
-                           "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU")),
-                       /*y=*/BigInteger(Base64WebSafeDecode(
-                           "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0")));
+  {
+    absl::StatusOr<JwtEcdsaParameters> params =
+        JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
+                                   JwtEcdsaParameters::Algorithm::kEs256);
+    CHECK_OK(params);
+    EcPoint public_point(/*x=*/BigInteger(Base64WebSafeDecode(kEs256X)),
+                         /*y=*/BigInteger(Base64WebSafeDecode(kEs256Y)));
 
-  absl::StatusOr<JwtEcdsaPublicKey> public_key =
-      JwtEcdsaPublicKey::Builder()
-          .SetPublicPoint(public_point)
-          .SetParameters(*params)
-          .Build(GetPartialKeyAccess());
-  CHECK_OK(public_key);
-  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
-      *std::move(public_key),
-      RestrictedBigInteger(
-          Base64WebSafeDecode("jpsQnnGQmL-YBIffH1136cspYG6-0iY7X1fCE9-E9LI"),
-          InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
-  CHECK_OK(private_key);
+    absl::StatusOr<JwtEcdsaPublicKey> public_key =
+        JwtEcdsaPublicKey::Builder()
+            .SetPublicPoint(public_point)
+            .SetParameters(*params)
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(public_key);
+    absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+        *std::move(public_key),
+        RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
+                             InsecureSecretKeyAccess::Get()),
+        GetPartialKeyAccess());
+    CHECK_OK(private_key);
 
-  res.push_back(JwtSignatureTestVector{
-      /*private_key=*/std::make_shared<JwtEcdsaPrivateKey>(*private_key),
-      /*signed_jwt=*/
-      "eyJhbGciOiJFUzI1NiJ9"
-      "."
-      "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt"
-      "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
-      "."
-      "DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSA"
-      "pmWQxfKTUJqPP3-Kg6NU1Q"});
+    util::StatusOr<JwtValidator> test_vector_validator =
+        JwtValidatorBuilder()
+            .ExpectIssuer("joe")
+            .SetFixedNow(absl::FromUnixSeconds(1300819380 - 3600))
+            .Build();
+
+    res.push_back(JwtSignatureTestVector{
+        /*private_key=*/std::make_shared<JwtEcdsaPrivateKey>(*private_key),
+        /*signed_jwt=*/
+        // {"alg":"ES256"}
+        "eyJhbGciOiJFUzI1NiJ9"
+        "."
+        // {"iss":"joe",
+        //  "exp":1300819380,
+        //  "http://example.com/is_root":true}
+        "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt"
+        "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
+        "."
+        "DtEhU3ljbEg8L38VWAfUAqOyKAM6-Xx-F4GawxaepmXFCgfTjDxw5djxLa8ISlSA"
+        "pmWQxfKTUJqPP3-Kg6NU1Q",
+        /*signed_jwt_validator=*/*std::move(test_vector_validator)});
+  }
+  {
+    absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
+        JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+        JwtEcdsaParameters::Algorithm::kEs256);
+    CHECK_OK(params);
+    EcPoint public_point(/*x=*/BigInteger(Base64WebSafeDecode(kEs256X)),
+                         /*y=*/BigInteger(Base64WebSafeDecode(kEs256Y)));
+
+    absl::StatusOr<JwtEcdsaPublicKey> public_key =
+        JwtEcdsaPublicKey::Builder()
+            .SetPublicPoint(public_point)
+            .SetParameters(*params)
+            .SetIdRequirement(0x01020304)
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(public_key);
+    absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+        *std::move(public_key),
+        RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
+                             InsecureSecretKeyAccess::Get()),
+        GetPartialKeyAccess());
+    CHECK_OK(private_key);
+
+    util::StatusOr<JwtValidator> test_vector_validator =
+        JwtValidatorBuilder()
+            .ExpectIssuer("issuer")
+            .AllowMissingExpiration()
+            .Build();
+
+    // Generated with a custom Go script.
+    res.push_back(JwtSignatureTestVector{
+        /*private_key=*/std::make_shared<JwtEcdsaPrivateKey>(*private_key),
+        /*signed_jwt=*/
+        // {"kid":"AQIDBA","alg":"ES256"}
+        "eyJraWQiOiJBUUlEQkEiLCJhbGciOiJFUzI1NiJ9"
+        "."
+        // {"iss":"issuer"}
+        "eyJpc3MiOiJpc3N1ZXIifQ"
+        "."
+        "Mgzp130-bvzWJAQlkrQRt45EeKQ6ymZX1ABQoautz1fMW2sVLONkoPl_g6UYxecYz-"
+        "2ApvT292dR_3jHd0S3QA",
+        /*signed_jwt_validator=*/*std::move(test_vector_validator)});
+  }
+  {
+    absl::StatusOr<JwtEcdsaParameters> params =
+        JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
+                                   JwtEcdsaParameters::Algorithm::kEs256);
+    CHECK_OK(params);
+    EcPoint public_point(/*x=*/BigInteger(Base64WebSafeDecode(kEs256X)),
+                         /*y=*/BigInteger(Base64WebSafeDecode(kEs256Y)));
+
+    absl::StatusOr<JwtEcdsaPublicKey> public_key =
+        JwtEcdsaPublicKey::Builder()
+            .SetPublicPoint(public_point)
+            .SetParameters(*params)
+            .SetCustomKid("custom-kid")
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(public_key);
+    absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+        *std::move(public_key),
+        RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
+                             InsecureSecretKeyAccess::Get()),
+        GetPartialKeyAccess());
+    CHECK_OK(private_key);
+
+    util::StatusOr<JwtValidator> test_vector_validator =
+        JwtValidatorBuilder()
+            .ExpectIssuer("issuer")
+            .AllowMissingExpiration()
+            .Build();
+
+    // Generated with a custom Go script.
+    res.push_back(JwtSignatureTestVector{
+        /*private_key=*/std::make_shared<JwtEcdsaPrivateKey>(*private_key),
+        /*signed_jwt=*/
+        // {"kid":"custom-kid","alg":"ES256"}
+        "eyJraWQiOiJjdXN0b20ta2lkIiwiYWxnIjoiRVMyNTYifQ"
+        "."
+        // {"iss":"issuer"}
+        "eyJpc3MiOiJpc3N1ZXIifQ"
+        "."
+        "A51jqxnj-pddSJUm7dxe4bcmac3xOVg85xhIQ8Fsohv4_"
+        "LNMJnmx6Pw9xXGeUHDtW4Y59CxATAmXDqnqvB-kiA",
+        /*signed_jwt_validator=*/*std::move(test_vector_validator)});
+  }
   return res;
 }
 

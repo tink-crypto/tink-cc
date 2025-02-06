@@ -102,6 +102,7 @@ using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::_;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::Not;
@@ -764,12 +765,24 @@ TEST(KeysetHandleGenerateNewFromParametersTest,
       StatusIs(absl::StatusCode::kNotFound));
 }
 
-TEST_F(KeysetHandleTest, UnknownPrefixIsInvalid) {
-  KeyTemplate templ(AeadKeyTemplates::Aes128Gcm());
-  templ.set_output_prefix_type(OutputPrefixType::UNKNOWN_PREFIX);
-  auto handle_result =
-      KeysetHandle::GenerateNew(templ, KeyGenConfigGlobalRegistry());
-  EXPECT_FALSE(handle_result.ok());
+TEST_F(KeysetHandleTest, GenerateNewWithUnknownPrefixFails) {
+  KeyTemplate key_template(AeadKeyTemplates::Aes128Gcm());
+  key_template.set_output_prefix_type(OutputPrefixType::UNKNOWN_PREFIX);
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
+  EXPECT_THAT(handle, StatusIs(absl::StatusCode::kInvalidArgument,
+                               HasSubstr("key template has UNKNOWN prefix")));
+}
+
+TEST_F(KeysetHandleTest, GenerateNewWithIdRequirementFails) {
+  KeyTemplate key_template(AeadKeyTemplates::Aes128Gcm());
+  key_template.set_output_prefix_type(OutputPrefixType::WITH_ID_REQUIREMENT);
+  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+      KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
+  EXPECT_THAT(
+      handle,
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("key template has WITH_ID_REQUIREMENT prefix")));
 }
 
 void CompareKeyMetadata(const Keyset::Key& expected,

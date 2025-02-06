@@ -573,7 +573,12 @@ crypto::tink::util::StatusOr<uint32_t> KeysetHandle::AddToKeyset(
   if (key_template.output_prefix_type() ==
       google::crypto::tink::OutputPrefixType::UNKNOWN_PREFIX) {
     return util::Status(absl::StatusCode::kInvalidArgument,
-                        "key template has unknown prefix");
+                        "key template has UNKNOWN prefix");
+  }
+  if (key_template.output_prefix_type() ==
+      google::crypto::tink::OutputPrefixType::WITH_ID_REQUIREMENT) {
+    return util::Status(absl::StatusCode::kInvalidArgument,
+                        "key template has WITH_ID_REQUIREMENT prefix");
   }
 
   // Generate new key data.

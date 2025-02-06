@@ -392,9 +392,10 @@ TEST_F(PrimitiveSetTest, GetAll) {
               CreateKey(0x01010101, OutputPrefixType::TINK,
                         KeyStatusType::ENABLED, /*type_url=*/
                         "type.googleapis.com/google.crypto.tink.HmacKey"))
+          // WITH_ID_REQUIREMENT has an empty identifier.
           .AddPrimitive(
               absl::make_unique<DummyMac>("MAC2"),
-              CreateKey(0x02020202, OutputPrefixType::TINK,
+              CreateKey(0x02020202, OutputPrefixType::WITH_ID_REQUIREMENT,
                         KeyStatusType::ENABLED, /*type_url=*/
                         "type.googleapis.com/google.crypto.tink.HmacKey"))
           // Add primitive and make it primary.
@@ -430,7 +431,7 @@ TEST_F(PrimitiveSetTest, GetAll) {
   std::vector<MacIdAndTypeUrl> expected_result = {
       {/*mac=*/"13:0:DummyMac:MAC1", /*id=*/absl::StrCat("\1\1\1\1\1"),
        /*type_url=*/"type.googleapis.com/google.crypto.tink.HmacKey"},
-      {/*mac=*/"13:0:DummyMac:MAC2", /*id=*/absl::StrCat("\1\2\2\2\2"),
+      {/*mac=*/"13:0:DummyMac:MAC2", /*id=*/"",
        /*type_url=*/"type.googleapis.com/google.crypto.tink.HmacKey"},
       {/*mac=*/"13:0:DummyMac:MAC3", /*id=*/absl::StrCat("\1\2\2\2\2"),
        /*type_url=*/"type.googleapis.com/google.crypto.tink.AesCmacKey"},

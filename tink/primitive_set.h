@@ -72,20 +72,29 @@ class PrimitiveSet {
         return util::Status(absl::StatusCode::kInvalidArgument,
                             "The key must be ENABLED.");
       }
-      auto identifier_result = CryptoFormat::GetOutputPrefix(key_info);
-      if (!identifier_result.ok()) return identifier_result.status();
+      util::StatusOr<std::string> identifier =
+          key_info.output_prefix_type() ==
+                  google::crypto::tink::OutputPrefixType::WITH_ID_REQUIREMENT
+              ? ""  // No associated prefix, so set to empty.
+              : CryptoFormat::GetOutputPrefix(key_info);
+      if (!identifier.ok()) {
+        return identifier.status();
+      }
       if (primitive == nullptr) {
         return util::Status(absl::StatusCode::kInvalidArgument,
                             "The primitive must be non-null.");
       }
-      return absl::WrapUnique(
-          new Entry(std::move(primitive), identifier_result.value(),
-                    key_info.status(), key_info.key_id(),
-                    key_info.output_prefix_type(), key_info.type_url()));
+      return absl::WrapUnique(new Entry(std::move(primitive), *identifier,
+                                        key_info.status(), key_info.key_id(),
+                                        key_info.output_prefix_type(),
+                                        key_info.type_url()));
     }
 
     P2& get_primitive() const { return *primitive_; }
 
+    // Returns an empty string if the output prefix type is WITH_ID_REQUIREMENT.
+    // Otherwise, it returns the corresponding output prefix according to
+    // `CryptoFormat::GetOutputPrefix()`.
     const std::string& get_identifier() const { return identifier_; }
 
     google::crypto::tink::KeyStatusType get_status() const { return status_; }

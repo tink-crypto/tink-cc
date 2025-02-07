@@ -1110,16 +1110,39 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::jwt_ecdsa_sign_key_manager
     tink::jwt::internal::jwt_ecdsa_verify_key_manager
+    tink::jwt::internal::jwt_public_key_sign_impl
+    tink::jwt::internal::jwt_public_key_sign_internal
     tink::jwt::internal::jwt_public_key_sign_wrapper
+    tink::jwt::internal::jwt_public_key_verify_impl
+    tink::jwt::internal::jwt_public_key_verify_internal
     tink::jwt::internal::jwt_public_key_verify_wrapper
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
+    absl::status
+    absl::strings
+    absl::optional
     tink::core::configuration
+    tink::core::ec_point
+    tink::core::partial_key_access
+    tink::core::partial_key_access_token
+    tink::core::public_key_sign
+    tink::core::public_key_verify
+    tink::core::restricted_big_integer
     tink::internal::configuration_impl
+    tink::jwt::jwt_ecdsa_parameters
+    tink::jwt::jwt_ecdsa_private_key
+    tink::jwt::jwt_ecdsa_proto_serialization
+    tink::jwt::jwt_ecdsa_public_key
+    tink::signature::ecdsa_parameters
+    tink::signature::ecdsa_private_key
+    tink::signature::ecdsa_public_key
+    tink::subtle::ecdsa_sign_boringssl
+    tink::subtle::ecdsa_verify_boringssl
     tink::util::status
+    tink::util::statusor
 )
 
 tink_cc_test(

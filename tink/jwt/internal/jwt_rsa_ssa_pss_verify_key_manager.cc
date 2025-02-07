@@ -57,10 +57,11 @@ JwtRsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
   if (jwt_rsa_ssa_pss_public_key.has_custom_kid()) {
     custom_kid = jwt_rsa_ssa_pss_public_key.custom_kid().value();
   }
-  std::unique_ptr<JwtPublicKeyVerifyInternal> jwt_public_key_verify =
-      absl::make_unique<jwt_internal::JwtPublicKeyVerifyImpl>(
-          *std::move(verify), *name, custom_kid);
-  return std::move(jwt_public_key_verify);
+  if (custom_kid.has_value()) {
+    return jwt_internal::JwtPublicKeyVerifyImpl::RawWithCustomKid(
+        *std::move(verify), *name, *custom_kid);
+  }
+  return jwt_internal::JwtPublicKeyVerifyImpl::Raw(*std::move(verify), *name);
 }
 
 uint32_t JwtRsaSsaPssVerifyKeyManager::get_version() const {

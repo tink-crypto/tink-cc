@@ -661,8 +661,10 @@ tink_cc_library(
     tink::jwt::internal::jwt_format
     tink::jwt::internal::jwt_public_key_verify_internal
     protobuf::libprotobuf
+    absl::memory
     absl::status
     absl::strings
+    absl::str_format
     absl::optional
     tink::core::public_key_verify
     tink::jwt::jwt_validator

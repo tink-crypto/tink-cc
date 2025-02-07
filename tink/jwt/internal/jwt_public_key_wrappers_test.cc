@@ -602,17 +602,17 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
       absl::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(kAnnotations);
   ASSERT_THAT(
       public_key_verify_primitive_set
-          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
                              absl::make_unique<DummyPublicKeyVerify>("verify0"),
-                             "jwtverify0", absl::nullopt),
+                             "jwtverify0"),
                          keyset_info.key_info(0))
           .status(),
       IsOk());
   ASSERT_THAT(
       public_key_verify_primitive_set
-          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
                              absl::make_unique<DummyPublicKeyVerify>("verify1"),
-                             "jwtverify1", absl::nullopt),
+                             "jwtverify1"),
                          keyset_info.key_info(1))
           .status(),
       IsOk());
@@ -620,9 +620,8 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
   util::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>::Entry<
       JwtPublicKeyVerifyInternal>*>
       last = public_key_verify_primitive_set->AddPrimitive(
-          absl::make_unique<JwtPublicKeyVerifyImpl>(
-              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2",
-              absl::nullopt),
+          JwtPublicKeyVerifyImpl::Raw(
+              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
           keyset_info.key_info(2));
   ASSERT_THAT(last, IsOk());
   ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
@@ -665,17 +664,17 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
       absl::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(kAnnotations);
   ASSERT_THAT(
       public_key_verify_primitive_set
-          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
                              absl::make_unique<DummyPublicKeyVerify>("verify0"),
-                             "jwtverify0", absl::nullopt),
+                             "jwtverify0"),
                          keyset_info.key_info(0))
           .status(),
       IsOk());
   ASSERT_THAT(
       public_key_verify_primitive_set
-          ->AddPrimitive(absl::make_unique<JwtPublicKeyVerifyImpl>(
+          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
                              absl::make_unique<DummyPublicKeyVerify>("verify1"),
-                             "jwtverify1", absl::nullopt),
+                             "jwtverify1"),
                          keyset_info.key_info(1))
           .status(),
       IsOk());
@@ -683,9 +682,8 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
   util::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>::Entry<
       JwtPublicKeyVerifyInternal>*>
       last = public_key_verify_primitive_set->AddPrimitive(
-          absl::make_unique<JwtPublicKeyVerifyImpl>(
-              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2",
-              absl::nullopt),
+          JwtPublicKeyVerifyImpl::Raw(
+              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
           keyset_info.key_info(2));
   ASSERT_THAT(last, IsOk());
   ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());

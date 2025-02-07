@@ -25,10 +25,8 @@
 #include "absl/types/optional.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/jwt_validator.h"
-#include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/public_key_verify.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -37,28 +35,53 @@ namespace jwt_internal {
 
 class JwtPublicKeyVerifyImpl : public JwtPublicKeyVerifyInternal {
  public:
-  explicit JwtPublicKeyVerifyImpl(
+  // Creates a JwtPublicKeyVerifyImpl with a fixed Kid.
+  // This means that SignAndEncodeWithKid needs to be called with the
+  // given kid; otherwise it will fail. This is useful because in the
+  // migration to full primitives we have a phase where the kid will
+  // be passed in at two places (here and in SignAndEncodeWithKid).
+  static std::unique_ptr<JwtPublicKeyVerifyImpl> WithKid(
       std::unique_ptr<crypto::tink::PublicKeyVerify> verify,
-      absl::string_view algorithm,
-      absl::optional<absl::string_view> custom_kid) {
-    verify_ = std::move(verify);
-    algorithm_ = std::string(algorithm);
-    if (custom_kid.has_value()) {
-      custom_kid_ = std::string(*custom_kid);
-    }
-  }
+      absl::string_view algorithm, absl::string_view kid);
+
+  // Creates a JwtPublicKeyVerifyImpl for a RAW key with a custom kid.
+  // If this is used, SignAndEncodeWithKid must have an absent kid.
+  static std::unique_ptr<JwtPublicKeyVerifyImpl> RawWithCustomKid(
+      std::unique_ptr<crypto::tink::PublicKeyVerify> verify,
+      absl::string_view algorithm, absl::string_view custom_kid);
+
+  // Creates a JwtPublicKeyVerifyImpl for a RAW key without custom kid.
+  // If this is used, SignAndEncodeWithKid may be called with an absent
+  // or a present kid. This is because for non-full primitives, we
+  // always use a RAW output prefix and hence we cannot distinguish between
+  // Tink style kids and absent kids.
+  static std::unique_ptr<JwtPublicKeyVerifyImpl> Raw(
+      std::unique_ptr<crypto::tink::PublicKeyVerify> verify,
+      absl::string_view algorithm);
 
   crypto::tink::util::StatusOr<VerifiedJwt> VerifyAndDecodeWithKid(
       absl::string_view compact, const JwtValidator& validator,
       absl::optional<absl::string_view> kid) const override;
 
  private:
+  explicit JwtPublicKeyVerifyImpl(
+      std::unique_ptr<crypto::tink::PublicKeyVerify> verify,
+      absl::string_view algorithm, absl::optional<std::string> custom_kid,
+      absl::optional<std::string> kid)
+      : verify_(std::move(verify)),
+        algorithm_(algorithm),
+        custom_kid_(custom_kid),
+        kid_(kid) {}
+
   std::unique_ptr<crypto::tink::PublicKeyVerify> verify_;
   std::string algorithm_;
   // custom_kid may be set when a key is converted from another format, for
   // example JWK. It does not have any relation to the key id. It can only be
   // set for keys with output prefix RAW.
   absl::optional<std::string> custom_kid_;
+  // kid is for TINK keys. It is the key id. If this is set, custom_kid_ is
+  // not set.
+  absl::optional<std::string> kid_;
 };
 
 }  // namespace jwt_internal

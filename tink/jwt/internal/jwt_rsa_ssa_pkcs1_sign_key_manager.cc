@@ -59,10 +59,11 @@ JwtRsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
     custom_kid =
         jwt_rsa_ssa_pkcs1_private_key.public_key().custom_kid().value();
   }
-  std::unique_ptr<JwtPublicKeySignInternal> jwt_public_key_sign =
-      absl::make_unique<jwt_internal::JwtPublicKeySignImpl>(*std::move(sign),
-                                                            *name, custom_kid);
-  return std::move(jwt_public_key_sign);
+  if (custom_kid.has_value()) {
+    return jwt_internal::JwtPublicKeySignImpl::RawWithCustomKid(
+        *std::move(sign), *name, *custom_kid);
+  }
+  return jwt_internal::JwtPublicKeySignImpl::Raw(*std::move(sign), *name);
 }
 
 uint32_t JwtRsaSsaPkcs1SignKeyManager::get_version() const {

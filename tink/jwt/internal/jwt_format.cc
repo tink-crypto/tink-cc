@@ -142,6 +142,8 @@ util::Status ValidateHeader(const google::protobuf::Struct& header,
                         "all tokens with crit headers are rejected");
   }
 
+  std::cout << tink_kid.has_value() << " " << custom_kid.has_value() << "\n";
+
   if (tink_kid.has_value() && custom_kid.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "custom_kid can only be set for RAW keys");

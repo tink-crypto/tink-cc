@@ -640,8 +640,10 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::jwt_format
     tink::jwt::internal::jwt_public_key_sign_internal
+    absl::memory
     absl::status
     absl::strings
+    absl::str_format
     absl::optional
     tink::core::public_key_sign
     tink::jwt::raw_jwt
@@ -686,8 +688,6 @@ tink_cc_test(
     absl::time
     absl::optional
     tink::internal::ec_util
-    tink::jwt::jwt_public_key_sign
-    tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
@@ -852,7 +852,6 @@ tink_cc_test(
     tink::monitoring::monitoring
     tink::monitoring::monitoring_client_mocks
     tink::signature::failing_signature
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

@@ -26,7 +26,6 @@
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/public_key_sign.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -35,27 +34,53 @@ namespace jwt_internal {
 
 class JwtPublicKeySignImpl : public JwtPublicKeySignInternal {
  public:
-  explicit JwtPublicKeySignImpl(
+  // Creates a JwtPublicKeySignImpl with a fixed Kid.
+  // This means that SignAndEncodeWithKid needs to be called with the
+  // given kid; otherwise it will fail. This is useful because in the
+  // migration to full primitives we have a phase where the kid will
+  // be passed in at two places (here and in SignAndEncodeWithKid).
+  static std::unique_ptr<JwtPublicKeySignImpl> WithKid(
       std::unique_ptr<crypto::tink::PublicKeySign> sign,
-      absl::string_view algorithm,
-      absl::optional<absl::string_view> custom_kid) {
-    sign_ = std::move(sign);
-    algorithm_ = std::string(algorithm);
-    if (custom_kid.has_value()) {
-      custom_kid_ = std::string(*custom_kid);
-    }
-  }
+      absl::string_view algorithm, absl::string_view kid);
+
+  // Creates a JwtPublicKeySignImpl for a RAW key with a custom kid.
+  // If this is used, SignAndEncodeWithKid must have an absent kid.
+  static std::unique_ptr<JwtPublicKeySignImpl> RawWithCustomKid(
+      std::unique_ptr<crypto::tink::PublicKeySign> sign,
+      absl::string_view algorithm, absl::string_view custom_kid);
+
+  // Creates a JwtPublicKeySignImpl for a RAW key without custom kid.
+  // If this is used, SignAndEncodeWithKid may be called with an absent
+  // or a present kid. This is because for non-full primitives, we
+  // always use a RAW output prefix and hence we cannot distinguish between
+  // Tink style kids and absent kids.
+  static std::unique_ptr<JwtPublicKeySignImpl> Raw(
+      std::unique_ptr<crypto::tink::PublicKeySign> sign,
+      absl::string_view algorithm);
+
   crypto::tink::util::StatusOr<std::string> SignAndEncodeWithKid(
       const crypto::tink::RawJwt& token,
       absl::optional<absl::string_view> kid) const override;
 
  private:
+  explicit JwtPublicKeySignImpl(
+      std::unique_ptr<crypto::tink::PublicKeySign> sign,
+      absl::string_view algorithm, absl::optional<std::string> custom_kid,
+      absl::optional<std::string> kid)
+      : sign_(std::move(sign)),
+        algorithm_(algorithm),
+        custom_kid_(custom_kid),
+        kid_(kid) {}
+
   std::unique_ptr<crypto::tink::PublicKeySign> sign_;
   std::string algorithm_;
   // custom_kid may be set when a key is converted from another format, for
   // example JWK. It does not have any relation to the key id. It can only be
   // set for keys with output prefix RAW.
   absl::optional<std::string> custom_kid_;
+  // kid is for TINK keys. It is the key id. If this is set, custom_kid_ is
+  // not set.
+  absl::optional<std::string> kid_;
 };
 
 }  // namespace jwt_internal

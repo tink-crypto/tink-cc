@@ -34,8 +34,6 @@
 #include "tink/jwt/internal/jwt_format.h"
 #include "tink/jwt/internal/jwt_public_key_sign_impl.h"
 #include "tink/jwt/internal/jwt_public_key_verify_impl.h"
-#include "tink/jwt/jwt_public_key_sign.h"
-#include "tink/jwt/jwt_public_key_verify.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
@@ -45,46 +43,17 @@
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
+namespace crypto {
+namespace tink {
+namespace jwt_internal {
+namespace {
+
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::testing::Eq;
 using ::testing::Not;
 
-namespace crypto {
-namespace tink {
-namespace jwt_internal {
-
-namespace {
-
-class JwtSignatureImplTest : public ::testing::Test {
- protected:
-  void SetUp() override {
-    util::StatusOr<internal::EcKey> ec_key =
-        internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-    ASSERT_THAT(ec_key, IsOk());
-
-    util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
-        subtle::EcdsaSignBoringSsl::New(
-            *ec_key, subtle::HashType::SHA256,
-            subtle::EcdsaSignatureEncoding::IEEE_P1363);
-    ASSERT_THAT(sign, IsOk());
-
-    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
-        subtle::EcdsaVerifyBoringSsl::New(
-            *ec_key, subtle::HashType::SHA256,
-            subtle::EcdsaSignatureEncoding::IEEE_P1363);
-    ASSERT_THAT(verify, IsOk());
-
-    jwt_sign_ = absl::make_unique<JwtPublicKeySignImpl>(
-        *std::move(sign), "ES256", /*custom_kid=*/absl::nullopt);
-    jwt_verify_ = absl::make_unique<JwtPublicKeyVerifyImpl>(
-        *std::move(verify), "ES256", /*custom_kid=*/absl::nullopt);
-  }
-  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign_;
-  std::unique_ptr<JwtPublicKeyVerifyImpl> jwt_verify_;
-};
-
-TEST_F(JwtSignatureImplTest, CreateAndValidateToken) {
+TEST(JwtSignatureImplTest, CreateAndValidateToken) {
   absl::Time now = absl::Now();
   util::StatusOr<RawJwt> raw_jwt_or =
       RawJwtBuilder()
@@ -97,8 +66,26 @@ TEST_F(JwtSignatureImplTest, CreateAndValidateToken) {
   ASSERT_THAT(raw_jwt_or, IsOk());
   RawJwt raw_jwt = raw_jwt_or.value();
 
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::Raw(*std::move(sign), "ES256");
+
+  util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+      subtle::EcdsaVerifyBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(verify, IsOk());
+  auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+      *std::move(verify), "ES256", /*custom_kid=*/absl::nullopt);
+
   util::StatusOr<std::string> compact =
-      jwt_sign_->SignAndEncodeWithKid(raw_jwt, /*kid=*/absl::nullopt);
+      jwt_sign->SignAndEncodeWithKid(raw_jwt, /*kid=*/absl::nullopt);
   ASSERT_THAT(compact, IsOk());
 
   util::StatusOr<JwtValidator> validator =
@@ -107,15 +94,15 @@ TEST_F(JwtSignatureImplTest, CreateAndValidateToken) {
 
   // Success
   util::StatusOr<VerifiedJwt> verified_jwt =
-      jwt_verify_->VerifyAndDecodeWithKid(*compact, *validator,
-                                          /*kid=*/absl::nullopt);
+      jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
+                                         /*kid=*/absl::nullopt);
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
   EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
 
   // Fails because kid header is not present
   EXPECT_THAT(
-      jwt_verify_->VerifyAndDecodeWithKid(*compact, *validator, "kid-123")
+      jwt_verify->VerifyAndDecodeWithKid(*compact, *validator, "kid-123")
           .status(),
       Not(IsOk()));
 
@@ -123,22 +110,20 @@ TEST_F(JwtSignatureImplTest, CreateAndValidateToken) {
   util::StatusOr<JwtValidator> validator2 =
       JwtValidatorBuilder().ExpectIssuer("unknown").Build();
   ASSERT_THAT(validator2, IsOk());
-  EXPECT_FALSE(
-      jwt_verify_
-          ->VerifyAndDecodeWithKid(*compact, *validator2, /*kid=*/absl::nullopt)
-          .ok());
+  EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid(*compact, *validator2,
+                                                 /*kid=*/absl::nullopt),
+              Not(IsOk()));
 
   // Fails because token is not yet valid
   util::StatusOr<JwtValidator> validator_1970 =
       JwtValidatorBuilder().SetFixedNow(absl::FromUnixSeconds(12345)).Build();
   ASSERT_THAT(validator_1970, IsOk());
-  EXPECT_FALSE(jwt_verify_
-                   ->VerifyAndDecodeWithKid(*compact, *validator_1970,
-                                            /*kid=*/absl::nullopt)
-                   .ok());
+  EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid(*compact, *validator_1970,
+                                                 /*kid=*/absl::nullopt),
+              Not(IsOk()));
 }
 
-TEST_F(JwtSignatureImplTest, CreateAndValidateTokenWithKid) {
+TEST(JwtSignatureImplTest, CreateAndValidateTokenWithKid) {
   absl::Time now = absl::Now();
   util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
                                        .SetTypeHeader("typeHeader")
@@ -149,22 +134,40 @@ TEST_F(JwtSignatureImplTest, CreateAndValidateTokenWithKid) {
                                        .Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::Raw(*std::move(sign), "ES256");
+
+  util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+      subtle::EcdsaVerifyBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(verify, IsOk());
+  auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+      *std::move(verify), "ES256", /*custom_kid=*/absl::nullopt);
+
   util::StatusOr<std::string> compact =
-      jwt_sign_->SignAndEncodeWithKid(*raw_jwt, "kid-123");
+      jwt_sign->SignAndEncodeWithKid(*raw_jwt, "kid-123");
   ASSERT_THAT(compact, IsOk());
 
   util::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
 
   util::StatusOr<VerifiedJwt> verified_jwt =
-      jwt_verify_->VerifyAndDecodeWithKid(*compact, *validator, "kid-123");
+      jwt_verify->VerifyAndDecodeWithKid(*compact, *validator, "kid-123");
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
   EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
 
   // Kid header in the token is ignored.
   EXPECT_THAT(
-      jwt_verify_
+      jwt_verify
           ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/absl::nullopt)
           .status(),
       IsOk());
@@ -181,78 +184,321 @@ TEST_F(JwtSignatureImplTest, CreateAndValidateTokenWithKid) {
               Eq("kid-123"));
 }
 
-TEST_F(JwtSignatureImplTest, FailsWithModifiedCompact) {
+TEST(JwtSignatureImplTest, SignAndEncodeWithKidFailsWithWrongKid) {
+  absl::Time now = absl::Now();
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .SetNotBefore(now - absl::Seconds(300))
+                                       .SetIssuedAt(now)
+                                       .SetExpiration(now + absl::Seconds(300))
+                                       .Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  std::string kid = "01020304";
+  util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::WithKid(*std::move(sign), "ES256", kid);
+  EXPECT_THAT(jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/"05060708"),
+              Not(IsOk()));
+  EXPECT_THAT(jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt),
+              Not(IsOk()));
+}
+
+TEST(JwtSignatureImplTest, SignAndEncodeWithKidFailsIfCustomKidIsPresent) {
+  absl::Time now = absl::Now();
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .SetNotBefore(now - absl::Seconds(300))
+                                       .SetIssuedAt(now)
+                                       .SetExpiration(now + absl::Seconds(300))
+                                       .Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  std::string kid = "01020304";
+  util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::RawWithCustomKid(*std::move(sign), "ES256", kid);
+  EXPECT_THAT(jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/"05060708"),
+              Not(IsOk()));
+}
+
+TEST(JwtSignatureImplTest, CreateSignerWithKidAndValidateTokenWithKid) {
+  absl::Time now = absl::Now();
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .SetNotBefore(now - absl::Seconds(300))
+                                       .SetIssuedAt(now)
+                                       .SetExpiration(now + absl::Seconds(300))
+                                       .Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  std::string kid = "01020304";
+  util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(sign, IsOk());
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::WithKid(*std::move(sign), "ES256", kid);
+
+  util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+      subtle::EcdsaVerifyBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(verify, IsOk());
+  auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+      *std::move(verify), "ES256", /*custom_kid=*/absl::nullopt);
+
+  util::StatusOr<std::string> compact =
+      jwt_sign->SignAndEncodeWithKid(*raw_jwt, kid);
+  ASSERT_THAT(compact, IsOk());
+
+  util::StatusOr<JwtValidator> validator =
+      JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
+
+  util::StatusOr<VerifiedJwt> verified_jwt =
+      jwt_verify->VerifyAndDecodeWithKid(*compact, *validator, kid);
+  ASSERT_THAT(verified_jwt, IsOk());
+  EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
+  EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
+
+  // Kid header in the token is ignored.
+  EXPECT_THAT(
+      jwt_verify
+          ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/absl::nullopt)
+          .status(),
+      IsOk());
+
+  // Parse header to make sure the kid value is set correctly.
+  std::vector<absl::string_view> parts = absl::StrSplit(*compact, '.');
+  ASSERT_THAT(parts.size(), Eq(3));
+  std::string json_header;
+  ASSERT_TRUE(DecodeHeader(parts[0], &json_header));
+  util::StatusOr<google::protobuf::Struct> header =
+      JsonStringToProtoStruct(json_header);
+  ASSERT_THAT(header, IsOk());
+  EXPECT_THAT(header->fields().find("kid")->second.string_value(), Eq(kid));
+}
+
+TEST(JwtSignatureImplTest, CreateSignerWithCustomKidAndValidateToken) {
+  absl::Time now = absl::Now();
+  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+                                       .SetTypeHeader("typeHeader")
+                                       .SetJwtId("id123")
+                                       .SetNotBefore(now - absl::Seconds(300))
+                                       .SetIssuedAt(now)
+                                       .SetExpiration(now + absl::Seconds(300))
+                                       .Build();
+  ASSERT_THAT(raw_jwt, IsOk());
+
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  std::string custom_kid = "01020304";
+  util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(sign, IsOk());
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::RawWithCustomKid(*std::move(sign), "ES256",
+                                             custom_kid);
+
+  util::StatusOr<std::string> compact =
+      jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+  ASSERT_THAT(compact, IsOk());
+  // Parse header to make sure the kid value is set correctly.
+  std::vector<absl::string_view> parts = absl::StrSplit(*compact, '.');
+  ASSERT_THAT(parts.size(), Eq(3));
+  std::string json_header;
+  ASSERT_TRUE(DecodeHeader(parts[0], &json_header));
+  util::StatusOr<google::protobuf::Struct> header =
+      JsonStringToProtoStruct(json_header);
+  ASSERT_THAT(header, IsOk());
+  EXPECT_THAT(header->fields().find("kid")->second.string_value(),
+              Eq(custom_kid));
+
+  {
+    // Verify with a RAW verifier works.
+    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+        subtle::EcdsaVerifyBoringSsl::New(
+            *ec_key, subtle::HashType::SHA256,
+            subtle::EcdsaSignatureEncoding::IEEE_P1363);
+    ASSERT_THAT(verify, IsOk());
+    auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+        *std::move(verify), "ES256", /*custom_kid=*/absl::nullopt);
+
+    util::StatusOr<JwtValidator> validator =
+        JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
+
+    // Kid header in the token is ignored.
+    util::StatusOr<VerifiedJwt> verified_jwt =
+        jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
+                                           /*kid=*/absl::nullopt);
+    ASSERT_THAT(verified_jwt, IsOk());
+    EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
+    EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
+  }
+  {
+    // Verify with a verifier with custom kid works.
+    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+        subtle::EcdsaVerifyBoringSsl::New(
+            *ec_key, subtle::HashType::SHA256,
+            subtle::EcdsaSignatureEncoding::IEEE_P1363);
+    ASSERT_THAT(verify, IsOk());
+    auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+        *std::move(verify), "ES256", custom_kid);
+
+    util::StatusOr<JwtValidator> validator =
+        JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
+
+    util::StatusOr<VerifiedJwt> verified_jwt =
+        jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
+                                           /*kid=*/absl::nullopt);
+    ASSERT_THAT(verified_jwt, IsOk());
+    EXPECT_THAT(verified_jwt->GetTypeHeader(), IsOkAndHolds("typeHeader"));
+    EXPECT_THAT(verified_jwt->GetJwtId(), IsOkAndHolds("id123"));
+    // Specifying a kid makes the verification fail.
+    EXPECT_THAT(
+        jwt_verify->VerifyAndDecodeWithKid(*compact, *validator, custom_kid),
+        Not(IsOk()));
+  }
+  {
+    // Verify with a verifier with different custom kid fails.
+    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+        subtle::EcdsaVerifyBoringSsl::New(
+            *ec_key, subtle::HashType::SHA256,
+            subtle::EcdsaSignatureEncoding::IEEE_P1363);
+    ASSERT_THAT(verify, IsOk());
+    auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+        *std::move(verify), "ES256", "another-custom-kid");
+
+    util::StatusOr<JwtValidator> validator =
+        JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
+
+    EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid(*compact, *validator,
+                                                   /*kid=*/absl::nullopt),
+                Not(IsOk()));
+  }
+}
+
+TEST(JwtSignatureImplTest, FailsWithModifiedCompact) {
   util::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetJwtId("id123").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  util::StatusOr<std::unique_ptr<subtle::EcdsaSignBoringSsl>> sign =
+      subtle::EcdsaSignBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  std::unique_ptr<JwtPublicKeySignImpl> jwt_sign =
+      JwtPublicKeySignImpl::Raw(*std::move(sign), "ES256");
+
+  util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+      subtle::EcdsaVerifyBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(verify, IsOk());
+  auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+      *std::move(verify), "ES256", /*custom_kid=*/absl::nullopt);
+
   util::StatusOr<std::string> compact =
-      jwt_sign_->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
+      jwt_sign->SignAndEncodeWithKid(*raw_jwt, /*kid=*/absl::nullopt);
   ASSERT_THAT(compact, IsOk());
   util::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().AllowMissingExpiration().Build();
   ASSERT_THAT(validator, IsOk());
 
   EXPECT_THAT(
-      jwt_verify_
+      jwt_verify
           ->VerifyAndDecodeWithKid(*compact, *validator, /*kid=*/absl::nullopt)
           .status(),
       IsOk());
-  EXPECT_FALSE(jwt_verify_
+  EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat(*compact, "x"),
                                             *validator,
                                             /*kid=*/absl::nullopt)
                    .ok());
-  EXPECT_FALSE(jwt_verify_
+  EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat(*compact, " "),
                                             *validator,
                                             /*kid=*/absl::nullopt)
                    .ok());
-  EXPECT_FALSE(jwt_verify_
+  EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat("x", *compact),
                                             *validator,
                                             /*kid=*/absl::nullopt)
                    .ok());
-  EXPECT_FALSE(jwt_verify_
+  EXPECT_FALSE(jwt_verify
                    ->VerifyAndDecodeWithKid(absl::StrCat(" ", *compact),
                                             *validator,
                                             /*kid=*/absl::nullopt)
                    .ok());
 }
 
-TEST_F(JwtSignatureImplTest, FailsWithInvalidTokens) {
+TEST(JwtSignatureImplTest, FailsWithInvalidTokens) {
+  util::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+  util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verify =
+      subtle::EcdsaVerifyBoringSsl::New(
+          *ec_key, subtle::HashType::SHA256,
+          subtle::EcdsaSignatureEncoding::IEEE_P1363);
+  ASSERT_THAT(verify, IsOk());
+  auto jwt_verify = absl::make_unique<JwtPublicKeyVerifyImpl>(
+      *std::move(verify), "ES256", /*custom_kid=*/absl::nullopt);
+
   util::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().AllowMissingExpiration().Build();
   ASSERT_THAT(validator, IsOk());
-  EXPECT_FALSE(jwt_verify_
-                   ->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30.YWJj.",
-                                            *validator, /*kid=*/absl::nullopt)
-                   .ok());
-  EXPECT_FALSE(jwt_verify_
-                   ->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9?.e30.YWJj",
-                                            *validator, /*kid=*/absl::nullopt)
-                   .ok());
-  EXPECT_FALSE(jwt_verify_
-                   ->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30?.YWJj",
-                                            *validator, /*kid=*/absl::nullopt)
-                   .ok());
-  EXPECT_FALSE(jwt_verify_
-                   ->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30.YWJj?",
-                                            *validator, /*kid=*/absl::nullopt)
-                   .ok());
-  EXPECT_FALSE(jwt_verify_
-                   ->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.YWJj",
-                                            *validator,
-                                            /*kid=*/absl::nullopt)
-                   .ok());
-  EXPECT_FALSE(
-      jwt_verify_->VerifyAndDecodeWithKid("", *validator, /*kid=*/absl::nullopt)
-          .ok());
-  EXPECT_FALSE(
-      jwt_verify_
-          ->VerifyAndDecodeWithKid("..", *validator, /*kid=*/absl::nullopt)
+  EXPECT_THAT(
+      jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30.YWJj.",
+                                         *validator, /*kid=*/absl::nullopt),
+      Not(IsOk()));
+  EXPECT_THAT(
+      jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9?.e30.YWJj",
+                                         *validator, /*kid=*/absl::nullopt),
+      Not(IsOk()));
+  EXPECT_THAT(
+      jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30?.YWJj",
+                                         *validator, /*kid=*/absl::nullopt),
+      Not(IsOk()));
+  EXPECT_THAT(
+      jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.e30.YWJj?",
+                                         *validator, /*kid=*/absl::nullopt),
+      Not(IsOk()));
+  EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid("eyJhbGciOiJIUzI1NiJ9.YWJj",
+                                                 *validator,
+                                                 /*kid=*/absl::nullopt),
+              Not(IsOk()));
+  EXPECT_THAT(
+      jwt_verify->VerifyAndDecodeWithKid("", *validator, /*kid=*/absl::nullopt),
+      Not(IsOk()));
+  EXPECT_THAT(jwt_verify->VerifyAndDecodeWithKid("..", *validator,
+                                                 /*kid=*/absl::nullopt)
 
-          .ok());
+                  ,
+              Not(IsOk()));
 }
 
 }  // namespace

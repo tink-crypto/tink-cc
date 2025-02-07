@@ -58,10 +58,11 @@ JwtEcdsaSignKeyManager::PublicKeySignFactory::Create(
   if (jwt_ecdsa_private_key.public_key().has_custom_kid()) {
     custom_kid = jwt_ecdsa_private_key.public_key().custom_kid().value();
   }
-  std::unique_ptr<JwtPublicKeySignInternal> jwt_public_key_sign =
-      absl::make_unique<jwt_internal::JwtPublicKeySignImpl>(*std::move(sign),
-                                                            *name, custom_kid);
-  return std::move(jwt_public_key_sign);
+  if (custom_kid.has_value()) {
+    return jwt_internal::JwtPublicKeySignImpl::RawWithCustomKid(
+        *std::move(sign), *name, *custom_kid);
+  }
+  return jwt_internal::JwtPublicKeySignImpl::Raw(*std::move(sign), *name);
 }
 
 uint32_t JwtEcdsaSignKeyManager::get_version() const {

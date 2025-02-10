@@ -1124,6 +1124,7 @@ tink_cc_library(
     absl::status
     absl::strings
     absl::optional
+    tink::core::big_integer
     tink::core::configuration
     tink::core::ec_point
     tink::core::partial_key_access
@@ -1136,11 +1137,20 @@ tink_cc_library(
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_ecdsa_public_key
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_private_key
+    tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
+    tink::jwt::jwt_rsa_ssa_pkcs1_public_key
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
+    tink::signature::rsa_ssa_pkcs1_parameters
+    tink::signature::rsa_ssa_pkcs1_private_key
+    tink::signature::rsa_ssa_pkcs1_public_key
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
+    tink::subtle::rsa_ssa_pkcs1_sign_boringssl
+    tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::util::status
     tink::util::statusor
 )
@@ -1164,6 +1174,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::time
+    crypto
     tink::core::big_integer
     tink::core::configuration
     tink::core::ec_point
@@ -1174,10 +1185,12 @@ tink_cc_test(
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::restricted_big_integer
+    tink::internal::bn_util
     tink::internal::configuration_impl
     tink::internal::key_gen_configuration_impl
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
+    tink::internal::ssl_unique_ptr
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_ecdsa_private_key
     tink::jwt::jwt_ecdsa_proto_serialization
@@ -1185,6 +1198,9 @@ tink_cc_test(
     tink::jwt::jwt_key_templates
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify
+    tink::jwt::jwt_rsa_ssa_pkcs1_parameters
+    tink::jwt::jwt_rsa_ssa_pkcs1_private_key
+    tink::jwt::jwt_rsa_ssa_pkcs1_public_key
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::util::statusor

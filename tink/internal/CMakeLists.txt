@@ -1952,3 +1952,28 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME tink_proto_structs
+  SRCS
+    tink_proto_structs.cc
+    tink_proto_structs.h
+  DEPS
+    tink::internal::proto_parser
+    absl::no_destructor
+    tink::util::secret_data
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME tink_proto_structs_test
+  SRCS
+    tink_proto_structs_test.cc
+  DEPS
+    tink::internal::tink_proto_structs
+    gmock
+    tink::util::secret_data
+    tink::util::statusor
+    tink::util::test_matchers
+    tink::proto::tink_cc_proto
+)

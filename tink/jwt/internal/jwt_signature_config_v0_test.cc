@@ -57,6 +57,9 @@
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
+#include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/key.h"
@@ -589,6 +592,195 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
         "xEEovnbwlX54UgGuaYiuqlS1ZV8_c9kG9oXU-8IriuqUctss3VtN4_"
         "1XgEvFreOypKnCn29TAIaB8Frhq5CBsF2O30cTFFa0WtZox2lZsFU9RobrIOELC-"
         "9kpIkE6iS03H-G0fi228XNRNCB0XhzA",
+        /*signed_jwt_validator=*/*std::move(test_vector_validator)});
+  }
+  // RSASSA-PSS.
+  {
+    absl::StatusOr<JwtRsaSsaPssParameters> params =
+        JwtRsaSsaPssParameters::Builder()
+            .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kIgnored)
+            .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
+            .SetModulusSizeInBits(size_t(2048))
+            .SetPublicExponent(F4())
+            .Build();
+    CHECK_OK(params);
+    absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+        JwtRsaSsaPssPublicKey::Builder()
+            .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
+            .SetParameters(*params)
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(public_key);
+    absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+        JwtRsaSsaPssPrivateKey::Builder()
+            .SetPublicKey(*std::move(public_key))
+            .SetPrivateExponent(
+                RestrictedBigInteger(Base64WebSafeDecode(kD2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetPrimeP(RestrictedBigInteger(Base64WebSafeDecode(kP2048Base64),
+                                            InsecureSecretKeyAccess::Get()))
+            .SetPrimeQ(RestrictedBigInteger(Base64WebSafeDecode(kQ2048Base64),
+                                            InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentP(
+                RestrictedBigInteger(Base64WebSafeDecode(kDp2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentQ(
+                RestrictedBigInteger(Base64WebSafeDecode(kDq2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetCrtCoefficient(
+                RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(private_key);
+
+    util::StatusOr<JwtValidator> test_vector_validator =
+        JwtValidatorBuilder()
+            .ExpectIssuer("joe")
+            .SetFixedNow(absl::FromUnixSeconds(1300819380 - 3600))
+            .Build();
+
+    res.push_back(JwtSignatureTestVector{
+        /*private_key=*/std::make_shared<JwtRsaSsaPssPrivateKey>(*private_key),
+        /*signed_jwt=*/
+        // {"alg":"PS256"}
+        "eyJhbGciOiJQUzI1NiJ9"
+        "."
+        // {"iss":"joe",
+        //  "exp":1300819380,
+        //  "http://example.com/is_root":true}
+        "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFt"
+        "cGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
+        "."
+        "WeMZxYgxDNYFbVm2-pt3uxlj1fIS540KIz1mUMwBfcWunpduvtzj_fWPJv_"
+        "bqRC78GdqUaOju01Sega8ECcVsg_8guRyJOl_"
+        "BmE9c6kxzSiPyZJ9f1xUjx9WfQ5kcoYMNMVJ_"
+        "gUO9QbWin23UiHBBs61rolzn0M6xfNS6MkaYXfsa8aYOWAmsLU_"
+        "6WOQtN645bSyoyHDIah2dHXZXQBc6SkqLP8fW1oiTLU4PcVr6SzQIHfK0kS674lqqmdFVK"
+        "QfyIakLEhGsQuZ0XzKRE-RbUrQGelKiC1q5Jz3Gq0nAGqOSPkFMA_"
+        "5TK1TQhykfbIuXYAClbt1tM74ee27sb2uuQ",
+        /*signed_jwt_validator=*/*std::move(test_vector_validator)});
+  }
+  {
+    absl::StatusOr<JwtRsaSsaPssParameters> params =
+        JwtRsaSsaPssParameters::Builder()
+            .SetKidStrategy(
+                JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId)
+            .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
+            .SetModulusSizeInBits(size_t(2048))
+            .SetPublicExponent(F4())
+            .Build();
+    CHECK_OK(params);
+    absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+        JwtRsaSsaPssPublicKey::Builder()
+            .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
+            .SetParameters(*params)
+            .SetIdRequirement(0x01020304)
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(public_key);
+    absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+        JwtRsaSsaPssPrivateKey::Builder()
+            .SetPublicKey(*std::move(public_key))
+            .SetPrivateExponent(
+                RestrictedBigInteger(Base64WebSafeDecode(kD2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetPrimeP(RestrictedBigInteger(Base64WebSafeDecode(kP2048Base64),
+                                            InsecureSecretKeyAccess::Get()))
+            .SetPrimeQ(RestrictedBigInteger(Base64WebSafeDecode(kQ2048Base64),
+                                            InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentP(
+                RestrictedBigInteger(Base64WebSafeDecode(kDp2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentQ(
+                RestrictedBigInteger(Base64WebSafeDecode(kDq2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetCrtCoefficient(
+                RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(private_key);
+
+    util::StatusOr<JwtValidator> test_vector_validator =
+        JwtValidatorBuilder()
+            .ExpectIssuer("issuer")
+            .AllowMissingExpiration()
+            .Build();
+
+    res.push_back(JwtSignatureTestVector{
+        /*private_key=*/std::make_shared<JwtRsaSsaPssPrivateKey>(*private_key),
+        /*signed_jwt=*/
+        // {"kid":"AQIDBA","alg":"PS256"}
+        "eyJraWQiOiJBUUlEQkEiLCJhbGciOiJQUzI1NiJ9"
+        "."
+        // {"iss":"issuer"}
+        "eyJpc3MiOiJpc3N1ZXIifQ"
+        "."
+        "g3PZHFG5ZTEhq_"
+        "73HvCOy5DMsEIYOvuhDVzx839d8KhepjQ50QukGG5xIndgNkwJ6lHNGoDxXuAWu8ckSkt7"
+        "y4RVYc9Qef7cViiHFlJSSFhGocZZuoNFa4uVyQFRe84Zn70kTt2CZ22bhFAJ9rGdTF-"
+        "Vw5BgiHquHiivFzHyo6Q4hOL901Sm1hIW3wHJ6wneW_at6iVLv80l3jRxh19y7JfQJ-"
+        "hCE3yv5UKDYJMlNwwY1jzVD1GdFwpNnjTtgtSH9rFMY8t7D9iXfQjo4iNpZFxeho2igyuV"
+        "dUj8BhfzFO6aSk6NxWdY--ALTJ06YfqMhqNzt_cDrtMksR8vJMcjEQ",
+        /*signed_jwt_validator=*/*std::move(test_vector_validator)});
+  }
+  {
+    absl::StatusOr<JwtRsaSsaPssParameters> params =
+        JwtRsaSsaPssParameters::Builder()
+            .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kCustom)
+            .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
+            .SetModulusSizeInBits(size_t(2048))
+            .SetPublicExponent(F4())
+            .Build();
+    CHECK_OK(params);
+    absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+        JwtRsaSsaPssPublicKey::Builder()
+            .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
+            .SetParameters(*params)
+            .SetCustomKid("custom-kid")
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(public_key);
+    absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+        JwtRsaSsaPssPrivateKey::Builder()
+            .SetPublicKey(*std::move(public_key))
+            .SetPrivateExponent(
+                RestrictedBigInteger(Base64WebSafeDecode(kD2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetPrimeP(RestrictedBigInteger(Base64WebSafeDecode(kP2048Base64),
+                                            InsecureSecretKeyAccess::Get()))
+            .SetPrimeQ(RestrictedBigInteger(Base64WebSafeDecode(kQ2048Base64),
+                                            InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentP(
+                RestrictedBigInteger(Base64WebSafeDecode(kDp2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetPrimeExponentQ(
+                RestrictedBigInteger(Base64WebSafeDecode(kDq2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .SetCrtCoefficient(
+                RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
+                                     InsecureSecretKeyAccess::Get()))
+            .Build(GetPartialKeyAccess());
+    CHECK_OK(private_key);
+
+    util::StatusOr<JwtValidator> test_vector_validator =
+        JwtValidatorBuilder()
+            .ExpectIssuer("issuer")
+            .AllowMissingExpiration()
+            .Build();
+
+    res.push_back(JwtSignatureTestVector{
+        /*private_key=*/std::make_shared<JwtRsaSsaPssPrivateKey>(*private_key),
+        /*signed_jwt=*/
+        // {"kid":"custom-kid","alg":"PS256"}
+        "eyJraWQiOiJjdXN0b20ta2lkIiwiYWxnIjoiUFMyNTYifQ"
+        "."
+        // {"iss":"issuer"}
+        "eyJpc3MiOiJpc3N1ZXIifQ"
+        "."
+        "jrJpl_N-"
+        "uwEDnFrUoqjvJb0Hc9RCyXl9C8heT9Z7ITKOHn4B8laq3Otz20TLeJ9eHNESHZh7mq5R1o"
+        "1vgdkGmxvtmQ8OXC9sr1paFFWREH7FD9ofHSpru7WqkDLH4K9iiQnr6s_"
+        "Idy56f9xbELgBkwipSQVeEiLbWXvMasU2YyyOMfEFF40Y-"
+        "dzxFVHPUWKV7GdrrT7TdiA9Z9pSl4JNQau3_"
+        "sEXOnBZQ3GxJ63vsDQgAzTuz6Ggr8DuuiLHkOZyqAF6qckQ7IzGEYw7jDbHEBR3VbUU8xZ"
+        "e-X1uZS-ZbijC452qDAT8qCp0z9zKT-zOOa1W0hdxDOnG2pPWqNzy7g",
         /*signed_jwt_validator=*/*std::move(test_vector_validator)});
   }
   return res;

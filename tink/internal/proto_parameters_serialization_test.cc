@@ -20,6 +20,8 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/status.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/test_proto.pb.h"
@@ -30,10 +32,12 @@ namespace tink {
 namespace internal {
 
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::TestProto;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
@@ -64,6 +68,21 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   EXPECT_THAT(parsed_proto.num(), Eq(12345));
 }
 
+TEST_F(ProtoParametersSerializationTest,
+       CreateFromIndividualComponentsWithNonPrintableAsciiTypeURLFails) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create("type_url\x01",
+                                           OutputPrefixType::RAW,
+                                           test_proto.SerializeAsString());
+
+  EXPECT_THAT(
+      serialization.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Non-printable ASCII character in type URL.")));
+}
+
 TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplate) {
   TestProto test_proto;
   test_proto.set_num(12345);
@@ -83,6 +102,81 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplate) {
               test_proto.SerializeAsString());
   TestProto parsed_proto;
   parsed_proto.ParseFromString(serialization->GetKeyTemplate().value());
+  EXPECT_THAT(parsed_proto.num(), Eq(12345));
+}
+
+TEST_F(ProtoParametersSerializationTest,
+       CreateFromKeyTemplateWithNonPrintableAsciiTypeURLFails) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  KeyTemplate key_template;
+  key_template.set_value(test_proto.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::TINK);
+  key_template.set_type_url("type_url\x01");
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(key_template);
+
+  EXPECT_THAT(
+      serialization.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Non-printable ASCII character in type URL.")));
+}
+
+TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateStruct) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  KeyTemplateStruct key_template_struct;
+  key_template_struct.value = test_proto.SerializeAsString();
+  key_template_struct.output_prefix_type = OutputPrefixType::TINK;
+  key_template_struct.type_url = "type_url";
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(key_template_struct);
+  ASSERT_THAT(serialization.status(), IsOk());
+
+  EXPECT_THAT(serialization->GetKeyTemplateStruct().type_url, "type_url");
+  EXPECT_THAT(serialization->GetKeyTemplateStruct().output_prefix_type,
+              OutputPrefixType::TINK);
+  EXPECT_THAT(serialization->GetKeyTemplateStruct().value,
+              test_proto.SerializeAsString());
+  TestProto parsed_proto;
+  parsed_proto.ParseFromString(serialization->GetKeyTemplateStruct().value);
+  EXPECT_THAT(parsed_proto.num(), Eq(12345));
+}
+
+TEST_F(ProtoParametersSerializationTest,
+       CreateFromKeyTemplateStructWithNonPrintableAsciiTypeURLFails) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  KeyTemplateStruct key_template_struct;
+  key_template_struct.value = test_proto.SerializeAsString();
+  key_template_struct.output_prefix_type = OutputPrefixType::TINK;
+  key_template_struct.type_url = "type_url\x01";
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(key_template_struct);
+
+  EXPECT_THAT(
+      serialization.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Non-printable ASCII character in type URL.")));
+}
+
+TEST_F(ProtoParametersSerializationTest, GetKeyTemplateStruct) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  KeyTemplate key_template;
+  key_template.set_value(test_proto.SerializeAsString());
+  key_template.set_output_prefix_type(OutputPrefixType::TINK);
+  key_template.set_type_url("type_url");
+  util::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(key_template);
+  ASSERT_THAT(serialization.status(), IsOk());
+
+  KeyTemplateStruct key_template_struct = serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template_struct.type_url, "type_url");
+  EXPECT_THAT(key_template_struct.output_prefix_type, OutputPrefixType::TINK);
+  EXPECT_THAT(key_template_struct.value, test_proto.SerializeAsString());
+  TestProto parsed_proto;
+  parsed_proto.ParseFromString(key_template_struct.value);
   EXPECT_THAT(parsed_proto.num(), Eq(12345));
 }
 
@@ -111,7 +205,6 @@ TEST_F(ProtoParametersSerializationTest, TypeUrlNotEqual) {
       ProtoParametersSerialization::Create("type_url", OutputPrefixType::RAW,
                                            test_proto.SerializeAsString());
   ASSERT_THAT(serialization.status(), IsOk());
-
 
   util::StatusOr<ProtoParametersSerialization> other_serialization =
       ProtoParametersSerialization::Create("other_url", OutputPrefixType::RAW,

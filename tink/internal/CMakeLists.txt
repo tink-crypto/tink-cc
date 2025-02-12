@@ -531,6 +531,7 @@ tink_cc_library(
     proto_parameters_serialization.h
   DEPS
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::internal::util
     absl::status
     absl::strings
@@ -545,7 +546,9 @@ tink_cc_test(
     proto_parameters_serialization_test.cc
   DEPS
     tink::internal::proto_parameters_serialization
+    tink::internal::tink_proto_structs
     gmock
+    absl::status
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::test_proto_cc_proto

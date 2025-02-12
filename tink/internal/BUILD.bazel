@@ -562,6 +562,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":serialization",
+        ":tink_proto_structs",
         ":util",
         "//proto:tink_cc_proto",
         "//tink/util:status",
@@ -576,10 +577,12 @@ cc_test(
     srcs = ["proto_parameters_serialization_test.cc"],
     deps = [
         ":proto_parameters_serialization",
+        ":tink_proto_structs",
         "//proto:test_proto_cc_proto",
         "//proto:tink_cc_proto",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_absl//absl/status",
         "@com_google_googletest//:gtest_main",
     ],
 )

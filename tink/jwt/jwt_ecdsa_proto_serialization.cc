@@ -26,6 +26,7 @@
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_encoding_util.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -40,6 +41,8 @@
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
+#include "tink/util/secret_data.h"
+#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
@@ -343,37 +346,39 @@ util::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
                         "Wrong type URL when parsing JwtEcdsaPrivateKey.");
   }
 
-  google::crypto::tink::JwtEcdsaPrivateKey proto_key;
+  util::SecretProto<google::crypto::tink::JwtEcdsaPrivateKey> proto_key;
   const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_key.ParseFromString(restricted_data.GetSecret(*token))) {
+  if (!internal::CallWithCoreDumpProtection([&]() {
+        return proto_key->ParseFromString(restricted_data.GetSecret(*token));
+      })) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse JwtEcdsaPrivateKey proto");
   }
-  if (proto_key.version() != 0) {
+  if (proto_key->version() != 0) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsing JwtEcdsaPrivateKey failed: only version 0 is accepted.");
   }
-  if (!proto_key.has_public_key()) {
+  if (!proto_key->has_public_key()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "JwtEcdsaPrivateKey proto is missing public key.");
   }
 
   util::StatusOr<JwtEcdsaParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key.public_key().algorithm(),
-      proto_key.public_key().has_custom_kid());
+      serialization.GetOutputPrefixType(), proto_key->public_key().algorithm(),
+      proto_key->public_key().has_custom_kid());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   util::StatusOr<JwtEcdsaPublicKey> public_key = ToPublicKey(
-      *parameters, proto_key.public_key(), serialization.IdRequirement());
+      *parameters, proto_key->public_key(), serialization.IdRequirement());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(proto_key.key_value(), *token);
+  RestrictedBigInteger private_key_value = internal::CallWithCoreDumpProtection(
+      [&]() { return RestrictedBigInteger(proto_key->key_value(), *token); });
   return JwtEcdsaPrivateKey::Create(*public_key, private_key_value,
                                     GetPartialKeyAccess());
 }
@@ -403,11 +408,14 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return enc_length.status();
   }
 
-  google::crypto::tink::JwtEcdsaPrivateKey proto_private_key;
-  proto_private_key.set_version(0);
-  *proto_private_key.mutable_public_key() = std::move(*proto_public_key);
-  proto_private_key.set_key_value(*internal::GetValueOfFixedLength(
-      restricted_input->GetSecret(*token), *enc_length));
+  util::SecretProto<google::crypto::tink::JwtEcdsaPrivateKey> proto_private_key;
+  proto_private_key->set_version(0);
+  *proto_private_key->mutable_public_key() = *std::move(proto_public_key);
+  internal::CallWithCoreDumpProtection([&]() {
+    proto_private_key->set_key_value(
+        util::SecretDataAsStringView(*internal::GetSecretValueOfFixedLength(
+            *restricted_input, *enc_length, *token)));
+  });
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
@@ -415,10 +423,15 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output =
-      RestrictedData(proto_private_key.SerializeAsString(), *token);
+  util::StatusOr<util::SecretData> serialized_proto_private_key =
+      proto_private_key.SerializeAsSecretData();
+  if (!serialized_proto_private_key.ok()) {
+    return serialized_proto_private_key.status();
+  }
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, std::move(restricted_output),
+      kPrivateTypeUrl,
+      RestrictedData(*std::move(serialized_proto_private_key),
+                     InsecureSecretKeyAccess::Get()),
       KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
 }
 

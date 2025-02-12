@@ -20,6 +20,7 @@
 
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
+#include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -91,26 +92,28 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
 
-  // Set EC_KEY private key.
   util::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_big_num =
       internal::StringToBignum(
           private_key_value.GetSecret(InsecureSecretKeyAccess::Get()));
   if (!priv_big_num.ok()) {
     return priv_big_num.status();
   }
-  if (!EC_KEY_set_private_key(key.get(), priv_big_num->get())) {
+  if (int set_private_key_res = internal::CallWithCoreDumpProtection([&]() {
+        return EC_KEY_set_private_key(key.get(), priv_big_num->get());
+      });
+      !set_private_key_res) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
   }
 
-  // Check that EC_KEY is valid.
-  if (!EC_KEY_check_key(key.get())) {
+  if (int validate_key_res = internal::CallWithCoreDumpProtection(
+          [&]() { return EC_KEY_check_key(key.get()); });
+      !validate_key_res) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid EC key pair: ", internal::GetSslErrors()));
   }
-
   return util::OkStatus();
 }
 

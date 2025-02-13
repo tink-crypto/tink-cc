@@ -17,7 +17,6 @@
 #include "tink/jwt/jwt_hmac_proto_serialization.h"
 
 #include <cstdint>
-#include <string>
 #include <utility>
 
 #include "absl/base/no_destructor.h"

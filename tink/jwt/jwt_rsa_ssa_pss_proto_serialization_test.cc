@@ -490,9 +490,8 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Only version 0 keys are accepted")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                     HasSubstr("only version 0 is accepted")));
 }
 
 TEST_F(JwtRsaSsaPssProtoSerializationTest,
@@ -748,10 +747,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      key.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse JwtRsaSsaPssPrivateKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(JwtRsaSsaPssProtoSerializationTest,
@@ -862,11 +858,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   util::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(
-      key.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("JwtRsaSsaPssPrivateKey proto is missing public key")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_P(JwtRsaSsaPssParseInvalidPrefixTest,

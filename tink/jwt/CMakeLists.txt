@@ -568,8 +568,8 @@ tink_cc_library(
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_public_key
+    absl::no_destructor
     absl::status
-    absl::statusor
     absl::string_view
     absl::optional
     tink::core::big_integer
@@ -586,8 +586,8 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::util::secret_data
-    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
     tink::proto::jwt_rsa_ssa_pss_cc_proto

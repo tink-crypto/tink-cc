@@ -180,12 +180,12 @@ class AeadKeyTemplates {
   static const google::crypto::tink::KeyTemplate&
   XAes256Gcm160BitNonceNoPrefix();
 
-  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  ABSL_DEPRECATE_AND_INLINE()
   static const google::crypto::tink::KeyTemplate& XAes256Gcm8ByteSalt() {
     return XAes256Gcm160BitNonce();
   }
 
-  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  ABSL_DEPRECATE_AND_INLINE()
   static const google::crypto::tink::KeyTemplate&
   XAes256Gcm8ByteSaltNoPrefix() {
     return XAes256Gcm160BitNonceNoPrefix();

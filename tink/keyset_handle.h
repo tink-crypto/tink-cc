@@ -195,7 +195,7 @@ class KeysetHandle {
   // Returns a KeysetHandle containing one new key generated according to
   // `key_template` using the global registry. When specified, the keyset is
   //  annotated for monitoring with `monitoring_annotations`.
-  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  ABSL_DEPRECATE_AND_INLINE()
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
   GenerateNew(
       const google::crypto::tink::KeyTemplate& key_template,
@@ -203,7 +203,7 @@ class KeysetHandle {
     return GenerateNew(key_template, crypto::tink::KeyGenConfigGlobalRegistry(),
                        std::move(monitoring_annotations));
   }
-  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  ABSL_DEPRECATE_AND_INLINE()
   static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
   GenerateNew(const google::crypto::tink::KeyTemplate& key_template) {
     return GenerateNew(key_template,
@@ -245,7 +245,7 @@ class KeysetHandle {
   // private keys in this handle. Relies on key type managers stored in the
   // global registry to do so. Returns an error if this handle contains keys
   // that are not private keys.
-  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  ABSL_DEPRECATE_AND_INLINE()
   crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
   GetPublicKeysetHandle() const {
     return GetPublicKeysetHandle(crypto::tink::KeyGenConfigGlobalRegistry());
@@ -264,7 +264,7 @@ class KeysetHandle {
   // Creates a wrapped primitive using this keyset handle and the global
   // registry, which stores necessary primitive wrappers and key type managers.
   template <class P>
-  ABSL_DEPRECATED("Inline this function's body at its call sites")
+  ABSL_DEPRECATE_AND_INLINE()
   crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive() const {
     return GetPrimitive<P>(crypto::tink::ConfigGlobalRegistry());
   }

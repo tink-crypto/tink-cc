@@ -16,15 +16,18 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_proto_serialization.h"
 
+#include <sys/types.h>
+
+#include <cstdint>
+#include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -32,6 +35,7 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
@@ -40,9 +44,9 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
+#include "proto/jwt_ecdsa.pb.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"
 
@@ -50,10 +54,10 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
-using ::google::crypto::tink::JwtRsaSsaPkcs1KeyFormat;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 
@@ -75,6 +79,97 @@ using JwtRsaSsaPkcs1ProtoPrivateKeyParserImpl =
 using JwtRsaSsaPkcs1ProtoPrivateKeySerializerImpl =
     internal::KeySerializerImpl<JwtRsaSsaPkcs1PrivateKey,
                                 internal::ProtoKeySerialization>;
+
+bool JwtRsaSsaPkcs1AlgorithmValid(int value) {
+  return google::crypto::tink::JwtRsaSsaPkcs1Algorithm_IsValid(value);
+}
+
+struct CustomKidStruct {
+  std::string value;
+
+  static ProtoParser<CustomKidStruct> CreateParser() {
+    return ProtoParserBuilder<CustomKidStruct>()
+        .AddBytesStringField(1, &CustomKidStruct::value)
+        .BuildOrDie();
+  }
+};
+
+struct JwtRsaSsaPkcs1PublicKeyStruct {
+  uint32_t version;
+  JwtRsaSsaPkcs1Algorithm algorithm;
+  std::string n;
+  std::string e;
+  std::optional<CustomKidStruct> custom_kid;
+
+  static ProtoParser<JwtRsaSsaPkcs1PublicKeyStruct> CreateParser() {
+    return ProtoParserBuilder<JwtRsaSsaPkcs1PublicKeyStruct>()
+        .AddUint32Field(1, &JwtRsaSsaPkcs1PublicKeyStruct::version)
+        .AddEnumField(2, &JwtRsaSsaPkcs1PublicKeyStruct::algorithm,
+                      &JwtRsaSsaPkcs1AlgorithmValid)
+        .AddBytesStringField(3, &JwtRsaSsaPkcs1PublicKeyStruct::n)
+        .AddBytesStringField(4, &JwtRsaSsaPkcs1PublicKeyStruct::e)
+        .AddMessageFieldWithPresence(5,
+                                     &JwtRsaSsaPkcs1PublicKeyStruct::custom_kid,
+                                     CustomKidStruct::CreateParser())
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<JwtRsaSsaPkcs1PublicKeyStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<JwtRsaSsaPkcs1PublicKeyStruct>>
+        parser{CreateParser()};
+    return *parser;
+  }
+};
+
+struct JwtRsaSsaPkcs1PrivateKeyStruct {
+  uint32_t version;
+  JwtRsaSsaPkcs1PublicKeyStruct public_key;
+  SecretData d;
+  SecretData p;
+  SecretData q;
+  SecretData dp;
+  SecretData dq;
+  SecretData crt;
+
+  static const ProtoParser<JwtRsaSsaPkcs1PrivateKeyStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<JwtRsaSsaPkcs1PrivateKeyStruct>>
+        parser{
+            ProtoParserBuilder<JwtRsaSsaPkcs1PrivateKeyStruct>()
+                .AddUint32Field(1, &JwtRsaSsaPkcs1PrivateKeyStruct::version)
+                .AddMessageField(2, &JwtRsaSsaPkcs1PrivateKeyStruct::public_key,
+                                 JwtRsaSsaPkcs1PublicKeyStruct::CreateParser())
+                .AddBytesSecretDataField(3, &JwtRsaSsaPkcs1PrivateKeyStruct::d)
+                .AddBytesSecretDataField(4, &JwtRsaSsaPkcs1PrivateKeyStruct::p)
+                .AddBytesSecretDataField(5, &JwtRsaSsaPkcs1PrivateKeyStruct::q)
+                .AddBytesSecretDataField(6, &JwtRsaSsaPkcs1PrivateKeyStruct::dp)
+                .AddBytesSecretDataField(7, &JwtRsaSsaPkcs1PrivateKeyStruct::dq)
+                .AddBytesSecretDataField(8,
+                                         &JwtRsaSsaPkcs1PrivateKeyStruct::crt)
+                .BuildOrDie()};
+    return *parser;
+  }
+};
+
+struct JwtRsaSsaPkcs1KeyFormatStruct {
+  uint32_t version;
+  JwtRsaSsaPkcs1Algorithm algorithm;
+  uint32_t modulus_size_in_bits;
+  std::string public_exponent;
+
+  static const ProtoParser<JwtRsaSsaPkcs1KeyFormatStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<JwtRsaSsaPkcs1KeyFormatStruct>>
+        parser{ProtoParserBuilder<JwtRsaSsaPkcs1KeyFormatStruct>()
+                   .AddUint32Field(1, &JwtRsaSsaPkcs1KeyFormatStruct::version)
+                   .AddEnumField(2, &JwtRsaSsaPkcs1KeyFormatStruct::algorithm,
+                                 &JwtRsaSsaPkcs1AlgorithmValid)
+                   .AddUint32Field(
+                       3, &JwtRsaSsaPkcs1KeyFormatStruct::modulus_size_in_bits)
+                   .AddBytesStringField(
+                       4, &JwtRsaSsaPkcs1KeyFormatStruct::public_exponent)
+                   .BuildOrDie()};
+    return *parser;
+  }
+};
 
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtRsaSsaPkcs1PrivateKey";
@@ -168,15 +263,42 @@ util::StatusOr<JwtRsaSsaPkcs1Parameters> ToParameters(
       .Build();
 }
 
+util::StatusOr<JwtRsaSsaPkcs1Parameters> ParseParameters(
+    const internal::ProtoParametersSerialization& serialization) {
+  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Wrong type URL when parsing JwtRsaSsaPkcs1Parameters.");
+  }
+
+  util::StatusOr<JwtRsaSsaPkcs1KeyFormatStruct> key_format_struct =
+      JwtRsaSsaPkcs1KeyFormatStruct::GetParser().Parse(
+          serialization.GetKeyTemplate().value());
+  if (!key_format_struct.ok()) {
+    return key_format_struct.status();
+  }
+  if (key_format_struct->version != 0) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Parsing JwtRsaSsaPkcs1Parameters failed: only version 0 is accepted.");
+  }
+
+  return ToParameters(serialization.GetKeyTemplate().output_prefix_type(),
+                      key_format_struct->algorithm,
+                      key_format_struct->modulus_size_in_bits,
+                      BigInteger(key_format_struct->public_exponent),
+                      /*has_custom_kid=*/false);
+}
+
 util::StatusOr<JwtRsaSsaPkcs1PublicKey> ToPublicKey(
-    const google::crypto::tink::JwtRsaSsaPkcs1PublicKey& proto_public_key,
+    const JwtRsaSsaPkcs1PublicKeyStruct& proto_public_key,
     OutputPrefixType output_prefix_type, absl::optional<int> id_requirement) {
-  BigInteger modulus(proto_public_key.n());
+  BigInteger modulus(proto_public_key.n);
   int modulus_size_in_bits = modulus.SizeInBytes() * 8;
 
   util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters = ToParameters(
-      output_prefix_type, proto_public_key.algorithm(), modulus_size_in_bits,
-      BigInteger(proto_public_key.e()), proto_public_key.has_custom_kid());
+      output_prefix_type, proto_public_key.algorithm, modulus_size_in_bits,
+      BigInteger(proto_public_key.e), proto_public_key.custom_kid.has_value());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -187,36 +309,10 @@ util::StatusOr<JwtRsaSsaPkcs1PublicKey> ToPublicKey(
   if (id_requirement.has_value()) {
     builder.SetIdRequirement(*id_requirement);
   }
-  if (proto_public_key.has_custom_kid()) {
-    builder.SetCustomKid(proto_public_key.custom_kid().value());
+  if (proto_public_key.custom_kid.has_value()) {
+    builder.SetCustomKid(proto_public_key.custom_kid.value().value);
   }
   return builder.Build(GetPartialKeyAccess());
-}
-
-util::StatusOr<JwtRsaSsaPkcs1Parameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Wrong type URL when parsing JwtRsaSsaPkcs1Parameters.");
-  }
-
-  JwtRsaSsaPkcs1KeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse JwtRsaSsaPkcs1KeyFormat proto");
-  }
-  if (proto_key_format.version() != 0) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Parsing JwtRsaSsaPkcs1Parameters failed: only version 0 is accepted.");
-  }
-
-  return ToParameters(
-      serialization.GetKeyTemplate().output_prefix_type(),
-      proto_key_format.algorithm(), proto_key_format.modulus_size_in_bits(),
-      BigInteger(proto_key_format.public_exponent()), /*has_custom_kid=*/false);
 }
 
 util::StatusOr<JwtRsaSsaPkcs1PublicKey> ParsePublicKey(
@@ -227,19 +323,19 @@ util::StatusOr<JwtRsaSsaPkcs1PublicKey> ParsePublicKey(
                         "Wrong type URL when parsing JwtRsaSsaPkcs1PublicKey.");
   }
 
-  google::crypto::tink::JwtRsaSsaPkcs1PublicKey proto_public_key;
-  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  if (!proto_public_key.ParseFromString(
-          restricted_data.GetSecret(InsecureSecretKeyAccess::Get()))) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse JwtRsaSsaPkcs1PublicKey proto");
+  util::StatusOr<JwtRsaSsaPkcs1PublicKeyStruct> public_key_struct =
+      JwtRsaSsaPkcs1PublicKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(
+              InsecureSecretKeyAccess::Get()));
+  if (!public_key_struct.ok()) {
+    return public_key_struct.status();
   }
-  if (proto_public_key.version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+  if (public_key_struct->version != 0) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Parsing JwtRsaSsaPkcs1PublicKey failed: only version 0 is accepted.");
   }
-
-  return ToPublicKey(proto_public_key, serialization.GetOutputPrefixType(),
+  return ToPublicKey(*public_key_struct, serialization.GetOutputPrefixType(),
                      serialization.IdRequirement());
 }
 
@@ -256,30 +352,23 @@ util::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
         "Wrong type URL when parsing JwtRsaSsaPkcs1PrivateKey.");
   }
 
-  absl::StatusOr<SecretProto<google::crypto::tink::JwtRsaSsaPkcs1PrivateKey>>
-      proto_key = SecretProto<google::crypto::tink::JwtRsaSsaPkcs1PrivateKey>::
-          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
-  if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse JwtRsaSsaPkcs1PrivateKey proto");
+  util::StatusOr<JwtRsaSsaPkcs1PrivateKeyStruct> private_key_struct =
+      JwtRsaSsaPkcs1PrivateKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
+  if (!private_key_struct.ok()) {
+    return private_key_struct.status();
   }
-  if ((*proto_key)->version() != 0) {
+  if (private_key_struct->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
-  if (!(*proto_key)->has_public_key()) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "JwtRsaSsaPkcs1PrivateKey proto is missing public key.");
-  }
-
-  if ((*proto_key)->public_key().version() != 0) {
+  if (private_key_struct->public_key.version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 public keys are accepted.");
   }
 
   util::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key = ToPublicKey(
-      (*proto_key)->public_key(), serialization.GetOutputPrefixType(),
+      private_key_struct->public_key, serialization.GetOutputPrefixType(),
       serialization.IdRequirement());
   if (!public_key.ok()) {
     return public_key.status();
@@ -287,12 +376,12 @@ util::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
 
   return JwtRsaSsaPkcs1PrivateKey::Builder()
       .SetPublicKey(*public_key)
-      .SetPrimeP(RestrictedBigInteger((*proto_key)->p(), *token))
-      .SetPrimeQ(RestrictedBigInteger((*proto_key)->q(), *token))
-      .SetPrimeExponentP(RestrictedBigInteger((*proto_key)->dp(), *token))
-      .SetPrimeExponentQ(RestrictedBigInteger((*proto_key)->dq(), *token))
-      .SetPrivateExponent(RestrictedBigInteger((*proto_key)->d(), *token))
-      .SetCrtCoefficient(RestrictedBigInteger((*proto_key)->crt(), *token))
+      .SetPrimeP(RestrictedBigInteger(private_key_struct->p, *token))
+      .SetPrimeQ(RestrictedBigInteger(private_key_struct->q, *token))
+      .SetPrimeExponentP(RestrictedBigInteger(private_key_struct->dp, *token))
+      .SetPrimeExponentQ(RestrictedBigInteger(private_key_struct->dq, *token))
+      .SetPrivateExponent(RestrictedBigInteger(private_key_struct->d, *token))
+      .SetCrtCoefficient(RestrictedBigInteger(private_key_struct->crt, *token))
       .Build(GetPartialKeyAccess());
 }
 
@@ -315,35 +404,54 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return proto_algorithm.status();
   }
 
-  JwtRsaSsaPkcs1KeyFormat key_format;
-  key_format.set_version(0);
-  key_format.set_algorithm(*proto_algorithm);
-  key_format.set_modulus_size_in_bits(parameters.GetModulusSizeInBits());
-  key_format.set_public_exponent(parameters.GetPublicExponent().GetValue());
+  JwtRsaSsaPkcs1KeyFormatStruct key_format{
+      /*version=*/0,
+      /*algorithm=*/*proto_algorithm,
+      /*modulus_size_in_bits=*/
+      static_cast<uint32_t>(parameters.GetModulusSizeInBits()),
+      /*public_exponent=*/
+      std::string(parameters.GetPublicExponent().GetValue()),
+  };
+
+  util::StatusOr<std::string> serialized_key_format =
+      JwtRsaSsaPkcs1KeyFormatStruct::GetParser().SerializeIntoString(
+          key_format);
+  if (!serialized_key_format.ok()) {
+    return serialized_key_format.status();
+  }
 
   return internal::ProtoParametersSerialization::Create(
-      kPrivateTypeUrl, *output_prefix_type, key_format.SerializeAsString());
+      kPrivateTypeUrl, *output_prefix_type, *serialized_key_format);
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
-    const JwtRsaSsaPkcs1PublicKey& public_key,
-    absl::optional<SecretKeyAccessToken> token) {
+util::StatusOr<JwtRsaSsaPkcs1PublicKeyStruct> ToStruct(
+    const JwtRsaSsaPkcs1PublicKey& public_key) {
   util::StatusOr<JwtRsaSsaPkcs1Algorithm> proto_algorithm =
       ToProtoAlgorithm(public_key.GetParameters().GetAlgorithm());
   if (!proto_algorithm.ok()) {
     return proto_algorithm.status();
   }
-
-  google::crypto::tink::JwtRsaSsaPkcs1PublicKey proto_public_key;
-  proto_public_key.set_version(0);
-  proto_public_key.set_algorithm(*proto_algorithm);
-  proto_public_key.set_n(
-      public_key.GetModulus(GetPartialKeyAccess()).GetValue());
-  proto_public_key.set_e(
-      public_key.GetParameters().GetPublicExponent().GetValue());
+  JwtRsaSsaPkcs1PublicKeyStruct public_key_struct;
+  public_key_struct.version = 0;
+  public_key_struct.algorithm = *proto_algorithm;
+  public_key_struct.n =
+      std::string(public_key.GetModulus(GetPartialKeyAccess()).GetValue());
+  public_key_struct.e =
+      std::string(public_key.GetParameters().GetPublicExponent().GetValue());
   if (public_key.GetParameters().GetKidStrategy() ==
       JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom) {
-    proto_public_key.mutable_custom_kid()->set_value(*public_key.GetKid());
+    public_key_struct.custom_kid = CustomKidStruct{public_key.GetKid().value()};
+  }
+  return public_key_struct;
+}
+
+util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+    const JwtRsaSsaPkcs1PublicKey& public_key,
+    absl::optional<SecretKeyAccessToken> token) {
+  util::StatusOr<JwtRsaSsaPkcs1PublicKeyStruct> public_key_struct =
+      ToStruct(public_key);
+  if (!public_key_struct.ok()) {
+    return public_key_struct.status();
   }
 
   util::StatusOr<OutputPrefixType> output_prefix_type =
@@ -352,61 +460,56 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output = RestrictedData(
-      proto_public_key.SerializeAsString(), InsecureSecretKeyAccess::Get());
+  util::StatusOr<std::string> serialized_public_key =
+      JwtRsaSsaPkcs1PublicKeyStruct::GetParser().SerializeIntoString(
+          *public_key_struct);
+  if (!serialized_public_key.ok()) {
+    return serialized_public_key.status();
+  }
+
+  RestrictedData restricted_output =
+      RestrictedData(*serialized_public_key, InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
       kPublicTypeUrl, std::move(restricted_output), KeyData::ASYMMETRIC_PUBLIC,
       *output_prefix_type, public_key.GetIdRequirement());
 }
 
 util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
-    const JwtRsaSsaPkcs1PrivateKey& key,
+    const JwtRsaSsaPkcs1PrivateKey& private_key,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
 
-  util::StatusOr<JwtRsaSsaPkcs1Algorithm> proto_algorithm =
-      ToProtoAlgorithm(key.GetPublicKey().GetParameters().GetAlgorithm());
-  if (!proto_algorithm.ok()) {
-    return proto_algorithm.status();
-  }
-  google::crypto::tink::JwtRsaSsaPkcs1PublicKey proto_public_key;
-  proto_public_key.set_version(0);
-  proto_public_key.set_algorithm(*proto_algorithm);
-  proto_public_key.set_n(
-      key.GetPublicKey().GetModulus(GetPartialKeyAccess()).GetValue());
-  proto_public_key.set_e(
-      key.GetPublicKey().GetParameters().GetPublicExponent().GetValue());
-  if (key.GetPublicKey().GetParameters().GetKidStrategy() ==
-      JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom) {
-    proto_public_key.mutable_custom_kid()->set_value(
-        *key.GetPublicKey().GetKid());
+  util::StatusOr<JwtRsaSsaPkcs1PublicKeyStruct> public_key_struct =
+      ToStruct(private_key.GetPublicKey());
+  if (!public_key_struct.ok()) {
+    return public_key_struct.status();
   }
 
-  SecretProto<google::crypto::tink::JwtRsaSsaPkcs1PrivateKey> proto_private_key;
-  proto_private_key->set_version(0);
-  *proto_private_key->mutable_public_key() = proto_public_key;
-  internal::CallWithCoreDumpProtection([&]() {
-    proto_private_key->set_p(
-        key.GetPrimeP(GetPartialKeyAccess()).GetSecret(*token));
-    proto_private_key->set_q(
-        key.GetPrimeQ(GetPartialKeyAccess()).GetSecret(*token));
-    proto_private_key->set_dp(key.GetPrimeExponentP().GetSecret(*token));
-    proto_private_key->set_dq(key.GetPrimeExponentQ().GetSecret(*token));
-    proto_private_key->set_d(key.GetPrivateExponent().GetSecret(*token));
-    proto_private_key->set_crt(key.GetCrtCoefficient().GetSecret(*token));
-  });
+  JwtRsaSsaPkcs1PrivateKeyStruct private_key_struct;
+  private_key_struct.version = 0;
+  private_key_struct.public_key = *std::move(public_key_struct);
+  private_key_struct.p =
+      private_key.GetPrimeP(GetPartialKeyAccess()).GetSecretData(*token);
+  private_key_struct.q =
+      private_key.GetPrimeQ(GetPartialKeyAccess()).GetSecretData(*token);
+  private_key_struct.dp = private_key.GetPrimeExponentP().GetSecretData(*token);
+  private_key_struct.dq = private_key.GetPrimeExponentQ().GetSecretData(*token);
+  private_key_struct.d = private_key.GetPrivateExponent().GetSecretData(*token);
+  private_key_struct.crt =
+      private_key.GetCrtCoefficient().GetSecretData(*token);
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
-      ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
+  util::StatusOr<OutputPrefixType> output_prefix_type = ToOutputPrefixType(
+      private_key.GetPublicKey().GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
   util::StatusOr<SecretData> serialized_key =
-      proto_private_key.SerializeAsSecretData();
+      JwtRsaSsaPkcs1PrivateKeyStruct::GetParser().SerializeIntoSecretData(
+          private_key_struct);
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }
@@ -414,7 +517,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
       RestrictedData(*std::move(serialized_key), *token);
   return internal::ProtoKeySerialization::Create(
       kPrivateTypeUrl, std::move(restricted_output),
-      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
+      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type,
+      private_key.GetIdRequirement());
 }
 
 JwtRsaSsaPkcs1ProtoParametersParserImpl& JwtRsaSsaPkcs1ProtoParametersParser() {

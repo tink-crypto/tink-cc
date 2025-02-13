@@ -467,8 +467,8 @@ tink_cc_library(
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
+    absl::no_destructor
     absl::status
-    absl::statusor
     absl::string_view
     absl::optional
     tink::core::big_integer
@@ -477,7 +477,6 @@ tink_cc_library(
     tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::internal::call_with_core_dump_protection
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -485,10 +484,11 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::util::secret_data
-    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
+    tink::proto::jwt_ecdsa_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )

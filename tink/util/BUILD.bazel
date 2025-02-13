@@ -92,7 +92,10 @@ cc_library(
     hdrs = ["status.h"],
     include_prefix = "tink/util",
     visibility = ["//visibility:public"],
-    deps = ["@com_google_absl//absl/status"],
+    deps = [
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+    ],
 )
 
 cc_library(
@@ -102,6 +105,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":status",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/status:statusor",
     ],
 )

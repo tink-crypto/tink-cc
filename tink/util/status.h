@@ -20,6 +20,7 @@
 #ifndef TINK_UTIL_STATUS_H_
 #define TINK_UTIL_STATUS_H_
 
+#include "absl/base/macros.h"
 #include "absl/status/status.h"
 
 #define TINK_USE_ABSL_STATUS
@@ -28,10 +29,15 @@ namespace crypto {
 namespace tink {
 namespace util {
 
-using Status = absl::Status;
+// Status can be inlined to make user code cleaner. We currently do not plan
+// to remove it.
+using Status ABSL_DEPRECATE_AND_INLINE() = absl::Status;
 
 // Returns an OK status, equivalent to a default constructed instance.
-inline Status OkStatus() { return Status(); }
+// OkStatus can be inlined to make user code cleaner. We currently do not plan
+// to remove OkStatus.
+ABSL_DEPRECATE_AND_INLINE()
+inline absl::Status OkStatus() { return absl::OkStatus(); }
 
 }  // namespace util
 }  // namespace tink

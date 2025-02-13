@@ -42,7 +42,7 @@ class JwtPublicKeyVerifyImpl;
 ///////////////////////////////////////////////////////////////////////////////
 // A decoded and verified JSON Web Token (JWT).
 //
-// A new instance of this class is returned as the result of a sucessfully
+// A new instance of this class is returned as the result of a successful
 // verification of a MACed or signed compact JWT.
 //
 // It gives read-only access all payload claims and a subset of the headers. It

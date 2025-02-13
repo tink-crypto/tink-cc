@@ -47,13 +47,12 @@
 #include "tink/util/test_util.h"
 #include "proto/common.pb.h"
 
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
-
 namespace crypto {
 namespace tink {
-
 namespace {
+
+using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
 
 util::StatusOr<VerifiedJwt> CreateVerifiedJwt(const RawJwt& raw_jwt) {
   // Creating a VerifiedJwt is a bit complicated since it can only be created
@@ -74,8 +73,7 @@ util::StatusOr<VerifiedJwt> CreateVerifiedJwt(const RawJwt& raw_jwt) {
     return mac.status();
   }
   std::unique_ptr<jwt_internal::JwtMacInternal> jwt_mac =
-      absl::make_unique<jwt_internal::JwtMacImpl>(std::move(*mac), "HS256",
-                                                  absl::nullopt);
+      jwt_internal::JwtMacImpl::Raw(std::move(*mac), "HS256");
 
   util::StatusOr<std::string> compact =
       jwt_mac->ComputeMacAndEncodeWithKid(raw_jwt, "kid-123");

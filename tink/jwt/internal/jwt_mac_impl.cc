@@ -17,14 +17,16 @@
 #include "tink/jwt/internal/jwt_mac_impl.h"
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "google/protobuf/struct.pb.h"
+#include "absl/memory/memory.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -33,6 +35,7 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
+#include "tink/mac.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
@@ -50,6 +53,13 @@ util::StatusOr<std::string> JwtMacImpl::ComputeMacAndEncodeWithKid(
     }
     type_header = *type;
   }
+  if (kid_.has_value() && kid != kid_) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrFormat("invalid kid provided; expected: %s, got: %s", *kid_,
+                        kid.value_or("nullopt")));
+  }
+
   if (custom_kid_.has_value()) {
     if (kid.has_value()) {
       return util::Status(absl::StatusCode::kInvalidArgument,
@@ -80,6 +90,12 @@ util::StatusOr<std::string> JwtMacImpl::ComputeMacAndEncodeWithKid(
 util::StatusOr<VerifiedJwt> JwtMacImpl::VerifyMacAndDecodeWithKid(
     absl::string_view compact, const JwtValidator& validator,
     absl::optional<absl::string_view> kid) const {
+  if (kid_.has_value() && kid != kid_) {
+    return util::Status(
+        absl::StatusCode::kInvalidArgument,
+        absl::StrFormat("invalid kid provided; expected: %s, got: %s", *kid_,
+                        kid.value_or("nullopt")));
+  }
   std::size_t mac_pos = compact.find_last_of('.');
   if (mac_pos == absl::string_view::npos) {
     return util::Status(absl::StatusCode::kInvalidArgument, "invalid token");
@@ -130,6 +146,29 @@ util::StatusOr<VerifiedJwt> JwtMacImpl::VerifyMacAndDecodeWithKid(
     return validate_result;
   }
   return VerifiedJwt(*std::move(raw_jwt));
+}
+
+std::unique_ptr<JwtMacImpl> JwtMacImpl::WithKid(std::unique_ptr<Mac> mac,
+                                                absl::string_view algorithm,
+                                                absl::string_view kid) {
+  return absl::WrapUnique(new JwtMacImpl(std::move(mac), algorithm,
+                                         /*custom_kid=*/absl::nullopt,
+                                         std::string(kid)));
+}
+
+std::unique_ptr<JwtMacImpl> JwtMacImpl::RawWithCustomKid(
+    std::unique_ptr<Mac> mac, absl::string_view algorithm,
+    absl::string_view custom_kid) {
+  return absl::WrapUnique(new JwtMacImpl(std::move(mac), algorithm,
+                                         std::string(custom_kid),
+                                         /*kid=*/absl::nullopt));
+}
+
+std::unique_ptr<JwtMacImpl> JwtMacImpl::Raw(std::unique_ptr<Mac> mac,
+                                            absl::string_view algorithm) {
+  return absl::WrapUnique(new JwtMacImpl(std::move(mac), algorithm,
+                                         /*custom_kid=*/absl::nullopt,
+                                         /*kid=*/absl::nullopt));
 }
 
 }  // namespace jwt_internal

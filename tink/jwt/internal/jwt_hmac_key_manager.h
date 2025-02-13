@@ -19,27 +19,14 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "absl/memory/memory.h"
-#include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
-#include "absl/types/optional.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
-#include "tink/jwt/internal/jwt_mac_impl.h"
 #include "tink/jwt/internal/jwt_mac_internal.h"
 #include "tink/jwt/internal/raw_jwt_hmac_key_manager.h"
-#include "tink/jwt/jwt_mac.h"
-#include "tink/mac.h"
-#include "tink/subtle/hmac_boringssl.h"
-#include "tink/util/constants.h"
-#include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
-#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/jwt_hmac.pb.h"
@@ -55,46 +42,7 @@ class JwtHmacKeyManager
  public:
   class JwtMacFactory : public PrimitiveFactory<JwtMacInternal> {
     crypto::tink::util::StatusOr<std::unique_ptr<JwtMacInternal>> Create(
-        const google::crypto::tink::JwtHmacKey& jwt_hmac_key) const override {
-      int tag_size;
-      std::string algorithm;
-      google::crypto::tink::HashType hash_type;
-      switch (jwt_hmac_key.algorithm()) {
-        case google::crypto::tink::JwtHmacAlgorithm::HS256:
-          hash_type = google::crypto::tink::HashType::SHA256;
-          tag_size = 32;
-          algorithm = "HS256";
-          break;
-        case google::crypto::tink::JwtHmacAlgorithm::HS384:
-          hash_type = google::crypto::tink::HashType::SHA384;
-          tag_size = 48;
-          algorithm = "HS384";
-          break;
-        case google::crypto::tink::JwtHmacAlgorithm::HS512:
-          hash_type = google::crypto::tink::HashType::SHA512;
-          tag_size = 64;
-          algorithm = "HS512";
-          break;
-        default:
-          return util::Status(absl::StatusCode::kInvalidArgument,
-                              "Unknown algorithm.");
-      }
-      crypto::tink::util::StatusOr<std::unique_ptr<Mac>> mac =
-          subtle::HmacBoringSsl::New(
-              util::Enums::ProtoToSubtle(hash_type), tag_size,
-              util::SecretDataFromStringView(jwt_hmac_key.key_value()));
-      if (!mac.ok()) {
-        return mac.status();
-      }
-      absl::optional<std::string> custom_kid = absl::nullopt;
-      if (jwt_hmac_key.has_custom_kid()) {
-        custom_kid = jwt_hmac_key.custom_kid().value();
-      }
-      std::unique_ptr<JwtMacInternal> jwt_mac =
-          absl::make_unique<jwt_internal::JwtMacImpl>(*std::move(mac),
-                                                      algorithm, custom_kid);
-      return std::move(jwt_mac);
-    }
+        const google::crypto::tink::JwtHmacKey& jwt_hmac_key) const override;
   };
 
   JwtHmacKeyManager() : KeyTypeManager(absl::make_unique<JwtMacFactory>()) {}

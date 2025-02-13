@@ -126,11 +126,12 @@ tink_cc_library(
     tink::jwt::internal::jwt_format
     tink::jwt::internal::jwt_mac_internal
     protobuf::libprotobuf
+    absl::memory
     absl::status
     absl::strings
+    absl::str_format
     absl::optional
     tink::core::mac
-    tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
@@ -149,26 +150,22 @@ tink_cc_test(
     tink::jwt::internal::jwt_mac_internal
     protobuf::libprotobuf
     gmock
-    absl::memory
     absl::status
     absl::strings
     absl::time
     absl::optional
     tink::core::mac
-    tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
+    tink::subtle::common_enums
     tink::subtle::hmac_boringssl
-    tink::util::constants
+    tink::subtle::random
     tink::util::enums
-    tink::util::errors
-    tink::util::protobuf_helper
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
-    tink::util::test_util
     tink::proto::common_cc_proto
 )
 
@@ -190,18 +187,11 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::mac
     tink::internal::fips_utils
-    tink::jwt::jwt_mac
     tink::subtle::hmac_boringssl
-    tink::subtle::random
-    tink::util::constants
     tink::util::enums
-    tink::util::errors
-    tink::util::input_stream_util
-    tink::util::protobuf_helper
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
-    tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_hmac_cc_proto
     tink::proto::tink_cc_proto
@@ -272,6 +262,7 @@ tink_cc_test(
     tink::jwt::internal::json_util
     tink::jwt::internal::jwt_format
     tink::jwt::internal::jwt_hmac_key_manager
+    tink::jwt::internal::jwt_mac_impl
     tink::jwt::internal::jwt_mac_internal
     tink::jwt::internal::jwt_mac_wrapper
     protobuf::libprotobuf
@@ -294,7 +285,6 @@ tink_cc_test(
     tink::mac::failing_mac
     tink::monitoring::monitoring
     tink::monitoring::monitoring_client_mocks
-    tink::util::status
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util

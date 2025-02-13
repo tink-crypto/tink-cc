@@ -17,22 +17,23 @@
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
 
 #include <cstdint>
-#include <map>
+#include <memory>
 #include <string>
+#include <utility>
 
+#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "tink/input_stream.h"
+#include "tink/jwt/internal/jwt_mac_impl.h"
+#include "tink/jwt/internal/jwt_mac_internal.h"
 #include "tink/jwt/internal/raw_jwt_hmac_key_manager.h"
 #include "tink/mac.h"
 #include "tink/subtle/hmac_boringssl.h"
-#include "tink/subtle/random.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/input_stream_util.h"
-#include "tink/util/protobuf_helper.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "tink/util/validation.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_hmac.pb.h"
 #include "proto/tink.pb.h"
@@ -41,10 +42,53 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
-using google::crypto::tink::JwtHmacKey;
-using google::crypto::tink::JwtHmacKeyFormat;
+using ::crypto::tink::util::Status;
+using ::crypto::tink::util::StatusOr;
+using ::google::crypto::tink::HashType;
+using ::google::crypto::tink::JwtHmacKey;
+using ::google::crypto::tink::JwtHmacKeyFormat;
+
+util::StatusOr<std::unique_ptr<JwtMacInternal>>
+JwtHmacKeyManager::JwtMacFactory::Create(const JwtHmacKey& jwt_hmac_key) const {
+  int tag_size;
+  std::string algorithm;
+  HashType hash_type;
+  switch (jwt_hmac_key.algorithm()) {
+    case google::crypto::tink::JwtHmacAlgorithm::HS256:
+      hash_type = HashType::SHA256;
+      tag_size = 32;
+      algorithm = "HS256";
+      break;
+    case google::crypto::tink::JwtHmacAlgorithm::HS384:
+      hash_type = HashType::SHA384;
+      tag_size = 48;
+      algorithm = "HS384";
+      break;
+    case google::crypto::tink::JwtHmacAlgorithm::HS512:
+      hash_type = HashType::SHA512;
+      tag_size = 64;
+      algorithm = "HS512";
+      break;
+    default:
+      return util::Status(absl::StatusCode::kInvalidArgument,
+                          "Unknown algorithm.");
+  }
+  util::StatusOr<std::unique_ptr<Mac>> mac = subtle::HmacBoringSsl::New(
+      util::Enums::ProtoToSubtle(hash_type), tag_size,
+      util::SecretDataFromStringView(jwt_hmac_key.key_value()));
+  if (!mac.ok()) {
+    return mac.status();
+  }
+  absl::optional<std::string> custom_kid = absl::nullopt;
+  if (jwt_hmac_key.has_custom_kid()) {
+    custom_kid = jwt_hmac_key.custom_kid().value();
+  }
+  if (custom_kid.has_value()) {
+    return jwt_internal::JwtMacImpl::RawWithCustomKid(*std::move(mac),
+                                                      algorithm, *custom_kid);
+  }
+  return jwt_internal::JwtMacImpl::Raw(*std::move(mac), algorithm);
+}
 
 uint32_t JwtHmacKeyManager::get_version() const {
   return raw_key_manager_.get_version();

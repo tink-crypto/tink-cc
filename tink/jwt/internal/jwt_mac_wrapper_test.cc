@@ -38,6 +38,7 @@
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/internal/jwt_format.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
+#include "tink/jwt/internal/jwt_mac_impl.h"
 #include "tink/jwt/internal/jwt_mac_internal.h"
 #include "tink/jwt/jwt_mac.h"
 #include "tink/jwt/jwt_validator.h"
@@ -49,7 +50,6 @@
 #include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -434,25 +434,24 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   auto jwt_mac_primitive_set =
       absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
 
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     absl::make_unique<DummyMac>("mac0"),
-                                     "jwtmac0", absl::nullopt),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     absl::make_unique<DummyMac>("mac1"),
-                                     "jwtmac1", absl::nullopt),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
+  ASSERT_THAT(
+      jwt_mac_primitive_set
+          ->AddPrimitive(
+              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
+              keyset_info.key_info(0))
+          .status(),
+      IsOk());
+  ASSERT_THAT(
+      jwt_mac_primitive_set
+          ->AddPrimitive(
+              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
+              keyset_info.key_info(1))
+          .status(),
+      IsOk());
   // Set the last as primary.
   util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
-          absl::make_unique<JwtMacImpl>(absl::make_unique<DummyMac>("mac2"),
-                                        "jwtmac2", absl::nullopt),
+          JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
   ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
@@ -487,25 +486,24 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   auto jwt_mac_primitive_set =
       absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
 
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     absl::make_unique<DummyMac>("mac0"),
-                                     "jwtmac0", absl::nullopt),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     absl::make_unique<DummyMac>("mac1"),
-                                     "jwtmac1", absl::nullopt),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
+  ASSERT_THAT(
+      jwt_mac_primitive_set
+          ->AddPrimitive(
+              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
+              keyset_info.key_info(0))
+          .status(),
+      IsOk());
+  ASSERT_THAT(
+      jwt_mac_primitive_set
+          ->AddPrimitive(
+              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
+              keyset_info.key_info(1))
+          .status(),
+      IsOk());
   // Set the last as primary.
   util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
-          absl::make_unique<JwtMacImpl>(absl::make_unique<DummyMac>("mac2"),
-                                        "jwtmac2", absl::nullopt),
+          JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
   ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
@@ -552,24 +550,21 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
       absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
 
   ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     CreateAlwaysFailingMac("mac0"), "jwtmac0",
-                                     absl::nullopt),
+                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac0"),
+                                                 "jwtmac0"),
                                  keyset_info.key_info(0))
                   .status(),
               IsOk());
   ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     CreateAlwaysFailingMac("mac1"), "jwtmac1",
-                                     absl::nullopt),
+                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac1"),
+                                                 "jwtmac1"),
                                  keyset_info.key_info(1))
                   .status(),
               IsOk());
   // Set the last as primary.
   util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
-          absl::make_unique<JwtMacImpl>(CreateAlwaysFailingMac("mac2"),
-                                        "jwtmac2", absl::nullopt),
+          JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
   ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
@@ -604,24 +599,21 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
       absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
 
   ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     CreateAlwaysFailingMac("mac0"), "jwtmac0",
-                                     absl::nullopt),
+                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac0"),
+                                                 "jwtmac0"),
                                  keyset_info.key_info(0))
                   .status(),
               IsOk());
   ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(absl::make_unique<JwtMacImpl>(
-                                     CreateAlwaysFailingMac("mac1"), "jwtmac1",
-                                     absl::nullopt),
+                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac1"),
+                                                 "jwtmac1"),
                                  keyset_info.key_info(1))
                   .status(),
               IsOk());
   // Set the last as primary.
   util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
-          absl::make_unique<JwtMacImpl>(CreateAlwaysFailingMac("mac2"),
-                                        "jwtmac2", absl::nullopt),
+          JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
   ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());

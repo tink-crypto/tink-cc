@@ -122,7 +122,7 @@ AesCmacPrfKey GetAesCmacPrfKey() {
 KeyData GetAesCmacPrfKeyData() {
   google::crypto::tink::AesCmacPrfKey key;
   key.set_version(0);
-  key.set_key_value(std::string("0123456789abcdef"));
+  key.set_key_value(kPrfKeyValue);
   KeyData key_data;
   key_data.set_type_url(kPrfKeyTypeUrl);
   key_data.set_value(key.SerializeAsString());
@@ -249,11 +249,9 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   util::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
-  EXPECT_THAT(
-      params.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("Failed to parse PrfBasedKeyDerivationKeyFormat proto")));
+  EXPECT_THAT(params.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Not enough data to read kFixed64")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
@@ -542,7 +540,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse PrfBasedDeriverKey proto")));
+                       HasSubstr("Not enough data to read kFixed64")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
@@ -715,7 +713,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
                   proto_serialization->SerializedKeyProto().GetSecret(
                       GetInsecureSecretKeyAccessInternal())),
               IsTrue());
+
+  google::crypto::tink::AesCmacPrfKey cmac_key;
+  ASSERT_THAT(cmac_key.ParseFromString(key_proto.prf_key().value()), IsTrue());
+  EXPECT_THAT(cmac_key.version(), Eq(0));
+  EXPECT_THAT(cmac_key.key_value(), Eq(kPrfKeyValue));
+
   EXPECT_THAT(key_proto.prf_key().type_url(), Eq(kPrfKeyTypeUrl));
+  EXPECT_THAT(key_proto.prf_key().key_material_type(), Eq(KeyData::SYMMETRIC));
   EXPECT_THAT(key_proto.params().derived_key_template().type_url(),
               Eq(kDerivedKeyTypeUrl));
 }

@@ -27,14 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for AES-CTR-HMAC parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status
-RegisterAesCtrHmacAeadProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesCtrHmacAeadProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-CTR-HMAC parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status
-RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

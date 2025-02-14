@@ -27,12 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for AES-EAX parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status RegisterAesEaxProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesEaxProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-EAX parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status RegisterAesEaxProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesEaxProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

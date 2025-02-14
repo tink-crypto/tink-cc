@@ -47,7 +47,7 @@ class SslOneShotAead {
   // resulting tag in `out`, so the caller must make sure it has sufficient
   // capacity. There should be no overlap between `plaintext` and `out`. In
   // particular, in-place encryption is not supported.
-  virtual util::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
+  virtual absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
                                           absl::string_view associated_data,
                                           absl::string_view iv,
                                           absl::Span<char> out) const = 0;
@@ -60,18 +60,18 @@ class SslOneShotAead {
   // plaintext to `out`. `ciphertext` contains the raw ciphertext and the tag.
   // There should be no overlap between `ciphertext` and `out`. In particular,
   // in-place decryption is not supported.
-  virtual util::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
+  virtual absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
                                           absl::string_view associated_data,
                                           absl::string_view iv,
                                           absl::Span<char> out) const = 0;
 };
 
 // Create one-shot crypters for the supported algorithms.
-util::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
+absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
     const util::SecretData &key);
-util::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
+absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
     const util::SecretData &key);
-util::StatusOr<std::unique_ptr<SslOneShotAead>>
+absl::StatusOr<std::unique_ptr<SslOneShotAead>>
 CreateXchacha20Poly1305OneShotCrypter(const util::SecretData &key);
 
 }  // namespace internal

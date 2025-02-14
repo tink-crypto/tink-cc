@@ -27,15 +27,13 @@ namespace internal {
 
 // Registers proto parsers and serializers for legacy KMS Envelope AEAD
 // parameters and keys into specified mutable serialization `registry`.
-crypto::tink::util::Status
-RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
+absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for legacy KMS Envelope AEAD
 // parameters and keys into specified immutable serialization registry
 // `builder`.
-crypto::tink::util::Status
-RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
+absl::Status RegisterLegacyKmsEnvelopeAeadProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

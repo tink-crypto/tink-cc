@@ -27,7 +27,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
+absl::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
     const crypto::tink::XAesGcmKey& key);
 
 }  // namespace internal

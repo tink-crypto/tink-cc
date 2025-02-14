@@ -31,17 +31,17 @@ namespace internal {
 bool IsSupportedKmsEnvelopeAeadDekKeyType(absl::string_view key_type);
 
 // Returns a pointer to an AES-GCM EVP_CIPHER for the given key size.
-util::StatusOr<const EVP_CIPHER *> GetAesGcmCipherForKeySize(
+absl::StatusOr<const EVP_CIPHER *> GetAesGcmCipherForKeySize(
     uint32_t key_size_in_bytes);
 
 #ifdef OPENSSL_IS_BORINGSSL
 // Returns a pointer to an AES-GCM EVP_AEAD for the given key size.
-util::StatusOr<const EVP_AEAD *> GetAesGcmAeadForKeySize(
+absl::StatusOr<const EVP_AEAD *> GetAesGcmAeadForKeySize(
     uint32_t key_size_in_bytes);
 
 // Returns a pointer to an AES-GCM-SIV EVP_AEAD for `key_size_in_bytes` or an
 // error if `key_size_in_bytes` is invalid.
-util::StatusOr<const EVP_AEAD *> GetAesGcmSivAeadCipherForKeySize(
+absl::StatusOr<const EVP_AEAD *> GetAesGcmSivAeadCipherForKeySize(
     int key_size_in_bytes);
 #endif
 

@@ -43,11 +43,11 @@ class AeadFromZeroCopy : public Aead {
   explicit AeadFromZeroCopy(std::unique_ptr<ZeroCopyAead> aead)
       : aead_(std::move(aead)) {}
 
-  crypto::tink::util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 

@@ -53,9 +53,9 @@ class ZeroCopyAead {
   // enough space for encryption.
   // The ciphertext allows for checking authenticity and integrity
   // of the associated data, but does not guarantee its secrecy.
-  virtual crypto::tink::util::StatusOr<int64_t> Encrypt(
-      absl::string_view plaintext, absl::string_view associated_data,
-      absl::Span<char> buffer) const = 0;
+  virtual absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
+                                          absl::string_view associated_data,
+                                          absl::Span<char> buffer) const = 0;
 
   // Returns an upper bound on the size of the plaintext based on
   // `ciphertext_size`. The actual size of the written plaintext may be smaller.
@@ -70,9 +70,9 @@ class ZeroCopyAead {
   // The decryption verifies the authenticity and integrity of the
   // associated data, but there are no guarantees wrt. secrecy of
   // that data.
-  virtual crypto::tink::util::StatusOr<int64_t> Decrypt(
-      absl::string_view ciphertext, absl::string_view associated_data,
-      absl::Span<char> buffer) const = 0;
+  virtual absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
+                                          absl::string_view associated_data,
+                                          absl::Span<char> buffer) const = 0;
 };
 
 }  // namespace internal

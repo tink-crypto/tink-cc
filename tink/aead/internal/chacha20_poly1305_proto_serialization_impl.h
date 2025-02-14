@@ -27,14 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for ChaCha20-Poly1305 parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status
-RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
+absl::Status RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for ChaCha20-Poly1305 parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status
-RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
+absl::Status RegisterChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

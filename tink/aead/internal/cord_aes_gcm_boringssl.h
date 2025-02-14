@@ -33,14 +33,14 @@ namespace internal {
 
 class CordAesGcmBoringSsl : public CordAead {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> New(
+  static absl::StatusOr<std::unique_ptr<CordAead>> New(
       const util::SecretData& key_value);
 
-  crypto::tink::util::StatusOr<absl::Cord> Encrypt(
-      absl::Cord plaintext, absl::Cord associated_data) const override;
+  absl::StatusOr<absl::Cord> Encrypt(absl::Cord plaintext,
+                                     absl::Cord associated_data) const override;
 
-  crypto::tink::util::StatusOr<absl::Cord> Decrypt(
-      absl::Cord ciphertext, absl::Cord associated_data) const override;
+  absl::StatusOr<absl::Cord> Decrypt(absl::Cord ciphertext,
+                                     absl::Cord associated_data) const override;
 
  private:
   explicit CordAesGcmBoringSsl(

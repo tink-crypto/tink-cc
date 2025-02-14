@@ -27,14 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for X-AES-GCM parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status
-RegisterXAesGcmProtoSerializationWithMutableRegistry(
+absl::Status RegisterXAesGcmProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for X-AES-GCM parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status
-RegisterXAesGcmProtoSerializationWithRegistryBuilder(
+absl::Status RegisterXAesGcmProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

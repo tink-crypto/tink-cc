@@ -27,14 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for AES-GCM-SIV parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status
-RegisterAesGcmSivProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesGcmSivProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-GCM-SIV parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status
-RegisterAesGcmSivProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesGcmSivProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

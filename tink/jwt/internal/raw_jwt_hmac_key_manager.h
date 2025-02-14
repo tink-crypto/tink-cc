@@ -31,8 +31,6 @@
 #include "tink/subtle/hmac_boringssl.h"
 #include "tink/util/constants.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"

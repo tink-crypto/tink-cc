@@ -31,7 +31,6 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
 #include "tink/internal/registry_impl.h"

@@ -16,18 +16,11 @@
 
 #include "tink/jwt/internal/raw_jwt_hmac_key_manager.h"
 
-#include <map>
 
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
-#include "tink/mac.h"
-#include "tink/subtle/hmac_boringssl.h"
 #include "tink/subtle/random.h"
-#include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/input_stream_util.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "tink/util/validation.h"

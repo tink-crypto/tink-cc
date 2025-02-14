@@ -17,11 +17,9 @@
 #ifndef TINK_JWT_INTERNAL_RAW_JWT_RSA_SSA_PKCS1_VERIFY_KEY_MANAGER_H_
 #define TINK_JWT_INTERNAL_RAW_JWT_RSA_SSA_PKCS1_VERIFY_KEY_MANAGER_H_
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
@@ -30,8 +28,6 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_verify.h"
 #include "tink/util/constants.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"

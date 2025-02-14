@@ -24,7 +24,6 @@
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
-#include "tink/big_integer.h"
 #include "tink/configuration.h"
 #include "tink/ec_point.h"
 #include "tink/internal/configuration_impl.h"

@@ -20,7 +20,6 @@
 #include <string>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"

@@ -32,8 +32,6 @@
 #include "tink/signature/sig_util.h"
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
 #include "tink/util/enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"

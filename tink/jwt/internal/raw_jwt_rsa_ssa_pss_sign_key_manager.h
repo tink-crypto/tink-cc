@@ -27,8 +27,6 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/public_key_sign.h"
 #include "tink/util/constants.h"
-#include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"

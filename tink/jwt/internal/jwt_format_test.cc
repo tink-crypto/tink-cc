@@ -29,7 +29,6 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
 using ::crypto::tink::test::IsOk;

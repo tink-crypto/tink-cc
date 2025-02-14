@@ -108,7 +108,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, ValidateKeyFormat) {
 }
 
 TEST(XChaCha20Poly1305KeyManagerTest, CreateKey) {
-  StatusOr<XChaCha20Poly1305KeyProto> key_or =
+  absl::StatusOr<XChaCha20Poly1305KeyProto> key_or =
       XChaCha20Poly1305KeyManager().CreateKey(XChaCha20Poly1305KeyFormat());
 
   ASSERT_THAT(key_or, IsOk());
@@ -121,7 +121,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, DeriveKey) {
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
   XChaCha20Poly1305KeyFormat format;
   format.set_version(0);
-  StatusOr<XChaCha20Poly1305KeyProto> key_or =
+  absl::StatusOr<XChaCha20Poly1305KeyProto> key_or =
       XChaCha20Poly1305KeyManager().DeriveKey(format, &input_stream);
 
   ASSERT_THAT(key_or, IsOk());
@@ -148,7 +148,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyWithoutEnoughEntropy) {
   XChaCha20Poly1305KeyFormat format;
   format.set_version(0);
 
-  StatusOr<XChaCha20Poly1305KeyProto> key_or =
+  absl::StatusOr<XChaCha20Poly1305KeyProto> key_or =
       XChaCha20Poly1305KeyManager().DeriveKey(format, &input_stream);
 
   ASSERT_THAT(key_or.status(), StatusIs(absl::StatusCode::kInvalidArgument,
@@ -160,7 +160,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyWrongVersion) {
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
   XChaCha20Poly1305KeyFormat format;
   format.set_version(1);
-  StatusOr<XChaCha20Poly1305KeyProto> key_or =
+  absl::StatusOr<XChaCha20Poly1305KeyProto> key_or =
       XChaCha20Poly1305KeyManager().DeriveKey(format, &input_stream);
 
   ASSERT_THAT(key_or.status(), StatusIs(absl::StatusCode::kInvalidArgument,
@@ -168,7 +168,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, DeriveKeyWrongVersion) {
 }
 
 TEST(XChaCha20Poly1305KeyManagerTest, CreateKeyValid) {
-  StatusOr<XChaCha20Poly1305KeyProto> key_or =
+  absl::StatusOr<XChaCha20Poly1305KeyProto> key_or =
       XChaCha20Poly1305KeyManager().CreateKey(XChaCha20Poly1305KeyFormat());
 
   ASSERT_THAT(key_or, IsOk());
@@ -180,7 +180,7 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadFailsWithOpenSsl) {
   if (internal::IsBoringSsl()) {
     GTEST_SKIP() << "OpenSSL-only test, skipping because Tink uses BoringSSL";
   }
-  StatusOr<XChaCha20Poly1305KeyProto> key =
+  absl::StatusOr<XChaCha20Poly1305KeyProto> key =
       XChaCha20Poly1305KeyManager().CreateKey(XChaCha20Poly1305KeyFormat());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT(XChaCha20Poly1305KeyManager().GetPrimitive<Aead>(*key).status(),
@@ -195,15 +195,15 @@ TEST(XChaCha20Poly1305KeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
   if (!internal::IsBoringSsl()) {
     GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
   }
-  StatusOr<XChaCha20Poly1305KeyProto> key =
+  absl::StatusOr<XChaCha20Poly1305KeyProto> key =
       XChaCha20Poly1305KeyManager().CreateKey(XChaCha20Poly1305KeyFormat());
   ASSERT_THAT(key, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       XChaCha20Poly1305KeyManager().GetPrimitive<Aead>(*key);
   ASSERT_THAT(aead, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> direct_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> direct_aead =
       subtle::XChacha20Poly1305BoringSsl::New(
           util::SecretDataFromStringView(key->key_value()));
   ASSERT_THAT(direct_aead, IsOk());

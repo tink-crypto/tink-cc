@@ -109,13 +109,13 @@ TEST_P(XAesGcmProtoSerializationTest, ParseParameters) {
   XAesGcmTestCase test_case = GetParam();
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kTypeUrl, test_case.output_prefix_type,
           ValidKeyFormat(test_case.salt_size).SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(params, IsOk());
@@ -130,12 +130,12 @@ TEST_P(XAesGcmProtoSerializationTest, ParseParameters) {
 
 TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixType::RAW,
                                            "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(),
@@ -145,13 +145,13 @@ TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithInvalidSerialization) {
 
 TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           ValidKeyFormat(kSaltSize).SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -164,13 +164,13 @@ TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithInvalidVersion) {
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
   XAesGcmKeyFormat key_format_proto = ValidKeyFormat(kSaltSize);
   key_format_proto.set_version(1);
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(),
@@ -182,11 +182,11 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeParameters) {
   const XAesGcmTestCase& test_case = GetParam();
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
 
-  util::StatusOr<XAesGcmParameters> parameters =
+  absl::StatusOr<XAesGcmParameters> parameters =
       XAesGcmParameters::Create(test_case.variant, test_case.salt_size);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
@@ -219,13 +219,13 @@ TEST_P(XAesGcmProtoSerializationTest, ParseKey) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
@@ -233,11 +233,11 @@ TEST_P(XAesGcmProtoSerializationTest, ParseKey) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<XAesGcmParameters> expected_parameters =
+  absl::StatusOr<XAesGcmParameters> expected_parameters =
       XAesGcmParameters::Create(test_case.variant, kSaltSize);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<XAesGcmKey> expected_key = XAesGcmKey::Create(
+  absl::StatusOr<XAesGcmKey> expected_key = XAesGcmKey::Create(
       *expected_parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
@@ -251,13 +251,13 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -276,13 +276,13 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
@@ -299,13 +299,13 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -324,13 +324,13 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidSaltSize) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
@@ -348,14 +348,14 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidKeyType) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmKey", serialized_key,
           KeyData::SYMMETRIC, OutputPrefixType::TINK,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kNotFound));
@@ -365,18 +365,18 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeKey) {
   XAesGcmTestCase test_case = GetParam();
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
 
-  util::StatusOr<XAesGcmParameters> parameters =
+  absl::StatusOr<XAesGcmParameters> parameters =
       XAesGcmParameters::Create(test_case.variant, test_case.salt_size);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(kKeySize);
-  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+  absl::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<ProtoKeySerialization>(*key,
                                                InsecureSecretKeyAccess::Get());
@@ -403,18 +403,18 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeKey) {
 
 TEST_F(XAesGcmProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kNoPrefix, kSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(kKeySize);
-  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+  absl::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<ProtoKeySerialization>(*key, /*token=*/absl::nullopt);
   EXPECT_THAT(serialization.status(),

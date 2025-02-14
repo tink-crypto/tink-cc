@@ -45,7 +45,7 @@
 namespace crypto {
 namespace tink {
 // static
-util::Status AeadConfig::Register() {
+absl::Status AeadConfig::Register() {
   auto status = MacConfig::Register();
   if (!status.ok()) {
     return status;
@@ -82,7 +82,7 @@ util::Status AeadConfig::Register() {
   }
 
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Register all the other key managers.

@@ -29,11 +29,11 @@ namespace tink {
 
 class MockAead : public Aead {
  public:
-  MOCK_METHOD(util::StatusOr<std::string>, Encrypt,
+  MOCK_METHOD(absl::StatusOr<std::string>, Encrypt,
               (absl::string_view plaintext, absl::string_view associated_data),
               (const, override));
 
-  MOCK_METHOD(util::StatusOr<std::string>, Decrypt,
+  MOCK_METHOD(absl::StatusOr<std::string>, Decrypt,
               (absl::string_view ciphertext, absl::string_view associated_data),
               (const, override));
 };

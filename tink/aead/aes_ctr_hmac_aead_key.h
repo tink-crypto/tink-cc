@@ -61,7 +61,7 @@ class AesCtrHmacAeadKey : public AeadKey {
     Builder& SetIdRequirement(absl::optional<int> id_requirement);
 
     // Creates an AES-CTR-HMAC-AEAD key object from this builder.
-    util::StatusOr<AesCtrHmacAeadKey> Build(PartialKeyAccessToken token);
+    absl::StatusOr<AesCtrHmacAeadKey> Build(PartialKeyAccessToken token);
 
    private:
     absl::optional<AesCtrHmacAeadParameters> parameters_;

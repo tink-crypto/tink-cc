@@ -37,7 +37,7 @@ class CordAeadWrapper : public PrimitiveWrapper<CordAead, CordAead> {
  public:
   // Returns an Aead-primitive that uses Aead-instances provided in 'aead_set',
   // which must be non-NULL and must contain a primary instance.
-  util::StatusOr<std::unique_ptr<CordAead>> Wrap(
+  absl::StatusOr<std::unique_ptr<CordAead>> Wrap(
       std::unique_ptr<PrimitiveSet<CordAead>> aead_set) const override;
 };
 

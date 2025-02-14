@@ -35,57 +35,57 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::Status ValidateDekParsingStrategy(
+absl::Status ValidateDekParsingStrategy(
     LegacyKmsEnvelopeAeadParameters::DekParsingStrategy dek_parsing_strategy,
     const AeadParameters& dek_parameters) {
   if (dek_parsing_strategy == LegacyKmsEnvelopeAeadParameters::
                                   DekParsingStrategy::kAssumeAesCtrHmac &&
       typeid(dek_parameters) == typeid(AesCtrHmacAeadParameters)) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   if (dek_parsing_strategy ==
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesEax &&
       typeid(dek_parameters) == typeid(AesEaxParameters)) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   if (dek_parsing_strategy ==
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::kAssumeAesGcm &&
       typeid(dek_parameters) == typeid(AesGcmParameters)) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   if (dek_parsing_strategy == LegacyKmsEnvelopeAeadParameters::
                                   DekParsingStrategy::kAssumeAesGcmSiv &&
       typeid(dek_parameters) == typeid(AesGcmSivParameters)) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   if (dek_parsing_strategy ==
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
               kAssumeXChaCha20Poly1305 &&
       typeid(dek_parameters) == typeid(XChaCha20Poly1305Parameters)) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       "Cannot create legacy KMS Envelope AEAD parameters with "
                       "mismatching parsing strategy and DEK parameters type.");
 }
 
 }  // namespace
 
-util::StatusOr<LegacyKmsEnvelopeAeadParameters>
+absl::StatusOr<LegacyKmsEnvelopeAeadParameters>
 LegacyKmsEnvelopeAeadParameters::Create(absl::string_view key_uri,
                                         Variant variant,
                                         DekParsingStrategy dek_parsing_strategy,
                                         const AeadParameters& dek_parameters) {
   if (variant != Variant::kTink && variant != Variant::kNoPrefix) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create legacy KMS Envelope AEAD parameters "
                         "with unknown variant.");
   }
   if (dek_parameters.HasIdRequirement()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "DEK parameters must not have an ID requirement.");
   }
-  util::Status status =
+  absl::Status status =
       ValidateDekParsingStrategy(dek_parsing_strategy, dek_parameters);
   if (!status.ok()) {
     return status;

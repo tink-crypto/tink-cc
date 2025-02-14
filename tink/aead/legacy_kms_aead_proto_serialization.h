@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for legacy KMS AEAD parameters and
 // keys into global serialization registry.
-inline crypto::tink::util::Status RegisterLegacyKmsAeadProtoSerialization() {
+inline absl::Status RegisterLegacyKmsAeadProtoSerialization() {
   return internal::RegisterLegacyKmsAeadProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

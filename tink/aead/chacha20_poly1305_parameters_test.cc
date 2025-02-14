@@ -56,7 +56,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(ChaCha20Poly1305ParametersTest, Create) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -73,7 +73,7 @@ TEST(ChaCha20Poly1305ParametersTest, CreateWithInvalidVariantFails) {
 }
 
 TEST(ChaCha20Poly1305ParametersTest, CopyConstructor) {
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
@@ -86,12 +86,12 @@ TEST(ChaCha20Poly1305ParametersTest, CopyConstructor) {
 }
 
 TEST(ChaCha20Poly1305ParametersTest, CopyAssignment) {
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<ChaCha20Poly1305Parameters> copy =
+  absl::StatusOr<ChaCha20Poly1305Parameters> copy =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(copy, IsOk());
@@ -104,7 +104,7 @@ TEST(ChaCha20Poly1305ParametersTest, CopyAssignment) {
 }
 
 TEST(ChaCha20Poly1305ParametersTest, MoveConstructor) {
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
@@ -117,12 +117,12 @@ TEST(ChaCha20Poly1305ParametersTest, MoveConstructor) {
 }
 
 TEST(ChaCha20Poly1305ParametersTest, MoveAssignment) {
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<ChaCha20Poly1305Parameters> move =
+  absl::StatusOr<ChaCha20Poly1305Parameters> move =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(move, IsOk());
@@ -137,11 +137,11 @@ TEST(ChaCha20Poly1305ParametersTest, MoveAssignment) {
 TEST_P(ChaCha20Poly1305ParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<ChaCha20Poly1305Parameters> other_parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> other_parameters =
       ChaCha20Poly1305Parameters::Create(test_case.variant);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -152,12 +152,12 @@ TEST_P(ChaCha20Poly1305ParametersTest, ParametersEquals) {
 }
 
 TEST(ChaCha20Poly1305ParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<ChaCha20Poly1305Parameters> other_parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> other_parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(other_parameters, IsOk());
@@ -167,7 +167,7 @@ TEST(ChaCha20Poly1305ParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(ChaCha20Poly1305ParametersTest, Clone) {
-  util::StatusOr<ChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());

@@ -45,7 +45,7 @@ class KmsEnvelopeAeadKeyManager
                             List<Aead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const google::crypto::tink::KmsEnvelopeAeadKey& key) const override;
   };
 
@@ -61,31 +61,30 @@ class KmsEnvelopeAeadKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::KmsEnvelopeAeadKey& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     return ValidateKeyFormat(key.params());
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::KmsEnvelopeAeadKeyFormat& format)
       const override {
     if (format.kek_uri().empty()) {
-      return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                        "Missing kek_uri.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Missing kek_uri.");
     }
     if (!internal::IsSupportedKmsEnvelopeAeadDekKeyType(
             format.dek_template().type_url())) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "unsupported dek key type");
     }
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::KmsEnvelopeAeadKey>
-  CreateKey(const google::crypto::tink::KmsEnvelopeAeadKeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::KmsEnvelopeAeadKey> CreateKey(
+      const google::crypto::tink::KmsEnvelopeAeadKeyFormat& key_format)
       const override {
     google::crypto::tink::KmsEnvelopeAeadKey key;
     key.set_version(get_version());

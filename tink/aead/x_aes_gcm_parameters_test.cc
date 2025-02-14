@@ -61,7 +61,7 @@ INSTANTIATE_TEST_SUITE_P(XAesGcmParametersTestSuite, XAesGcmParametersTest,
 TEST_P(XAesGcmParametersTest, Create) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<XAesGcmParameters> parameters =
+  absl::StatusOr<XAesGcmParameters> parameters =
       XAesGcmParameters::Create(test_case.variant, test_case.salt_size);
   ASSERT_THAT(parameters, IsOk());
 
@@ -89,7 +89,7 @@ TEST(XAesGcmParametersTest, CreateWithInvalidSaltSizeFails) {
 }
 
 TEST(XAesGcmParametersTest, CopyConstructor) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
@@ -101,11 +101,11 @@ TEST(XAesGcmParametersTest, CopyConstructor) {
 }
 
 TEST(XAesGcmParametersTest, CopyAssignment) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<XAesGcmParameters> copy = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> copy = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kNoPrefix, /*salt_size_bytes=*/10);
   ASSERT_THAT(copy, IsOk());
 
@@ -117,7 +117,7 @@ TEST(XAesGcmParametersTest, CopyAssignment) {
 }
 
 TEST(XAesGcmParametersTest, MoveConstructor) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
@@ -129,11 +129,11 @@ TEST(XAesGcmParametersTest, MoveConstructor) {
 }
 
 TEST(XAesGcmParametersTest, MoveAssignment) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<XAesGcmParameters> move = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> move = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kNoPrefix, /*salt_size_bytes=*/10);
   ASSERT_THAT(move, IsOk());
 
@@ -147,11 +147,11 @@ TEST(XAesGcmParametersTest, MoveAssignment) {
 TEST_P(XAesGcmParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<XAesGcmParameters> parameters =
+  absl::StatusOr<XAesGcmParameters> parameters =
       XAesGcmParameters::Create(test_case.variant, test_case.salt_size);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<XAesGcmParameters> other_parameters =
+  absl::StatusOr<XAesGcmParameters> other_parameters =
       XAesGcmParameters::Create(test_case.variant, test_case.salt_size);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -162,11 +162,11 @@ TEST_P(XAesGcmParametersTest, ParametersEquals) {
 }
 
 TEST(XAesGcmParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<XAesGcmParameters> other_parameters =
+  absl::StatusOr<XAesGcmParameters> other_parameters =
       XAesGcmParameters::Create(XAesGcmParameters::Variant::kNoPrefix,
                                 kDefaultSaltSize);
   ASSERT_THAT(other_parameters, IsOk());
@@ -176,11 +176,11 @@ TEST(XAesGcmParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(XAesGcmParametersTest, DifferentSaltSizeNotEqual) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<XAesGcmParameters> other_parameters =
+  absl::StatusOr<XAesGcmParameters> other_parameters =
       XAesGcmParameters::Create(XAesGcmParameters::Variant::kTink,
                                 /*salt_size_bytes=*/10);
   ASSERT_THAT(other_parameters, IsOk());
@@ -190,7 +190,7 @@ TEST(XAesGcmParametersTest, DifferentSaltSizeNotEqual) {
 }
 
 TEST(XAesGcmParametersTest, Clone) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, kDefaultSaltSize);
   ASSERT_THAT(parameters, IsOk());
 

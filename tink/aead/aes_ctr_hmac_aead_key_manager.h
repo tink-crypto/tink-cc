@@ -43,7 +43,7 @@ class AesCtrHmacAeadKeyManager
                             List<Aead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const google::crypto::tink::AesCtrHmacAeadKey& key) const override;
   };
 
@@ -59,18 +59,18 @@ class AesCtrHmacAeadKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesCtrHmacAeadKey& key) const override;
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::AesCtrHmacAeadKeyFormat& key) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesCtrHmacAeadKey>
-  CreateKey(const google::crypto::tink::AesCtrHmacAeadKeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::AesCtrHmacAeadKey> CreateKey(
+      const google::crypto::tink::AesCtrHmacAeadKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesCtrHmacAeadKey>
-  DeriveKey(const google::crypto::tink::AesCtrHmacAeadKeyFormat& key_format,
-            InputStream* input_stream) const override;
+  absl::StatusOr<google::crypto::tink::AesCtrHmacAeadKey> DeriveKey(
+      const google::crypto::tink::AesCtrHmacAeadKeyFormat& key_format,
+      InputStream* input_stream) const override;
 
   internal::FipsCompatibility FipsStatus() const override {
     return internal::FipsCompatibility::kRequiresBoringCrypto;

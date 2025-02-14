@@ -49,7 +49,7 @@ class AesGcmSivParameters : public AeadParameters {
 
   // Creates a new AES-GCM-SIV parameters object. Returns an error if either
   // `key_size_in_bytes` or `variant` is invalid.
-  static util::StatusOr<AesGcmSivParameters> Create(int key_size_in_bytes,
+  static absl::StatusOr<AesGcmSivParameters> Create(int key_size_in_bytes,
                                                     Variant variant);
 
   int KeySizeInBytes() const { return key_size_in_bytes_; }

@@ -45,7 +45,7 @@ class AesGcmSivKeyManager
                             List<Aead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const google::crypto::tink::AesGcmSivKey& key) const override {
       return subtle::AesGcmSivBoringSsl::New(
           util::SecretDataFromStringView(key.key_value()));
@@ -63,22 +63,20 @@ class AesGcmSivKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesGcmSivKey& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     return ValidateAesKeySize(key.key_value().size());
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::AesGcmSivKeyFormat& format) const override {
     return ValidateAesKeySize(format.key_size());
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesGcmSivKey> CreateKey(
-      const google::crypto::tink::AesGcmSivKeyFormat& format)
-      const override {
+  absl::StatusOr<google::crypto::tink::AesGcmSivKey> CreateKey(
+      const google::crypto::tink::AesGcmSivKeyFormat& format) const override {
     google::crypto::tink::AesGcmSivKey key;
     key.set_version(get_version());
     key.set_key_value(subtle::Random::GetRandomBytes(format.key_size()));

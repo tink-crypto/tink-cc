@@ -137,9 +137,9 @@ TEST(XAesGcmKeyManagerTest, CreateKeyGeneratesRandomKey) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
   XAesGcmKeyFormat key_format = ValidKeyFormat();
 
-  util::StatusOr<XAesGcmKeyProto> key_1 = key_manager->CreateKey(key_format);
+  absl::StatusOr<XAesGcmKeyProto> key_1 = key_manager->CreateKey(key_format);
   ASSERT_THAT(key_1, IsOk());
-  util::StatusOr<XAesGcmKeyProto> key_2 = key_manager->CreateKey(key_format);
+  absl::StatusOr<XAesGcmKeyProto> key_2 = key_manager->CreateKey(key_format);
   ASSERT_THAT(key_2, IsOk());
 
   EXPECT_THAT(key_1->key_value(), Not(Eq(key_2->key_value())));
@@ -154,7 +154,7 @@ TEST(XAesGcmKeyManagerTest, CreateKeyWithValidSaltSizes) {
   XAesGcmKeyFormat key_format = ValidKeyFormat();
   for (int salt_size = kMinSaltSize; salt_size <= kMaxSaltSize; ++salt_size) {
     key_format.mutable_params()->set_salt_size(salt_size);
-    util::StatusOr<XAesGcmKeyProto> key = key_manager->CreateKey(key_format);
+    absl::StatusOr<XAesGcmKeyProto> key = key_manager->CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
     EXPECT_THAT(key->params().salt_size(), Eq(salt_size));
   }
@@ -235,10 +235,10 @@ TEST(XAesGcmKeyManagerTest, CreatePrimitiveWithValidSaltSizes) {
 TEST(XAesGcmKeyManagerTest, CordAndAeadCompatibility) {
   std::unique_ptr<XAesGcmKeyManager> key_manager = CreateXAesGcmKeyManager();
   XAesGcmKeyProto key = ValidKey();
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       key_manager->GetPrimitive<Aead>(key);
   ASSERT_THAT(aead, IsOk());
-  util::StatusOr<std::unique_ptr<CordAead>> cord_aead =
+  absl::StatusOr<std::unique_ptr<CordAead>> cord_aead =
       key_manager->GetPrimitive<CordAead>(key);
   ASSERT_THAT(cord_aead, IsOk());
 
@@ -246,18 +246,18 @@ TEST(XAesGcmKeyManagerTest, CordAndAeadCompatibility) {
   // nodes.
   std::string plaintext = Random::GetRandomBytes(1 << 14);
   std::string associated_data = "associated_data";
-  util::StatusOr<std::string> aead_ciphertext =
+  absl::StatusOr<std::string> aead_ciphertext =
       (*aead)->Encrypt(plaintext, associated_data);
   ASSERT_THAT(aead_ciphertext, IsOk());
-  util::StatusOr<absl::Cord> cord_aead_ciphertext =
+  absl::StatusOr<absl::Cord> cord_aead_ciphertext =
       (*cord_aead)->Encrypt(absl::Cord(plaintext), absl::Cord(associated_data));
   ASSERT_THAT(cord_aead_ciphertext, IsOk());
 
-  util::StatusOr<std::string> aead_plaintext =
+  absl::StatusOr<std::string> aead_plaintext =
       (*aead)->Decrypt(cord_aead_ciphertext->Flatten(), associated_data);
   EXPECT_THAT(aead_plaintext, IsOk());
   EXPECT_THAT(aead_plaintext, IsOkAndHolds(Eq(plaintext)));
-  util::StatusOr<absl::Cord> cord_aead_plaintext =
+  absl::StatusOr<absl::Cord> cord_aead_plaintext =
       (*cord_aead)
           ->Decrypt(absl::Cord(*aead_ciphertext), absl::Cord(associated_data));
   EXPECT_THAT(cord_aead_plaintext, IsOkAndHolds(Eq(absl::Cord(plaintext))));

@@ -59,7 +59,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesGcmSivParametersCreateTest, Create) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<AesGcmSivParameters> parameters =
+  absl::StatusOr<AesGcmSivParameters> parameters =
       AesGcmSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -101,7 +101,7 @@ TEST(AesGcmSivParametersTest, CreateWithInvalidKeySizeFails) {
 }
 
 TEST(AesGcmSivParametersTest, CopyConstructor) {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -113,11 +113,11 @@ TEST(AesGcmSivParametersTest, CopyConstructor) {
 }
 
 TEST(AesGcmSivParametersTest, CopyAssignment) {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivParameters> copy = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> copy = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(copy, IsOk());
 
@@ -129,7 +129,7 @@ TEST(AesGcmSivParametersTest, CopyAssignment) {
 }
 
 TEST(AesGcmSivParametersTest, MoveConstructor) {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -141,11 +141,11 @@ TEST(AesGcmSivParametersTest, MoveConstructor) {
 }
 
 TEST(AesGcmSivParametersTest, MoveAssignment) {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivParameters> move = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> move = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(move, IsOk());
 
@@ -170,11 +170,11 @@ TEST_P(AesGcmSivParametersVariantTest, ParametersEquals) {
   AesGcmSivParameters::Variant variant;
   std::tie(key_size, variant) = GetParam();
 
-  util::StatusOr<AesGcmSivParameters> parameters =
+  absl::StatusOr<AesGcmSivParameters> parameters =
       AesGcmSivParameters::Create(key_size, variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivParameters> other_parameters =
+  absl::StatusOr<AesGcmSivParameters> other_parameters =
       AesGcmSivParameters::Create(key_size, variant);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -185,11 +185,11 @@ TEST_P(AesGcmSivParametersVariantTest, ParametersEquals) {
 }
 
 TEST(AesGcmParametersTest, KeySizeNotEqual) {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivParameters> other_parameters =
+  absl::StatusOr<AesGcmSivParameters> other_parameters =
       AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
                                   AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(other_parameters, IsOk());
@@ -199,11 +199,11 @@ TEST(AesGcmParametersTest, KeySizeNotEqual) {
 }
 
 TEST(AesGcmParametersTest, VariantNotEqual) {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivParameters> other_parameters =
+  absl::StatusOr<AesGcmSivParameters> other_parameters =
       AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
                                   AesGcmSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(other_parameters, IsOk());
@@ -213,7 +213,7 @@ TEST(AesGcmParametersTest, VariantNotEqual) {
 }
 
 TEST(AesGcmParametersTest, Clone) {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 

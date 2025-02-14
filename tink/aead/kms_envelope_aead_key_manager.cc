@@ -33,7 +33,8 @@ namespace tink {
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::KmsEnvelopeAeadKey;
 
-StatusOr<std::unique_ptr<Aead>> KmsEnvelopeAeadKeyManager::AeadFactory::Create(
+absl::StatusOr<std::unique_ptr<Aead>>
+KmsEnvelopeAeadKeyManager::AeadFactory::Create(
     const KmsEnvelopeAeadKey& key) const {
   const auto& kek_uri = key.params().kek_uri();
   auto kms_client_result = KmsClients::Get(kek_uri);

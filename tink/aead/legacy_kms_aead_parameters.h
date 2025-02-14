@@ -48,7 +48,7 @@ class LegacyKmsAeadParameters : public AeadParameters {
   LegacyKmsAeadParameters(LegacyKmsAeadParameters&& other) = default;
   LegacyKmsAeadParameters& operator=(LegacyKmsAeadParameters&& other) = default;
 
-  static util::StatusOr<LegacyKmsAeadParameters> Create(
+  static absl::StatusOr<LegacyKmsAeadParameters> Create(
       absl::string_view key_uri, Variant variant);
 
   const std::string& GetKeyUri() const { return key_uri_; }

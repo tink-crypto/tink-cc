@@ -65,7 +65,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesGcmParametersBuildTest, Build) {
   BuildTestCase test_case = GetParam();
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetIvSizeInBytes(test_case.iv_size)
@@ -218,7 +218,7 @@ TEST(AesGcmParametersTest, BuildWithInvalidTagSizeFails) {
 }
 
 TEST(AesGcmParametersTest, CopyConstructor) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(16)
@@ -237,7 +237,7 @@ TEST(AesGcmParametersTest, CopyConstructor) {
 }
 
 TEST(AesGcmParametersTest, CopyAssignment) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(16)
@@ -246,7 +246,7 @@ TEST(AesGcmParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmParameters> copy =
+  absl::StatusOr<AesGcmParameters> copy =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -265,7 +265,7 @@ TEST(AesGcmParametersTest, CopyAssignment) {
 }
 
 TEST(AesGcmParametersTest, MoveConstructor) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(16)
@@ -284,7 +284,7 @@ TEST(AesGcmParametersTest, MoveConstructor) {
 }
 
 TEST(AesGcmParametersTest, MoveAssignment) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(16)
@@ -293,7 +293,7 @@ TEST(AesGcmParametersTest, MoveAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmParameters> move =
+  absl::StatusOr<AesGcmParameters> move =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -327,7 +327,7 @@ TEST_P(AesGcmParametersVariantTest, ParametersEquals) {
   AesGcmParameters::Variant variant;
   std::tie(key_size, iv_and_tag_size, variant) = GetParam();
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(key_size)
           .SetIvSizeInBytes(iv_and_tag_size)
@@ -336,7 +336,7 @@ TEST_P(AesGcmParametersVariantTest, ParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmParameters> other_parameters =
+  absl::StatusOr<AesGcmParameters> other_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(key_size)
           .SetIvSizeInBytes(iv_and_tag_size)
@@ -352,7 +352,7 @@ TEST_P(AesGcmParametersVariantTest, ParametersEquals) {
 }
 
 TEST(AesGcmParametersTest, KeySizeNotEqual) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -361,7 +361,7 @@ TEST(AesGcmParametersTest, KeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmParameters> other_parameters =
+  absl::StatusOr<AesGcmParameters> other_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(24)
           .SetIvSizeInBytes(16)
@@ -375,7 +375,7 @@ TEST(AesGcmParametersTest, KeySizeNotEqual) {
 }
 
 TEST(AesGcmParametersTest, IvSizeNotEqual) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -384,7 +384,7 @@ TEST(AesGcmParametersTest, IvSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmParameters> other_parameters =
+  absl::StatusOr<AesGcmParameters> other_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -398,7 +398,7 @@ TEST(AesGcmParametersTest, IvSizeNotEqual) {
 }
 
 TEST(AesGcmParametersTest, TagSizeNotEqual) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -407,7 +407,7 @@ TEST(AesGcmParametersTest, TagSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmParameters> other_parameters =
+  absl::StatusOr<AesGcmParameters> other_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -421,7 +421,7 @@ TEST(AesGcmParametersTest, TagSizeNotEqual) {
 }
 
 TEST(AesGcmParametersTest, VariantNotEqual) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -430,7 +430,7 @@ TEST(AesGcmParametersTest, VariantNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmParameters> other_parameters =
+  absl::StatusOr<AesGcmParameters> other_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -444,7 +444,7 @@ TEST(AesGcmParametersTest, VariantNotEqual) {
 }
 
 TEST(AesGcmParametersTest, Clone) {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)

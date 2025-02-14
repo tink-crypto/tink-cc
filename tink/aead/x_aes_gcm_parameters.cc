@@ -25,15 +25,15 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<XAesGcmParameters> XAesGcmParameters::Create(
+absl::StatusOr<XAesGcmParameters> XAesGcmParameters::Create(
     Variant variant, int salt_size_bytes) {
   if (variant != Variant::kTink && variant != Variant::kNoPrefix) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create X-AES-GCM parameters with unknown variant.");
   }
   if (salt_size_bytes < 8 || salt_size_bytes > 12) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Salt size must be between 8 and 12 bytes.");
   }
   return XAesGcmParameters(variant, salt_size_bytes);

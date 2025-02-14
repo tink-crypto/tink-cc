@@ -34,7 +34,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const AesCtrHmacAeadParameters& parameters,
     absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
@@ -42,19 +42,19 @@ util::StatusOr<std::string> ComputeOutputPrefix(
       return std::string("");  // Empty prefix.
     case AesCtrHmacAeadParameters::Variant::kCrunchy:
       if (!id_requirement.has_value()) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "ID requirement must not be empty with kCrunchy or kLegacy");
       }
       return internal::ComputeOutputPrefix(0, *id_requirement);
     case AesCtrHmacAeadParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must not be empty with kTink");
       }
       return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid variant: ", parameters.GetVariant()));
   }
@@ -86,48 +86,48 @@ AesCtrHmacAeadKey::Builder& AesCtrHmacAeadKey::Builder::SetIdRequirement(
   return *this;
 }
 
-util::StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKey::Builder::Build(
+absl::StatusOr<AesCtrHmacAeadKey> AesCtrHmacAeadKey::Builder::Build(
     PartialKeyAccessToken token) {
   if (!parameters_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting the parameters");
   }
 
   if (!aes_key_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without AES key material");
   }
 
   if (!hmac_key_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without HMAC key material");
   }
 
   if (parameters_->GetAesKeySizeInBytes() != aes_key_bytes_->size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "AES key size does not match "
                         "AesCtrHmacAeadParameters::GetAesKeySizeInBytes");
   }
 
   if (parameters_->GetHmacKeySizeInBytes() != hmac_key_bytes_->size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "HMAC key size does not match "
                         "AesCtrHmacAeadParameters::GetHmacKeySizeInBytes");
   }
 
   if (parameters_->HasIdRequirement() && !id_requirement_.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key without ID requirement with parameters with ID "
         "requirement");
   }
   if (!parameters_->HasIdRequirement() && id_requirement_.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(*parameters_, id_requirement_);
   if (!output_prefix.ok()) {
     return output_prefix.status();

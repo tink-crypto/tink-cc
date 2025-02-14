@@ -51,21 +51,21 @@ AesGcmParameters::Builder& AesGcmParameters::Builder::SetVariant(
   return *this;
 }
 
-util::StatusOr<AesGcmParameters> AesGcmParameters::Builder::Build() {
+absl::StatusOr<AesGcmParameters> AesGcmParameters::Builder::Build() {
   if (key_size_in_bytes_ != 16 && key_size_in_bytes_ != 24 &&
       key_size_in_bytes_ != 32) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Key size should be 16, 24, or 32 bytes, got ",
                      key_size_in_bytes_, " bytes."));
   }
   if (iv_size_in_bytes_ <= 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("IV size should be positive, got ",
                                      iv_size_in_bytes_, " bytes."));
   }
   if (tag_size_in_bytes_ < 12 || tag_size_in_bytes_ > 16) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Tag size should be between 12 and 16 bytes, got ",
                      tag_size_in_bytes_, " bytes."));
@@ -73,7 +73,7 @@ util::StatusOr<AesGcmParameters> AesGcmParameters::Builder::Build() {
   static const std::set<Variant>* supported_variants = new std::set<Variant>(
       {Variant::kTink, Variant::kCrunchy, Variant::kNoPrefix});
   if (supported_variants->find(variant_) == supported_variants->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create AES-GCM parameters with unknown variant.");
   }

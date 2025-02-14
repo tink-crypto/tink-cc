@@ -48,7 +48,7 @@ class XChaCha20Poly1305KeyManager
                             List<Aead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const google::crypto::tink::XChaCha20Poly1305Key& key) const override {
       return subtle::XChacha20Poly1305BoringSsl::New(
           util::SecretDataFromStringView(key.key_value()));
@@ -67,29 +67,28 @@ class XChaCha20Poly1305KeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::XChaCha20Poly1305Key& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     uint32_t key_size = key.key_value().size();
     if (key.key_value().size() != kKeySizeInBytes) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid XChaCha20Poly1305Key: key_value has ", key_size,
                        " bytes; supported size: ", kKeySizeInBytes, " bytes."));
     }
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::XChaCha20Poly1305KeyFormat& key_format)
       const override {
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::XChaCha20Poly1305Key>
-  CreateKey(const google::crypto::tink::XChaCha20Poly1305KeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::XChaCha20Poly1305Key> CreateKey(
+      const google::crypto::tink::XChaCha20Poly1305KeyFormat& key_format)
       const override {
     google::crypto::tink::XChaCha20Poly1305Key result;
     result.set_version(get_version());
@@ -97,18 +96,17 @@ class XChaCha20Poly1305KeyManager
     return result;
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::XChaCha20Poly1305Key>
-  DeriveKey(const google::crypto::tink::XChaCha20Poly1305KeyFormat& key_format,
-            InputStream* input_stream) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key_format.version(), get_version());
+  absl::StatusOr<google::crypto::tink::XChaCha20Poly1305Key> DeriveKey(
+      const google::crypto::tink::XChaCha20Poly1305KeyFormat& key_format,
+      InputStream* input_stream) const override {
+    absl::Status status = ValidateVersion(key_format.version(), get_version());
     if (!status.ok()) return status;
 
-    crypto::tink::util::StatusOr<std::string> randomness =
+    absl::StatusOr<std::string> randomness =
         ReadBytesFromStream(kKeySizeInBytes, input_stream);
     if (!randomness.ok()) {
       if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
-        return crypto::tink::util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "Could not get enough pseudorandomness from input stream");
       }

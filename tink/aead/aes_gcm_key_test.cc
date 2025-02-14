@@ -68,7 +68,7 @@ TEST_P(AesGcmKeyTest, CreateSucceeds) {
   TestCase test_case;
   std::tie(key_size, iv_and_tag_size, test_case) = GetParam();
 
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(key_size)
           .SetIvSizeInBytes(iv_and_tag_size)
@@ -78,7 +78,7 @@ TEST_P(AesGcmKeyTest, CreateSucceeds) {
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(key_size);
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -89,7 +89,7 @@ TEST_P(AesGcmKeyTest, CreateSucceeds) {
 
 TEST(AesGcmKeyTest, CreateKeyWithMismatchedKeySizeFails) {
   // Key size parameter is 32 bytes.
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -108,7 +108,7 @@ TEST(AesGcmKeyTest, CreateKeyWithMismatchedKeySizeFails) {
 }
 
 TEST(AesGcmKeyTest, CreateKeyWithInvalidIdRequirementFails) {
-  util::StatusOr<AesGcmParameters> no_prefix_params =
+  absl::StatusOr<AesGcmParameters> no_prefix_params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -117,7 +117,7 @@ TEST(AesGcmKeyTest, CreateKeyWithInvalidIdRequirementFails) {
           .Build();
   ASSERT_THAT(no_prefix_params, IsOk());
 
-  util::StatusOr<AesGcmParameters> tink_params =
+  absl::StatusOr<AesGcmParameters> tink_params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -145,7 +145,7 @@ TEST_P(AesGcmKeyTest, GetKeyBytes) {
   TestCase test_case;
   std::tie(key_size, iv_and_tag_size, test_case) = GetParam();
 
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(key_size)
           .SetIvSizeInBytes(iv_and_tag_size)
@@ -156,7 +156,7 @@ TEST_P(AesGcmKeyTest, GetKeyBytes) {
 
   RestrictedData secret = RestrictedData(key_size);
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -169,7 +169,7 @@ TEST_P(AesGcmKeyTest, KeyEquals) {
   TestCase test_case;
   std::tie(key_size, iv_and_tag_size, test_case) = GetParam();
 
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(key_size)
           .SetIvSizeInBytes(iv_and_tag_size)
@@ -179,11 +179,11 @@ TEST_P(AesGcmKeyTest, KeyEquals) {
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(key_size);
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -194,7 +194,7 @@ TEST_P(AesGcmKeyTest, KeyEquals) {
 }
 
 TEST(AesGcmKeyTest, DifferentVariantNotEqual) {
-  util::StatusOr<AesGcmParameters> crunchy_params =
+  absl::StatusOr<AesGcmParameters> crunchy_params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -203,7 +203,7 @@ TEST(AesGcmKeyTest, DifferentVariantNotEqual) {
           .Build();
   ASSERT_THAT(crunchy_params, IsOk());
 
-  util::StatusOr<AesGcmParameters> tink_params =
+  absl::StatusOr<AesGcmParameters> tink_params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -214,12 +214,12 @@ TEST(AesGcmKeyTest, DifferentVariantNotEqual) {
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmKey> key =
+  absl::StatusOr<AesGcmKey> key =
       AesGcmKey::Create(*crunchy_params, secret, /*id_requirement=*/0x01020304,
                         GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmKey> other_key =
+  absl::StatusOr<AesGcmKey> other_key =
       AesGcmKey::Create(*tink_params, secret, /*id_requirement=*/0x01020304,
                         GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -231,7 +231,7 @@ TEST(AesGcmKeyTest, DifferentVariantNotEqual) {
 }
 
 TEST(AesGcmKeyTest, DifferentSecretDataNotEqual) {
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -243,11 +243,11 @@ TEST(AesGcmKeyTest, DifferentSecretDataNotEqual) {
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *params, secret1, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
       *params, secret2, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -258,7 +258,7 @@ TEST(AesGcmKeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(AesGcmKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -269,11 +269,11 @@ TEST(AesGcmKeyTest, DifferentIdRequirementNotEqual) {
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *params, secret, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> other_key = AesGcmKey::Create(
       *params, secret, /*id_requirement=*/0x02030405, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -286,7 +286,7 @@ TEST(AesGcmKeyTest, DifferentIdRequirementNotEqual) {
 TEST(AesGcmKeyTest, CopyConstructor) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -295,7 +295,7 @@ TEST(AesGcmKeyTest, CopyConstructor) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -309,7 +309,7 @@ TEST(AesGcmKeyTest, CopyConstructor) {
 TEST(AesGcmKeyTest, CopyAssignment) {
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmParameters> parameters1 =
+  absl::StatusOr<AesGcmParameters> parameters1 =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -318,13 +318,13 @@ TEST(AesGcmKeyTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<AesGcmParameters> parameters2 =
+  absl::StatusOr<AesGcmParameters> parameters2 =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -333,7 +333,7 @@ TEST(AesGcmKeyTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<AesGcmKey> copy =
+  absl::StatusOr<AesGcmKey> copy =
       AesGcmKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
@@ -348,7 +348,7 @@ TEST(AesGcmKeyTest, CopyAssignment) {
 TEST(AesGcmKeyTest, MoveConstructor) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -357,7 +357,7 @@ TEST(AesGcmKeyTest, MoveConstructor) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -371,7 +371,7 @@ TEST(AesGcmKeyTest, MoveConstructor) {
 TEST(AesGcmKeyTest, MoveAssignment) {
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmParameters> parameters1 =
+  absl::StatusOr<AesGcmParameters> parameters1 =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -380,13 +380,13 @@ TEST(AesGcmKeyTest, MoveAssignment) {
           .Build();
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<AesGcmParameters> parameters2 =
+  absl::StatusOr<AesGcmParameters> parameters2 =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -395,7 +395,7 @@ TEST(AesGcmKeyTest, MoveAssignment) {
           .Build();
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<AesGcmKey> move =
+  absl::StatusOr<AesGcmKey> move =
       AesGcmKey::Create(*parameters2, secret2, /*id_requirement=*/absl::nullopt,
                         GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
@@ -410,7 +410,7 @@ TEST(AesGcmKeyTest, MoveAssignment) {
 TEST(AesGcmKeyTest, Clone) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -419,7 +419,7 @@ TEST(AesGcmKeyTest, Clone) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

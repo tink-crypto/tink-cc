@@ -249,35 +249,35 @@ class KmsEnvelopeAeadKeyManagerDekTemplatesTest
 };
 
 TEST_P(KmsEnvelopeAeadKeyManagerDekTemplatesTest, EncryptDecryp) {
-  util::StatusOr<std::string> kek_uri_result =
+  absl::StatusOr<std::string> kek_uri_result =
       test::FakeKmsClient::CreateFakeKeyUri();
   ASSERT_THAT(kek_uri_result, IsOk());
   std::string kek_uri = kek_uri_result.value();
-  util::Status register_fake_kms_client_status =
+  absl::Status register_fake_kms_client_status =
       test::FakeKmsClient::RegisterNewClient(kek_uri, /*credentials_path=*/"");
   ASSERT_THAT(register_fake_kms_client_status, IsOk());
 
   KeyTemplate dek_template = GetParam();
   KeyTemplate env_template =
       AeadKeyTemplates::KmsEnvelopeAead(kek_uri, dek_template);
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(env_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<Aead>> envelope_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> envelope_aead =
       (*handle)->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(envelope_aead, IsOk());
 
   std::string plaintext = "plaintext";
   std::string associated_data = "associated_data";
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*envelope_aead)->Encrypt(plaintext, associated_data);
   ASSERT_THAT(ciphertext, IsOk());
-  util::StatusOr<std::string> decrypted =
+  absl::StatusOr<std::string> decrypted =
       (*envelope_aead)->Decrypt(ciphertext.value(), associated_data);
   EXPECT_THAT(decrypted, IsOkAndHolds(plaintext));
 
   std::string invalid_associated_data = "invalid_associated_data";
-  util::StatusOr<std::string> decrypted_with_invalid_associated_data =
+  absl::StatusOr<std::string> decrypted_with_invalid_associated_data =
       (*envelope_aead)->Decrypt(ciphertext.value(), invalid_associated_data);
   EXPECT_THAT(decrypted_with_invalid_associated_data.status(), Not(IsOk()));
 }

@@ -45,7 +45,7 @@ class XAesGcmParameters : public AeadParameters {
   XAesGcmParameters(XAesGcmParameters&& other) = default;
   XAesGcmParameters& operator=(XAesGcmParameters&& other) = default;
 
-  static util::StatusOr<XAesGcmParameters> Create(Variant variant,
+  static absl::StatusOr<XAesGcmParameters> Create(Variant variant,
                                                   int salt_size_bytes);
 
   Variant GetVariant() const { return variant_; }

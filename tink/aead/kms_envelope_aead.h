@@ -46,15 +46,15 @@ namespace tink {
 //  - AEAD payload: variable length.
 class KmsEnvelopeAead : public Aead {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<Aead>> New(
+  static absl::StatusOr<std::unique_ptr<Aead>> New(
       const google::crypto::tink::KeyTemplate& dek_template,
       std::unique_ptr<Aead> remote_aead);
 
-  crypto::tink::util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 

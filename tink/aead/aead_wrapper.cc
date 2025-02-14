@@ -42,16 +42,16 @@ constexpr absl::string_view kPrimitive = "aead";
 constexpr absl::string_view kEncryptApi = "encrypt";
 constexpr absl::string_view kDecryptApi = "decrypt";
 
-util::Status Validate(PrimitiveSet<Aead>* aead_set) {
+absl::Status Validate(PrimitiveSet<Aead>* aead_set) {
   if (aead_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "aead_set must be non-NULL");
   }
   if (aead_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "aead_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // The actual wrapper.
@@ -66,11 +66,11 @@ class AeadSetWrapper : public Aead {
         monitoring_decryption_client_(std::move(monitoring_decryption_client)) {
   }
 
-  util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 
@@ -80,11 +80,11 @@ class AeadSetWrapper : public Aead {
   std::unique_ptr<MonitoringClient> monitoring_decryption_client_;
 };
 
-util::StatusOr<std::string> AeadSetWrapper::Encrypt(
+absl::StatusOr<std::string> AeadSetWrapper::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data) const {
   associated_data = internal::EnsureStringNonNull(associated_data);
   const Aead& primitive = aead_set_->get_primary()->get_primitive();
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       primitive.Encrypt(plaintext, associated_data);
   if (!ciphertext.ok()) {
     if (monitoring_encryption_client_ != nullptr) {
@@ -100,7 +100,7 @@ util::StatusOr<std::string> AeadSetWrapper::Encrypt(
   return absl::StrCat(key_id, *ciphertext);
 }
 
-util::StatusOr<std::string> AeadSetWrapper::Decrypt(
+absl::StatusOr<std::string> AeadSetWrapper::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   // BoringSSL expects a non-null pointer for plaintext and associated_data,
   // regardless of whether the size is 0.
@@ -109,7 +109,7 @@ util::StatusOr<std::string> AeadSetWrapper::Decrypt(
   if (ciphertext.length() > CryptoFormat::kNonRawPrefixSize) {
     absl::string_view key_id =
         ciphertext.substr(0, CryptoFormat::kNonRawPrefixSize);
-    util::StatusOr<const PrimitiveSet<Aead>::Primitives*> primitives =
+    absl::StatusOr<const PrimitiveSet<Aead>::Primitives*> primitives =
         aead_set_->get_primitives(key_id);
     if (primitives.ok()) {
       absl::string_view raw_ciphertext =
@@ -117,7 +117,7 @@ util::StatusOr<std::string> AeadSetWrapper::Decrypt(
       for (const std::unique_ptr<PrimitiveSet<Aead>::Entry<Aead>>& aead_entry :
            **primitives) {
         Aead& aead = aead_entry->get_primitive();
-        util::StatusOr<std::string> plaintext =
+        absl::StatusOr<std::string> plaintext =
             aead.Decrypt(raw_ciphertext, associated_data);
         if (plaintext.ok()) {
           if (monitoring_decryption_client_ != nullptr) {
@@ -131,13 +131,13 @@ util::StatusOr<std::string> AeadSetWrapper::Decrypt(
   }
 
   // No matching key succeeded with decryption, try all RAW keys.
-  util::StatusOr<const PrimitiveSet<Aead>::Primitives*> raw_primitives =
+  absl::StatusOr<const PrimitiveSet<Aead>::Primitives*> raw_primitives =
       aead_set_->get_raw_primitives();
   if (raw_primitives.ok()) {
     for (const std::unique_ptr<PrimitiveSet<Aead>::Entry<Aead>>& aead_entry :
          **raw_primitives) {
       Aead& aead = aead_entry->get_primitive();
-      util::StatusOr<std::string> plaintext =
+      absl::StatusOr<std::string> plaintext =
           aead.Decrypt(ciphertext, associated_data);
       if (plaintext.ok()) {
         if (monitoring_decryption_client_ != nullptr) {
@@ -151,14 +151,14 @@ util::StatusOr<std::string> AeadSetWrapper::Decrypt(
   if (monitoring_decryption_client_ != nullptr) {
     monitoring_decryption_client_->LogFailure();
   }
-  return util::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
+  return absl::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
 }
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<Aead>> aead_set) const {
-  util::Status status = Validate(aead_set.get());
+  absl::Status status = Validate(aead_set.get());
   if (!status.ok()) {
     return status;
   }
@@ -171,20 +171,20 @@ util::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
     return {absl::make_unique<AeadSetWrapper>(std::move(aead_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*aead_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<MonitoringClient>>
       monitoring_encryption_client = monitoring_factory->New(
           MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
   if (!monitoring_encryption_client.ok()) {
     return monitoring_encryption_client.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<MonitoringClient>>
       monitoring_decryption_client = monitoring_factory->New(
           MonitoringContext(kPrimitive, kDecryptApi, *keyset_info));
   if (!monitoring_decryption_client.ok()) {

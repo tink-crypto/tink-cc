@@ -198,7 +198,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, ValidateKeyFormatHmacKeySizes) {
 
 TEST(AesCtrHmacAeadKeyManagerTest, CreateKey) {
   AesCtrHmacAeadKeyFormat key_format = CreateValidKeyFormat();
-  StatusOr<AesCtrHmacAeadKeyProto> key_or =
+  absl::StatusOr<AesCtrHmacAeadKeyProto> key_or =
       AesCtrHmacAeadKeyManager().CreateKey(key_format);
   ASSERT_THAT(key_or, IsOk());
   const AesCtrHmacAeadKeyProto& key = key_or.value();
@@ -219,7 +219,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, CreateKey) {
 TEST(AesCtrHmacAeadKeyManagerTest, CreateAead) {
   AesCtrHmacAeadKeyProto key = CreateValidKey();
 
-  StatusOr<std::unique_ptr<Aead>> aead_or =
+  absl::StatusOr<std::unique_ptr<Aead>> aead_or =
       AesCtrHmacAeadKeyManager().GetPrimitive<Aead>(key);
   ASSERT_THAT(aead_or, IsOk());
 
@@ -257,7 +257,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, Derive16ByteKey) {
   IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
       "0123456789abcde_YELLOW_SUBMARINE_EXTRA")};
 
-  StatusOr<AesCtrHmacAeadKeyProto> derived_key =
+  absl::StatusOr<AesCtrHmacAeadKeyProto> derived_key =
       AesCtrHmacAeadKeyManager().DeriveKey(key_format, &input_stream);
   ASSERT_THAT(derived_key, IsOk());
   EXPECT_THAT(derived_key.value().aes_ctr_key().key_value(),
@@ -285,7 +285,7 @@ TEST(AesCtrHmacAeadKeyManagerTest, Derive32ByteKey) {
   IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
       "0123456789abcde0123456789abcdef_YELLOW_SUBMARINE_YELLOW_SUBMARIN")};
 
-  StatusOr<AesCtrHmacAeadKeyProto> derived_key =
+  absl::StatusOr<AesCtrHmacAeadKeyProto> derived_key =
       AesCtrHmacAeadKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(derived_key, IsOk());
   EXPECT_THAT(derived_key.value().aes_ctr_key().key_value(),

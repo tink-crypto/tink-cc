@@ -55,22 +55,22 @@ INSTANTIATE_TEST_SUITE_P(ConfigV0BoringSslTestSuite, ConfigV0BoringSslTest,
                                 AeadKeyTemplates::XChaCha20Poly1305()));
 
 TEST_P(ConfigV0Test, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigAeadV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<Aead>(ConfigAeadV0());
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }
 
 TEST_P(ConfigV0BoringSslTest, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigAeadV0());
   ASSERT_THAT(handle, IsOk());
 
@@ -80,12 +80,12 @@ TEST_P(ConfigV0BoringSslTest, GetPrimitive) {
     return;
   }
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<Aead>(ConfigAeadV0());
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }

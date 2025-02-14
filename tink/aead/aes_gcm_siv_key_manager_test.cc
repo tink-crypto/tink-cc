@@ -145,7 +145,8 @@ TEST(AesGcmSivKeyManagerTest, Create16ByteKey) {
   AesGcmSivKeyFormat format;
   format.set_key_size(16);
 
-  StatusOr<AesGcmSivKeyProto> key_or = AesGcmSivKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmSivKeyProto> key_or =
+      AesGcmSivKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -155,7 +156,8 @@ TEST(AesGcmSivKeyManagerTest, Create32ByteKey) {
   AesGcmSivKeyFormat format;
   format.set_key_size(32);
 
-  StatusOr<AesGcmSivKeyProto> key_or = AesGcmSivKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmSivKeyProto> key_or =
+      AesGcmSivKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -167,7 +169,8 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadFailsWithOpenSsl) {
   }
   AesGcmSivKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmSivKeyProto> key = AesGcmSivKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmSivKeyProto> key =
+      AesGcmSivKeyManager().CreateKey(format);
   ASSERT_THAT(key, IsOk());
 
   EXPECT_THAT(AesGcmSivKeyManager().GetPrimitive<Aead>(*key).status(),
@@ -184,14 +187,15 @@ TEST(AesGcmSivKeyManagerTest, CreateAeadSucceedsWithBoringSsl) {
   }
   AesGcmSivKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmSivKeyProto> key = AesGcmSivKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmSivKeyProto> key =
+      AesGcmSivKeyManager().CreateKey(format);
   ASSERT_THAT(key, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       AesGcmSivKeyManager().GetPrimitive<Aead>(*key);
   ASSERT_THAT(aead, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> boring_ssl_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> boring_ssl_aead =
       subtle::AesGcmSivBoringSsl::New(
           util::SecretDataFromStringView(key->key_value()));
   ASSERT_THAT(boring_ssl_aead, IsOk());

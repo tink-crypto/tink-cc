@@ -41,7 +41,7 @@ class CordAead {
   // An implementation of this interface must ensure that the Cord-structure
   // of the returned ciphertext gives no information about the Cord-structure
   // of the given plaintext.
-  virtual crypto::tink::util::StatusOr<absl::Cord> Encrypt(
+  virtual absl::StatusOr<absl::Cord> Encrypt(
       absl::Cord plaintext, absl::Cord associated_data) const = 0;
 
   // Decrypts 'ciphertext' with 'associated_data' as associated data,
@@ -52,9 +52,8 @@ class CordAead {
   // The plaintext is returned as a Cord. The structure of the Cord
   // might differ from the original plaintext Cord, but the content will be the
   // same.
-  virtual crypto::tink::util::StatusOr<absl::Cord> Decrypt(
-      absl::Cord ciphertext,
-      absl::Cord associated_data) const = 0;
+  virtual absl::StatusOr<absl::Cord> Decrypt(
+      absl::Cord ciphertext, absl::Cord associated_data) const = 0;
 
   virtual ~CordAead() = default;
 };

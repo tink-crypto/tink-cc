@@ -51,7 +51,7 @@ class ChaCha20Poly1305Parameters : public AeadParameters {
 
   // Creates a new ChaCha20-Poly1305 parameters object. Returns an error if
   // `variant` is invalid.
-  static util::StatusOr<ChaCha20Poly1305Parameters> Create(Variant variant);
+  static absl::StatusOr<ChaCha20Poly1305Parameters> Create(Variant variant);
 
   Variant GetVariant() const { return variant_; }
 

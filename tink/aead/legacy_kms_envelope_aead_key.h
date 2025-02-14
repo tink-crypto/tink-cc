@@ -51,7 +51,7 @@ class LegacyKmsEnvelopeAeadKey : public AeadKey {
   LegacyKmsEnvelopeAeadKey& operator=(LegacyKmsEnvelopeAeadKey&& other) =
       default;
 
-  static util::StatusOr<LegacyKmsEnvelopeAeadKey> Create(
+  static absl::StatusOr<LegacyKmsEnvelopeAeadKey> Create(
       const LegacyKmsEnvelopeAeadParameters& parameters,
       absl::optional<int> id_requirement);
 

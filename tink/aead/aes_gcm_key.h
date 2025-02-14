@@ -45,7 +45,7 @@ class AesGcmKey : public AeadKey {
 
   // Creates a new AES-GCM key.  If the parameters specify a variant that uses
   // a prefix, then the id is used to compute this prefix.
-  static util::StatusOr<AesGcmKey> Create(const AesGcmParameters& parameters,
+  static absl::StatusOr<AesGcmKey> Create(const AesGcmParameters& parameters,
                                           const RestrictedData& key_bytes,
                                           absl::optional<int> id_requirement,
                                           PartialKeyAccessToken token);

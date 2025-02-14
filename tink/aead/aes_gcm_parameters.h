@@ -59,7 +59,7 @@ class AesGcmParameters : public AeadParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates AES-GCM parameters object from this builder.
-    util::StatusOr<AesGcmParameters> Build();
+    absl::StatusOr<AesGcmParameters> Build();
 
    private:
     int key_size_in_bytes_;

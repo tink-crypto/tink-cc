@@ -177,15 +177,15 @@ TEST(AesGcmKeyManagerTest, CreateAead) {
   AesEaxKeyFormat format;
   format.set_key_size(32);
   format.mutable_params()->set_iv_size(16);
-  StatusOr<AesEaxKeyProto> key_or = AesEaxKeyManager().CreateKey(format);
+  absl::StatusOr<AesEaxKeyProto> key_or = AesEaxKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> aead_or =
+  absl::StatusOr<std::unique_ptr<Aead>> aead_or =
       AesEaxKeyManager().GetPrimitive<Aead>(key_or.value());
 
   ASSERT_THAT(aead_or, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> boring_ssl_aead_or =
+  absl::StatusOr<std::unique_ptr<Aead>> boring_ssl_aead_or =
       subtle::AesEaxBoringSsl::New(
           util::SecretDataFromStringView(key_or.value().key_value()),
           key_or.value().params().iv_size());

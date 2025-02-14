@@ -74,7 +74,7 @@ class AesEaxParameters : public AeadParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates AES-EAX parameters object from this builder.
-    util::StatusOr<AesEaxParameters> Build();
+    absl::StatusOr<AesEaxParameters> Build();
 
    private:
     absl::optional<int> key_size_in_bytes_ = absl::nullopt;

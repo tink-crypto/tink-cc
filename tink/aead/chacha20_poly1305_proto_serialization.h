@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for ChaCha20-Poly1305 parameters and
 // keys into global serialization registry.
-inline crypto::tink::util::Status RegisterChaCha20Poly1305ProtoSerialization() {
+inline absl::Status RegisterChaCha20Poly1305ProtoSerialization() {
   return internal::
       RegisterChaCha20Poly1305ProtoSerializationWithMutableRegistry(
           internal::MutableSerializationRegistry::GlobalInstance());

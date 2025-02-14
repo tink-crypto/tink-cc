@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for AES-CTR-HMAC-AEAD parameters and
 // keys into global serialization registry.
-inline crypto::tink::util::Status RegisterAesCtrHmacAeadProtoSerialization() {
+inline absl::Status RegisterAesCtrHmacAeadProtoSerialization() {
   return internal::RegisterAesCtrHmacAeadProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

@@ -41,7 +41,7 @@ class LegacyKmsAeadKey : public AeadKey {
   LegacyKmsAeadKey(LegacyKmsAeadKey&& other) = default;
   LegacyKmsAeadKey& operator=(LegacyKmsAeadKey&& other) = default;
 
-  static util::StatusOr<LegacyKmsAeadKey> Create(
+  static absl::StatusOr<LegacyKmsAeadKey> Create(
       const LegacyKmsAeadParameters& parameters,
       absl::optional<int> id_requirement);
 

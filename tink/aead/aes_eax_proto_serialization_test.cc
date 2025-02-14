@@ -103,20 +103,20 @@ TEST_P(AesEaxProtoSerializationTest, ParseParameters) {
   key_format_proto.set_key_size(test_case.key_size);
   key_format_proto.mutable_params()->set_iv_size(test_case.iv_size);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kAesEaxTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parsed_parameters, IsOk());
   EXPECT_THAT((*parsed_parameters)->HasIdRequirement(),
               Eq(test_case.id.has_value()));
 
-  util::StatusOr<AesEaxParameters> expected_parameters =
+  absl::StatusOr<AesEaxParameters> expected_parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetIvSizeInBytes(test_case.iv_size)
@@ -135,7 +135,7 @@ TEST_F(AesEaxProtoSerializationTest,
   key_format_proto.set_key_size(16);
   key_format_proto.mutable_params()->set_iv_size(16);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kAesEaxTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
@@ -154,7 +154,7 @@ TEST_F(AesEaxProtoSerializationTest,
   key_format_proto.set_key_size(16);
   key_format_proto.mutable_params()->set_iv_size(16);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kAesEaxTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
@@ -171,7 +171,7 @@ TEST_P(AesEaxProtoSerializationTest, SerializeParameters) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
 
   // Tink currently restricts AES-EAX tag size to 16 bytes.
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(test_case.variant)
           .SetKeySizeInBytes(test_case.key_size)
@@ -180,7 +180,7 @@ TEST_P(AesEaxProtoSerializationTest, SerializeParameters) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -209,7 +209,7 @@ TEST_F(AesEaxProtoSerializationTest,
        SerializeParametersWithDisallowedTagSizeFails) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
 
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(AesEaxParameters::Variant::kNoPrefix)
           .SetKeySizeInBytes(16)
@@ -218,7 +218,7 @@ TEST_F(AesEaxProtoSerializationTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -239,13 +239,13 @@ TEST_P(AesEaxProtoSerializationTest, ParseKey) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kAesEaxTypeUrl, serialized_key, KeyData::SYMMETRIC,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
@@ -254,7 +254,7 @@ TEST_P(AesEaxProtoSerializationTest, ParseKey) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<AesEaxParameters> expected_parameters =
+  absl::StatusOr<AesEaxParameters> expected_parameters =
       AesEaxParameters::Builder()
           .SetVariant(test_case.variant)
           .SetKeySizeInBytes(test_case.key_size)
@@ -263,7 +263,7 @@ TEST_P(AesEaxProtoSerializationTest, ParseKey) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<AesEaxKey> expected_key = AesEaxKey::Create(
+  absl::StatusOr<AesEaxKey> expected_key = AesEaxKey::Create(
       *expected_parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
@@ -283,13 +283,13 @@ TEST_F(AesEaxProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kAesEaxTypeUrl, serialized_key, KeyData::SYMMETRIC,
           OutputPrefixType::LEGACY, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
@@ -306,14 +306,14 @@ TEST_F(AesEaxProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kAesEaxTypeUrl, serialized_key,
                                               KeyData::SYMMETRIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
 
@@ -331,14 +331,14 @@ TEST_F(AesEaxProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kAesEaxTypeUrl, serialized_key,
                                               KeyData::SYMMETRIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -355,14 +355,14 @@ TEST_F(AesEaxProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kAesEaxTypeUrl, serialized_key,
                                               KeyData::SYMMETRIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -373,7 +373,7 @@ TEST_P(AesEaxProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
 
   // Tink currently restricts AES-EAX tag size to 16 bytes.
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(test_case.variant)
           .SetKeySizeInBytes(test_case.key_size)
@@ -383,13 +383,13 @@ TEST_P(AesEaxProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
-  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -419,7 +419,7 @@ TEST_P(AesEaxProtoSerializationTest, SerializeKey) {
 TEST_F(AesEaxProtoSerializationTest, SerializeKeyWithDisallowedTagSizeFails) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
 
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(AesEaxParameters::Variant::kNoPrefix)
           .SetKeySizeInBytes(32)
@@ -429,13 +429,13 @@ TEST_F(AesEaxProtoSerializationTest, SerializeKeyWithDisallowedTagSizeFails) {
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(32);
-  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -447,7 +447,7 @@ TEST_F(AesEaxProtoSerializationTest, SerializeKeyWithDisallowedTagSizeFails) {
 TEST_F(AesEaxProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
 
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(AesEaxParameters::Variant::kNoPrefix)
           .SetKeySizeInBytes(16)
@@ -457,13 +457,13 @@ TEST_F(AesEaxProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(16);
-  util::StatusOr<AesEaxKey> key = AesEaxKey::Create(
+  absl::StatusOr<AesEaxKey> key = AesEaxKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(*key, absl::nullopt);
   EXPECT_THAT(serialization.status(),

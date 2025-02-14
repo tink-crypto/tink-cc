@@ -61,11 +61,11 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(LegacyKmsAeadKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, test_case.id_requirement);
   ASSERT_THAT(key, IsOk());
 
@@ -75,7 +75,7 @@ TEST_P(LegacyKmsAeadKeyTest, CreateSucceeds) {
 }
 
 TEST(LegacyKmsAeadKeyTest, CreateKeyWithInvalidIdRequirementFails) {
-  util::StatusOr<LegacyKmsAeadParameters> no_prefix_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> no_prefix_parameters =
       LegacyKmsAeadParameters::Create(
           kKeyUri, LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(no_prefix_parameters, IsOk());
@@ -86,7 +86,7 @@ TEST(LegacyKmsAeadKeyTest, CreateKeyWithInvalidIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Cannot create key with ID requirement")));
 
-  util::StatusOr<LegacyKmsAeadParameters> tink_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> tink_parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(tink_parameters, IsOk());
@@ -101,15 +101,15 @@ TEST(LegacyKmsAeadKeyTest, CreateKeyWithInvalidIdRequirementFails) {
 TEST_P(LegacyKmsAeadKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, test_case.id_requirement);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> other_key =
+  absl::StatusOr<LegacyKmsAeadKey> other_key =
       LegacyKmsAeadKey::Create(*parameters, test_case.id_requirement);
   ASSERT_THAT(other_key, IsOk());
 
@@ -120,21 +120,21 @@ TEST_P(LegacyKmsAeadKeyTest, KeyEquals) {
 }
 
 TEST(LegacyKmsAeadKeyTest, DifferentParametersNotEqual) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters1 =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters1 =
       LegacyKmsAeadParameters::Create(
           "key_uri1", LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters1, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters2 =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters2 =
       LegacyKmsAeadParameters::Create(
           "key_uri2", LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> other_key =
+  absl::StatusOr<LegacyKmsAeadKey> other_key =
       LegacyKmsAeadKey::Create(*parameters2, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(other_key, IsOk());
 
@@ -145,17 +145,17 @@ TEST(LegacyKmsAeadKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(LegacyKmsAeadKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters,
                                /*id_requirement=*/0x01020304);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> other_key =
+  absl::StatusOr<LegacyKmsAeadKey> other_key =
       LegacyKmsAeadKey::Create(*parameters,
                                /*id_requirement=*/0x02030405);
   ASSERT_THAT(other_key, IsOk());
@@ -167,12 +167,12 @@ TEST(LegacyKmsAeadKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(LegacyKmsAeadKeyTest, CopyConstructor) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
@@ -183,21 +183,21 @@ TEST(LegacyKmsAeadKeyTest, CopyConstructor) {
 }
 
 TEST(LegacyKmsAeadKeyTest, CopyAssignment) {
-  util::StatusOr<LegacyKmsAeadParameters> tink_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> tink_parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(tink_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*tink_parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> no_prefix_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> no_prefix_parameters =
       LegacyKmsAeadParameters::Create(
           kKeyUri, LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(no_prefix_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> copy = LegacyKmsAeadKey::Create(
+  absl::StatusOr<LegacyKmsAeadKey> copy = LegacyKmsAeadKey::Create(
       *no_prefix_parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(copy, IsOk());
 
@@ -208,12 +208,12 @@ TEST(LegacyKmsAeadKeyTest, CopyAssignment) {
 }
 
 TEST(LegacyKmsAeadKeyTest, MoveConstructor) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
@@ -224,21 +224,21 @@ TEST(LegacyKmsAeadKeyTest, MoveConstructor) {
 }
 
 TEST(LegacyKmsAeadKeyTest, MoveAssignment) {
-  util::StatusOr<LegacyKmsAeadParameters> tink_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> tink_parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(tink_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*tink_parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> no_prefix_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> no_prefix_parameters =
       LegacyKmsAeadParameters::Create(
           kKeyUri, LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(no_prefix_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> move = LegacyKmsAeadKey::Create(
+  absl::StatusOr<LegacyKmsAeadKey> move = LegacyKmsAeadKey::Create(
       *no_prefix_parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(move, IsOk());
 
@@ -249,12 +249,12 @@ TEST(LegacyKmsAeadKeyTest, MoveAssignment) {
 }
 
 TEST(LegacyKmsAeadKeyTest, Clone) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 

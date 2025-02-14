@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for AES-EAX parameters and
 // keys into global serialization registry.
-inline crypto::tink::util::Status RegisterAesEaxProtoSerialization() {
+inline absl::Status RegisterAesEaxProtoSerialization() {
   return internal::RegisterAesEaxProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

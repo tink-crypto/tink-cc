@@ -27,12 +27,12 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<AesGcmSivParameters> AesGcmSivParameters::Create(
+absl::StatusOr<AesGcmSivParameters> AesGcmSivParameters::Create(
     int key_size_in_bytes, Variant variant) {
   // AES-GCM-SIV key sizes specified in
   // https://www.rfc-editor.org/rfc/rfc8452.html#section-6.
   if (key_size_in_bytes != 16 && key_size_in_bytes != 32) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Key size should be either 16 or 32 bytes, got ",
                      key_size_in_bytes, " bytes."));
@@ -40,7 +40,7 @@ util::StatusOr<AesGcmSivParameters> AesGcmSivParameters::Create(
   static const std::set<Variant>* supported_variants = new std::set<Variant>(
       {Variant::kTink, Variant::kCrunchy, Variant::kNoPrefix});
   if (supported_variants->find(variant) == supported_variants->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create AES-GCM-SIV parameters with unknown variant.");
   }

@@ -71,25 +71,25 @@ class KmsEnvelopeAeadTest : public Test {
 
 TEST_F(KmsEnvelopeAeadTest, EncryptDecryptSucceed) {
   // Use an AES-128-GCM primitive as the remote one.
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                 KeyGenConfigGlobalRegistry());
   ASSERT_THAT(keyset_handle, IsOk());
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Eax();
-  util::StatusOr<std::unique_ptr<Aead>> remote_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> remote_aead =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
 
-  util::StatusOr<std::unique_ptr<Aead>> envelope_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> envelope_aead =
       KmsEnvelopeAead::New(dek_template, *std::move(remote_aead));
   ASSERT_THAT(envelope_aead, IsOk());
 
   std::string message = "Some data to encrypt.";
   std::string aad = "Some associated data.";
-  util::StatusOr<std::string> encrypt_result =
+  absl::StatusOr<std::string> encrypt_result =
       (*envelope_aead)->Encrypt(message, aad);
   ASSERT_THAT(encrypt_result, IsOk());
-  util::StatusOr<std::string> decrypt_result =
+  absl::StatusOr<std::string> decrypt_result =
       (*envelope_aead)->Decrypt(encrypt_result.value(), aad);
   EXPECT_THAT(decrypt_result, IsOkAndHolds(message));
 }
@@ -122,13 +122,13 @@ TEST_F(KmsEnvelopeAeadTest, NewFailsIfUsingDekTemplateOfUnsupportedKeyType) {
 TEST_F(KmsEnvelopeAeadTest, DecryptFailsWithInvalidCiphertextOrAad) {
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Gcm();
   auto remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       KmsEnvelopeAead::New(dek_template, std::move(remote_aead));
   ASSERT_THAT(aead, IsOk());
 
   std::string message = "Some data to encrypt.";
   std::string aad = "Some associated data.";
-  util::StatusOr<std::string> encrypt_result = (*aead)->Encrypt(message, aad);
+  absl::StatusOr<std::string> encrypt_result = (*aead)->Encrypt(message, aad);
   ASSERT_THAT(encrypt_result, IsOk());
   auto ciphertext = absl::string_view(*encrypt_result);
 
@@ -174,13 +174,13 @@ TEST_F(KmsEnvelopeAeadTest, DecryptFailsWithInvalidCiphertextOrAad) {
 TEST_F(KmsEnvelopeAeadTest, DekMaintainsCorrectKeyFormat) {
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Gcm();
   auto kms_remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       KmsEnvelopeAead::New(dek_template, std::move(kms_remote_aead));
   ASSERT_THAT(aead, IsOk());
 
   std::string message = "Some data to encrypt.";
   std::string aad = "Some associated data.";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(message, aad);
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(message, aad);
   ASSERT_THAT(ciphertext, IsOk());
 
   // Recover DEK from ciphertext (see
@@ -191,7 +191,7 @@ TEST_F(KmsEnvelopeAeadTest, DekMaintainsCorrectKeyFormat) {
   absl::string_view encrypted_dek =
       absl::string_view(*ciphertext)
           .substr(kEncryptedDekPrefixSize, enc_dek_size);
-  util::StatusOr<std::string> dek_proto_bytes =
+  absl::StatusOr<std::string> dek_proto_bytes =
       remote_aead.Decrypt(encrypted_dek,
                           /*associated_data=*/"");
   ASSERT_THAT(dek_proto_bytes, IsOk());
@@ -205,7 +205,7 @@ TEST_F(KmsEnvelopeAeadTest, DekMaintainsCorrectKeyFormat) {
 TEST_F(KmsEnvelopeAeadTest, MultipleEncryptionsProduceDifferentDeks) {
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Gcm();
   auto kms_remote_aead = absl::make_unique<DummyAead>(kRemoteAeadName);
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       KmsEnvelopeAead::New(dek_template, std::move(kms_remote_aead));
   ASSERT_THAT(aead, IsOk());
 
@@ -216,13 +216,13 @@ TEST_F(KmsEnvelopeAeadTest, MultipleEncryptionsProduceDifferentDeks) {
   std::vector<google::crypto::tink::AesGcmKey> ciphertexts;
   ciphertexts.reserve(kNumIterations);
   for (int i = 0; i < kNumIterations; i++) {
-    util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(message, aad);
+    absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(message, aad);
     ASSERT_THAT(ciphertext, IsOk());
 
     auto enc_dek_size = absl::big_endian::Load32(
         reinterpret_cast<const uint8_t*>(ciphertext->data()));
     DummyAead remote_aead = DummyAead(kRemoteAeadName);
-    util::StatusOr<std::string> dek_proto_bytes = remote_aead.Decrypt(
+    absl::StatusOr<std::string> dek_proto_bytes = remote_aead.Decrypt(
         ciphertext->substr(kEncryptedDekPrefixSize, enc_dek_size),
         /*associated_data=*/"");
     ASSERT_THAT(dek_proto_bytes, IsOk());
@@ -248,25 +248,25 @@ class KmsEnvelopeAeadDekTemplatesTest
 
 TEST_P(KmsEnvelopeAeadDekTemplatesTest, EncryptDecrypt) {
   // Use an AES-128-GCM primitive as the remote AEAD.
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                 KeyGenConfigGlobalRegistry());
   ASSERT_THAT(keyset_handle, IsOk());
-  util::StatusOr<std::unique_ptr<Aead>> remote_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> remote_aead =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
 
   KeyTemplate dek_template = GetParam();
-  util::StatusOr<std::unique_ptr<Aead>> envelope_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> envelope_aead =
       KmsEnvelopeAead::New(dek_template, *std::move(remote_aead));
   ASSERT_THAT(envelope_aead, IsOk());
 
   std::string plaintext = "plaintext";
   std::string associated_data = "associated_data";
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*envelope_aead)->Encrypt(plaintext, associated_data);
   ASSERT_THAT(ciphertext, IsOk());
-  util::StatusOr<std::string> decrypted =
+  absl::StatusOr<std::string> decrypted =
       (*envelope_aead)->Decrypt(ciphertext.value(), associated_data);
   EXPECT_THAT(decrypted, IsOkAndHolds(plaintext));
 }
@@ -291,36 +291,36 @@ INSTANTIATE_TEST_SUITE_P(
     testing::ValuesIn(GetTestTemplates()));
 
 TEST_F(KmsEnvelopeAeadTest, PrimitiveFromTemplateAndFromNewAreCompatible) {
-  util::StatusOr<std::string> kek_uri_result =
+  absl::StatusOr<std::string> kek_uri_result =
       test::FakeKmsClient::CreateFakeKeyUri();
   ASSERT_THAT(kek_uri_result, IsOk());
   std::string kek_uri = *kek_uri_result;
   KeyTemplate dek_template = AeadKeyTemplates::Aes128Gcm();
 
   // Create a KmsEnvelopeAead primitive from a KmsEnvelopeAeadKey template.
-  util::Status register_status =
+  absl::Status register_status =
       test::FakeKmsClient::RegisterNewClient(kek_uri, /*credentials_path=*/"");
   ASSERT_THAT(register_status, IsOk());
   // Create a KmsEnvelopeAeadKey template.
   KeyTemplate env_template =
       AeadKeyTemplates::KmsEnvelopeAead(kek_uri, dek_template);
   // Get KMS envelope AEAD primitive.
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(env_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<Aead>> envelope_aead_from_template =
+  absl::StatusOr<std::unique_ptr<Aead>> envelope_aead_from_template =
       (*handle)->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(envelope_aead_from_template, IsOk());
 
   // Create a KmsEnvelopeAead primitive form KmsEnvelopeAead::New.
-  util::StatusOr<std::unique_ptr<test::FakeKmsClient>> client =
+  absl::StatusOr<std::unique_ptr<test::FakeKmsClient>> client =
       test::FakeKmsClient::New(/*key_uri=*/"", /*credentials_path=*/"");
   ASSERT_THAT(client, IsOk());
-  util::StatusOr<std::unique_ptr<Aead>> remote_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> remote_aead =
       (*client)->GetAead(kek_uri);
   ASSERT_THAT(remote_aead, IsOk());
   // Get KMS envelope AEAD primitive.
-  util::StatusOr<std::unique_ptr<Aead>> envelope_aead_from_new =
+  absl::StatusOr<std::unique_ptr<Aead>> envelope_aead_from_new =
       KmsEnvelopeAead::New(dek_template, *std::move(remote_aead));
   ASSERT_THAT(envelope_aead_from_new, IsOk());
 
@@ -330,18 +330,18 @@ TEST_F(KmsEnvelopeAeadTest, PrimitiveFromTemplateAndFromNewAreCompatible) {
   std::string plaintext = "plaintext";
   std::string associated_data = "associated_data";
   {
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         (*envelope_aead_from_template)->Encrypt(plaintext, associated_data);
     ASSERT_THAT(ciphertext, IsOk());
-    util::StatusOr<std::string> decrypted =
+    absl::StatusOr<std::string> decrypted =
         (*envelope_aead_from_new)->Decrypt(ciphertext.value(), associated_data);
     EXPECT_THAT(decrypted, IsOkAndHolds(plaintext));
   }
   {
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         (*envelope_aead_from_new)->Encrypt(plaintext, associated_data);
     ASSERT_THAT(ciphertext, IsOk());
-    util::StatusOr<std::string> decrypted =
+    absl::StatusOr<std::string> decrypted =
         (*envelope_aead_from_template)
             ->Decrypt(ciphertext.value(), associated_data);
     EXPECT_THAT(decrypted, IsOkAndHolds(plaintext));

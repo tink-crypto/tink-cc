@@ -53,7 +53,7 @@ class AesGcmKeyManager
                             List<Aead, CordAead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const google::crypto::tink::AesGcmKey& key) const override {
       auto aes_gcm_result = subtle::AesGcmBoringSsl::New(
           util::SecretDataFromStringView(key.key_value()));
@@ -62,7 +62,7 @@ class AesGcmKeyManager
     }
   };
   class CordAeadFactory : public PrimitiveFactory<CordAead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> Create(
+    absl::StatusOr<std::unique_ptr<CordAead>> Create(
         const google::crypto::tink::AesGcmKey& key) const override {
       auto cord_aes_gcm_result =
           crypto::tink::internal::CordAesGcmBoringSsl::New(
@@ -87,20 +87,19 @@ class AesGcmKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesGcmKey& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     return ValidateAesKeySize(key.key_value().size());
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::AesGcmKeyFormat& key_format) const override {
     return ValidateAesKeySize(key_format.key_size());
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesGcmKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::AesGcmKey> CreateKey(
       const google::crypto::tink::AesGcmKeyFormat& key_format) const override {
     google::crypto::tink::AesGcmKey key;
     key.set_version(get_version());
@@ -109,18 +108,17 @@ class AesGcmKeyManager
     return key;
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesGcmKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::AesGcmKey> DeriveKey(
       const google::crypto::tink::AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key_format.version(), get_version());
+    absl::Status status = ValidateVersion(key_format.version(), get_version());
     if (!status.ok()) return status;
 
-    crypto::tink::util::StatusOr<std::string> randomness =
+    absl::StatusOr<std::string> randomness =
         ReadBytesFromStream(key_format.key_size(), input_stream);
     if (!randomness.ok()) {
       if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
-        return crypto::tink::util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "Could not get enough pseudorandomness from input stream");
       }

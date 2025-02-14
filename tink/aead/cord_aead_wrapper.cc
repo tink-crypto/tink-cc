@@ -33,16 +33,16 @@ namespace tink {
 
 namespace {
 
-util::Status Validate(PrimitiveSet<CordAead>* aead_set) {
+absl::Status Validate(PrimitiveSet<CordAead>* aead_set) {
   if (aead_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "aead_set must be non-NULL");
   }
   if (aead_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "aead_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class CordAeadSetWrapper : public CordAead {
@@ -50,11 +50,11 @@ class CordAeadSetWrapper : public CordAead {
   explicit CordAeadSetWrapper(std::unique_ptr<PrimitiveSet<CordAead>> aead_set)
       : aead_set_(std::move(aead_set)) {}
 
-  crypto::tink::util::StatusOr<absl::Cord> Encrypt(
-      absl::Cord plaintext, absl::Cord associated_data) const override;
+  absl::StatusOr<absl::Cord> Encrypt(absl::Cord plaintext,
+                                     absl::Cord associated_data) const override;
 
-  crypto::tink::util::StatusOr<absl::Cord> Decrypt(
-      absl::Cord ciphertext, absl::Cord associated_data) const override;
+  absl::StatusOr<absl::Cord> Decrypt(absl::Cord ciphertext,
+                                     absl::Cord associated_data) const override;
 
   ~CordAeadSetWrapper() override = default;
 
@@ -62,7 +62,7 @@ class CordAeadSetWrapper : public CordAead {
   std::unique_ptr<PrimitiveSet<CordAead>> aead_set_;
 };
 
-util::StatusOr<absl::Cord> CordAeadSetWrapper::Encrypt(
+absl::StatusOr<absl::Cord> CordAeadSetWrapper::Encrypt(
     absl::Cord plaintext, absl::Cord associated_data) const {
   auto encrypt_result = aead_set_->get_primary()->get_primitive().Encrypt(
       plaintext, associated_data);
@@ -73,7 +73,7 @@ util::StatusOr<absl::Cord> CordAeadSetWrapper::Encrypt(
   return result;
 }
 
-util::StatusOr<absl::Cord> CordAeadSetWrapper::Decrypt(
+absl::StatusOr<absl::Cord> CordAeadSetWrapper::Decrypt(
     absl::Cord ciphertext, absl::Cord associated_data) const {
   if (ciphertext.size() > CryptoFormat::kNonRawPrefixSize) {
     std::string key_id =
@@ -103,13 +103,13 @@ util::StatusOr<absl::Cord> CordAeadSetWrapper::Decrypt(
       }
     }
   }
-  return util::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
+  return absl::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
 }
 }  // anonymous namespace
 
-util::StatusOr<std::unique_ptr<CordAead>> CordAeadWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<CordAead>> CordAeadWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<CordAead>> aead_set) const {
-  util::Status status = Validate(aead_set.get());
+  absl::Status status = Validate(aead_set.get());
   if (!status.ok()) return status;
   std::unique_ptr<CordAead> aead(new CordAeadSetWrapper(std::move(aead_set)));
   return std::move(aead);

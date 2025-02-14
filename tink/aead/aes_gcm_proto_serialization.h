@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for AES-GCM parameters and
 // keys into global serialization registry.
-inline crypto::tink::util::Status RegisterAesGcmProtoSerialization() {
+inline absl::Status RegisterAesGcmProtoSerialization() {
   return internal::RegisterAesGcmProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

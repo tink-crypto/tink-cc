@@ -63,7 +63,7 @@ using AesCtrKeyProto = ::google::crypto::tink::AesCtrKey;
 using ::google::crypto::tink::HashType;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
 
-StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::CreateKey(
+absl::StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::CreateKey(
     const AesCtrHmacAeadKeyFormat& aes_ctr_hmac_aead_key_format) const {
   AesCtrHmacAeadKeyProto aes_ctr_hmac_aead_key;
   aes_ctr_hmac_aead_key.set_version(get_version());
@@ -87,7 +87,8 @@ StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::CreateKey(
   return aes_ctr_hmac_aead_key;
 }
 
-StatusOr<std::unique_ptr<Aead>> AesCtrHmacAeadKeyManager::AeadFactory::Create(
+absl::StatusOr<std::unique_ptr<Aead>>
+AesCtrHmacAeadKeyManager::AeadFactory::Create(
     const AesCtrHmacAeadKeyProto& key) const {
   auto aes_ctr_result = subtle::AesCtrBoringSsl::New(
       util::SecretDataFromStringView(key.aes_ctr_key().key_value()),
@@ -123,7 +124,7 @@ Status AesCtrHmacAeadKeyManager::ValidateKey(
   }
   if (aes_ctr_key.params().iv_size() < kMinIvSizeInBytes ||
       aes_ctr_key.params().iv_size() > 16) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid AesCtrHmacAeadKey: IV size out of range.");
   }
   return HmacKeyManager().ValidateKey(key.hmac_key());
@@ -139,7 +140,7 @@ Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
   }
   if (aes_ctr_key_format.params().iv_size() < kMinIvSizeInBytes ||
       aes_ctr_key_format.params().iv_size() > 16) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Invalid AesCtrHmacAeadKeyFormat: IV size out of range.");
   }
@@ -147,13 +148,13 @@ Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
   // Validate HmacKeyFormat.
   auto hmac_key_format = key_format.hmac_key_format();
   if (hmac_key_format.key_size() < kMinKeySizeInBytes) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Invalid AesCtrHmacAeadKeyFormat: HMAC key_size is too small.");
   }
   auto params = hmac_key_format.params();
   if (params.tag_size() < kMinTagSizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Invalid HmacParams: tag_size ",
                                      params.tag_size(), " is too small."));
   }
@@ -163,13 +164,13 @@ Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
                                                {HashType::SHA384, 48},
                                                {HashType::SHA512, 64}};
   if (max_tag_size.find(params.hash()) == max_tag_size.end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid HmacParams: HashType '",
                      Enums::HashName(params.hash()), "' not supported."));
   } else {
     if (params.tag_size() > max_tag_size[params.hash()]) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid HmacParams: tag_size ", params.tag_size(),
                        " is too big for HashType '",
@@ -192,24 +193,24 @@ Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
 //     and AES key size 16 bytes.
 //   - HMAC pads its key with zeroes, so both parties will end up with the same
 //     HMAC key, but different AES keys (offset by 1 byte).
-StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::DeriveKey(
+absl::StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::DeriveKey(
     const AesCtrHmacAeadKeyFormat& key_format,
     InputStream* input_stream) const {
   Status status = ValidateKeyFormat(key_format);
   if (!status.ok()) {
     return status;
   }
-  StatusOr<std::string> aes_ctr_randomness = ReadBytesFromStream(
+  absl::StatusOr<std::string> aes_ctr_randomness = ReadBytesFromStream(
       key_format.aes_ctr_key_format().key_size(), input_stream);
   if (!aes_ctr_randomness.ok()) {
     if (absl::IsOutOfRange(aes_ctr_randomness.status())) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Could not get enough pseudorandomness from input stream");
     }
     return aes_ctr_randomness.status();
   }
-  StatusOr<HmacKeyProto> hmac_key =
+  absl::StatusOr<HmacKeyProto> hmac_key =
       HmacKeyManager().DeriveKey(key_format.hmac_key_format(), input_stream);
   if (!hmac_key.ok()) {
     return hmac_key.status();

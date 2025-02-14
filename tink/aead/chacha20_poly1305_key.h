@@ -45,7 +45,7 @@ class ChaCha20Poly1305Key : public AeadKey {
 
   // Creates a new ChaCha20-Poly1305 key. If `variant` uses a prefix, then the
   // id is used to compute this prefix.
-  static util::StatusOr<ChaCha20Poly1305Key> Create(
+  static absl::StatusOr<ChaCha20Poly1305Key> Create(
       ChaCha20Poly1305Parameters::Variant variant,
       const RestrictedData& key_bytes, absl::optional<int> id_requirement,
       PartialKeyAccessToken token);

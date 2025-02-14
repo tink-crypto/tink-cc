@@ -45,7 +45,7 @@ class KmsAeadKeyManager
                             List<Aead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const google::crypto::tink::KmsAeadKey& kms_aead_key) const override {
       const auto& key_uri = kms_aead_key.params().key_uri();
       auto kms_client_result = KmsClients::Get(key_uri);
@@ -65,24 +65,23 @@ class KmsAeadKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::KmsAeadKey& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     return ValidateKeyFormat(key.params());
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::KmsAeadKeyFormat& key_format) const override {
     if (key_format.key_uri().empty()) {
-      return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                        "Missing key_uri.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Missing key_uri.");
     }
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::KmsAeadKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::KmsAeadKey> CreateKey(
       const google::crypto::tink::KmsAeadKeyFormat& key_format) const override {
     google::crypto::tink::KmsAeadKey kms_aead_key;
     kms_aead_key.set_version(get_version());

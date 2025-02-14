@@ -159,7 +159,7 @@ TEST(AesGcmKeyManagerTest, Create16ByteKey) {
   AesGcmKeyFormat format;
   format.set_key_size(16);
 
-  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -169,7 +169,7 @@ TEST(AesGcmKeyManagerTest, Create32ByteKey) {
   AesGcmKeyFormat format;
   format.set_key_size(32);
 
-  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
 
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value().size(), Eq(format.key_size()));
@@ -178,15 +178,15 @@ TEST(AesGcmKeyManagerTest, Create32ByteKey) {
 TEST(AesGcmKeyManagerTest, CreateAead) {
   AesGcmKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> aead_or =
+  absl::StatusOr<std::unique_ptr<Aead>> aead_or =
       AesGcmKeyManager().GetPrimitive<Aead>(key_or.value());
 
   ASSERT_THAT(aead_or, IsOk());
 
-  StatusOr<std::unique_ptr<Aead>> boring_ssl_aead_or =
+  absl::StatusOr<std::unique_ptr<Aead>> boring_ssl_aead_or =
       subtle::AesGcmBoringSsl::New(
           util::SecretDataFromStringView(key_or.value().key_value()));
   ASSERT_THAT(boring_ssl_aead_or, IsOk());
@@ -199,15 +199,15 @@ TEST(AesGcmKeyManagerTest, CreateAead) {
 TEST(AesGcmKeyManagerTest, CreateCordAead) {
   AesGcmKeyFormat format;
   format.set_key_size(32);
-  StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
+  absl::StatusOr<AesGcmKeyProto> key_or = AesGcmKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
 
-  StatusOr<std::unique_ptr<CordAead>> aead_or =
+  absl::StatusOr<std::unique_ptr<CordAead>> aead_or =
       AesGcmKeyManager().GetPrimitive<CordAead>(key_or.value());
 
   ASSERT_THAT(aead_or, IsOk());
 
-  StatusOr<std::unique_ptr<CordAead>> boring_ssl_aead_or =
+  absl::StatusOr<std::unique_ptr<CordAead>> boring_ssl_aead_or =
       CordAesGcmBoringSsl::New(
           util::SecretDataFromStringView(key_or.value().key_value()));
   ASSERT_THAT(boring_ssl_aead_or, IsOk());
@@ -225,7 +225,7 @@ TEST(AesGcmKeyManagerTest, DeriveShortKey) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
-  StatusOr<AesGcmKeyProto> key_or =
+  absl::StatusOr<AesGcmKeyProto> key_or =
       AesGcmKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(), Eq("0123456789abcdef"));
@@ -239,7 +239,7 @@ TEST(AesGcmKeyManagerTest, DeriveLongKey) {
   IstreamInputStream input_stream{absl::make_unique<std::stringstream>(
       "0123456789abcdef0123456789abcdefXXX")};
 
-  StatusOr<AesGcmKeyProto> key_or =
+  absl::StatusOr<AesGcmKeyProto> key_or =
       AesGcmKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(),

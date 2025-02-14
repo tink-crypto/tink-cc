@@ -64,7 +64,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesEaxParametersTest, BuildParametersSucceeds) {
   BuildTestCase test_case = GetParam();
 
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetIvSizeInBytes(test_case.iv_size)
@@ -268,7 +268,7 @@ TEST(AesEaxParametersTest, BuildWithInvalidTagSizeFails) {
 }
 
 TEST(AesEaxParametersTest, CopyConstructor) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -287,7 +287,7 @@ TEST(AesEaxParametersTest, CopyConstructor) {
 }
 
 TEST(AesEaxParametersTest, CopyAssignment) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -296,7 +296,7 @@ TEST(AesEaxParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesEaxParameters> copy =
+  absl::StatusOr<AesEaxParameters> copy =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -315,7 +315,7 @@ TEST(AesEaxParametersTest, CopyAssignment) {
 }
 
 TEST(AesEaxParametersTest, MoveConstructor) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -334,7 +334,7 @@ TEST(AesEaxParametersTest, MoveConstructor) {
 }
 
 TEST(AesEaxParametersTest, MoveAssignment) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -343,7 +343,7 @@ TEST(AesEaxParametersTest, MoveAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesEaxParameters> move =
+  absl::StatusOr<AesEaxParameters> move =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -364,7 +364,7 @@ TEST(AesEaxParametersTest, MoveAssignment) {
 TEST_P(AesEaxParametersTest, SameParametersEquals) {
   BuildTestCase test_case = GetParam();
 
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetIvSizeInBytes(test_case.iv_size)
@@ -373,7 +373,7 @@ TEST_P(AesEaxParametersTest, SameParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesEaxParameters> other_parameters =
+  absl::StatusOr<AesEaxParameters> other_parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetIvSizeInBytes(test_case.iv_size)
@@ -389,7 +389,7 @@ TEST_P(AesEaxParametersTest, SameParametersEquals) {
 }
 
 TEST(AesEaxParametersTest, DifferentKeySizeNotEqual) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -398,7 +398,7 @@ TEST(AesEaxParametersTest, DifferentKeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesEaxParameters> other_parameters =
+  absl::StatusOr<AesEaxParameters> other_parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(24)
           .SetIvSizeInBytes(16)
@@ -412,7 +412,7 @@ TEST(AesEaxParametersTest, DifferentKeySizeNotEqual) {
 }
 
 TEST(AesEaxParametersTest, DifferentIvSizeNotEqual) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -421,7 +421,7 @@ TEST(AesEaxParametersTest, DifferentIvSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesEaxParameters> other_parameters =
+  absl::StatusOr<AesEaxParameters> other_parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -435,7 +435,7 @@ TEST(AesEaxParametersTest, DifferentIvSizeNotEqual) {
 }
 
 TEST(AesEaxParametersTest, DifferentTagSizeNotEqual) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -444,7 +444,7 @@ TEST(AesEaxParametersTest, DifferentTagSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesEaxParameters> other_parameters =
+  absl::StatusOr<AesEaxParameters> other_parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -458,7 +458,7 @@ TEST(AesEaxParametersTest, DifferentTagSizeNotEqual) {
 }
 
 TEST(AesEaxParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -467,7 +467,7 @@ TEST(AesEaxParametersTest, DifferentVariantNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesEaxParameters> other_parameters =
+  absl::StatusOr<AesEaxParameters> other_parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -481,7 +481,7 @@ TEST(AesEaxParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(AesEaxParametersTest, Clone) {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)

@@ -408,19 +408,19 @@ TEST_P(XAesGcmKeyTemplateTest, CreateKeyAndPrimitive) {
   EXPECT_TRUE(key_format.ParseFromString(test_case.key_template.value()));
 
   ASSERT_THAT(key_manager->ValidateKeyFormat(key_format), IsOk());
-  util::StatusOr<google::crypto::tink::XAesGcmKey> key =
+  absl::StatusOr<google::crypto::tink::XAesGcmKey> key =
       key_manager->CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
   ASSERT_THAT(key_manager->ValidateKey(*key), IsOk());
 
-  util::StatusOr<std::unique_ptr<CordAead>> primitive =
+  absl::StatusOr<std::unique_ptr<CordAead>> primitive =
       key_manager->GetPrimitive<CordAead>(*key);
   ASSERT_THAT(primitive, IsOk());
 
   absl::Cord pt("hello world");
   absl::Cord aad("aad");
-  util::StatusOr<absl::Cord> ct = (*primitive)->Encrypt(pt, aad);
-  util::StatusOr<absl::Cord> decrypted = (*primitive)->Decrypt(*ct, aad);
+  absl::StatusOr<absl::Cord> ct = (*primitive)->Encrypt(pt, aad);
+  absl::StatusOr<absl::Cord> decrypted = (*primitive)->Decrypt(*ct, aad);
   EXPECT_EQ(*decrypted, pt);
 }
 

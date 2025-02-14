@@ -45,7 +45,7 @@ class XAesGcmKey : public AeadKey {
 
   // Creates a new X-AES-GCM key. If the parameters specify a variant that uses
   // a prefix, then the id is used to compute this prefix.
-  static util::StatusOr<XAesGcmKey> Create(
+  static absl::StatusOr<XAesGcmKey> Create(
       XAesGcmParameters parameters, const RestrictedData& key_bytes,
       absl::optional<int32_t> id_requirement, PartialKeyAccessToken token);
 

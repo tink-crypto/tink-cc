@@ -101,7 +101,7 @@ class LegacyKmsEnvelopeAeadParameters : public AeadParameters {
   LegacyKmsEnvelopeAeadParameters& operator=(
       LegacyKmsEnvelopeAeadParameters&& other) = default;
 
-  static util::StatusOr<LegacyKmsEnvelopeAeadParameters> Create(
+  static absl::StatusOr<LegacyKmsEnvelopeAeadParameters> Create(
       absl::string_view key_uri, Variant variant,
       DekParsingStrategy dek_parsing_strategy,
       const AeadParameters& dek_parameters);

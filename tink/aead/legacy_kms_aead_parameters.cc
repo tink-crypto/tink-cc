@@ -25,10 +25,10 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<LegacyKmsAeadParameters> LegacyKmsAeadParameters::Create(
+absl::StatusOr<LegacyKmsAeadParameters> LegacyKmsAeadParameters::Create(
     absl::string_view key_uri, Variant variant) {
   if (variant != Variant::kTink && variant != Variant::kNoPrefix) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create legacy KMS AEAD parameters with unknown variant.");
   }

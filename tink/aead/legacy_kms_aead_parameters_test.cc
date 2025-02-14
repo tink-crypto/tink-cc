@@ -57,7 +57,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(LegacyKmsAeadParametersTest, Create) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -76,7 +76,7 @@ TEST(LegacyKmsAeadParametersTest, CreateWithInvalidVariantFails) {
 }
 
 TEST(LegacyKmsAeadParametersTest, CopyConstructor) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
@@ -89,12 +89,12 @@ TEST(LegacyKmsAeadParametersTest, CopyConstructor) {
 }
 
 TEST(LegacyKmsAeadParametersTest, CopyAssignment) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> copy =
+  absl::StatusOr<LegacyKmsAeadParameters> copy =
       LegacyKmsAeadParameters::Create(
           "some.other.key.uri", LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(copy, IsOk());
@@ -107,7 +107,7 @@ TEST(LegacyKmsAeadParametersTest, CopyAssignment) {
 }
 
 TEST(LegacyKmsAeadParametersTest, MoveConstructor) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
@@ -120,12 +120,12 @@ TEST(LegacyKmsAeadParametersTest, MoveConstructor) {
 }
 
 TEST(LegacyKmsAeadParametersTest, MoveAssignment) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> move =
+  absl::StatusOr<LegacyKmsAeadParameters> move =
       LegacyKmsAeadParameters::Create(
           "some.other.key.uri", LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(move, IsOk());
@@ -140,11 +140,11 @@ TEST(LegacyKmsAeadParametersTest, MoveAssignment) {
 TEST_P(LegacyKmsAeadParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> other_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> other_parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -155,12 +155,12 @@ TEST_P(LegacyKmsAeadParametersTest, ParametersEquals) {
 }
 
 TEST(LegacyKmsAeadParametersTest, DifferentKeyUriNotEqual) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> other_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> other_parameters =
       LegacyKmsAeadParameters::Create("some.other.key.uri",
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(other_parameters, IsOk());
@@ -170,12 +170,12 @@ TEST(LegacyKmsAeadParametersTest, DifferentKeyUriNotEqual) {
 }
 
 TEST(LegacyKmsAeadParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> other_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> other_parameters =
       LegacyKmsAeadParameters::Create(
           kKeyUri, LegacyKmsAeadParameters::Variant::kNoPrefix);
   ASSERT_THAT(other_parameters, IsOk());
@@ -185,7 +185,7 @@ TEST(LegacyKmsAeadParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(LegacyKmsAeadParametersTest, Clone) {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri,
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());

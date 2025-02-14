@@ -126,11 +126,11 @@ TEST_F(AeadConfigTest, WrappersRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                 KeyGenConfigGlobalRegistry());
   ASSERT_THAT(keyset_handle.status(), IsOk());
-  StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(aead.status(), IsOk());
@@ -201,18 +201,18 @@ TEST_F(AeadConfigTest, AesGcmProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               AeadKeyTemplates::Aes256Gcm());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetVariant(AesGcmParameters::Variant::kTink)
           .SetKeySizeInBytes(32)
@@ -221,7 +221,7 @@ TEST_F(AeadConfigTest, AesGcmProtoParamsSerializationRegistered) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params.status(),
@@ -229,12 +229,12 @@ TEST_F(AeadConfigTest, AesGcmProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params2, IsOk());
@@ -249,7 +249,7 @@ TEST_F(AeadConfigTest, AesGcmProtoKeySerializationRegistered) {
   key_proto.set_version(0);
   key_proto.set_key_value(subtle::Random::GetRandomBytes(32));
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmKey",
           RestrictedData(key_proto.SerializeAsString(),
@@ -257,12 +257,12 @@ TEST_F(AeadConfigTest, AesGcmProtoKeySerializationRegistered) {
           KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetVariant(AesGcmParameters::Variant::kTink)
           .SetKeySizeInBytes(32)
@@ -271,14 +271,14 @@ TEST_F(AeadConfigTest, AesGcmProtoKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<AesGcmKey> key =
+  absl::StatusOr<AesGcmKey> key =
       AesGcmKey::Create(*params,
                         RestrictedData(subtle::Random::GetRandomBytes(32),
                                        InsecureSecretKeyAccess::Get()),
                         /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -286,12 +286,12 @@ TEST_F(AeadConfigTest, AesGcmProtoKeySerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -303,22 +303,22 @@ TEST_F(AeadConfigTest, AesGcmSivProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               AeadKeyTemplates::Aes256GcmSiv());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params.status(),
@@ -326,12 +326,12 @@ TEST_F(AeadConfigTest, AesGcmSivProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params2, IsOk());
@@ -346,7 +346,7 @@ TEST_F(AeadConfigTest, AesGcmSivProtoKeySerializationRegistered) {
   key_proto.set_version(0);
   key_proto.set_key_value(subtle::Random::GetRandomBytes(32));
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           RestrictedData(key_proto.SerializeAsString(),
@@ -354,23 +354,23 @@ TEST_F(AeadConfigTest, AesGcmSivProtoKeySerializationRegistered) {
           KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<AesGcmSivKey> key =
+  absl::StatusOr<AesGcmSivKey> key =
       AesGcmSivKey::Create(*params,
                            RestrictedData(subtle::Random::GetRandomBytes(32),
                                           InsecureSecretKeyAccess::Get()),
                            /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -378,12 +378,12 @@ TEST_F(AeadConfigTest, AesGcmSivProtoKeySerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -395,18 +395,18 @@ TEST_F(AeadConfigTest, AesEaxProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               AeadKeyTemplates::Aes256Eax());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesEaxParameters> params =
+  absl::StatusOr<AesEaxParameters> params =
       AesEaxParameters::Builder()
           .SetVariant(AesEaxParameters::Variant::kTink)
           .SetKeySizeInBytes(32)
@@ -415,7 +415,7 @@ TEST_F(AeadConfigTest, AesEaxProtoParamsSerializationRegistered) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params.status(),
@@ -423,12 +423,12 @@ TEST_F(AeadConfigTest, AesEaxProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params2, IsOk());
@@ -444,7 +444,7 @@ TEST_F(AeadConfigTest, AesEaxProtoKeySerializationRegistered) {
   key_proto.mutable_params()->set_iv_size(16);
   key_proto.set_key_value(subtle::Random::GetRandomBytes(32));
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesEaxKey",
           RestrictedData(key_proto.SerializeAsString(),
@@ -452,12 +452,12 @@ TEST_F(AeadConfigTest, AesEaxProtoKeySerializationRegistered) {
           KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesEaxParameters> params =
+  absl::StatusOr<AesEaxParameters> params =
       AesEaxParameters::Builder()
           .SetVariant(AesEaxParameters::Variant::kTink)
           .SetKeySizeInBytes(32)
@@ -466,14 +466,14 @@ TEST_F(AeadConfigTest, AesEaxProtoKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<AesEaxKey> key =
+  absl::StatusOr<AesEaxKey> key =
       AesEaxKey::Create(*params,
                         RestrictedData(subtle::Random::GetRandomBytes(32),
                                        InsecureSecretKeyAccess::Get()),
                         /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -481,12 +481,12 @@ TEST_F(AeadConfigTest, AesEaxProtoKeySerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -499,23 +499,23 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoParamsSerializationRegistered) {
   }
 
   // TODO: b/347926425 - Rewrite tests using parameters proto format API.
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               AeadKeyTemplates::XChaCha20Poly1305());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<XChaCha20Poly1305Parameters> params =
+  absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params.status(),
@@ -523,12 +523,12 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params2, IsOk());
@@ -539,7 +539,7 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::XChaCha20Poly1305(),
                                 KeyGenConfigAeadV0());
   ASSERT_THAT(handle, IsOk());
@@ -550,7 +550,7 @@ TEST_F(AeadConfigTest, XChaCha20Poly1305ProtoKeySerializationRegistered) {
           (*handle)->GetPrimary().GetKey().get());
   EXPECT_THAT(legacy_proto_key_from_handle, Not(IsNull()));
 
-  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       XChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(subtle::Random::GetRandomBytes(32),
                      InsecureSecretKeyAccess::Get()),
@@ -586,18 +586,18 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoParamsSerializationRegistered) {
   }
 
   // TODO: b/347926425 - Rewrite tests using parameters proto format API.
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               AeadKeyTemplates::Aes256CtrHmacSha256());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesCtrHmacAeadParameters> params =
+  absl::StatusOr<AesCtrHmacAeadParameters> params =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(32)
           .SetHmacKeySizeInBytes(32)
@@ -608,7 +608,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoParamsSerializationRegistered) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params.status(),
@@ -616,12 +616,12 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params2, IsOk());
@@ -632,7 +632,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256CtrHmacSha256(),
                                 KeyGenConfigAeadV0());
   ASSERT_THAT(handle, IsOk());
@@ -642,7 +642,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
                   (*handle)->GetPrimary().GetKey().get()),
               Not(IsNull()));
 
-  util::StatusOr<AesCtrHmacAeadParameters> params =
+  absl::StatusOr<AesCtrHmacAeadParameters> params =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(32)
           .SetHmacKeySizeInBytes(32)
@@ -653,7 +653,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadKey> key =
+  absl::StatusOr<AesCtrHmacAeadKey> key =
       AesCtrHmacAeadKey::Builder()
           .SetParameters(*params)
           .SetAesKeyBytes(RestrictedData(subtle::Random::GetRandomBytes(32),
@@ -675,7 +675,7 @@ TEST_F(AeadConfigTest, AesCtrHmacAeadProtoKeySerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes256CtrHmacSha256(),
                                 KeyGenConfigAeadV0());
   ASSERT_THAT(handle2, IsOk());
@@ -703,7 +703,7 @@ TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoParamsSerializationRegistered) {
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
 
   // TODO: b/347926425 - Rewrite tests using parameters proto format API.
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(key_template);
   ASSERT_THAT(proto_params_serialization, IsOk());
@@ -713,7 +713,7 @@ TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoParamsSerializationRegistered) {
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<ChaCha20Poly1305Parameters> params =
+  absl::StatusOr<ChaCha20Poly1305Parameters> params =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
@@ -747,7 +747,7 @@ TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoKeySerializationRegistered) {
   key_proto.set_version(0);
   key_proto.set_key_value(key_bytes);
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.ChaCha20Poly1305Key",
           RestrictedData(key_proto.SerializeAsString(),
@@ -761,7 +761,7 @@ TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoKeySerializationRegistered) {
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
+  absl::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
       ChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/123, GetPartialKeyAccess());
@@ -791,7 +791,7 @@ TEST_F(AeadConfigTest, XAesGcmProtoParamsSerializationRegistered) {
   }
 
   // TODO: b/347926425 - Rewrite tests using parameters proto format API.
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               AeadKeyTemplates::XAes256Gcm160BitNonce());
@@ -802,7 +802,7 @@ TEST_F(AeadConfigTest, XAesGcmProtoParamsSerializationRegistered) {
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, /*salt_size_bytes=*/12);
   ASSERT_THAT(params, IsOk());
 
@@ -835,7 +835,7 @@ TEST_F(AeadConfigTest, XAesGcmProtoKeySerializationRegistered) {
   key_proto.mutable_params()->set_salt_size(12);
   key_proto.set_key_value(key_bytes);
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.XAesGcmKey",
           RestrictedData(key_proto.SerializeAsString(),
@@ -849,11 +849,11 @@ TEST_F(AeadConfigTest, XAesGcmProtoKeySerializationRegistered) {
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, /*salt_size_bytes=*/12);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
+  absl::StatusOr<XAesGcmKey> key = XAesGcmKey::Create(
       *params, RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
@@ -889,14 +889,14 @@ TEST_F(AeadConfigTest, KmsAeadProtoParamsSerializationRegistered) {
   key_format.set_key_uri("key_uri");
   key_format.SerializeToString(key_template.mutable_value());
 
-  util::StatusOr<std::unique_ptr<Parameters>> proto_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> proto_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(proto_parameters, IsOk());
   EXPECT_THAT(
       dynamic_cast<internal::LegacyProtoParameters*>(proto_parameters->get()),
       NotNull());
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create("key_uri",
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
@@ -905,7 +905,7 @@ TEST_F(AeadConfigTest, KmsAeadProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(parsed_parameters, IsOk());
   EXPECT_THAT(dynamic_cast<LegacyKmsAeadParameters*>(parsed_parameters->get()),
@@ -931,7 +931,7 @@ TEST_F(AeadConfigTest, KmsAeadProtoKeySerializationRegistered) {
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
                   absl::make_unique<KmsAeadKeyManager>(), true),
               IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
 
@@ -940,11 +940,11 @@ TEST_F(AeadConfigTest, KmsAeadProtoKeySerializationRegistered) {
                   (*handle)->GetPrimary().GetKey().get()),
               NotNull());
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create("key_uri",
                                       LegacyKmsAeadParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/123);
   ASSERT_THAT(key, IsOk());
 
@@ -959,7 +959,7 @@ TEST_F(AeadConfigTest, KmsAeadProtoKeySerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle2, IsOk());
 
@@ -986,7 +986,7 @@ KeyTemplate GetXChaCha20Poly1305KeyTemplate() {
 }
 
 XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
-  util::StatusOr<XChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
   CHECK_OK(parameters);
@@ -1007,14 +1007,14 @@ TEST_F(AeadConfigTest, KmsEnvelopeAeadProtoParamsSerializationRegistered) {
   *key_format.mutable_dek_template() = GetXChaCha20Poly1305KeyTemplate();
   key_format.SerializeToString(key_template.mutable_value());
 
-  util::StatusOr<std::unique_ptr<Parameters>> proto_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> proto_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(proto_parameters, IsOk());
   EXPECT_THAT(
       dynamic_cast<internal::LegacyProtoParameters*>(proto_parameters->get()),
       NotNull());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           "kek_uri", LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -1026,7 +1026,7 @@ TEST_F(AeadConfigTest, KmsEnvelopeAeadProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(parsed_parameters, IsOk());
   EXPECT_THAT(
@@ -1054,7 +1054,7 @@ TEST_F(AeadConfigTest, KmsEnvelopeAeadProtoKeySerializationRegistered) {
   ASSERT_THAT(Registry::RegisterKeyTypeManager(
                   absl::make_unique<KmsEnvelopeAeadKeyManager>(), true),
               IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
 
@@ -1063,14 +1063,14 @@ TEST_F(AeadConfigTest, KmsEnvelopeAeadProtoKeySerializationRegistered) {
                   (*handle)->GetPrimary().GetKey().get()),
               NotNull());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           "kek_uri", LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
               kAssumeXChaCha20Poly1305,
           GetXChaCha20Poly1305Parameters());
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters, /*id_requirement=*/123);
   ASSERT_THAT(key, IsOk());
 
@@ -1085,7 +1085,7 @@ TEST_F(AeadConfigTest, KmsEnvelopeAeadProtoKeySerializationRegistered) {
 
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle2, IsOk());
 

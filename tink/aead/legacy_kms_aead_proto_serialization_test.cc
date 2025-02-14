@@ -95,13 +95,13 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseParameters) {
   KmsAeadKeyFormat key_format_proto;
   key_format_proto.set_key_uri(kKeyUri);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(params, IsOk());
@@ -118,11 +118,11 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeParameters) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterLegacyKmsAeadProtoSerialization(), IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -157,13 +157,13 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKey) {
       RestrictedData(key_proto.SerializeAsString(),
                      internal::GetInsecureSecretKeyAccessInternal());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::REMOTE,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
@@ -171,11 +171,11 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKey) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<LegacyKmsAeadParameters> expected_parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> expected_parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> expected_key =
+  absl::StatusOr<LegacyKmsAeadKey> expected_key =
       LegacyKmsAeadKey::Create(*expected_parameters, test_case.id);
   ASSERT_THAT(expected_key, IsOk());
 
@@ -186,15 +186,15 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterLegacyKmsAeadProtoSerialization(), IsOk());
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create(kKeyUri, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, test_case.id);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);

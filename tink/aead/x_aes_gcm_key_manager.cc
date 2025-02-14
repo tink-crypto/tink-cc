@@ -65,7 +65,7 @@ using XAesGcmKeyProto = ::google::crypto::tink::XAesGcmKey;
 using ::google::crypto::tink::XAesGcmKeyFormat;
 using ::google::crypto::tink::XAesGcmParams;
 
-util::Status ValidateParams(const XAesGcmParams& params) {
+absl::Status ValidateParams(const XAesGcmParams& params) {
   if (params.salt_size() < 8 || params.salt_size() > 12) {
     return absl::InvalidArgumentError(
         absl::StrCat("Invalid salt size: ", params.salt_size()));
@@ -73,7 +73,7 @@ util::Status ValidateParams(const XAesGcmParams& params) {
   return absl::OkStatus();
 }
 
-util::Status ValidateKeySize(uint32_t key_size) {
+absl::Status ValidateKeySize(uint32_t key_size) {
   if (key_size != kKeySizeBytes) {
     return absl::InvalidArgumentError(
         absl::StrFormat("Invalid key size: %d, only %d bytes is supported.",
@@ -82,7 +82,7 @@ util::Status ValidateKeySize(uint32_t key_size) {
   return absl::OkStatus();
 }
 
-util::Status ValidateXAesGcmKey(const XAesGcmKeyProto& key) {
+absl::Status ValidateXAesGcmKey(const XAesGcmKeyProto& key) {
   absl::Status status = ValidateKeySize(key.key_value().size());
   if (!status.ok()) {
     return status;
@@ -90,9 +90,9 @@ util::Status ValidateXAesGcmKey(const XAesGcmKeyProto& key) {
   return ValidateParams(key.params());
 }
 
-util::StatusOr<::crypto::tink::XAesGcmKey> ConvertToXAesGcmKey(
+absl::StatusOr<::crypto::tink::XAesGcmKey> ConvertToXAesGcmKey(
     const XAesGcmKeyProto& key) {
-  util::StatusOr<XAesGcmParameters> x_aes_gcm_params =
+  absl::StatusOr<XAesGcmParameters> x_aes_gcm_params =
       XAesGcmParameters::Create(XAesGcmParameters::Variant::kNoPrefix,
                                 key.params().salt_size());
   if (!x_aes_gcm_params.ok()) {
@@ -110,9 +110,9 @@ class XAesGcmKeyManagerImpl
                             List<Aead, CordAead>> {
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
-    util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const XAesGcmKeyProto& key) const override {
-      util::Status status = ValidateXAesGcmKey(key);
+      absl::Status status = ValidateXAesGcmKey(key);
       if (!status.ok()) {
         return status;
       }
@@ -120,12 +120,12 @@ class XAesGcmKeyManagerImpl
       if (!status.ok()) {
         return status;
       }
-      util::StatusOr<::crypto::tink::XAesGcmKey> x_aes_gcm_key =
+      absl::StatusOr<::crypto::tink::XAesGcmKey> x_aes_gcm_key =
           ConvertToXAesGcmKey(key);
       if (!x_aes_gcm_key.ok()) {
         return x_aes_gcm_key.status();
       }
-      util::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
+      absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
           internal::NewZeroCopyXAesGcmBoringSsl(std::move(*x_aes_gcm_key));
       if (!zero_copy_aead.ok()) {
         return zero_copy_aead.status();
@@ -136,9 +136,9 @@ class XAesGcmKeyManagerImpl
   };
 
   class CordAeadFactory : public PrimitiveFactory<CordAead> {
-    util::StatusOr<std::unique_ptr<CordAead>> Create(
+    absl::StatusOr<std::unique_ptr<CordAead>> Create(
         const XAesGcmKeyProto& key) const override {
-      util::Status status = ValidateXAesGcmKey(key);
+      absl::Status status = ValidateXAesGcmKey(key);
       if (!status.ok()) {
         return status;
       }
@@ -146,7 +146,7 @@ class XAesGcmKeyManagerImpl
       if (!status.ok()) {
         return status;
       }
-      util::StatusOr<::crypto::tink::XAesGcmKey> x_aes_gcm_key =
+      absl::StatusOr<::crypto::tink::XAesGcmKey> x_aes_gcm_key =
           ConvertToXAesGcmKey(key);
       if (!x_aes_gcm_key.ok()) {
         return x_aes_gcm_key.status();
@@ -168,26 +168,26 @@ class XAesGcmKeyManagerImpl
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const XAesGcmKeyProto& key) const override {
-    util::Status status = ValidateVersion(key.version(), get_version());
+  absl::Status ValidateKey(const XAesGcmKeyProto& key) const override {
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) {
       return status;
     }
     return ValidateXAesGcmKey(key);
   }
 
-  util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const XAesGcmKeyFormat& key_format) const override {
-    util::Status status = ValidateParams(key_format.params());
+    absl::Status status = ValidateParams(key_format.params());
     if (!status.ok()) {
       return status;
     }
     return ValidateVersion(key_format.version(), get_version());
   }
 
-  util::StatusOr<XAesGcmKeyProto> CreateKey(
+  absl::StatusOr<XAesGcmKeyProto> CreateKey(
       const XAesGcmKeyFormat& key_format) const override {
-    util::Status status = ValidateKeyFormat(key_format);
+    absl::Status status = ValidateKeyFormat(key_format);
     if (!status.ok()) {
       return status;
     }
@@ -198,7 +198,7 @@ class XAesGcmKeyManagerImpl
     return key;
   }
 
-  util::StatusOr<XAesGcmKeyProto> DeriveKey(
+  absl::StatusOr<XAesGcmKeyProto> DeriveKey(
       const XAesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
     return absl::UnimplementedError(

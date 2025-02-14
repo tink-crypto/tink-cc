@@ -46,7 +46,7 @@ using ::testing::Values;
 const absl::string_view kKeyUri = "some://arbitrary.key.uri?q=123#xyz";
 
 XChaCha20Poly1305Parameters CreateXChaCha20Poly1305KeyParameters() {
-  util::StatusOr<XChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
   CHECK_OK(parameters);
@@ -73,7 +73,7 @@ TEST_P(LegacyKmsEnvelopeAeadKeyTest, CreateSucceeds) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, test_case.variant,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -81,7 +81,7 @@ TEST_P(LegacyKmsEnvelopeAeadKeyTest, CreateSucceeds) {
           dek_parameters);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters, test_case.id_requirement);
   ASSERT_THAT(key, IsOk());
 
@@ -93,7 +93,7 @@ TEST_P(LegacyKmsEnvelopeAeadKeyTest, CreateSucceeds) {
 TEST(LegacyKmsEnvelopeAeadKeyTest, CreateKeyWithInvalidIdRequirementFails) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> no_prefix_parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> no_prefix_parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -107,7 +107,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CreateKeyWithInvalidIdRequirementFails) {
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Cannot create key with ID requirement")));
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> tink_parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> tink_parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -127,7 +127,7 @@ TEST_P(LegacyKmsEnvelopeAeadKeyTest, KeyEquals) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, test_case.variant,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -135,11 +135,11 @@ TEST_P(LegacyKmsEnvelopeAeadKeyTest, KeyEquals) {
           dek_parameters);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters, test_case.id_requirement);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters, test_case.id_requirement);
   ASSERT_THAT(other_key, IsOk());
 
@@ -153,7 +153,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentParametersNotEqual) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters1 =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters1 =
       LegacyKmsEnvelopeAeadParameters::Create(
           "key_uri1", LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -161,12 +161,12 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentParametersNotEqual) {
           dek_parameters);
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters1,
                                        /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters2 =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters2 =
       LegacyKmsEnvelopeAeadParameters::Create(
           "key_uri2", LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -174,7 +174,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentParametersNotEqual) {
           dek_parameters);
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters2,
                                        /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(other_key, IsOk());
@@ -189,7 +189,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentIdRequirementNotEqual) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -197,12 +197,12 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, DifferentIdRequirementNotEqual) {
           dek_parameters);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters,
                                        /*id_requirement=*/0x01020304);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> other_key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters,
                                        /*id_requirement=*/0x02030405);
   ASSERT_THAT(other_key, IsOk());
@@ -217,7 +217,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CopyConstructor) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -225,7 +225,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CopyConstructor) {
           dek_parameters);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
@@ -239,7 +239,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CopyAssignment) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> tink_parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> tink_parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -247,12 +247,12 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CopyAssignment) {
           dek_parameters);
   ASSERT_THAT(tink_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*tink_parameters,
                                        /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> no_prefix_parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> no_prefix_parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -260,7 +260,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, CopyAssignment) {
           dek_parameters);
   ASSERT_THAT(no_prefix_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> copy =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> copy =
       LegacyKmsEnvelopeAeadKey::Create(*no_prefix_parameters,
                                        /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(copy, IsOk());
@@ -275,7 +275,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, MoveConstructor) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -283,7 +283,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, MoveConstructor) {
           dek_parameters);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
@@ -297,7 +297,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, MoveAssignment) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> tink_parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> tink_parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -305,12 +305,12 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, MoveAssignment) {
           dek_parameters);
   ASSERT_THAT(tink_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*tink_parameters,
                                        /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> no_prefix_parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> no_prefix_parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kNoPrefix,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -318,7 +318,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, MoveAssignment) {
           dek_parameters);
   ASSERT_THAT(no_prefix_parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> move =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> move =
       LegacyKmsEnvelopeAeadKey::Create(*no_prefix_parameters,
                                        /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(move, IsOk());
@@ -333,7 +333,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, Clone) {
   XChaCha20Poly1305Parameters dek_parameters =
       CreateXChaCha20Poly1305KeyParameters();
 
-  util::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
       LegacyKmsEnvelopeAeadParameters::Create(
           kKeyUri, LegacyKmsEnvelopeAeadParameters::Variant::kTink,
           LegacyKmsEnvelopeAeadParameters::DekParsingStrategy::
@@ -341,7 +341,7 @@ TEST(LegacyKmsEnvelopeAeadKeyTest, Clone) {
           dek_parameters);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<LegacyKmsEnvelopeAeadKey> key =
+  absl::StatusOr<LegacyKmsEnvelopeAeadKey> key =
       LegacyKmsEnvelopeAeadKey::Create(*parameters, /*id_requirement=*/0x123);
   ASSERT_THAT(key, IsOk());
 

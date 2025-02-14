@@ -50,41 +50,41 @@ AesEaxParameters::Builder& AesEaxParameters::Builder::SetVariant(
   return *this;
 }
 
-util::StatusOr<AesEaxParameters> AesEaxParameters::Builder::Build() {
+absl::StatusOr<AesEaxParameters> AesEaxParameters::Builder::Build() {
   if (!key_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size is not set.");
   }
 
   if (!iv_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "IV size is not set.");
   }
 
   if (!tag_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Tag size is not set.");
   }
 
   if (!variant_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Variant is not set.");
   }
 
   if (*key_size_in_bytes_ != 16 && *key_size_in_bytes_ != 24 &&
       *key_size_in_bytes_ != 32) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Key size should be 16, 24, or 32 bytes, got ",
                      *key_size_in_bytes_, " bytes."));
   }
   if (*iv_size_in_bytes_ != 12 && *iv_size_in_bytes_ != 16) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("IV size should be 12 or 16 bytes, got ",
                                      *iv_size_in_bytes_, " bytes."));
   }
   if (*tag_size_in_bytes_ < 0 || *tag_size_in_bytes_ > 16) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Tag size should be positive and at most 16 bytes, got ",
                      *tag_size_in_bytes_, " bytes."));
@@ -93,7 +93,7 @@ util::StatusOr<AesEaxParameters> AesEaxParameters::Builder::Build() {
   static const auto* kSupportedVariants = new absl::flat_hash_set<Variant>(
       {Variant::kTink, Variant::kCrunchy, Variant::kNoPrefix});
   if (!kSupportedVariants->contains(*variant_)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create AES-EAX parameters with unknown variant.");
   }

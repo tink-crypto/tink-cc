@@ -71,7 +71,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesCtrHmacAeadParametersTest, BuildParametersSucceeds) {
   BuildTestCase test_case = GetParam();
 
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(test_case.aes_key_size)
           .SetHmacKeySizeInBytes(test_case.hmac_key_size)
@@ -347,7 +347,7 @@ TEST(AesCtrHmacAeadParametersTest, BuildWithInvalidVariantFails) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, CopyConstructor) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -372,7 +372,7 @@ TEST(AesCtrHmacAeadParametersTest, CopyConstructor) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, CopyAssignment) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -383,7 +383,7 @@ TEST(AesCtrHmacAeadParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> copy =
+  absl::StatusOr<AesCtrHmacAeadParameters> copy =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(32)
           .SetHmacKeySizeInBytes(32)
@@ -408,7 +408,7 @@ TEST(AesCtrHmacAeadParametersTest, CopyAssignment) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, MoveConstructor) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -433,7 +433,7 @@ TEST(AesCtrHmacAeadParametersTest, MoveConstructor) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, MoveAssignment) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -444,7 +444,7 @@ TEST(AesCtrHmacAeadParametersTest, MoveAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> move =
+  absl::StatusOr<AesCtrHmacAeadParameters> move =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(32)
           .SetHmacKeySizeInBytes(32)
@@ -470,7 +470,7 @@ TEST(AesCtrHmacAeadParametersTest, MoveAssignment) {
 
 TEST_P(AesCtrHmacAeadParametersTest, SameParametersEquals) {
   BuildTestCase test_case = GetParam();
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(test_case.aes_key_size)
           .SetHmacKeySizeInBytes(test_case.hmac_key_size)
@@ -481,7 +481,7 @@ TEST_P(AesCtrHmacAeadParametersTest, SameParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> other_parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(test_case.aes_key_size)
           .SetHmacKeySizeInBytes(test_case.hmac_key_size)
@@ -499,7 +499,7 @@ TEST_P(AesCtrHmacAeadParametersTest, SameParametersEquals) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, DifferentAesKeySizeNotEqual) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -510,7 +510,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentAesKeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> other_parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(24)
           .SetHmacKeySizeInBytes(16)
@@ -526,7 +526,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentAesKeySizeNotEqual) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, DifferentHmacKeySizeNotEqual) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -537,7 +537,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentHmacKeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> other_parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(32)
@@ -553,7 +553,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentHmacKeySizeNotEqual) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, DifferentIvSizeNotEqual) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -564,7 +564,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentIvSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> other_parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -580,7 +580,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentIvSizeNotEqual) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, DifferentTagSizeNotEqual) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -591,7 +591,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentTagSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> other_parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -607,7 +607,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentTagSizeNotEqual) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, DifferentHashTypeNotEqual) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -618,7 +618,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentHashTypeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> other_parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -634,7 +634,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentHashTypeNotEqual) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -645,7 +645,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentVariantNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacAeadParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> other_parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)
@@ -661,7 +661,7 @@ TEST(AesCtrHmacAeadParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(AesCtrHmacAeadParametersTest, Clone) {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(16)

@@ -26,12 +26,12 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<ChaCha20Poly1305Parameters> ChaCha20Poly1305Parameters::Create(
+absl::StatusOr<ChaCha20Poly1305Parameters> ChaCha20Poly1305Parameters::Create(
     Variant variant) {
   static const std::set<Variant>* kSupportedVariants = new std::set<Variant>(
       {Variant::kTink, Variant::kCrunchy, Variant::kNoPrefix});
   if (kSupportedVariants->find(variant) == kSupportedVariants->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create ChaCha20-Poly1305 parameters with unknown variant.");
   }

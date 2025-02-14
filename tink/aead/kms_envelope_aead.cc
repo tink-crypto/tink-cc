@@ -60,16 +60,16 @@ std::string GetEnvelopeCiphertext(absl::string_view encrypted_dek,
 }  // namespace
 
 // static
-util::StatusOr<std::unique_ptr<Aead>> KmsEnvelopeAead::New(
+absl::StatusOr<std::unique_ptr<Aead>> KmsEnvelopeAead::New(
     const google::crypto::tink::KeyTemplate& dek_template,
     std::unique_ptr<Aead> remote_aead) {
   if (!internal::IsSupportedKmsEnvelopeAeadDekKeyType(
           dek_template.type_url())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "unsupported key type");
   }
   if (remote_aead == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "remote_aead must be non-null");
   }
   auto km_result = Registry::get_key_manager<Aead>(dek_template.type_url());
@@ -78,7 +78,7 @@ util::StatusOr<std::unique_ptr<Aead>> KmsEnvelopeAead::New(
       new KmsEnvelopeAead(dek_template, std::move(remote_aead)));
 }
 
-util::StatusOr<std::string> KmsEnvelopeAead::Encrypt(
+absl::StatusOr<std::string> KmsEnvelopeAead::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data) const {
   // Generate DEK.
   auto dek_result = Registry::NewKeyData(dek_template_);
@@ -90,7 +90,7 @@ util::StatusOr<std::string> KmsEnvelopeAead::Encrypt(
       remote_aead_->Encrypt(dek->value(), kEmptyAssociatedData);
   if (!dek_encrypt_result.ok()) return dek_encrypt_result.status();
   if (dek_encrypt_result.value().size() > kMaxEncryptedDekSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "length of encrypted DEK too large");
   }
   // Encrypt plaintext using DEK.
@@ -105,18 +105,18 @@ util::StatusOr<std::string> KmsEnvelopeAead::Encrypt(
                                encrypt_result.value());
 }
 
-util::StatusOr<std::string> KmsEnvelopeAead::Decrypt(
+absl::StatusOr<std::string> KmsEnvelopeAead::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   // Parse the ciphertext.
   if (ciphertext.size() < kEncryptedDekPrefixSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
   uint32_t enc_dek_size = absl::big_endian::Load32(
       reinterpret_cast<const uint8_t*>(ciphertext.data()));
   if (enc_dek_size < 0 || enc_dek_size > kMaxEncryptedDekSize ||
       enc_dek_size > ciphertext.size() - kEncryptedDekPrefixSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "length of encrypted DEK too large");
   }
   // Decrypt the DEK with remote.
@@ -124,7 +124,7 @@ util::StatusOr<std::string> KmsEnvelopeAead::Decrypt(
       ciphertext.substr(kEncryptedDekPrefixSize, enc_dek_size),
       kEmptyAssociatedData);
   if (!dek_decrypt_result.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("invalid ciphertext: ",
                                      dek_decrypt_result.status().message()));
   }

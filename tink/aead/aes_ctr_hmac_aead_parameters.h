@@ -92,7 +92,7 @@ class AesCtrHmacAeadParameters : public AeadParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates AES-CTR-HMAC-AEAD parameters object from this builder.
-    util::StatusOr<AesCtrHmacAeadParameters> Build();
+    absl::StatusOr<AesCtrHmacAeadParameters> Build();
 
    private:
     absl::optional<int> aes_key_size_in_bytes_;

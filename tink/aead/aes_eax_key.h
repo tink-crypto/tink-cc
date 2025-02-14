@@ -45,7 +45,7 @@ class AesEaxKey : public AeadKey {
 
   // Creates a new AES-EAX key.  If the parameters specify a variant that uses
   // a prefix, then the id is used to compute this prefix.
-  static util::StatusOr<AesEaxKey> Create(const AesEaxParameters& parameters,
+  static absl::StatusOr<AesEaxKey> Create(const AesEaxParameters& parameters,
                                           const RestrictedData& key_bytes,
                                           absl::optional<int> id_requirement,
                                           PartialKeyAccessToken token);

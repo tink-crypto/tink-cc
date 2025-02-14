@@ -66,12 +66,12 @@ TEST_P(AesGcmSivKeyTest, CreateSucceeds) {
   TestCase test_case;
   std::tie(key_size, test_case) = GetParam();
 
-  util::StatusOr<AesGcmSivParameters> params =
+  absl::StatusOr<AesGcmSivParameters> params =
       AesGcmSivParameters::Create(key_size, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(key_size);
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -82,7 +82,7 @@ TEST_P(AesGcmSivKeyTest, CreateSucceeds) {
 
 TEST(AesGcmSivKeyTest, CreateKeyWithMismatchedKeySizeFails) {
   // Key size parameter is 32 bytes.
-  util::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
@@ -97,12 +97,12 @@ TEST(AesGcmSivKeyTest, CreateKeyWithMismatchedKeySizeFails) {
 }
 
 TEST(AesGcmSivKeyTest, CreateKeyWithInvalidIdRequirementFails) {
-  util::StatusOr<AesGcmSivParameters> no_prefix_params =
+  absl::StatusOr<AesGcmSivParameters> no_prefix_params =
       AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
                                   AesGcmSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(no_prefix_params, IsOk());
 
-  util::StatusOr<AesGcmSivParameters> tink_params = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> tink_params = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
 
@@ -125,13 +125,13 @@ TEST_P(AesGcmSivKeyTest, GetKeyBytes) {
   TestCase test_case;
   std::tie(key_size, test_case) = GetParam();
 
-  util::StatusOr<AesGcmSivParameters> params =
+  absl::StatusOr<AesGcmSivParameters> params =
       AesGcmSivParameters::Create(key_size, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(key_size);
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -143,16 +143,16 @@ TEST_P(AesGcmSivKeyTest, KeyEquals) {
   TestCase test_case;
   std::tie(key_size, test_case) = GetParam();
 
-  util::StatusOr<AesGcmSivParameters> params =
+  absl::StatusOr<AesGcmSivParameters> params =
       AesGcmSivParameters::Create(key_size, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(key_size);
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
       *params, secret, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -163,23 +163,23 @@ TEST_P(AesGcmSivKeyTest, KeyEquals) {
 }
 
 TEST(AesGcmSivKeyTest, DifferentVariantNotEqual) {
-  util::StatusOr<AesGcmSivParameters> crunchy_params =
+  absl::StatusOr<AesGcmSivParameters> crunchy_params =
       AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
                                   AesGcmSivParameters::Variant::kCrunchy);
   ASSERT_THAT(crunchy_params, IsOk());
 
-  util::StatusOr<AesGcmSivParameters> tink_params = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> tink_params = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(tink_params, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *crunchy_params, secret, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmSivKey> other_key =
+  absl::StatusOr<AesGcmSivKey> other_key =
       AesGcmSivKey::Create(*tink_params, secret, /*id_requirement=*/0x01020304,
                            GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -191,18 +191,18 @@ TEST(AesGcmSivKeyTest, DifferentVariantNotEqual) {
 }
 
 TEST(AesGcmSivKeyTest, DifferentSecretDataNotEqual) {
-  util::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *params, secret1, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
       *params, secret2, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -213,17 +213,17 @@ TEST(AesGcmSivKeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(AesGcmSivKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> params = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *params, secret, /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> other_key = AesGcmSivKey::Create(
       *params, secret, /*id_requirement=*/0x02030405, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -236,11 +236,11 @@ TEST(AesGcmSivKeyTest, DifferentIdRequirementNotEqual) {
 TEST(AesGcmSivKeyTest, CopyConstructor) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -254,21 +254,21 @@ TEST(AesGcmSivKeyTest, CopyConstructor) {
 TEST(AesGcmSivKeyTest, CopyAssignment) {
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivParameters> parameters1 = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters1 = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<AesGcmSivParameters> parameters2 = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters2 = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<AesGcmSivKey> copy = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> copy = AesGcmSivKey::Create(
       *parameters2, secret2, /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(copy, IsOk());
@@ -283,11 +283,11 @@ TEST(AesGcmSivKeyTest, CopyAssignment) {
 TEST(AesGcmSivKeyTest, MoveConstructor) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -301,21 +301,21 @@ TEST(AesGcmSivKeyTest, MoveConstructor) {
 TEST(AesGcmSivKeyTest, MoveAssignment) {
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivParameters> parameters1 = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters1 = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters1, secret1, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<AesGcmSivParameters> parameters2 = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters2 = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<AesGcmSivKey> move = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> move = AesGcmSivKey::Create(
       *parameters2, secret2, /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(move, IsOk());
@@ -330,11 +330,11 @@ TEST(AesGcmSivKeyTest, MoveAssignment) {
 TEST(AesGcmSivKeyTest, Clone) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
 
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/32, AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters, secret, /*id_requirement=*/0x123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

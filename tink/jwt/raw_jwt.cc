@@ -164,9 +164,9 @@ util::Status ValidateAudienceClaim(const google::protobuf::Struct& json_proto) {
 
 }  // namespace
 
-util::StatusOr<RawJwt> RawJwt::FromJson(absl::optional<std::string> type_header,
+absl::StatusOr<RawJwt> RawJwt::FromJson(absl::optional<std::string> type_header,
                                         absl::string_view json_payload) {
-  util::StatusOr<google::protobuf::Struct> proto =
+  absl::StatusOr<google::protobuf::Struct> proto =
       jwt_internal::JsonStringToProtoStruct(json_payload);
   if (!proto.ok()) {
     return proto.status();
@@ -187,7 +187,7 @@ util::StatusOr<RawJwt> RawJwt::FromJson(absl::optional<std::string> type_header,
   return token;
 }
 
-util::StatusOr<std::string> RawJwt::GetJsonPayload() const {
+absl::StatusOr<std::string> RawJwt::GetJsonPayload() const {
   return jwt_internal::ProtoStructToJsonString(json_proto_);
 }
 
@@ -201,7 +201,7 @@ RawJwt::RawJwt(absl::optional<std::string> type_header,
 
 bool RawJwt::HasTypeHeader() const { return type_header_.has_value(); }
 
-util::StatusOr<std::string> RawJwt::GetTypeHeader() const {
+absl::StatusOr<std::string> RawJwt::GetTypeHeader() const {
   if (!type_header_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "No type header found");
@@ -213,7 +213,7 @@ bool RawJwt::HasIssuer() const {
   return json_proto_.fields().contains(std::string(kJwtClaimIssuer));
 }
 
-util::StatusOr<std::string> RawJwt::GetIssuer() const {
+absl::StatusOr<std::string> RawJwt::GetIssuer() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimIssuer));
   if (it == fields.end()) {
@@ -231,7 +231,7 @@ bool RawJwt::HasSubject() const {
   return json_proto_.fields().contains(std::string(kJwtClaimSubject));
 }
 
-util::StatusOr<std::string> RawJwt::GetSubject() const {
+absl::StatusOr<std::string> RawJwt::GetSubject() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimSubject));
   if (it == fields.end()) {
@@ -249,7 +249,7 @@ bool RawJwt::HasAudiences() const {
   return json_proto_.fields().contains(std::string(kJwtClaimAudience));
 }
 
-util::StatusOr<std::vector<std::string>> RawJwt::GetAudiences() const {
+absl::StatusOr<std::vector<std::string>> RawJwt::GetAudiences() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimAudience));
   if (it == fields.end()) {
@@ -280,7 +280,7 @@ bool RawJwt::HasJwtId() const {
   return json_proto_.fields().contains(std::string(kJwtClaimJwtId));
 }
 
-util::StatusOr<std::string> RawJwt::GetJwtId() const {
+absl::StatusOr<std::string> RawJwt::GetJwtId() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimJwtId));
   if (it == fields.end()) {
@@ -298,7 +298,7 @@ bool RawJwt::HasExpiration() const {
   return json_proto_.fields().contains(std::string(kJwtClaimExpiration));
 }
 
-util::StatusOr<absl::Time> RawJwt::GetExpiration() const {
+absl::StatusOr<absl::Time> RawJwt::GetExpiration() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimExpiration));
   if (it == fields.end()) {
@@ -316,7 +316,7 @@ bool RawJwt::HasNotBefore() const {
   return json_proto_.fields().contains(std::string(kJwtClaimNotBefore));
 }
 
-util::StatusOr<absl::Time> RawJwt::GetNotBefore() const {
+absl::StatusOr<absl::Time> RawJwt::GetNotBefore() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimNotBefore));
   if (it == fields.end()) {
@@ -334,7 +334,7 @@ bool RawJwt::HasIssuedAt() const {
   return json_proto_.fields().contains(std::string(kJwtClaimIssuedAt));
 }
 
-util::StatusOr<absl::Time> RawJwt::GetIssuedAt() const {
+absl::StatusOr<absl::Time> RawJwt::GetIssuedAt() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimIssuedAt));
   if (it == fields.end()) {
@@ -356,8 +356,7 @@ bool RawJwt::HasBooleanClaim(absl::string_view name) const {
   return HasClaimOfKind(json_proto_, name, Value::kBoolValue);
 }
 
-util::StatusOr<bool> RawJwt::GetBooleanClaim(
-    absl::string_view name) const {
+absl::StatusOr<bool> RawJwt::GetBooleanClaim(absl::string_view name) const {
   util::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     return status;
@@ -380,7 +379,7 @@ bool RawJwt::HasStringClaim(absl::string_view name) const {
   return HasClaimOfKind(json_proto_, name, Value::kStringValue);
 }
 
-util::StatusOr<std::string> RawJwt::GetStringClaim(
+absl::StatusOr<std::string> RawJwt::GetStringClaim(
     absl::string_view name) const {
   util::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
@@ -404,7 +403,7 @@ bool RawJwt::HasNumberClaim(absl::string_view name) const {
   return HasClaimOfKind(json_proto_, name, Value::kNumberValue);
 }
 
-util::StatusOr<double> RawJwt::GetNumberClaim(absl::string_view name) const {
+absl::StatusOr<double> RawJwt::GetNumberClaim(absl::string_view name) const {
   util::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     return status;
@@ -427,7 +426,7 @@ bool RawJwt::HasJsonObjectClaim(absl::string_view name) const {
   return HasClaimOfKind(json_proto_, name, Value::kStructValue);
 }
 
-util::StatusOr<std::string> RawJwt::GetJsonObjectClaim(
+absl::StatusOr<std::string> RawJwt::GetJsonObjectClaim(
     absl::string_view name) const {
   util::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
@@ -452,7 +451,7 @@ bool RawJwt::HasJsonArrayClaim(absl::string_view name) const {
   return HasClaimOfKind(json_proto_, name, Value::kListValue);
 }
 
-util::StatusOr<std::string> RawJwt::GetJsonArrayClaim(
+absl::StatusOr<std::string> RawJwt::GetJsonArrayClaim(
     absl::string_view name) const {
   util::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
@@ -690,7 +689,7 @@ RawJwtBuilder& RawJwtBuilder::AddJsonObjectClaim(
     }
     return *this;
   }
-  util::StatusOr<google::protobuf::Struct> proto =
+  absl::StatusOr<google::protobuf::Struct> proto =
       jwt_internal::JsonStringToProtoStruct(object_value);
   if (!proto.ok()) {
     if (!error_.has_value()) {
@@ -714,7 +713,7 @@ RawJwtBuilder& RawJwtBuilder::AddJsonArrayClaim(absl::string_view name,
     }
     return *this;
   }
-  util::StatusOr<google::protobuf::ListValue> list =
+  absl::StatusOr<google::protobuf::ListValue> list =
       jwt_internal::JsonStringToProtoList(array_value);
   if (!list.ok()) {
     if (!error_.has_value()) {
@@ -729,7 +728,7 @@ RawJwtBuilder& RawJwtBuilder::AddJsonArrayClaim(absl::string_view name,
   return *this;
 }
 
-util::StatusOr<RawJwt> RawJwtBuilder::Build() {
+absl::StatusOr<RawJwt> RawJwtBuilder::Build() {
   if (error_.has_value()) {
     return *error_;
   }

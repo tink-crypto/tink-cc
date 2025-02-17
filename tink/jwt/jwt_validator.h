@@ -89,7 +89,7 @@ class JwtValidatorBuilder {
   JwtValidatorBuilder& SetClockSkew(absl::Duration clock_skew);
   JwtValidatorBuilder& SetFixedNow(absl::Time fixed_now);
 
-  util::StatusOr<JwtValidator> Build();
+  absl::StatusOr<JwtValidator> Build();
 
  private:
   friend class JwtValidator;

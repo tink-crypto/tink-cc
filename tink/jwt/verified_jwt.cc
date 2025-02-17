@@ -39,7 +39,7 @@ VerifiedJwt::VerifiedJwt(const RawJwt& raw_jwt) {
 
 bool VerifiedJwt::HasTypeHeader() const { return raw_jwt_.HasTypeHeader(); }
 
-util::StatusOr<std::string> VerifiedJwt::GetTypeHeader() const {
+absl::StatusOr<std::string> VerifiedJwt::GetTypeHeader() const {
   return raw_jwt_.GetTypeHeader();
 }
 
@@ -47,7 +47,7 @@ bool VerifiedJwt::HasIssuer() const {
   return raw_jwt_.HasIssuer();
 }
 
-util::StatusOr<std::string> VerifiedJwt::GetIssuer() const {
+absl::StatusOr<std::string> VerifiedJwt::GetIssuer() const {
   return raw_jwt_.GetIssuer();
 }
 
@@ -55,7 +55,7 @@ bool VerifiedJwt::HasSubject() const {
   return raw_jwt_.HasSubject();
 }
 
-util::StatusOr<std::string> VerifiedJwt::GetSubject() const {
+absl::StatusOr<std::string> VerifiedJwt::GetSubject() const {
   return raw_jwt_.GetSubject();
 }
 
@@ -63,7 +63,7 @@ bool VerifiedJwt::HasAudiences() const {
   return raw_jwt_.HasAudiences();
 }
 
-util::StatusOr<std::vector<std::string>> VerifiedJwt::GetAudiences() const {
+absl::StatusOr<std::vector<std::string>> VerifiedJwt::GetAudiences() const {
   return raw_jwt_.GetAudiences();
 }
 
@@ -71,7 +71,7 @@ bool VerifiedJwt::HasJwtId() const {
   return raw_jwt_.HasJwtId();
 }
 
-util::StatusOr<std::string> VerifiedJwt::GetJwtId() const {
+absl::StatusOr<std::string> VerifiedJwt::GetJwtId() const {
   return raw_jwt_.GetJwtId();
 }
 
@@ -79,7 +79,7 @@ bool VerifiedJwt::HasExpiration() const {
   return raw_jwt_.HasExpiration();
 }
 
-util::StatusOr<absl::Time> VerifiedJwt::GetExpiration() const {
+absl::StatusOr<absl::Time> VerifiedJwt::GetExpiration() const {
   return raw_jwt_.GetExpiration();
 }
 
@@ -87,7 +87,7 @@ bool VerifiedJwt::HasNotBefore() const {
   return raw_jwt_.HasNotBefore();
 }
 
-util::StatusOr<absl::Time> VerifiedJwt::GetNotBefore() const {
+absl::StatusOr<absl::Time> VerifiedJwt::GetNotBefore() const {
   return raw_jwt_.GetNotBefore();
 }
 
@@ -95,7 +95,7 @@ bool VerifiedJwt::HasIssuedAt() const {
   return raw_jwt_.HasIssuedAt();
 }
 
-util::StatusOr<absl::Time> VerifiedJwt::GetIssuedAt() const {
+absl::StatusOr<absl::Time> VerifiedJwt::GetIssuedAt() const {
   return raw_jwt_.GetIssuedAt();
 }
 
@@ -107,7 +107,7 @@ bool VerifiedJwt::HasBooleanClaim(absl::string_view name) const {
   return raw_jwt_.HasBooleanClaim(name);
 }
 
-util::StatusOr<bool> VerifiedJwt::GetBooleanClaim(
+absl::StatusOr<bool> VerifiedJwt::GetBooleanClaim(
     absl::string_view name) const {
   return raw_jwt_.GetBooleanClaim(name);
 }
@@ -116,7 +116,7 @@ bool VerifiedJwt::HasStringClaim(absl::string_view name) const {
   return raw_jwt_.HasStringClaim(name);
 }
 
-util::StatusOr<std::string> VerifiedJwt::GetStringClaim(
+absl::StatusOr<std::string> VerifiedJwt::GetStringClaim(
     absl::string_view name) const {
   return raw_jwt_.GetStringClaim(name);
 }
@@ -125,7 +125,7 @@ bool VerifiedJwt::HasNumberClaim(absl::string_view name) const {
   return raw_jwt_.HasNumberClaim(name);
 }
 
-util::StatusOr<double> VerifiedJwt::GetNumberClaim(
+absl::StatusOr<double> VerifiedJwt::GetNumberClaim(
     absl::string_view name) const {
   return raw_jwt_.GetNumberClaim(name);
 }
@@ -134,7 +134,7 @@ bool VerifiedJwt::HasJsonObjectClaim(absl::string_view name) const {
   return raw_jwt_.HasJsonObjectClaim(name);
 }
 
-util::StatusOr<std::string> VerifiedJwt::GetJsonObjectClaim(
+absl::StatusOr<std::string> VerifiedJwt::GetJsonObjectClaim(
     absl::string_view name) const {
   return raw_jwt_.GetJsonObjectClaim(name);
 }
@@ -143,7 +143,7 @@ bool VerifiedJwt::HasJsonArrayClaim(absl::string_view name) const {
   return raw_jwt_.HasJsonArrayClaim(name);
 }
 
-util::StatusOr<std::string> VerifiedJwt::GetJsonArrayClaim(
+absl::StatusOr<std::string> VerifiedJwt::GetJsonArrayClaim(
     absl::string_view name) const {
   return raw_jwt_.GetJsonArrayClaim(name);
 }
@@ -152,7 +152,7 @@ std::vector<std::string> VerifiedJwt::CustomClaimNames() const {
   return raw_jwt_.CustomClaimNames();
 }
 
-util::StatusOr<std::string> VerifiedJwt::GetJsonPayload() {
+absl::StatusOr<std::string> VerifiedJwt::GetJsonPayload() {
   return raw_jwt_.GetJsonPayload();
 }
 

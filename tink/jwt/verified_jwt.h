@@ -57,36 +57,36 @@ class VerifiedJwt {
   VerifiedJwt& operator=(const VerifiedJwt&) = default;
 
   bool HasTypeHeader() const;
-  util::StatusOr<std::string> GetTypeHeader() const;
+  absl::StatusOr<std::string> GetTypeHeader() const;
   bool HasIssuer() const;
-  util::StatusOr<std::string> GetIssuer() const;
+  absl::StatusOr<std::string> GetIssuer() const;
   bool HasSubject() const;
-  util::StatusOr<std::string> GetSubject() const;
+  absl::StatusOr<std::string> GetSubject() const;
   bool HasAudiences() const;
-  util::StatusOr<std::vector<std::string>> GetAudiences() const;
+  absl::StatusOr<std::vector<std::string>> GetAudiences() const;
   bool HasJwtId() const;
-  util::StatusOr<std::string> GetJwtId() const;
+  absl::StatusOr<std::string> GetJwtId() const;
   bool HasExpiration() const;
-  util::StatusOr<absl::Time> GetExpiration() const;
+  absl::StatusOr<absl::Time> GetExpiration() const;
   bool HasNotBefore() const;
-  util::StatusOr<absl::Time> GetNotBefore() const;
+  absl::StatusOr<absl::Time> GetNotBefore() const;
   bool HasIssuedAt() const;
-  util::StatusOr<absl::Time> GetIssuedAt() const;
+  absl::StatusOr<absl::Time> GetIssuedAt() const;
 
   bool IsNullClaim(absl::string_view name) const;
   bool HasBooleanClaim(absl::string_view name) const;
-  util::StatusOr<bool> GetBooleanClaim(absl::string_view name) const;
+  absl::StatusOr<bool> GetBooleanClaim(absl::string_view name) const;
   bool HasStringClaim(absl::string_view name) const;
-  util::StatusOr<std::string> GetStringClaim(absl::string_view name) const;
+  absl::StatusOr<std::string> GetStringClaim(absl::string_view name) const;
   bool HasNumberClaim(absl::string_view name) const;
-  util::StatusOr<double> GetNumberClaim(absl::string_view name) const;
+  absl::StatusOr<double> GetNumberClaim(absl::string_view name) const;
   bool HasJsonObjectClaim(absl::string_view name) const;
-  util::StatusOr<std::string> GetJsonObjectClaim(absl::string_view name) const;
+  absl::StatusOr<std::string> GetJsonObjectClaim(absl::string_view name) const;
   bool HasJsonArrayClaim(absl::string_view name) const;
-  util::StatusOr<std::string> GetJsonArrayClaim(absl::string_view name) const;
+  absl::StatusOr<std::string> GetJsonArrayClaim(absl::string_view name) const;
   std::vector<std::string> CustomClaimNames() const;
 
-  util::StatusOr<std::string> GetJsonPayload();
+  absl::StatusOr<std::string> GetJsonPayload();
 
  private:
   VerifiedJwt();

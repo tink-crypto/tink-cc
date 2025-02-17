@@ -62,7 +62,7 @@ util::Status JwtValidator::ValidateTimestamps(RawJwt const& raw_jwt) const {
                         "token does not have an expiration set");
   }
   if (raw_jwt.HasExpiration()) {
-    util::StatusOr<absl::Time> expiration = raw_jwt.GetExpiration();
+    absl::StatusOr<absl::Time> expiration = raw_jwt.GetExpiration();
     if (!expiration.ok()) {
       return expiration.status();
     }
@@ -72,7 +72,7 @@ util::Status JwtValidator::ValidateTimestamps(RawJwt const& raw_jwt) const {
     }
   }
   if (raw_jwt.HasNotBefore()) {
-    util::StatusOr<absl::Time> not_before = raw_jwt.GetNotBefore();
+    absl::StatusOr<absl::Time> not_before = raw_jwt.GetNotBefore();
     if (!not_before.ok()) {
       return not_before.status();
     }
@@ -82,7 +82,7 @@ util::Status JwtValidator::ValidateTimestamps(RawJwt const& raw_jwt) const {
     }
   }
   if (expect_issued_in_the_past_) {
-    util::StatusOr<absl::Time> issued_at = raw_jwt.GetIssuedAt();
+    absl::StatusOr<absl::Time> issued_at = raw_jwt.GetIssuedAt();
     if (!issued_at.ok()) {
       return issued_at.status();
     }
@@ -100,7 +100,7 @@ util::Status JwtValidator::ValidateTypeHeader(RawJwt const& raw_jwt) const {
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "missing expected type header");
     }
-    util::StatusOr<std::string> type_header = raw_jwt.GetTypeHeader();
+    absl::StatusOr<std::string> type_header = raw_jwt.GetTypeHeader();
     if (!type_header.ok()) {
       return type_header.status();
     }
@@ -124,7 +124,7 @@ util::Status JwtValidator::ValidateIssuer(RawJwt const& raw_jwt) const {
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "missing expected issuer");
     }
-    util::StatusOr<std::string> issuer = raw_jwt.GetIssuer();
+    absl::StatusOr<std::string> issuer = raw_jwt.GetIssuer();
     if (!issuer.ok()) {
       return issuer.status();
     }
@@ -147,7 +147,7 @@ util::Status JwtValidator::ValidateAudiences(RawJwt const& raw_jwt) const {
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "missing expected audiences");
     }
-    util::StatusOr<std::vector<std::string>> audiences = raw_jwt.GetAudiences();
+    absl::StatusOr<std::vector<std::string>> audiences = raw_jwt.GetAudiences();
     if (!audiences.ok()) {
       return audiences.status();
     }
@@ -251,7 +251,7 @@ JwtValidatorBuilder& JwtValidatorBuilder::SetFixedNow(absl::Time fixed_now) {
   return *this;
 }
 
-util::StatusOr<JwtValidator> JwtValidatorBuilder::Build() {
+absl::StatusOr<JwtValidator> JwtValidatorBuilder::Build() {
   if (expected_type_header_.has_value() && ignore_type_header_) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,

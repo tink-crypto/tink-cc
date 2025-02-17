@@ -37,7 +37,7 @@ namespace crypto {
 namespace tink {
 
 TEST(RawJwt, GetTypeHeaderIssuerSubjectJwtIdOK) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetTypeHeader("typeHeader")
                                    .SetIssuer("issuer")
                                    .SetSubject("subject")
@@ -60,7 +60,7 @@ TEST(RawJwt, TimestampsOK) {
   absl::Time nbf = absl::FromUnixSeconds(1234567890);
   absl::Time iat = absl::FromUnixSeconds(1234567891);
   absl::Time exp = absl::FromUnixSeconds(1234567892);
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetNotBefore(nbf)
                                    .SetIssuedAt(iat)
                                    .SetExpiration(exp)
@@ -78,42 +78,42 @@ TEST(RawJwt, TimestampsOK) {
 }
 
 TEST(RawJwt, ExpWithMillisAlwaysRoundDown) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().SetExpiration(absl::FromUnixMillis(123999)).Build();
   ASSERT_THAT(jwt, IsOk());
 
   EXPECT_TRUE(jwt->HasExpiration());
-  util::StatusOr<absl::Time> exp = jwt->GetExpiration();
+  absl::StatusOr<absl::Time> exp = jwt->GetExpiration();
   EXPECT_THAT(exp, IsOkAndHolds(absl::FromUnixSeconds(123)));
 }
 
 TEST(RawJwt, NbfWithMillisAlwaysRoundDown) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetNotBefore(absl::FromUnixMillis(123999))
                                    .WithoutExpiration()
                                    .Build();
   ASSERT_THAT(jwt, IsOk());
 
   EXPECT_TRUE(jwt->HasNotBefore());
-  util::StatusOr<absl::Time> nbf = jwt->GetNotBefore();
+  absl::StatusOr<absl::Time> nbf = jwt->GetNotBefore();
   EXPECT_THAT(nbf, IsOkAndHolds(absl::FromUnixSeconds(123)));
 }
 
 TEST(RawJwt, IatWithMillisAlwaysRoundDown) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetIssuedAt(absl::FromUnixMillis(123999))
                                    .WithoutExpiration()
                                    .Build();
   ASSERT_THAT(jwt, IsOk());
 
   EXPECT_TRUE(jwt->HasIssuedAt());
-  util::StatusOr<absl::Time> iat = jwt->GetIssuedAt();
+  absl::StatusOr<absl::Time> iat = jwt->GetIssuedAt();
   EXPECT_THAT(iat, IsOkAndHolds(absl::FromUnixSeconds(123)));
 }
 
 TEST(RawJwt, LargeExpirationWorks) {
   absl::Time large = absl::FromUnixSeconds(253402300799);  // year 9999
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetNotBefore(large)
                                    .SetIssuedAt(large)
                                    .SetExpiration(large)
@@ -123,11 +123,11 @@ TEST(RawJwt, LargeExpirationWorks) {
   EXPECT_TRUE(jwt->HasExpiration());
   EXPECT_TRUE(jwt->HasIssuedAt());
   EXPECT_TRUE(jwt->HasNotBefore());
-  util::StatusOr<absl::Time> exp = jwt->GetExpiration();
+  absl::StatusOr<absl::Time> exp = jwt->GetExpiration();
   EXPECT_THAT(exp, IsOkAndHolds(large));
-  util::StatusOr<absl::Time> iat = jwt->GetIssuedAt();
+  absl::StatusOr<absl::Time> iat = jwt->GetIssuedAt();
   EXPECT_THAT(iat, IsOkAndHolds(large));
-  util::StatusOr<absl::Time> nbf = jwt->GetNotBefore();
+  absl::StatusOr<absl::Time> nbf = jwt->GetNotBefore();
   EXPECT_THAT(nbf, IsOkAndHolds(large));
 }
 
@@ -160,7 +160,7 @@ TEST(RawJwt, NeitherSetExpirationNorWithoutExpirationFail) {
 }
 
 TEST(RawJwt, SetAudienceAndGetAudiencesOK) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().SetAudience("audience").WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
@@ -170,7 +170,7 @@ TEST(RawJwt, SetAudienceAndGetAudiencesOK) {
 }
 
 TEST(RawJwt, SetAudiencesAndGetAudiencesOK) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetAudiences({"audience1", "audience2"})
                                    .WithoutExpiration()
                                    .Build();
@@ -182,7 +182,7 @@ TEST(RawJwt, SetAudiencesAndGetAudiencesOK) {
 }
 
 TEST(RawJwt, AddGetAudiencesOK) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .AddAudience("audience1")
                                    .AddAudience("audience2")
                                    .WithoutExpiration()
@@ -195,7 +195,7 @@ TEST(RawJwt, AddGetAudiencesOK) {
 }
 
 TEST(RawJwt, SetAudienceStringAud) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().SetAudience("audience").WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
@@ -203,7 +203,7 @@ TEST(RawJwt, SetAudienceStringAud) {
 }
 
 TEST(RawJwt, AddAudienceListAud) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().AddAudience("audience").WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
@@ -226,7 +226,7 @@ TEST(RawJwt, SetAndAddAudienceFail) {
 }
 
 TEST(RawJwt, GetCustomClaimOK) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder()
           .WithoutExpiration()
           .AddNullClaim("null_claim")
@@ -260,7 +260,7 @@ TEST(RawJwt, GetCustomClaimOK) {
 }
 
 TEST(RawJwt, HasCustomClaimIsFalseForWrongType) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .WithoutExpiration()
                                    .AddNullClaim("null_claim")
                                    .AddBooleanClaim("boolean_claim", true)
@@ -277,7 +277,7 @@ TEST(RawJwt, HasCustomClaimIsFalseForWrongType) {
 
 TEST(RawJwt, HasAlwaysReturnsFalseForRegisteredClaims) {
   absl::Time now = absl::Now();
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetIssuer("issuer")
                                    .SetSubject("subject")
                                    .SetJwtId("jwt_id")
@@ -299,7 +299,7 @@ TEST(RawJwt, HasAlwaysReturnsFalseForRegisteredClaims) {
 
 TEST(RawJwt, GetRegisteredCustomClaimNotOK) {
   absl::Time now = absl::Now();
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder()
                                    .SetIssuer("issuer")
                                    .SetSubject("subject")
                                    .SetJwtId("jwt_id")
@@ -414,7 +414,7 @@ TEST(RawJwt, SetInvalidJsonArrayClaimNotOK) {
 }
 
 TEST(RawJwt, EmptyTokenHasAndIsReturnsFalse) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder().WithoutExpiration().Build();
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder().WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
   EXPECT_FALSE(jwt->HasTypeHeader());
@@ -434,7 +434,7 @@ TEST(RawJwt, EmptyTokenHasAndIsReturnsFalse) {
 }
 
 TEST(RawJwt, EmptyTokenGetReturnsNotOK) {
-  util::StatusOr<RawJwt> jwt = RawJwtBuilder().WithoutExpiration().Build();
+  absl::StatusOr<RawJwt> jwt = RawJwtBuilder().WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
   EXPECT_FALSE(jwt->GetTypeHeader().ok());
@@ -458,11 +458,11 @@ TEST(RawJwt, BuildCanBeCalledTwice) {
                      .SetIssuer("issuer")
                      .SetSubject("subject")
                      .WithoutExpiration();
-  util::StatusOr<RawJwt> jwt = builder.Build();
+  absl::StatusOr<RawJwt> jwt = builder.Build();
   ASSERT_THAT(jwt, IsOk());
 
   builder.SetSubject("subject2");
-  util::StatusOr<RawJwt> jwt2 = builder.Build();
+  absl::StatusOr<RawJwt> jwt2 = builder.Build();
   ASSERT_THAT(jwt2, IsOk());
 
   EXPECT_THAT(jwt->GetIssuer(), IsOkAndHolds("issuer"));
@@ -472,7 +472,7 @@ TEST(RawJwt, BuildCanBeCalledTwice) {
 }
 
 TEST(RawJwt, GetJsonPayload) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
@@ -480,7 +480,7 @@ TEST(RawJwt, GetJsonPayload) {
 }
 
 TEST(RawJwt, IntegerIsEncodedAsInteger) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().AddNumberClaim("num", 1).WithoutExpiration().Build();
   ASSERT_THAT(jwt, IsOk());
 
@@ -488,7 +488,7 @@ TEST(RawJwt, IntegerIsEncodedAsInteger) {
 }
 
 TEST(RawJwt, GetExpirationJsonPayload) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().SetExpiration(absl::FromUnixSeconds(2218027244)).Build();
   ASSERT_THAT(jwt, IsOk());
 
@@ -496,7 +496,7 @@ TEST(RawJwt, GetExpirationJsonPayload) {
 }
 
 TEST(RawJwt, GetNanoExpirationJsonPayload) {
-  util::StatusOr<RawJwt> jwt =
+  absl::StatusOr<RawJwt> jwt =
       RawJwtBuilder().SetExpiration(absl::FromUnixNanos(123456789012)).Build();
   ASSERT_THAT(jwt, IsOk());
 

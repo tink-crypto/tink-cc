@@ -49,32 +49,32 @@ INSTANTIATE_TEST_SUITE_P(JwtSignatureV0KeyTypesTestSuite,
                                 RawJwtPs256_2048_F4_Template()));
 
 TEST_P(JwtSignatureV0KeyTypesTest, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigJwtSignatureV0());
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(KeyGenConfigJwtSignatureV0());
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
       (*handle)->GetPrimitive<JwtPublicKeySign>(ConfigJwtSignatureV0());
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
       (*public_handle)
           ->GetPrimitive<JwtPublicKeyVerify>(ConfigJwtSignatureV0());
   ASSERT_THAT(verify, IsOk());
 
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectIssuer("issuer")
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
 
-  util::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
+  absl::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
   EXPECT_THAT((*verify)->VerifyAndDecode(*compact, *validator), IsOk());
 }

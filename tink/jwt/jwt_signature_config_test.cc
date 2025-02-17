@@ -123,7 +123,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(JwtEs256Template());
   ASSERT_THAT(proto_params_serialization, IsOk());
@@ -133,7 +133,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoParamsSerializationRegistered) {
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtEcdsaParameters> parameters =
+  absl::StatusOr<JwtEcdsaParameters> parameters =
       JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
                                  JwtEcdsaParameters::Algorithm::kEs256);
   ASSERT_THAT(parameters, IsOk());
@@ -162,7 +162,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPublicKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::EcKey> ec_key =
+  absl::StatusOr<internal::EcKey> ec_key =
       internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
@@ -172,7 +172,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPublicKeySerializationRegistered) {
   public_key_proto.set_x(ec_key->pub_x);
   public_key_proto.set_y(ec_key->pub_y);
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.JwtEcdsaPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
@@ -187,14 +187,14 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPublicKeySerializationRegistered) {
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtEcdsaParameters> parameters =
+  absl::StatusOr<JwtEcdsaParameters> parameters =
       JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
                                  JwtEcdsaParameters::Algorithm::kEs256);
   ASSERT_THAT(parameters, IsOk());
 
   EcPoint public_point =
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  util::StatusOr<JwtEcdsaPublicKey> public_key =
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
       JwtEcdsaPublicKey::Builder()
           .SetParameters(*parameters)
           .SetPublicPoint(public_point)
@@ -224,7 +224,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::EcKey> ec_key =
+  absl::StatusOr<internal::EcKey> ec_key =
       internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
@@ -239,7 +239,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
   *private_key_proto.mutable_public_key() = public_key_proto;
   private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.JwtEcdsaPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
@@ -254,21 +254,21 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtEcdsaParameters> parameters =
+  absl::StatusOr<JwtEcdsaParameters> parameters =
       JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
                                  JwtEcdsaParameters::Algorithm::kEs256);
   ASSERT_THAT(parameters, IsOk());
 
   EcPoint public_point =
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  util::StatusOr<JwtEcdsaPublicKey> public_key =
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
       JwtEcdsaPublicKey::Builder()
           .SetParameters(*parameters)
           .SetPublicPoint(public_point)
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
+  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
       *public_key,
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                            InsecureSecretKeyAccess::Get()),
@@ -352,7 +352,7 @@ TEST_F(JwtSignatureConfigTest,
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               JwtRs256_2048_F4_Template());
@@ -363,7 +363,7 @@ TEST_F(JwtSignatureConfigTest,
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored)
           .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
@@ -403,7 +403,7 @@ TEST_F(JwtSignatureConfigTest,
   public_key_proto.set_n(Base64WebSafeDecode(k2048BitRsaModulus));
   public_key_proto.set_e(kF4Str);
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPkcs1PublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
@@ -418,7 +418,7 @@ TEST_F(JwtSignatureConfigTest,
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored)
           .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
@@ -427,7 +427,7 @@ TEST_F(JwtSignatureConfigTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(BigInteger(Base64WebSafeDecode(k2048BitRsaModulus)))
@@ -474,7 +474,7 @@ TEST_F(JwtSignatureConfigTest,
   private_key_proto.set_d(Base64WebSafeDecode(kD));
   private_key_proto.set_crt(Base64WebSafeDecode(kQInv));
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPkcs1PrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
@@ -489,7 +489,7 @@ TEST_F(JwtSignatureConfigTest,
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored)
           .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
@@ -498,14 +498,14 @@ TEST_F(JwtSignatureConfigTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(BigInteger(Base64WebSafeDecode(k2048BitRsaModulus)))
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
       JwtRsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(RestrictedBigInteger(Base64WebSafeDecode(kP),
@@ -546,7 +546,7 @@ TEST_F(JwtSignatureConfigTest, JwtRsaSsaPssProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               JwtPs256_2048_F4_Template());
@@ -557,7 +557,7 @@ TEST_F(JwtSignatureConfigTest, JwtRsaSsaPssProtoParamsSerializationRegistered) {
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kIgnored)
           .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
@@ -597,7 +597,7 @@ TEST_F(JwtSignatureConfigTest,
   public_key_proto.set_n(Base64WebSafeDecode(k2048BitRsaModulus));
   public_key_proto.set_e(kF4Str);
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
@@ -612,7 +612,7 @@ TEST_F(JwtSignatureConfigTest,
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kIgnored)
           .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
@@ -621,7 +621,7 @@ TEST_F(JwtSignatureConfigTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
       JwtRsaSsaPssPublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(BigInteger(Base64WebSafeDecode(k2048BitRsaModulus)))
@@ -668,7 +668,7 @@ TEST_F(JwtSignatureConfigTest,
   private_key_proto.set_d(Base64WebSafeDecode(kD));
   private_key_proto.set_crt(Base64WebSafeDecode(kQInv));
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
@@ -683,7 +683,7 @@ TEST_F(JwtSignatureConfigTest,
           .status(),
       StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kIgnored)
           .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
@@ -692,14 +692,14 @@ TEST_F(JwtSignatureConfigTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
       JwtRsaSsaPssPublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(BigInteger(Base64WebSafeDecode(k2048BitRsaModulus)))
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
       JwtRsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(RestrictedBigInteger(Base64WebSafeDecode(kP),

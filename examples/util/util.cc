@@ -100,7 +100,7 @@ Status WriteToFile(const std::string& data_to_write,
                   absl::StrCat("Error opening output file ", filename));
   }
   output_stream << data_to_write;
-  return crypto::tink::util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink_cc_examples

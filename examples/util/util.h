@@ -32,7 +32,7 @@ ReadJsonCleartextKeyset(const std::string& filename);
 
 // Writes `keyset_handle` to the file `filename` formatted with JSON in
 // cleartext.
-crypto::tink::util::Status WriteJsonCleartextKeyset(
+absl::Status WriteJsonCleartextKeyset(
     const std::string& filename,
     const crypto::tink::KeysetHandle& keyset_handle);
 
@@ -41,8 +41,8 @@ crypto::tink::util::Status WriteJsonCleartextKeyset(
 crypto::tink::util::StatusOr<std::string> ReadFile(const std::string& filename);
 
 // Writes the given `data_to_write` to the specified file `filename`.
-crypto::tink::util::Status WriteToFile(const std::string& data_to_write,
-                                       const std::string& filename);
+absl::Status WriteToFile(const std::string& data_to_write,
+                         const std::string& filename);
 
 }  // namespace tink_cc_examples
 

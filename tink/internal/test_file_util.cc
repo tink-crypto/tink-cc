@@ -36,15 +36,15 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status CreateTestFile(absl::string_view filename,
+absl::Status CreateTestFile(absl::string_view filename,
                             absl::string_view file_content) {
   std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
   std::ofstream output_stream(full_filename, std::ios::binary);
   if (!output_stream) {
-    return util::Status(absl::StatusCode::kInternal, "Cannot open file");
+    return absl::Status(absl::StatusCode::kInternal, "Cannot open file");
   }
   output_stream.write(file_content.data(), file_content.size());
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 std::string GetTestFileNamePrefix() {

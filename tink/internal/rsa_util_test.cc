@@ -69,7 +69,7 @@ util::StatusOr<std::pair<RsaPublicKey, RsaPrivateKey>> GetKeyPair(
   RsaPrivateKey private_key;
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), RSA_F4);
-  util::Status res =
+  absl::Status res =
       NewRsaKeyPair(modulus_size_in_bits, e.get(), &private_key, &public_key);
   if (!res.ok()) {
     return res;
@@ -267,7 +267,7 @@ TEST(RsaUtilTest, GetRsaModAndExponents) {
   ASSERT_THAT(keys, IsOk());
   const RsaPrivateKey& private_key = keys->second;
   internal::SslUniquePtr<RSA> rsa(RSA_new());
-  util::Status result = GetRsaModAndExponents(private_key, rsa.get());
+  absl::Status result = GetRsaModAndExponents(private_key, rsa.get());
   ASSERT_THAT(result, IsOk());
   const BIGNUM* n = nullptr;
   const BIGNUM* e = nullptr;
@@ -284,7 +284,7 @@ TEST(RsaUtilTest, GetRsaPrimeFactors) {
   ASSERT_THAT(keys, IsOk());
   const RsaPrivateKey& private_key = keys->second;
   internal::SslUniquePtr<RSA> rsa(RSA_new());
-  util::Status result = GetRsaPrimeFactors(private_key, rsa.get());
+  absl::Status result = GetRsaPrimeFactors(private_key, rsa.get());
   ASSERT_THAT(result, IsOk());
   const BIGNUM* p = nullptr;
   const BIGNUM* q = nullptr;
@@ -302,7 +302,7 @@ TEST(RsaUtilTest, GetRsaCrtParams) {
   const BIGNUM* dp = nullptr;
   const BIGNUM* dq = nullptr;
   const BIGNUM* crt = nullptr;
-  util::Status result = GetRsaCrtParams(private_key, rsa.get());
+  absl::Status result = GetRsaCrtParams(private_key, rsa.get());
   ASSERT_THAT(result, IsOk());
   RSA_get0_crt_params(rsa.get(), &dp, &dq, &crt);
   ExpectBignumEquals(dp, private_key.dp);
@@ -366,7 +366,7 @@ util::StatusOr<internal::SslUniquePtr<RSA>> NewRsaPublicKey(
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), exp);
   if (RSA_set0_key(key.get(), n.get(), e.get(), /*d=*/nullptr) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "RSA_set0_key failed");
+    return absl::Status(absl::StatusCode::kInternal, "RSA_set0_key failed");
   }
   // RSA_set0_key takes ownership of the arguments.
   n.release();

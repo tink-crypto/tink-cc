@@ -61,19 +61,19 @@ class SerializationRegistry {
 
     // Registers parameters `parser`. Returns an error if a different parameters
     // parser has already been registered.
-    util::Status RegisterParametersParser(ParametersParser* parser);
+    absl::Status RegisterParametersParser(ParametersParser* parser);
 
     // Registers parameters `serializer`. Returns an error if a different
     // parameters serializer has already been registered.
-    util::Status RegisterParametersSerializer(ParametersSerializer* serializer);
+    absl::Status RegisterParametersSerializer(ParametersSerializer* serializer);
 
     // Registers key `parser`. Returns an error if a different key parser has
     // already been registered.
-    util::Status RegisterKeyParser(KeyParser* parser);
+    absl::Status RegisterKeyParser(KeyParser* parser);
 
     // Registers key `serializer`. Returns an error if a different key
     // serializer has already been registered.
-    util::Status RegisterKeySerializer(KeySerializer* serializer);
+    absl::Status RegisterKeySerializer(KeySerializer* serializer);
 
     // Creates serialization registry from this builder.
     SerializationRegistry Build() &&;
@@ -124,7 +124,7 @@ class SerializationRegistry {
     SerializerIndex index = SerializerIndex::Create<SerializationT>(parameters);
     auto it = parameters_serializers_.find(index);
     if (it == parameters_serializers_.end()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kNotFound,
           absl::StrFormat(
               "No parameters serializer found for parameters type %s",
@@ -151,7 +151,7 @@ class SerializationRegistry {
     SerializerIndex index = SerializerIndex::Create<SerializationT>(key);
     auto it = key_serializers_.find(index);
     if (it == key_serializers_.end()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kNotFound,
           absl::StrFormat("No key serializer found for key type %s",
                           typeid(key).name()));

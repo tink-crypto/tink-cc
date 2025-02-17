@@ -99,8 +99,8 @@ class Wrapper : public PrimitiveWrapper<InputPrimitive, OutputPrimitive> {
 crypto::tink::util::StatusOr<std::unique_ptr<InputPrimitive>> CreateIn(
     const google::crypto::tink::KeyData& key_data) {
   if (absl::StartsWith(key_data.type_url(), "error:")) {
-    return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                      key_data.type_url());
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        key_data.type_url());
   } else {
     return absl::make_unique<InputPrimitive>(key_data.type_url());
   }
@@ -113,7 +113,7 @@ util::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKey(
 
 util::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKeyFailing(
     const Key& key) {
-  return util::Status(absl::StatusCode::kNotFound, "Not found.");
+  return absl::Status(absl::StatusCode::kNotFound, "Not found.");
 }
 
 // Creates an XChaCha20Poly1305Key from the given parameters.
@@ -133,7 +133,7 @@ util::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
     const google::crypto::tink::KeyData& key_data) {
   google::crypto::tink::XChaCha20Poly1305Key key;
   if (!key.ParseFromString(key_data.value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse XChaCha20Poly1305Key proto");
   }
   return subtle::XChacha20Poly1305BoringSsl::New(
@@ -317,7 +317,7 @@ TEST_P(KeysetWrapperImplTest,
 
   auto aead_primitive_getter_failing =
       [](const Key& key) -> absl::StatusOr<std::unique_ptr<Aead>> {
-    return util::Status(absl::StatusCode::kNotFound, "Not implemented.");
+    return absl::Status(absl::StatusCode::kNotFound, "Not implemented.");
   };
   AeadWrapper wrapper;
   auto wrapper_impl = absl::make_unique<KeysetWrapperImpl<Aead, Aead>>(

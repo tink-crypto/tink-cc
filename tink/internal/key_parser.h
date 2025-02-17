@@ -87,13 +87,13 @@ class KeyParserImpl : public KeyParser {
       const Serialization& serialization,
       absl::optional<SecretKeyAccessToken> token) const override {
     if (serialization.ObjectIdentifier() != object_identifier_) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid object identifier for this key parser.");
     }
     const SerializationT* st =
         dynamic_cast<const SerializationT*>(&serialization);
     if (st == nullptr) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid serialization type for this key parser.");
     }
     util::StatusOr<KeyT> key = function_(*st, token);

@@ -73,7 +73,7 @@ util::StatusOr<std::string> SslEcPointEncode(
       EC_POINT_point2oct(group, point, conversion_form,
                          /*buf=*/nullptr, /*max_out=*/0, /*ctx=*/nullptr);
   if (buffer_size == 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_POINT_point2oct failed");
   }
 
@@ -84,7 +84,7 @@ util::StatusOr<std::string> SslEcPointEncode(
                          reinterpret_cast<uint8_t *>(&encoded_point[0]),
                          buffer_size, /*ctx=*/nullptr);
   if (size == 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_POINT_point2oct failed");
   }
   return encoded_point;
@@ -107,7 +107,7 @@ util::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromCoordinates(
   // already checks if the point is on the curve.
   if (EC_POINT_set_affine_coordinates_GFp(group, pub_key.get(), bn_x->get(),
                                           bn_y->get(), nullptr) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_POINT_set_affine_coordinates_GFp failed");
   }
   return std::move(pub_key);
@@ -119,7 +119,7 @@ util::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromEncoded(
     EllipticCurveType curve, EcPointFormat format, absl::string_view encoded) {
   if (format != EcPointFormat::UNCOMPRESSED &&
       format != EcPointFormat::COMPRESSED) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid format ", subtle::EnumToString(format)));
   }
@@ -134,7 +134,7 @@ util::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromEncoded(
     return encoding_size.status();
   }
   if (encoded.size() != *encoding_size) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Encoded point's size is ", encoded.size(),
                                      " bytes; expected ", *encoding_size));
   }
@@ -142,13 +142,13 @@ util::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromEncoded(
   // Check starting byte.
   if (format == EcPointFormat::UNCOMPRESSED &&
       static_cast<int>(encoded[0]) != 0x04) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         "Uncompressed point should start with 0x04, but input doesn't");
   } else if (format == EcPointFormat::COMPRESSED &&
              static_cast<int>(encoded[0]) != 0x03 &&
              static_cast<int>(encoded[0]) != 0x02) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Compressed point should start with either 0x02 or "
                         "0x03, but input doesn't");
   }
@@ -157,12 +157,12 @@ util::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromEncoded(
   if (EC_POINT_oct2point(group->get(), point.get(),
                          reinterpret_cast<const uint8_t *>(encoded.data()),
                          encoded.size(), nullptr) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_POINT_toc2point failed");
   }
   // Check that point is on curve.
   if (EC_POINT_is_on_curve(group->get(), point.get(), nullptr) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "Point is not on curve");
+    return absl::Status(absl::StatusCode::kInternal, "Point is not on curve");
   }
 
   return std::move(point);
@@ -183,7 +183,7 @@ util::StatusOr<EcPointCoordinates> SslGetEcPointCoordinates(
       SslUniquePtr<BIGNUM>(BN_new()),
   };
   if (coordinates.x == nullptr || coordinates.y == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Unable to allocate memory for the point coordinates");
   }
   int get_affine_coordinates_result = CallWithCoreDumpProtection([&]() {
@@ -191,7 +191,7 @@ util::StatusOr<EcPointCoordinates> SslGetEcPointCoordinates(
         group, point, coordinates.x.get(), coordinates.y.get(), nullptr);
   });
   if (get_affine_coordinates_result != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_POINT_get_affine_coordinates_GFp failed");
   }
   return std::move(coordinates);
@@ -216,17 +216,17 @@ util::StatusOr<SslUniquePtr<EVP_PKEY>> SslNewEvpKey(SslEvpPkeyType key_type) {
   EVP_PKEY *private_key = nullptr;
   SslUniquePtr<EVP_PKEY_CTX> pctx(EVP_PKEY_CTX_new_id(key_type, /*e=*/nullptr));
   if (pctx == nullptr) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("EVP_PKEY_CTX_new_id failed for id ", key_type));
   }
 
   if (EVP_PKEY_keygen_init(pctx.get()) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_keygen_init failed");
   }
   if (EVP_PKEY_keygen(pctx.get(), &private_key) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "EVP_PKEY_keygen failed");
+    return absl::Status(absl::StatusCode::kInternal, "EVP_PKEY_keygen failed");
   }
   return {SslUniquePtr<EVP_PKEY>(private_key)};
 }
@@ -234,7 +234,7 @@ util::StatusOr<SslUniquePtr<EVP_PKEY>> SslNewEvpKey(SslEvpPkeyType key_type) {
 namespace {
 // Given a private EVP_PKEY `evp_key` of key type `key_type` fills `priv_key`
 // and `pub_key` with raw private and public keys, respectively.
-util::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
+absl::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
                                     const EVP_PKEY &evp_key,
                                     absl::Span<uint8_t> priv_key,
                                     absl::Span<uint8_t> pub_key) {
@@ -243,11 +243,11 @@ util::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
     return EVP_PKEY_get_raw_private_key(&evp_key, priv_key.data(), &len) != -1;
   });
   if (!created) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_get_raw_private_key failed");
   }
   if (len != priv_key.size()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Invalid private key size; expected ",
                                      priv_key.size(), " got ", len));
   }
@@ -259,29 +259,29 @@ util::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
   if (CallWithCoreDumpProtection([&] {
         return EVP_PKEY_get_raw_public_key(&evp_key, pub_key.data(), &len);
       }) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_get_raw_public_key failed");
   }
   if (len != pub_key.size()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Invalid public key size; expected ",
                                      pub_key.size(), " got ", len));
   }
   DfsanClearLabel(pub_key.data(), len);
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 }  // namespace
 
 util::StatusOr<std::string> SslEcdsaSignatureToBytes(
     const ECDSA_SIG *ecdsa_signature) {
   if (ecdsa_signature == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ECDSA signature is null");
   }
   uint8_t *der = nullptr;
   int der_len = i2d_ECDSA_SIG(ecdsa_signature, &der);
   if (der_len <= 0) {
-    return util::Status(absl::StatusCode::kInternal, "i2d_ECDSA_SIG failed");
+    return absl::Status(absl::StatusCode::kInternal, "i2d_ECDSA_SIG failed");
   }
   auto result = std::string(reinterpret_cast<char *>(der), der_len);
   OPENSSL_free(der);
@@ -353,7 +353,7 @@ util::StatusOr<int32_t> EcPointEncodingSizeInBytes(EllipticCurveType curve_type,
     return coordinate_size;
   }
   if (*coordinate_size == 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Unsupported elliptic curve type: ",
                                      EnumToString(curve_type)));
   }
@@ -365,7 +365,7 @@ util::StatusOr<int32_t> EcPointEncodingSizeInBytes(EllipticCurveType curve_type,
     case EcPointFormat::DO_NOT_USE_CRUNCHY_UNCOMPRESSED:
       return 2 * (*coordinate_size);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported elliptic curve point format: ",
                        EnumToString(point_format)));
@@ -388,7 +388,7 @@ util::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type) {
   SslUniquePtr<EC_KEY> key(EC_KEY_new());
 
   if (key.get() == nullptr) {
-    return util::Status(absl::StatusCode::kInternal, "EC_KEY_new failed");
+    return absl::Status(absl::StatusCode::kInternal, "EC_KEY_new failed");
   }
   EC_KEY_set_group(key.get(), group->get());
   EC_KEY_generate_key(key.get());
@@ -410,12 +410,12 @@ util::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type,
       "Deriving EC keys from a secret seed is not supported with OpenSSL");
 #else
   if (IsFipsModeEnabled()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         "Deriving EC keys from a secret seed is not allowed in FIPS mode");
   }
   if (curve_type == EllipticCurveType::CURVE25519) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         "Creating a X25519 key from a secret seed is not supported");
   }
@@ -427,7 +427,7 @@ util::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type,
   SslUniquePtr<EC_KEY> key(EC_KEY_derive_from_secret(
       group->get(), secret_seed.data(), secret_seed.size()));
   if (key.get() == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_KEY_derive_from_secret failed");
   }
   return EcKeyFromSslEcKey(curve_type, *key);
@@ -443,7 +443,7 @@ util::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key() {
 
   auto key = absl::make_unique<X25519Key>();
   internal::SecretBuffer x22519_priv_key_buffer(X25519KeyPrivKeySize());
-  util::Status res = SslNewKeyPairFromEcKey(
+  absl::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, **private_key,
       absl::MakeSpan(x22519_priv_key_buffer.data(), X25519KeyPrivKeySize()),
       absl::MakeSpan(key->public_value, X25519KeyPubKeySize()));
@@ -475,7 +475,7 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key() {
 util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
     const util::SecretData &secret_seed) {
   if (secret_seed.size() != Ed25519KeyPrivKeySize()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid seed of length ", secret_seed.size(),
                      "; expected ", Ed25519KeyPrivKeySize()));
@@ -490,19 +490,19 @@ util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   uint8_t *priv_key_ptr = priv_key_buffer.data();
   uint8_t *pub_key_ptr = reinterpret_cast<uint8_t *>(&key->public_key[0]);
 
-  util::Status res = internal::CallWithCoreDumpProtection([&]() {
+  absl::Status res = internal::CallWithCoreDumpProtection([&]() {
     SslUniquePtr<EVP_PKEY> priv_key =
         SslUniquePtr<EVP_PKEY>(EVP_PKEY_new_raw_private_key(
             SslEvpPkeyType::kEd25519Key, nullptr, secret_seed.data(),
             Ed25519KeyPrivKeySize()));
     if (priv_key == nullptr) {
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "EVP_PKEY_new_raw_private_key failed");
     }
 
     // The EVP_PKEY interface returns only the first 32 bytes of the private
     // key.
-    util::Status res = SslNewKeyPairFromEcKey(
+    absl::Status res = SslNewKeyPairFromEcKey(
         SslEvpPkeyType::kEd25519Key, *priv_key,
         absl::MakeSpan(priv_key_ptr, Ed25519KeyPrivKeySize()),
         absl::MakeSpan(pub_key_ptr, Ed25519KeyPubKeySize()));
@@ -519,11 +519,11 @@ util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
     const EcKey &ec_key) {
   auto x25519_key = absl::make_unique<X25519Key>();
   if (ec_key.curve != subtle::EllipticCurveType::CURVE25519) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "This key is not on curve 25519");
   }
   if (!ec_key.pub_y.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid X25519 key. pub_y is unexpectedly set.");
   }
   // Curve25519 public key is x, not (x,y).
@@ -539,11 +539,11 @@ util::StatusOr<util::SecretData> ComputeX25519SharedSecret(
     EVP_PKEY *private_key, EVP_PKEY *peer_public_key) {
   // Make sure the keys are actually X25519 keys.
   if (EVP_PKEY_id(private_key) != SslEvpPkeyType::kX25519Key) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid type for private key");
   }
   if (EVP_PKEY_id(peer_public_key) != SslEvpPkeyType::kX25519Key) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid type for peer's public key");
   }
 
@@ -557,7 +557,7 @@ util::StatusOr<util::SecretData> ComputeX25519SharedSecret(
         return EVP_PKEY_derive(pctx.get(), shared_secret.data(),
                                &out_key_length);
       }) <= 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Secret generation failed");
   }
   return util::internal::AsSecretData(std::move(shared_secret));
@@ -566,7 +566,7 @@ util::StatusOr<util::SecretData> ComputeX25519SharedSecret(
 util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
     const util::SecretData &private_key) {
   if (private_key.size() != X25519KeyPrivKeySize()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid length for private key");
   }
 
@@ -576,7 +576,7 @@ util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
   }));
   auto key = absl::make_unique<X25519Key>();
   internal::SecretBuffer priv_key_buffer(X25519KeyPrivKeySize());
-  util::Status res = SslNewKeyPairFromEcKey(
+  absl::Status res = SslNewKeyPairFromEcKey(
       SslEvpPkeyType::kX25519Key, *pkey,
       absl::MakeSpan(priv_key_buffer.data(), X25519KeyPrivKeySize()),
       absl::MakeSpan(key->public_value, X25519KeyPubKeySize()));
@@ -595,7 +595,7 @@ util::StatusOr<std::string> EcPointEncode(EllipticCurveType curve,
     return group.status();
   }
   if (EC_POINT_is_on_curve(group->get(), point, nullptr) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "Point is not on curve");
+    return absl::Status(absl::StatusCode::kInternal, "Point is not on curve");
   }
   switch (format) {
     case EcPointFormat::UNCOMPRESSED: {
@@ -614,11 +614,11 @@ util::StatusOr<std::string> EcPointEncode(EllipticCurveType curve,
       const int kCurveSizeInBytes = SslEcFieldSizeInBytes(group->get());
       std::string encoded_point;
       subtle::ResizeStringUninitialized(&encoded_point, 2 * kCurveSizeInBytes);
-      util::Status res = BignumToBinaryPadded(
+      absl::Status res = BignumToBinaryPadded(
           absl::MakeSpan(&encoded_point[0], kCurveSizeInBytes),
           ec_point_xy->x.get());
       if (!res.ok()) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInternal,
             absl::StrCat(res.message(), " serializing the x coordinate"));
       }
@@ -627,14 +627,14 @@ util::StatusOr<std::string> EcPointEncode(EllipticCurveType curve,
           absl::MakeSpan(&encoded_point[kCurveSizeInBytes], kCurveSizeInBytes),
           ec_point_xy->y.get());
       if (!res.ok()) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInternal,
             absl::StrCat(res.message(), " serializing the y coordinate"));
       }
       return encoded_point;
     }
     default:
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported point format");
   }
 }
@@ -653,7 +653,7 @@ util::StatusOr<SslUniquePtr<EC_POINT>> EcPointDecode(
       }
       const int kCurveSizeInBytes = SslEcFieldSizeInBytes(group->get());
       if (encoded.size() != 2 * kCurveSizeInBytes) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInternal,
             absl::StrCat("Encoded point's size is ", encoded.size(),
                          " bytes; expected ", 2 * kCurveSizeInBytes));
@@ -665,7 +665,7 @@ util::StatusOr<SslUniquePtr<EC_POINT>> EcPointDecode(
                                           encoded.substr(kCurveSizeInBytes));
     }
     default:
-      return util::Status(absl::StatusCode::kInternal, "Unsupported format");
+      return absl::Status(absl::StatusCode::kInternal, "Unsupported format");
   }
 }
 
@@ -686,11 +686,11 @@ util::StatusOr<SslUniquePtr<EC_GROUP>> EcGroupFromCurveType(
       break;
     }
     default:
-      return util::Status(absl::StatusCode::kUnimplemented,
+      return absl::Status(absl::StatusCode::kUnimplemented,
                           "Unsupported elliptic curve");
   }
   if (ec_group == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_GROUP_new_by_curve_name failed");
   }
   return {SslUniquePtr<EC_GROUP>(ec_group)};
@@ -698,7 +698,7 @@ util::StatusOr<SslUniquePtr<EC_GROUP>> EcGroupFromCurveType(
 
 util::StatusOr<EllipticCurveType> CurveTypeFromEcGroup(const EC_GROUP *group) {
   if (group == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Null group provided");
   }
   switch (EC_GROUP_get_curve_name(group)) {
@@ -709,7 +709,7 @@ util::StatusOr<EllipticCurveType> CurveTypeFromEcGroup(const EC_GROUP *group) {
     case NID_secp521r1:
       return EllipticCurveType::NIST_P521;
     default:
-      return util::Status(absl::StatusCode::kUnimplemented,
+      return absl::Status(absl::StatusCode::kUnimplemented,
                           "Unsupported elliptic curve");
   }
 }
@@ -732,7 +732,7 @@ util::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
     return priv_group.status();
   }
   if (EC_POINT_is_on_curve(priv_group->get(), pub_key, /*ctx=*/nullptr) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Public key is not on curve ",
                                      subtle::EnumToString(curve)));
   }
@@ -745,7 +745,7 @@ util::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
                         pub_key, priv_key, /*ctx=*/nullptr);
   });
   if (ec_point_mul_result != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Point multiplication failed");
   }
   int ec_point_is_on_curve_result = CallWithCoreDumpProtection([&]() {
@@ -755,7 +755,7 @@ util::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
     return result;
   });
   if (ec_point_is_on_curve_result != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Shared point is not on curve ",
                                      subtle::EnumToString(curve)));
   }
@@ -775,7 +775,7 @@ util::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP *group,
                                                  absl::string_view ieee_sig) {
   const size_t kFieldSizeInBytes = SslEcFieldSizeInBytes(group);
   if (ieee_sig.size() != kFieldSizeInBytes * 2) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid.");
   }
   util::StatusOr<SslUniquePtr<BIGNUM>> r =
@@ -790,7 +790,7 @@ util::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP *group,
   }
   internal::SslUniquePtr<ECDSA_SIG> ecdsa(ECDSA_SIG_new());
   if (ECDSA_SIG_set0(ecdsa.get(), r->get(), s->get()) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "ECDSA_SIG_set0 failed");
+    return absl::Status(absl::StatusCode::kInternal, "ECDSA_SIG_set0 failed");
   }
   // ECDSA_SIG_set0 takes ownership of s and r's pointers.
   r->release();

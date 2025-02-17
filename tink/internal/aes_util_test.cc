@@ -99,7 +99,7 @@ TEST_F(AesCtrTest, AesCtrPartiallyOverlappingFails) {
             out.begin() + kStartIndex);
   auto plaintext =
       absl::string_view(out).substr(kStartIndex, test_vector_.plaintext.size());
-  util::Status res = AesCtr128Crypt(
+  absl::Status res = AesCtr128Crypt(
       plaintext, reinterpret_cast<uint8_t*>(&test_vector_.iv[0]),
       aes_key_.get(), absl::MakeSpan(out).subspan(0, plaintext.size()));
   // Checking the message to disambiguate from the kInvalidArgumentError that is

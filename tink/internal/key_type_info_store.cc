@@ -40,12 +40,12 @@ util::StatusOr<KeyTypeInfoStore::Info*> KeyTypeInfoStore::Get(
   return it->second.get();
 }
 
-util::Status KeyTypeInfoStore::IsInsertable(
+absl::Status KeyTypeInfoStore::IsInsertable(
     absl::string_view type_url, const std::type_index& key_manager_type_index,
     bool new_key_allowed) const {
   auto it = type_url_to_info_.find(type_url);
   if (it == type_url_to_info_.end()) {
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
   if (it->second->key_manager_type_index() != key_manager_type_index) {
     return ToStatusF(absl::StatusCode::kAlreadyExists,
@@ -58,7 +58,7 @@ util::Status KeyTypeInfoStore::IsInsertable(
                      "with forbidden new key operation.",
                      type_url);
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace internal

@@ -67,13 +67,13 @@ class RegistryImpl {
   // Takes ownership of 'manager', which must be non-nullptr. KeyManager is the
   // legacy/internal version of KeyTypeManager.
   template <class P>
-  crypto::tink::util::Status RegisterKeyManager(KeyManager<P>* manager,
-                                                bool new_key_allowed = true)
+  absl::Status RegisterKeyManager(KeyManager<P>* manager,
+                                  bool new_key_allowed = true)
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   // Takes ownership of 'manager', which must be non-nullptr.
   template <class KeyProto, class KeyFormatProto, class PrimitiveList>
-  crypto::tink::util::Status RegisterKeyTypeManager(
+  absl::Status RegisterKeyTypeManager(
       std::unique_ptr<KeyTypeManager<KeyProto, KeyFormatProto, PrimitiveList>>
           manager,
       bool new_key_allowed) ABSL_LOCKS_EXCLUDED(maps_mutex_);
@@ -82,7 +82,7 @@ class RegistryImpl {
   // non-nullptr.
   template <class PrivateKeyProto, class KeyFormatProto, class PublicKeyProto,
             class PrivatePrimitivesList, class PublicPrimitivesList>
-  crypto::tink::util::Status RegisterAsymmetricKeyManagers(
+  absl::Status RegisterAsymmetricKeyManagers(
       PrivateKeyTypeManager<PrivateKeyProto, KeyFormatProto, PublicKeyProto,
                             PrivatePrimitivesList>* private_manager,
       KeyTypeManager<PublicKeyProto, void, PublicPrimitivesList>*
@@ -95,8 +95,8 @@ class RegistryImpl {
 
   // Takes ownership of 'wrapper', which must be non-nullptr.
   template <class P, class Q>
-  crypto::tink::util::Status RegisterPrimitiveWrapper(
-      PrimitiveWrapper<P, Q>* wrapper) ABSL_LOCKS_EXCLUDED(maps_mutex_);
+  absl::Status RegisterPrimitiveWrapper(PrimitiveWrapper<P, Q>* wrapper)
+      ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   template <class P>
   crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
@@ -130,12 +130,11 @@ class RegistryImpl {
 
   void Reset() ABSL_LOCKS_EXCLUDED(maps_mutex_, monitoring_factory_mutex_);
 
-  crypto::tink::util::Status RestrictToFipsIfEmpty() const
-      ABSL_LOCKS_EXCLUDED(maps_mutex_);
+  absl::Status RestrictToFipsIfEmpty() const ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   // Registers a `monitoring_factory`. Only one factory can be registered,
   // subsequent calls to this method will return a kAlreadyExists error.
-  crypto::tink::util::Status RegisterMonitoringClientFactory(
+  absl::Status RegisterMonitoringClientFactory(
       std::unique_ptr<crypto::tink::MonitoringClientFactory> monitoring_factory)
       ABSL_LOCKS_EXCLUDED(monitoring_factory_mutex_);
 
@@ -172,12 +171,12 @@ class RegistryImpl {
 };
 
 template <class P>
-crypto::tink::util::Status RegistryImpl::RegisterKeyManager(
-    KeyManager<P>* manager, bool new_key_allowed) {
+absl::Status RegistryImpl::RegisterKeyManager(KeyManager<P>* manager,
+                                              bool new_key_allowed) {
   auto owned_manager = absl::WrapUnique(manager);
   if (manager == nullptr) {
-    return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                      "Parameter 'manager' must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Parameter 'manager' must be non-null.");
   }
   absl::MutexLock lock(&maps_mutex_);
   return key_type_info_store_.AddKeyManager(std::move(owned_manager),
@@ -185,13 +184,13 @@ crypto::tink::util::Status RegistryImpl::RegisterKeyManager(
 }
 
 template <class KeyProto, class KeyFormatProto, class PrimitiveList>
-crypto::tink::util::Status RegistryImpl::RegisterKeyTypeManager(
+absl::Status RegistryImpl::RegisterKeyTypeManager(
     std::unique_ptr<KeyTypeManager<KeyProto, KeyFormatProto, PrimitiveList>>
         manager,
     bool new_key_allowed) {
   if (manager == nullptr) {
-    return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                      "Parameter 'manager' must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Parameter 'manager' must be non-null.");
   }
   absl::MutexLock lock(&maps_mutex_);
   return key_type_info_store_.AddKeyTypeManager(std::move(manager),
@@ -200,7 +199,7 @@ crypto::tink::util::Status RegistryImpl::RegisterKeyTypeManager(
 
 template <class PrivateKeyProto, class KeyFormatProto, class PublicKeyProto,
           class PrivatePrimitivesList, class PublicPrimitivesList>
-crypto::tink::util::Status RegistryImpl::RegisterAsymmetricKeyManagers(
+absl::Status RegistryImpl::RegisterAsymmetricKeyManagers(
     PrivateKeyTypeManager<PrivateKeyProto, KeyFormatProto, PublicKeyProto,
                           PrivatePrimitivesList>* private_manager,
     KeyTypeManager<PublicKeyProto, void, PublicPrimitivesList>* public_manager,
@@ -209,14 +208,12 @@ crypto::tink::util::Status RegistryImpl::RegisterAsymmetricKeyManagers(
   auto owned_public_manager = absl::WrapUnique(public_manager);
 
   if (private_manager == nullptr) {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Parameter 'private_manager' must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Parameter 'private_manager' must be non-null.");
   }
   if (public_manager == nullptr) {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Parameter 'public_manager' must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Parameter 'public_manager' must be non-null.");
   }
 
   absl::MutexLock lock(&maps_mutex_);
@@ -226,11 +223,11 @@ crypto::tink::util::Status RegistryImpl::RegisterAsymmetricKeyManagers(
 }
 
 template <class P, class Q>
-crypto::tink::util::Status RegistryImpl::RegisterPrimitiveWrapper(
+absl::Status RegistryImpl::RegisterPrimitiveWrapper(
     PrimitiveWrapper<P, Q>* wrapper) {
   if (wrapper == nullptr) {
-    return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                      "Parameter 'wrapper' must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Parameter 'wrapper' must be non-null.");
   }
   std::unique_ptr<PrimitiveWrapper<P, Q>> owned_wrapper(wrapper);
 
@@ -244,10 +241,10 @@ crypto::tink::util::Status RegistryImpl::RegisterPrimitiveWrapper(
   absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
       const Key& key) const>
       always_failing_primitive_getter = [](const Key& key) {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kNotFound,
-        "Primitive getter not available in global registry mode.");
-  };
+        return absl::Status(
+            absl::StatusCode::kNotFound,
+            "Primitive getter not available in global registry mode.");
+      };
 
   return keyset_wrapper_store_.Add(std::move(owned_wrapper),
                                    std::move(primitive_getter),
@@ -283,9 +280,8 @@ template <class P>
 crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::Wrap(
     std::unique_ptr<PrimitiveSet<P>> primitive_set) const {
   if (primitive_set == nullptr) {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kInvalidArgument,
-        "Parameter 'primitive_set' must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Parameter 'primitive_set' must be non-null.");
   }
   const PrimitiveWrapper<P, P>* wrapper = nullptr;
   {
@@ -319,17 +315,17 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
   return keyset_wrapper->Wrap(keyset, annotations);
 }
 
-inline crypto::tink::util::Status RegistryImpl::RestrictToFipsIfEmpty() const {
+inline absl::Status RegistryImpl::RestrictToFipsIfEmpty() const {
   absl::MutexLock lock(&maps_mutex_);
   // If we are already in FIPS mode, then do nothing..
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   if (key_type_info_store_.IsEmpty()) {
     SetFipsRestricted();
-    return util::OkStatus();
+    return absl::OkStatus();
   }
-  return util::Status(absl::StatusCode::kInternal,
+  return absl::Status(absl::StatusCode::kInternal,
                       "Could not set FIPS only mode. Registry is not empty.");
 }
 

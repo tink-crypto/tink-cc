@@ -35,7 +35,7 @@ util::StatusOr<const EVP_MD *> EvpHashFromHashType(
     crypto::tink::subtle::HashType hash_type);
 
 // Validates whether `sig_hash` is safe to use for digital signature.
-crypto::tink::util::Status IsHashTypeSafeForSignature(
+absl::Status IsHashTypeSafeForSignature(
     crypto::tink::subtle::HashType sig_hash);
 
 // Returns the hash of `input` using the hash function `hasher`.

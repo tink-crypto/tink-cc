@@ -40,18 +40,18 @@ util::StatusOr<ProtoKeySerialization> ProtoKeySerialization::Create(
     KeyData::KeyMaterialType key_material_type,
     OutputPrefixType output_prefix_type, absl::optional<int> id_requirement) {
   if (!IsPrintableAscii(type_url)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
   if (output_prefix_type == OutputPrefixType::RAW &&
       id_requirement.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Keys with a RAW output prefix type should not have an "
                         "ID requirement.");
   }
   if (output_prefix_type != OutputPrefixType::RAW &&
       !id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Keys without a RAW output prefix type should have an ID requirement.");
   }

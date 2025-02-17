@@ -112,14 +112,14 @@ class FakeKeyTypeManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesGcmKey& key) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
-  util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const AesGcmKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   util::StatusOr<google::crypto::tink::AesGcmKey> CreateKey(
@@ -412,13 +412,13 @@ class FakeSignKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const RsaSsaPssPrivateKey& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const RsaSsaPssPrivateKey& key) const override {
+    return absl::OkStatus();
   }
 
-  util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const RsaSsaPssKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   util::StatusOr<RsaSsaPssPrivateKey> CreateKey(
@@ -464,12 +464,12 @@ class FakeVerifyKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const RsaSsaPssPublicKey& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const RsaSsaPssPublicKey& key) const override {
+    return absl::OkStatus();
   }
 
-  util::Status ValidateParams(const RsaSsaPssParams& params) const {
-    return util::OkStatus();
+  absl::Status ValidateParams(const RsaSsaPssParams& params) const {
+    return absl::OkStatus();
   }
 
  private:

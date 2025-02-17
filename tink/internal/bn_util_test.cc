@@ -212,7 +212,7 @@ TEST(BnUtil, BignumToBinaryPadded) {
     const std::string bn_bytes = test::HexDecodeOrDie(s);
     std::vector<char> buffer;
     buffer.resize(bn_bytes.size());
-    util::Status res = BignumToBinaryPadded(
+    absl::Status res = BignumToBinaryPadded(
         absl::MakeSpan(buffer.data(), buffer.size()), expected_bn->get());
     ASSERT_THAT(res, IsOk());
     auto buffer_data = absl::string_view(buffer.data(), buffer.size());
@@ -232,7 +232,7 @@ TEST(BnUtil, BufferToSmall) {
     {
       std::vector<char> buffer;
       buffer.resize(buffer_size);
-      util::Status result = BignumToBinaryPadded(
+      absl::Status result = BignumToBinaryPadded(
           absl::MakeSpan(buffer.data(), buffer.size()), expected_bn->get());
       EXPECT_THAT(result, Not(IsOk()));
     }

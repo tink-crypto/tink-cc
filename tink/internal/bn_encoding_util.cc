@@ -41,7 +41,7 @@ util::StatusOr<std::string> GetValueOfFixedLength(
   }
 
   if (big_integer_encoding.size() > length) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat(
             "Value too large for the given length. Expected %d, got %d", length,
@@ -60,7 +60,7 @@ util::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
   }
 
   if (big_integer.SizeInBytes() > length) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat(
             "Value too large for the given length. Expected %d, got %d", length,

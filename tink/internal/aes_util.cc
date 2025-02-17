@@ -38,10 +38,10 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
+absl::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
                             const AES_KEY* key, absl::Span<char> out) {
   if (out.size() < data.size()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid size for output buffer; expected at least ",
                      data.size(), " got ", out.size()));
@@ -50,7 +50,7 @@ util::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
   // Only full overlap or no overlap is allowed.
   if (!BuffersAreIdentical(data, absl::string_view(out.data(), out.size())) &&
       BuffersOverlap(data, absl::string_view(out.data(), out.size()))) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Buffers must not partially overlap");
   }
 
@@ -70,7 +70,7 @@ util::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
                         key, iv, ecount_buf, &num,
                         reinterpret_cast<block128_f>(AES_encrypt));
 #endif
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<const EVP_CIPHER*> GetAesCtrCipherForKeySize(
@@ -81,7 +81,7 @@ util::StatusOr<const EVP_CIPHER*> GetAesCtrCipherForKeySize(
     case 32:
       return EVP_aes_256_ctr();
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Invalid key size ", key_size_in_bytes));
   }
 }
@@ -94,7 +94,7 @@ util::StatusOr<const EVP_CIPHER*> GetAesCbcCipherForKeySize(
     case 32:
       return EVP_aes_256_cbc();
   }
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       absl::StrCat("Invalid key size ", key_size_in_bytes));
 }
 

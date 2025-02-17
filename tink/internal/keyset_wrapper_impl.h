@@ -63,7 +63,7 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
       const google::crypto::tink::Keyset& keyset,
       const absl::flat_hash_map<std::string, std::string>& annotations)
       const override {
-    crypto::tink::util::Status status = ValidateKeyset(keyset);
+    absl::Status status = ValidateKeyset(keyset);
     if (!status.ok()) return status;
     typename PrimitiveSet<P>::Builder primitives_builder;
     primitives_builder.AddAnnotations(annotations);

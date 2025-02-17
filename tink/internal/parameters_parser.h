@@ -78,14 +78,14 @@ class ParametersParserImpl : public ParametersParser {
   util::StatusOr<std::unique_ptr<Parameters>> ParseParameters(
       const Serialization& serialization) const override {
     if (serialization.ObjectIdentifier() != object_identifier_) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Invalid object identifier for this parameters parser.");
     }
     const SerializationT* st =
         dynamic_cast<const SerializationT*>(&serialization);
     if (st == nullptr) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Invalid serialization type for this parameters parser.");
     }

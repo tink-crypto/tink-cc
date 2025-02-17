@@ -38,10 +38,8 @@ constexpr int AesBlockSize() { return 16; }
 // written to `out`. `out` may fully overlap with `data`; partial overlaps will
 // result in an kInvalidArgument error. `iv` is incremented of the number of
 // blocks that were encrypted/decrypted.
-crypto::tink::util::Status AesCtr128Crypt(absl::string_view data,
-                                          uint8_t iv[AesBlockSize()],
-                                          const AES_KEY* key,
-                                          absl::Span<char> out);
+absl::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
+                            const AES_KEY* key, absl::Span<char> out);
 
 // Returns a pointer to an AES-CTR EVP_CIPHER for the given key size
 // `key_size_in_bytes`.

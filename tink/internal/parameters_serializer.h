@@ -75,7 +75,7 @@ class ParametersSerializerImpl : public ParametersSerializer {
       const Parameters& parameters) const override {
     const ParametersT* pt = dynamic_cast<const ParametersT*>(&parameters);
     if (pt == nullptr) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Invalid parameters type for this parameters serializer.");
     }

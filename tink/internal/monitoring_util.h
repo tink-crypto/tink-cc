@@ -44,11 +44,11 @@ MonitoringKeySetInfoFromPrimitiveSet(const PrimitiveSet<P>& primitive_set) {
   const std::vector<typename PrimitiveSet<P>::template Entry<P>*>
       primitive_set_entries = primitive_set.get_all();
   if (primitive_set_entries.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "The primitive set is empty");
   }
   if (primitive_set.get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "The primary keys must not be null");
   }
   std::vector<MonitoringKeySetInfo::Entry> keyset_info_entries = {};

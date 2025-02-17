@@ -94,7 +94,7 @@ class SecretDataWithCrc final {
   // Runtime: O(1)
   absl::crc32c_t GetCrc32c() const { return crc_.value(); }
 
-  crypto::tink::util::Status ValidateCrc() const;
+  absl::Status ValidateCrc() const;
 
   bool empty() const { return data_.empty(); }
   size_t size() const { return data_.size(); }

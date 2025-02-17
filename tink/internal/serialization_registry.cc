@@ -50,61 +50,61 @@ SerializationRegistry::Builder::Builder(const SerializationRegistry& registry)
     : Builder(registry.parameters_parsers_, registry.parameters_serializers_,
               registry.key_parsers_, registry.key_serializers_) {}
 
-util::Status SerializationRegistry::Builder::RegisterParametersParser(
+absl::Status SerializationRegistry::Builder::RegisterParametersParser(
     ParametersParser* parser) {
   ParserIndex index = parser->Index();
   auto it = parameters_parsers_.find(index);
   if (it != parameters_parsers_.end()) {
     if (parameters_parsers_[index] != parser) {
-      return util::Status(absl::StatusCode::kAlreadyExists,
+      return absl::Status(absl::StatusCode::kAlreadyExists,
                           "Attempted to update existing parameters parser.");
     }
   }
   parameters_parsers_.insert({parser->Index(), parser});
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status SerializationRegistry::Builder::RegisterParametersSerializer(
+absl::Status SerializationRegistry::Builder::RegisterParametersSerializer(
     ParametersSerializer* serializer) {
   SerializerIndex index = serializer->Index();
   auto it = parameters_serializers_.find(index);
   if (it != parameters_serializers_.end()) {
     if (parameters_serializers_[index] != serializer) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kAlreadyExists,
           "Attempted to update existing parameters serializer.");
     }
   }
   parameters_serializers_.insert({serializer->Index(), serializer});
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status SerializationRegistry::Builder::RegisterKeyParser(
+absl::Status SerializationRegistry::Builder::RegisterKeyParser(
     KeyParser* parser) {
   ParserIndex index = parser->Index();
   auto it = key_parsers_.find(index);
   if (it != key_parsers_.end()) {
     if (key_parsers_[index] != parser) {
-      return util::Status(absl::StatusCode::kAlreadyExists,
+      return absl::Status(absl::StatusCode::kAlreadyExists,
                           "Attempted to update existing key parser.");
     }
   }
   key_parsers_.insert({parser->Index(), parser});
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status SerializationRegistry::Builder::RegisterKeySerializer(
+absl::Status SerializationRegistry::Builder::RegisterKeySerializer(
     KeySerializer* serializer) {
   SerializerIndex index = serializer->Index();
   auto it = key_serializers_.find(index);
   if (it != key_serializers_.end()) {
     if (key_serializers_[index] != serializer) {
-      return util::Status(absl::StatusCode::kAlreadyExists,
+      return absl::Status(absl::StatusCode::kAlreadyExists,
                           "Attempted to update existing key serializer.");
     }
   }
   key_serializers_.insert({serializer->Index(), serializer});
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 SerializationRegistry SerializationRegistry::Builder::Build() && {
@@ -119,7 +119,7 @@ SerializationRegistry::ParseParameters(
   ParserIndex index = ParserIndex::Create(serialization);
   auto it = parameters_parsers_.find(index);
   if (it == parameters_parsers_.end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kNotFound,
         absl::StrFormat("No parameters parser found for parameters type %s",
                         typeid(serialization).name()));
@@ -137,7 +137,7 @@ SerializationRegistry::ParseParametersWithLegacyFallback(
     const ProtoParametersSerialization* proto_serialization =
         dynamic_cast<const ProtoParametersSerialization*>(&serialization);
     if (proto_serialization == nullptr) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInternal,
           "Failed to convert serialization to ProtoParametersSerialization.");
     }
@@ -155,7 +155,7 @@ util::StatusOr<std::unique_ptr<Key>> SerializationRegistry::ParseKey(
   ParserIndex index = ParserIndex::Create(serialization);
   auto it = key_parsers_.find(index);
   if (it == key_parsers_.end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kNotFound,
         absl::StrFormat("No key parser found for serialization type %s",
                         typeid(serialization).name()));
@@ -172,7 +172,7 @@ SerializationRegistry::ParseKeyWithLegacyFallback(
     const ProtoKeySerialization* proto_serialization =
         dynamic_cast<const ProtoKeySerialization*>(&serialization);
     if (proto_serialization == nullptr) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInternal,
           "Failed to convert serialization to ProtoKeySerialization.");
     }

@@ -43,25 +43,25 @@ constexpr absl::string_view kKeyGenConfigurationImplErr =
 class KeyGenConfigurationImpl {
  public:
   template <class KM>
-  static crypto::tink::util::Status AddKeyTypeManager(
+  static absl::Status AddKeyTypeManager(
       std::unique_ptr<KM> key_manager,
       crypto::tink::KeyGenConfiguration& config) {
     if (config.global_registry_mode_) {
-      return crypto::tink::util::Status(absl::StatusCode::kFailedPrecondition,
-                                        kKeyGenConfigurationImplErr);
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kKeyGenConfigurationImplErr);
     }
     return config.key_type_info_store_.AddKeyTypeManager(
         std::move(key_manager), /*new_key_allowed=*/true);
   }
 
   template <class PrivateKM, class PublicKM>
-  static crypto::tink::util::Status AddAsymmetricKeyManagers(
+  static absl::Status AddAsymmetricKeyManagers(
       std::unique_ptr<PrivateKM> private_key_manager,
       std::unique_ptr<PublicKM> public_key_manager,
       crypto::tink::KeyGenConfiguration& config) {
     if (config.global_registry_mode_) {
-      return crypto::tink::util::Status(absl::StatusCode::kFailedPrecondition,
-                                        kKeyGenConfigurationImplErr);
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kKeyGenConfigurationImplErr);
     }
     return config.key_type_info_store_.AddAsymmetricKeyTypeManagers(
         std::move(private_key_manager), std::move(public_key_manager),
@@ -69,29 +69,28 @@ class KeyGenConfigurationImpl {
   }
 
   template <class P>
-  static crypto::tink::util::Status AddLegacyKeyManager(
+  static absl::Status AddLegacyKeyManager(
       std::unique_ptr<KeyManager<P>> key_manager,
       crypto::tink::KeyGenConfiguration& config) {
     if (config.global_registry_mode_) {
-      return crypto::tink::util::Status(absl::StatusCode::kFailedPrecondition,
-                                        kKeyGenConfigurationImplErr);
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kKeyGenConfigurationImplErr);
     }
     return config.key_type_info_store_.AddKeyManager(std::move(key_manager),
                                                      /*new_key_allowed=*/true);
   }
 
   template <class P>
-  static crypto::tink::util::Status AddKeyCreator(
-      KeyCreatorFn<P> key_creator_fn,
-      crypto::tink::KeyGenConfiguration& config) {
+  static absl::Status AddKeyCreator(KeyCreatorFn<P> key_creator_fn,
+                                    crypto::tink::KeyGenConfiguration& config) {
     if (config.global_registry_mode_) {
-      return crypto::tink::util::Status(absl::StatusCode::kFailedPrecondition,
-                                        kKeyGenConfigurationImplErr);
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kKeyGenConfigurationImplErr);
     }
     // Check if the key creator already exists.
     auto it = config.key_creator_fn_map_.find(std::type_index(typeid(P)));
     if (it != config.key_creator_fn_map_.end()) {
-      return util::Status(absl::StatusCode::kUnimplemented,
+      return absl::Status(absl::StatusCode::kUnimplemented,
                           absl::StrCat("Key creator for ", typeid(P).name(),
                                        " already exists."));
     }
@@ -104,22 +103,22 @@ class KeyGenConfigurationImpl {
       if (p) {
         return key_creator_fn(*p, key_template_index);
       } else {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "Failed to cast Parameters to P");
       }
     };
 
     config.key_creator_fn_map_.insert(
         {std::type_index(typeid(P)), std::move(wrapped_fn)});
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
   static crypto::tink::util::StatusOr<
       const crypto::tink::internal::KeyTypeInfoStore*>
   GetKeyTypeInfoStore(const crypto::tink::KeyGenConfiguration& config) {
     if (config.global_registry_mode_) {
-      return crypto::tink::util::Status(absl::StatusCode::kFailedPrecondition,
-                                        kKeyGenConfigurationImplErr);
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
+                          kKeyGenConfigurationImplErr);
     }
     return &config.key_type_info_store_;
   }
@@ -133,7 +132,7 @@ class KeyGenConfigurationImpl {
     auto it =
         config.key_creator_fn_map_.find(std::type_index(typeid(parameters)));
     if (it == config.key_creator_fn_map_.end()) {
-      return util::Status(absl::StatusCode::kUnimplemented,
+      return absl::Status(absl::StatusCode::kUnimplemented,
                           absl::StrCat("Key creator not found for ",
                                        typeid(parameters).name()));
     }
@@ -141,16 +140,16 @@ class KeyGenConfigurationImpl {
   }
 
   // `config` can be set to global registry mode only if empty.
-  static crypto::tink::util::Status SetGlobalRegistryMode(
+  static absl::Status SetGlobalRegistryMode(
       crypto::tink::KeyGenConfiguration& config) {
     if (!config.key_type_info_store_.IsEmpty()) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kFailedPrecondition,
           "Using the global registry is only allowed when KeyGenConfiguration "
           "is empty.");
     }
     config.global_registry_mode_ = true;
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
   static bool IsInGlobalRegistryMode(

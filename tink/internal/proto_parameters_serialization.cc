@@ -41,7 +41,7 @@ ProtoParametersSerialization::Create(absl::string_view type_url,
                                      OutputPrefixType output_prefix_type,
                                      absl::string_view serialized_proto) {
   if (!IsPrintableAscii(type_url)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
   KeyTemplate key_template;
@@ -54,7 +54,7 @@ ProtoParametersSerialization::Create(absl::string_view type_url,
 util::StatusOr<ProtoParametersSerialization>
 ProtoParametersSerialization::Create(KeyTemplate key_template) {
   if (!IsPrintableAscii(key_template.type_url())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
   return ProtoParametersSerialization(std::move(key_template));
@@ -63,7 +63,7 @@ ProtoParametersSerialization::Create(KeyTemplate key_template) {
 util::StatusOr<ProtoParametersSerialization>
 ProtoParametersSerialization::Create(const KeyTemplateStruct& key_template) {
   if (!IsPrintableAscii(key_template.type_url)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
   KeyTemplate proto_key_template;

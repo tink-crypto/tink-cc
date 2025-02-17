@@ -59,15 +59,13 @@ enum class FipsCompatibility {
 // 1) The algorithm has no FIPS support.
 // 2) The algorithm has FIPS support, but BoringSSL has not been compiled with
 //    the BoringCrypto module.
-crypto::tink::util::Status ChecksFipsCompatibility(
-    FipsCompatibility fips_status);
+absl::Status ChecksFipsCompatibility(FipsCompatibility fips_status);
 
 // Utility function wich calls CheckFipsCompatibility(T::kFipsStatus).
 template <class T>
-crypto::tink::util::Status CheckFipsCompatibility() {
+absl::Status CheckFipsCompatibility() {
   return ChecksFipsCompatibility(T::kFipsStatus);
 }
-
 
 }  // namespace internal
 }  // namespace tink

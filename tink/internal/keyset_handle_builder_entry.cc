@@ -81,7 +81,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   if (proto_serialization == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize proto parameters.");
   }
 
@@ -93,7 +93,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeLegacyParameters(
   const LegacyProtoParameters* proto_params =
       dynamic_cast<const LegacyProtoParameters*>(params);
   if (proto_params == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to serialize legacy proto parameters.");
   }
   return proto_params->Serialization();
@@ -174,7 +174,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(const Key& key) {
   const ProtoKeySerialization* serialized_proto_key =
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   if (serialized_proto_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize proto key.");
   }
 
@@ -184,7 +184,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(const Key& key) {
 util::StatusOr<ProtoKeySerialization> SerializeLegacyKey(const Key* key) {
   const LegacyProtoKey* proto_key = dynamic_cast<const LegacyProtoKey*>(key);
   if (proto_key == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to serialize legacy proto key.");
   }
   util::StatusOr<const ProtoKeySerialization*> serialized_key =
@@ -211,7 +211,7 @@ CreateKeysetKeyFromProtoKeySerialization(const ProtoKeySerialization& key,
                                          int id, KeyStatusType status) {
   absl::optional<int> id_requirement = key.IdRequirement();
   if (id_requirement.has_value() && *id_requirement != id) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong ID set for key with ID requirement.");
   }
   return ToKeysetKey(id, status, key);
@@ -250,7 +250,7 @@ util::StatusOr<SecretProto<Keyset::Key>> KeyEntry::CreateKeysetKey(
   if (!key_status.ok()) return key_status.status();
 
   if (GetKeyIdRequirement().has_value() && GetKeyIdRequirement() != id) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Requested id does not match id requirement.");
   }
 
@@ -263,7 +263,7 @@ util::StatusOr<SecretProto<Keyset::Key>> ParametersEntry::CreateKeysetKey(
   if (!key_status.ok()) return key_status.status();
 
   if (GetKeyIdRequirement().has_value() && GetKeyIdRequirement() != id) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Requested id does not match id requirement.");
   }
 

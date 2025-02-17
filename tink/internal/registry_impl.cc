@@ -56,7 +56,7 @@ util::StatusOr<std::unique_ptr<KeyData>> RegistryImpl::NewKeyData(
     return info.status();
   }
   if (!(*info)->new_key_allowed()) {
-    return crypto::tink::util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("KeyManager for type ", key_template.type_url(),
                      " does not allow for creation of new keys."));
@@ -92,7 +92,7 @@ util::StatusOr<KeyData> RegistryImpl::DeriveKey(const KeyTemplate& key_template,
     return info.status();
   }
   if (!(*info)->key_deriver()) {
-    return crypto::tink::util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Manager for type '", key_template.type_url(),
                      "' cannot derive keys."));
@@ -100,19 +100,19 @@ util::StatusOr<KeyData> RegistryImpl::DeriveKey(const KeyTemplate& key_template,
   return (*info)->key_deriver()(key_template.value(), randomness);
 }
 
-util::Status RegistryImpl::RegisterMonitoringClientFactory(
+absl::Status RegistryImpl::RegisterMonitoringClientFactory(
     std::unique_ptr<MonitoringClientFactory> factory) {
   if (factory == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Monitoring factory must not be null");
   }
   absl::MutexLock lock(&monitoring_factory_mutex_);
   if (GetMonitoringClientFactory() != nullptr) {
-    return util::Status(absl::StatusCode::kAlreadyExists,
+    return absl::Status(absl::StatusCode::kAlreadyExists,
                         "A monitoring factory is already registered");
   }
   monitoring_factory_.store(factory.release(), std::memory_order_release);
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 void RegistryImpl::Reset() {

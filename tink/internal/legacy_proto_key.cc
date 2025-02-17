@@ -35,17 +35,17 @@ namespace {
 
 using ::google::crypto::tink::KeyData;
 
-util::Status CheckKeyAccess(KeyData::KeyMaterialType key_material_type,
+absl::Status CheckKeyAccess(KeyData::KeyMaterialType key_material_type,
                             absl::optional<SecretKeyAccessToken> token) {
   if (key_material_type == KeyData::SYMMETRIC ||
       key_material_type == KeyData::ASYMMETRIC_PRIVATE) {
     if (!token.has_value()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kPermissionDenied,
           "Missing secret key access token for legacy proto key.");
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -63,7 +63,7 @@ bool UnusableLegacyProtoParameters::operator==(const Parameters& other) const {
 util::StatusOr<LegacyProtoKey> LegacyProtoKey::Create(
     ProtoKeySerialization serialization,
     absl::optional<SecretKeyAccessToken> token) {
-  util::Status access_check_status =
+  absl::Status access_check_status =
       CheckKeyAccess(serialization.KeyMaterialType(), token);
   if (!access_check_status.ok()) {
     return access_check_status;
@@ -81,7 +81,7 @@ bool LegacyProtoKey::operator==(const Key& other) const {
 
 util::StatusOr<const ProtoKeySerialization*> LegacyProtoKey::Serialization(
     absl::optional<SecretKeyAccessToken> token) const {
-  util::Status access_check_status =
+  absl::Status access_check_status =
       CheckKeyAccess(serialization_.KeyMaterialType(), token);
   if (!access_check_status.ok()) {
     return access_check_status;

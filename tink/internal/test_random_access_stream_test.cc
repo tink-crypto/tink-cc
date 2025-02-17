@@ -41,7 +41,7 @@ TEST(TestRandomAccessStreamTest, ReadAllSucceeds) {
   auto rand_access_stream =
       std::make_unique<TestRandomAccessStream>(stream_content);
   auto buffer = *std::move(util::Buffer::New(buffer_size));
-  util::Status pread_status = util::OkStatus();
+  absl::Status pread_status = absl::OkStatus();
   std::string result;
   do {
     pread_status =

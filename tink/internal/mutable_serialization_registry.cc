@@ -43,44 +43,44 @@ MutableSerializationRegistry& MutableSerializationRegistry::GlobalInstance() {
   return *instance;
 }
 
-util::Status MutableSerializationRegistry::RegisterParametersParser(
+absl::Status MutableSerializationRegistry::RegisterParametersParser(
     ParametersParser* parser) {
   absl::WriterMutexLock lock(&registry_mutex_);
   SerializationRegistry::Builder builder(registry_);
-  util::Status status = builder.RegisterParametersParser(parser);
+  absl::Status status = builder.RegisterParametersParser(parser);
   if (!status.ok()) return status;
   registry_ = std::move(builder).Build();
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status MutableSerializationRegistry::RegisterParametersSerializer(
+absl::Status MutableSerializationRegistry::RegisterParametersSerializer(
     ParametersSerializer* serializer) {
   absl::WriterMutexLock lock(&registry_mutex_);
   SerializationRegistry::Builder builder(registry_);
-  util::Status status = builder.RegisterParametersSerializer(serializer);
+  absl::Status status = builder.RegisterParametersSerializer(serializer);
   if (!status.ok()) return status;
   registry_ = std::move(builder).Build();
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status MutableSerializationRegistry::RegisterKeyParser(
+absl::Status MutableSerializationRegistry::RegisterKeyParser(
     KeyParser* parser) {
   absl::WriterMutexLock lock(&registry_mutex_);
   SerializationRegistry::Builder builder(registry_);
-  util::Status status = builder.RegisterKeyParser(parser);
+  absl::Status status = builder.RegisterKeyParser(parser);
   if (!status.ok()) return status;
   registry_ = std::move(builder).Build();
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status MutableSerializationRegistry::RegisterKeySerializer(
+absl::Status MutableSerializationRegistry::RegisterKeySerializer(
     KeySerializer* serializer) {
   absl::WriterMutexLock lock(&registry_mutex_);
   SerializationRegistry::Builder builder(registry_);
-  util::Status status = builder.RegisterKeySerializer(serializer);
+  absl::Status status = builder.RegisterKeySerializer(serializer);
   if (!status.ok()) return status;
   registry_ = std::move(builder).Build();
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<std::unique_ptr<Parameters>>

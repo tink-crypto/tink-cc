@@ -67,7 +67,7 @@ class KeySerializerImpl : public KeySerializer {
       absl::optional<SecretKeyAccessToken> token) const override {
     const KeyT* kt = dynamic_cast<const KeyT*>(&key);
     if (kt == nullptr) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid key type for this key serializer.");
     }
     util::StatusOr<SerializationT> serialization = function_(*kt, token);

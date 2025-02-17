@@ -44,7 +44,7 @@ class TestRandomAccessStream : public RandomAccessStream {
   TestRandomAccessStream(const TestRandomAccessStream&) = delete;
   TestRandomAccessStream& operator=(const TestRandomAccessStream&) = delete;
 
-  util::Status PRead(int64_t position, int count,
+  absl::Status PRead(int64_t position, int count,
                      util::Buffer* dest_buffer) override;
 
   util::StatusOr<int64_t> size() override { return content_.size(); }
@@ -56,7 +56,7 @@ class TestRandomAccessStream : public RandomAccessStream {
 // Reads the entire `random_access_stream` using a buffer of size `chunk_size`
 // until no more bytes can be read, and puts the read bytes into `contents`.
 // Returns the status of the last call to random_access_stream->PRead().
-util::Status ReadAllFromRandomAccessStream(
+absl::Status ReadAllFromRandomAccessStream(
     RandomAccessStream* random_access_stream, std::string& contents,
     int chunk_size = 42);
 

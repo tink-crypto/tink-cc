@@ -38,8 +38,8 @@ int CompareBignumWithWord(const BIGNUM* bignum, BN_ULONG word);
 
 // Converts the absolute value of `bignum` into a big-endian form, and writes it
 // in `buffer`.
-crypto::tink::util::Status BignumToBinaryPadded(absl::Span<char> buffer,
-                                                const BIGNUM* bignum);
+absl::Status BignumToBinaryPadded(absl::Span<char> buffer,
+                                  const BIGNUM* bignum);
 
 // Retuns a string that encodes `bn` in big-endian form of size `len` with
 // leading zeroes.

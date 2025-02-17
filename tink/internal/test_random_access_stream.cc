@@ -31,28 +31,28 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status TestRandomAccessStream::PRead(int64_t position, int count,
+absl::Status TestRandomAccessStream::PRead(int64_t position, int count,
                                            util::Buffer* dest_buffer) {
   if (dest_buffer == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "dest_buffer must be non-null");
   }
   if (count <= 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "count must be positive");
   }
   if (count > dest_buffer->allocated_size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "buffer too small");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "buffer too small");
   }
   if (position < 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "position cannot be negative");
   }
   if (position >= content_.size()) {
     dest_buffer->set_size(0).IgnoreError();
-    return util::Status(absl::StatusCode::kOutOfRange, "EOF");
+    return absl::Status(absl::StatusCode::kOutOfRange, "EOF");
   }
-  util::Status status = dest_buffer->set_size(count);
+  absl::Status status = dest_buffer->set_size(count);
   if (!status.ok()) {
     return status;
   }
@@ -67,23 +67,23 @@ util::Status TestRandomAccessStream::PRead(int64_t position, int count,
   }
   if (position + read_count == content_.size()) {
     // We reached EOF.
-    return util::Status(absl::StatusCode::kOutOfRange, "EOF");
+    return absl::Status(absl::StatusCode::kOutOfRange, "EOF");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status ReadAllFromRandomAccessStream(
+absl::Status ReadAllFromRandomAccessStream(
     RandomAccessStream* random_access_stream, std::string& contents,
     int chunk_size) {
   if (chunk_size < 1) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "chunk_size must be greater than zero");
   }
   contents.clear();
   std::unique_ptr<util::Buffer> buffer =
       *std::move(util::Buffer::New(chunk_size));
   int64_t position = 0;
-  auto status = util::OkStatus();
+  auto status = absl::OkStatus();
   while (status.ok()) {
     status = random_access_stream->PRead(position, chunk_size, buffer.get());
     contents.append(buffer->get_mem_block(), buffer->size());

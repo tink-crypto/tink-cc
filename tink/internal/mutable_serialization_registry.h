@@ -48,23 +48,23 @@ class MutableSerializationRegistry {
 
   // Registers parameters `parser`. Returns an error if a different parameters
   // parser with the same parser index has already been registered.
-  util::Status RegisterParametersParser(ParametersParser* parser)
+  absl::Status RegisterParametersParser(ParametersParser* parser)
       ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
   // Registers parameters `serializer`. Returns an error if a different
   // parameters serializer with the same serializer index has already been
   // registered.
-  util::Status RegisterParametersSerializer(ParametersSerializer* serializer)
+  absl::Status RegisterParametersSerializer(ParametersSerializer* serializer)
       ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
   // Registers key `parser`. Returns an error if a different key parser with the
   // same parser index has already been registered.
-  util::Status RegisterKeyParser(KeyParser* parser)
+  absl::Status RegisterKeyParser(KeyParser* parser)
       ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
   // Registers key `serializer`. Returns an error if a different key serializer
   // with the same serializer index has already been registered.
-  util::Status RegisterKeySerializer(KeySerializer* serializer)
+  absl::Status RegisterKeySerializer(KeySerializer* serializer)
       ABSL_LOCKS_EXCLUDED(registry_mutex_);
 
   // Parses `serialization` into a `Parameters` instance.

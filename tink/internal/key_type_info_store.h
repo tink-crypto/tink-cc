@@ -157,7 +157,7 @@ class KeyTypeInfoStore {
         absl::string_view requested_type_url) const {
       auto it = primitive_to_manager_.find(std::type_index(typeid(P)));
       if (it == primitive_to_manager_.end()) {
-        return crypto::tink::util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             absl::StrCat(
                 "Primitive type ", typeid(P).name(),
@@ -231,14 +231,14 @@ class KeyTypeInfoStore {
   // Adds a crypto::tink::KeyTypeManager to KeyTypeInfoStore. `new_key_allowed`
   // indicates whether `manager` may create new keys.
   template <class KeyTypeManager>
-  crypto::tink::util::Status AddKeyTypeManager(
-      std::unique_ptr<KeyTypeManager> manager, bool new_key_allowed);
+  absl::Status AddKeyTypeManager(std::unique_ptr<KeyTypeManager> manager,
+                                 bool new_key_allowed);
 
   // Adds a pair of crypto::tink::PrivateKeyTypeManager and
   // crypto::tink::KeyTypeManager to KeyTypeInfoStore. `new_key_allowed`
   // indicates whether `private_manager` may create new keys.
   template <class PrivateKeyTypeManager, class PublicKeyTypeManager>
-  crypto::tink::util::Status AddAsymmetricKeyTypeManagers(
+  absl::Status AddAsymmetricKeyTypeManagers(
       std::unique_ptr<PrivateKeyTypeManager> private_manager,
       std::unique_ptr<PublicKeyTypeManager> public_manager,
       bool new_key_allowed);
@@ -247,8 +247,8 @@ class KeyTypeInfoStore {
   // indicates whether `manager` may create new keys. KeyManager is the
   // legacy/internal version of KeyTypeManager.
   template <class P>
-  crypto::tink::util::Status AddKeyManager(
-      std::unique_ptr<KeyManager<P>> manager, bool new_key_allowed);
+  absl::Status AddKeyManager(std::unique_ptr<KeyManager<P>> manager,
+                             bool new_key_allowed);
 
   // Gets Info associated with `type_url`, returning either a valid, non-null
   // Info or an error.
@@ -259,9 +259,9 @@ class KeyTypeInfoStore {
  private:
   // Whether a key manager with `type_url` and `key_manager_type_index` can be
   // inserted.
-  crypto::tink::util::Status IsInsertable(
-      absl::string_view type_url, const std::type_index& key_manager_type_index,
-      bool new_key_allowed) const;
+  absl::Status IsInsertable(absl::string_view type_url,
+                            const std::type_index& key_manager_type_index,
+                            bool new_key_allowed) const;
 
   void Add(std::string type_url, std::unique_ptr<Info> info,
            bool new_key_allowed) {
@@ -280,7 +280,7 @@ class KeyTypeInfoStore {
 };
 
 template <class P>
-crypto::tink::util::Status KeyTypeInfoStore::AddKeyManager(
+absl::Status KeyTypeInfoStore::AddKeyManager(
     std::unique_ptr<KeyManager<P>> manager, bool new_key_allowed) {
   std::string type_url = manager->get_key_type();
   if (!manager->DoesSupport(type_url)) {
@@ -288,7 +288,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddKeyManager(
                      "The manager does not support type '%s'.", type_url);
   }
 
-  crypto::tink::util::Status status = IsInsertable(
+  absl::Status status = IsInsertable(
       type_url, std::type_index(typeid(*manager)), new_key_allowed);
   if (!status.ok()) {
     return status;
@@ -296,17 +296,17 @@ crypto::tink::util::Status KeyTypeInfoStore::AddKeyManager(
 
   auto info = absl::make_unique<Info>(manager.release(), new_key_allowed);
   Add(type_url, std::move(info), new_key_allowed);
-  return crypto::tink::util::OkStatus();
+  return absl::OkStatus();
 }
 
 template <class KeyTypeManager>
-crypto::tink::util::Status KeyTypeInfoStore::AddKeyTypeManager(
+absl::Status KeyTypeInfoStore::AddKeyTypeManager(
     std::unique_ptr<KeyTypeManager> manager, bool new_key_allowed) {
   // Check FIPS status.
   internal::FipsCompatibility fips_compatible = manager->FipsStatus();
   auto fips_status = internal::ChecksFipsCompatibility(fips_compatible);
   if (!fips_status.ok()) {
-    return crypto::tink::util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("Failed registering the key manager for ",
                      typeid(*manager).name(),
@@ -314,7 +314,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddKeyTypeManager(
   }
 
   std::string type_url = manager->get_key_type();
-  crypto::tink::util::Status status = IsInsertable(
+  absl::Status status = IsInsertable(
       type_url, std::type_index(typeid(*manager)), new_key_allowed);
   if (!status.ok()) {
     return status;
@@ -322,18 +322,18 @@ crypto::tink::util::Status KeyTypeInfoStore::AddKeyTypeManager(
 
   auto info = absl::make_unique<Info>(manager.release(), new_key_allowed);
   Add(type_url, std::move(info), new_key_allowed);
-  return crypto::tink::util::OkStatus();
+  return absl::OkStatus();
 }
 
 template <class PrivateKeyTypeManager, class PublicKeyTypeManager>
-crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
+absl::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
     std::unique_ptr<PrivateKeyTypeManager> private_manager,
     std::unique_ptr<PublicKeyTypeManager> public_manager,
     bool new_key_allowed) {
   std::string private_type_url = private_manager->get_key_type();
   std::string public_type_url = public_manager->get_key_type();
   if (private_type_url == public_type_url) {
-    return crypto::tink::util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Passed in key managers must have different get_key_type() results.");
   }
@@ -342,31 +342,29 @@ crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
   auto private_fips_status =
       internal::ChecksFipsCompatibility(private_manager->FipsStatus());
   if (!private_fips_status.ok()) {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kInternal,
-        absl::StrCat(
-            "Failed registering the key manager for ",
-            typeid(*private_manager).name(),
-            " as it is not FIPS compatible: ", private_fips_status.message()));
+    return absl::Status(absl::StatusCode::kInternal,
+                        absl::StrCat("Failed registering the key manager for ",
+                                     typeid(*private_manager).name(),
+                                     " as it is not FIPS compatible: ",
+                                     private_fips_status.message()));
   }
   auto public_fips_status =
       internal::ChecksFipsCompatibility(public_manager->FipsStatus());
   if (!public_fips_status.ok()) {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kInternal,
-        absl::StrCat(
-            "Failed registering the key manager for ",
-            typeid(*public_manager).name(),
-            " as it is not FIPS compatible: ", public_fips_status.message()));
+    return absl::Status(absl::StatusCode::kInternal,
+                        absl::StrCat("Failed registering the key manager for ",
+                                     typeid(*public_manager).name(),
+                                     " as it is not FIPS compatible: ",
+                                     public_fips_status.message()));
   }
 
-  crypto::tink::util::Status private_status =
+  absl::Status private_status =
       IsInsertable(private_type_url, std::type_index(typeid(*private_manager)),
                    new_key_allowed);
   if (!private_status.ok()) {
     return private_status;
   }
-  crypto::tink::util::Status public_status =
+  absl::Status public_status =
       IsInsertable(public_type_url, std::type_index(typeid(*public_manager)),
                    new_key_allowed);
   if (!public_status.ok()) {
@@ -379,7 +377,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
 
   // Only one of the private and public key type managers is found.
   if (private_found.ok() && !public_found.ok()) {
-    return crypto::tink::util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat(
             "Private key manager corresponding to ",
@@ -389,7 +387,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
             " was not, so it's impossible to register them jointly"));
   }
   if (!private_found.ok() && public_found.ok()) {
-    return crypto::tink::util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Key manager corresponding to ",
                      typeid(*public_manager).name(),
@@ -402,7 +400,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
   // Both private and public key type managers are found.
   if (private_found.ok() && public_found.ok()) {
     if (!(*private_found)->public_key_type_manager_type_index().has_value()) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("private key manager corresponding to ",
                        typeid(*private_manager).name(),
@@ -411,7 +409,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
     }
     if ((*private_found)->public_key_type_manager_type_index() !=
         std::type_index(typeid(*public_manager))) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat(
               "private key manager corresponding to ",
@@ -423,7 +421,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
     // Since `private_manager` passed the `IsInsertable` check above, the
     // `set_new_key_allowed` operation is permissible.
     (*private_found)->set_new_key_allowed(new_key_allowed);
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Both private and public key type managers were not found.
@@ -436,7 +434,7 @@ crypto::tink::util::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
       absl::make_unique<Info>(public_manager.release(), new_key_allowed);
   Add(public_type_url, std::move(public_info), new_key_allowed);
 
-  return crypto::tink::util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace internal

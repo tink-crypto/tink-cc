@@ -47,26 +47,26 @@ util::StatusOr<const EVP_MD *> EvpHashFromHashType(subtle::HashType hash_type) {
     case subtle::HashType::SHA512:
       return EVP_sha512();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kUnimplemented,
           absl::StrCat("Unsupported hash ", subtle::EnumToString(hash_type)));
   }
 }
 
-util::Status IsHashTypeSafeForSignature(subtle::HashType sig_hash) {
+absl::Status IsHashTypeSafeForSignature(subtle::HashType sig_hash) {
   switch (sig_hash) {
     case subtle::HashType::SHA256:
     case subtle::HashType::SHA384:
     case subtle::HashType::SHA512:
-      return util::OkStatus();
+      return absl::OkStatus();
     case subtle::HashType::SHA1:
     case subtle::HashType::SHA224:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Hash function ", subtle::EnumToString(sig_hash),
                        " is not safe for digital signature"));
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Unsupported hash function");
   }
 }
@@ -80,7 +80,7 @@ util::StatusOr<std::string> ComputeHash(absl::string_view input,
   if (EVP_Digest(input.data(), input.length(),
                  reinterpret_cast<uint8_t *>(&digest[0]), &digest_length,
                  &hasher, /*impl=*/nullptr) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Openssl internal error computing hash: ",
                                      internal::GetSslErrors()));
   }

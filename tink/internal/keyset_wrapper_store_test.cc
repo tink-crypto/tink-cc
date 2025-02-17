@@ -93,13 +93,13 @@ class FakeKeyTypeManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const AesGcmKeyProto& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const AesGcmKeyProto& key) const override {
+    return absl::OkStatus();
   }
 
-  util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const AesGcmKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   util::StatusOr<AesGcmKeyProto> CreateKey(
@@ -150,7 +150,7 @@ FakePrimitiveGetterFromKey() {
 std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(const Key& key)>
 FailingFakePrimitiveGetterFromKey() {
   return [](const Key& key) {
-    return util::Status(absl::StatusCode::kUnimplemented, "Not implemented.");
+    return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented.");
   };
 }
 
@@ -173,7 +173,7 @@ std::string AddAesGcmKeyToKeyset(Keyset& keyset, uint32_t key_id,
 util::StatusOr<std::function<
     util::StatusOr<std::unique_ptr<FakePrimitive>>(const KeyData& key_data)>>
 PrimitiveGetter(RegistryImpl& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterKeyTypeManager<AesGcmKeyProto, AesGcmKeyFormat,
                                       List<FakePrimitive>>(
           absl::make_unique<FakeKeyTypeManager>(),
@@ -233,7 +233,7 @@ TEST(KeysetWrapperStoreTest, AddWrappersForDifferentPrimitivesSucceeds) {
       };
   std::function<util::StatusOr<std::unique_ptr<Mac>>(const Key& key)>
       primitive_getter_mac_from_key = [](const Key& key) {
-        return util::Status(absl::StatusCode::kUnimplemented,
+        return absl::Status(absl::StatusCode::kUnimplemented,
                             "Not implemented.");
       };
   EXPECT_THAT((store.Add<Mac, Mac>(absl::make_unique<MacWrapper>(),

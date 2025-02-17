@@ -96,7 +96,7 @@ struct RsaPrivateKey {
 // 3072-bit while 2048-bit RSA key only has 112-bit security. Nevertheless,
 // a 2048-bit RSA key is considered safe by NIST until 2030 (see
 // https://www.keylength.com/en/4/).
-crypto::tink::util::Status ValidateRsaModulusSize(size_t modulus_size);
+absl::Status ValidateRsaModulusSize(size_t modulus_size);
 
 // Validates whether `exponent` is a valid bignum, is odd, greater than 65536
 // and smaller than 32 bits. The primes p and q are chosen such that (p-1)(q-1)
@@ -105,30 +105,26 @@ crypto::tink::util::Status ValidateRsaModulusSize(size_t modulus_size);
 // than 65536 can lead to weak instantiations of RSA. A public exponent which is
 // odd and greater than 65536 conforms to the requirements set by NIST FIPS
 // 186-4 (Appendix B.3.1).
-crypto::tink::util::Status ValidateRsaPublicExponent(const BIGNUM *exponent);
+absl::Status ValidateRsaPublicExponent(const BIGNUM *exponent);
 
 // Validates whether `exponent` is a valid bignum, is odd, greater than 65536
 // and smaller than 32 bits.
-crypto::tink::util::Status ValidateRsaPublicExponent(
-    absl::string_view exponent);
+absl::Status ValidateRsaPublicExponent(absl::string_view exponent);
 
 // Creates a new RSA key pair and populates `private_key` and `public_key`.
-crypto::tink::util::Status NewRsaKeyPair(int modulus_size_in_bits,
-                                         const BIGNUM *e,
-                                         RsaPrivateKey *private_key,
-                                         RsaPublicKey *public_key);
+absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
+                           RsaPrivateKey *private_key,
+                           RsaPublicKey *public_key);
 
 // Returns `key`'s private and public exponents (d and e) and mosulus
 // (n) writing a copy of them into `rsa`.
-crypto::tink::util::Status GetRsaModAndExponents(const RsaPrivateKey &key,
-                                                 RSA *rsa);
+absl::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa);
 
 // Returns `key`'s prime factors (p and q) writing a copy of them into `rsa`.
-crypto::tink::util::Status GetRsaPrimeFactors(const RsaPrivateKey &key,
-                                              RSA *rsa);
+absl::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa);
 
 // Returns `key`'s CRT parameters (dp and dq) writing a copy of them into `rsa`.
-crypto::tink::util::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa);
+absl::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa);
 
 // Creates a OpenSSL/BoringSSL RSA key from `private_key`.
 crypto::tink::util::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
@@ -146,7 +142,7 @@ crypto::tink::util::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
 //
 // [1] https://github.com/google/boringssl/blob/master/crypto/fipsmodule/rsa/rsa_impl.c#L76
 // [2] https://www.openssl.org/docs/man1.1.1/man3/RSA_check_key.html
-crypto::tink::util::Status RsaCheckPublicKey(const RSA *key);
+absl::Status RsaCheckPublicKey(const RSA *key);
 
 }  // namespace internal
 }  // namespace tink

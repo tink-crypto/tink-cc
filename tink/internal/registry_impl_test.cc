@@ -120,13 +120,13 @@ class TestKeyFactory : public KeyFactory {
 
   util::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
       const MessageLite& key_format) const override {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "TestKeyFactory cannot produce a key");
   }
 
   util::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
       absl::string_view serialized_key_format) const override {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "TestKeyFactory cannot produce a key");
   }
 
@@ -155,7 +155,7 @@ class TestAeadKeyManager : public KeyManager<Aead> {
 
   util::StatusOr<std::unique_ptr<Aead>> GetPrimitive(
       const MessageLite& key) const override {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "TestKeyFactory cannot construct an aead");
   }
 
@@ -217,13 +217,13 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
 
   const std::string& get_key_type() const override { return kKeyType; }
 
-  crypto::tink::util::Status ValidateKey(const AesGcmKey& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const AesGcmKey& key) const override {
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const AesGcmKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   crypto::tink::util::StatusOr<AesGcmKey> CreateKey(
@@ -262,7 +262,7 @@ class TestWrapper : public PrimitiveWrapper<P, Q> {
   TestWrapper() = default;
   crypto::tink::util::StatusOr<std::unique_ptr<Q>> Wrap(
       std::unique_ptr<PrimitiveSet<P>> primitive_set) const override {
-    return util::Status(absl::StatusCode::kUnimplemented,
+    return absl::Status(absl::StatusCode::kUnimplemented,
                         "This is a test wrapper.");
   }
 };
@@ -290,7 +290,7 @@ void register_test_managers(const std::string& key_type_prefix,
                             int manager_count) {
   for (int i = 0; i < manager_count; i++) {
     std::string key_type = key_type_prefix + std::to_string(i);
-    util::Status status = Registry::RegisterKeyManager(
+    absl::Status status = Registry::RegisterKeyManager(
         absl::make_unique<TestAeadKeyManager>(key_type),
         /* new_key_allowed= */ true);
     EXPECT_TRUE(status.ok()) << status;
@@ -315,7 +315,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerMoreRestrictiveNewKeyAllowed) {
 
   // Register the key manager with new_key_allowed == true and verify that
   // new key data can be created.
-  util::Status status = Registry::RegisterKeyManager(
+  absl::Status status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ true);
   EXPECT_TRUE(status.ok()) << status;
@@ -345,7 +345,7 @@ TEST_F(RegistryTest, testRegisterKeyManagerLessRestrictiveNewKeyAllowed) {
   key_template.set_type_url(key_type);
 
   // Register the key manager with new_key_allowed == false.
-  util::Status status = Registry::RegisterKeyManager(
+  absl::Status status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type),
       /* new_key_allowed= */ false);
   EXPECT_TRUE(status.ok()) << status;
@@ -522,7 +522,7 @@ TEST_F(RegistryTest, testGettingPrimitives) {
   keyset.set_primary_key_id(key_id_3);
 
   // Register key managers.
-  util::Status status;
+  absl::Status status;
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_1), true);
   EXPECT_TRUE(status.ok()) << status;
@@ -559,7 +559,7 @@ TEST_F(RegistryTest, testNewKeyData) {
   std::string key_type_3 = "yet/another/keytype";
 
   // Register key managers.
-  util::Status status;
+  absl::Status status;
   status = Registry::RegisterKeyManager(
       absl::make_unique<TestAeadKeyManager>(key_type_1),
       /*new_key_allowed=*/true);
@@ -730,7 +730,7 @@ TEST_F(RegistryTest, RegisterDifferentWrappers) {
   EXPECT_TRUE(
       Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>())
           .ok());
-  util::Status result = Registry::RegisterPrimitiveWrapper(
+  absl::Status result = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<TestWrapper<Aead>>());
   EXPECT_FALSE(result.ok());
   EXPECT_EQ(absl::StatusCode::kAlreadyExists, result.code());
@@ -1302,14 +1302,14 @@ class TestPrivateKeyTypeManager
    public:
     crypto::tink::util::StatusOr<std::unique_ptr<PrivatePrimitiveA>> Create(
         const EcdsaPrivateKey& key) const override {
-      return util::Status(absl::StatusCode::kUnimplemented, "Not implemented");
+      return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented");
     }
   };
   class PrivatePrimitiveBFactory : public PrimitiveFactory<PrivatePrimitiveB> {
    public:
     crypto::tink::util::StatusOr<std::unique_ptr<PrivatePrimitiveB>> Create(
         const EcdsaPrivateKey& key) const override {
-      return util::Status(absl::StatusCode::kUnimplemented, "Not implemented");
+      return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented");
     }
   };
 
@@ -1323,13 +1323,11 @@ class TestPrivateKeyTypeManager
   }
 
   uint32_t get_version() const override { return 0; }
-  crypto::tink::util::Status ValidateKey(
-      const EcdsaPrivateKey& key) const override {
-    return crypto::tink::util::OkStatus();
+  absl::Status ValidateKey(const EcdsaPrivateKey& key) const override {
+    return absl::OkStatus();
   }
-  crypto::tink::util::Status ValidateKeyFormat(
-      const EcdsaKeyFormat& key) const override {
-    return crypto::tink::util::OkStatus();
+  absl::Status ValidateKeyFormat(const EcdsaKeyFormat& key) const override {
+    return absl::OkStatus();
   }
 
   const std::string& get_key_type() const override { return kKeyType; }
@@ -1372,14 +1370,14 @@ class TestPublicKeyTypeManager
    public:
     crypto::tink::util::StatusOr<std::unique_ptr<PublicPrimitiveA>> Create(
         const EcdsaPublicKey& key) const override {
-      return util::Status(absl::StatusCode::kUnimplemented, "Not implemented");
+      return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented");
     }
   };
   class PublicPrimitiveBFactory : public PrimitiveFactory<PublicPrimitiveB> {
    public:
     crypto::tink::util::StatusOr<std::unique_ptr<PublicPrimitiveB>> Create(
         const EcdsaPublicKey& key) const override {
-      return util::Status(absl::StatusCode::kUnimplemented, "Not implemented");
+      return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented");
     }
   };
 
@@ -1393,9 +1391,8 @@ class TestPublicKeyTypeManager
   }
 
   uint32_t get_version() const override { return 0; }
-  crypto::tink::util::Status ValidateKey(
-      const EcdsaPublicKey& key) const override {
-    return crypto::tink::util::OkStatus();
+  absl::Status ValidateKey(const EcdsaPublicKey& key) const override {
+    return absl::OkStatus();
   }
 
   const std::string& get_key_type() const override { return kKeyType; }
@@ -1429,7 +1426,7 @@ TEST_F(RegistryTest, RegisterAsymmetricKeyManagers) {
                     "not available";
   }
 
-  crypto::tink::util::Status status = Registry::RegisterAsymmetricKeyManagers(
+  absl::Status status = Registry::RegisterAsymmetricKeyManagers(
       CreateTestPrivateKeyManagerFipsCompatible(),
       CreateTestPublicKeyManagerFipsCompatible(), true);
   ASSERT_TRUE(status.ok()) << status;
@@ -1446,7 +1443,7 @@ TEST_F(RegistryTest, AsymmetricMoreRestrictiveNewKey) {
                   CreateTestPublicKeyManagerFipsCompatible(), true)
                   .ok());
 
-  crypto::tink::util::Status status = Registry::RegisterAsymmetricKeyManagers(
+  absl::Status status = Registry::RegisterAsymmetricKeyManagers(
       CreateTestPrivateKeyManagerFipsCompatible(),
       CreateTestPublicKeyManagerFipsCompatible(), false);
   ASSERT_TRUE(status.ok()) << status;
@@ -1462,7 +1459,7 @@ TEST_F(RegistryTest, AsymmetricSameNewKey) {
                   CreateTestPrivateKeyManagerFipsCompatible(),
                   CreateTestPublicKeyManagerFipsCompatible(), true)
                   .ok());
-  crypto::tink::util::Status status = Registry::RegisterAsymmetricKeyManagers(
+  absl::Status status = Registry::RegisterAsymmetricKeyManagers(
       CreateTestPrivateKeyManagerFipsCompatible(),
       CreateTestPublicKeyManagerFipsCompatible(), true);
   ASSERT_TRUE(status.ok()) << status;
@@ -1483,7 +1480,7 @@ TEST_F(RegistryTest, AsymmetricLessRestrictiveGivesError) {
                     "not available";
   }
 
-  crypto::tink::util::Status status = Registry::RegisterAsymmetricKeyManagers(
+  absl::Status status = Registry::RegisterAsymmetricKeyManagers(
       CreateTestPrivateKeyManagerFipsCompatible(),
       CreateTestPublicKeyManagerFipsCompatible(), false);
   ASSERT_TRUE(status.ok()) << status;
@@ -1708,7 +1705,7 @@ TEST_F(RegistryTest, AsymmetricGetPublicKeyData) {
                     "not available";
   }
 
-  crypto::tink::util::Status status = Registry::RegisterAsymmetricKeyManagers(
+  absl::Status status = Registry::RegisterAsymmetricKeyManagers(
       CreateTestPrivateKeyManagerFipsCompatible(),
       CreateTestPublicKeyManagerFipsCompatible(), true);
   EcdsaPrivateKey private_key;
@@ -1807,14 +1804,13 @@ class DelegatingKeyTypeManager
 
   const std::string& get_key_type() const override { return kKeyType; }
 
-  crypto::tink::util::Status ValidateKey(
-      const EcdsaPrivateKey& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const EcdsaPrivateKey& key) const override {
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const EcdsaKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   crypto::tink::util::StatusOr<EcdsaPrivateKey> CreateKey(
@@ -1827,7 +1823,7 @@ class DelegatingKeyTypeManager
     auto result = registry_->NewKeyData(key_template);
     if (!result.ok()) return result.status();
     // Return a string we can check for.
-    return util::Status(absl::StatusCode::kDeadlineExceeded,
+    return absl::Status(absl::StatusCode::kDeadlineExceeded,
                         "CreateKey worked");
   }
 
@@ -1843,7 +1839,7 @@ class DelegatingKeyTypeManager
     auto result = registry_->DeriveKey(key_template, input_stream);
     if (!result.ok()) return result.status();
     // Return a string we can check for.
-    return util::Status(absl::StatusCode::kDeadlineExceeded,
+    return absl::Status(absl::StatusCode::kDeadlineExceeded,
                         "DeriveKey worked");
   }
 
@@ -1857,7 +1853,7 @@ class DelegatingKeyTypeManager
     auto result = registry_->NewKeyData(key_template);
     if (!result.ok()) return result.status();
     // Return a string we can check for.
-    return util::Status(absl::StatusCode::kDeadlineExceeded,
+    return absl::Status(absl::StatusCode::kDeadlineExceeded,
                         "GetPublicKey worked");
   }
 

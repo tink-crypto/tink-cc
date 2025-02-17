@@ -81,7 +81,7 @@ class PrfFromStatefulMacFactory : public Prf {
     // Clear the label on output -- this can now be given out.
     internal::DfsanClearLabel(output->data(), output->size());
     if (output->size() < output_length) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("PRF only supports outputs up to ", output->size(),
                        " bytes, but ", output_length, " bytes were requested"));

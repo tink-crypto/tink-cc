@@ -61,13 +61,13 @@ class MockPrf : public Prf {
 
 class MockStatefulMac : public internal::StatefulMac {
  public:
-  MOCK_METHOD(util::Status, Update, (absl::string_view data), (override));
+  MOCK_METHOD(absl::Status, Update, (absl::string_view data), (override));
   MOCK_METHOD(util::StatusOr<SecretData>, FinalizeAsSecretData, (), (override));
 };
 
 class FakeStatefulMacFactory : public internal::StatefulMacFactory {
  public:
-  FakeStatefulMacFactory(util::Status update_status,
+  FakeStatefulMacFactory(absl::Status update_status,
                          util::StatusOr<SecretData> finalize_result)
       : update_status_(update_status), finalize_result_(finalize_result) {}
   util::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
@@ -81,7 +81,7 @@ class FakeStatefulMacFactory : public internal::StatefulMacFactory {
   }
 
  private:
-  util::Status update_status_;
+  absl::Status update_status_;
   util::StatusOr<SecretData> finalize_result_;
 };
 
@@ -98,7 +98,7 @@ std::unique_ptr<InputStream> GetInputStreamForString(const std::string& input) {
 
 class PrfFromStatefulMacFactoryTest : public ::testing::Test {
  protected:
-  void SetUpWithResult(util::Status update_status,
+  void SetUpWithResult(absl::Status update_status,
                        util::StatusOr<std::string> finalize_result) {
     util::StatusOr<SecretData> finalize_result_secret_data =
         finalize_result.ok()
@@ -116,14 +116,14 @@ class PrfFromStatefulMacFactoryTest : public ::testing::Test {
 };
 
 TEST_F(PrfFromStatefulMacFactoryTest, ComputePrf) {
-  SetUpWithResult(util::OkStatus(), std::string("mock_stateful_mac"));
+  SetUpWithResult(absl::OkStatus(), std::string("mock_stateful_mac"));
   auto output_result = prf()->Compute("test_input", 5);
   ASSERT_TRUE(output_result.ok()) << output_result.status();
   EXPECT_THAT(output_result.value(), StrEq("mock_"));
 }
 
 TEST_F(PrfFromStatefulMacFactoryTest, ComputePrfUpdateFails) {
-  SetUpWithResult(util::Status(absl::StatusCode::kInternal, "UpdateFailed"),
+  SetUpWithResult(absl::Status(absl::StatusCode::kInternal, "UpdateFailed"),
                   std::string("mock_stateful_mac"));
   auto output_result = prf()->Compute("test_input", 5);
   EXPECT_FALSE(output_result.ok());
@@ -131,15 +131,15 @@ TEST_F(PrfFromStatefulMacFactoryTest, ComputePrfUpdateFails) {
 }
 
 TEST_F(PrfFromStatefulMacFactoryTest, ComputePrfFinalizeFails) {
-  SetUpWithResult(util::OkStatus(),
-                  util::Status(absl::StatusCode::kInternal, "FinalizeFailed"));
+  SetUpWithResult(absl::OkStatus(),
+                  absl::Status(absl::StatusCode::kInternal, "FinalizeFailed"));
   auto output_result = prf()->Compute("test_input", 5);
   EXPECT_FALSE(output_result.ok());
   EXPECT_THAT(output_result.status().message(), Eq("FinalizeFailed"));
 }
 
 TEST_F(PrfFromStatefulMacFactoryTest, ComputePrfTooMuchOutputRequested) {
-  SetUpWithResult(util::OkStatus(), std::string("mock_stateful_mac"));
+  SetUpWithResult(absl::OkStatus(), std::string("mock_stateful_mac"));
   auto output_result = prf()->Compute("test_input", 100);
   EXPECT_FALSE(output_result.ok());
 }

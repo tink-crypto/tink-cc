@@ -320,7 +320,7 @@ util::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
                         "Only version 0 keys are accepted.");
   }
 
-  if (serialization.GetOutputPrefixType() !=
+  if (static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()) !=
       proto_key->params.derived_key_template.output_prefix_type) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,

@@ -21,14 +21,15 @@
 namespace crypto {
 namespace tink {
 namespace internal {
+namespace {
 
-bool OutputPrefixTypeValid(int c) {
-  return google::crypto::tink::OutputPrefixType_IsValid(c);
-}
+bool OutputPrefixTypeValid(int c) { return c >= 0 && c <= 5; }
 
 bool KeyMaterialTypeValid(int c) {
   return google::crypto::tink::KeyData::KeyMaterialType_IsValid(c);
 }
+
+}  // namespace
 
 ProtoParser<KeyTemplateStruct> KeyTemplateStruct::CreateParser() {
   return ProtoParserBuilder<KeyTemplateStruct>()

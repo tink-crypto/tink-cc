@@ -127,7 +127,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateStruct) {
   test_proto.set_num(12345);
   KeyTemplateStruct key_template_struct;
   key_template_struct.value = test_proto.SerializeAsString();
-  key_template_struct.output_prefix_type = OutputPrefixType::TINK;
+  key_template_struct.output_prefix_type = OutputPrefixTypeEnum::kTink;
   key_template_struct.type_url = "type_url";
   util::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(key_template_struct);
@@ -135,7 +135,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateStruct) {
 
   EXPECT_THAT(serialization->GetKeyTemplateStruct().type_url, "type_url");
   EXPECT_THAT(serialization->GetKeyTemplateStruct().output_prefix_type,
-              OutputPrefixType::TINK);
+              OutputPrefixTypeEnum::kTink);
   EXPECT_THAT(serialization->GetKeyTemplateStruct().value,
               test_proto.SerializeAsString());
   TestProto parsed_proto;
@@ -149,7 +149,7 @@ TEST_F(ProtoParametersSerializationTest,
   test_proto.set_num(12345);
   KeyTemplateStruct key_template_struct;
   key_template_struct.value = test_proto.SerializeAsString();
-  key_template_struct.output_prefix_type = OutputPrefixType::TINK;
+  key_template_struct.output_prefix_type = OutputPrefixTypeEnum::kTink;
   key_template_struct.type_url = "type_url\x01";
   util::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(key_template_struct);
@@ -173,7 +173,8 @@ TEST_F(ProtoParametersSerializationTest, GetKeyTemplateStruct) {
 
   KeyTemplateStruct key_template_struct = serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template_struct.type_url, "type_url");
-  EXPECT_THAT(key_template_struct.output_prefix_type, OutputPrefixType::TINK);
+  EXPECT_THAT(key_template_struct.output_prefix_type,
+              OutputPrefixTypeEnum::kTink);
   EXPECT_THAT(key_template_struct.value, test_proto.SerializeAsString());
   TestProto parsed_proto;
   parsed_proto.ParseFromString(key_template_struct.value);

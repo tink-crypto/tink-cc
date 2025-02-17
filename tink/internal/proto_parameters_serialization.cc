@@ -16,6 +16,8 @@
 
 #include "tink/internal/proto_parameters_serialization.h"
 
+#include <sys/stat.h>
+
 #include <string>
 #include <utility>
 
@@ -66,7 +68,8 @@ ProtoParametersSerialization::Create(const KeyTemplateStruct& key_template) {
   }
   KeyTemplate proto_key_template;
   proto_key_template.set_type_url(key_template.type_url);
-  proto_key_template.set_output_prefix_type(key_template.output_prefix_type);
+  proto_key_template.set_output_prefix_type(
+      static_cast<OutputPrefixType>(key_template.output_prefix_type));
   proto_key_template.set_value(key_template.value);
   return ProtoParametersSerialization(std::move(proto_key_template));
 }
@@ -77,7 +80,8 @@ KeyTemplateStruct ProtoParametersSerialization::GetKeyTemplateStruct() const {
   KeyTemplateStruct key_template_struct;
   key_template_struct.type_url = key_template_.type_url();
   key_template_struct.value = key_template_.value();
-  key_template_struct.output_prefix_type = key_template_.output_prefix_type();
+  key_template_struct.output_prefix_type =
+      static_cast<OutputPrefixTypeEnum>(key_template_.output_prefix_type());
   return key_template_struct;
 }
 

@@ -534,6 +534,7 @@ tink_cc_library(
     tink::internal::tink_proto_structs
     tink::internal::util
     absl::status
+    absl::statusor
     absl::strings
     tink::util::status
     tink::util::statusor
@@ -562,8 +563,10 @@ tink_cc_library(
     proto_key_serialization.h
   DEPS
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::internal::util
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::restricted_data

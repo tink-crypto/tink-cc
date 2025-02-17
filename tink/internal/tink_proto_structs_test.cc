@@ -65,14 +65,14 @@ TEST(TinkProtoStructsTest, ParseKeyTemplateStruct) {
   EXPECT_THAT(key_template_struct->type_url, Eq("type_url"));
   EXPECT_THAT(key_template_struct->value, Eq("value"));
   EXPECT_THAT(key_template_struct->output_prefix_type,
-              Eq(OutputPrefixType::TINK));
+              Eq(OutputPrefixTypeEnum::kTink));
 }
 
 TEST(TinkProtoStructsTest, SerializeKeyTemplateStruct) {
   KeyTemplateStruct key_template_struct;
   key_template_struct.type_url = "type_url",
   key_template_struct.value = "value",
-  key_template_struct.output_prefix_type = OutputPrefixType::TINK;
+  key_template_struct.output_prefix_type = OutputPrefixTypeEnum::kTink;
   util::StatusOr<std::string> serialized_key_template =
       KeyTemplateStruct::GetParser().SerializeIntoString(key_template_struct);
   ASSERT_THAT(serialized_key_template, IsOk());

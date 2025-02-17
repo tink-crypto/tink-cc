@@ -16,6 +16,7 @@
 #ifndef TINK_INTERNAL_TINK_PROTO_STRUCTS_H_
 #define TINK_INTERNAL_TINK_PROTO_STRUCTS_H_
 
+#include <cstdint>
 #include <string>
 
 #include "tink/internal/proto_parser.h"
@@ -26,10 +27,21 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+// Enum representing the output prefix type of a key.
+// It represents the proto enum `google.crypto.tink.OutputPrefixType`.
+enum class OutputPrefixTypeEnum : uint32_t {
+  kUnknownPrefix = 0,
+  kTink,
+  kLegacy,
+  kRaw,
+  kCrunchy,
+  kWithIdRequirement,
+};
+
 struct KeyTemplateStruct {
   std::string type_url;
   std::string value;
-  google::crypto::tink::OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
 
   static ProtoParser<KeyTemplateStruct> CreateParser();
   static const ProtoParser<KeyTemplateStruct>& GetParser();

@@ -48,7 +48,7 @@ using ::google::protobuf::util::JsonStringToMessage;
 // TODO(tholenst): factor these helpers out to an "util"-class.
 util::StatusOr<std::string> HexDecode(absl::string_view hex) {
   if (hex.size() % 2 != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Input has odd size.");
   }
   std::string decoded(hex.size() / 2, static_cast<char>(0));
@@ -62,7 +62,7 @@ util::StatusOr<std::string> HexDecode(absl::string_view hex) {
     else if ('A' <= c && c <= 'F')
       val = c - 'A' + 10;
     else
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Not hexadecimal");
     decoded[i / 2] = (decoded[i / 2] << 4) | val;
   }
@@ -99,7 +99,7 @@ util::StatusOr<google::protobuf::Struct> ReadTestVectors(
   absl::Status status =
       JsonStringToMessage(input_string, &proto, json_parse_options);
   if (!status.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
   }
   return proto;
 }

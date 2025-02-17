@@ -77,30 +77,30 @@ Status DeterministicAeadCli(absl::string_view mode,
   if (!result.ok()) return result;
 
   // Read keyset from file.
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
   if (!keyset_handle.ok()) return keyset_handle.status();
 
   // Get the primitive.
-  StatusOr<std::unique_ptr<DeterministicAead>> daead =
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::DeterministicAead>(
               crypto::tink::ConfigGlobalRegistry());
   if (!daead.ok()) return daead.status();
 
   // Read the input.
-  StatusOr<std::string> input_file_content = ReadFile(input_filename);
+  absl::StatusOr<std::string> input_file_content = ReadFile(input_filename);
   if (!input_file_content.ok()) return input_file_content.status();
 
   // Compute the output.
   std::string output;
   if (mode == kEncrypt) {
-    StatusOr<std::string> result = (*daead)->EncryptDeterministically(
+    absl::StatusOr<std::string> result = (*daead)->EncryptDeterministically(
         *input_file_content, associated_data);
     if (!result.ok()) return result.status();
     output = *result;
   } else if (mode == kDecrypt) {
-    StatusOr<std::string> result = (*daead)->DecryptDeterministically(
+    absl::StatusOr<std::string> result = (*daead)->DecryptDeterministically(
         *input_file_content, associated_data);
     if (!result.ok()) return result.status();
     output = *result;

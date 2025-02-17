@@ -93,14 +93,15 @@ TEST(TinkProtoStructsTest, ParseKeyDataStruct) {
   EXPECT_THAT(key_data_struct->type_url, Eq("type_url"));
   EXPECT_THAT(util::SecretDataAsStringView(key_data_struct->value),
               Eq("value"));
-  EXPECT_THAT(key_data_struct->key_material_type, Eq(KeyData::SYMMETRIC));
+  EXPECT_THAT(key_data_struct->key_material_type,
+              Eq(KeyMaterialTypeEnum::kSymmetric));
 }
 
 TEST(TinkProtoStructsTest, SerializeKeyDataStruct) {
   KeyDataStruct key_data_struct;
   key_data_struct.type_url = "type_url";
   key_data_struct.value = util::SecretDataFromStringView("value");
-  key_data_struct.key_material_type = KeyData::SYMMETRIC;
+  key_data_struct.key_material_type = KeyMaterialTypeEnum::kSymmetric;
   util::StatusOr<util::SecretData> serialized_key_data =
       KeyDataStruct::GetParser().SerializeIntoSecretData(key_data_struct);
   ASSERT_THAT(serialized_key_data, IsOk());

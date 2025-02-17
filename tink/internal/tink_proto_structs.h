@@ -21,7 +21,6 @@
 
 #include "tink/internal/proto_parser.h"
 #include "tink/util/secret_data.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -38,6 +37,16 @@ enum class OutputPrefixTypeEnum : uint32_t {
   kWithIdRequirement,
 };
 
+// Enum representing the key material type of a key.
+// It represents the proto enum `google.crypto.tink.KeyData.KeyMaterialType`.
+enum class KeyMaterialTypeEnum : uint32_t {
+  kUnknownKeyMaterial = 0,
+  kSymmetric,
+  kAsymmetricPrivate,
+  kAsymmetricPublic,
+  kRemote,
+};
+
 struct KeyTemplateStruct {
   std::string type_url;
   std::string value;
@@ -50,7 +59,7 @@ struct KeyTemplateStruct {
 struct KeyDataStruct {
   std::string type_url;
   util::SecretData value;
-  google::crypto::tink::KeyData::KeyMaterialType key_material_type;
+  KeyMaterialTypeEnum key_material_type;
 
   static ProtoParser<KeyDataStruct> CreateParser();
   static const ProtoParser<KeyDataStruct>& GetParser();

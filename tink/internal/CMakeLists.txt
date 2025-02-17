@@ -1968,7 +1968,6 @@ tink_cc_library(
     tink::internal::proto_parser
     absl::no_destructor
     tink::util::secret_data
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

@@ -54,11 +54,13 @@ class ProtoKeySerialization : public Serialization {
   // Creates a `ProtoKeySerialization` object from individual components.
   inline static absl::StatusOr<ProtoKeySerialization> Create(
       absl::string_view type_url, RestrictedData serialized_key,
-      google::crypto::tink::KeyData::KeyMaterialType key_material_type,
+      KeyMaterialTypeEnum key_material_type,
       OutputPrefixTypeEnum output_prefix_type,
       absl::optional<int> id_requirement) {
     return Create(
-        type_url, serialized_key, key_material_type,
+        type_url, serialized_key,
+        static_cast<google::crypto::tink::KeyData::KeyMaterialType>(
+            key_material_type),
         static_cast<google::crypto::tink::OutputPrefixType>(output_prefix_type),
         id_requirement);
   }

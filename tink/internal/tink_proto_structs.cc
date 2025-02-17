@@ -25,9 +25,7 @@ namespace {
 
 bool OutputPrefixTypeValid(int c) { return c >= 0 && c <= 5; }
 
-bool KeyMaterialTypeValid(int c) {
-  return google::crypto::tink::KeyData::KeyMaterialType_IsValid(c);
-}
+bool KeyMaterialTypeValid(int c) { return c >= 0 && c <= 4; }
 
 }  // namespace
 

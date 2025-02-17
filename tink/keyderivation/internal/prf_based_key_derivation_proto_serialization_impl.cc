@@ -173,7 +173,7 @@ util::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
   util::StatusOr<ProtoKeySerialization> proto_key_serialization =
       ProtoKeySerialization::Create(
           key_data.type_url, RestrictedData(key_data.value, token),
-          key_data.key_material_type, OutputPrefixType::RAW,
+          key_data.key_material_type, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   if (!proto_key_serialization.ok()) {
     return proto_key_serialization.status();
@@ -213,7 +213,8 @@ util::StatusOr<KeyDataStruct> PrfKeyToKeyData(const PrfKey& prf_key,
   KeyDataStruct key_data;
   key_data.value = proto_serialization->SerializedKeyProto().Get(token);
   key_data.type_url = proto_serialization->TypeUrl();
-  key_data.key_material_type = proto_serialization->KeyMaterialType();
+  key_data.key_material_type =
+      static_cast<KeyMaterialTypeEnum>(proto_serialization->KeyMaterialType());
 
   return key_data;
 }
@@ -384,7 +385,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   }
   RestrictedData restricted_output = RestrictedData(*serialized_key, *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
       derived_key_template->output_prefix_type, key.GetIdRequirement());
 }
 

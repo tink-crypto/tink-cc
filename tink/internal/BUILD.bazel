@@ -2040,7 +2040,6 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser",
-        "//proto:tink_cc_proto",
         "//tink/util:secret_data",
         "@com_google_absl//absl/base:no_destructor",
     ],

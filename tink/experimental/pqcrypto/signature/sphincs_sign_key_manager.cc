@@ -48,7 +48,7 @@ using ::google::crypto::tink::SphincsKeyFormat;
 using ::google::crypto::tink::SphincsPrivateKey;
 using ::google::crypto::tink::SphincsPublicKey;
 
-StatusOr<SphincsPrivateKey> SphincsSignKeyManager::CreateKey(
+absl::StatusOr<SphincsPrivateKey> SphincsSignKeyManager::CreateKey(
     const SphincsKeyFormat& key_format) const {
   SphincsParamsPqclean sphincs_params_pqclean = {
       .hash_type =
@@ -58,7 +58,7 @@ StatusOr<SphincsPrivateKey> SphincsSignKeyManager::CreateKey(
           EnumsPqcrypto::ProtoToSubtle(key_format.params().sig_length_type()),
       .private_key_size = key_format.params().key_size()};
 
-  util::StatusOr<SphincsKeyPair> key_pair =
+  absl::StatusOr<SphincsKeyPair> key_pair =
       GenerateSphincsKeyPair(sphincs_params_pqclean);
 
   if (!key_pair.status().ok()) {
@@ -79,7 +79,7 @@ StatusOr<SphincsPrivateKey> SphincsSignKeyManager::CreateKey(
   return sphincs_private_key;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 SphincsSignKeyManager::PublicKeySignFactory::Create(
     const SphincsPrivateKey& private_key) const {
   util::SecretData sk_data =

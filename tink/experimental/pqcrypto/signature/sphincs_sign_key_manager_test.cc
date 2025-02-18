@@ -109,10 +109,9 @@ struct SphincsTestCase {
 using SphincsSignKeyManagerTest = testing::TestWithParam<SphincsTestCase>;
 
 // Helper function that returns a valid sphincs key format.
-StatusOr<SphincsKeyFormat> CreateValidKeyFormat(int32_t private_key_size,
-                                                SphincsHashType hash_type,
-                                                SphincsVariant variant,
-                                                SphincsSignatureType type) {
+absl::StatusOr<SphincsKeyFormat> CreateValidKeyFormat(
+    int32_t private_key_size, SphincsHashType hash_type, SphincsVariant variant,
+    SphincsSignatureType type) {
   SphincsKeyFormat key_format;
   SphincsParams* params = key_format.mutable_params();
   params->set_key_size(private_key_size);
@@ -134,7 +133,7 @@ TEST(SphincsSignKeyManagerTest, Basic) {
 TEST_P(SphincsSignKeyManagerTest, ValidKeyFormat) {
   const SphincsTestCase& test_case = GetParam();
 
-  StatusOr<SphincsKeyFormat> key_format =
+  absl::StatusOr<SphincsKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size, test_case.hash_type,
                            test_case.variant, test_case.sig_length_type);
   ASSERT_THAT(key_format, IsOk());
@@ -143,7 +142,7 @@ TEST_P(SphincsSignKeyManagerTest, ValidKeyFormat) {
 }
 
 TEST(SphincsSignKeyManagerTest, InvalidKeyFormat) {
-  StatusOr<SphincsKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<SphincsKeyFormat> key_format = CreateValidKeyFormat(
       subtle::kSphincsPrivateKeySize64, SphincsHashType::HASH_TYPE_UNSPECIFIED,
       SphincsVariant::VARIANT_UNSPECIFIED,
       SphincsSignatureType::SIG_TYPE_UNSPECIFIED);
@@ -156,12 +155,12 @@ TEST(SphincsSignKeyManagerTest, InvalidKeyFormat) {
 TEST_P(SphincsSignKeyManagerTest, CreateKeyValid) {
   const SphincsTestCase& test_case = GetParam();
 
-  StatusOr<SphincsKeyFormat> key_format =
+  absl::StatusOr<SphincsKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size, test_case.hash_type,
                            test_case.variant, test_case.sig_length_type);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<SphincsPrivateKey> private_key =
+  absl::StatusOr<SphincsPrivateKey> private_key =
       SphincsSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
@@ -174,12 +173,12 @@ TEST_P(SphincsSignKeyManagerTest, CreateKeyValid) {
 TEST_P(SphincsSignKeyManagerTest, PrivateKeyWrongVersion) {
   const SphincsTestCase& test_case = GetParam();
 
-  StatusOr<SphincsKeyFormat> key_format =
+  absl::StatusOr<SphincsKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size, test_case.hash_type,
                            test_case.variant, test_case.sig_length_type);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<SphincsPrivateKey> private_key =
+  absl::StatusOr<SphincsPrivateKey> private_key =
       SphincsSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
@@ -188,13 +187,13 @@ TEST_P(SphincsSignKeyManagerTest, PrivateKeyWrongVersion) {
 }
 
 TEST(SphincsSignKeyManagerTest, CreateKeyInvalidParams) {
-  StatusOr<SphincsKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<SphincsKeyFormat> key_format = CreateValidKeyFormat(
       subtle::kSphincsPrivateKeySize64, SphincsHashType::HASH_TYPE_UNSPECIFIED,
       SphincsVariant::VARIANT_UNSPECIFIED,
       SphincsSignatureType::SIG_TYPE_UNSPECIFIED);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<SphincsPrivateKey> private_key =
+  absl::StatusOr<SphincsPrivateKey> private_key =
       SphincsSignKeyManager().CreateKey(*key_format);
   EXPECT_THAT(private_key, Not(IsOk()));
 }
@@ -202,7 +201,7 @@ TEST(SphincsSignKeyManagerTest, CreateKeyInvalidParams) {
 TEST_P(SphincsSignKeyManagerTest, CreateKeyAlwaysNew) {
   const SphincsTestCase& test_case = GetParam();
 
-  StatusOr<SphincsKeyFormat> key_format =
+  absl::StatusOr<SphincsKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size, test_case.hash_type,
                            test_case.variant, test_case.sig_length_type);
   ASSERT_THAT(key_format, IsOk());
@@ -210,7 +209,7 @@ TEST_P(SphincsSignKeyManagerTest, CreateKeyAlwaysNew) {
   absl::flat_hash_set<std::string> keys;
   int num_tests = 5;
   for (int i = 0; i < num_tests; ++i) {
-    StatusOr<SphincsPrivateKey> private_key =
+    absl::StatusOr<SphincsPrivateKey> private_key =
         SphincsSignKeyManager().CreateKey(*key_format);
     ASSERT_THAT(private_key, IsOk());
     keys.insert(std::string(private_key->key_value()));
@@ -221,16 +220,16 @@ TEST_P(SphincsSignKeyManagerTest, CreateKeyAlwaysNew) {
 TEST_P(SphincsSignKeyManagerTest, GetPublicKey) {
   const SphincsTestCase& test_case = GetParam();
 
-  StatusOr<SphincsKeyFormat> key_format =
+  absl::StatusOr<SphincsKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size, test_case.hash_type,
                            test_case.variant, test_case.sig_length_type);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<SphincsPrivateKey> private_key =
+  absl::StatusOr<SphincsPrivateKey> private_key =
       SphincsSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  StatusOr<SphincsPublicKey> public_key_or =
+  absl::StatusOr<SphincsPublicKey> public_key_or =
       SphincsSignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key_or, IsOk());
 
@@ -243,16 +242,16 @@ TEST_P(SphincsSignKeyManagerTest, GetPublicKey) {
 TEST_P(SphincsSignKeyManagerTest, CreateValid) {
   const SphincsTestCase& test_case = GetParam();
 
-  StatusOr<SphincsKeyFormat> key_format =
+  absl::StatusOr<SphincsKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size, test_case.hash_type,
                            test_case.variant, test_case.sig_length_type);
   ASSERT_THAT(key_format, IsOk());
 
-  util::StatusOr<SphincsPrivateKey> private_key =
+  absl::StatusOr<SphincsPrivateKey> private_key =
       SphincsSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       SphincsSignKeyManager().GetPrimitive<PublicKeySign>(*private_key);
   ASSERT_THAT(signer, IsOk());
 
@@ -267,12 +266,12 @@ TEST_P(SphincsSignKeyManagerTest, CreateValid) {
       std::string(private_key->public_key().key_value()),
       sphincs_params_pqclean);
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       subtle::SphincsVerify::New(sphincs_public_key_pqclean);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
@@ -280,16 +279,16 @@ TEST_P(SphincsSignKeyManagerTest, CreateValid) {
 TEST_P(SphincsSignKeyManagerTest, CreateBadPublicKey) {
   const SphincsTestCase& test_case = GetParam();
 
-  StatusOr<SphincsKeyFormat> key_format =
+  absl::StatusOr<SphincsKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size, test_case.hash_type,
                            test_case.variant, test_case.sig_length_type);
   ASSERT_THAT(key_format, IsOk());
 
-  util::StatusOr<SphincsPrivateKey> private_key =
+  absl::StatusOr<SphincsPrivateKey> private_key =
       SphincsSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       SphincsSignKeyManager().GetPrimitive<PublicKeySign>(*private_key);
   ASSERT_THAT(signer, IsOk());
 
@@ -304,12 +303,12 @@ TEST_P(SphincsSignKeyManagerTest, CreateBadPublicKey) {
 
   SphincsPublicKeyPqclean sphincs_public_key_pqclean(bad_public_key_data,
                                                      sphincs_params_pqclean);
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> direct_verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> direct_verifier =
       subtle::SphincsVerify::New(sphincs_public_key_pqclean);
   ASSERT_THAT(direct_verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*direct_verifier)->Verify(*signature, message), Not(IsOk()));
 }

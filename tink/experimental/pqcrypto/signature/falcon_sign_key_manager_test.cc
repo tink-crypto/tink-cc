@@ -59,7 +59,7 @@ struct FalconTestCase {
 using FalconSignKeyManagerTest = testing::TestWithParam<FalconTestCase>;
 
 // Helper function that returns a valid falcon key format.
-StatusOr<FalconKeyFormat> CreateValidKeyFormat(int32_t private_key_size) {
+absl::StatusOr<FalconKeyFormat> CreateValidKeyFormat(int32_t private_key_size) {
   FalconKeyFormat key_format;
   key_format.set_key_size(private_key_size);
 
@@ -77,7 +77,7 @@ TEST(FalconSignKeyManagerTest, Basic) {
 TEST_P(FalconSignKeyManagerTest, ValidKeyFormat) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconKeyFormat> key_format =
+  absl::StatusOr<FalconKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size);
   ASSERT_THAT(key_format, IsOk());
 
@@ -85,7 +85,7 @@ TEST_P(FalconSignKeyManagerTest, ValidKeyFormat) {
 }
 
 TEST(FalconSignKeyManagerTest, InvalidKeyFormat) {
-  StatusOr<FalconKeyFormat> key_format = CreateValidKeyFormat(0);
+  absl::StatusOr<FalconKeyFormat> key_format = CreateValidKeyFormat(0);
   ASSERT_THAT(key_format, IsOk());
 
   EXPECT_THAT(FalconSignKeyManager().ValidateKeyFormat(*key_format),
@@ -95,11 +95,11 @@ TEST(FalconSignKeyManagerTest, InvalidKeyFormat) {
 TEST_P(FalconSignKeyManagerTest, CreateKeyValid) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconKeyFormat> key_format =
+  absl::StatusOr<FalconKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       FalconSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
@@ -112,11 +112,11 @@ TEST_P(FalconSignKeyManagerTest, CreateKeyValid) {
 TEST_P(FalconSignKeyManagerTest, PrivateKeyWrongVersion) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconKeyFormat> key_format =
+  absl::StatusOr<FalconKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       FalconSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
@@ -127,14 +127,14 @@ TEST_P(FalconSignKeyManagerTest, PrivateKeyWrongVersion) {
 TEST_P(FalconSignKeyManagerTest, CreateKeyAlwaysNew) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconKeyFormat> key_format =
+  absl::StatusOr<FalconKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size);
   ASSERT_THAT(key_format, IsOk());
 
   absl::flat_hash_set<std::string> keys;
   int num_tests = 5;
   for (int i = 0; i < num_tests; ++i) {
-    StatusOr<FalconPrivateKey> private_key =
+    absl::StatusOr<FalconPrivateKey> private_key =
         FalconSignKeyManager().CreateKey(*key_format);
     ASSERT_THAT(private_key, IsOk());
     keys.insert(std::string(private_key->key_value()));
@@ -145,15 +145,15 @@ TEST_P(FalconSignKeyManagerTest, CreateKeyAlwaysNew) {
 TEST_P(FalconSignKeyManagerTest, GetPublicKey) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconKeyFormat> key_format =
+  absl::StatusOr<FalconKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       FalconSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  StatusOr<FalconPublicKey> public_key =
+  absl::StatusOr<FalconPublicKey> public_key =
       FalconSignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
 
@@ -165,29 +165,29 @@ TEST_P(FalconSignKeyManagerTest, GetPublicKey) {
 TEST_P(FalconSignKeyManagerTest, CreateValid) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconKeyFormat> key_format =
+  absl::StatusOr<FalconKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size);
   ASSERT_THAT(key_format, IsOk());
 
-  util::StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       FalconSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       FalconSignKeyManager().GetPrimitive<PublicKeySign>(*private_key);
   ASSERT_THAT(signer, IsOk());
 
-  StatusOr<subtle::FalconPublicKeyPqclean> falcon_public_key_pqclean =
+  absl::StatusOr<subtle::FalconPublicKeyPqclean> falcon_public_key_pqclean =
       subtle::FalconPublicKeyPqclean::NewPublicKey(
           private_key->public_key().key_value());
   ASSERT_THAT(falcon_public_key_pqclean, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       subtle::FalconVerify::New(*falcon_public_key_pqclean);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
@@ -195,29 +195,29 @@ TEST_P(FalconSignKeyManagerTest, CreateValid) {
 TEST_P(FalconSignKeyManagerTest, CreateBadPublicKey) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconKeyFormat> key_format =
+  absl::StatusOr<FalconKeyFormat> key_format =
       CreateValidKeyFormat(test_case.private_key_size);
   ASSERT_THAT(key_format, IsOk());
 
-  util::StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       FalconSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       FalconSignKeyManager().GetPrimitive<PublicKeySign>(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   std::string bad_public_key_data(test_case.public_key_size, '@');
 
-  StatusOr<subtle::FalconPublicKeyPqclean> falcon_public_key_pqclean =
+  absl::StatusOr<subtle::FalconPublicKeyPqclean> falcon_public_key_pqclean =
       subtle::FalconPublicKeyPqclean::NewPublicKey(bad_public_key_data);
   ASSERT_THAT(falcon_public_key_pqclean, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> direct_verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> direct_verifier =
       subtle::FalconVerify::New(*falcon_public_key_pqclean);
   ASSERT_THAT(direct_verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*direct_verifier)->Verify(*signature, message), Not(IsOk()));
 }

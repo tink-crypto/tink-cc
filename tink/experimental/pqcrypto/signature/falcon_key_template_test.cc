@@ -83,7 +83,7 @@ TEST_P(FalconKeyTemplateTest, KeyManagerCompatibility) {
   const FalconTestCase& test_case = GetParam();
   key_format.set_key_size(test_case.private_key_size);
 
-  util::StatusOr<std::unique_ptr<portable_proto::MessageLite>> new_key_result =
+  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> new_key_result =
       key_manager->get_key_factory().NewKey(key_format);
   EXPECT_THAT(new_key_result, IsOk());
 }

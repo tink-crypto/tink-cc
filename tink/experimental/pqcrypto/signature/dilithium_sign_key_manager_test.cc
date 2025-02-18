@@ -74,7 +74,7 @@ struct DilithiumTestCase {
 using DilithiumSignKeyManagerTest = testing::TestWithParam<DilithiumTestCase>;
 
 // Helper function that returns a valid dilithium key format.
-StatusOr<DilithiumKeyFormat> CreateValidKeyFormat(
+absl::StatusOr<DilithiumKeyFormat> CreateValidKeyFormat(
     int32_t private_key_size, DilithiumSeedExpansion seed_expansion) {
   DilithiumKeyFormat key_format;
   DilithiumParams* params = key_format.mutable_params();
@@ -95,7 +95,7 @@ TEST(DilithiumSignKeyManagerTest, Basic) {
 TEST_P(DilithiumSignKeyManagerTest, ValidateKeyFormat) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
@@ -105,11 +105,11 @@ TEST_P(DilithiumSignKeyManagerTest, ValidateKeyFormat) {
 TEST_P(DilithiumSignKeyManagerTest, PrivateKeyWrongVersion) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<DilithiumPrivateKey> private_key =
+  absl::StatusOr<DilithiumPrivateKey> private_key =
       DilithiumSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
@@ -120,11 +120,11 @@ TEST_P(DilithiumSignKeyManagerTest, PrivateKeyWrongVersion) {
 TEST_P(DilithiumSignKeyManagerTest, CreateKey) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<DilithiumPrivateKey> private_key =
+  absl::StatusOr<DilithiumPrivateKey> private_key =
       DilithiumSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
@@ -138,11 +138,11 @@ TEST_P(DilithiumSignKeyManagerTest, CreateKey) {
 TEST_P(DilithiumSignKeyManagerTest, CreateKeyValid) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<DilithiumPrivateKey> private_key =
+  absl::StatusOr<DilithiumPrivateKey> private_key =
       DilithiumSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT(DilithiumSignKeyManager().ValidateKey(*private_key), IsOk());
@@ -151,14 +151,14 @@ TEST_P(DilithiumSignKeyManagerTest, CreateKeyValid) {
 TEST_P(DilithiumSignKeyManagerTest, CreateKeyAlwaysNew) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
   absl::flat_hash_set<std::string> keys;
   int num_tests = 100;
   for (int i = 0; i < num_tests; ++i) {
-    StatusOr<DilithiumPrivateKey> private_key =
+    absl::StatusOr<DilithiumPrivateKey> private_key =
         DilithiumSignKeyManager().CreateKey(*key_format);
     ASSERT_THAT(private_key, IsOk());
     keys.insert(std::string(private_key->key_value()));
@@ -169,15 +169,15 @@ TEST_P(DilithiumSignKeyManagerTest, CreateKeyAlwaysNew) {
 TEST_P(DilithiumSignKeyManagerTest, GetPublicKey) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
-  StatusOr<DilithiumPrivateKey> private_key =
+  absl::StatusOr<DilithiumPrivateKey> private_key =
       DilithiumSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  StatusOr<DilithiumPublicKey> public_key_or =
+  absl::StatusOr<DilithiumPublicKey> public_key_or =
       DilithiumSignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key_or, IsOk());
 
@@ -190,29 +190,29 @@ TEST_P(DilithiumSignKeyManagerTest, GetPublicKey) {
 TEST_P(DilithiumSignKeyManagerTest, Create) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
-  util::StatusOr<DilithiumPrivateKey> private_key =
+  absl::StatusOr<DilithiumPrivateKey> private_key =
       DilithiumSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       DilithiumSignKeyManager().GetPrimitive<PublicKeySign>(*private_key);
   ASSERT_THAT(signer, IsOk());
 
-  util::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
+  absl::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
       DilithiumPublicKeyPqclean::NewPublicKey(
           private_key->public_key().key_value(),
           EnumsPqcrypto::ProtoToSubtle(test_case.seed_expansion));
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       subtle::DilithiumAvx2Verify::New(*dilithium_public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
@@ -220,29 +220,29 @@ TEST_P(DilithiumSignKeyManagerTest, Create) {
 TEST_P(DilithiumSignKeyManagerTest, CreateDifferentKey) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
+  absl::StatusOr<DilithiumKeyFormat> key_format = CreateValidKeyFormat(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(key_format, IsOk());
 
-  util::StatusOr<DilithiumPrivateKey> private_key =
+  absl::StatusOr<DilithiumPrivateKey> private_key =
       DilithiumSignKeyManager().CreateKey(*key_format);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       DilithiumSignKeyManager().GetPrimitive<PublicKeySign>(*private_key);
   ASSERT_THAT(signer, IsOk());
 
   std::string bad_public_key_data(test_case.public_key_size, '@');
-  util::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
+  absl::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
       DilithiumPublicKeyPqclean::NewPublicKey(
           bad_public_key_data,
           EnumsPqcrypto::ProtoToSubtle(test_case.seed_expansion));
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       subtle::DilithiumAvx2Verify::New(*dilithium_public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), Not(IsOk()));
 }

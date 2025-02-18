@@ -105,7 +105,7 @@ TEST_P(DilithiumKeyTemplateTest, KeyManagerCompatibility) {
   params->set_key_size(test_case.key_size);
   params->set_seed_expansion(test_case.seed_expansion);
 
-  util::StatusOr<std::unique_ptr<portable_proto::MessageLite>> new_key_result =
+  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> new_key_result =
       key_manager->get_key_factory().NewKey(key_format);
   EXPECT_THAT(new_key_result, IsOk());
 }

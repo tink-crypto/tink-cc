@@ -78,16 +78,16 @@ TEST_F(PcqSignatureConfigTest, PublicKeySignWrapperRegistered) {
   ASSERT_THAT(add_primitive, IsOk());
   ASSERT_THAT(primitive_set->set_primary(*add_primitive), IsOk());
 
-  util::StatusOr<std::unique_ptr<crypto::tink::PublicKeySign>> wrapped =
+  absl::StatusOr<std::unique_ptr<crypto::tink::PublicKeySign>> wrapped =
       Registry::Wrap(std::move(primitive_set));
   ASSERT_THAT(wrapped, IsOk());
 
-  util::StatusOr<std::string> signature_result = (*wrapped)->Sign("message");
+  absl::StatusOr<std::string> signature_result = (*wrapped)->Sign("message");
   ASSERT_THAT(signature_result, IsOk());
 
-  util::StatusOr<std::string> prefix = CryptoFormat::GetOutputPrefix(key_info);
+  absl::StatusOr<std::string> prefix = CryptoFormat::GetOutputPrefix(key_info);
   ASSERT_THAT(prefix, IsOk());
-  util::StatusOr<std::string> signature =
+  absl::StatusOr<std::string> signature =
       DummyPublicKeySign("dummy").Sign("message");
   ASSERT_THAT(signature, IsOk());
 
@@ -114,13 +114,13 @@ TEST_F(PcqSignatureConfigTest, PublicKeyVerifyWrapperRegistered) {
   ASSERT_THAT(add_primitive, IsOk());
   ASSERT_THAT(primitive_set->set_primary(*add_primitive), IsOk());
 
-  util::StatusOr<std::unique_ptr<crypto::tink::PublicKeyVerify>> wrapped =
+  absl::StatusOr<std::unique_ptr<crypto::tink::PublicKeyVerify>> wrapped =
       Registry::Wrap(std::move(primitive_set));
   ASSERT_THAT(wrapped, IsOk());
 
-  util::StatusOr<std::string> prefix = CryptoFormat::GetOutputPrefix(key_info);
+  absl::StatusOr<std::string> prefix = CryptoFormat::GetOutputPrefix(key_info);
   ASSERT_THAT(prefix, IsOk());
-  util::StatusOr<std::string> signature =
+  absl::StatusOr<std::string> signature =
       DummyPublicKeySign("dummy").Sign("message");
   ASSERT_THAT(signature, IsOk());
 

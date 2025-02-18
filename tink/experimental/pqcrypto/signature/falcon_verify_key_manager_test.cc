@@ -59,7 +59,8 @@ struct FalconTestCase {
 using FalconVerifyKeyManagerTest = testing::TestWithParam<FalconTestCase>;
 
 // Helper function that returns a valid falcon private key.
-StatusOr<FalconPrivateKey> CreateValidPrivateKey(int32_t private_key_size) {
+absl::StatusOr<FalconPrivateKey> CreateValidPrivateKey(
+    int32_t private_key_size) {
   FalconKeyFormat key_format;
   key_format.set_key_size(private_key_size);
 
@@ -67,8 +68,8 @@ StatusOr<FalconPrivateKey> CreateValidPrivateKey(int32_t private_key_size) {
 }
 
 // Helper function that returns a valid falcon public key.
-StatusOr<FalconPublicKey> CreateValidPublicKey(int32_t private_key_size) {
-  StatusOr<FalconPrivateKey> private_key =
+absl::StatusOr<FalconPublicKey> CreateValidPublicKey(int32_t private_key_size) {
+  absl::StatusOr<FalconPrivateKey> private_key =
       CreateValidPrivateKey(private_key_size);
 
   if (!private_key.ok()) return private_key.status();
@@ -91,7 +92,7 @@ TEST(FalconVerifyKeyManagerTest, ValidateEmptyKey) {
 TEST_P(FalconVerifyKeyManagerTest, PublicKeyValid) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconPublicKey> public_key =
+  absl::StatusOr<FalconPublicKey> public_key =
       CreateValidPublicKey(test_case.private_key_size);
   ASSERT_THAT(public_key, IsOk());
 
@@ -101,7 +102,7 @@ TEST_P(FalconVerifyKeyManagerTest, PublicKeyValid) {
 TEST_P(FalconVerifyKeyManagerTest, PublicKeyWrongVersion) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconPublicKey> public_key =
+  absl::StatusOr<FalconPublicKey> public_key =
       CreateValidPublicKey(test_case.private_key_size);
   ASSERT_THAT(public_key, IsOk());
 
@@ -112,28 +113,28 @@ TEST_P(FalconVerifyKeyManagerTest, PublicKeyWrongVersion) {
 TEST_P(FalconVerifyKeyManagerTest, Create) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       CreateValidPrivateKey(test_case.private_key_size);
   ASSERT_THAT(private_key, IsOk());
 
-  StatusOr<FalconPublicKey> public_key =
+  absl::StatusOr<FalconPublicKey> public_key =
       FalconSignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
 
-  StatusOr<subtle::FalconPrivateKeyPqclean> falcon_private_key_pqclean =
+  absl::StatusOr<subtle::FalconPrivateKeyPqclean> falcon_private_key_pqclean =
       subtle::FalconPrivateKeyPqclean::NewPrivateKey(
           util::SecretDataFromStringView(private_key->key_value()));
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::FalconSign::New(*falcon_private_key_pqclean);
   ASSERT_THAT(direct_signer, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       FalconVerifyKeyManager().GetPrimitive<PublicKeyVerify>(*public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
@@ -141,18 +142,18 @@ TEST_P(FalconVerifyKeyManagerTest, Create) {
 TEST_P(FalconVerifyKeyManagerTest, CreateInvalidPublicKey) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       CreateValidPrivateKey(test_case.private_key_size);
   ASSERT_THAT(private_key, IsOk());
 
-  StatusOr<FalconPublicKey> public_key =
+  absl::StatusOr<FalconPublicKey> public_key =
       FalconSignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
 
   std::string bad_public_key_data = "bad_public_key";
   public_key->set_key_value(bad_public_key_data);
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       FalconVerifyKeyManager().GetPrimitive<PublicKeyVerify>(*public_key);
   EXPECT_THAT(verifier, Not(IsOk()));
 }
@@ -160,32 +161,32 @@ TEST_P(FalconVerifyKeyManagerTest, CreateInvalidPublicKey) {
 TEST_P(FalconVerifyKeyManagerTest, CreateDifferentPublicKey) {
   const FalconTestCase& test_case = GetParam();
 
-  StatusOr<FalconPrivateKey> private_key =
+  absl::StatusOr<FalconPrivateKey> private_key =
       CreateValidPrivateKey(test_case.private_key_size);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new public key derived from a diffferent private key.
-  StatusOr<FalconPrivateKey> new_private_key =
+  absl::StatusOr<FalconPrivateKey> new_private_key =
       CreateValidPrivateKey(test_case.private_key_size);
   ASSERT_THAT(new_private_key, IsOk());
-  StatusOr<FalconPublicKey> public_key =
+  absl::StatusOr<FalconPublicKey> public_key =
       FalconSignKeyManager().GetPublicKey(*new_private_key);
   ASSERT_THAT(public_key, IsOk());
 
-  StatusOr<subtle::FalconPrivateKeyPqclean> falcon_private_key_pqclean =
+  absl::StatusOr<subtle::FalconPrivateKeyPqclean> falcon_private_key_pqclean =
       subtle::FalconPrivateKeyPqclean::NewPrivateKey(
           util::SecretDataFromStringView(private_key->key_value()));
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::FalconSign::New(*falcon_private_key_pqclean);
   ASSERT_THAT(direct_signer, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       FalconVerifyKeyManager().GetPrimitive<PublicKeyVerify>(*public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), Not(IsOk()));
 }

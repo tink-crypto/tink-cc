@@ -136,7 +136,7 @@ TEST_P(SphincsKeyTemplateTest, KeyManagerCompatibility) {
   params->set_variant(test_case.variant);
   params->set_sig_length_type(test_case.sig_length_type);
 
-  util::StatusOr<std::unique_ptr<portable_proto::MessageLite>> new_key_result =
+  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> new_key_result =
       key_manager->get_key_factory().NewKey(key_format);
   EXPECT_THAT(new_key_result, IsOk());
 }

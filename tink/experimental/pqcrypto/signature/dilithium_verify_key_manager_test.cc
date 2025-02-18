@@ -74,7 +74,7 @@ struct DilithiumTestCase {
 using DilithiumVerifyKeyManagerTest = testing::TestWithParam<DilithiumTestCase>;
 
 // Helper function that returns a valid dilithium private key.
-StatusOr<DilithiumPrivateKey> CreateValidPrivateKey(
+absl::StatusOr<DilithiumPrivateKey> CreateValidPrivateKey(
     int32_t private_key_size, DilithiumSeedExpansion seed_expansion) {
   DilithiumKeyFormat key_format;
   DilithiumParams* params = key_format.mutable_params();
@@ -85,9 +85,9 @@ StatusOr<DilithiumPrivateKey> CreateValidPrivateKey(
 }
 
 // Helper function that returns a valid dilithium public key.
-StatusOr<DilithiumPublicKey> CreateValidPublicKey(
+absl::StatusOr<DilithiumPublicKey> CreateValidPublicKey(
     int32_t private_key_size, DilithiumSeedExpansion seed_expansion) {
-  StatusOr<DilithiumPrivateKey> private_key =
+  absl::StatusOr<DilithiumPrivateKey> private_key =
       CreateValidPrivateKey(private_key_size, seed_expansion);
 
   if (!private_key.ok()) return private_key.status();
@@ -121,7 +121,7 @@ TEST_P(DilithiumVerifyKeyManagerTest, InvalidParams) {
 TEST_P(DilithiumVerifyKeyManagerTest, PublicKeyValid) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumPublicKey> public_key = CreateValidPublicKey(
+  absl::StatusOr<DilithiumPublicKey> public_key = CreateValidPublicKey(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(public_key, IsOk());
 
@@ -131,7 +131,7 @@ TEST_P(DilithiumVerifyKeyManagerTest, PublicKeyValid) {
 TEST_P(DilithiumVerifyKeyManagerTest, PublicKeyWrongVersion) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumPublicKey> public_key = CreateValidPublicKey(
+  absl::StatusOr<DilithiumPublicKey> public_key = CreateValidPublicKey(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(public_key, IsOk());
 
@@ -143,7 +143,7 @@ TEST_P(DilithiumVerifyKeyManagerTest, PublicKeyWrongVersion) {
 TEST_P(DilithiumVerifyKeyManagerTest, PublicKeyWrongKeyLength) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumPublicKey> public_key = CreateValidPublicKey(
+  absl::StatusOr<DilithiumPublicKey> public_key = CreateValidPublicKey(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(public_key, IsOk());
 
@@ -158,30 +158,30 @@ TEST_P(DilithiumVerifyKeyManagerTest, PublicKeyWrongKeyLength) {
 TEST_P(DilithiumVerifyKeyManagerTest, Create) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumPrivateKey> private_key = CreateValidPrivateKey(
+  absl::StatusOr<DilithiumPrivateKey> private_key = CreateValidPrivateKey(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(private_key, IsOk());
 
-  StatusOr<DilithiumPublicKey> public_key =
+  absl::StatusOr<DilithiumPublicKey> public_key =
       DilithiumSignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
+  absl::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
       DilithiumPrivateKeyPqclean::NewPrivateKey(
           util::SecretDataFromStringView(private_key->key_value()),
           EnumsPqcrypto::ProtoToSubtle(test_case.seed_expansion));
   ASSERT_THAT(dilithium_private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::DilithiumAvx2Sign::New(*dilithium_private_key);
   ASSERT_THAT(direct_signer, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       DilithiumVerifyKeyManager().GetPrimitive<PublicKeyVerify>(*public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 }
@@ -189,34 +189,34 @@ TEST_P(DilithiumVerifyKeyManagerTest, Create) {
 TEST_P(DilithiumVerifyKeyManagerTest, CreateDifferentPublicKey) {
   const DilithiumTestCase& test_case = GetParam();
 
-  StatusOr<DilithiumPrivateKey> private_key = CreateValidPrivateKey(
+  absl::StatusOr<DilithiumPrivateKey> private_key = CreateValidPrivateKey(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new public key derived from a diffferent private key.
-  StatusOr<DilithiumPrivateKey> new_private_key = CreateValidPrivateKey(
+  absl::StatusOr<DilithiumPrivateKey> new_private_key = CreateValidPrivateKey(
       test_case.private_key_size, test_case.seed_expansion);
   ASSERT_THAT(new_private_key, IsOk());
-  StatusOr<DilithiumPublicKey> public_key =
+  absl::StatusOr<DilithiumPublicKey> public_key =
       DilithiumSignKeyManager().GetPublicKey(*new_private_key);
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
+  absl::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
       DilithiumPrivateKeyPqclean::NewPrivateKey(
           util::SecretDataFromStringView(private_key->key_value()),
           EnumsPqcrypto::ProtoToSubtle(test_case.seed_expansion));
   ASSERT_THAT(dilithium_private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::DilithiumAvx2Sign::New(*dilithium_private_key);
   ASSERT_THAT(direct_signer, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       DilithiumVerifyKeyManager().GetPrimitive<PublicKeyVerify>(*public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*direct_signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, message), Not(IsOk()));
 }

@@ -117,7 +117,7 @@ class KeysetHandle {
   crypto::tink::util::Status ValidateAt(int index) const;
   // Validates each individual `KeysetHandle::Entry` in keyset handle by calling
   // `ValidateAt()`.  Also, checks that there is a single enabled primary key.
-  crypto::tink::util::Status Validate() const;
+  absl::Status Validate() const;
   // Returns entry for primary key in this keyset. Crashes if `Validate()`
   // does not return an OK status.  Call `Validate()` prior to calling this
   // method to avoid potentially crashing your program.

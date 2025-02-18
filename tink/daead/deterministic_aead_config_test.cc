@@ -150,22 +150,22 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               DeterministicAeadKeyTemplates::Aes256Siv());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesSivParameters> params = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> params = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params.status(),
@@ -173,12 +173,12 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(DeterministicAeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params2, IsOk());
@@ -193,7 +193,7 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
   key_proto.set_version(0);
   key_proto.set_key_value(subtle::Random::GetRandomBytes(64));
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesSivKey",
           RestrictedData(key_proto.SerializeAsString(),
@@ -201,23 +201,23 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
           KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesSivParameters> params = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> params = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<AesSivKey> key =
+  absl::StatusOr<AesSivKey> key =
       AesSivKey::Create(*params,
                         RestrictedData(subtle::Random::GetRandomBytes(64),
                                        InsecureSecretKeyAccess::Get()),
                         /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -225,12 +225,12 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
 
   ASSERT_THAT(DeterministicAeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());

@@ -49,7 +49,7 @@ class AesSivParameters : public DeterministicAeadParameters {
 
   // Creates `AesSivParameters` object from `key_size_in_bytes` and `variant`.
   // Only allows 32-, 48-, and 64-byte key sizes as specified in RFC 5297.
-  static util::StatusOr<AesSivParameters> Create(int key_size_in_bytes,
+  static absl::StatusOr<AesSivParameters> Create(int key_size_in_bytes,
                                                  Variant variant);
 
   int KeySizeInBytes() const { return key_size_in_bytes_; }

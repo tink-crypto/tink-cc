@@ -210,10 +210,10 @@ class DeterministicAeadSetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(encryption_monitoring_client)))))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(decryption_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -254,7 +254,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
                          keyset_info.key_info(1))
           , IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead>*>
+  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
       last = daead_primitive_set->AddPrimitive(
           absl::make_unique<DummyDeterministicAead>("daead2"),
           keyset_info.key_info(2));
@@ -264,7 +264,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a deterministic AEAD and encrypt some data.
-  util::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 
@@ -274,7 +274,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
   // Check that calling EncryptDeterministically triggers a Log() call.
   EXPECT_CALL(*encryption_monitoring_client_,
               Log(primary_key_id, plaintext.size()));
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*daead)->EncryptDeterministically(plaintext, associated_data);
   EXPECT_THAT(ciphertext, IsOk());
 }
@@ -301,7 +301,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
           .status(),
       IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead>*>
+  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
       last = daead_primitive_set->AddPrimitive(
           absl::make_unique<DummyDeterministicAead>("daead2"),
           keyset_info.key_info(2));
@@ -312,7 +312,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
 
   // Create a deterministic AEAD and encrypt/decrypt some data.
-  util::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 
@@ -321,7 +321,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
 
   // Check that calling DecryptDeterministically triggers a Log() call.
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*daead)->EncryptDeterministically(plaintext, associated_data);
   EXPECT_THAT(ciphertext, IsOk());
 
@@ -353,7 +353,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead>*>
+  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
       last = daead_primitive_set->AddPrimitive(
           CreateAlwaysFailingDeterministicAead("daead2"),
           keyset_info.key_info(2));
@@ -362,7 +362,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
 
   // Create a deterministic AEAD and encrypt.
-  util::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 
@@ -372,7 +372,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
   // Check that calling EncryptDeterministically triggers a LogFailure() call.
   EXPECT_CALL(*encryption_monitoring_client_, LogFailure());
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*daead)->EncryptDeterministically(plaintext, associated_data);
   EXPECT_THAT(ciphertext.status(), StatusIs(absl::StatusCode::kInternal));
 }
@@ -397,7 +397,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead>*>
+  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
       last = daead_primitive_set->AddPrimitive(
           CreateAlwaysFailingDeterministicAead("daead2"),
           keyset_info.key_info(2));
@@ -406,7 +406,7 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
 
   // Create a deterministic AEAD and decrypt.
-  util::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 

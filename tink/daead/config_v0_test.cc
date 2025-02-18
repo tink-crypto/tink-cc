@@ -37,17 +37,17 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 
 TEST(ConfigV0Test, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(DeterministicAeadKeyTemplates::Aes256Siv(),
                                 KeyGenConfigDeterministicAeadV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       (*handle)->GetPrimitive<DeterministicAead>(ConfigDeterministicAeadV0());
   ASSERT_THAT(daead, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*daead)->EncryptDeterministically(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*daead)->DecryptDeterministically(*ciphertext, "ad"),

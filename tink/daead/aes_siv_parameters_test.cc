@@ -58,7 +58,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesSivParametersBuildTest, Create) {
   CreateTestCase test_case = GetParam();
 
-  util::StatusOr<AesSivParameters> parameters =
+  absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -104,7 +104,7 @@ TEST(AesSivParametersTest, CreateWithInvalidKeySizeFails) {
 }
 
 TEST(AesSivParametersTest, CopyConstructor) {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -115,11 +115,11 @@ TEST(AesSivParametersTest, CopyConstructor) {
 }
 
 TEST(AesSivParametersTest, CopyAssignment) {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesSivParameters> copy = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> copy = AesSivParameters::Create(
       /*key_size_in_bytes=*/32, AesSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(copy, IsOk());
 
@@ -130,7 +130,7 @@ TEST(AesSivParametersTest, CopyAssignment) {
 }
 
 TEST(AesSivParametersTest, MoveConstructor) {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -141,11 +141,11 @@ TEST(AesSivParametersTest, MoveConstructor) {
 }
 
 TEST(AesSivParametersTest, MoveAssignment) {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesSivParameters> move = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> move = AesSivParameters::Create(
       /*key_size_in_bytes=*/32, AesSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(move, IsOk());
 
@@ -170,11 +170,11 @@ TEST_P(AesSivParametersVariantTest, ParametersEquals) {
   AesSivParameters::Variant variant;
   std::tie(key_size, variant) = GetParam();
 
-  util::StatusOr<AesSivParameters> parameters =
+  absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(key_size, variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesSivParameters> other_parameters =
+  absl::StatusOr<AesSivParameters> other_parameters =
       AesSivParameters::Create(key_size, variant);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -185,11 +185,11 @@ TEST_P(AesSivParametersVariantTest, ParametersEquals) {
 }
 
 TEST(AesSivParametersTest, KeySizeNotEqual) {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/48, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesSivParameters> other_parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> other_parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -198,11 +198,11 @@ TEST(AesSivParametersTest, KeySizeNotEqual) {
 }
 
 TEST(AesSivParametersTest, VariantNotEqual) {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesSivParameters> other_parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> other_parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -211,7 +211,7 @@ TEST(AesSivParametersTest, VariantNotEqual) {
 }
 
 TEST(AesSivParametersTest, Clone) {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 

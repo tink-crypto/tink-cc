@@ -45,7 +45,7 @@ class AesSivKey : public DeterministicAeadKey {
 
   // Creates a new AES-SIV key.  If the parameters specify a variant that uses
   // a prefix, then the id is used to compute this prefix.
-  static util::StatusOr<AesSivKey> Create(const AesSivParameters& parameters,
+  static absl::StatusOr<AesSivKey> Create(const AesSivParameters& parameters,
                                           const RestrictedData& key_bytes,
                                           absl::optional<int> id_requirement,
                                           PartialKeyAccessToken token);

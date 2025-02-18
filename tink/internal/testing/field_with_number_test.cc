@@ -60,9 +60,9 @@ TEST(FieldWithNumberTest, Example) {
                                   /* field 3.2 */ "1206889988998899",
                                   /* field 5 */ "2805")),
       InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> expected =
-      ProtoKeySerialization::Create(kTypeUrl, expected_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+  absl::StatusOr<ProtoKeySerialization> expected =
+      ProtoKeySerialization::Create(kTypeUrl, expected_key, KeyData::SYMMETRIC,
+                                    OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(expected.status(), IsOk());
   EXPECT_THAT(serialization, EqualsProtoKeySerialization(*expected));

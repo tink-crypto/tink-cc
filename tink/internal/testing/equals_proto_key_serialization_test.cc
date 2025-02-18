@@ -44,7 +44,7 @@ constexpr absl::string_view kTypeUrl = "SomeArbitraryTypeUrl";
 TEST(EqualsProtoKeySerialization, Equals) {
   RestrictedData serialized_key1 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization1 =
+  absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -52,7 +52,7 @@ TEST(EqualsProtoKeySerialization, Equals) {
 
   RestrictedData serialized_key2 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization2 =
+  absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -63,7 +63,7 @@ TEST(EqualsProtoKeySerialization, Equals) {
 TEST(EqualsProtoKeySerialization, TypeUrlDiffers) {
   RestrictedData serialized_key1 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization1 =
+  absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -71,7 +71,7 @@ TEST(EqualsProtoKeySerialization, TypeUrlDiffers) {
 
   RestrictedData serialized_key2 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization2 =
+  absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create("somedifferenttypeurl", serialized_key2,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -83,7 +83,7 @@ TEST(EqualsProtoKeySerialization, TypeUrlDiffers) {
 TEST(EqualsProtoKeySerialization, DifferentKey) {
   RestrictedData serialized_key1 =
       RestrictedData("some key data1", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization1 =
+  absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -91,7 +91,7 @@ TEST(EqualsProtoKeySerialization, DifferentKey) {
 
   RestrictedData serialized_key2 =
       RestrictedData("some key data2", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization2 =
+  absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -103,7 +103,7 @@ TEST(EqualsProtoKeySerialization, DifferentKey) {
 TEST(EqualsProtoKeySerialization, KeyMaterialTypeDiffer) {
   RestrictedData serialized_key1 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization1 =
+  absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -111,7 +111,7 @@ TEST(EqualsProtoKeySerialization, KeyMaterialTypeDiffer) {
 
   RestrictedData serialized_key2 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization2 =
+  absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     OutputPrefixType::LEGACY,
@@ -124,7 +124,7 @@ TEST(EqualsProtoKeySerialization, KeyMaterialTypeDiffer) {
 TEST(EqualsProtoKeySerialization, DifferentOutputPrefix) {
   RestrictedData serialized_key1 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization1 =
+  absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -132,7 +132,7 @@ TEST(EqualsProtoKeySerialization, DifferentOutputPrefix) {
 
   RestrictedData serialized_key2 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization2 =
+  absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
                                     KeyData::SYMMETRIC,
                                     OutputPrefixType::LEGACY,
@@ -145,7 +145,7 @@ TEST(EqualsProtoKeySerialization, DifferentOutputPrefix) {
 TEST(EqualsProtoKeySerialization, DifferentIdRequirement) {
   RestrictedData serialized_key1 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization1 =
+  absl::StatusOr<ProtoKeySerialization> serialization1 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key1,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -153,7 +153,7 @@ TEST(EqualsProtoKeySerialization, DifferentIdRequirement) {
 
   RestrictedData serialized_key2 =
       RestrictedData("some key data", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization2 =
+  absl::StatusOr<ProtoKeySerialization> serialization2 =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key2,
                                     KeyData::SYMMETRIC,
                                     OutputPrefixType::LEGACY,
@@ -166,7 +166,7 @@ TEST(EqualsProtoKeySerialization, DifferentIdRequirement) {
 TEST(EqualsProtoKeySerialization, EverythingDiffersToTestTheMessage) {
   RestrictedData serialized_key =
       RestrictedData("a", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("typeUrl1", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -174,7 +174,7 @@ TEST(EqualsProtoKeySerialization, EverythingDiffersToTestTheMessage) {
 
   RestrictedData expected_key =
       RestrictedData("b", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> expected =
+  absl::StatusOr<ProtoKeySerialization> expected =
       ProtoKeySerialization::Create("typeUrl2", expected_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     OutputPrefixType::LEGACY,

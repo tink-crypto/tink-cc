@@ -30,7 +30,7 @@ namespace wycheproof_testing {
 
 // Reads test vector from a file.
 // The filename is relative to the directory with the test vectors.
-util::StatusOr<google::protobuf::Struct> ReadTestVectors(
+absl::StatusOr<google::protobuf::Struct> ReadTestVectors(
     const std::string &filename);
 
 std::string GetBytesFromHexValue(const google::protobuf::Value &val);

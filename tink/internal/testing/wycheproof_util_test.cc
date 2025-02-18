@@ -79,7 +79,7 @@ TEST(WycheproofUtilTest, GetEllipticCurveTypeFromValue) {
 }
 
 TEST(WycheproofUtilTest, ReadTestVectors) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(/*filename=*/"rsa_pss_2048_sha256_mgf1_0_test.json");
   ASSERT_THAT(parsed_input.status(), IsOk());
   const google::protobuf::Value& algorithm =

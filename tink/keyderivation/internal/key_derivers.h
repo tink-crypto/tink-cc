@@ -29,7 +29,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::Key>> DeriveKey(
+absl::StatusOr<std::unique_ptr<crypto::tink::Key>> DeriveKey(
     const crypto::tink::Parameters& params,
     crypto::tink::InputStream* randomness);
 

@@ -152,7 +152,7 @@ TEST(PrfBasedDeriverKeyManagerTest, CreateKey) {
   *key_format.mutable_params()->mutable_derived_key_template() =
       AeadKeyTemplates::Aes256Gcm();
 
-  util::StatusOr<PrfBasedDeriverKeyProto> key =
+  absl::StatusOr<PrfBasedDeriverKeyProto> key =
       PrfBasedDeriverKeyManager().CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key).version(), Eq(0));
@@ -253,21 +253,21 @@ TEST(PrfBasedDeriverKeyManagerTest, GetPrimitive) {
   *key.mutable_params()->mutable_derived_key_template() =
       AeadKeyTemplates::Aes256Gcm();
 
-  StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
       PrfBasedDeriverKeyManager().GetPrimitive<KeysetDeriver>(key);
   ASSERT_THAT(deriver, IsOk());
 
   std::string salt = subtle::Random::GetRandomBytes(23);
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       (*deriver)->DeriveKeyset(salt);
   ASSERT_THAT(handle, IsOk());
   Keyset keyset = CleartextKeysetHandle::GetKeyset(**handle);
 
-  StatusOr<std::unique_ptr<KeysetDeriver>> direct_deriver =
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> direct_deriver =
       internal::PrfBasedDeriver::New(key.prf_key(),
                                      key.params().derived_key_template());
   ASSERT_THAT(direct_deriver, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> direct_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> direct_handle =
       (*direct_deriver)->DeriveKeyset(salt);
   ASSERT_THAT(direct_handle, IsOk());
   Keyset direct_keyset = CleartextKeysetHandle::GetKeyset(**direct_handle);

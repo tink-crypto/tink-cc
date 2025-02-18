@@ -41,7 +41,7 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::SHA256;
 
 TEST(ConfigPrfForDeriverTest, KeyManager) {
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore *> store =
       ConfigurationImpl::GetKeyTypeInfoStore(ConfigPrfForDeriver());
   ASSERT_THAT(store, IsOk());
 
@@ -49,10 +49,10 @@ TEST(ConfigPrfForDeriverTest, KeyManager) {
 }
 
 TEST(ConfigPrfForDeriverTest, GetUnwrappedPrimitive) {
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore *> store =
       ConfigurationImpl::GetKeyTypeInfoStore(ConfigPrfForDeriver());
   ASSERT_THAT(store, IsOk());
-  util::StatusOr<const KeyTypeInfoStore::Info*> info =
+  absl::StatusOr<const KeyTypeInfoStore::Info *> info =
       (*store)->Get(HkdfPrfKeyManager().get_key_type());
   ASSERT_THAT(info, IsOk());
 
@@ -61,7 +61,7 @@ TEST(ConfigPrfForDeriverTest, GetUnwrappedPrimitive) {
   prf_key.set_key_value("01234567890123456789012345678901");
   prf_key.mutable_params()->set_hash(SHA256);
 
-  util::StatusOr<std::unique_ptr<StreamingPrf>> prf =
+  absl::StatusOr<std::unique_ptr<StreamingPrf>> prf =
       (*info)->GetPrimitive<StreamingPrf>(
           test::AsKeyData(prf_key, KeyData::SYMMETRIC));
   ASSERT_THAT(prf, IsOk());

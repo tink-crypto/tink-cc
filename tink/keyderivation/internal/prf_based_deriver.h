@@ -34,11 +34,11 @@ namespace internal {
 // to the Tink registry to derive a key.
 class PrfBasedDeriver : public KeysetDeriver {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetDeriver>> New(
+  static absl::StatusOr<std::unique_ptr<KeysetDeriver>> New(
       const ::google::crypto::tink::KeyData& prf_key,
       const ::google::crypto::tink::KeyTemplate& key_template);
 
-  crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeyset(
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeyset(
       absl::string_view salt) const override;
 
  private:

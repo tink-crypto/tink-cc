@@ -87,7 +87,7 @@ KeyTemplate GetAesCmacPrfKeyTemplate() {
 }
 
 AesCmacPrfParameters GetAesCmacPrfParameters() {
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(kPrfKeyValue.size());
   CHECK_OK(parameters);
   return *parameters;
@@ -104,7 +104,7 @@ KeyTemplate GetXChaCha20Poly1305KeyTemplate() {
 }
 
 XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
-  util::StatusOr<XChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   CHECK_OK(parameters);
@@ -112,7 +112,7 @@ XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
 }
 
 AesCmacPrfKey GetAesCmacPrfKey() {
-  util::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
+  absl::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
       RestrictedData(kPrfKeyValue, GetInsecureSecretKeyAccessInternal()),
       GetPartialKeyAccess());
   CHECK_OK(key);
@@ -174,13 +174,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       derived_key_template;
   *key_format_proto.mutable_params() = prf_based_deriver_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, derived_key_template.output_prefix_type(),
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsTrue());
@@ -213,13 +213,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       derived_key_template;
   *key_format_proto.mutable_params() = prf_based_deriver_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, derived_key_template.output_prefix_type(),
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsTrue());
@@ -242,12 +242,12 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           registry),
       IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -269,13 +269,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       GetXChaCha20Poly1305KeyTemplate();
   *key_format_proto.mutable_params() = prf_based_deriver_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -301,13 +301,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       derived_key_template;
   *key_format_proto.mutable_params() = prf_based_deriver_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(
       params.status(),
@@ -333,13 +333,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       GetXChaCha20Poly1305KeyTemplate();
   *key_format_proto.mutable_params() = prf_based_deriver_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(
       params.status(),
@@ -357,14 +357,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           registry),
       IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(GetAesCmacPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<internal::ProtoParametersSerialization>(
           *parameters);
   ASSERT_THAT(serialization, IsOk());
@@ -395,14 +395,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(GetAesCmacPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<internal::ProtoParametersSerialization>(
           *parameters);
   ASSERT_THAT(serialization, IsOk());
@@ -441,13 +441,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithMutableRegistry) {
 
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC,
           derived_key_template.output_prefix_type(), /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(123));
@@ -455,14 +455,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithMutableRegistry) {
       (*key)->GetParameters().HasIdRequirement(),
       derived_key_template.output_prefix_type() != OutputPrefixType::RAW);
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> expected_parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> expected_parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(GetAesCmacPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> expected_key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> expected_key =
       PrfBasedKeyDerivationKey::Create(*expected_parameters, GetAesCmacPrfKey(),
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -489,13 +489,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithRegistryBuilder) {
 
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC,
           derived_key_template.output_prefix_type(), /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(123));
@@ -503,14 +503,14 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithRegistryBuilder) {
       (*key)->GetParameters().HasIdRequirement(),
       derived_key_template.output_prefix_type() != OutputPrefixType::RAW);
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> expected_parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> expected_parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(GetAesCmacPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> expected_key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> expected_key =
       PrfBasedKeyDerivationKey::Create(*expected_parameters, GetAesCmacPrfKey(),
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -530,13 +530,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       "invalid_serialization", GetInsecureSecretKeyAccessInternal());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::TINK,
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -561,13 +561,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   EXPECT_THAT(key, StatusIs(absl::StatusCode::kInvalidArgument,
                             HasSubstr("Parsed output prefix type must match "
@@ -591,13 +591,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
 
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC,
           derived_key_template.output_prefix_type(), /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key, StatusIs(absl::StatusCode::kPermissionDenied));
 }
@@ -628,13 +628,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC,
           derived_key_template.output_prefix_type(), /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   EXPECT_THAT(key,
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -658,13 +658,13 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest, ParseKeyWithInvalidVersion) {
 
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC,
           derived_key_template.output_prefix_type(), /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   EXPECT_THAT(key, StatusIs(absl::StatusCode::kInvalidArgument,
                             HasSubstr("Only version 0 keys are accepted")));
@@ -678,20 +678,20 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           registry),
       IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(GetAesCmacPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, GetAesCmacPrfKey(),
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<internal::ProtoKeySerialization>(
           *key, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(serialization, IsOk());
@@ -734,20 +734,20 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(GetAesCmacPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, GetAesCmacPrfKey(),
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<internal::ProtoKeySerialization>(
           *key, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(serialization, IsOk());
@@ -782,20 +782,20 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
           registry),
       IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(GetAesCmacPrfParameters())
           .SetDerivedKeyParameters(GetXChaCha20Poly1305Parameters())
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, GetAesCmacPrfKey(),
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<internal::ProtoKeySerialization>(
           *key, /*token=*/absl::nullopt);
   ASSERT_THAT(serialization, StatusIs(absl::StatusCode::kPermissionDenied));

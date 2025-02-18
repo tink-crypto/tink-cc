@@ -167,7 +167,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(KeyDeriversTest, DeriveKey) {
   std::shared_ptr<Parameters> params = GetParam();
-  util::StatusOr<std::shared_ptr<Key>> key =
+  absl::StatusOr<std::shared_ptr<Key>> key =
       DeriveKey(*params, Randomness().get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetParameters(), Eq(std::ref(*params)));
@@ -182,7 +182,7 @@ TEST_P(KeyDeriversTest, DeriveKey) {
 TEST_P(KeyDeriversTest, InsufficientRandomness) {
   util::IstreamInputStream insufficient_randomness{
       absl::make_unique<std::stringstream>("0123456789")};
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       DeriveKey(*GetParam().get(), &insufficient_randomness);
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kOutOfRange));
 }
@@ -210,7 +210,7 @@ TEST_P(KeyDeriversBoringSslTest, DeriveKey) {
   }
 
   std::shared_ptr<Parameters> params = GetParam();
-  util::StatusOr<std::shared_ptr<Key>> key =
+  absl::StatusOr<std::shared_ptr<Key>> key =
       DeriveKey(*params, Randomness().get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetParameters(), Eq(std::ref(*params)));
@@ -224,7 +224,7 @@ TEST_P(KeyDeriversBoringSslTest, DeriveKey) {
 
 TEST(MissingKeyDeriversTest, MissingKeyDeriver) {
   ASSERT_THAT(RegisterAesEaxProtoSerialization(), IsOk());
-  util::StatusOr<AesEaxParameters> params =
+  absl::StatusOr<AesEaxParameters> params =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -264,10 +264,10 @@ class KeyDeriversRfcVectorTest : public Test {
     google::crypto::tink::KeyData key_data =
         test::AsKeyData(prf_key, google::crypto::tink::KeyData::SYMMETRIC);
 
-    util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
+    absl::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
         Registry::GetPrimitive<StreamingPrf>(key_data);
     ASSERT_THAT(streaming_prf, IsOk());
-    util::StatusOr<std::unique_ptr<StreamingPrf>> same_streaming_prf =
+    absl::StatusOr<std::unique_ptr<StreamingPrf>> same_streaming_prf =
         Registry::GetPrimitive<StreamingPrf>(key_data);
     ASSERT_THAT(same_streaming_prf, IsOk());
 
@@ -295,7 +295,7 @@ class KeyDeriversRfcVectorTest : public Test {
 
 TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
   // Derive key with Parameters map.
-  util::StatusOr<AesCtrHmacAeadParameters> params =
+  absl::StatusOr<AesCtrHmacAeadParameters> params =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
           .SetHmacKeySizeInBytes(32)
@@ -305,7 +305,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
           .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
           .Build();
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesCtrHmacAeadKey* key =
@@ -324,7 +324,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
 
   // Derive key with AesCtrHmacAeadKeyManager.
   ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
@@ -335,7 +335,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());
-  util::StatusOr<google::crypto::tink::AesCtrHmacAeadKey> proto_key =
+  absl::StatusOr<google::crypto::tink::AesCtrHmacAeadKey> proto_key =
       AesCtrHmacAeadKeyManager().DeriveKey(
           key_format, same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
@@ -347,7 +347,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
 
 TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
   // Derive key with hard-coded map.
-  util::StatusOr<AesGcmParameters> params =
+  absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -355,7 +355,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
           .SetVariant(AesGcmParameters::Variant::kNoPrefix)
           .Build();
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesGcmKey* key =
@@ -369,7 +369,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
 
   // Derive key with AesGcmKeyManager.
   ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
@@ -380,7 +380,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());
-  util::StatusOr<google::crypto::tink::AesGcmKey> proto_key =
+  absl::StatusOr<google::crypto::tink::AesGcmKey> proto_key =
       AesGcmKeyManager().DeriveKey(key_format,
                                    same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
@@ -389,11 +389,11 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
 
 TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
   // Derive key with hard-coded map.
-  util::StatusOr<XChaCha20Poly1305Parameters> params =
+  absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const XChaCha20Poly1305Key* key =
@@ -406,7 +406,7 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
 
   // Derive key with XChaCha20Poly1305KeyManager.
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
@@ -417,7 +417,7 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());
-  util::StatusOr<google::crypto::tink::XChaCha20Poly1305Key> proto_key =
+  absl::StatusOr<google::crypto::tink::XChaCha20Poly1305Key> proto_key =
       XChaCha20Poly1305KeyManager().DeriveKey(
           key_format, same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
@@ -426,10 +426,10 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
 
 TEST_F(KeyDeriversRfcVectorTest, AesSiv) {
   // Derive key with hard-coded map.
-  util::StatusOr<AesSivParameters> params = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> params = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const AesSivKey* key =
@@ -443,7 +443,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv) {
 
   // Derive key with AesSivKeyManager.
   ASSERT_THAT(RegisterAesSivProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
@@ -454,7 +454,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv) {
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());
-  util::StatusOr<google::crypto::tink::AesSivKey> proto_key =
+  absl::StatusOr<google::crypto::tink::AesSivKey> proto_key =
       AesSivKeyManager().DeriveKey(key_format,
                                    same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
@@ -463,11 +463,11 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv) {
 
 TEST_F(KeyDeriversRfcVectorTest, Hmac) {
   // Derive key with hard-coded map.
-  util::StatusOr<HmacParameters> params = HmacParameters::Create(
+  absl::StatusOr<HmacParameters> params = HmacParameters::Create(
       /*key_size_in_bytes=*/16, /*cryptographic_tag_size_in_bytes=*/10,
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const HmacKey* key = dynamic_cast<const HmacKey*>(&**std::move(generic_key));
@@ -480,7 +480,7 @@ TEST_F(KeyDeriversRfcVectorTest, Hmac) {
 
   // Derive key with HmacKeyManager.
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
@@ -491,7 +491,7 @@ TEST_F(KeyDeriversRfcVectorTest, Hmac) {
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());
-  util::StatusOr<google::crypto::tink::HmacKey> proto_key =
+  absl::StatusOr<google::crypto::tink::HmacKey> proto_key =
       HmacKeyManager().DeriveKey(key_format,
                                  same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
@@ -505,7 +505,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
   }
 
   // Derive key with hard-coded map.
-  util::StatusOr<EcdsaParameters> params =
+  absl::StatusOr<EcdsaParameters> params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -513,7 +513,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const EcdsaPrivateKey* key =
@@ -525,7 +525,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
 
   // Derive key with EcdsaSignKeyManager.
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
@@ -536,7 +536,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());
-  util::StatusOr<google::crypto::tink::EcdsaPrivateKey> proto_key =
+  absl::StatusOr<google::crypto::tink::EcdsaPrivateKey> proto_key =
       EcdsaSignKeyManager().DeriveKey(key_format,
                                       same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
@@ -545,10 +545,10 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
 
 TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
   // Derive key with hard-coded map.
-  util::StatusOr<Ed25519Parameters> params =
+  absl::StatusOr<Ed25519Parameters> params =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       DeriveKey(*params, randomness_from_rfc_vector_.get());
   ASSERT_THAT(generic_key, IsOk());
   const Ed25519PrivateKey* key =
@@ -560,7 +560,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
 
   // Derive key with Ed25519SignKeyManager.
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
@@ -571,7 +571,7 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
   ASSERT_THAT(
       key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
       IsTrue());
-  util::StatusOr<google::crypto::tink::Ed25519PrivateKey> proto_key =
+  absl::StatusOr<google::crypto::tink::Ed25519PrivateKey> proto_key =
       Ed25519SignKeyManager().DeriveKey(key_format,
                                         same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());

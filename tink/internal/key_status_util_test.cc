@@ -34,35 +34,35 @@ using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyStatusType;
 
 TEST(KeyStatusUtilTest, FromKeyStatusType) {
-  util::StatusOr<KeyStatus> enabled = FromKeyStatusType(KeyStatusType::ENABLED);
+  absl::StatusOr<KeyStatus> enabled = FromKeyStatusType(KeyStatusType::ENABLED);
   EXPECT_THAT(enabled, IsOkAndHolds(KeyStatus::kEnabled));
 
-  util::StatusOr<KeyStatus> disabled =
+  absl::StatusOr<KeyStatus> disabled =
       FromKeyStatusType(KeyStatusType::DISABLED);
   EXPECT_THAT(disabled, IsOkAndHolds(KeyStatus::kDisabled));
 
-  util::StatusOr<KeyStatus> destroyed =
+  absl::StatusOr<KeyStatus> destroyed =
       FromKeyStatusType(KeyStatusType::DESTROYED);
   EXPECT_THAT(destroyed, IsOkAndHolds(KeyStatus::kDestroyed));
 
-  util::StatusOr<KeyStatus> unknown =
+  absl::StatusOr<KeyStatus> unknown =
       FromKeyStatusType(KeyStatusType::UNKNOWN_STATUS);
   EXPECT_THAT(unknown.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(KeyStatusUtilTest, ToKeyStatusType) {
-  util::StatusOr<KeyStatusType> enabled = ToKeyStatusType(KeyStatus::kEnabled);
+  absl::StatusOr<KeyStatusType> enabled = ToKeyStatusType(KeyStatus::kEnabled);
   EXPECT_THAT(enabled, IsOkAndHolds(KeyStatusType::ENABLED));
 
-  util::StatusOr<KeyStatusType> disabled =
+  absl::StatusOr<KeyStatusType> disabled =
       ToKeyStatusType(KeyStatus::kDisabled);
   EXPECT_THAT(disabled, IsOkAndHolds(KeyStatusType::DISABLED));
 
-  util::StatusOr<KeyStatusType> destroyed =
+  absl::StatusOr<KeyStatusType> destroyed =
       ToKeyStatusType(KeyStatus::kDestroyed);
   EXPECT_THAT(destroyed, IsOkAndHolds(KeyStatusType::DESTROYED));
 
-  util::StatusOr<KeyStatusType> unknown = ToKeyStatusType(
+  absl::StatusOr<KeyStatusType> unknown = ToKeyStatusType(
       KeyStatus::kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements);
   EXPECT_THAT(unknown.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }

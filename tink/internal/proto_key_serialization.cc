@@ -35,7 +35,7 @@ namespace internal {
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::OutputPrefixType;
 
-util::StatusOr<ProtoKeySerialization> ProtoKeySerialization::Create(
+absl::StatusOr<ProtoKeySerialization> ProtoKeySerialization::Create(
     absl::string_view type_url, RestrictedData serialized_key,
     KeyData::KeyMaterialType key_material_type,
     OutputPrefixType output_prefix_type, absl::optional<int> id_requirement) {

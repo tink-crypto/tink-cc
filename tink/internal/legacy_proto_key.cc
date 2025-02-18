@@ -60,7 +60,7 @@ bool UnusableLegacyProtoParameters::operator==(const Parameters& other) const {
          output_prefix_type_ == that->output_prefix_type_;
 }
 
-util::StatusOr<LegacyProtoKey> LegacyProtoKey::Create(
+absl::StatusOr<LegacyProtoKey> LegacyProtoKey::Create(
     ProtoKeySerialization serialization,
     absl::optional<SecretKeyAccessToken> token) {
   absl::Status access_check_status =
@@ -79,7 +79,7 @@ bool LegacyProtoKey::operator==(const Key& other) const {
   return serialization_.EqualsWithPotentialFalseNegatives(that->serialization_);
 }
 
-util::StatusOr<const ProtoKeySerialization*> LegacyProtoKey::Serialization(
+absl::StatusOr<const ProtoKeySerialization*> LegacyProtoKey::Serialization(
     absl::optional<SecretKeyAccessToken> token) const {
   absl::Status access_check_status =
       CheckKeyAccess(serialization_.KeyMaterialType(), token);

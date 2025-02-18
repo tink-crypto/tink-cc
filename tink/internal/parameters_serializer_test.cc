@@ -55,7 +55,7 @@ TEST(ParametersSerializerTest, SerializeParameters) {
       kNoIdTypeUrl, SerializeNoIdParams);
 
   NoIdParams parameters;
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       serializer->SerializeParameters(parameters);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -67,7 +67,7 @@ TEST(ParametersSerializerTest, SerializeParametersWithInvalidParametersType) {
       kNoIdTypeUrl, SerializeNoIdParams);
 
   IdParams parameters;
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       serializer->SerializeParameters(parameters);
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));

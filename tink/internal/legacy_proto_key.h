@@ -79,7 +79,7 @@ class LegacyProtoKey : public Key {
 
   // Creates `LegacyProtoKey` object from `serialization`.  Requires `token` if
   // the key material type is either SYMMETRIC or ASYMMETRIC_PRIVATE.
-  static util::StatusOr<LegacyProtoKey> Create(
+  static absl::StatusOr<LegacyProtoKey> Create(
       ProtoKeySerialization serialization,
       absl::optional<SecretKeyAccessToken> token);
 
@@ -99,7 +99,7 @@ class LegacyProtoKey : public Key {
 
   // Returns `ProtoKeySerialization` pointer for this object.  Requires `token`
   // if the key material type is either SYMMETRIC or ASYMMETRIC_PRIVATE.
-  util::StatusOr<const ProtoKeySerialization*> Serialization(
+  absl::StatusOr<const ProtoKeySerialization*> Serialization(
       absl::optional<SecretKeyAccessToken> token) const;
 
  private:

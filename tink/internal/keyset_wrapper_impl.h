@@ -73,12 +73,11 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
       }
 
       // Get the proto key serialization.
-      util::StatusOr<internal::ProtoKeySerialization> serialization =
+      absl::StatusOr<internal::ProtoKeySerialization> serialization =
           internal::ProtoKeySerialization::Create(
               proto_key.key_data().type_url(),
-              RestrictedData(
-                  proto_key.key_data().value(),
-                  internal::GetInsecureSecretKeyAccessInternal()),
+              RestrictedData(proto_key.key_data().value(),
+                             internal::GetInsecureSecretKeyAccessInternal()),
               proto_key.key_data().key_material_type(),
               google::crypto::tink::OutputPrefixType::RAW,
               /*id_requirement=*/absl::nullopt);
@@ -86,10 +85,9 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
         return serialization.status();
       }
 
-      util::StatusOr<std::unique_ptr<const Key>> key =
+      absl::StatusOr<std::unique_ptr<const Key>> key =
           internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-              *serialization,
-              internal::GetInsecureSecretKeyAccessInternal());
+              *serialization, internal::GetInsecureSecretKeyAccessInternal());
 
       util::StatusOr<std::unique_ptr<P>> primitive;
       if (!key.ok() ||

@@ -33,10 +33,10 @@ namespace internal {
 // Returns the value of a big integer `big_integer_encoding` (represented as a
 // big endian encoded string), left padded to obtain a fixed length `length`.
 // Returns an error if the `length` is too short.
-crypto::tink::util::StatusOr<std::string> GetValueOfFixedLength(
+absl::StatusOr<std::string> GetValueOfFixedLength(
     absl::string_view big_integer_encoding, int length);
 
-crypto::tink::util::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
+absl::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
     const RestrictedBigInteger& big_integer, int length,
     SecretKeyAccessToken token);
 

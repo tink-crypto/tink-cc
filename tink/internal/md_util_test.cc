@@ -64,11 +64,11 @@ TEST(MdUtil, IsHashTypeSafeForSignature) {
 }
 
 TEST(MdUtil, ComputeHashAcceptsNullStringView) {
-  util::StatusOr<std::string> null_hash =
+  absl::StatusOr<std::string> null_hash =
       ComputeHash(absl::string_view(nullptr, 0), *EVP_sha512());
-  util::StatusOr<std::string> empty_hash = ComputeHash("", *EVP_sha512());
+  absl::StatusOr<std::string> empty_hash = ComputeHash("", *EVP_sha512());
   std::string str;
-  util::StatusOr<std::string> empty_str_hash = ComputeHash(str, *EVP_sha512());
+  absl::StatusOr<std::string> empty_str_hash = ComputeHash(str, *EVP_sha512());
 
   ASSERT_THAT(null_hash, IsOk());
   ASSERT_THAT(empty_hash, IsOk());
@@ -120,7 +120,7 @@ GetMdUtilComputeHashSamplesTestParams() {
 
 TEST_P(MdUtilComputeHashSamplesTest, ComputesHash) {
   const MdUtilComputeHashSamplesTestParam& params = GetParam();
-  util::StatusOr<const EVP_MD*> hasher = EvpHashFromHashType(params.hash_type);
+  absl::StatusOr<const EVP_MD*> hasher = EvpHashFromHashType(params.hash_type);
   ASSERT_THAT(hasher, IsOk());
   std::string data = test::HexDecodeOrDie(params.data_hex);
   std::string expected_digest =

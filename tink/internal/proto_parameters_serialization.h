@@ -44,7 +44,7 @@ class ProtoParametersSerialization : public Serialization {
       ProtoParametersSerialization&& other) = default;
 
   // Creates a `ProtoParametersSerialization` object from individual components.
-  static util::StatusOr<ProtoParametersSerialization> Create(
+  static absl::StatusOr<ProtoParametersSerialization> Create(
       absl::string_view type_url,
       google::crypto::tink::OutputPrefixType output_prefix_type,
       absl::string_view serialized_proto);
@@ -60,11 +60,11 @@ class ProtoParametersSerialization : public Serialization {
   }
 
   // Creates a `ProtoParametersSerialization` object from a key template.
-  static util::StatusOr<ProtoParametersSerialization> Create(
+  static absl::StatusOr<ProtoParametersSerialization> Create(
       google::crypto::tink::KeyTemplate key_template);
 
   // Creates a `ProtoParametersSerialization` object from a key template struct.
-  static util::StatusOr<ProtoParametersSerialization> Create(
+  static absl::StatusOr<ProtoParametersSerialization> Create(
       const KeyTemplateStruct& key_template);
 
   const google::crypto::tink::KeyTemplate& GetKeyTemplate() const {

@@ -60,7 +60,7 @@ TEST(KeyParserTest, ParseKey) {
           kNoIdTypeUrl, ParseNoIdKey);
 
   NoIdSerialization serialization;
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       parser->ParseKey(serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
@@ -74,7 +74,7 @@ TEST(KeyParserTest, ParsePublicKeyNoAccessToken) {
           kNoIdTypeUrl, ParseNoIdKey);
 
   NoIdSerialization serialization;
-  util::StatusOr<std::unique_ptr<Key>> public_key =
+  absl::StatusOr<std::unique_ptr<Key>> public_key =
       parser->ParseKey(serialization, absl::nullopt);
   ASSERT_THAT(public_key, IsOk());
   EXPECT_THAT((*public_key)->GetIdRequirement(), Eq(absl::nullopt));
@@ -88,7 +88,7 @@ TEST(KeyParserTest, ParseKeyWithInvalidSerializationType) {
           "example_type_url", ParseNoIdKey);
 
   IdKeySerialization serialization(/*id=*/123);
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       parser->ParseKey(serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -99,7 +99,7 @@ TEST(KeyParserTest, ParseKeyWithInvalidObjectIdentifier) {
           "mismatched_type_url", ParseNoIdKey);
 
   NoIdSerialization serialization;
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       parser->ParseKey(serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }

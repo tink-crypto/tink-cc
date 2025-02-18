@@ -30,7 +30,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<KeyTypeInfoStore::Info*> KeyTypeInfoStore::Get(
+absl::StatusOr<KeyTypeInfoStore::Info*> KeyTypeInfoStore::Get(
     absl::string_view type_url) const {
   auto it = type_url_to_info_.find(type_url);
   if (it == type_url_to_info_.end()) {

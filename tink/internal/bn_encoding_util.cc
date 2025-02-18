@@ -34,7 +34,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<std::string> GetValueOfFixedLength(
+absl::StatusOr<std::string> GetValueOfFixedLength(
     absl::string_view big_integer_encoding, int length) {
   if (big_integer_encoding.size() == length) {
     return std::string(big_integer_encoding);
@@ -52,7 +52,7 @@ util::StatusOr<std::string> GetValueOfFixedLength(
   return absl::StrCat(padded_string, big_integer_encoding);
 }
 
-util::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
+absl::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
     const RestrictedBigInteger& big_integer, int length,
     SecretKeyAccessToken token) {
   if (big_integer.SizeInBytes() == length) {

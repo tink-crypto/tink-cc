@@ -81,7 +81,7 @@ using OutputPrimitive = std::vector<std::pair<int, std::string>>;
 // It appends " (primary)" to the string for the primary id.
 class Wrapper : public PrimitiveWrapper<InputPrimitive, OutputPrimitive> {
  public:
-  crypto::tink::util::StatusOr<std::unique_ptr<OutputPrimitive>> Wrap(
+  absl::StatusOr<std::unique_ptr<OutputPrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<InputPrimitive>> primitive_set)
       const override {
     auto result = absl::make_unique<OutputPrimitive>();
@@ -96,7 +96,7 @@ class Wrapper : public PrimitiveWrapper<InputPrimitive, OutputPrimitive> {
   }
 };
 
-crypto::tink::util::StatusOr<std::unique_ptr<InputPrimitive>> CreateIn(
+absl::StatusOr<std::unique_ptr<InputPrimitive>> CreateIn(
     const google::crypto::tink::KeyData& key_data) {
   if (absl::StartsWith(key_data.type_url(), "error:")) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -106,22 +106,22 @@ crypto::tink::util::StatusOr<std::unique_ptr<InputPrimitive>> CreateIn(
   }
 }
 
-util::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKey(
+absl::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKey(
     const Key& key) {
   return absl::make_unique<InputPrimitive>("input primitive from key");
 }
 
-util::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKeyFailing(
+absl::StatusOr<std::unique_ptr<InputPrimitive>> CreateInFromKeyFailing(
     const Key& key) {
   return absl::Status(absl::StatusCode::kNotFound, "Not found.");
 }
 
 // Creates an XChaCha20Poly1305Key from the given parameters.
-util::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
+absl::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
 CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
                            absl::optional<int> id_requirement) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       params.GetVariant(), secret, id_requirement, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
@@ -129,7 +129,7 @@ CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
   return absl::make_unique<XChaCha20Poly1305Key>(*key);
 }
 
-util::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
+absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
     const google::crypto::tink::KeyData& key_data) {
   google::crypto::tink::XChaCha20Poly1305Key key;
   if (!key.ParseFromString(key_data.value())) {
@@ -140,7 +140,7 @@ util::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305KeyData(
       util::SecretDataFromStringView(key.key_value()));
 }
 
-util::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305Key(
+absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305Key(
     const Key& key) {
   XChaCha20Poly1305Key xchacha_key =
       dynamic_cast<const XChaCha20Poly1305Key&>(key);
@@ -176,7 +176,7 @@ TEST(KeysetWrapperImplTest, Basic) {
   google::crypto::tink::Keyset keyset = CreateKeyset(keydata);
   keyset.set_primary_key_id(222);
 
-  util::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
+  absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
       wrapper_impl->Wrap(keyset, /*annotations=*/{});
 
   ASSERT_THAT(wrapped, IsOk());
@@ -196,7 +196,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(KeysetWrapperImplTest, BasicFromKey) {
   ASSERT_THAT(AeadConfig::Register(), IsOk());
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
-  util::StatusOr<XChaCha20Poly1305Parameters> params =
+  absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(variant);
 
   KeyGenConfiguration key_gen_config;
@@ -214,7 +214,7 @@ TEST_P(KeysetWrapperImplTest, BasicFromKey) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *params, KeyStatus::kEnabled, /*is_primary=*/false, /*id=*/222);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .Build(key_gen_config);
@@ -225,7 +225,7 @@ TEST_P(KeysetWrapperImplTest, BasicFromKey) {
       absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, &CreateIn, &CreateInFromKey);
 
-  util::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped = wrapper_impl->Wrap(
+  absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped = wrapper_impl->Wrap(
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
   ASSERT_THAT(wrapped, IsOk());
   ASSERT_THAT(
@@ -240,7 +240,7 @@ TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
   }
   ASSERT_THAT(AeadConfig::Register(), IsOk());
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
-  util::StatusOr<XChaCha20Poly1305Parameters> params =
+  absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(variant);
 
   KeyGenConfiguration key_gen_config;
@@ -258,7 +258,7 @@ TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *params, KeyStatus::kEnabled, /*is_primary=*/false, /*id=*/222);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .Build(key_gen_config);
@@ -268,17 +268,17 @@ TEST_P(KeysetWrapperImplTest, AeadEncryptDecryptWorks) {
   auto wrapper_impl = absl::make_unique<KeysetWrapperImpl<Aead, Aead>>(
       &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
       &GetPrimitiveFromXChaCha20Poly1305Key);
-  util::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
+  absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
 
   // Check that encrypt/decrypt works.
   const std::string plaintext = "plaintext";
   const std::string associated_data = "associated_data";
-  util::StatusOr<std::string> encryption =
+  absl::StatusOr<std::string> encryption =
       (*aead)->Encrypt(plaintext, associated_data);
   ASSERT_THAT(encryption, IsOk());
-  util::StatusOr<std::string> decryption =
+  absl::StatusOr<std::string> decryption =
       (*aead)->Decrypt(*encryption, associated_data);
   ASSERT_THAT(decryption, IsOk());
   EXPECT_THAT(*decryption, Eq(plaintext));
@@ -291,7 +291,7 @@ TEST_P(KeysetWrapperImplTest,
   }
   ASSERT_THAT(AeadConfig::Register(), IsOk());
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
-  util::StatusOr<XChaCha20Poly1305Parameters> params =
+  absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(variant);
 
   KeyGenConfiguration key_gen_config;
@@ -309,7 +309,7 @@ TEST_P(KeysetWrapperImplTest,
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *params, KeyStatus::kEnabled, /*is_primary=*/false, /*id=*/222);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .Build(key_gen_config);
@@ -323,17 +323,17 @@ TEST_P(KeysetWrapperImplTest,
   auto wrapper_impl = absl::make_unique<KeysetWrapperImpl<Aead, Aead>>(
       &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
       aead_primitive_getter_failing);
-  util::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
+  absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
 
   // Check that encrypt/decrypt works.
   const std::string plaintext = "plaintext";
   const std::string associated_data = "associated_data";
-  util::StatusOr<std::string> encryption =
+  absl::StatusOr<std::string> encryption =
       (*aead)->Encrypt(plaintext, associated_data);
   ASSERT_THAT(encryption, IsOk());
-  util::StatusOr<std::string> decryption =
+  absl::StatusOr<std::string> decryption =
       (*aead)->Decrypt(*encryption, associated_data);
   ASSERT_THAT(decryption, IsOk());
   EXPECT_THAT(*decryption, Eq(plaintext));
@@ -347,7 +347,7 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
     GTEST_SKIP() << "XChaCha20-Poly1305 is not supported when OpenSSL is used";
   }
   ASSERT_THAT(AeadConfig::Register(), IsOk());
-  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       XChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(test::HexDecodeOrDie("ab1562faea9f47af3ae1c3d6d030e3af23"
                                           "0255dff3df583ced6fbbcbf9d606a9"),
@@ -359,24 +359,24 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
                                                         KeyStatus::kEnabled,
                                                         /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry0)).Build();
   ASSERT_THAT(handle.status(), IsOk());
   AeadWrapper wrapper;
   auto wrapper_impl = absl::make_unique<KeysetWrapperImpl<Aead, Aead>>(
       &wrapper, &GetPrimitiveFromXChaCha20Poly1305KeyData,
       &GetPrimitiveFromXChaCha20Poly1305Key);
-  util::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
+  absl::StatusOr<std::unique_ptr<Aead>> aead = wrapper_impl->Wrap(
       TestKeysetHandle::GetKeyset(*handle), /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
 
   // Check that encrypt/decrypt works.
-  util::StatusOr<std::string> encryption =
+  absl::StatusOr<std::string> encryption =
       (*aead)->Encrypt(/*plaintext=*/"", /*associated_data=*/"");
   ASSERT_THAT(encryption, IsOk());
   EXPECT_THAT(encryption->size(), Eq(key->GetOutputPrefix().size() +
                                      /*tag_size=*/16 + /*nonce_size=*/24));
-  util::StatusOr<std::string> decryption =
+  absl::StatusOr<std::string> decryption =
       (*aead)->Decrypt(*encryption, /*associated_data=*/"");
   EXPECT_THAT(encryption->substr(0, key->GetOutputPrefix().size()),
               Eq(key->GetOutputPrefix()));
@@ -389,7 +389,7 @@ TEST(KeysetWrapperImpl2Test, AeadEncryptDecryptFixedValuesWorks) {
                    /*key_id*/ "02030405",
                    /*iv*/ "6a5e0c4617e07091b605a4de2c02dde117de2ebd53b23497",
                    /*ct*/ "", /*tag*/ "e2697ea6877aba39d9555a00e14db041"));
-  util::StatusOr<std::string> fixed_ct_decryption =
+  absl::StatusOr<std::string> fixed_ct_decryption =
       (*aead)->Decrypt(fixed_ct, /*associated_data=*/"");
   ASSERT_THAT(fixed_ct_decryption, IsOk());
   EXPECT_THAT(*fixed_ct_decryption, Eq(""));
@@ -405,7 +405,7 @@ TEST(KeysetWrapperImplTest, FailingGetPrimitive) {
   google::crypto::tink::Keyset keyset = CreateKeyset(keydata);
   keyset.set_primary_key_id(1);
 
-  util::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
+  absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
       wrapper_impl->Wrap(keyset, /*annotations=*/{});
 
   ASSERT_THAT(wrapped, Not(IsOk()));
@@ -419,7 +419,7 @@ TEST(KeysetWrapperImplTest, ValidatesKeyset) {
   auto wrapper_impl =
       absl::make_unique<KeysetWrapperImpl<InputPrimitive, OutputPrimitive>>(
           &wrapper, &CreateIn, &CreateInFromKey);
-  util::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
+  absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
       wrapper_impl->Wrap(google::crypto::tink::Keyset(), /*annotations=*/{});
 
   ASSERT_THAT(wrapped, Not(IsOk()));
@@ -437,7 +437,7 @@ TEST(KeysetWrapperImplTest, OnlyEnabled) {
   keyset.set_primary_key_id(222);
   // KeyId 333 is index 2.
   keyset.mutable_key(2)->set_status(google::crypto::tink::DISABLED);
-  util::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
+  absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped =
       wrapper_impl->Wrap(keyset, /*annotations=*/{});
 
   ASSERT_THAT(wrapped, IsOk());
@@ -490,7 +490,7 @@ TEST(KeysetWrapperImplTest, WrapWithAnnotationCorrectlyWrittenToPrimitiveSet) {
             return GetOutputPrimitiveForTesting();
           });
 
-  util::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped_primitive =
+  absl::StatusOr<std::unique_ptr<OutputPrimitive>> wrapped_primitive =
       keyset_wrapper->Wrap(keyset, kExpectedAnnotations);
 
   EXPECT_EQ(generated_annotations, kExpectedAnnotations);

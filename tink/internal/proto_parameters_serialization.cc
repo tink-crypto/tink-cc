@@ -36,7 +36,7 @@ namespace internal {
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 
-util::StatusOr<ProtoParametersSerialization>
+absl::StatusOr<ProtoParametersSerialization>
 ProtoParametersSerialization::Create(absl::string_view type_url,
                                      OutputPrefixType output_prefix_type,
                                      absl::string_view serialized_proto) {
@@ -51,7 +51,7 @@ ProtoParametersSerialization::Create(absl::string_view type_url,
   return ProtoParametersSerialization(key_template);
 }
 
-util::StatusOr<ProtoParametersSerialization>
+absl::StatusOr<ProtoParametersSerialization>
 ProtoParametersSerialization::Create(KeyTemplate key_template) {
   if (!IsPrintableAscii(key_template.type_url())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -60,7 +60,7 @@ ProtoParametersSerialization::Create(KeyTemplate key_template) {
   return ProtoParametersSerialization(std::move(key_template));
 }
 
-util::StatusOr<ProtoParametersSerialization>
+absl::StatusOr<ProtoParametersSerialization>
 ProtoParametersSerialization::Create(const KeyTemplateStruct& key_template) {
   if (!IsPrintableAscii(key_template.type_url)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

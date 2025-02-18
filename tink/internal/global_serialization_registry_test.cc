@@ -86,12 +86,12 @@ struct KeyTestVector {
 };
 
 std::unique_ptr<const AesCmacKey> CreateAesCmacKey() {
-  util::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<AesCmacKey> key =
+  absl::StatusOr<AesCmacKey> key =
       AesCmacKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                          /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -100,7 +100,7 @@ std::unique_ptr<const AesCmacKey> CreateAesCmacKey() {
 }
 
 std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
-  util::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
+  absl::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
       RestrictedData(/*num_random_bytes=*/32), GetPartialKeyAccess());
   CHECK_OK(key);
 
@@ -108,7 +108,7 @@ std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
 }
 
 std::unique_ptr<const AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey() {
-  util::StatusOr<AesCtrHmacAeadParameters> parameters =
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(32)
           .SetHmacKeySizeInBytes(32)
@@ -119,7 +119,7 @@ std::unique_ptr<const AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey() {
           .Build();
   CHECK_OK(parameters);
 
-  util::StatusOr<AesCtrHmacAeadKey> key =
+  absl::StatusOr<AesCtrHmacAeadKey> key =
       AesCtrHmacAeadKey::Builder()
           .SetParameters(*parameters)
           .SetAesKeyBytes(RestrictedData(/*num_random_bytes=*/32))
@@ -131,7 +131,7 @@ std::unique_ptr<const AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey() {
 }
 
 std::unique_ptr<const AesEaxKey> CreateAesEaxKey() {
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -140,7 +140,7 @@ std::unique_ptr<const AesEaxKey> CreateAesEaxKey() {
           .Build();
   CHECK_OK(parameters);
 
-  util::StatusOr<AesEaxKey> key =
+  absl::StatusOr<AesEaxKey> key =
       AesEaxKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                         /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -149,7 +149,7 @@ std::unique_ptr<const AesEaxKey> CreateAesEaxKey() {
 }
 
 std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -158,7 +158,7 @@ std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
           .Build();
   CHECK_OK(parameters);
 
-  util::StatusOr<AesGcmKey> key =
+  absl::StatusOr<AesGcmKey> key =
       AesGcmKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                         /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -167,11 +167,11 @@ std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
 }
 
 std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<AesGcmSivKey> key =
+  absl::StatusOr<AesGcmSivKey> key =
       AesGcmSivKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                            /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -180,11 +180,11 @@ std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
 }
 
 std::unique_ptr<const AesSivKey> CreateAesSivKey() {
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/32, AesSivParameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<AesSivKey> key =
+  absl::StatusOr<AesSivKey> key =
       AesSivKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                         /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -193,7 +193,7 @@ std::unique_ptr<const AesSivKey> CreateAesSivKey() {
 }
 
 std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
-  util::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
+  absl::StatusOr<ChaCha20Poly1305Key> key = ChaCha20Poly1305Key::Create(
       ChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(/*num_random_bytes=*/32), /*id_requirement=*/123,
       GetPartialKeyAccess());
@@ -203,7 +203,7 @@ std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
 }
 
 std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -212,12 +212,12 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
           .Build();
   CHECK_OK(parameters);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   CHECK_OK(ec_key);
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
 
-  util::StatusOr<EcdsaPublicKey> public_key =
+  absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(public_key);
@@ -226,7 +226,7 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                            GetInsecureSecretKeyAccessInternal());
 
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());
   CHECK_OK(private_key);
 
@@ -234,7 +234,7 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
 }
 
 std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -243,12 +243,12 @@ std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
           .Build();
   CHECK_OK(parameters);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   CHECK_OK(ec_key);
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
 
-  util::StatusOr<EcdsaPublicKey> public_key =
+  absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(public_key);
@@ -257,14 +257,14 @@ std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
 }
 
 std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<std::unique_ptr<Ed25519Key>> key_pair = NewEd25519Key();
+  absl::StatusOr<std::unique_ptr<Ed25519Key>> key_pair = NewEd25519Key();
   CHECK_OK(key_pair);
 
-  util::StatusOr<Ed25519PublicKey> public_key =
+  absl::StatusOr<Ed25519PublicKey> public_key =
       Ed25519PublicKey::Create(*parameters, (*key_pair)->public_key,
                                /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(public_key);
@@ -272,7 +272,7 @@ std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
   RestrictedData private_key_bytes = RestrictedData(
       (*key_pair)->private_key, GetInsecureSecretKeyAccessInternal());
 
-  util::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
+  absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
       *public_key, private_key_bytes, GetPartialKeyAccess());
   CHECK_OK(private_key);
 
@@ -280,11 +280,11 @@ std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
 }
 
 std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<Ed25519PublicKey> key =
+  absl::StatusOr<Ed25519PublicKey> key =
       Ed25519PublicKey::Create(*parameters, subtle::Random::GetRandomBytes(32),
                                /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -293,12 +293,12 @@ std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
 }
 
 std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   CHECK_OK(parameters);
 
-  util::StatusOr<HkdfPrfKey> key =
+  absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                          GetPartialKeyAccess());
   CHECK_OK(key);
@@ -307,12 +307,12 @@ std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
 }
 
 std::unique_ptr<const HmacKey> CreateHmacKey() {
-  util::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+  absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<HmacKey> key =
+  absl::StatusOr<HmacKey> key =
       HmacKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                       /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -321,11 +321,11 @@ std::unique_ptr<const HmacKey> CreateHmacKey() {
 }
 
 std::unique_ptr<const HmacPrfKey> CreateHmacPrfKey() {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   CHECK_OK(parameters);
 
-  util::StatusOr<HmacPrfKey> key =
+  absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                          GetPartialKeyAccess());
   CHECK_OK(key);
@@ -334,12 +334,12 @@ std::unique_ptr<const HmacPrfKey> CreateHmacPrfKey() {
 }
 
 std::unique_ptr<const LegacyKmsAeadKey> CreateLegacyKmsAeadKey() {
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create("key_uri",
                                       LegacyKmsAeadParameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<LegacyKmsAeadKey> key =
+  absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/123);
   CHECK_OK(key);
 
@@ -347,11 +347,11 @@ std::unique_ptr<const LegacyKmsAeadKey> CreateLegacyKmsAeadKey() {
 }
 
 std::unique_ptr<const XAesGcmKey> CreateXAesGcmKey() {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, /*salt_size_bytes=*/12);
   CHECK_OK(parameters);
 
-  util::StatusOr<XAesGcmKey> key =
+  absl::StatusOr<XAesGcmKey> key =
       XAesGcmKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                          /*id_requirement=*/123, GetPartialKeyAccess());
   CHECK_OK(key);
@@ -360,7 +360,7 @@ std::unique_ptr<const XAesGcmKey> CreateXAesGcmKey() {
 }
 
 std::unique_ptr<const XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key() {
-  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       XChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(/*num_random_bytes=*/32), /*id_requirement=*/123,
       GetPartialKeyAccess());
@@ -395,12 +395,12 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(GlobalSerializationRegistryTest, SerializeAndParse) {
   const KeyTestVector& test_case = GetParam();
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       GlobalSerializationRegistry().SerializeKey<ProtoKeySerialization>(
           *test_case.key, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       GlobalSerializationRegistry().ParseKey(
           **serialization, GetInsecureSecretKeyAccessInternal());
   ASSERT_THAT(parsed_key, IsOk());

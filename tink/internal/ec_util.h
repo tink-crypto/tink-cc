@@ -62,11 +62,11 @@ struct Ed25519Key {
 // EcKey.
 
 // Returns a new EC key for the specified curve.
-crypto::tink::util::StatusOr<EcKey> NewEcKey(
+absl::StatusOr<EcKey> NewEcKey(
     crypto::tink::subtle::EllipticCurveType curve_type);
 
 // Returns a new EC key for the specified curve derived from a secret seed.
-crypto::tink::util::StatusOr<EcKey> NewEcKey(
+absl::StatusOr<EcKey> NewEcKey(
     crypto::tink::subtle::EllipticCurveType curve_type,
     const crypto::tink::util::SecretData &secret_seed);
 
@@ -74,10 +74,10 @@ crypto::tink::util::StatusOr<EcKey> NewEcKey(
 
 // Returns a new X25519Key key. It returns a kInternal error status if the
 // OpenSSL/BoringSSL APIs fail.
-crypto::tink::util::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key();
+absl::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key();
 
 // Returns a X25519Key matching the specified EcKey.
-crypto::tink::util::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
+absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
     const EcKey &ec_key);
 
 // Returns an EcKey matching the specified X25519Key.
@@ -85,25 +85,25 @@ EcKey EcKeyFromX25519Key(const X25519Key *x25519_key);
 
 // Given an OpenSSL/BoringSSL key EC_KEY `key` and curve type `curve` return an
 // EcKey.
-util::StatusOr<EcKey> EcKeyFromSslEcKey(
+absl::StatusOr<EcKey> EcKeyFromSslEcKey(
     crypto::tink::subtle::EllipticCurveType curve, const EC_KEY &key);
 
 // Generates a shared secret using `private_key` and `peer_public_key`; keys
 // must be X25519 keys otherwise an error is returned.
-crypto::tink::util::StatusOr<util::SecretData> ComputeX25519SharedSecret(
+absl::StatusOr<util::SecretData> ComputeX25519SharedSecret(
     EVP_PKEY *private_key, EVP_PKEY *peer_public_key);
 
 // Computes the corresponding public+private key for the supplied private key.
-crypto::tink::util::StatusOr<std::unique_ptr<X25519Key>>
-X25519KeyFromPrivateKey(const crypto::tink::util::SecretData &private_key);
+absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
+    const crypto::tink::util::SecretData &private_key);
 
 // Ed25519Key Utils.
 
 // Returns a new ED25519 key.
-crypto::tink::util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key();
+absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key();
 
 // Returns a new ED25519 key generated from a 32-byte secret seed.
-crypto::tink::util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
+absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
     const crypto::tink::util::SecretData &secret_seed);
 
 // EC_POINT Encode/Decode.
@@ -117,41 +117,41 @@ crypto::tink::util::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
 
 // Returns OpenSSL/BoringSSL's EC_POINT constructed from curve type
 // `curve_type`, point `format` and encoded public key's point `encoded_point`.
-crypto::tink::util::StatusOr<SslUniquePtr<EC_POINT>> EcPointDecode(
+absl::StatusOr<SslUniquePtr<EC_POINT>> EcPointDecode(
     crypto::tink::subtle::EllipticCurveType curve_type,
     crypto::tink::subtle::EcPointFormat format,
     absl::string_view encoded_point);
 
 // Returns the encoded public key based on curve type `curve_type`, point
 // `format` and OpenSSL/BoringSSL's EC_POINT public key `point`.
-crypto::tink::util::StatusOr<std::string> EcPointEncode(
+absl::StatusOr<std::string> EcPointEncode(
     crypto::tink::subtle::EllipticCurveType curve_type,
     crypto::tink::subtle::EcPointFormat format, const EC_POINT *point);
 
 // Returns the encoding size of a point on the specified elliptic curve
 // `curve_type` when the given point `format` is used.
-util::StatusOr<int32_t> EcPointEncodingSizeInBytes(
+absl::StatusOr<int32_t> EcPointEncodingSizeInBytes(
     crypto::tink::subtle::EllipticCurveType curve_type,
     crypto::tink::subtle::EcPointFormat format);
 
 // Returns the size (in bytes) of an element of the field over which
 // the curve `curve_type` is defined.
-util::StatusOr<int32_t> EcFieldSizeInBytes(
+absl::StatusOr<int32_t> EcFieldSizeInBytes(
     crypto::tink::subtle::EllipticCurveType curve_type);
 
 // EC_GROUP Utils.
 
 // Returns OpenSSL/BoringSSL's EC_GROUP constructed from the given `curve_type`.
-crypto::tink::util::StatusOr<SslUniquePtr<EC_GROUP>> EcGroupFromCurveType(
+absl::StatusOr<SslUniquePtr<EC_GROUP>> EcGroupFromCurveType(
     crypto::tink::subtle::EllipticCurveType curve_type);
 
 // Returns the curve type associated with the given `group`.
-crypto::tink::util::StatusOr<crypto::tink::subtle::EllipticCurveType>
-CurveTypeFromEcGroup(const EC_GROUP *group);
+absl::StatusOr<crypto::tink::subtle::EllipticCurveType> CurveTypeFromEcGroup(
+    const EC_GROUP *group);
 
 // Returns OpenSSL/BoringSSL's EC_POINT constructed from the curve type,
 // big-endian representation of public key's x-coordinate and y-coordinate.
-crypto::tink::util::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(
+absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(
     crypto::tink::subtle::EllipticCurveType curve, absl::string_view pubx,
     absl::string_view puby);
 
@@ -166,13 +166,13 @@ crypto::tink::util::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(
 //   ECDSA-Sig-Value :: = SEQUENCE { r INTEGER, s INTEGER }.
 // In particular, the encoding is:
 //   0x30 || totalLength || 0x02 || r's length || r || 0x02 || s's length || s
-util::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP *group,
+absl::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP *group,
                                                  absl::string_view ieee_sig);
 
 // Returns the ECDH's shared secret between two peers A and B using A's private
 // key `priv_key` and B's public key `pub_key`. Returns error if `pub_key`
 // is not on `priv_key`'s curve `curve`.
-util::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
+absl::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
     crypto::tink::subtle::EllipticCurveType curve, const BIGNUM *priv_key,
     const EC_POINT *pub_key);
 

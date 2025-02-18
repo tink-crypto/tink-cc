@@ -39,7 +39,7 @@ namespace internal {
 class ParametersSerializer {
  public:
   // Returns the serialization of `parameters`.
-  virtual util::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
+  virtual absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
       const Parameters& parameters) const = 0;
 
   // Returns the object identifier for this serialization, which is only valid
@@ -71,7 +71,7 @@ class ParametersSerializerImpl : public ParametersSerializer {
           function)
       : object_identifier_(object_identifier), function_(function) {}
 
-  util::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
+  absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
       const Parameters& parameters) const override {
     const ParametersT* pt = dynamic_cast<const ParametersT*>(&parameters);
     if (pt == nullptr) {

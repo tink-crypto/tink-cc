@@ -73,7 +73,7 @@ absl::Status AesCtr128Crypt(absl::string_view data, uint8_t iv[AesBlockSize()],
   return absl::OkStatus();
 }
 
-util::StatusOr<const EVP_CIPHER*> GetAesCtrCipherForKeySize(
+absl::StatusOr<const EVP_CIPHER *> GetAesCtrCipherForKeySize(
     uint32_t key_size_in_bytes) {
   switch (key_size_in_bytes) {
     case 16:
@@ -86,7 +86,7 @@ util::StatusOr<const EVP_CIPHER*> GetAesCtrCipherForKeySize(
   }
 }
 
-util::StatusOr<const EVP_CIPHER*> GetAesCbcCipherForKeySize(
+absl::StatusOr<const EVP_CIPHER *> GetAesCbcCipherForKeySize(
     uint32_t key_size_in_bytes) {
   switch (key_size_in_bytes) {
     case 16:

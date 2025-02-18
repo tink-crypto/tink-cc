@@ -79,7 +79,7 @@ class KeysetHandleBuilderEntry {
 
   // Creates a Keyset::Key proto with the specified key `id` from either a
   // `Key` object or a `Parameters` object.
-  virtual crypto::tink::util::StatusOr<
+  virtual absl::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
   CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) = 0;
 
@@ -103,7 +103,7 @@ class KeyEntry : public KeysetHandleBuilderEntry {
 
   explicit KeyEntry(std::shared_ptr<const Key> key) : key_(std::move(key)) {}
 
-  crypto::tink::util::StatusOr<
+  absl::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
   CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) override;
 
@@ -123,7 +123,7 @@ class ParametersEntry : public KeysetHandleBuilderEntry {
   explicit ParametersEntry(std::shared_ptr<const Parameters> parameters)
       : parameters_(std::move(parameters)) {}
 
-  crypto::tink::util::StatusOr<
+  absl::StatusOr<
       crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
   CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) override;
 

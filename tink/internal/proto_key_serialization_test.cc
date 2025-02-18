@@ -50,7 +50,7 @@ class ProtoKeySerializationTest : public ::testing::Test {
 TEST_F(ProtoKeySerializationTest, CreateWithIdRequirement) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -67,7 +67,7 @@ TEST_F(ProtoKeySerializationTest, CreateWithIdRequirement) {
 TEST_F(ProtoKeySerializationTest, CreateWithoutIdRequirement) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::RAW,
                                     /*id_requirement=*/absl::nullopt);
@@ -84,14 +84,14 @@ TEST_F(ProtoKeySerializationTest, CreateWithoutIdRequirement) {
 TEST_F(ProtoKeySerializationTest, OutputPrefixIncompatibleWithIdRequirement) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> tink_without_id =
+  absl::StatusOr<ProtoKeySerialization> tink_without_id =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(tink_without_id.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 
-  util::StatusOr<ProtoKeySerialization> raw_with_id =
+  absl::StatusOr<ProtoKeySerialization> raw_with_id =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::RAW,
                                     /*id_requirement=*/12345);
@@ -102,13 +102,13 @@ TEST_F(ProtoKeySerializationTest, OutputPrefixIncompatibleWithIdRequirement) {
 TEST_F(ProtoKeySerializationTest, Equals) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  util::StatusOr<ProtoKeySerialization> other_serialization =
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -120,13 +120,13 @@ TEST_F(ProtoKeySerializationTest, Equals) {
 TEST_F(ProtoKeySerializationTest, TypeUrlAndObjectIdentifierNotEqual) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  util::StatusOr<ProtoKeySerialization> other_serialization =
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
       ProtoKeySerialization::Create("different_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -136,7 +136,7 @@ TEST_F(ProtoKeySerializationTest, TypeUrlAndObjectIdentifierNotEqual) {
 }
 
 TEST_F(ProtoKeySerializationTest, SerializedKeyNotEqual) {
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type_url",
           RestrictedData("serialized_key", InsecureSecretKeyAccess::Get()),
@@ -144,7 +144,7 @@ TEST_F(ProtoKeySerializationTest, SerializedKeyNotEqual) {
           /*id_requirement=*/12345);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  util::StatusOr<ProtoKeySerialization> other_serialization =
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
       ProtoKeySerialization::Create(
           "type_url",
           RestrictedData("different_key", InsecureSecretKeyAccess::Get()),
@@ -158,13 +158,13 @@ TEST_F(ProtoKeySerializationTest, SerializedKeyNotEqual) {
 TEST_F(ProtoKeySerializationTest, KeyMaterialTypeNotEqual) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  util::StatusOr<ProtoKeySerialization> other_serialization =
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
       ProtoKeySerialization::Create("type_url", serialized_key, KeyData::REMOTE,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
@@ -176,13 +176,13 @@ TEST_F(ProtoKeySerializationTest, KeyMaterialTypeNotEqual) {
 TEST_F(ProtoKeySerializationTest, OutputPrefixTypeNotEqual) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  util::StatusOr<ProtoKeySerialization> other_serialization =
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC,
                                     OutputPrefixType::CRUNCHY,
@@ -194,13 +194,13 @@ TEST_F(ProtoKeySerializationTest, OutputPrefixTypeNotEqual) {
 TEST_F(ProtoKeySerializationTest, IdRequirementNotEqual) {
   RestrictedData serialized_key =
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  util::StatusOr<ProtoKeySerialization> other_serialization =
+  absl::StatusOr<ProtoKeySerialization> other_serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/6789);
@@ -212,7 +212,7 @@ TEST_F(ProtoKeySerializationTest, IdRequirementNotEqual) {
 TEST_F(ProtoKeySerializationTest, AssignSecretToStringView) {
   RestrictedData serialized_key =
       RestrictedData("secret", InsecureSecretKeyAccess::Get());
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/12345);

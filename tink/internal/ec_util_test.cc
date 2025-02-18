@@ -81,7 +81,7 @@ using ::testing::ValuesIn;
 // Use wycheproof test vectors to verify Ed25519 key generation from a seed (the
 // private key) results in the public/private key.
 TEST(EcUtilTest, NewEd25519KeyWithWycheproofTestVectors) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors("eddsa_test.json");
   ASSERT_THAT(parsed_input, IsOk());
 
@@ -98,7 +98,7 @@ TEST(EcUtilTest, NewEd25519KeyWithWycheproofTestVectors) {
     std::string public_key =
         GetBytesFromHexValue(key_value.struct_value().fields().at("pk"));
 
-    util::StatusOr<std::unique_ptr<Ed25519Key>> key =
+    absl::StatusOr<std::unique_ptr<Ed25519Key>> key =
         NewEd25519Key(private_key);
     ASSERT_THAT(key, IsOk());
     EXPECT_EQ((*key)->public_key, public_key);
@@ -126,7 +126,7 @@ TEST(EcUtilTest, NewEd25519KeyInvalidSeed) {
 }
 
 TEST(EcUtilTest, NewEcKeyReturnsWellFormedX25519Key) {
-  util::StatusOr<EcKey> ec_key =
+  absl::StatusOr<EcKey> ec_key =
       NewEcKey(subtle::EllipticCurveType::CURVE25519);
   ASSERT_THAT(ec_key, IsOk());
   EXPECT_THAT(
@@ -161,9 +161,9 @@ TEST_P(EcUtilNewEcKeyWithSeed, KeysFromDifferentSeedAreDifferent) {
       test::HexDecodeOrDie("0f0e0d0c0b0a09080706050403020100"));
   subtle::EllipticCurveType curve = GetParam();
 
-  util::StatusOr<EcKey> keypair1 = NewEcKey(curve, seed1);
+  absl::StatusOr<EcKey> keypair1 = NewEcKey(curve, seed1);
   ASSERT_THAT(keypair1, IsOk());
-  util::StatusOr<EcKey> keypair2 = NewEcKey(curve, seed2);
+  absl::StatusOr<EcKey> keypair2 = NewEcKey(curve, seed2);
   ASSERT_THAT(keypair2, IsOk());
   EXPECT_THAT(*keypair1, Not(EqualsEcKey(*keypair2)));
 }
@@ -180,9 +180,9 @@ TEST_P(EcUtilNewEcKeyWithSeed, SameSeedGivesSameKey) {
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   subtle::EllipticCurveType curve = GetParam();
 
-  util::StatusOr<EcKey> keypair1 = NewEcKey(curve, seed1);
+  absl::StatusOr<EcKey> keypair1 = NewEcKey(curve, seed1);
   ASSERT_THAT(keypair1, IsOk());
-  util::StatusOr<EcKey> keypair2 = NewEcKey(curve, seed1);
+  absl::StatusOr<EcKey> keypair2 = NewEcKey(curve, seed1);
   ASSERT_THAT(keypair2, IsOk());
   EXPECT_THAT(*keypair1, EqualsEcKey(*keypair2));
 }
@@ -200,7 +200,7 @@ TEST(EcUtilTest, GenerationWithSeedFailsWithWrongCurve) {
   }
   util::SecretData seed = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  util::StatusOr<EcKey> keypair =
+  absl::StatusOr<EcKey> keypair =
       NewEcKey(subtle::EllipticCurveType::CURVE25519, seed);
   EXPECT_THAT(keypair.status(), StatusIs(absl::StatusCode::kInternal));
 }
@@ -215,15 +215,15 @@ TEST(EcUtilTest, NewEcKeyFromSeedUnimplementedIfOpenSsl) {
   }
   util::SecretData seed = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  util::StatusOr<EcKey> keypair =
+  absl::StatusOr<EcKey> keypair =
       NewEcKey(subtle::EllipticCurveType::CURVE25519, seed);
   EXPECT_THAT(keypair.status(), StatusIs(absl::StatusCode::kUnimplemented));
 }
 
 TEST(EcUtilTest, NewX25519KeyGeneratesNewKeyEveryTime) {
-  util::StatusOr<std::unique_ptr<X25519Key>> keypair1 = NewX25519Key();
+  absl::StatusOr<std::unique_ptr<X25519Key>> keypair1 = NewX25519Key();
   ASSERT_THAT(keypair1, IsOk());
-  util::StatusOr<std::unique_ptr<X25519Key>> keypair2 = NewX25519Key();
+  absl::StatusOr<std::unique_ptr<X25519Key>> keypair2 = NewX25519Key();
   ASSERT_THAT(keypair2, IsOk());
 
   EXPECT_THAT((*keypair1)->private_key,
@@ -236,12 +236,12 @@ TEST(EcUtilTest, NewX25519KeyGeneratesNewKeyEveryTime) {
 }
 
 TEST(EcUtilTest, X25519KeyToEcKeyAndBack) {
-  util::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
+  absl::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
   ASSERT_THAT(x25519_key, IsOk());
   EcKey ec_key = EcKeyFromX25519Key(x25519_key->get());
   ASSERT_EQ(ec_key.curve, EllipticCurveType::CURVE25519);
 
-  util::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
+  absl::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
       X25519KeyFromEcKey(ec_key);
   ASSERT_THAT(roundtrip_key, IsOk());
   EXPECT_THAT((*x25519_key)->private_key,
@@ -253,10 +253,10 @@ TEST(EcUtilTest, X25519KeyToEcKeyAndBack) {
 }
 
 TEST(EcUtilTest, X25519KeyFromRandomPrivateKey) {
-  util::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
+  absl::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
   ASSERT_THAT(x25519_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
+  absl::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
       X25519KeyFromPrivateKey((*x25519_key)->private_key);
   ASSERT_THAT(roundtrip_key, IsOk());
   EXPECT_THAT((*roundtrip_key)->private_key,
@@ -319,7 +319,7 @@ using X25519FunctionTest = TestWithParam<X25519FunctionTestVector>;
 TEST_P(X25519FunctionTest, ComputeX25519PublicKey) {
   X25519FunctionTestVector test_vector = GetParam();
 
-  util::StatusOr<std::unique_ptr<X25519Key>> key = X25519KeyFromPrivateKey(
+  absl::StatusOr<std::unique_ptr<X25519Key>> key = X25519KeyFromPrivateKey(
       util::SecretDataFromStringView(test_vector.private_key));
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT(absl::MakeSpan((*key)->public_value, X25519KeyPubKeySize()),
@@ -473,12 +473,12 @@ using EcUtilEncodeDecodePointTest = TestWithParam<EncodingTestVector>;
 
 TEST_P(EcUtilEncodeDecodePointTest, EcPointEncode) {
   const EncodingTestVector& test = GetParam();
-  util::StatusOr<SslUniquePtr<EC_POINT>> point =
+  absl::StatusOr<SslUniquePtr<EC_POINT>> point =
       GetEcPoint(test.curve, test::HexDecodeOrDie(test.x_hex),
                  test::HexDecodeOrDie(test.y_hex));
   ASSERT_THAT(point, IsOk());
 
-  util::StatusOr<std::string> encoded_point =
+  absl::StatusOr<std::string> encoded_point =
       EcPointEncode(test.curve, test.format, point->get());
   ASSERT_THAT(encoded_point, IsOk());
   EXPECT_EQ(test.encoded_hex, test::HexEncode(*encoded_point));
@@ -487,15 +487,15 @@ TEST_P(EcUtilEncodeDecodePointTest, EcPointEncode) {
 TEST_P(EcUtilEncodeDecodePointTest, EcPointDecode) {
   const EncodingTestVector& test = GetParam();
   // Get the test point and its encoded version.
-  util::StatusOr<SslUniquePtr<EC_POINT>> point =
+  absl::StatusOr<SslUniquePtr<EC_POINT>> point =
       GetEcPoint(test.curve, test::HexDecodeOrDie(test.x_hex),
                  test::HexDecodeOrDie(test.y_hex));
   ASSERT_THAT(point, IsOk());
   std::string encoded_str = test::HexDecodeOrDie(test.encoded_hex);
 
-  util::StatusOr<SslUniquePtr<EC_GROUP>> ec_group =
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> ec_group =
       EcGroupFromCurveType(test.curve);
-  util::StatusOr<SslUniquePtr<EC_POINT>> ec_point =
+  absl::StatusOr<SslUniquePtr<EC_POINT>> ec_point =
       EcPointDecode(test.curve, test.format, encoded_str);
   ASSERT_THAT(ec_point, IsOk());
   EXPECT_EQ(EC_POINT_cmp(ec_group->get(), point->get(), ec_point->get(),
@@ -504,7 +504,7 @@ TEST_P(EcUtilEncodeDecodePointTest, EcPointDecode) {
 
   // Modifying the 1st byte decoding fails.
   encoded_str[0] = '0';
-  util::StatusOr<SslUniquePtr<EC_POINT>> ec_point2 =
+  absl::StatusOr<SslUniquePtr<EC_POINT>> ec_point2 =
       EcPointDecode(test.curve, test.format, encoded_str);
   EXPECT_THAT(ec_point2, Not(IsOk()));
   if (test.format == EcPointFormat::UNCOMPRESSED ||
@@ -577,11 +577,11 @@ TEST(EcUtilTest, CurveTypeFromEcGroupSuccess) {
   EC_GROUP* p384_group = EC_GROUP_new_by_curve_name(NID_secp384r1);
   EC_GROUP* p521_group = EC_GROUP_new_by_curve_name(NID_secp521r1);
 
-  util::StatusOr<EllipticCurveType> p256_curve =
+  absl::StatusOr<EllipticCurveType> p256_curve =
       CurveTypeFromEcGroup(p256_group);
-  util::StatusOr<EllipticCurveType> p384_curve =
+  absl::StatusOr<EllipticCurveType> p384_curve =
       CurveTypeFromEcGroup(p384_group);
-  util::StatusOr<EllipticCurveType> p521_curve =
+  absl::StatusOr<EllipticCurveType> p521_curve =
       CurveTypeFromEcGroup(p521_group);
 
   ASSERT_THAT(p256_curve, IsOkAndHolds(EllipticCurveType::NIST_P256));
@@ -596,11 +596,11 @@ TEST(EcUtilTest, CurveTypeFromEcGroupUnimplemented) {
 }
 
 TEST(EcUtilTest, EcGroupFromCurveTypeSuccess) {
-  util::StatusOr<SslUniquePtr<EC_GROUP>> p256_curve =
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> p256_curve =
       EcGroupFromCurveType(EllipticCurveType::NIST_P256);
-  util::StatusOr<SslUniquePtr<EC_GROUP>> p384_curve =
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> p384_curve =
       EcGroupFromCurveType(EllipticCurveType::NIST_P384);
-  util::StatusOr<SslUniquePtr<EC_GROUP>> p521_curve =
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> p521_curve =
       EcGroupFromCurveType(EllipticCurveType::NIST_P521);
   ASSERT_THAT(p256_curve, IsOk());
   ASSERT_THAT(p384_curve, IsOk());
@@ -640,7 +640,7 @@ TEST(EcUtilTest, GetEcPointReturnsAValidPoint) {
   constexpr absl::string_view kYCoordinateHex =
       "00aa3fb2448335f694e3cda4ae0cc71b1b2f2a206fa802d7262f19983c44674fe15327a"
       "caac1fa40424c395a6556cb8167312527fae5865ecffc14bbdc17da78cdcf";
-  util::StatusOr<SslUniquePtr<EC_POINT>> point = GetEcPoint(
+  absl::StatusOr<SslUniquePtr<EC_POINT>> point = GetEcPoint(
       EllipticCurveType::NIST_P521, test::HexDecodeOrDie(kXCoordinateHex),
       test::HexDecodeOrDie(kYCoordinateHex));
   ASSERT_THAT(point, IsOk());
@@ -666,7 +666,7 @@ TEST(EcUtilTest, GetEcPointReturnsAValidPoint) {
 }
 
 TEST(EcUtilTest, EcSignatureIeeeToDer) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors("ecdsa_webcrypto_test.json");
   ASSERT_THAT(parsed_input, IsOk());
   const google::protobuf::Value& test_groups =
@@ -679,7 +679,7 @@ TEST(EcUtilTest, EcSignatureIeeeToDer) {
     if (curve == EllipticCurveType::UNKNOWN_CURVE) {
       continue;
     }
-    util::StatusOr<SslUniquePtr<EC_GROUP>> ec_group =
+    absl::StatusOr<SslUniquePtr<EC_GROUP>> ec_group =
         EcGroupFromCurveType(curve);
     ASSERT_THAT(ec_group, IsOk());
     // Read all the valid signatures.
@@ -691,7 +691,7 @@ TEST(EcUtilTest, EcSignatureIeeeToDer) {
         continue;
       }
       std::string sig = GetBytesFromHexValue(test_fields.at("sig"));
-      util::StatusOr<std::string> der_encoded =
+      absl::StatusOr<std::string> der_encoded =
           EcSignatureIeeeToDer(ec_group->get(), sig);
       ASSERT_THAT(der_encoded, IsOk());
 
@@ -708,11 +708,11 @@ TEST(EcUtilTest, EcSignatureIeeeToDer) {
       ASSERT_THAT(r, Not(IsNull()));
       ASSERT_THAT(s, Not(IsNull()));
 
-      util::StatusOr<int32_t> field_size = EcFieldSizeInBytes(curve);
+      absl::StatusOr<int32_t> field_size = EcFieldSizeInBytes(curve);
       ASSERT_THAT(field_size, IsOk());
-      util::StatusOr<std::string> r_str = BignumToString(r, *field_size);
+      absl::StatusOr<std::string> r_str = BignumToString(r, *field_size);
       ASSERT_THAT(r_str, IsOk());
-      util::StatusOr<std::string> s_str = BignumToString(s, *field_size);
+      absl::StatusOr<std::string> s_str = BignumToString(s, *field_size);
       ASSERT_THAT(s_str, IsOk());
       EXPECT_EQ(absl::StrCat(*r_str, *s_str), sig);
     }
@@ -724,13 +724,13 @@ using EcKeyFromSslEcKeyTestWithParam =
 
 TEST_P(EcKeyFromSslEcKeyTestWithParam, EcKeyFromSslEcKeySucceeds) {
   EllipticCurveType curve_type = GetParam();
-  util::StatusOr<SslUniquePtr<EC_GROUP>> group =
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
       EcGroupFromCurveType(curve_type);
   SslUniquePtr<EC_KEY> key(EC_KEY_new());
   EC_KEY_set_group(key.get(), group->get());
   EC_KEY_generate_key(key.get());
 
-  util::StatusOr<EcKey> ec_key = EcKeyFromSslEcKey(curve_type, *key);
+  absl::StatusOr<EcKey> ec_key = EcKeyFromSslEcKey(curve_type, *key);
 
   EXPECT_THAT(ec_key, IsOk());
   EXPECT_THAT(ec_key->curve, Eq(curve_type));
@@ -740,13 +740,13 @@ TEST_P(EcKeyFromSslEcKeyTestWithParam, EcKeyFromSslEcKeySucceeds) {
 }
 
 TEST(EcKeyFromSSLEcKeyTest, EcKeyFromSslKeyFailsWrongCurveType) {
-  util::StatusOr<SslUniquePtr<EC_GROUP>> group =
+  absl::StatusOr<SslUniquePtr<EC_GROUP>> group =
       EcGroupFromCurveType(EllipticCurveType::NIST_P256);
   SslUniquePtr<EC_KEY> key(EC_KEY_new());
   EC_KEY_set_group(key.get(), group->get());
   EC_KEY_generate_key(key.get());
 
-  util::StatusOr<EcKey> ec_key =
+  absl::StatusOr<EcKey> ec_key =
       EcKeyFromSslEcKey(EllipticCurveType::NIST_P384, *key);
 
   EXPECT_THAT(ec_key.status(), StatusIs(absl::StatusCode::kInternal));
@@ -787,7 +787,7 @@ bool HasFlag(const google::protobuf::Value& flags, absl::string_view value) {
 // Reads Wycheproof's ECDH test vectors from the given file `file_name`.
 std::vector<EcdhWycheproofTestVector> ReadEcdhWycheproofTestVectors(
     absl::string_view file_name) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(std::string(file_name));
   CHECK_OK(parsed_input.status());
   std::vector<EcdhWycheproofTestVector> test_vectors;
@@ -847,7 +847,7 @@ using EcUtilComputeEcdhSharedSecretTest =
 TEST_P(EcUtilComputeEcdhSharedSecretTest, ComputeEcdhSharedSecretWycheproof) {
   EcdhWycheproofTestVector params = GetParam();
 
-  util::StatusOr<int32_t> point_size =
+  absl::StatusOr<int32_t> point_size =
       internal::EcPointEncodingSizeInBytes(params.curve, params.format);
   ASSERT_THAT(point_size, IsOk());
   if (*point_size > params.pub_bytes.size()) {
@@ -857,7 +857,7 @@ TEST_P(EcUtilComputeEcdhSharedSecretTest, ComputeEcdhSharedSecretWycheproof) {
   std::string pub_bytes = params.pub_bytes.substr(
       params.pub_bytes.size() - *point_size, *point_size);
 
-  util::StatusOr<SslUniquePtr<EC_POINT>> pub_key =
+  absl::StatusOr<SslUniquePtr<EC_POINT>> pub_key =
       EcPointDecode(params.curve, params.format, pub_bytes);
   if (!pub_key.ok()) {
     // Make sure we didn't fail decoding a valid point, then we can terminate
@@ -866,11 +866,11 @@ TEST_P(EcUtilComputeEcdhSharedSecretTest, ComputeEcdhSharedSecretWycheproof) {
     return;
   }
 
-  util::StatusOr<SslUniquePtr<BIGNUM>> priv_key =
+  absl::StatusOr<SslUniquePtr<BIGNUM>> priv_key =
       StringToBignum(params.priv_bytes);
   ASSERT_THAT(priv_key, IsOk());
 
-  util::StatusOr<util::SecretData> shared_secret =
+  absl::StatusOr<util::SecretData> shared_secret =
       ComputeEcdhSharedSecret(params.curve, priv_key->get(), pub_key->get());
 
   if (params.result == "invalid") {

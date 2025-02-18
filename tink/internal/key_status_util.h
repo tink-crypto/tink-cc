@@ -29,12 +29,12 @@ namespace internal {
 
 // Returns `KeyStatus` C++ enum for a given `KeyStatusType` proto enum. If
 // `status_type` is unrecognized (i.e., not handled), then an error is returned.
-util::StatusOr<KeyStatus> FromKeyStatusType(
+absl::StatusOr<KeyStatus> FromKeyStatusType(
     google::crypto::tink::KeyStatusType status_type);
 
 // Returns `KeyStatusType` proto enum for a given `KeyStatus` C++ enum. If
 // `status` is unrecognized (i.e., not handled), then an error is returned.
-util::StatusOr<google::crypto::tink::KeyStatusType> ToKeyStatusType(
+absl::StatusOr<google::crypto::tink::KeyStatusType> ToKeyStatusType(
     KeyStatus status);
 
 // Returns a canonical name for a `KeyStatus` based on the corresponding

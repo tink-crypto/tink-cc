@@ -42,15 +42,15 @@ using ::crypto::tink::MonitoringClientFactory;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 
-util::StatusOr<const KeyTypeInfoStore::Info*> RegistryImpl::get_key_type_info(
+absl::StatusOr<const KeyTypeInfoStore::Info*> RegistryImpl::get_key_type_info(
     absl::string_view type_url) const {
   absl::MutexLock lock(&maps_mutex_);
   return key_type_info_store_.Get(type_url);
 }
 
-util::StatusOr<std::unique_ptr<KeyData>> RegistryImpl::NewKeyData(
+absl::StatusOr<std::unique_ptr<KeyData>> RegistryImpl::NewKeyData(
     const KeyTemplate& key_template) const {
-  util::StatusOr<const internal::KeyTypeInfoStore::Info*> info =
+  absl::StatusOr<const internal::KeyTypeInfoStore::Info*> info =
       get_key_type_info(key_template.type_url());
   if (!info.ok()) {
     return info.status();
@@ -64,10 +64,10 @@ util::StatusOr<std::unique_ptr<KeyData>> RegistryImpl::NewKeyData(
   return (*info)->key_factory().NewKeyData(key_template.value());
 }
 
-util::StatusOr<std::unique_ptr<KeyData>> RegistryImpl::GetPublicKeyData(
+absl::StatusOr<std::unique_ptr<KeyData>> RegistryImpl::GetPublicKeyData(
     absl::string_view type_url,
     absl::string_view serialized_private_key) const {
-  util::StatusOr<const internal::KeyTypeInfoStore::Info*> info =
+  absl::StatusOr<const internal::KeyTypeInfoStore::Info*> info =
       get_key_type_info(type_url);
   if (!info.ok()) {
     return info.status();
@@ -84,9 +84,9 @@ util::StatusOr<std::unique_ptr<KeyData>> RegistryImpl::GetPublicKeyData(
   return result;
 }
 
-util::StatusOr<KeyData> RegistryImpl::DeriveKey(const KeyTemplate& key_template,
+absl::StatusOr<KeyData> RegistryImpl::DeriveKey(const KeyTemplate& key_template,
                                                 InputStream* randomness) const {
-  util::StatusOr<const internal::KeyTypeInfoStore::Info*> info =
+  absl::StatusOr<const internal::KeyTypeInfoStore::Info*> info =
       get_key_type_info(key_template.type_url());
   if (!info.ok()) {
     return info.status();

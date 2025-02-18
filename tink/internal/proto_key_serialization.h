@@ -45,7 +45,7 @@ class ProtoKeySerialization : public Serialization {
   ProtoKeySerialization& operator=(ProtoKeySerialization&& other) = default;
 
   // Creates a `ProtoKeySerialization` object from individual components.
-  static util::StatusOr<ProtoKeySerialization> Create(
+  static absl::StatusOr<ProtoKeySerialization> Create(
       absl::string_view type_url, RestrictedData serialized_key,
       google::crypto::tink::KeyData::KeyMaterialType key_material_type,
       google::crypto::tink::OutputPrefixType output_prefix_type,

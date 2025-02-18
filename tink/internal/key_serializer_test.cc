@@ -57,7 +57,7 @@ TEST(KeySerializerTest, SerializeKey) {
           SerializeNoIdKey);
 
   NoIdKey key;
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       serializer->SerializeKey(key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -69,7 +69,7 @@ TEST(KeySerializerTest, SerializePublicKeyNoAccessToken) {
           SerializeNoIdKey);
 
   NoIdKey public_key;
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       serializer->SerializeKey(public_key, absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kNoIdTypeUrl));
@@ -81,7 +81,7 @@ TEST(KeySerializerTest, SerializeKeyWithInvalidKeyType) {
           SerializeNoIdKey);
 
   IdKey key(/*id=*/123);
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       serializer->SerializeKey(key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));

@@ -154,7 +154,7 @@ TEST_F(AesCtrTest, AesCtrDecryptInPlace) {
 
 TEST(AesUtilTest, GetAesCtrCipherForKeySize) {
   for (int i = 0; i < 64; i++) {
-    util::StatusOr<const EVP_CIPHER*> cipher = GetAesCtrCipherForKeySize(i);
+    absl::StatusOr<const EVP_CIPHER *> cipher = GetAesCtrCipherForKeySize(i);
     if (i == 16) {
       EXPECT_THAT(cipher, IsOkAndHolds(EVP_aes_128_ctr()));
     } else if (i == 32) {
@@ -167,7 +167,7 @@ TEST(AesUtilTest, GetAesCtrCipherForKeySize) {
 
 TEST(AesUtilTest, GetAesCbcCipherForKeySize) {
   for (int i = 0; i < 64; i++) {
-    util::StatusOr<const EVP_CIPHER*> cipher = GetAesCbcCipherForKeySize(i);
+    absl::StatusOr<const EVP_CIPHER *> cipher = GetAesCbcCipherForKeySize(i);
     if (i == 16) {
       EXPECT_THAT(cipher, IsOkAndHolds(EVP_aes_128_cbc()));
     } else if (i == 32) {

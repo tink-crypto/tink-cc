@@ -67,11 +67,11 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManager) {
               IsOk());
 
   std::string type_url = AesGcmKeyManager().get_key_type();
-  util::StatusOr<KeyTypeInfoStore::Info*> info = store.Get(type_url);
+  absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), true);
 
-  util::StatusOr<const KeyManager<Aead>*> manager =
+  absl::StatusOr<const KeyManager<Aead> *> manager =
       (*info)->get_key_manager<Aead>(type_url);
   ASSERT_THAT(manager, IsOk());
   EXPECT_EQ((*manager)->get_key_type(), type_url);
@@ -96,7 +96,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyTypeManagerAndChangeNewKeyAllowed) {
               IsOk());
 
   std::string type_url = AesGcmKeyManager().get_key_type();
-  util::StatusOr<KeyTypeInfoStore::Info*> info = store.Get(type_url);
+  absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), true);
 
@@ -140,20 +140,20 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagers) {
 
   {
     std::string private_type_url = EcdsaSignKeyManager().get_key_type();
-    util::StatusOr<KeyTypeInfoStore::Info*> info = store.Get(private_type_url);
+    absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(private_type_url);
     ASSERT_THAT(info, IsOk());
 
-    util::StatusOr<const KeyManager<PublicKeySign>*> manager =
+    absl::StatusOr<const KeyManager<PublicKeySign> *> manager =
         (*info)->get_key_manager<PublicKeySign>(private_type_url);
     ASSERT_THAT(manager, IsOk());
     EXPECT_EQ((*manager)->get_key_type(), private_type_url);
   }
   {
     std::string public_type_url = EcdsaVerifyKeyManager().get_key_type();
-    util::StatusOr<KeyTypeInfoStore::Info*> info = store.Get(public_type_url);
+    absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(public_type_url);
     ASSERT_THAT(info, IsOk());
 
-    util::StatusOr<const KeyManager<PublicKeyVerify>*> manager =
+    absl::StatusOr<const KeyManager<PublicKeyVerify> *> manager =
         (*info)->get_key_manager<PublicKeyVerify>(public_type_url);
     ASSERT_THAT(manager, IsOk());
     EXPECT_EQ((*manager)->get_key_type(), public_type_url);
@@ -211,11 +211,11 @@ TEST(KeyTypeInfoStoreTest, AddAsymmetricKeyTypeManagersAndChangeNewKeyAllowed) {
   std::string private_type_url = EcdsaSignKeyManager().get_key_type();
   std::string public_type_url = EcdsaVerifyKeyManager().get_key_type();
 
-  util::StatusOr<KeyTypeInfoStore::Info*> private_info =
+  absl::StatusOr<KeyTypeInfoStore::Info *> private_info =
       store.Get(private_type_url);
   ASSERT_THAT(private_info, IsOk());
   EXPECT_EQ((*private_info)->new_key_allowed(), true);
-  util::StatusOr<KeyTypeInfoStore::Info*> public_info =
+  absl::StatusOr<KeyTypeInfoStore::Info *> public_info =
       store.Get(public_type_url);
   ASSERT_THAT(public_info, IsOk());
   EXPECT_EQ((*public_info)->new_key_allowed(), true);
@@ -275,10 +275,10 @@ TEST(KeyTypeInfoStoreTest, AddKeyManager) {
               IsOk());
 
   std::string type_url = manager.get_key_type();
-  util::StatusOr<KeyTypeInfoStore::Info*> info = store.Get(type_url);
+  absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
 
-  util::StatusOr<const KeyManager<Aead>*> got_manager =
+  absl::StatusOr<const KeyManager<Aead> *> got_manager =
       (*info)->get_key_manager<Aead>(type_url);
   ASSERT_THAT(got_manager, IsOk());
   EXPECT_EQ((*got_manager)->get_key_type(), type_url);
@@ -292,7 +292,7 @@ TEST(KeyTypeInfoStoreTest, AddKeyManagerAndChangeNewKeyAllowed) {
               IsOk());
 
   std::string type_url = manager.get_key_type();
-  util::StatusOr<KeyTypeInfoStore::Info*> info = store.Get(type_url);
+  absl::StatusOr<KeyTypeInfoStore::Info *> info = store.Get(type_url);
   ASSERT_THAT(info, IsOk());
   EXPECT_EQ((*info)->new_key_allowed(), true);
 
@@ -331,7 +331,7 @@ TEST(KeyTypeInfoStoreTest, Get) {
   ASSERT_THAT(store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(),
                                       /*new_key_allowed=*/true),
               IsOk());
-  util::StatusOr<KeyTypeInfoStore::Info*> info =
+  absl::StatusOr<KeyTypeInfoStore::Info *> info =
       store.Get(AesGcmKeyManager().get_key_type());
   EXPECT_THAT(info, IsOk());
 
@@ -362,11 +362,11 @@ TEST(KeyTypeInfoStoreInfoTest, KeyTypeManager) {
   EXPECT_EQ(info.new_key_allowed(), true);
 
   std::string type_url = AesGcmKeyManager().get_key_type();
-  util::StatusOr<const KeyManager<Aead>*> aead_manager =
+  absl::StatusOr<const KeyManager<Aead> *> aead_manager =
       info.get_key_manager<Aead>(type_url);
   ASSERT_THAT(aead_manager, IsOk());
   EXPECT_EQ((*aead_manager)->DoesSupport(type_url), true);
-  util::StatusOr<const KeyManager<CordAead>*> cord_aead_manager =
+  absl::StatusOr<const KeyManager<CordAead> *> cord_aead_manager =
       info.get_key_manager<CordAead>(type_url);
   ASSERT_THAT(aead_manager, IsOk());
   EXPECT_EQ((*aead_manager)->DoesSupport(type_url), true);
@@ -395,7 +395,7 @@ TEST(KeyTypeInfoStoreInfoTest, AsymmetricKeyTypeManagers) {
   EXPECT_EQ(info.new_key_allowed(), true);
 
   std::string type_url = EcdsaSignKeyManager().get_key_type();
-  util::StatusOr<const KeyManager<PublicKeySign>*> manager =
+  absl::StatusOr<const KeyManager<PublicKeySign> *> manager =
       info.get_key_manager<PublicKeySign>(type_url);
   ASSERT_THAT(manager, IsOk());
   EXPECT_EQ((*manager)->DoesSupport(type_url), true);
@@ -427,7 +427,7 @@ TEST(KeyTypeInfoStoreInfoTest, KeyManager) {
   EXPECT_EQ(info.new_key_allowed(), true);
 
   std::string type_url = AesGcmKeyManager().get_key_type();
-  util::StatusOr<const KeyManager<Aead>*> got_manager =
+  absl::StatusOr<const KeyManager<Aead> *> got_manager =
       info.get_key_manager<Aead>(type_url);
   ASSERT_THAT(got_manager, IsOk());
   EXPECT_EQ((*got_manager)->DoesSupport(type_url), true);
@@ -449,14 +449,14 @@ TEST(KeyTypeInfoStoreInfoTest, GetPrimitive) {
 
   AesGcmKeyFormat format;
   format.set_key_size(32);
-  util::StatusOr<std::unique_ptr<KeyData>> key_data =
+  absl::StatusOr<std::unique_ptr<KeyData>> key_data =
       info.key_factory().NewKeyData(format.SerializeAsString());
   ASSERT_THAT(key_data, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       info.GetPrimitive<Aead>(**key_data);
   ASSERT_THAT(aead, IsOk());
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt("plaintext", "ad");
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt("plaintext", "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOk());
 }

@@ -34,7 +34,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<const EVP_MD *> EvpHashFromHashType(subtle::HashType hash_type) {
+absl::StatusOr<const EVP_MD *> EvpHashFromHashType(subtle::HashType hash_type) {
   switch (hash_type) {
     case subtle::HashType::SHA1:
       return EVP_sha1();
@@ -71,7 +71,7 @@ absl::Status IsHashTypeSafeForSignature(subtle::HashType sig_hash) {
   }
 }
 
-util::StatusOr<std::string> ComputeHash(absl::string_view input,
+absl::StatusOr<std::string> ComputeHash(absl::string_view input,
                                         const EVP_MD &hasher) {
   input = EnsureStringNonNull(input);
   std::string digest;

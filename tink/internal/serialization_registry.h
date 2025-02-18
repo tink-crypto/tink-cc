@@ -109,17 +109,17 @@ class SerializationRegistry {
   SerializationRegistry() = default;
 
   // Parses `serialization` into a `Parameters` instance.
-  util::StatusOr<std::unique_ptr<Parameters>> ParseParameters(
+  absl::StatusOr<std::unique_ptr<Parameters>> ParseParameters(
       const Serialization& serialization) const;
 
   // Similar to `ParseParameters` but falls back to legacy proto parameters
   // serialization if the corresponding parameters parser is not found.
-  util::StatusOr<std::unique_ptr<Parameters>> ParseParametersWithLegacyFallback(
+  absl::StatusOr<std::unique_ptr<Parameters>> ParseParametersWithLegacyFallback(
       const Serialization& serialization) const;
 
   // Serializes `parameters` into a `Serialization` instance.
   template <typename SerializationT>
-  util::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
+  absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
       const Parameters& parameters) const {
     SerializerIndex index = SerializerIndex::Create<SerializationT>(parameters);
     auto it = parameters_serializers_.find(index);
@@ -135,18 +135,18 @@ class SerializationRegistry {
   }
 
   // Parses `serialization` into a `Key` instance.
-  util::StatusOr<std::unique_ptr<Key>> ParseKey(
+  absl::StatusOr<std::unique_ptr<Key>> ParseKey(
       const Serialization& serialization,
       absl::optional<SecretKeyAccessToken> token) const;
 
   // Similar to `ParseKey` but falls back to legacy proto key serialization if
   // the corresponding key parser is not found.
-  util::StatusOr<std::unique_ptr<Key>> ParseKeyWithLegacyFallback(
+  absl::StatusOr<std::unique_ptr<Key>> ParseKeyWithLegacyFallback(
       const Serialization& serialization, SecretKeyAccessToken token) const;
 
   // Serializes `parameters` into a `Serialization` instance.
   template <typename SerializationT>
-  util::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
+  absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
       const Key& key, absl::optional<SecretKeyAccessToken> token) const {
     SerializerIndex index = SerializerIndex::Create<SerializationT>(key);
     auto it = key_serializers_.find(index);

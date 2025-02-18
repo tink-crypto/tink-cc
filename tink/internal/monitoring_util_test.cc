@@ -65,7 +65,7 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetNullPrimary) {
   key_info.set_status(KeyStatusType::ENABLED);
   key_info.set_key_id(1);
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
-  util::StatusOr<PrimitiveSet<std::string>::Entry<std::string> *> added_entry =
+  absl::StatusOr<PrimitiveSet<std::string>::Entry<std::string> *> added_entry =
       primitive_set.AddPrimitive(std::move(some_string), key_info);
   ASSERT_THAT(added_entry, IsOk());
   EXPECT_THAT(MonitoringKeySetInfoFromPrimitiveSet(primitive_set).status(),
@@ -124,7 +124,7 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetValid) {
           /*status=*/KeyStatusType::ENABLED, /*key_id=*/2,
           /*prefix_type=*/OutputPrefixType::TINK);
 
-  util::StatusOr<PrimitiveSet<std::string>::Entry<std::string> *> added_entry =
+  absl::StatusOr<PrimitiveSet<std::string>::Entry<std::string> *> added_entry =
       primitive_set.AddPrimitive(std::move(primitive_1.primitive),
                                  primitive_1.key_info);
   ASSERT_THAT(added_entry, IsOk());
@@ -134,7 +134,7 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetValid) {
                                            primitive_2.key_info);
   ASSERT_THAT(added_entry, IsOk());
 
-  util::StatusOr<MonitoringKeySetInfo> monitoring_keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> monitoring_keyset_info =
       MonitoringKeySetInfoFromPrimitiveSet(primitive_set);
   ASSERT_THAT(monitoring_keyset_info, IsOk());
   EXPECT_EQ(monitoring_keyset_info->GetPrimaryKeyId(), 1);

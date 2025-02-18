@@ -51,7 +51,7 @@ TEST(BnEncodingUtilTest, GetValueOfFixedLength) {
                                      "0fffffffffffffff", "00ffffffffffffff"};
   for (const std::string& s : bn_str) {
     const std::string bn_bytes = test::HexDecodeOrDie(s);
-    util::StatusOr<std::string> bn_bytes_fixed_length =
+    absl::StatusOr<std::string> bn_bytes_fixed_length =
         GetValueOfFixedLength(bn_bytes, 10);
 
     EXPECT_THAT(bn_bytes_fixed_length,
@@ -63,7 +63,7 @@ TEST(BnEncodingUtilTest, GetValueOfFixedLengthIntegerTooBig) {
   std::string bn_str = "0fffffffffffffff";
   const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
 
-  util::StatusOr<std::string> bn_bytes_fixed_length =
+  absl::StatusOr<std::string> bn_bytes_fixed_length =
       GetValueOfFixedLength(bn_bytes, 2);
   EXPECT_THAT(bn_bytes_fixed_length.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -73,7 +73,7 @@ TEST(BnEncodingUtilTest, GetValueOfFixedLengthSameLength) {
   std::string bn_str = "0fffffffffffffff";
   const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
 
-  util::StatusOr<std::string> bn_bytes_fixed_length =
+  absl::StatusOr<std::string> bn_bytes_fixed_length =
       GetValueOfFixedLength(bn_bytes, 8);
 
   EXPECT_THAT(bn_bytes_fixed_length, IsOkAndHolds(bn_bytes));
@@ -92,7 +92,7 @@ TEST(BnEncodingUtilTest, CreateBigIntegerObjectOfFixedLength) {
 
   const std::string big_integer_bytes_256 =
       test::HexDecodeOrDie(big_integer_hex_256);
-  util::StatusOr<std::string> big_integer_bytes_fixed_length =
+  absl::StatusOr<std::string> big_integer_bytes_fixed_length =
       GetValueOfFixedLength(big_integer_bytes_256, 258);
 
   BigInteger big_integer(big_integer_bytes_256);
@@ -124,7 +124,7 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLength) {
     const std::string bn_bytes = test::HexDecodeOrDie(s);
     RestrictedBigInteger bn_bytes_restricted(
         bn_bytes, InsecureSecretKeyAccess::Get());
-    util::StatusOr<util::SecretData> bn_bytes_fixed_length =
+    absl::StatusOr<util::SecretData> bn_bytes_fixed_length =
         GetSecretValueOfFixedLength(bn_bytes_restricted, 10,
                                     InsecureSecretKeyAccess::Get());
 
@@ -140,7 +140,7 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthIntegerTooBig) {
 
   RestrictedBigInteger bn_bytes_restricted(bn_bytes,
                                            InsecureSecretKeyAccess::Get());
-  util::StatusOr<util::SecretData> bn_bytes_fixed_length =
+  absl::StatusOr<util::SecretData> bn_bytes_fixed_length =
       GetSecretValueOfFixedLength(bn_bytes_restricted, 2,
                                   InsecureSecretKeyAccess::Get());
   EXPECT_THAT(bn_bytes_fixed_length.status(),
@@ -153,7 +153,7 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthSameLength) {
   RestrictedBigInteger bn_bytes_restricted(bn_bytes,
                                            InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<util::SecretData> bn_bytes_fixed_length =
+  absl::StatusOr<util::SecretData> bn_bytes_fixed_length =
       GetSecretValueOfFixedLength(bn_bytes_restricted, 8,
                                   InsecureSecretKeyAccess::Get());
 

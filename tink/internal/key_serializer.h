@@ -41,7 +41,7 @@ namespace internal {
 class KeySerializer {
  public:
   // Returns the serialization of `key`.
-  virtual util::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
+  virtual absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
       const Key& key, absl::optional<SecretKeyAccessToken> token) const = 0;
 
   // Returns an index that can be used to look up the `KeySerializer`
@@ -62,7 +62,7 @@ class KeySerializerImpl : public KeySerializer {
                                  function)
       : function_(function) {}
 
-  util::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
+  absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
       const Key& key,
       absl::optional<SecretKeyAccessToken> token) const override {
     const KeyT* kt = dynamic_cast<const KeyT*>(&key);

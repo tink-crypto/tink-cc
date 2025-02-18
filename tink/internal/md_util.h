@@ -31,7 +31,7 @@ namespace internal {
 
 // Returns an EVP structure for a hash function type `hash_type`.
 // Note: EVP_MD instances are sigletons owned by BoringSSL/OpenSSL.
-util::StatusOr<const EVP_MD *> EvpHashFromHashType(
+absl::StatusOr<const EVP_MD *> EvpHashFromHashType(
     crypto::tink::subtle::HashType hash_type);
 
 // Validates whether `sig_hash` is safe to use for digital signature.
@@ -39,8 +39,8 @@ absl::Status IsHashTypeSafeForSignature(
     crypto::tink::subtle::HashType sig_hash);
 
 // Returns the hash of `input` using the hash function `hasher`.
-crypto::tink::util::StatusOr<std::string> ComputeHash(absl::string_view input,
-                                                      const EVP_MD &hasher);
+absl::StatusOr<std::string> ComputeHash(absl::string_view input,
+                                        const EVP_MD &hasher);
 
 }  // namespace internal
 }  // namespace tink

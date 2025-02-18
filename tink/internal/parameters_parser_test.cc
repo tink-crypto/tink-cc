@@ -56,7 +56,7 @@ TEST(ParametersParserTest, ParseParameters) {
           kNoIdTypeUrl, ParseNoIdParams);
 
   NoIdSerialization serialization;
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       parser->ParseParameters(serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), IsFalse());
@@ -68,7 +68,7 @@ TEST(ParametersParserTest, ParseParametersWithInvalidSerializationType) {
           kNoIdTypeUrl, ParseNoIdParams);
 
   IdParamsSerialization serialization;
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       parser->ParseParameters(serialization);
   ASSERT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -79,7 +79,7 @@ TEST(ParametersParserTest, ParseParametersWithInvalidObjectIdentifier) {
           "mismatched_type_url", ParseNoIdParams);
 
   IdParamsSerialization serialization;
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       parser->ParseParameters(serialization);
   ASSERT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }

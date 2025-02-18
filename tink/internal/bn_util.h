@@ -43,20 +43,19 @@ absl::Status BignumToBinaryPadded(absl::Span<char> buffer,
 
 // Retuns a string that encodes `bn` in big-endian form of size `len` with
 // leading zeroes.
-crypto::tink::util::StatusOr<std::string> BignumToString(const BIGNUM* bn,
-                                                         size_t len);
+absl::StatusOr<std::string> BignumToString(const BIGNUM* bn, size_t len);
 
 // Retuns a SecretData object that encodes `bn` in big-endian form of size `len`
 // with leading zeroes.
-crypto::tink::util::StatusOr<crypto::tink::util::SecretData> BignumToSecretData(
+absl::StatusOr<crypto::tink::util::SecretData> BignumToSecretData(
     const BIGNUM* bn, size_t len);
 
-util::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
+absl::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
     const util::SecretData& bigendian_bn_str);
 
 // Returns an OpenSSL/BoringSSL BIGNUM constructed from a bigendian string
 // representation `bigendian_bn_str`.
-crypto::tink::util::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(
+absl::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(
     absl::string_view bigendian_bn_str);
 
 }  // namespace internal

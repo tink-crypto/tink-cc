@@ -151,51 +151,51 @@ class IdKey : public Key {
 };
 
 // Parse `serialization` into parameters without an ID requirement.
-inline util::StatusOr<NoIdParams> ParseNoIdParams(
+inline absl::StatusOr<NoIdParams> ParseNoIdParams(
     NoIdSerialization serialization) {
   return NoIdParams();
 }
 
 // Parse `serialization` into parameters with an ID requirement.
-inline util::StatusOr<IdParams> ParseIdParams(
+inline absl::StatusOr<IdParams> ParseIdParams(
     IdParamsSerialization serialization) {
   return IdParams();
 }
 
 // Serialize `parameters` without an ID requirement.
-inline util::StatusOr<NoIdSerialization> SerializeNoIdParams(
+inline absl::StatusOr<NoIdSerialization> SerializeNoIdParams(
     NoIdParams parameters) {
   return NoIdSerialization();
 }
 
 // Serialize `parameters` with an ID requirement.
-inline util::StatusOr<IdParamsSerialization> SerializeIdParams(
+inline absl::StatusOr<IdParamsSerialization> SerializeIdParams(
     IdParams parameters) {
   return IdParamsSerialization();
 }
 
 // Parse `serialization` into a key without an ID requirement.
-inline util::StatusOr<NoIdKey> ParseNoIdKey(
+inline absl::StatusOr<NoIdKey> ParseNoIdKey(
     NoIdSerialization serialization,
     absl::optional<SecretKeyAccessToken> token) {
   return NoIdKey();
 }
 
 // Parse `serialization` into a key with an ID requirement.
-inline util::StatusOr<IdKey> ParseIdKey(
+inline absl::StatusOr<IdKey> ParseIdKey(
     IdKeySerialization serialization,
     absl::optional<SecretKeyAccessToken> token) {
   return IdKey(serialization.GetKeyId());
 }
 
 // Serialize `key` without an ID requirement.
-inline util::StatusOr<NoIdSerialization> SerializeNoIdKey(
+inline absl::StatusOr<NoIdSerialization> SerializeNoIdKey(
     NoIdKey key, absl::optional<SecretKeyAccessToken> token) {
   return NoIdSerialization();
 }
 
 // Serialize `key` with an ID requirement.
-inline util::StatusOr<IdKeySerialization> SerializeIdKey(
+inline absl::StatusOr<IdKeySerialization> SerializeIdKey(
     IdKey key, absl::optional<SecretKeyAccessToken> token) {
   return IdKeySerialization(key.GetIdRequirement().value());
 }

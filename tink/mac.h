@@ -38,9 +38,8 @@ class Mac {
 
   // Verifies if 'mac' is a correct authentication code (MAC) for 'data'.
   // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.
-  virtual crypto::tink::util::Status VerifyMac(
-      absl::string_view mac_value,
-      absl::string_view data) const = 0;
+  virtual absl::Status VerifyMac(absl::string_view mac_value,
+                                 absl::string_view data) const = 0;
 
   virtual ~Mac() = default;
 };

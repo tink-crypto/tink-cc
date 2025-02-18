@@ -68,33 +68,28 @@ class KeysetManager {
   // Sets the status of the specified key to 'ENABLED'.
   // Succeeds only if before the call the specified key
   // has status 'DISABLED' or 'ENABLED'.
-  crypto::tink::util::Status Enable(uint32_t key_id)
-      ABSL_LOCKS_EXCLUDED(keyset_mutex_);
+  absl::Status Enable(uint32_t key_id) ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
   // Sets the status of the specified key to 'DISABLED'.
   // Succeeds only if before the call the specified key
   // is not primary and has status 'DISABLED' or 'ENABLED'.
-  crypto::tink::util::Status Disable(uint32_t key_id)
-      ABSL_LOCKS_EXCLUDED(keyset_mutex_);
+  absl::Status Disable(uint32_t key_id) ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
   // Sets the status of the specified key to 'DESTROYED',
   // and removes the corresponding key material, if any.
   // Succeeds only if before the call the specified key
   // is not primary and has status 'DISABLED', or 'ENABLED',
   // or 'DESTROYED'.
-  crypto::tink::util::Status Destroy(uint32_t key_id)
-      ABSL_LOCKS_EXCLUDED(keyset_mutex_);
+  absl::Status Destroy(uint32_t key_id) ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
   // Removes the specifed key from the managed keyset.
   // Succeeds only if the specified key is not primary.
   // After deletion the keyset contains one key fewer.
-  crypto::tink::util::Status Delete(uint32_t key_id)
-      ABSL_LOCKS_EXCLUDED(keyset_mutex_);
+  absl::Status Delete(uint32_t key_id) ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
   // Sets the specified key as the primary.
   // Succeeds only if the specified key is 'ENABLED'.
-  crypto::tink::util::Status SetPrimary(uint32_t key_id)
-      ABSL_LOCKS_EXCLUDED(keyset_mutex_);
+  absl::Status SetPrimary(uint32_t key_id) ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
   // Returns the count of all keys in the keyset.
   int KeyCount() const;

@@ -28,12 +28,11 @@ namespace tink {
 class KeysetWriter {
  public:
   // Writes 'keyset' to the underlying storage system.
-  virtual crypto::tink::util::Status
-      Write(const google::crypto::tink::Keyset& keyset) = 0;
+  virtual absl::Status Write(const google::crypto::tink::Keyset& keyset) = 0;
 
   // Writes 'encrypted_keyset' to the underlying storage system.
-  virtual crypto::tink::util::Status
-      Write(const google::crypto::tink::EncryptedKeyset& encrypted_keyset) = 0;
+  virtual absl::Status Write(
+      const google::crypto::tink::EncryptedKeyset& encrypted_keyset) = 0;
 
   virtual ~KeysetWriter() = default;
 };

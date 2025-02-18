@@ -44,7 +44,7 @@ class HmacKey : public MacKey {
 
   // Creates a new HMAC key.  If the parameters specify a variant that uses
   // a prefix, then the id is used to compute this prefix.
-  static util::StatusOr<HmacKey> Create(const HmacParameters& parameters,
+  static absl::StatusOr<HmacKey> Create(const HmacParameters& parameters,
                                         const RestrictedData& key_bytes,
                                         absl::optional<int> id_requirement,
                                         PartialKeyAccessToken token);
@@ -76,7 +76,7 @@ class HmacKey : public MacKey {
         id_requirement_(id_requirement),
         output_prefix_(std::move(output_prefix)) {}
 
-  static util::StatusOr<std::string> ComputeOutputPrefix(
+  static absl::StatusOr<std::string> ComputeOutputPrefix(
       const HmacParameters& parameters, absl::optional<int> id_requirement);
 
   HmacParameters parameters_;

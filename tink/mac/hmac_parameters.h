@@ -69,7 +69,7 @@ class HmacParameters : public MacParameters {
   // 1. `key_size_in_bytes` is a value smaller than 16 bytes
   // 2. `cryptographic_tag_size_in_bytes` is either less than 10 bytes or
   // greater than the maximum value accepted by the corresponding hash algorithm
-  static util::StatusOr<HmacParameters> Create(
+  static absl::StatusOr<HmacParameters> Create(
       int key_size_in_bytes, int cryptographic_tag_size_in_bytes,
       HashType hash_type, Variant variant);
 

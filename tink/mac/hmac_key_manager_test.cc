@@ -264,7 +264,7 @@ TEST(HmacKeyManagerTest, DeriveKey) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
-  StatusOr<HmacKeyProto> key_or =
+  absl::StatusOr<HmacKeyProto> key_or =
       HmacKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_EQ(key_or.value().key_value(), "0123456789abcdefghijklm");
@@ -328,19 +328,19 @@ TEST(HmacKeyManagerTest, GetChunkedMacPrimitive) {
   key_format.set_key_size(16);
   HmacKeyProto key = HmacKeyManager().CreateKey(key_format).value();
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       HmacKeyManager().GetPrimitive<ChunkedMac>(key);
   ASSERT_THAT(chunked_mac, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
   ASSERT_THAT((*computation)->Update("abc"), IsOk());
   ASSERT_THAT((*computation)->Update("xyz"), IsOk());
-  util::StatusOr<std::string> tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*computation)->ComputeMac();
   ASSERT_THAT(tag, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verification, IsOk());
   ASSERT_THAT((*verification)->Update("abc"), IsOk());
@@ -355,25 +355,25 @@ TEST(HmacKeyManagerTest, MixPrimitives) {
   key_format.set_key_size(16);
   HmacKeyProto key = HmacKeyManager().CreateKey(key_format).value();
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       HmacKeyManager().GetPrimitive<Mac>(key);
   ASSERT_THAT(mac, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       HmacKeyManager().GetPrimitive<ChunkedMac>(key);
   ASSERT_THAT(chunked_mac, IsOk());
 
   // Compute tag with Mac.
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac("abcxyz");
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac("abcxyz");
   ASSERT_THAT(tag, IsOk());
 
   // Compute chunked tag with ChunkedMac.
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
   ASSERT_THAT((*computation)->Update("abc"), IsOk());
   ASSERT_THAT((*computation)->Update("xyz"), IsOk());
-  util::StatusOr<std::string> chunked_tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> chunked_tag = (*computation)->ComputeMac();
   ASSERT_THAT(chunked_tag, IsOk());
   ASSERT_THAT(*chunked_tag, Eq(*tag));  // Both primitives generated same tag.
 
@@ -381,7 +381,7 @@ TEST(HmacKeyManagerTest, MixPrimitives) {
   ASSERT_THAT((*mac)->VerifyMac(*chunked_tag, "abcxyz"), IsOk());
 
   // Verify tag with ChunkedMac.
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verification, IsOk());
   ASSERT_THAT((*verification)->Update("abc"), IsOk());

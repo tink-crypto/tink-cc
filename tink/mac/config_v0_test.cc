@@ -47,41 +47,41 @@ INSTANTIATE_TEST_SUITE_P(ConfigV0TestSuite, ConfigV0Test,
                                 MacKeyTemplates::HmacSha256()));
 
 TEST_P(ConfigV0Test, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigMacV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       (*handle)->GetPrimitive<Mac>(ConfigMacV0());
   ASSERT_THAT(mac, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac(data);
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac(data);
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT((*mac)->VerifyMac(*tag, data), IsOk());
 }
 
 TEST_P(ConfigV0Test, GetPrimitiveChunkedMac) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigMacV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       (*handle)->GetPrimitive<ChunkedMac>(ConfigMacV0());
   ASSERT_THAT(chunked_mac, IsOk());
 
   std::string data1 = "da";
   std::string data2 = "ta";
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> compute =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> compute =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(compute, IsOk());
   ASSERT_THAT((*compute)->Update(data1), IsOk());
   ASSERT_THAT((*compute)->Update(data2), IsOk());
-  util::StatusOr<std::string> tag = (*compute)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*compute)->ComputeMac();
   ASSERT_THAT(tag, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verify =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verify =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verify, IsOk());
   ASSERT_THAT((*verify)->Update(data1), IsOk());

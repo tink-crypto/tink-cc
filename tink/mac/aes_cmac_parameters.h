@@ -58,7 +58,7 @@ class AesCmacParameters : public MacParameters {
   // occurs under one of the following conditions:
   // 1. `key_size_in_bytes` is a value other than 16 or 32
   // 2. `cryptographic_tag_size_in_bytes` falls outside [10,...,16]
-  static util::StatusOr<AesCmacParameters> Create(
+  static absl::StatusOr<AesCmacParameters> Create(
       int key_size_in_bytes, int cryptographic_tag_size_in_bytes,
       Variant variant);
 

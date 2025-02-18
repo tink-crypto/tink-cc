@@ -68,7 +68,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesCmacParametersCreateTest, Create) {
   CreateTestCase test_case = GetParam();
 
-  util::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
       test_case.key_size, test_case.cryptographic_tag_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -149,7 +149,7 @@ TEST(AesCmacParametersTest, CreateWithInvalidTagSizeFails) {
 }
 
 TEST(AesCmacParametersTest, CopyConstructor) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
@@ -163,13 +163,13 @@ TEST(AesCmacParametersTest, CopyConstructor) {
 }
 
 TEST(AesCmacParametersTest, CopyAssignment) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacParameters> copy =
+  absl::StatusOr<AesCmacParameters> copy =
       AesCmacParameters::Create(/*key_size_in_bytes=*/16,
                                 /*cryptographic_tag_size_in_bytes=*/12,
                                 AesCmacParameters::Variant::kNoPrefix);
@@ -183,7 +183,7 @@ TEST(AesCmacParametersTest, CopyAssignment) {
 }
 
 TEST(AesCmacParametersTest, MoveConstructor) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
@@ -197,13 +197,13 @@ TEST(AesCmacParametersTest, MoveConstructor) {
 }
 
 TEST(AesCmacParametersTest, MoveAssignment) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacParameters> move =
+  absl::StatusOr<AesCmacParameters> move =
       AesCmacParameters::Create(/*key_size_in_bytes=*/16,
                                 /*cryptographic_tag_size_in_bytes=*/12,
                                 AesCmacParameters::Variant::kNoPrefix);
@@ -233,11 +233,11 @@ TEST_P(AesCmacParametersVariantTest, ParametersEquals) {
   AesCmacParameters::Variant variant;
   std::tie(key_size, cryptographic_tag_size, variant) = GetParam();
 
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(key_size, cryptographic_tag_size, variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacParameters> other_parameters =
+  absl::StatusOr<AesCmacParameters> other_parameters =
       AesCmacParameters::Create(key_size, cryptographic_tag_size, variant);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -248,13 +248,13 @@ TEST_P(AesCmacParametersVariantTest, ParametersEquals) {
 }
 
 TEST(AesCmacParametersTest, KeySizeNotEqual) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/16,
                                 /*cryptographic_tag_size_in_bytes=*/10,
                                 AesCmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacParameters> other_parameters =
+  absl::StatusOr<AesCmacParameters> other_parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/10,
                                 AesCmacParameters::Variant::kNoPrefix);
@@ -265,13 +265,13 @@ TEST(AesCmacParametersTest, KeySizeNotEqual) {
 }
 
 TEST(AesCmacParametersTest, TagSizeNotEqual) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/10,
                                 AesCmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacParameters> other_parameters =
+  absl::StatusOr<AesCmacParameters> other_parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/11,
                                 AesCmacParameters::Variant::kNoPrefix);
@@ -282,13 +282,13 @@ TEST(AesCmacParametersTest, TagSizeNotEqual) {
 }
 
 TEST(AesCmacParametersTest, VariantNotEqual) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/10,
                                 AesCmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacParameters> other_parameters =
+  absl::StatusOr<AesCmacParameters> other_parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/10,
                                 AesCmacParameters::Variant::kTink);
@@ -299,7 +299,7 @@ TEST(AesCmacParametersTest, VariantNotEqual) {
 }
 
 TEST(AesCmacParametersTest, Clone) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/10,
                                 AesCmacParameters::Variant::kNoPrefix);

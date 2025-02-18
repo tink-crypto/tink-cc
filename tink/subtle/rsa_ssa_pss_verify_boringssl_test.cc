@@ -123,7 +123,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, BasicVerify) {
   util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
       RsaSsaPssVerifyBoringSsl::New(pub_key, params);
   ASSERT_THAT(verifier, IsOk());
-  util::Status status =
+  absl::Status status =
       (*verifier)->Verify(kNistTestVector.signature, kNistTestVector.message);
   EXPECT_TRUE(status.ok()) << status << internal::GetSslErrors();
 }
@@ -181,7 +181,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
   for (std::size_t i = 0; i < kNistTestVector.message.length(); i++) {
     std::string modified_message = kNistTestVector.message;
     modified_message[i / 8] ^= 1 << (i % 8);
-    util::Status status =
+    absl::Status status =
         (*verifier)->Verify(kNistTestVector.signature, modified_message);
     EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
   }
@@ -189,14 +189,14 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
   for (std::size_t i = 0; i < kNistTestVector.signature.length(); i++) {
     std::string modified_signature = kNistTestVector.signature;
     modified_signature[i / 8] ^= 1 << (i % 8);
-    util::Status status =
+    absl::Status status =
         (*verifier)->Verify(modified_signature, kNistTestVector.message);
     EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
   }
   // Truncate the signature.
   for (std::size_t i = 0; i < kNistTestVector.signature.length(); i++) {
     std::string truncated_signature(kNistTestVector.signature, 0, i);
-    util::Status status =
+    absl::Status status =
         (*verifier)->Verify(truncated_signature, kNistTestVector.message);
     EXPECT_FALSE(status.ok()) << status << internal::GetSslErrors();
   }
@@ -281,7 +281,7 @@ TEST_P(RsaSsaPssWycheproofTest, SignatureVerify) {
   util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
       GetVerifier(params);
   ASSERT_THAT(verifier, IsOk());
-  util::Status result = (*verifier)->Verify(params.sig, params.msg);
+  absl::Status result = (*verifier)->Verify(params.sig, params.msg);
 
   if (params.expected == "valid") {
     EXPECT_THAT(result, IsOk());

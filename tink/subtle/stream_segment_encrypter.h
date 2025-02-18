@@ -71,9 +71,8 @@ class StreamSegmentEncrypter {
   // Encryption uses the current value returned by get_segment_number()
   // as the segment number, and subsequently increments the current
   // segment number.
-  virtual util::Status EncryptSegment(
-      const std::vector<uint8_t>& plaintext,
-      bool is_last_segment,
+  virtual absl::Status EncryptSegment(
+      const std::vector<uint8_t>& plaintext, bool is_last_segment,
       std::vector<uint8_t>* ciphertext_buffer) = 0;
 
   // Returns the header of the ciphertext stream.

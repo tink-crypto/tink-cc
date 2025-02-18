@@ -58,14 +58,14 @@ UintType GetRandomUint() {
 // until the system has collected at least 128 bits since boot. For old
 // kernels without getrandom support (and not in FIPS mode), it will resort to
 // /dev/urandom.
-util::Status Random::GetRandomBytes(absl::Span<char> buffer) {
+absl::Status Random::GetRandomBytes(absl::Span<char> buffer) {
   auto buffer_ptr = reinterpret_cast<uint8_t *>(buffer.data());
   if (RAND_bytes(buffer_ptr, buffer.size()) <= 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("RAND_bytes failed to generate ",
                                      buffer.size(), " bytes"));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 std::string Random::GetRandomBytes(size_t length) {

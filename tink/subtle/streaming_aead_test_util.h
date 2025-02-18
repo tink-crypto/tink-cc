@@ -31,11 +31,11 @@ namespace tink {
 // in stream_segment_encrypter.h).
 // Any error will be propagated to the caller. Returns OK if the resulting
 // decryptions are equal to the plaintext.
-crypto::tink::util::Status EncryptThenDecrypt(StreamingAead* encrypter,
-                                              StreamingAead* decrypter,
-                                              absl::string_view plaintext,
-                                              absl::string_view associated_data,
-                                              int ciphertext_offset);
+absl::Status EncryptThenDecrypt(StreamingAead* encrypter,
+                                StreamingAead* decrypter,
+                                absl::string_view plaintext,
+                                absl::string_view associated_data,
+                                int ciphertext_offset);
 
 }  // namespace tink
 }  // namespace crypto

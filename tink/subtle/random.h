@@ -33,7 +33,7 @@ namespace subtle {
 class Random {
  public:
   // Fills the given `buffer` with random bytes.
-  static util::Status GetRandomBytes(absl::Span<char> buffer);
+  static absl::Status GetRandomBytes(absl::Span<char> buffer);
   // Returns a random string of desired length.
   static std::string GetRandomBytes(size_t length);
   static uint32_t GetRandomUInt32();

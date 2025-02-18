@@ -57,7 +57,7 @@ class StreamingAeadDecryptingStream : public InputStream {
   std::vector<uint8_t> pt_buffer_;  // plaintext buffer
   int64_t position_;  // number of plaintext bytes read from this stream
   int64_t segment_number_;  // current segment number
-  crypto::tink::util::Status status_;  // status of the stream
+  absl::Status status_;     // status of the stream
 
   // Counters that describe the state of the data in pt_buffer_.
   int count_backedup_;    // # bytes in pt_buffer_ that were backed up

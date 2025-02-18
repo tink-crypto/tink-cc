@@ -66,7 +66,7 @@ namespace {
 // [1]https://github.com/google/boringssl/blob/master/crypto/fipsmodule/rsa/rsa.c#L633
 // [2]https://github.com/google/boringssl/blob/master/crypto/fipsmodule/rsa/rsa.c#L354
 // [3]https://github.com/openssl/openssl/blob/master/crypto/rsa/rsa_pmeth.c#L279
-util::Status SslRsaSsaPssVerify(RSA* rsa_public_key,
+absl::Status SslRsaSsaPssVerify(RSA* rsa_public_key,
                                 absl::string_view signature,
                                 absl::string_view message_digest,
                                 const EVP_MD* sig_md, const EVP_MD* mgf1_md,
@@ -74,7 +74,7 @@ util::Status SslRsaSsaPssVerify(RSA* rsa_public_key,
   const int kHashSize = EVP_MD_size(sig_md);
   // Make sure the size of the digest is correct.
   if (message_digest.size() != kHashSize) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Size of the digest doesn't match the one "
                      "of the hashing algorithm; expected ",
@@ -89,7 +89,7 @@ util::Status SslRsaSsaPssVerify(RSA* rsa_public_key,
       /*padding=*/RSA_NO_PADDING);
   if (recovered_message_digest_size != kRsaModulusSize) {
     internal::GetSslErrors();
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid signature size (likely an incorrect key is "
                      "used); expected ",
@@ -100,10 +100,10 @@ util::Status SslRsaSsaPssVerify(RSA* rsa_public_key,
           reinterpret_cast<const uint8_t*>(message_digest.data()), sig_md,
           mgf1_md, recovered_message_digest.data(), salt_length) != 1) {
     internal::GetSslErrors();
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "PSS padding verification failed.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<subtle::HashType> ToSubtle(
@@ -116,7 +116,7 @@ util::StatusOr<subtle::HashType> ToSubtle(
     case crypto::tink::RsaSsaPssParameters::HashType::kSha512:
       return subtle::HashType::SHA512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported hash:", hash_type));
   }
 }
@@ -161,14 +161,14 @@ RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                               const internal::RsaSsaPssParams& params,
                               absl::string_view output_prefix,
                               absl::string_view message_suffix) {
-  util::Status res =
+  absl::Status res =
       internal::CheckFipsCompatibility<RsaSsaPssVerifyBoringSsl>();
   if (!res.ok()) {
     return res;
   }
 
   // Check if the hash type is safe to use.
-  util::Status is_safe = internal::IsHashTypeSafeForSignature(params.sig_hash);
+  absl::Status is_safe = internal::IsHashTypeSafeForSignature(params.sig_hash);
   if (!is_safe.ok()) {
     return is_safe;
   }
@@ -198,7 +198,7 @@ RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
       message_suffix))};
 }
 
-util::Status RsaSsaPssVerifyBoringSsl::VerifyWithoutPrefix(
+absl::Status RsaSsaPssVerifyBoringSsl::VerifyWithoutPrefix(
     absl::string_view signature, absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -211,13 +211,13 @@ util::Status RsaSsaPssVerifyBoringSsl::VerifyWithoutPrefix(
                             mgf1_hash_, salt_length_);
 }
 
-util::Status RsaSsaPssVerifyBoringSsl::Verify(absl::string_view signature,
+absl::Status RsaSsaPssVerifyBoringSsl::Verify(absl::string_view signature,
                                               absl::string_view data) const {
   if (output_prefix_.empty() && message_suffix_.empty()) {
     return VerifyWithoutPrefix(signature, data);
   }
   if (!absl::StartsWith(signature, output_prefix_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
   // Stores a copy of the data in case message_suffix_ is not empty.

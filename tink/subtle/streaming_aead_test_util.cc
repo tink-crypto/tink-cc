@@ -77,16 +77,16 @@ Status ReadAndVerifyFragment(RandomAccessStream* ras, int pos, int count,
                      std::string(buf->get_mem_block(), exp_size), "] while [",
                      full_contents.substr(pos, exp_size), "] were expected."));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
 
-crypto::tink::util::Status EncryptThenDecrypt(StreamingAead* encrypter,
-                                              StreamingAead* decrypter,
-                                              absl::string_view plaintext,
-                                              absl::string_view associated_data,
-                                              int ciphertext_offset) {
+absl::Status EncryptThenDecrypt(StreamingAead* encrypter,
+                                StreamingAead* decrypter,
+                                absl::string_view plaintext,
+                                absl::string_view associated_data,
+                                int ciphertext_offset) {
   // Prepare ciphertext destination stream.
   auto ct_stream = absl::make_unique<std::stringstream>();
 
@@ -106,9 +106,8 @@ crypto::tink::util::Status EncryptThenDecrypt(StreamingAead* encrypter,
   status = subtle::test::WriteToStream(enc_stream.get(), plaintext);
   if (!status.ok()) return status;
   if (plaintext.size() != enc_stream->Position()) {
-    return ::crypto::tink::util::Status(
-        absl::StatusCode::kInternal,
-        "Plaintext size different from stream position.");
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Plaintext size different from stream position.");
   }
 
   // Prepare an InputStream with the ciphertext.
@@ -128,8 +127,8 @@ crypto::tink::util::Status EncryptThenDecrypt(StreamingAead* encrypter,
     return status;
   }
   if (plaintext != decrypted) {
-    return ::crypto::tink::util::Status(absl::StatusCode::kInternal,
-                                        "Decryption differs from plaintext.");
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Decryption differs from plaintext.");
   }
 
   // Prepare a RandomAccessStream with the ciphertext.
@@ -154,7 +153,7 @@ crypto::tink::util::Status EncryptThenDecrypt(StreamingAead* encrypter,
       }
     }
   }
-  return crypto::tink::util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

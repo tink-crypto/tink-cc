@@ -44,15 +44,13 @@ class StreamSegmentDecrypter {
   // Decryption uses the current value returned by get_segment_number()
   // as the segment number, and subsequently increments the current
   // segment number.
-  virtual util::Status DecryptSegment(
-      const std::vector<uint8_t>& ciphertext,
-      int64_t segment_number,
-      bool is_last_segment,
-      std::vector<uint8_t>* plaintext_buffer) = 0;
+  virtual absl::Status DecryptSegment(
+      const std::vector<uint8_t>& ciphertext, int64_t segment_number,
+      bool is_last_segment, std::vector<uint8_t>* plaintext_buffer) = 0;
 
   // Initializes this decrypter, using the information from 'header',
   // which must be of size exactly get_header_size().
-  virtual util::Status Init(const std::vector<uint8_t>& header) = 0;
+  virtual absl::Status Init(const std::vector<uint8_t>& header) = 0;
 
   // Returns the size (in bytes) of the header of a ciphertext stream.
   virtual int get_header_size() const = 0;

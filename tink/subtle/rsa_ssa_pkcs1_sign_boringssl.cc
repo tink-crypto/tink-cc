@@ -87,7 +87,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
       params.hash_type = SHA512;
       break;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported hash:", key.GetParameters().GetHashType()));
   }
@@ -108,14 +108,14 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
     const internal::RsaSsaPkcs1Params& params, absl::string_view output_prefix,
     absl::string_view message_suffix) {
-  util::Status status =
+  absl::Status status =
       internal::CheckFipsCompatibility<RsaSsaPkcs1SignBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
   // Check if the hash type is safe to use.
-  util::Status is_safe = internal::IsHashTypeSafeForSignature(params.hash_type);
+  absl::Status is_safe = internal::IsHashTypeSafeForSignature(params.hash_type);
   if (!is_safe.ok()) {
     return is_safe;
   }
@@ -161,7 +161,7 @@ util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
   size_t signature_buffer_size = RSA_size(private_key_.get());
   ResizeStringUninitialized(&signature, signature_buffer_size);
 
-  util::Status s = internal::CallWithCoreDumpProtection([&]() {
+  absl::Status s = internal::CallWithCoreDumpProtection([&]() {
     unsigned int signature_length = 0;
     internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
                                                    signature_buffer_size);
@@ -174,11 +174,11 @@ util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
       // TODO(b/112581512): Decide if it's safe to propagate the BoringSSL
       // error. For now, just empty the error stack.
       internal::GetSslErrors();
-      return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+      return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
     }
     internal::DfsanClearLabel(&signature[0], signature_buffer_size);
     signature.resize(signature_length);
-    return util::OkStatus();
+    return absl::OkStatus();
   });
   if (!s.ok()) {
     return s;

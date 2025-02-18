@@ -65,7 +65,7 @@ RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
       params.hash_type = SHA512;
       break;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported hash:", key.GetParameters().GetHashType()));
   }
@@ -87,14 +87,14 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                                 const internal::RsaSsaPkcs1Params& params,
                                 absl::string_view output_prefix,
                                 absl::string_view message_suffix) {
-  util::Status status =
+  absl::Status status =
       internal::CheckFipsCompatibility<RsaSsaPkcs1VerifyBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
   // Check if the hash type is safe to use.
-  util::Status is_safe = internal::IsHashTypeSafeForSignature(params.hash_type);
+  absl::Status is_safe = internal::IsHashTypeSafeForSignature(params.hash_type);
   if (!is_safe.ok()) {
     return is_safe;
   }
@@ -119,7 +119,7 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
   return std::move(verify);
 }
 
-util::Status RsaSsaPkcs1VerifyBoringSsl::VerifyWithoutPrefix(
+absl::Status RsaSsaPkcs1VerifyBoringSsl::VerifyWithoutPrefix(
     absl::string_view signature, absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -137,20 +137,20 @@ util::Status RsaSsaPkcs1VerifyBoringSsl::VerifyWithoutPrefix(
                  /*sig_len=*/signature.length(),
                  /*rsa=*/rsa_.get()) != 1) {
     // Signature is invalid.
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status RsaSsaPkcs1VerifyBoringSsl::Verify(absl::string_view signature,
+absl::Status RsaSsaPkcs1VerifyBoringSsl::Verify(absl::string_view signature,
                                                 absl::string_view data) const {
   if (output_prefix_.empty() && message_suffix_.empty()) {
     return VerifyWithoutPrefix(signature, data);
   }
   if (!absl::StartsWith(signature, output_prefix_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
   // Stores a copy of the data in case message_suffix_ is not empty.

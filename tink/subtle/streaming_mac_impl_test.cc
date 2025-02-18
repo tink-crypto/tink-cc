@@ -57,9 +57,9 @@ class DummyStatefulMac : public internal::StatefulMac {
   explicit DummyStatefulMac(const std::string& mac_name)
       : mac_name_(absl::StrCat("DummyMac:", mac_name)), buffer_("") {}
 
-  util::Status Update(absl::string_view data) override {
+  absl::Status Update(absl::string_view data) override {
     absl::StrAppend(&buffer_, data);
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   util::StatusOr<SecretData> FinalizeAsSecretData() override {
     return SecretDataFromStringView(absl::StrCat(
@@ -101,7 +101,7 @@ GetComputeMacOutputStream() {
 
 // A helper for creating an OutputStreamWithResult<util::Status>,
 // used for test validation for mac verification.
-std::unique_ptr<OutputStreamWithResult<util::Status>> GetVerifyMacOutputStream(
+std::unique_ptr<OutputStreamWithResult<absl::Status>> GetVerifyMacOutputStream(
     std::string expected_mac) {
   auto mac_factory = std::unique_ptr<internal::StatefulMacFactory>(
       absl::make_unique<DummyStatefulMacFactory>());

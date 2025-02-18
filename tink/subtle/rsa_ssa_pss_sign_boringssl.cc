@@ -78,7 +78,7 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
   const int kHashSize = EVP_MD_size(sig_md);
   // Make sure the size of the digest is correct.
   if (digest.size() != kHashSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Size of the digest doesn't match the one "
                                      "of the hashing algorithm; expected ",
                                      kHashSize, " got ", digest.size()));
@@ -96,7 +96,7 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
           /*mgf1Hash=*/mgf1_md,
           /*sLen=*/salt_length) != 1) {
     internal::GetSslErrors();
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "RSA_padding_add_PKCS1_PSS_mgf1 failed.");
   }
   std::string signature;
@@ -109,7 +109,7 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
       /*padding=*/RSA_NO_PADDING);
   if (signature_length < 0) {
     internal::GetSslErrors();
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "RSA_private_encrypt failed.");
   }
   internal::DfsanClearLabel(&signature[0], kModulusSize);
@@ -127,7 +127,7 @@ util::StatusOr<subtle::HashType> ToSubtle(
     case crypto::tink::RsaSsaPssParameters::HashType::kSha512:
       return subtle::HashType::SHA512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported hash:", hash_type));
   }
 }
@@ -180,14 +180,14 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
     const internal::RsaSsaPssParams& params, absl::string_view output_prefix,
     absl::string_view message_suffix) {
-  util::Status status =
+  absl::Status status =
       internal::CheckFipsCompatibility<RsaSsaPssSignBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
   // Check if the hash type is safe to use.
-  util::Status is_safe = internal::IsHashTypeSafeForSignature(params.sig_hash);
+  absl::Status is_safe = internal::IsHashTypeSafeForSignature(params.sig_hash);
   if (!is_safe.ok()) {
     return is_safe;
   }
@@ -231,7 +231,7 @@ util::StatusOr<std::string> RsaSsaPssSignBoringSsl::SignWithoutPrefix(
                                 mgf1_hash_, salt_length_);
       });
   if (!signature.ok()) {
-    return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
   }
   return signature;
 }

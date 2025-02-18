@@ -232,8 +232,7 @@ class SubtleUtilBoringSSL {
 
   // Validates whether 'sig_hash' is safe to use for digital signature.
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline crypto::tink::util::Status ValidateSignatureHash(
-      subtle::HashType sig_hash) {
+  static inline absl::Status ValidateSignatureHash(subtle::HashType sig_hash) {
     return internal::IsHashTypeSafeForSignature(sig_hash);
   }
 
@@ -244,19 +243,18 @@ class SubtleUtilBoringSSL {
   }
 
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline crypto::tink::util::Status ValidateRsaModulusSize(
-      size_t modulus_size) {
+  static inline absl::Status ValidateRsaModulusSize(size_t modulus_size) {
     return internal::ValidateRsaModulusSize(modulus_size);
   }
 
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline crypto::tink::util::Status ValidateRsaPublicExponent(
+  static inline absl::Status ValidateRsaPublicExponent(
       absl::string_view exponent) {
     return internal::ValidateRsaPublicExponent(exponent);
   }
 
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline util::Status GetNewRsaKeyPair(int modulus_size_in_bits,
+  static inline absl::Status GetNewRsaKeyPair(int modulus_size_in_bits,
                                               const BIGNUM *e,
                                               RsaPrivateKey *private_key,
                                               RsaPublicKey *public_key) {
@@ -266,20 +264,20 @@ class SubtleUtilBoringSSL {
 
   // Copies n, e and d into the RSA key.
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline util::Status CopyKey(const RsaPrivateKey &key, RSA *rsa) {
+  static inline absl::Status CopyKey(const RsaPrivateKey &key, RSA *rsa) {
     return internal::GetRsaModAndExponents(key, rsa);
   }
 
   // Copies the prime factors (p, q) into the RSA key.
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline util::Status CopyPrimeFactors(const RsaPrivateKey &key,
+  static inline absl::Status CopyPrimeFactors(const RsaPrivateKey &key,
                                               RSA *rsa) {
     return internal::GetRsaPrimeFactors(key, rsa);
   }
 
   // Copies the CRT params and dp, dq into the RSA key.
   ABSL_DEPRECATED("Use of this function is dicouraged outside Tink.")
-  static inline util::Status CopyCrtParams(const RsaPrivateKey &key, RSA *rsa) {
+  static inline absl::Status CopyCrtParams(const RsaPrivateKey &key, RSA *rsa) {
     return internal::GetRsaCrtParams(key, rsa);
   }
 

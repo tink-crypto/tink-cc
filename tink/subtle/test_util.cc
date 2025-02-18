@@ -35,7 +35,7 @@ const int DummyStreamSegmentEncrypter::kSegmentTagSize;
 const char DummyStreamSegmentEncrypter::kLastSegment;
 const char DummyStreamSegmentEncrypter::kNotLastSegment;
 
-util::Status WriteToStream(OutputStream* output_stream,
+absl::Status WriteToStream(OutputStream* output_stream,
                            absl::string_view contents, bool close_stream) {
   void* buffer;
   int pos = 0;
@@ -54,12 +54,12 @@ util::Status WriteToStream(OutputStream* output_stream,
   if (available_space > available_bytes) {
     output_stream->BackUp(available_space - available_bytes);
   }
-  return close_stream ? output_stream->Close() : util::OkStatus();
+  return close_stream ? output_stream->Close() : absl::OkStatus();
 }
 
-util::Status ReadFromStream(InputStream* input_stream, std::string* output) {
+absl::Status ReadFromStream(InputStream* input_stream, std::string* output) {
   if (input_stream == nullptr || output == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Illegal read from a stream");
   }
   const void* buffer;
@@ -68,7 +68,7 @@ util::Status ReadFromStream(InputStream* input_stream, std::string* output) {
     auto next_result = input_stream->Next(&buffer);
     if (next_result.status().code() == absl::StatusCode::kOutOfRange) {
       // End of stream.
-      return util::OkStatus();
+      return absl::OkStatus();
     }
     if (!next_result.ok()) return next_result.status();
     auto read_bytes = next_result.value();
@@ -77,7 +77,7 @@ util::Status ReadFromStream(InputStream* input_stream, std::string* output) {
           std::string(reinterpret_cast<const char*>(buffer), read_bytes));
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace test

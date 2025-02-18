@@ -68,7 +68,7 @@ util::StatusOr<std::string> XChacha20Poly1305BoringSsl::Encrypt(
       kNonceSizeInBytes + aead_->CiphertextSize(plaintext.size());
   std::string ct;
   ResizeStringUninitialized(&ct, kCiphertextSize);
-  util::Status res =
+  absl::Status res =
       Random::GetRandomBytes(absl::MakeSpan(ct).subspan(0, kNonceSizeInBytes));
   if (!res.ok()) {
     return res;
@@ -87,7 +87,7 @@ util::StatusOr<std::string> XChacha20Poly1305BoringSsl::Encrypt(
 util::StatusOr<std::string> XChacha20Poly1305BoringSsl::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   if (ciphertext.size() < kNonceSizeInBytes + kTagSizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Ciphertext too short; expected at least ",
                                      kNonceSizeInBytes + kTagSizeInBytes,
                                      " got ", ciphertext.size()));

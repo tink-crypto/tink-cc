@@ -96,7 +96,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
         "X25519 only supports compressed elliptic curve points");
   }
   if (kem_bytes.size() != X25519_PUBLIC_VALUE_LEN + HRSS_PUBLIC_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "kem_bytes has unexpected size");
   }
   if (key_size_in_bytes < 32) {

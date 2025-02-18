@@ -92,7 +92,7 @@ Cecpq2HkdfX25519SenderKemBoringSsl::New(
                         "puby is not empty");
   }
   if (marshalled_hrss_pub.size() != HRSS_PUBLIC_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "marshalled_hrss_pub has unexpected length");
   }
 

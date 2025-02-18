@@ -91,7 +91,7 @@ class Cecpq2AeadHkdfHybridDecryptTest : public ::testing::Test {
     return params_list;
   }
 
-  util::Status CheckKeyValidity(
+  absl::Status CheckKeyValidity(
       const google::crypto::tink::Cecpq2AeadHkdfPrivateKey& cecpq2_key) {
     auto result = Cecpq2AeadHkdfHybridDecrypt::New(cecpq2_key);
     if (!result.ok()) return result.status();

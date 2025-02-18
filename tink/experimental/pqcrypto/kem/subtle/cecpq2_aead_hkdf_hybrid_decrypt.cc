@@ -46,7 +46,7 @@ util::Status Validate(
   if (key.hrss_private_key_seed().empty() || key.x25519_private_key().empty() ||
       key.public_key().hrss_public_key_marshalled().empty() ||
       key.public_key().x25519_public_key_x().empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid Cecpq2AeadHkdfPrivateKeyInternal: missing KEM "
                         "required fields.");
   }

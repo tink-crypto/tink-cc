@@ -65,7 +65,7 @@ util::Status Validate(
 // static
 util::StatusOr<std::unique_ptr<HybridEncrypt>> Cecpq2AeadHkdfHybridEncrypt::New(
     const google::crypto::tink::Cecpq2AeadHkdfPublicKey& recipient_key) {
-  util::Status status = Validate(recipient_key);
+  absl::Status status = Validate(recipient_key);
   if (!status.ok()) return status;
 
   util::StatusOr<std::unique_ptr<const subtle::Cecpq2HkdfSenderKemBoringSsl>>

@@ -43,7 +43,7 @@ class MlKemPrivateKey : public KemPrivateKey {
   // Creates a new ML-KEM private key from `private_seed_bytes`. Returns an
   // error if `public_key` does not belong to the same key pair as
   // `private_seed_bytes`.
-  static util::StatusOr<MlKemPrivateKey> Create(
+  static absl::StatusOr<MlKemPrivateKey> Create(
       const MlKemPublicKey& public_key,
       const RestrictedData& private_seed_bytes, PartialKeyAccessToken token);
 

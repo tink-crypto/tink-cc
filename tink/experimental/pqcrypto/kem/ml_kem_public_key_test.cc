@@ -74,12 +74,12 @@ std::string GeneratePublicKey() {
 TEST_P(MlKemPublicKeyTest, CreatePublicKeyWorks) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -94,7 +94,7 @@ TEST_P(MlKemPublicKeyTest, CreatePublicKeyWorks) {
 TEST_P(MlKemPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -122,7 +122,7 @@ TEST_P(MlKemPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
 }
 
 TEST(MlKemPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -139,18 +139,18 @@ TEST(MlKemPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
 TEST_P(MlKemPublicKeyTest, PublicKeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
 
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPublicKey> other_public_key =
+  absl::StatusOr<MlKemPublicKey> other_public_key =
       MlKemPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -164,19 +164,19 @@ TEST_P(MlKemPublicKeyTest, PublicKeyEquals) {
 TEST_P(MlKemPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes1 = GeneratePublicKey();
   std::string public_key_bytes2 = GeneratePublicKey();
 
-  util::StatusOr<MlKemPublicKey> public_key1 =
+  absl::StatusOr<MlKemPublicKey> public_key1 =
       MlKemPublicKey::Create(*parameters, public_key_bytes1,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key2 =
+  absl::StatusOr<MlKemPublicKey> public_key2 =
       MlKemPublicKey::Create(*parameters, public_key_bytes2,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key2, IsOk());
@@ -190,18 +190,18 @@ TEST_P(MlKemPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
 TEST_P(MlKemPublicKeyTest, DifferentIdRequirementNotEqual) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
 
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPublicKey> other_public_key =
+  absl::StatusOr<MlKemPublicKey> other_public_key =
       MlKemPublicKey::Create(*parameters, public_key_bytes,
                              /*id_requirement=*/456, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -213,12 +213,12 @@ TEST_P(MlKemPublicKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(MlKemPublicKeyTest, Clone) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());

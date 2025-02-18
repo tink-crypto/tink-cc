@@ -73,11 +73,11 @@ class MlKemProtoSerializationTest : public ::testing::Test {
 };
 
 MlKemPrivateKey GenerateMlKem768PrivateKey(int id_requirement) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   CHECK_OK(parameters);
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       internal::GenerateMlKemPrivateKey(*parameters, id_requirement);
   CHECK_OK(private_key);
 
@@ -96,13 +96,13 @@ TEST_F(MlKemProtoSerializationTest, ParseMlKem768ParametersWorks) {
   MlKemParams& params = *key_format_proto.mutable_params();
   params.set_ml_kem_key_size(MlKemKeySize::ML_KEM_768);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parameters, IsOk());
@@ -120,7 +120,7 @@ TEST_F(MlKemProtoSerializationTest,
        ParseParametersWithInvalidSerializationFails) {
   ASSERT_THAT(RegisterMlKemProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
@@ -140,13 +140,13 @@ TEST_F(MlKemProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
   MlKemParams& params = *key_format_proto.mutable_params();
   params.set_ml_kem_key_size(MlKemKeySize::ML_KEM_768);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -159,13 +159,13 @@ TEST_F(MlKemProtoSerializationTest,
   ASSERT_THAT(RegisterMlKemProtoSerialization(), IsOk());
 
   MlKemKeyFormat key_format_proto;
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -181,13 +181,13 @@ TEST_F(MlKemProtoSerializationTest,
   MlKemParams& params = *key_format_proto.mutable_params();
   params.set_ml_kem_key_size(MlKemKeySize::ML_KEM_768);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -205,13 +205,13 @@ TEST_F(MlKemProtoSerializationTest,
   MlKemParams& params = *key_format_proto.mutable_params();
   params.set_ml_kem_key_size(MlKemKeySize::ML_KEM_768);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -223,11 +223,11 @@ TEST_F(MlKemProtoSerializationTest,
 TEST_F(MlKemProtoSerializationTest, SerializeMlKem768ParametersWorks) {
   ASSERT_THAT(RegisterMlKemProtoSerialization(), IsOk());
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -255,11 +255,11 @@ TEST_F(MlKemProtoSerializationTest, SerializeMlKem768ParametersWorks) {
 TEST_F(MlKemProtoSerializationTest, RoundTripMlKem768Parameters) {
   ASSERT_THAT(RegisterMlKemProtoSerialization(), IsOk());
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -270,7 +270,7 @@ TEST_F(MlKemProtoSerializationTest, RoundTripMlKem768Parameters) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_serialization);
   ASSERT_THAT(parsed_parameters, IsOk());
@@ -295,24 +295,24 @@ TEST_F(MlKemProtoSerializationTest, ParsePublicKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           OutputPrefixType::TINK, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(0x03050709));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), true);
 
-  util::StatusOr<MlKemParameters> expected_parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> expected_parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> expected_key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> expected_key = MlKemPublicKey::Create(
       *expected_parameters, raw_key_bytes, 0x03050709, GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
 
@@ -326,14 +326,14 @@ TEST_F(MlKemProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -359,13 +359,13 @@ TEST_F(MlKemProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           OutputPrefixType::TINK, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(),
@@ -381,15 +381,15 @@ TEST_F(MlKemProtoSerializationTest, SerializePublicKeyWorks) {
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> key = MlKemPublicKey::Create(
       *parameters, raw_key_bytes, 0x03050709, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);
@@ -427,15 +427,15 @@ TEST_F(MlKemProtoSerializationTest, RoundTripPublicKey) {
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> key = MlKemPublicKey::Create(
       *parameters, raw_key_bytes, 0x03050709, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);
@@ -446,7 +446,7 @@ TEST_F(MlKemProtoSerializationTest, RoundTripPublicKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(parsed_key, IsOk());
@@ -480,13 +480,13 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           OutputPrefixType::TINK, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> private_key =
+  absl::StatusOr<std::unique_ptr<Key>> private_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(private_key, IsOk());
@@ -494,16 +494,16 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWorks) {
   EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(0x03050709));
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(), true);
 
-  util::StatusOr<MlKemParameters> expected_parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> expected_parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> expected_public_key =
+  absl::StatusOr<MlKemPublicKey> expected_public_key =
       MlKemPublicKey::Create(*expected_parameters, public_key_bytes, 0x03050709,
                              GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> expected_private_key =
+  absl::StatusOr<MlKemPrivateKey> expected_private_key =
       MlKemPrivateKey::Create(
           *expected_public_key,
           RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
@@ -519,14 +519,14 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -561,13 +561,13 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           OutputPrefixType::TINK, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -602,13 +602,13 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           OutputPrefixType::TINK, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
@@ -626,21 +626,21 @@ TEST_F(MlKemProtoSerializationTest, SerializePrivateKey) {
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       *parameters, public_key_bytes, 0x03050709, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -684,22 +684,22 @@ TEST_F(MlKemProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, /*token=*/absl::nullopt);
@@ -719,21 +719,21 @@ TEST_F(MlKemProtoSerializationTest, RoundTripPrivateKey) {
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       *parameters, public_key_bytes, 0x03050709, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -744,7 +744,7 @@ TEST_F(MlKemProtoSerializationTest, RoundTripPrivateKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key, IsOk());
@@ -832,13 +832,13 @@ TEST_F(MlKemProtoSerializationTest, ParseGoldenPrivateKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       test::HexDecodeOrDie(serialized_key_hex), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           OutputPrefixType::TINK, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> private_key =
+  absl::StatusOr<std::unique_ptr<Key>> private_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(private_key, IsOk());
@@ -846,16 +846,16 @@ TEST_F(MlKemProtoSerializationTest, ParseGoldenPrivateKeyWorks) {
   EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(0x03050709));
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(), true);
 
-  util::StatusOr<MlKemParameters> expected_parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> expected_parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<MlKemPublicKey> expected_public_key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> expected_public_key = MlKemPublicKey::Create(
       *expected_parameters, test::HexDecodeOrDie(public_key_bytes_hex),
       0x03050709, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> expected_private_key =
+  absl::StatusOr<MlKemPrivateKey> expected_private_key =
       MlKemPrivateKey::Create(
           *expected_public_key,
           RestrictedData(test::HexDecodeOrDie(private_seed_bytes_hex),

@@ -51,7 +51,7 @@ class MlKemParameters : public KemParameters {
 
   // Creates ML-KEM parameters instances. The possible key sizes are 512, 768
   // and 1024, but only 768 is supported at the moment.
-  static util::StatusOr<MlKemParameters> Create(int key_size, Variant variant);
+  static absl::StatusOr<MlKemParameters> Create(int key_size, Variant variant);
 
   // Returns the ML-KEM key size (512, 768 or 1024). Only 768 is supported at
   // the moment.

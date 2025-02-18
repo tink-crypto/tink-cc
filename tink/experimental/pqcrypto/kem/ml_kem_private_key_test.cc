@@ -69,7 +69,7 @@ struct KeyPair {
   RestrictedData private_seed_bytes;
 };
 
-util::StatusOr<KeyPair> GenerateKeyPair() {
+absl::StatusOr<KeyPair> GenerateKeyPair() {
   std::string public_key_bytes;
   public_key_bytes.resize(MLKEM768_PUBLIC_KEY_BYTES);
   internal::SecretBuffer private_seed_bytes(MLKEM_SEED_BYTES);
@@ -89,19 +89,19 @@ util::StatusOr<KeyPair> GenerateKeyPair() {
 TEST_P(MlKemPrivateKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -116,14 +116,14 @@ TEST_P(MlKemPrivateKeyTest, CreateSucceeds) {
 TEST_P(MlKemPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -157,16 +157,16 @@ TEST_P(MlKemPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
 TEST_P(MlKemPrivateKeyTest, CreateWithMismatchedPublicKeyFails) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
   ASSERT_THAT(key_pair1, IsOk());
-  util::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
   ASSERT_THAT(key_pair2, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key1 =
+  absl::StatusOr<MlKemPublicKey> public_key1 =
       MlKemPublicKey::Create(*parameters, key_pair1->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
@@ -182,23 +182,23 @@ TEST_P(MlKemPrivateKeyTest, CreateWithMismatchedPublicKeyFails) {
 TEST_P(MlKemPrivateKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> other_private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> other_private_key = MlKemPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
@@ -211,31 +211,31 @@ TEST_P(MlKemPrivateKeyTest, KeyEquals) {
 TEST_P(MlKemPrivateKeyTest, DifferentKeyBytesNotEqual) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
   ASSERT_THAT(key_pair1, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key1 =
+  absl::StatusOr<MlKemPublicKey> public_key1 =
       MlKemPublicKey::Create(*parameters, key_pair1->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key1 = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key1 = MlKemPrivateKey::Create(
       *public_key1, key_pair1->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key1, IsOk());
 
-  util::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
   ASSERT_THAT(key_pair2, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key2 =
+  absl::StatusOr<MlKemPublicKey> public_key2 =
       MlKemPublicKey::Create(*parameters, key_pair2->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key2, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key2 = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key2 = MlKemPrivateKey::Create(
       *public_key2, key_pair2->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key2, IsOk());
 
@@ -248,28 +248,28 @@ TEST_P(MlKemPrivateKeyTest, DifferentKeyBytesNotEqual) {
 TEST_P(MlKemPrivateKeyTest, DifferentIdRequirementNotEqual) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key123 =
+  absl::StatusOr<MlKemPublicKey> public_key123 =
       MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key123, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key456 =
+  absl::StatusOr<MlKemPublicKey> public_key456 =
       MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              /*id_requirement=*/456, GetPartialKeyAccess());
   ASSERT_THAT(public_key456, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key123, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> other_private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> other_private_key = MlKemPrivateKey::Create(
       *public_key456, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
@@ -280,19 +280,19 @@ TEST_P(MlKemPrivateKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(MlKemPrivateKeyTest, Clone) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlKemPublicKey> public_key =
+  absl::StatusOr<MlKemPublicKey> public_key =
       MlKemPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

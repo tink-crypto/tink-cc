@@ -52,7 +52,7 @@ INSTANTIATE_TEST_SUITE_P(MlKemParametersTestSuite, MlKemParametersTest,
 TEST_P(MlKemParametersTest, CreateMlKem768Works) {
   VariantTestCase test_case = GetParam();
 
-  util::StatusOr<MlKemParameters> parameters =
+  absl::StatusOr<MlKemParameters> parameters =
       MlKemParameters::Create(/*key_size=*/768, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -87,7 +87,7 @@ TEST(MlKemParametersTest, CreateWithInvalidVariantFails) {
 }
 
 TEST(MlKemParametersTest, CopyConstructor) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -99,7 +99,7 @@ TEST(MlKemParametersTest, CopyConstructor) {
 }
 
 TEST(MlKemParametersTest, CopyAssignment) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -111,11 +111,11 @@ TEST(MlKemParametersTest, CopyAssignment) {
 }
 
 TEST(MlKemParametersTest, ParametersEquals) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlKemParameters> other_parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> other_parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -126,7 +126,7 @@ TEST(MlKemParametersTest, ParametersEquals) {
 }
 
 TEST(MlKemParametersTest, Clone) {
-  util::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
+  absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 

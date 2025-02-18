@@ -46,7 +46,7 @@ class MlKemPublicKey : public KemPublicKey {
   // Creates a new ML-KEM public key from `public_key_bytes`. If the
   // `parameters` specify a variant that uses a prefix, then `id_requirement` is
   // used to compute this prefix.
-  static util::StatusOr<MlKemPublicKey> Create(
+  static absl::StatusOr<MlKemPublicKey> Create(
       const MlKemParameters& parameters, absl::string_view public_key_bytes,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 

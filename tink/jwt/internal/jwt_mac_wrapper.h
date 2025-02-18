@@ -37,7 +37,7 @@ namespace jwt_internal {
 // only keys with RAW output prefix are supported.
 class JwtMacWrapper : public PrimitiveWrapper<JwtMacInternal, JwtMac> {
  public:
-  util::StatusOr<std::unique_ptr<JwtMac>> Wrap(
+  absl::StatusOr<std::unique_ptr<JwtMac>> Wrap(
       std::unique_ptr<PrimitiveSet<JwtMacInternal>> jwt_mac_set) const override;
 };
 

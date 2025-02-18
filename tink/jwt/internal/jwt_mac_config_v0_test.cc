@@ -64,7 +64,7 @@ using ::testing::Values;
 TEST(JwtMacV0Test, PrimitiveWrappers) {
   Configuration config;
   ASSERT_THAT(AddJwtMacV0(config), IsOk());
-  util::StatusOr<const internal::KeysetWrapperStore*> store =
+  absl::StatusOr<const internal::KeysetWrapperStore *> store =
       internal::ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -74,13 +74,13 @@ TEST(JwtMacV0Test, PrimitiveWrappers) {
 TEST(JwtMacV0Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddJwtMacV0(config), IsOk());
-  util::StatusOr<const internal::KeyTypeInfoStore*> store =
+  absl::StatusOr<const internal::KeyTypeInfoStore *> store =
       internal::ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddJwtMacKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const internal::KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const internal::KeyTypeInfoStore *> key_gen_store =
       internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -101,16 +101,16 @@ TEST_P(JwtMacV0KeyTypesTest, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddJwtMacV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       (*handle)->GetPrimitive<JwtMac>(config);
   ASSERT_THAT(jwt_mac, IsOk());
 
   absl::Time now = absl::Now();
-  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
                                        .SetTypeHeader("typeHeader")
                                        .SetJwtId("id123")
                                        .SetNotBefore(now - absl::Seconds(300))
@@ -119,11 +119,11 @@ TEST_P(JwtMacV0KeyTypesTest, GetPrimitive) {
                                        .Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<JwtValidator> validator =
+  absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
   ASSERT_THAT(validator, IsOk());
 
-  util::StatusOr<std::string> compact =
+  absl::StatusOr<std::string> compact =
       (*jwt_mac)->ComputeMacAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
   EXPECT_THAT((*jwt_mac)->VerifyMacAndDecode(*compact, *validator), IsOk());

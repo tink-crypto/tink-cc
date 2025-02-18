@@ -89,7 +89,7 @@ TEST(RawJwtEcdsaSignKeyManagerTest, ValidateKeyFormatUnknownAlgorithm) {
 
 TEST(RawJwtEcdsaSignKeyManagerTest, CreateKey) {
   JwtEcdsaKeyFormat format = CreateValidEs256KeyFormat();
-  StatusOr<JwtEcdsaPrivateKey> key =
+  absl::StatusOr<JwtEcdsaPrivateKey> key =
       RawJwtEcdsaSignKeyManager().CreateKey(format);
   ASSERT_THAT(key, IsOk());
 
@@ -107,7 +107,7 @@ TEST(RawJwtEcdsaSignKeyManagerTest, CreateKey) {
 
 TEST(RawJwtEcdsaSignKeyManagerTest, CreateKeyValid) {
   JwtEcdsaKeyFormat format = CreateValidEs256KeyFormat();
-  StatusOr<JwtEcdsaPrivateKey> key =
+  absl::StatusOr<JwtEcdsaPrivateKey> key =
       RawJwtEcdsaSignKeyManager().CreateKey(format);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT(RawJwtEcdsaSignKeyManager().ValidateKey(*key),
@@ -134,7 +134,7 @@ TEST(RawJwtEcdsaSignKeyManagerTest, ValidateKeyUnknownAlgorithm) {
 
 TEST(RawJwtEcdsaSignKeyManagerTest, GetPublicKey) {
   JwtEcdsaPrivateKey key = CreateValidEs256Key();
-  StatusOr<JwtEcdsaPublicKey> public_key =
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
       RawJwtEcdsaSignKeyManager().GetPublicKey(key);
 
   ASSERT_THAT(public_key, IsOk());
@@ -149,11 +149,11 @@ TEST(RawJwtEcdsaSignKeyManagerTest, GetPublicKey) {
 
 TEST(RawJwtEcdsaSignKeyManagerTest, Create) {
   JwtEcdsaPrivateKey private_key = CreateValidEs256Key();
-  util::StatusOr<JwtEcdsaPublicKey> public_key =
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
       RawJwtEcdsaSignKeyManager().GetPublicKey(private_key);
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       RawJwtEcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);
   ASSERT_THAT(signer, IsOk());
 
@@ -161,14 +161,14 @@ TEST(RawJwtEcdsaSignKeyManagerTest, Create) {
   ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P256);
   ec_key.pub_x = public_key->x();
   ec_key.pub_y = public_key->y();
-  util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>>
+  absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>>
       direct_verifier = subtle::EcdsaVerifyBoringSsl::New(
           ec_key, Enums::ProtoToSubtle(HashType::SHA256),
           subtle::EcdsaSignatureEncoding::IEEE_P1363);
   ASSERT_THAT(direct_verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> sig = (*signer)->Sign(message);
+  absl::StatusOr<std::string> sig = (*signer)->Sign(message);
   ASSERT_THAT(sig, IsOk());
   EXPECT_THAT((*direct_verifier)->Verify(*sig, message), IsOk());
 }
@@ -176,10 +176,10 @@ TEST(RawJwtEcdsaSignKeyManagerTest, Create) {
 TEST(RawJwtEcdsaSignKeyManagerTest, CreateDifferentKey) {
   JwtEcdsaPrivateKey private_key = CreateValidEs256Key();
   // Note: we create a new key in the next line.
-  util::StatusOr<JwtEcdsaPublicKey> public_key = RawJwtEcdsaSignKeyManager()
-                                     .GetPublicKey(CreateValidEs256Key());
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
+      RawJwtEcdsaSignKeyManager().GetPublicKey(CreateValidEs256Key());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       RawJwtEcdsaSignKeyManager().GetPrimitive<PublicKeySign>(private_key);
   ASSERT_THAT(signer, IsOk());
 
@@ -187,14 +187,14 @@ TEST(RawJwtEcdsaSignKeyManagerTest, CreateDifferentKey) {
   ec_key.curve = Enums::ProtoToSubtle(EllipticCurveType::NIST_P256);
   ec_key.pub_x = public_key->x();
   ec_key.pub_y = public_key->y();
-  util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>>
+  absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>>
       direct_verifier = subtle::EcdsaVerifyBoringSsl::New(
           ec_key, Enums::ProtoToSubtle(HashType::SHA256),
           subtle::EcdsaSignatureEncoding::IEEE_P1363);
   ASSERT_THAT(direct_verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> sig = (*signer)->Sign(message);
+  absl::StatusOr<std::string> sig = (*signer)->Sign(message);
   ASSERT_THAT(sig, IsOk());
   EXPECT_THAT((*direct_verifier)->Verify(*sig, message), Not(IsOk()));
 }

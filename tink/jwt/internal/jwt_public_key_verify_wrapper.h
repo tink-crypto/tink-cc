@@ -35,7 +35,7 @@ namespace jwt_internal {
 class JwtPublicKeyVerifyWrapper
     : public PrimitiveWrapper<JwtPublicKeyVerifyInternal, JwtPublicKeyVerify> {
  public:
-  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> Wrap(
+  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> Wrap(
       std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set)
       const override;
 };

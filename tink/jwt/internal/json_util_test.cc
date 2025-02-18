@@ -34,7 +34,7 @@ namespace tink {
 namespace jwt_internal {
 
 TEST(JsonUtil, ParseThenSerializeStructWtihStringListOk) {
-  util::StatusOr<Struct> proto =
+  absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":["hello","world","!"]})");
   ASSERT_THAT(proto, IsOk());
 
@@ -43,7 +43,7 @@ TEST(JsonUtil, ParseThenSerializeStructWtihStringListOk) {
 }
 
 TEST(JsonUtil, ParseThenSerializeStructWtihNumberOk) {
-  util::StatusOr<Struct> proto =
+  absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":-12345})");
   ASSERT_THAT(proto, IsOk());
 
@@ -52,7 +52,7 @@ TEST(JsonUtil, ParseThenSerializeStructWtihNumberOk) {
 }
 
 TEST(JsonUtil, ParseThenSerializeStructWtihBoolOk) {
-  util::StatusOr<Struct> proto =
+  absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":false})");
   ASSERT_THAT(proto, IsOk());
 
@@ -61,7 +61,7 @@ TEST(JsonUtil, ParseThenSerializeStructWtihBoolOk) {
 }
 
 TEST(JsonUtil, ParseThenSerializeListOk) {
-  util::StatusOr<ListValue> proto =
+  absl::StatusOr<ListValue> proto =
       JsonStringToProtoList(R"(["hello", "world", 42, true])");
   ASSERT_THAT(proto, IsOk());
 
@@ -71,7 +71,7 @@ TEST(JsonUtil, ParseThenSerializeListOk) {
 
 TEST(JsonUtil, ParseListWithTailingCommaWorks) {
   // This is not allowed in the spec: https://www.json.org/json-en.html
-  util::StatusOr<ListValue> proto =
+  absl::StatusOr<ListValue> proto =
       JsonStringToProtoList(R"(["hello", "world",])");
   EXPECT_TRUE(proto.ok());
   ASSERT_THAT(ProtoListToJsonString(*proto),
@@ -80,7 +80,7 @@ TEST(JsonUtil, ParseListWithTailingCommaWorks) {
 
 TEST(JsonUtil, ParseStructWithTailingCommaWorks) {
   // This is not allowed in the spec: https://www.json.org/json-en.html
-  util::StatusOr<Struct> proto =
+  absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":false,})");
   ASSERT_THAT(proto, IsOk());
 
@@ -90,13 +90,13 @@ TEST(JsonUtil, ParseStructWithTailingCommaWorks) {
 
 
 TEST(JsonUtil, ParseInvalidStructTokenNotOk) {
-  util::StatusOr<Struct> proto =
+  absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":false)");
   ASSERT_FALSE(proto.ok());
 }
 
 TEST(JsonUtil, ParseInvalidListTokenNotOk) {
-  util::StatusOr<Struct> proto = JsonStringToProtoStruct(R"(["one", )");
+  absl::StatusOr<Struct> proto = JsonStringToProtoStruct(R"(["one", )");
   ASSERT_FALSE(proto.ok());
 }
 
@@ -109,31 +109,31 @@ TEST(JsonUtil, parseRecursiveJsonStringFails) {
   for (int i = 0; i < 10000; i++) {
     recursive_json.append("}");
   }
-  util::StatusOr<Struct> proto = JsonStringToProtoStruct(recursive_json);
+  absl::StatusOr<Struct> proto = JsonStringToProtoStruct(recursive_json);
   EXPECT_FALSE(proto.ok());
 }
 
 TEST(JsonUtil, ParseStructWithoutQuotesOk) {
   // TODO(b/360366279) Make parsing stricter that this is not allowed.
-  util::StatusOr<Struct> proto = JsonStringToProtoStruct(R"({some_key:false})");
+  absl::StatusOr<Struct> proto = JsonStringToProtoStruct(R"({some_key:false})");
   ASSERT_THAT(proto, IsOk());
   ASSERT_THAT(ProtoStructToJsonString(*proto),
               IsOkAndHolds(R"({"some_key":false})"));
 }
 
 TEST(JsonUtil, ParseListWithoutQuotesNotOk) {
-  util::StatusOr<ListValue> proto = JsonStringToProtoList(R"([one,two])");
+  absl::StatusOr<ListValue> proto = JsonStringToProtoList(R"([one,two])");
   EXPECT_FALSE(proto.ok());
 }
 
 TEST(JsonUtil, ParseStructWithCommentNotOk) {
-  util::StatusOr<Struct> proto =
+  absl::StatusOr<Struct> proto =
       JsonStringToProtoStruct(R"({"some_key":false /* comment */})");
   EXPECT_FALSE(proto.ok());
 }
 
 TEST(JsonUtil, ParseListWithCommentNotOk) {
-  util::StatusOr<ListValue> proto =
+  absl::StatusOr<ListValue> proto =
       JsonStringToProtoList(R"(["hello", "world" /* comment */])");
   EXPECT_FALSE(proto.ok());
 }

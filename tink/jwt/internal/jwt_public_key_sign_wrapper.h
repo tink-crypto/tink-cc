@@ -35,7 +35,7 @@ namespace jwt_internal {
 class JwtPublicKeySignWrapper
     : public PrimitiveWrapper<JwtPublicKeySignInternal, JwtPublicKeySign> {
  public:
-  util::StatusOr<std::unique_ptr<JwtPublicKeySign>> Wrap(
+  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> Wrap(
       std::unique_ptr<PrimitiveSet<JwtPublicKeySignInternal>> jwt_sign_set)
       const override;
 };

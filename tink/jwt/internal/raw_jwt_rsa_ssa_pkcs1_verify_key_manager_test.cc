@@ -130,10 +130,10 @@ TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, KeyFormatWithSmallModulusInvalid) {
 TEST(JwtRsaSsaPkcs1SignKeyManagerTest, Create) {
   JwtRsaSsaPkcs1KeyFormat key_format =
       CreateKeyFormat(JwtRsaSsaPkcs1Algorithm::RS256, 3072, RSA_F4);
-  StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
       RawJwtRsaSsaPkcs1SignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key, IsOk());
-  StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
       RawJwtRsaSsaPkcs1SignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
 
@@ -147,17 +147,17 @@ TEST(JwtRsaSsaPkcs1SignKeyManagerTest, Create) {
   private_key_subtle.dq = util::SecretDataFromStringView(private_key->dq());
   private_key_subtle.crt = util::SecretDataFromStringView(private_key->crt());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::RsaSsaPkcs1SignBoringSsl::New(
           private_key_subtle, {crypto::tink::subtle::HashType::SHA256});
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RawJwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(
           *public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> sig = (*direct_signer)->Sign(message);
+  absl::StatusOr<std::string> sig = (*direct_signer)->Sign(message);
   ASSERT_THAT(sig, IsOk());
   EXPECT_THAT((*verifier)->Verify(*sig, message), IsOk());
 }
@@ -205,7 +205,7 @@ TEST(RawJwtRsaSsaPkcs1VerifyKeyManagerTest, NistTestVector) {
   key.set_version(0);
   key.set_n(nist_test_vector.n);
   key.set_e(nist_test_vector.e);
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RawJwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(key);
   EXPECT_THAT(verifier, IsOk());
   EXPECT_THAT(

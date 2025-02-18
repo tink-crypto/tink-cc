@@ -58,7 +58,7 @@ class JwtPublicKeySignImpl : public JwtPublicKeySignInternal {
       std::unique_ptr<crypto::tink::PublicKeySign> sign,
       absl::string_view algorithm);
 
-  crypto::tink::util::StatusOr<std::string> SignAndEncodeWithKid(
+  absl::StatusOr<std::string> SignAndEncodeWithKid(
       const crypto::tink::RawJwt& token,
       absl::optional<absl::string_view> kid) const override;
 

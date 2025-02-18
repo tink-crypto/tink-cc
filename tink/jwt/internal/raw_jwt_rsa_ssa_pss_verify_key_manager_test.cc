@@ -124,10 +124,10 @@ TEST(RawJwtRsaSsaPssVerifyKeyManagerTest, PublicKeyWithSmallModulusIsInvalid) {
 TEST(RsaSsaPssSignKeyManagerTest, Create) {
   JwtRsaSsaPssKeyFormat key_format =
       CreateKeyFormat(JwtRsaSsaPssAlgorithm::PS256, 3072, RSA_F4);
-  StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
       RawJwtRsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key, IsOk());
-  StatusOr<JwtRsaSsaPssPublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
       RawJwtRsaSsaPssSignKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
 
@@ -141,18 +141,18 @@ TEST(RsaSsaPssSignKeyManagerTest, Create) {
   private_key_subtle.dq = util::SecretDataFromStringView(private_key->dq());
   private_key_subtle.crt = util::SecretDataFromStringView(private_key->crt());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> direct_signer =
       subtle::RsaSsaPssSignBoringSsl::New(
           private_key_subtle, {crypto::tink::subtle::HashType::SHA256,
                                crypto::tink::subtle::HashType::SHA256, 32});
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RawJwtRsaSsaPssVerifyKeyManager().GetPrimitive<PublicKeyVerify>(
           *public_key);
   ASSERT_THAT(verifier, IsOk());
 
   std::string message = "Some message";
-  util::StatusOr<std::string> sig = (*direct_signer)->Sign(message);
+  absl::StatusOr<std::string> sig = (*direct_signer)->Sign(message);
   ASSERT_THAT(sig, IsOk());
   EXPECT_THAT((*verifier)->Verify(*sig, message), IsOk());
 }
@@ -202,7 +202,7 @@ TEST(RawJwtRsaSsaPssVerifyKeyManagerTest, TestVector) {
   key.set_version(0);
   key.set_n(nist_test_vector->n);
   key.set_e(nist_test_vector->e);
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RawJwtRsaSsaPssVerifyKeyManager().GetPrimitive<PublicKeyVerify>(key);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(nist_test_vector->signature,

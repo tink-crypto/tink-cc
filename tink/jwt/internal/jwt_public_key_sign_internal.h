@@ -38,7 +38,7 @@ class JwtPublicKeySignInternal {
   //
   // When `kid` has a value, the token will have a kid header. `kid` is set by
   // the primitive wrapper based on the output prefix type and the key id.
-  virtual crypto::tink::util::StatusOr<std::string> SignAndEncodeWithKid(
+  virtual absl::StatusOr<std::string> SignAndEncodeWithKid(
       const RawJwt& token, absl::optional<absl::string_view> kid) const = 0;
 
   virtual ~JwtPublicKeySignInternal() = default;

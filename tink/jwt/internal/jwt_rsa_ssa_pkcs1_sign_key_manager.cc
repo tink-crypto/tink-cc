@@ -40,15 +40,16 @@ using google::crypto::tink::JwtRsaSsaPkcs1KeyFormat;
 using google::crypto::tink::JwtRsaSsaPkcs1PrivateKey;
 using google::crypto::tink::JwtRsaSsaPkcs1PublicKey;
 
-StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
 JwtRsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
     const JwtRsaSsaPkcs1PrivateKey& jwt_rsa_ssa_pkcs1_private_key) const {
-  StatusOr<std::string> name = JwtRsaSsaPkcs1VerifyKeyManager::AlgorithmName(
-      jwt_rsa_ssa_pkcs1_private_key.public_key().algorithm());
+  absl::StatusOr<std::string> name =
+      JwtRsaSsaPkcs1VerifyKeyManager::AlgorithmName(
+          jwt_rsa_ssa_pkcs1_private_key.public_key().algorithm());
   if (!name.ok()) {
     return name.status();
   }
-  StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       raw_key_manager_.GetPrimitive<PublicKeySign>(
           jwt_rsa_ssa_pkcs1_private_key);
   if (!sign.ok()) {
@@ -79,7 +80,8 @@ const std::string& JwtRsaSsaPkcs1SignKeyManager::get_key_type() const {
   return raw_key_manager_.get_key_type();
 }
 
-StatusOr<JwtRsaSsaPkcs1PrivateKey> JwtRsaSsaPkcs1SignKeyManager::CreateKey(
+absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
+JwtRsaSsaPkcs1SignKeyManager::CreateKey(
     const JwtRsaSsaPkcs1KeyFormat& key_format) const {
   return raw_key_manager_.CreateKey(key_format);
 }
@@ -94,7 +96,8 @@ Status JwtRsaSsaPkcs1SignKeyManager::ValidateKeyFormat(
   return raw_key_manager_.ValidateKeyFormat(key_format);
 }
 
-StatusOr<JwtRsaSsaPkcs1PublicKey> JwtRsaSsaPkcs1SignKeyManager::GetPublicKey(
+absl::StatusOr<JwtRsaSsaPkcs1PublicKey>
+JwtRsaSsaPkcs1SignKeyManager::GetPublicKey(
     const JwtRsaSsaPkcs1PrivateKey& private_key) const {
   return raw_key_manager_.GetPublicKey(private_key);
 }

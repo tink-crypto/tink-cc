@@ -124,14 +124,14 @@ class JwtMacWrapperTest : public ::testing::Test {
 };
 
 TEST_F(JwtMacWrapperTest, WrapNullptr) {
-  util::StatusOr<std::unique_ptr<JwtMac>> mac_result =
+  absl::StatusOr<std::unique_ptr<JwtMac>> mac_result =
       JwtMacWrapper().Wrap(nullptr);
   EXPECT_FALSE(mac_result.ok());
 }
 
 TEST_F(JwtMacWrapperTest, WrapEmpty) {
   auto jwt_mac_set = absl::make_unique<PrimitiveSet<JwtMacInternal>>();
-  util::StatusOr<std::unique_ptr<crypto::tink::JwtMac>> jwt_mac_result =
+  absl::StatusOr<std::unique_ptr<crypto::tink::JwtMac>> jwt_mac_result =
       JwtMacWrapper().Wrap(std::move(jwt_mac_set));
   EXPECT_FALSE(jwt_mac_result.ok());
 }
@@ -139,7 +139,7 @@ TEST_F(JwtMacWrapperTest, WrapEmpty) {
 TEST_F(JwtMacWrapperTest, CannotWrapPrimitivesFromNonRawOrTinkKeys) {
   KeyTemplate tink_key_template = createTemplate(OutputPrefixType::LEGACY);
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(tink_key_template,
                                 KeyGenConfigGlobalRegistry());
   EXPECT_THAT(keyset_handle, IsOk());
@@ -152,38 +152,38 @@ TEST_F(JwtMacWrapperTest, CannotWrapPrimitivesFromNonRawOrTinkKeys) {
 
 TEST_F(JwtMacWrapperTest, GenerateRawComputeVerifySuccess) {
   KeyTemplate key_template = createTemplate(OutputPrefixType::RAW);
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   EXPECT_THAT(keyset_handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
   EXPECT_THAT(jwt_mac, IsOk());
 
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<std::string> compact =
+  absl::StatusOr<std::string> compact =
       (*jwt_mac)->ComputeMacAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectIssuer("issuer")
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  util::StatusOr<VerifiedJwt> verified_jwt =
+  absl::StatusOr<VerifiedJwt> verified_jwt =
       (*jwt_mac)->VerifyMacAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
 
-  util::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
                                                 .ExpectIssuer("unknown")
                                                 .AllowMissingExpiration()
                                                 .Build();
   ASSERT_THAT(validator2, IsOk());
-  util::StatusOr<VerifiedJwt> verified_jwt2 =
+  absl::StatusOr<VerifiedJwt> verified_jwt2 =
       (*jwt_mac)->VerifyMacAndDecode(*compact, *validator2);
   EXPECT_FALSE(verified_jwt2.ok());
   // Make sure the error message is interesting
@@ -194,7 +194,7 @@ TEST_F(JwtMacWrapperTest, GenerateRawComputeVerifySuccess) {
   // validation fail.
   std::unique_ptr<KeysetHandle> tink_keyset_handle =
       KeysetHandleWithTinkPrefix(**keyset_handle);
-  util::StatusOr<std::unique_ptr<JwtMac>> tink_jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> tink_jwt_mac =
       tink_keyset_handle->GetPrimitive<crypto::tink::JwtMac>(
           ConfigGlobalRegistry());
   ASSERT_THAT(tink_jwt_mac, IsOk());
@@ -206,28 +206,28 @@ TEST_F(JwtMacWrapperTest, GenerateRawComputeVerifySuccess) {
 
 TEST_F(JwtMacWrapperTest, GenerateTinkComputeVerifySuccess) {
   KeyTemplate key_template = createTemplate(OutputPrefixType::TINK);
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   EXPECT_THAT(keyset_handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
   EXPECT_THAT(jwt_mac, IsOk());
 
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<std::string> compact =
+  absl::StatusOr<std::string> compact =
       (*jwt_mac)->ComputeMacAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectIssuer("issuer")
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  util::StatusOr<VerifiedJwt> verified_jwt =
+  absl::StatusOr<VerifiedJwt> verified_jwt =
       (*jwt_mac)->VerifyMacAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
@@ -240,7 +240,7 @@ TEST_F(JwtMacWrapperTest, GenerateTinkComputeVerifySuccess) {
   ASSERT_THAT(parts.size(), Eq(3));
   std::string json_header;
   ASSERT_TRUE(DecodeHeader(parts[0], &json_header));
-  util::StatusOr<google::protobuf::Struct> header =
+  absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
   ASSERT_THAT(header, IsOk());
   EXPECT_THAT(GetKeyId((*header).fields().find("kid")->second.string_value()),
@@ -250,12 +250,12 @@ TEST_F(JwtMacWrapperTest, GenerateTinkComputeVerifySuccess) {
   // Therefore, changing the key_id makes the validation fail.
   std::unique_ptr<KeysetHandle> keyset_handle_with_new_key_id =
       KeysetHandleWithNewKeyId(**keyset_handle);
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac_with_new_key_id =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac_with_new_key_id =
       keyset_handle_with_new_key_id->GetPrimitive<crypto::tink::JwtMac>(
           ConfigGlobalRegistry());
   ASSERT_THAT(jwt_mac_with_new_key_id, IsOk());
 
-  util::StatusOr<VerifiedJwt> verified_jwt_2 =
+  absl::StatusOr<VerifiedJwt> verified_jwt_2 =
       (*jwt_mac_with_new_key_id)->VerifyMacAndDecode(*compact, *validator);
   EXPECT_FALSE(verified_jwt_2.ok());
 }
@@ -268,55 +268,55 @@ TEST_F(JwtMacWrapperTest, KeyRotation) {
     KeyTemplate key_template = createTemplate(prefix);
     KeysetManager manager;
 
-    util::StatusOr<uint32_t> old_id = manager.Add(key_template);
+    absl::StatusOr<uint32_t> old_id = manager.Add(key_template);
     ASSERT_THAT(old_id, IsOk());
     ASSERT_THAT(manager.SetPrimary(*old_id), IsOk());
     std::unique_ptr<KeysetHandle> handle1 = manager.GetKeysetHandle();
-    util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac1 =
+    absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac1 =
         handle1->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
     ASSERT_THAT(jwt_mac1, IsOk());
 
-    util::StatusOr<uint32_t> new_id = manager.Add(key_template);
+    absl::StatusOr<uint32_t> new_id = manager.Add(key_template);
     ASSERT_THAT(new_id, IsOk());
     std::unique_ptr<KeysetHandle> handle2 = manager.GetKeysetHandle();
-    util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac2 =
+    absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac2 =
         handle2->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
     ASSERT_THAT(jwt_mac2, IsOk());
 
     ASSERT_THAT(manager.SetPrimary(*new_id), IsOk());
     std::unique_ptr<KeysetHandle> handle3 = manager.GetKeysetHandle();
-    util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac3 =
+    absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac3 =
         handle3->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
     ASSERT_THAT(jwt_mac3, IsOk());
 
     ASSERT_THAT(manager.Disable(*old_id), IsOk());
     std::unique_ptr<KeysetHandle> handle4 = manager.GetKeysetHandle();
-    util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac4 =
+    absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac4 =
         handle4->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
     ASSERT_THAT(jwt_mac4, IsOk());
 
-    util::StatusOr<RawJwt> raw_jwt =
+    absl::StatusOr<RawJwt> raw_jwt =
         RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
     ASSERT_THAT(raw_jwt, IsOk());
-    util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+    absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                  .ExpectIssuer("issuer")
                                                  .AllowMissingExpiration()
                                                  .Build();
     ASSERT_THAT(validator, IsOk());
 
-    util::StatusOr<std::string> compact1 =
+    absl::StatusOr<std::string> compact1 =
         (*jwt_mac1)->ComputeMacAndEncode(*raw_jwt);
     ASSERT_THAT(compact1, IsOk());
 
-    util::StatusOr<std::string> compact2 =
+    absl::StatusOr<std::string> compact2 =
         (*jwt_mac2)->ComputeMacAndEncode(*raw_jwt);
     ASSERT_THAT(compact2, IsOk());
 
-    util::StatusOr<std::string> compact3 =
+    absl::StatusOr<std::string> compact3 =
         (*jwt_mac3)->ComputeMacAndEncode(*raw_jwt);
     ASSERT_THAT(compact3, IsOk());
 
-    util::StatusOr<std::string> compact4 =
+    absl::StatusOr<std::string> compact4 =
         (*jwt_mac4)->ComputeMacAndEncode(*raw_jwt);
     ASSERT_THAT(compact4, IsOk());
 
@@ -401,10 +401,10 @@ class JwtMacSetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(compute_monitoring_client)))))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(verify_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -448,7 +448,7 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
           .status(),
       IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
           JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
@@ -458,11 +458,11 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a JWT and compute an authentication tag
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
   ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
 
-  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
                                        .SetTypeHeader("typeHeader")
                                        .SetJwtId("id123")
                                        .WithoutExpiration()
@@ -500,7 +500,7 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
           .status(),
       IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
           JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
@@ -511,11 +511,11 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a MAC, compute a Mac and verify it.
-  util::StatusOr<std::unique_ptr<JwtMac>> mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> mac =
       JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
   ASSERT_THAT(mac, IsOkAndHolds(NotNull()));
 
-  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
                                        .SetTypeHeader("typeHeader")
                                        .SetJwtId("id123")
                                        .WithoutExpiration()
@@ -524,10 +524,10 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   ASSERT_THAT(raw_jwt, IsOk());
 
   // Check that calling VerifyMac triggers a Log() call.
-  util::StatusOr<std::string> compact = (*mac)->ComputeMacAndEncode(*raw_jwt);
+  absl::StatusOr<std::string> compact = (*mac)->ComputeMacAndEncode(*raw_jwt);
   EXPECT_THAT(compact.status(), IsOk());
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectTypeHeader("typeHeader")
                                                .AllowMissingExpiration()
                                                .Build();
@@ -561,7 +561,7 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
           JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
@@ -569,11 +569,11 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
 
   // Create a JWT and compute an authentication tag
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
   ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
 
-  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
                                        .SetTypeHeader("typeHeader")
                                        .SetJwtId("id123")
                                        .WithoutExpiration()
@@ -610,7 +610,7 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
       jwt_mac_primitive_set->AddPrimitive(
           JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
           keyset_info.key_info(2));
@@ -618,13 +618,13 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
 
   // Create a JWT and verify it
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
   ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view invalid_compact = "something is wrong here";
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectTypeHeader("typeHeader")
                                                .AllowMissingExpiration()
                                                .Build();

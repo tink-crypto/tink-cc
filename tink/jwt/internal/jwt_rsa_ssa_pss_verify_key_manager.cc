@@ -39,15 +39,15 @@ using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtRsaSsaPssAlgorithm;
 using google::crypto::tink::JwtRsaSsaPssPublicKey;
 
-StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
 JwtRsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const JwtRsaSsaPssPublicKey& jwt_rsa_ssa_pss_public_key) const {
-  StatusOr<std::string> name =
+  absl::StatusOr<std::string> name =
       AlgorithmName(jwt_rsa_ssa_pss_public_key.algorithm());
   if (!name.ok()) {
     return name.status();
   }
-  StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       raw_key_manager_.GetPrimitive<PublicKeyVerify>(
           jwt_rsa_ssa_pss_public_key);
   if (!verify.ok()) {
@@ -82,7 +82,7 @@ Status JwtRsaSsaPssVerifyKeyManager::ValidateKey(
   return raw_key_manager_.ValidateKey(key);
 }
 
-StatusOr<std::string> JwtRsaSsaPssVerifyKeyManager::AlgorithmName(
+absl::StatusOr<std::string> JwtRsaSsaPssVerifyKeyManager::AlgorithmName(
     const JwtRsaSsaPssAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPssAlgorithm::PS256:

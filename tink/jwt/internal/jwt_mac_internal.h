@@ -40,7 +40,7 @@ class JwtMacInternal {
   // serialization format.
   //
   // When the `kid` parameter has a value, the token will have a kid header.
-  virtual crypto::tink::util::StatusOr<std::string> ComputeMacAndEncodeWithKid(
+  virtual absl::StatusOr<std::string> ComputeMacAndEncodeWithKid(
       const RawJwt& token, absl::optional<absl::string_view> kid) const = 0;
 
   // Verifies and decodes a JWT token in the JWS compact serialization format.
@@ -61,7 +61,7 @@ class JwtMacInternal {
   // header are valid. When the `kid` parameter does not have a value the kid
   // header in the token is ignored. The `kid` parameter is set by the primitive
   // wrapper based on the output prefix type and the key id.
-  virtual crypto::tink::util::StatusOr<VerifiedJwt> VerifyMacAndDecodeWithKid(
+  virtual absl::StatusOr<VerifiedJwt> VerifyMacAndDecodeWithKid(
       absl::string_view compact, const JwtValidator& validator,
       absl::optional<absl::string_view> kid) const = 0;
 

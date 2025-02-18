@@ -39,14 +39,15 @@ using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtEcdsaPublicKey;
 using google::crypto::tink::JwtEcdsaAlgorithm;
 
-StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
 JwtEcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const JwtEcdsaPublicKey& jwt_ecdsa_public_key) const {
-  StatusOr<std::string> name = AlgorithmName(jwt_ecdsa_public_key.algorithm());
+  absl::StatusOr<std::string> name =
+      AlgorithmName(jwt_ecdsa_public_key.algorithm());
   if (!name.ok()) {
     return name.status();
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       raw_key_manager_.GetPrimitive<PublicKeyVerify>(jwt_ecdsa_public_key);
   if (!verify.ok()) {
     return verify.status();
@@ -80,7 +81,7 @@ Status JwtEcdsaVerifyKeyManager::ValidateKey(
   return raw_key_manager_.ValidateKey(key);
 }
 
-StatusOr<std::string> JwtEcdsaVerifyKeyManager::AlgorithmName(
+absl::StatusOr<std::string> JwtEcdsaVerifyKeyManager::AlgorithmName(
     const JwtEcdsaAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtEcdsaAlgorithm::ES256:

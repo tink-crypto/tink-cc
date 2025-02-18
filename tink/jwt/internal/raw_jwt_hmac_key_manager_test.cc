@@ -205,7 +205,7 @@ TEST(RawJwtHmacKeyManagerTest, DeriveKeyIsNotImplemented) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
-  StatusOr<JwtHmacKey> key_or =
+  absl::StatusOr<JwtHmacKey> key_or =
       RawJwtHmacKeyManager().DeriveKey(format, &input_stream);
   EXPECT_THAT(key_or.status(), StatusIs(absl::StatusCode::kUnimplemented));
 }

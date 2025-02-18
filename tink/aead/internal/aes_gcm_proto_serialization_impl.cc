@@ -23,6 +23,7 @@
 #include "absl/base/attributes.h"
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_key.h"
@@ -36,14 +37,13 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "proto/aes_gcm.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -53,7 +53,6 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::OutputPrefixType;
 
 struct AesGcmKeyFormatStruct {
   uint32_t key_size = 0;
@@ -104,15 +103,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesGcmKey";
 
 util::StatusOr<AesGcmParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return AesGcmParameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return AesGcmParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return AesGcmParameters::Variant::kTink;
     default:
       return util::Status(absl::StatusCode::kInvalidArgument,
@@ -120,15 +119,15 @@ util::StatusOr<AesGcmParameters::Variant> ToVariant(
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+util::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     AesGcmParameters::Variant variant) {
   switch (variant) {
     case AesGcmParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case AesGcmParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case AesGcmParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
@@ -169,9 +168,11 @@ util::StatusOr<AesGcmParameters> ParseParameters(
                         "Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<AesGcmParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
-  if (!variant.ok()) return variant.status();
+  absl::StatusOr<AesGcmParameters::Variant> variant =
+      ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
+  if (!variant.ok()) {
+    return variant.status();
+  }
 
   // Legacy Tink AES-GCM key proto format assumes 12-byte random IVs and 16-byte
   // tags.
@@ -188,9 +189,11 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   util::Status valid_params = ValidateParamsForProto(parameters);
   if (!valid_params.ok()) return valid_params;
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
-  if (!output_prefix_type.ok()) return output_prefix_type.status();
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
 
   AesGcmKeyFormatStruct proto_key_format;
   proto_key_format.key_size = parameters.KeySizeInBytes();
@@ -227,9 +230,11 @@ util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
                         "Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<AesGcmParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
-  if (!variant.ok()) return variant.status();
+  absl::StatusOr<AesGcmParameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  if (!variant.ok()) {
+    return variant.status();
+  }
 
   // Legacy AES-GCM key proto format assumes 12-byte random IVs and 16-byte
   // tags.
@@ -264,7 +269,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.version = 0;
   proto_key.key_value = restricted_input->Get(*token);
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  util::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
@@ -275,7 +280,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   }
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
-      google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
+      KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }
 

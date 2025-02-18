@@ -36,7 +36,7 @@ class AesCmacPrfParameters : public PrfParameters {
 
   // Creates an AES-CMAC-PRF parameters object. Returns an error status if
   // the key size is neither 16 nor 32 bytes.
-  static util::StatusOr<AesCmacPrfParameters> Create(int key_size_in_bytes);
+  static absl::StatusOr<AesCmacPrfParameters> Create(int key_size_in_bytes);
 
   int KeySizeInBytes() const { return key_size_in_bytes_; }
 

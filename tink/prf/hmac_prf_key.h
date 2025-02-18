@@ -38,7 +38,7 @@ class HmacPrfKey : public PrfKey {
   HmacPrfKey& operator=(HmacPrfKey&& other) = default;
 
   // Creates a new HMAC-PRF key.
-  static util::StatusOr<HmacPrfKey> Create(const HmacPrfParameters& parameters,
+  static absl::StatusOr<HmacPrfKey> Create(const HmacPrfParameters& parameters,
                                            const RestrictedData& key_bytes,
                                            PartialKeyAccessToken token);
 

@@ -85,13 +85,13 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseParameters) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(key_size);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(params, IsOk());
@@ -107,12 +107,12 @@ TEST_F(AesCmacPrfProtoSerializationTest,
        ParseParametersWithInvalidSerializationFails) {
   ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(),
@@ -135,13 +135,13 @@ TEST_P(AesCmacPrfParsePrefixTest, ParseParametersWithInvalidPrefixFails) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(32);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, invalid_output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -159,13 +159,13 @@ TEST_F(AesCmacPrfProtoSerializationTest,
   key_format_proto.set_version(1);
   key_format_proto.set_key_size(32);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(),
@@ -177,11 +177,11 @@ TEST_P(AesCmacPrfProtoSerializationTest, SerializeParameters) {
   int key_size = GetParam();
   ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
 
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(key_size);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -215,20 +215,20 @@ TEST_P(AesCmacPrfProtoSerializationTest, ParseKey) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
-  util::StatusOr<AesCmacPrfKey> expected_key = AesCmacPrfKey::Create(
+  absl::StatusOr<AesCmacPrfKey> expected_key = AesCmacPrfKey::Create(
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
@@ -243,13 +243,13 @@ TEST_F(AesCmacPrfProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -268,13 +268,13 @@ TEST_P(AesCmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyData::SYMMETRIC,
                                               invalid_output_prefix_type,
                                               /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
@@ -293,13 +293,13 @@ TEST_F(AesCmacPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
@@ -316,13 +316,13 @@ TEST_F(AesCmacPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -335,12 +335,12 @@ TEST_P(AesCmacPrfProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(key_size);
-  util::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
+  absl::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -370,12 +370,12 @@ TEST_F(AesCmacPrfProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(16);
-  util::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
+  absl::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);

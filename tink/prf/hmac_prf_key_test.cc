@@ -58,12 +58,12 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HmacPrfKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HmacPrfParameters> parameters =
+  absl::StatusOr<HmacPrfParameters> parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(test_case.key_size);
-  util::StatusOr<HmacPrfKey> key =
+  absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -73,7 +73,7 @@ TEST_P(HmacPrfKeyTest, CreateSucceeds) {
 }
 
 TEST(HmacPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
-  util::StatusOr<HmacPrfParameters> parameters =
+  absl::StatusOr<HmacPrfParameters> parameters =
       HmacPrfParameters::Create(16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
@@ -88,16 +88,16 @@ TEST(HmacPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
 TEST_P(HmacPrfKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HmacPrfParameters> parameters =
+  absl::StatusOr<HmacPrfParameters> parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(test_case.key_size);
-  util::StatusOr<HmacPrfKey> key =
+  absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HmacPrfKey> other_key =
+  absl::StatusOr<HmacPrfKey> other_key =
       HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -108,18 +108,18 @@ TEST_P(HmacPrfKeyTest, KeyEquals) {
 }
 
 TEST(HmacPrfKeyTest, DifferentSecretDataNotEqual) {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/16);
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<HmacPrfKey> key =
+  absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters, secret1, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HmacPrfKey> other_key =
+  absl::StatusOr<HmacPrfKey> other_key =
       HmacPrfKey::Create(*parameters, secret2, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -130,21 +130,21 @@ TEST(HmacPrfKeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(HmacPrfKeyTest, DifferentParametersNotEqual) {
-  util::StatusOr<HmacPrfParameters> parameters1 = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters1 = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<HmacPrfParameters> parameters2 = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters2 = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha384);
   ASSERT_THAT(parameters2, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<HmacPrfKey> key =
+  absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters1, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HmacPrfKey> other_key =
+  absl::StatusOr<HmacPrfKey> other_key =
       HmacPrfKey::Create(*parameters2, secret, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -155,13 +155,13 @@ TEST(HmacPrfKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(HmacPrfKeyTest, Clone) {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<HmacPrfKey> key =
+  absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

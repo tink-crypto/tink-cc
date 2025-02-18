@@ -45,7 +45,7 @@ class HmacPrfParameters : public PrfParameters {
   HmacPrfParameters& operator=(HmacPrfParameters&& other) = default;
 
   // Creates an HMAC-PRF parameters object. Key size must be at least 16 bytes.
-  static util::StatusOr<HmacPrfParameters> Create(int key_size_in_bytes,
+  static absl::StatusOr<HmacPrfParameters> Create(int key_size_in_bytes,
                                                   HashType hash_type);
 
   int KeySizeInBytes() const { return key_size_in_bytes_; }

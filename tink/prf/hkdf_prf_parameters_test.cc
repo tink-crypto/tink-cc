@@ -62,7 +62,7 @@ TEST_P(HkdfPrfParametersTest, Create) {
   TestCase test_case = GetParam();
   std::string salt = test::HexDecodeOrDie(kSalt);
 
-  util::StatusOr<HkdfPrfParameters> parameters =
+  absl::StatusOr<HkdfPrfParameters> parameters =
       HkdfPrfParameters::Create(test_case.key_size, test_case.hash_type, salt);
   ASSERT_THAT(parameters, IsOk());
 
@@ -73,7 +73,7 @@ TEST_P(HkdfPrfParametersTest, Create) {
 }
 
 TEST(HkdfPrfParametersTest, CreateWithoutSaltWorks) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ;
@@ -87,7 +87,7 @@ TEST(HkdfPrfParametersTest, CreateWithoutSaltWorks) {
 }
 
 TEST(HkdfPrfParametersTest, CreateWithEmptySaltDefaultsToNullopt) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/"");
   ;
@@ -123,7 +123,7 @@ TEST(HkdfPrfParametersTest, CreateWithInvalidKHashTypeFails) {
 }
 
 TEST(HkdfPrfParametersTest, CopyConstructor) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
@@ -136,7 +136,7 @@ TEST(HkdfPrfParametersTest, CopyConstructor) {
 }
 
 TEST(HkdfPrfParametersTest, CopyAssignment) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
@@ -152,11 +152,11 @@ TEST_P(HkdfPrfParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
   std::string salt = test::HexDecodeOrDie(kSalt);
 
-  util::StatusOr<HkdfPrfParameters> parameters =
+  absl::StatusOr<HkdfPrfParameters> parameters =
       HkdfPrfParameters::Create(test_case.key_size, test_case.hash_type, salt);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<HkdfPrfParameters> other_parameters =
+  absl::StatusOr<HkdfPrfParameters> other_parameters =
       HkdfPrfParameters::Create(test_case.key_size, test_case.hash_type, salt);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -167,12 +167,12 @@ TEST_P(HkdfPrfParametersTest, ParametersEquals) {
 }
 
 TEST(HkdfPrfParametersTest, DifferentKeySizeNotEqual) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<HkdfPrfParameters> other_parameters =
+  absl::StatusOr<HkdfPrfParameters> other_parameters =
       HkdfPrfParameters::Create(/*key_size_in_bytes=*/32,
                                 HkdfPrfParameters::HashType::kSha256,
                                 /*salt=*/absl::nullopt);
@@ -183,12 +183,12 @@ TEST(HkdfPrfParametersTest, DifferentKeySizeNotEqual) {
 }
 
 TEST(HkdfPrfParametersTest, DifferentashTypeNotEqual) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<HkdfPrfParameters> other_parameters =
+  absl::StatusOr<HkdfPrfParameters> other_parameters =
       HkdfPrfParameters::Create(/*key_size_in_bytes=*/16,
                                 HkdfPrfParameters::HashType::kSha512,
                                 /*salt=*/absl::nullopt);
@@ -200,13 +200,13 @@ TEST(HkdfPrfParametersTest, DifferentashTypeNotEqual) {
 
 TEST(HkdfPrfParametersTest, DifferentSaltNotEqual) {
   std::string salt1 = test::HexDecodeOrDie("2023ab");
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/salt1);
   ASSERT_THAT(parameters, IsOk());
 
   std::string salt2 = test::HexDecodeOrDie("2023af");
-  util::StatusOr<HkdfPrfParameters> other_parameters =
+  absl::StatusOr<HkdfPrfParameters> other_parameters =
       HkdfPrfParameters::Create(/*key_size_in_bytes=*/16,
                                 HkdfPrfParameters::HashType::kSha256,
                                 /*salt=*/salt2);
@@ -218,7 +218,7 @@ TEST(HkdfPrfParametersTest, DifferentSaltNotEqual) {
 
 TEST(HkdfPrfParametersTest, Clone) {
   std::string salt1 = test::HexDecodeOrDie("2023ab");
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/salt1);
   ASSERT_THAT(parameters, IsOk());

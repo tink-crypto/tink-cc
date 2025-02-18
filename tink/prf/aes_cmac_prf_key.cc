@@ -27,9 +27,9 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<AesCmacPrfKey> AesCmacPrfKey::Create(
+absl::StatusOr<AesCmacPrfKey> AesCmacPrfKey::Create(
     RestrictedData key_bytes, PartialKeyAccessToken token) {
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(key_bytes.size());
   if (!parameters.ok()) {
     return parameters.status();

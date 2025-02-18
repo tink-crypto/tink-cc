@@ -38,7 +38,7 @@ class HkdfPrfKey : public PrfKey {
   HkdfPrfKey& operator=(HkdfPrfKey&& other) = default;
 
   // Creates a new HKDF-PRF key.
-  static util::StatusOr<HkdfPrfKey> Create(const HkdfPrfParameters& parameters,
+  static absl::StatusOr<HkdfPrfKey> Create(const HkdfPrfParameters& parameters,
                                            const RestrictedData& key_bytes,
                                            PartialKeyAccessToken token);
 

@@ -48,16 +48,16 @@ INSTANTIATE_TEST_SUITE_P(PrfV0KeyTypesTestSuite, PrfV0KeyTypesTest,
                                 PrfKeyTemplates::HmacSha256()));
 
 TEST_P(PrfV0KeyTypesTest, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigPrfV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PrfSet>> prf =
+  absl::StatusOr<std::unique_ptr<PrfSet>> prf =
       (*handle)->GetPrimitive<PrfSet>(ConfigPrfV0());
   ASSERT_THAT(prf, IsOk());
 
   size_t output_length = 16;
-  util::StatusOr<std::string> output =
+  absl::StatusOr<std::string> output =
       (*prf)->ComputePrimary("input", output_length);
   ASSERT_THAT(output, IsOk());
   EXPECT_THAT((*output).length(), Eq(output_length));

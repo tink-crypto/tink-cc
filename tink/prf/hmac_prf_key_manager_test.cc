@@ -127,7 +127,7 @@ TEST(HmacPrfKeyManagerTest, DeriveKey) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdefghijklmnop")};
 
-  StatusOr<HmacPrfKeyProto> key_or =
+  absl::StatusOr<HmacPrfKeyProto> key_or =
       HmacPrfKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_EQ(key_or.value().key_value(), "0123456789abcdefghijklm");
@@ -201,7 +201,7 @@ TEST(HmacPrfKeyManagerTest, GetPrimitiveUnknownHash) {
   key.set_version(0);
   key.mutable_params()->set_hash(HashType::UNKNOWN_HASH);
   key.set_key_value("0123456789abcdef");
-  util::StatusOr<std::unique_ptr<Prf>> prf =
+  absl::StatusOr<std::unique_ptr<Prf>> prf =
       HmacPrfKeyManager().GetPrimitive<Prf>(key);
   EXPECT_THAT(prf.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,

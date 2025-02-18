@@ -44,7 +44,7 @@ INSTANTIATE_TEST_SUITE_P(AesCmacPrfParametersTestSuite,
 TEST_P(AesCmacPrfParametersTest, Create) {
   int key_size = GetParam();
 
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(key_size);
   ASSERT_THAT(parameters, IsOk());
 
@@ -60,7 +60,7 @@ TEST(AesCmacPrfParametersTest, CreateWithInvalidKeySizeFails) {
 }
 
 TEST(AesCmacPrfParametersTest, CopyConstructor) {
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(/*key_size_in_bytes=*/16);
   ASSERT_THAT(parameters, IsOk());
 
@@ -71,7 +71,7 @@ TEST(AesCmacPrfParametersTest, CopyConstructor) {
 }
 
 TEST(AesCmacPrfParametersTest, CopyAssignment) {
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(/*key_size_in_bytes=*/16);
   ASSERT_THAT(parameters, IsOk());
 
@@ -84,11 +84,11 @@ TEST(AesCmacPrfParametersTest, CopyAssignment) {
 TEST_P(AesCmacPrfParametersTest, ParametersEquals) {
   int key_size = GetParam();
 
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(key_size);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacPrfParameters> other_parameters =
+  absl::StatusOr<AesCmacPrfParameters> other_parameters =
       AesCmacPrfParameters::Create(key_size);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -99,11 +99,11 @@ TEST_P(AesCmacPrfParametersTest, ParametersEquals) {
 }
 
 TEST(AesCmacPrfParametersTest, DifferentKeySizeNotEqual) {
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(/*key_size_in_bytes=*/16);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCmacPrfParameters> other_parameters =
+  absl::StatusOr<AesCmacPrfParameters> other_parameters =
       AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -112,7 +112,7 @@ TEST(AesCmacPrfParametersTest, DifferentKeySizeNotEqual) {
 }
 
 TEST(AesCmacPrfParametersTest, Clone) {
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(/*key_size_in_bytes=*/16);
   ASSERT_THAT(parameters, IsOk());
 

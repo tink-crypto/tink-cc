@@ -105,19 +105,19 @@ TEST_P(HmacPrfProtoSerializationTest, ParseParameters) {
   proto_key_format.set_key_size(test_case.key_size);
   proto_key_format.mutable_params()->set_hash(test_case.proto_hash_type);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           proto_key_format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parsed_parameters, IsOk());
   EXPECT_THAT((*parsed_parameters)->HasIdRequirement(), IsFalse());
 
-  util::StatusOr<HmacPrfParameters> expected_parameters =
+  absl::StatusOr<HmacPrfParameters> expected_parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(expected_parameters, IsOk());
   ASSERT_THAT(**parsed_parameters, Eq(*expected_parameters));
@@ -127,12 +127,12 @@ TEST_F(HmacPrfProtoSerializationTest,
        ParseParametersWithInvalidSerializationFails) {
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(),
@@ -157,13 +157,13 @@ TEST_P(HmacPrfParsePrefixTest, ParseParametersWithInvalidPrefixFails) {
   proto_key_format.set_key_size(16);
   proto_key_format.mutable_params()->set_hash(HashType::SHA256);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, invalid_output_prefix_type,
           proto_key_format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -181,13 +181,13 @@ TEST_F(HmacPrfProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
   proto_key_format.set_key_size(16);
   proto_key_format.mutable_params()->set_hash(HashType::SHA256);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           proto_key_format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(),
@@ -203,13 +203,13 @@ TEST_F(HmacPrfProtoSerializationTest, ParseParametersWithUnknownHashTypeFails) {
   key_format_proto.set_version(0);
   key_format_proto.mutable_params()->set_hash(HashType::UNKNOWN_HASH);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(params.status(),
@@ -221,11 +221,11 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeParameters) {
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
 
   TestCase test_case = GetParam();
-  util::StatusOr<HmacPrfParameters> parameters =
+  absl::StatusOr<HmacPrfParameters> parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -262,24 +262,24 @@ TEST_P(HmacPrfProtoSerializationTest, ParseKey) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(absl::nullopt));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(), IsFalse());
 
-  util::StatusOr<HmacPrfParameters> expected_parameters =
+  absl::StatusOr<HmacPrfParameters> expected_parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<HmacPrfKey> expected_key = HmacPrfKey::Create(
+  absl::StatusOr<HmacPrfKey> expected_key = HmacPrfKey::Create(
       *expected_parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
@@ -294,13 +294,13 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -321,13 +321,13 @@ TEST_P(HmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyData::SYMMETRIC,
                                               invalid_output_prefix_type,
                                               /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
@@ -347,13 +347,13 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
@@ -371,13 +371,13 @@ TEST_F(HmacPrfProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -391,16 +391,16 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeKey) {
   TestCase test_case = GetParam();
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
-  util::StatusOr<HmacPrfParameters> parameters =
+  absl::StatusOr<HmacPrfParameters> parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HmacPrfKey> key = HmacPrfKey::Create(
+  absl::StatusOr<HmacPrfKey> key = HmacPrfKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -431,16 +431,16 @@ TEST_F(HmacPrfProtoSerializationTest, SerializeKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(16);
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HmacPrfKey> key = HmacPrfKey::Create(
+  absl::StatusOr<HmacPrfKey> key = HmacPrfKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);

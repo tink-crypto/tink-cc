@@ -66,12 +66,12 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HkdfPrfKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       test_case.key_size, test_case.hash_type, test_case.salt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(test_case.key_size);
-  util::StatusOr<HkdfPrfKey> key =
+  absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -81,7 +81,7 @@ TEST_P(HkdfPrfKeyTest, CreateSucceeds) {
 }
 
 TEST(HkdfPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       16, HkdfPrfParameters::HashType::kSha256, /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
@@ -96,16 +96,16 @@ TEST(HkdfPrfKeyTest, CreateKeyWithNonMatchingKeySizeFails) {
 TEST_P(HkdfPrfKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       test_case.key_size, test_case.hash_type, test_case.salt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(test_case.key_size);
-  util::StatusOr<HkdfPrfKey> key =
+  absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HkdfPrfKey> other_key =
+  absl::StatusOr<HkdfPrfKey> other_key =
       HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -116,7 +116,7 @@ TEST_P(HkdfPrfKeyTest, KeyEquals) {
 }
 
 TEST(HkdfPrfKeyTest, DifferentSecretDataNotEqual) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
@@ -124,11 +124,11 @@ TEST(HkdfPrfKeyTest, DifferentSecretDataNotEqual) {
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/16);
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<HkdfPrfKey> key =
+  absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters, secret1, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HkdfPrfKey> other_key =
+  absl::StatusOr<HkdfPrfKey> other_key =
       HkdfPrfKey::Create(*parameters, secret2, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -139,23 +139,23 @@ TEST(HkdfPrfKeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(HkdfPrfKeyTest, DifferentParametersNotEqual) {
-  util::StatusOr<HkdfPrfParameters> parameters1 = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters1 = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<HkdfPrfParameters> parameters2 = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters2 = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha384,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters2, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<HkdfPrfKey> key =
+  absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters1, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HkdfPrfKey> other_key =
+  absl::StatusOr<HkdfPrfKey> other_key =
       HkdfPrfKey::Create(*parameters2, secret, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -166,14 +166,14 @@ TEST(HkdfPrfKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(HkdfPrfKeyTest, Clone) {
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<HkdfPrfKey> key =
+  absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters, secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

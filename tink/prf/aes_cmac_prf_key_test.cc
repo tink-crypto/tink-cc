@@ -48,11 +48,11 @@ TEST_P(AesCmacPrfKeyTest, CreateSucceeds) {
   int key_size = GetParam();
 
   RestrictedData secret = RestrictedData(key_size);
-  util::StatusOr<AesCmacPrfKey> key =
+  absl::StatusOr<AesCmacPrfKey> key =
       AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCmacPrfParameters> expected_parameters =
+  absl::StatusOr<AesCmacPrfParameters> expected_parameters =
       AesCmacPrfParameters::Create(key_size);
   ASSERT_THAT(expected_parameters, IsOk());
 
@@ -76,11 +76,11 @@ TEST_P(AesCmacPrfKeyTest, KeyEquals) {
   int key_size = GetParam();
 
   RestrictedData secret = RestrictedData(key_size);
-  util::StatusOr<AesCmacPrfKey> key =
+  absl::StatusOr<AesCmacPrfKey> key =
       AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCmacPrfKey> other_key =
+  absl::StatusOr<AesCmacPrfKey> other_key =
       AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -94,11 +94,11 @@ TEST(AesCmacPrfKeyTest, DifferentSecretDataNotEqual) {
   RestrictedData secret1 = RestrictedData(/*num_random_bytes=*/16);
   RestrictedData secret2 = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<AesCmacPrfKey> key =
+  absl::StatusOr<AesCmacPrfKey> key =
       AesCmacPrfKey::Create(secret1, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCmacPrfKey> other_key =
+  absl::StatusOr<AesCmacPrfKey> other_key =
       AesCmacPrfKey::Create(secret2, GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
 
@@ -111,7 +111,7 @@ TEST(AesCmacPrfKeyTest, DifferentSecretDataNotEqual) {
 TEST(AesCmacPrfKeyTest, Clone) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
 
-  util::StatusOr<AesCmacPrfKey> key =
+  absl::StatusOr<AesCmacPrfKey> key =
       AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

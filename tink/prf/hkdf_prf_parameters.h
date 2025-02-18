@@ -54,7 +54,7 @@ class HkdfPrfParameters : public PrfParameters {
   // Key size must be at least 16 bytes. As of RFC5869, the salt is optional;
   // if `salt` is `absl::nullopt` or an empty string, it will be set to a string
   // of HashLen zeros in the algorithm implementation.
-  static util::StatusOr<HkdfPrfParameters> Create(
+  static absl::StatusOr<HkdfPrfParameters> Create(
       int key_size_in_bytes, HashType hash_type,
       absl::optional<absl::string_view> salt);
 

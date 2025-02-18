@@ -227,12 +227,12 @@ TEST(HkdfPrfKeyManagerTest, CreatePrf) {
   auto key_or = HkdfPrfKeyManager().CreateKey(key_format);
   ASSERT_THAT(key_or, IsOk());
 
-  StatusOr<std::unique_ptr<StreamingPrf>> prf_or =
+  absl::StatusOr<std::unique_ptr<StreamingPrf>> prf_or =
       HkdfPrfKeyManager().GetPrimitive<StreamingPrf>(key_or.value());
 
   ASSERT_THAT(prf_or, IsOk());
 
-  StatusOr<std::unique_ptr<StreamingPrf>> direct_prf =
+  absl::StatusOr<std::unique_ptr<StreamingPrf>> direct_prf =
       subtle::HkdfStreamingPrf::New(
           subtle::SHA256,
           util::SecretDataFromStringView(key_or.value().key_value()),
@@ -262,7 +262,7 @@ TEST(HkdfPrfKeyManagerTest, DeriveKey) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
-  StatusOr<HkdfPrfKeyProto> key_or =
+  absl::StatusOr<HkdfPrfKeyProto> key_or =
       HkdfPrfKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(),
@@ -305,12 +305,12 @@ TEST(HkdfPrfKeyManagerTest, CreatePrfSet) {
   auto key_or = HkdfPrfKeyManager().CreateKey(key_format);
   ASSERT_THAT(key_or, IsOk());
 
-  StatusOr<std::unique_ptr<Prf>> prf_or =
+  absl::StatusOr<std::unique_ptr<Prf>> prf_or =
       HkdfPrfKeyManager().GetPrimitive<Prf>(key_or.value());
 
   ASSERT_THAT(prf_or, IsOk());
 
-  StatusOr<std::unique_ptr<StreamingPrf>> direct_streaming_prf =
+  absl::StatusOr<std::unique_ptr<StreamingPrf>> direct_streaming_prf =
       subtle::HkdfStreamingPrf::New(
           subtle::SHA256,
           util::SecretDataFromStringView(key_or.value().key_value()),
@@ -320,9 +320,9 @@ TEST(HkdfPrfKeyManagerTest, CreatePrfSet) {
   auto direct_prf = subtle::CreatePrfFromStreamingPrf(
       std::move(direct_streaming_prf.value()));
 
-  util::StatusOr<std::string> output_or =
+  absl::StatusOr<std::string> output_or =
       prf_or.value()->Compute("input string", 100);
-  util::StatusOr<std::string> direct_output_or =
+  absl::StatusOr<std::string> direct_output_or =
       direct_prf->Compute("input string", 100);
 
   ASSERT_THAT(output_or, IsOk());

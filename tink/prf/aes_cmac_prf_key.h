@@ -40,7 +40,7 @@ class AesCmacPrfKey : public PrfKey {
   AesCmacPrfKey& operator=(AesCmacPrfKey&& other) = default;
 
   // Creates a new AES-CMAC-PRF key.
-  static util::StatusOr<AesCmacPrfKey> Create(RestrictedData key_bytes,
+  static absl::StatusOr<AesCmacPrfKey> Create(RestrictedData key_bytes,
                                               PartialKeyAccessToken token);
 
   const RestrictedData& GetKeyBytes(PartialKeyAccessToken token) const {

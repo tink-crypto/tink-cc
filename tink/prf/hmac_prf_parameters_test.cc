@@ -55,7 +55,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HmacPrfParametersTest, Create) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HmacPrfParameters> parameters =
+  absl::StatusOr<HmacPrfParameters> parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(parameters, IsOk());
 
@@ -85,7 +85,7 @@ TEST(HmacPrfParametersTest, CreateWithInvalidKHashTypeFails) {
 }
 
 TEST(HmacPrfParametersTest, CopyConstructor) {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
@@ -97,7 +97,7 @@ TEST(HmacPrfParametersTest, CopyConstructor) {
 }
 
 TEST(HmacPrfParametersTest, CopyAssignment) {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
@@ -111,11 +111,11 @@ TEST(HmacPrfParametersTest, CopyAssignment) {
 TEST_P(HmacPrfParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HmacPrfParameters> parameters =
+  absl::StatusOr<HmacPrfParameters> parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<HmacPrfParameters> other_parameters =
+  absl::StatusOr<HmacPrfParameters> other_parameters =
       HmacPrfParameters::Create(test_case.key_size, test_case.hash_type);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -126,11 +126,11 @@ TEST_P(HmacPrfParametersTest, ParametersEquals) {
 }
 
 TEST(HmacPrfParametersTest, DifferentKeySizeNotEqual) {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<HmacPrfParameters> other_parameters =
+  absl::StatusOr<HmacPrfParameters> other_parameters =
       HmacPrfParameters::Create(/*key_size_in_bytes=*/32,
                                 HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(other_parameters, IsOk());
@@ -140,11 +140,11 @@ TEST(HmacPrfParametersTest, DifferentKeySizeNotEqual) {
 }
 
 TEST(HmacPrfParametersTest, DifferentashTypeNotEqual) {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<HmacPrfParameters> other_parameters =
+  absl::StatusOr<HmacPrfParameters> other_parameters =
       HmacPrfParameters::Create(/*key_size_in_bytes=*/16,
                                 HmacPrfParameters::HashType::kSha512);
   ASSERT_THAT(other_parameters, IsOk());
@@ -154,7 +154,7 @@ TEST(HmacPrfParametersTest, DifferentashTypeNotEqual) {
 }
 
 TEST(HmacPrfParametersTest, Clone) {
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 

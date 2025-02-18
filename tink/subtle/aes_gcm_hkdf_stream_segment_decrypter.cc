@@ -172,7 +172,7 @@ util::Status AesGcmHkdfStreamSegmentDecrypter::DecryptSegment(
                         "decrypter not initialized");
   }
   if (ciphertext.size() > get_ciphertext_segment_size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too long");
   }
   if (ciphertext.size() < AesGcmHkdfStreamSegmentEncrypter::kTagSizeInBytes) {

@@ -171,7 +171,7 @@ util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
     EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
     absl::string_view message_suffix) {
-  util::Status status =
+  absl::Status status =
       internal::CheckFipsCompatibility<EcdsaVerifyBoringSsl>();
   if (!status.ok()) {
     return status;

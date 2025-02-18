@@ -73,7 +73,7 @@ AesSivBoringSsl::New(const util::SecretData& key) {
   if (!status.ok()) return status;
 
   if (!IsValidKeySizeInBytes(key.size())) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
   }
   auto k1_or = InitializeAesKey(absl::MakeSpan(key).subspan(0, key.size() / 2));
   if (!k1_or.ok()) {

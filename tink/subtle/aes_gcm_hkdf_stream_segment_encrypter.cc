@@ -59,7 +59,7 @@ void BigEndianStore32(uint8_t dst[4], uint32_t val) {
   std::memcpy(dst, &val, sizeof(val));
 }
 
-util::Status Validate(const AesGcmHkdfStreamSegmentEncrypter::Params& params) {
+absl::Status Validate(const AesGcmHkdfStreamSegmentEncrypter::Params& params) {
   if (params.key.size() != 16 && params.key.size() != 32) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "key must have 16 or 32 bytes");

@@ -145,7 +145,7 @@ EciesHkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
             /*len=*/internal::Ed25519KeyPrivKeySize());
       }));
   if (ssl_priv_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_new_raw_private_key failed");
   }
 

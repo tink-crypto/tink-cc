@@ -46,7 +46,7 @@ util::Status Validate(const AesGcmHkdfStreaming::Params& params) {
                         "unsupported hkdf_hash");
   }
   if (params.ikm.size() < 16 || params.ikm.size() < params.derived_key_size) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "ikm too small");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "ikm too small");
   }
   if (params.derived_key_size != 16 && params.derived_key_size != 32) {
     return util::Status(absl::StatusCode::kInvalidArgument,

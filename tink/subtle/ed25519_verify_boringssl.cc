@@ -112,7 +112,7 @@ util::Status Ed25519VerifyBoringSsl::VerifyWithoutPrefix(
           signature.size(),
           /*data=*/reinterpret_cast<const uint8_t *>(data.data()),
           data.size()) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "Signature is not valid.");
+    return absl::Status(absl::StatusCode::kInternal, "Signature is not valid.");
   }
 
   return util::OkStatus();

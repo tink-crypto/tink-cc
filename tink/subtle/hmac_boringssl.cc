@@ -101,7 +101,7 @@ util::StatusOr<std::string> HmacBoringSsl::ComputeMac(
   return std::string(reinterpret_cast<char*>(buf), tag_size_);
 }
 
-util::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
+absl::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
                                       absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.

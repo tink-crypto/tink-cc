@@ -287,7 +287,7 @@ crypto::tink::util::StatusOr<std::string> AesEaxBoringSsl::Decrypt(
 
   size_t ct_size = ciphertext.size();
   if (ct_size < nonce_size_ + kTagSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ciphertext too short");
   }
   size_t out_size = ct_size - kTagSize - nonce_size_;

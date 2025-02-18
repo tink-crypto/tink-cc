@@ -129,7 +129,7 @@ util::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
 
   internal::SslUniquePtr<EVP_CIPHER_CTX> ctx(EVP_CIPHER_CTX_new());
   if (ctx.get() == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "could not initialize EVP_CIPHER_CTX");
   }
 

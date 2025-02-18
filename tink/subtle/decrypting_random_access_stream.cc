@@ -233,8 +233,8 @@ util::Status DecryptingRandomAccessStream::ReadAndDecryptSegment(
                              ct_buffer->get_mem_block() + ct_buffer->size()),
         segment_nr, is_last_segment, pt_segment);
     if (dec_status.ok()) {
-      return is_last_segment ?
-          Status(absl::StatusCode::kOutOfRange, "EOF") : util::OkStatus();
+      return is_last_segment ? Status(absl::StatusCode::kOutOfRange, "EOF")
+                             : absl::OkStatus();
     }
     return dec_status;
   }

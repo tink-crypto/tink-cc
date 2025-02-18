@@ -59,8 +59,8 @@ crypto::tink::util::Status EncryptThenDecrypt(const CordAead& encrypter,
       decrypter.Decrypt(encryption_or.value(), aad_cord);
   if (!decryption_or.status().ok()) return decryption_or.status();
   if (decryption_or.value() != message) {
-    return crypto::tink::util::Status(absl::StatusCode::kInternal,
-                                      "Message/Decryption mismatch");
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Message/Decryption mismatch");
   }
   return util::OkStatus();
 }

@@ -42,16 +42,15 @@ namespace subtle {
 // Boring SSL for the underlying cryptographic operations.
 class RsaSsaPkcs1SignBoringSsl : public PublicKeySign {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const internal::RsaPrivateKey& private_key,
       const internal::RsaSsaPkcs1Params& params);
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const RsaSsaPkcs1PrivateKey& key);
 
   // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   ~RsaSsaPkcs1SignBoringSsl() override = default;
 
@@ -59,7 +58,7 @@ class RsaSsaPkcs1SignBoringSsl : public PublicKeySign {
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
  private:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const internal::RsaPrivateKey& private_key,
       const internal::RsaSsaPkcs1Params& params,
       absl::string_view output_prefix, absl::string_view message_suffix);
@@ -73,8 +72,7 @@ class RsaSsaPkcs1SignBoringSsl : public PublicKeySign {
         output_prefix_(output_prefix),
         message_suffix_(message_suffix) {}
 
-  crypto::tink::util::StatusOr<std::string> SignWithoutPrefix(
-      absl::string_view data) const;
+  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
 
   const internal::SslUniquePtr<RSA> private_key_;
   const EVP_MD* const sig_hash_;  // Owned by BoringSSL.

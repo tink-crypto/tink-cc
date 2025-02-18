@@ -69,16 +69,16 @@ TEST(XChacha20Poly1305BoringSslTest, EncryptDecrypt) {
     EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key).status(),
                 StatusIs(absl::StatusCode::kUnimplemented));
   } else {
-    util::StatusOr<std::unique_ptr<Aead>> aead =
+    absl::StatusOr<std::unique_ptr<Aead>> aead =
         XChacha20Poly1305BoringSsl::New(key);
     ASSERT_THAT(aead, IsOk());
 
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         (*aead)->Encrypt(kMessage, kAssociatedData);
     ASSERT_THAT(ciphertext, IsOk());
     EXPECT_THAT(*ciphertext,
                 SizeIs(kMessage.size() + kNonceSizeInBytes + kTagSizeInBytes));
-    util::StatusOr<std::string> plaintext =
+    absl::StatusOr<std::string> plaintext =
         (*aead)->Decrypt(*ciphertext, kAssociatedData);
     ASSERT_THAT(plaintext, IsOk());
     EXPECT_EQ(*plaintext, kMessage);
@@ -115,11 +115,11 @@ TEST(XChacha20Poly1305BoringSslTest, SimpleDecrypt) {
   util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"));
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       XChacha20Poly1305BoringSsl::New(key);
   ASSERT_THAT(aead, IsOk());
 
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*aead)->Decrypt(absl::StrCat(iv, raw_ciphertext, tag), associated_data);
   ASSERT_THAT(plaintext, IsOk());
   EXPECT_EQ(*plaintext, message);
@@ -135,7 +135,7 @@ TEST(XChacha20Poly1305BoringSslTest, DecryptFailsIfCiphertextTooSmall) {
 
   util::SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       XChacha20Poly1305BoringSsl::New(key);
   ASSERT_THAT(aead, IsOk());
 
@@ -186,12 +186,12 @@ class XChacha20Poly1305BoringSslWycheproofTest
 TEST_P(XChacha20Poly1305BoringSslWycheproofTest, Decrypt) {
   internal::WycheproofTestVector test_vector = GetParam();
   util::SecretData key = util::SecretDataFromStringView(test_vector.key);
-  util::StatusOr<std::unique_ptr<Aead>> cipher =
+  absl::StatusOr<std::unique_ptr<Aead>> cipher =
       XChacha20Poly1305BoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());
   std::string ciphertext =
       absl::StrCat(test_vector.nonce, test_vector.ct, test_vector.tag);
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*cipher)->Decrypt(ciphertext, test_vector.aad);
   if (plaintext.ok()) {
     EXPECT_NE(test_vector.expected, "invalid")

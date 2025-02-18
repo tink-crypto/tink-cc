@@ -42,25 +42,24 @@ namespace subtle {
 // https://tools.ietf.org/html/rfc8017#section-8.1).
 class RsaSsaPssSignBoringSsl : public PublicKeySign {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const crypto::tink::internal::RsaPrivateKey& private_key,
       const crypto::tink::internal::RsaSsaPssParams& params) {
     return New(private_key, params, "", "");
   }
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const RsaSsaPssPrivateKey& key);
 
   ~RsaSsaPssSignBoringSsl() override = default;
 
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
  private:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const crypto::tink::internal::RsaPrivateKey& private_key,
       const crypto::tink::internal::RsaSsaPssParams& params,
       absl::string_view output_prefix, absl::string_view message_suffix);
@@ -76,8 +75,7 @@ class RsaSsaPssSignBoringSsl : public PublicKeySign {
         output_prefix_(output_prefix),
         message_suffix_(message_suffix) {}
 
-  crypto::tink::util::StatusOr<std::string> SignWithoutPrefix(
-      absl::string_view data) const;
+  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
 
   const crypto::tink::internal::SslUniquePtr<RSA> private_key_;
   // Pointers to singletons owned by OpenSSL/BoringSSL.

@@ -41,12 +41,12 @@ class StreamingMacImpl : public StreamingMac {
   // Implement streaming mac class functions
   // Returns an ComputeMacOutputStream, which when closed will return the
   // message authentication code (MAC) of the data put into the stream.
-  util::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
   NewComputeMacOutputStream() const override;
 
   // Returns an VerifyMacOutputStream which verifies if 'mac' is a correct
   // message authentication code (MAC) for the data written to it.
-  util::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
   NewVerifyMacOutputStream(const std::string& mac_value) const override;
 
  private:

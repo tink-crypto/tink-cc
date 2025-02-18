@@ -177,7 +177,7 @@ TEST_F(RsaSsaPkcs1VerifyBoringSslTest, Modification) {
   }
 }
 
-static util::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> GetVerifier(
+static absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> GetVerifier(
     const google::protobuf::Value& test_group) {
   auto test_group_fields = test_group.struct_value().fields();
   internal::RsaPublicKey key;
@@ -197,7 +197,7 @@ static util::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> GetVerifier(
 
 // Tests signature verification using the test vectors in the specified file.
 bool TestSignatures(const std::string& filename) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(filename);
   CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
@@ -368,7 +368,7 @@ TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
@@ -395,7 +395,7 @@ TEST_P(RsaSsaPkcs1VerifyBoringSslTestVectorTest,
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RsaSsaPkcs1VerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(

@@ -250,13 +250,13 @@ TEST_P(RsaSsaPssSignBoringSSLTestVectorTest, FreshSignatureInTestVector) {
     ASSERT_THAT(RsaSsaPssSignBoringSsl::New(*typed_key), Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       RsaSsaPssSignBoringSsl::New(*typed_key);
   ASSERT_THAT(signer, IsOk());
-  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(param.message);
   ASSERT_THAT(signature, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RsaSsaPssVerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, param.message), IsOk());

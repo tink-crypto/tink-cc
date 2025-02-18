@@ -224,10 +224,10 @@ TEST_P(RsaSsaPkcs1SignBoringSSLTestVectorTest, ComputeSignatureInTestVector) {
     ASSERT_THAT(RsaSsaPkcs1SignBoringSsl::New(*typed_key), Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       RsaSsaPkcs1SignBoringSsl::New(*typed_key);
   ASSERT_THAT(signer, IsOk());
-  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(param.message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT(*signature, Eq(param.signature));
 }

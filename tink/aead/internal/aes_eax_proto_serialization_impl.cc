@@ -16,17 +16,19 @@
 
 #include "tink/aead/internal/aes_eax_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_eax_key.h"
 #include "tink/aead/aes_eax_parameters.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -34,27 +36,24 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "proto/aes_eax.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::AesEaxKeyFormat;
-using ::google::crypto::tink::AesEaxParams;
-using ::google::crypto::tink::OutputPrefixType;
 
 using AesEaxProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesEaxParameters>;
@@ -68,16 +67,58 @@ using AesEaxProtoKeySerializerImpl =
 constexpr absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesEaxKey";
 
+struct AesEaxParamsStruct {
+  uint32_t iv_size;
+
+  static ProtoParser<AesEaxParamsStruct> CreateParser() {
+    return ProtoParserBuilder<AesEaxParamsStruct>()
+        .AddUint32Field(1, &AesEaxParamsStruct::iv_size)
+        .BuildOrDie();
+  }
+};
+
+struct AesEaxKeyFormatStruct {
+  AesEaxParamsStruct params;
+  uint32_t key_size;
+
+  static const ProtoParser<AesEaxKeyFormatStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<AesEaxKeyFormatStruct>> parser{
+        ProtoParserBuilder<AesEaxKeyFormatStruct>()
+            .AddMessageField(1, &AesEaxKeyFormatStruct::params,
+                             AesEaxParamsStruct::CreateParser())
+            .AddUint32Field(2, &AesEaxKeyFormatStruct::key_size)
+            .BuildOrDie()};
+    return *parser;
+  }
+};
+
+struct AesEaxKeyStruct {
+  uint32_t version;
+  AesEaxParamsStruct params;
+  SecretData key_value;
+
+  static const ProtoParser<AesEaxKeyStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<AesEaxKeyStruct>> parser{
+        ProtoParserBuilder<AesEaxKeyStruct>()
+            .AddUint32Field(1, &AesEaxKeyStruct::version)
+            .AddMessageField(2, &AesEaxKeyStruct::params,
+                             AesEaxParamsStruct::CreateParser())
+            .AddBytesSecretDataField(3, &AesEaxKeyStruct::key_value)
+            .BuildOrDie()};
+    return *parser;
+  }
+};
+
 util::StatusOr<AesEaxParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return AesEaxParameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return AesEaxParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return AesEaxParameters::Variant::kTink;
     default:
       return util::Status(absl::StatusCode::kInvalidArgument,
@@ -85,22 +126,22 @@ util::StatusOr<AesEaxParameters::Variant> ToVariant(
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+util::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     AesEaxParameters::Variant variant) {
   switch (variant) {
     case AesEaxParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case AesEaxParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case AesEaxParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<AesEaxParams> GetProtoParams(
+util::StatusOr<AesEaxParamsStruct> GetProtoParams(
     const AesEaxParameters& parameters) {
   // Legacy Tink AES-EAX key proto format assumes 16-byte tags.
   if (parameters.GetTagSizeInBytes() != 16) {
@@ -109,9 +150,9 @@ util::StatusOr<AesEaxParams> GetProtoParams(
         "Tink currently restricts AES-EAX tag size to 16 bytes.");
   }
 
-  AesEaxParams params;
-  params.set_iv_size(parameters.GetIvSizeInBytes());
-
+  AesEaxParamsStruct params{
+      /*iv_size=*/static_cast<uint32_t>(parameters.GetIvSizeInBytes()),
+  };
   return params;
 }
 
@@ -124,41 +165,52 @@ util::StatusOr<AesEaxParameters> ParseParameters(
                      serialization.GetKeyTemplate().type_url()));
   }
 
-  AesEaxKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesEaxKeyFormat proto");
+  absl::StatusOr<AesEaxKeyFormatStruct> key_format_struct =
+      AesEaxKeyFormatStruct::GetParser().Parse(
+          serialization.GetKeyTemplate().value());
+  if (!key_format_struct.ok()) {
+    return absl::InvalidArgumentError("Failed to parse AesEaxKeyFormat proto");
   }
 
   util::StatusOr<AesEaxParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
-  if (!variant.ok()) return variant.status();
+      ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
+  if (!variant.ok()) {
+    return variant.status();
+  }
 
   // Legacy Tink AES-EAX key proto format assumes 16-byte tags only.
   return AesEaxParameters::Builder()
       .SetVariant(*variant)
-      .SetKeySizeInBytes(proto_key_format.key_size())
-      .SetIvSizeInBytes(proto_key_format.params().iv_size())
+      .SetKeySizeInBytes(key_format_struct->key_size)
+      .SetIvSizeInBytes(key_format_struct->params.iv_size)
       .SetTagSizeInBytes(16)
       .Build();
 }
 
 util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesEaxParameters& parameters) {
-  util::StatusOr<AesEaxParams> params = GetProtoParams(parameters);
-  if (!params.ok()) return params.status();
+  absl::StatusOr<AesEaxParamsStruct> params = GetProtoParams(parameters);
+  if (!params.ok()) {
+    return params.status();
+  }
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  util::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
-  if (!output_prefix_type.ok()) return output_prefix_type.status();
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
 
-  AesEaxKeyFormat proto_key_format;
-  *proto_key_format.mutable_params() = *params;
-  proto_key_format.set_key_size(parameters.GetKeySizeInBytes());
+  AesEaxKeyFormatStruct key_format_struct{
+      /*params=*/*params,
+      /*key_size=*/static_cast<uint32_t>(parameters.GetKeySizeInBytes())};
+  absl::StatusOr<std::string> serialized_proto =
+      AesEaxKeyFormatStruct::GetParser().SerializeIntoString(key_format_struct);
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
 
-  return ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
+  return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
+                                              *serialized_proto);
 }
 
 util::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
@@ -171,41 +223,45 @@ util::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
-  util::StatusOr<SecretProto<google::crypto::tink::AesEaxKey>> proto_key =
-      SecretProto<google::crypto::tink::AesEaxKey>::ParseFromSecretData(
-          serialization.SerializedKeyProto().Get(*token));
-  if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesEaxKey proto");
+
+  absl::StatusOr<AesEaxKeyStruct> key_struct =
+      AesEaxKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
+  if (!key_struct.ok()) {
+    return absl::InvalidArgumentError("Failed to parse AesEaxKey proto");
   }
-  if ((*proto_key)->version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+  if (key_struct->version != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<AesEaxParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
-  if (!variant.ok()) return variant.status();
+  util::StatusOr<AesEaxParameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  if (!variant.ok()) {
+    return variant.status();
+  }
 
   util::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(*variant)
-          .SetKeySizeInBytes((*proto_key)->key_value().length())
-          .SetIvSizeInBytes((*proto_key)->params().iv_size())
+          .SetKeySizeInBytes(key_struct->key_value.size())
+          .SetIvSizeInBytes(key_struct->params.iv_size)
           // Legacy AES-EAX key proto format assumes 16-byte tags.
           .SetTagSizeInBytes(16)
           .Build();
   if (!parameters.ok()) return parameters.status();
 
   return AesEaxKey::Create(
-      *parameters, RestrictedData((*proto_key)->key_value(), *token),
+      *parameters, RestrictedData(key_struct->key_value, *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
 util::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesEaxKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<AesEaxParams> params = GetProtoParams(key.GetParameters());
-  if (!params.ok()) return params.status();
+  absl::StatusOr<AesEaxParamsStruct> params =
+      GetProtoParams(key.GetParameters());
+  if (!params.ok()) {
+    return params.status();
+  }
 
   util::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
@@ -215,21 +271,22 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required");
   }
 
-  SecretProto<google::crypto::tink::AesEaxKey> proto_key;
-  proto_key->set_version(0);
-  CallWithCoreDumpProtection(
-      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
-  *proto_key->mutable_params() = *params;
-
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  AesEaxKeyStruct key_struct{/*version=*/0,
+                             /*params=*/*params,
+                             /*key_value=*/restricted_input->Get(*token)};
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
-  if (!output_prefix_type.ok()) return output_prefix_type.status();
-  util::StatusOr<SecretData> serialized_proto =
-      proto_key.SerializeAsSecretData();
-  if (!serialized_proto.ok()) return serialized_proto.status();
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
+  absl::StatusOr<SecretData> serialized_proto =
+      AesEaxKeyStruct::GetParser().SerializeIntoSecretData(key_struct);
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(*std::move(serialized_proto), *token),
-      google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
+      KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }
 

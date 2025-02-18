@@ -696,6 +696,7 @@ tink_cc_library(
     x_aes_gcm_proto_serialization_impl.h
   DEPS
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::partial_key_access
@@ -712,11 +713,8 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
-    tink::proto::x_aes_gcm_cc_proto
 )
 
 tink_cc_test(

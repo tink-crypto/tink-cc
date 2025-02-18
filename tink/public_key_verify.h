@@ -34,9 +34,8 @@ namespace tink {
 class PublicKeyVerify {
  public:
   // Verifies that 'signature' is a digital signature for 'data'.
-  virtual crypto::tink::util::Status Verify(
-      absl::string_view signature,
-      absl::string_view data) const = 0;
+  virtual absl::Status Verify(absl::string_view signature,
+                              absl::string_view data) const = 0;
 
   virtual ~PublicKeyVerify() = default;
 };

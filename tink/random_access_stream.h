@@ -50,10 +50,8 @@ class RandomAccessStream {
   //      'position' is larger than the current size of the stream.
   //  INVALID_ARGUMENT: if some of the arguments are not valid.
   //  other: if some other error occurred.
-  virtual crypto::tink::util::Status PRead(
-      int64_t position,
-      int count,
-      crypto::tink::util::Buffer* dest_buffer) = 0;
+  virtual absl::Status PRead(int64_t position, int count,
+                             crypto::tink::util::Buffer* dest_buffer) = 0;
 
   // Returns the size of this stream in bytes, if available.
   // If the size is not available, returns a non-Ok status.

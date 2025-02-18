@@ -55,15 +55,15 @@ class Registry {
  public:
   // Registers the given 'manager' for the key type 'manager->get_key_type()'.
   template <class ConcreteKeyManager>
-  static crypto::tink::util::Status RegisterKeyManager(
+  static absl::Status RegisterKeyManager(
       std::unique_ptr<ConcreteKeyManager> manager, bool new_key_allowed) {
     return internal::RegistryImpl::GlobalInstance().RegisterKeyManager(
         manager.release(), new_key_allowed);
   }
 
   template <class KTManager>
-  static crypto::tink::util::Status RegisterKeyTypeManager(
-      std::unique_ptr<KTManager> manager, bool new_key_allowed) {
+  static absl::Status RegisterKeyTypeManager(std::unique_ptr<KTManager> manager,
+                                             bool new_key_allowed) {
     return internal::RegistryImpl::GlobalInstance()
         .RegisterKeyTypeManager<typename KTManager::KeyProto,
                                 typename KTManager::KeyFormatProto,
@@ -72,7 +72,7 @@ class Registry {
   }
 
   template <class PrivateKeyTypeManager, class KeyTypeManager>
-  static crypto::tink::util::Status RegisterAsymmetricKeyManagers(
+  static absl::Status RegisterAsymmetricKeyManagers(
       std::unique_ptr<PrivateKeyTypeManager> private_key_manager,
       std::unique_ptr<KeyTypeManager> public_key_manager,
       bool new_key_allowed) {
@@ -83,7 +83,7 @@ class Registry {
   }
 
   template <class ConcretePrimitiveWrapper>
-  static crypto::tink::util::Status RegisterPrimitiveWrapper(
+  static absl::Status RegisterPrimitiveWrapper(
       std::unique_ptr<ConcretePrimitiveWrapper> wrapper) {
     return internal::RegistryImpl::GlobalInstance().RegisterPrimitiveWrapper(
         wrapper.release());

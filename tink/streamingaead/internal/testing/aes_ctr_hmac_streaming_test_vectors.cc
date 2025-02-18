@@ -51,7 +51,7 @@ std::string Xor(absl::string_view a, absl::string_view b) {
 
 // From the cross language tests, test_manually_created_test_vector
 StreamingAeadTestVector CreateTestVector0() {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetDerivedKeySizeInBytes(16)
@@ -65,7 +65,7 @@ StreamingAeadTestVector CreateTestVector0() {
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   CHECK_OK(key);
 
@@ -104,7 +104,7 @@ StreamingAeadTestVector CreateTestVector0() {
 
 // Created in Java.
 StreamingAeadTestVector CreateTestVector1() {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetDerivedKeySizeInBytes(16)
@@ -117,7 +117,7 @@ StreamingAeadTestVector CreateTestVector1() {
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   CHECK_OK(key);
 
@@ -132,7 +132,7 @@ StreamingAeadTestVector CreateTestVector1() {
 
 // Created in Java, Use SHA256/SHA512
 StreamingAeadTestVector CreateTestVector2() {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetDerivedKeySizeInBytes(16)
@@ -145,7 +145,7 @@ StreamingAeadTestVector CreateTestVector2() {
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   CHECK_OK(key);
 
@@ -160,7 +160,7 @@ StreamingAeadTestVector CreateTestVector2() {
 
 // Created in Java, Use SHA512/SHA1
 StreamingAeadTestVector CreateTestVector3() {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetDerivedKeySizeInBytes(16)
@@ -173,7 +173,7 @@ StreamingAeadTestVector CreateTestVector3() {
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   CHECK_OK(key);
 
@@ -188,7 +188,7 @@ StreamingAeadTestVector CreateTestVector3() {
 
 // Created in Java, Use KeySizeBytes=32
 StreamingAeadTestVector CreateTestVector4() {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetDerivedKeySizeInBytes(16)
@@ -202,7 +202,7 @@ StreamingAeadTestVector CreateTestVector4() {
       HexDecodeOrDie(
           "00112233445566778899aabbccddeeff000102030405060708090a0b0c0d0e0f"),
       InsecureSecretKeyAccess::Get());
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   CHECK_OK(key);
 
@@ -218,7 +218,7 @@ StreamingAeadTestVector CreateTestVector4() {
 
 // Created in Java, Use DerivedKeySizeBytes=32
 StreamingAeadTestVector CreateTestVector5() {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetDerivedKeySizeInBytes(32)
@@ -232,7 +232,7 @@ StreamingAeadTestVector CreateTestVector5() {
       HexDecodeOrDie(
           "00112233445566778899aabbccddeeff000102030405060708090a0b0c0d0e0f"),
       InsecureSecretKeyAccess::Get());
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   CHECK_OK(key);
 

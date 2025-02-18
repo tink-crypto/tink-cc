@@ -41,7 +41,7 @@ using ::crypto::tink::test::HexDecodeOrDie;
 
 // From the cross language tests, test_manually_created_test_vector
 StreamingAeadTestVector CreateTestVector0() {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetDerivedKeySizeInBytes(16)
@@ -53,7 +53,7 @@ StreamingAeadTestVector CreateTestVector0() {
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   CHECK_OK(key);
 

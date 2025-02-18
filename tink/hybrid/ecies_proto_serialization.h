@@ -23,7 +23,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for ECIES parameters and keys.
-crypto::tink::util::Status RegisterEciesProtoSerialization();
+absl::Status RegisterEciesProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

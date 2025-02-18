@@ -24,7 +24,7 @@ namespace tink {
 
 // Registers HybridEncrypt and HybridDecrypt primitive wrappers, and key
 // managers for HPKE Encrypt and HPKE Decrypt from the current Tink release.
-crypto::tink::util::Status RegisterHpke();
+absl::Status RegisterHpke();
 
 }  // namespace tink
 }  // namespace crypto

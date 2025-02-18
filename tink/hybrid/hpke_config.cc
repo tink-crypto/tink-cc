@@ -30,8 +30,8 @@
 namespace crypto {
 namespace tink {
 
-util::Status RegisterHpke() {
-  util::Status status = AeadConfig::Register();
+absl::Status RegisterHpke() {
+  absl::Status status = AeadConfig::Register();
   if (!status.ok()) {
     return status;
   }
@@ -51,7 +51,7 @@ util::Status RegisterHpke() {
   // Currently there are no HPKE key managers which only use FIPS-validated
   // implementations, therefore none will be registered in FIPS-only mode.
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Register non-FIPS HPKE key managers.

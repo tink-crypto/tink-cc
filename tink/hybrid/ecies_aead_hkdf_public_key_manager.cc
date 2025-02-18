@@ -64,7 +64,7 @@ Status EciesAeadHkdfPublicKeyManager::ValidateParams(
     return Status(absl::StatusCode::kInvalidArgument,
                   "Unknown EC point format.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 Status EciesAeadHkdfPublicKeyManager::ValidateKey(

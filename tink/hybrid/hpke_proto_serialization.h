@@ -23,7 +23,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for HPKE parameters and keys.
-crypto::tink::util::Status RegisterHpkeProtoSerialization();
+absl::Status RegisterHpkeProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

@@ -32,7 +32,7 @@ namespace crypto {
 namespace tink {
 
 // static
-util::Status HybridConfig::Register() {
+absl::Status HybridConfig::Register() {
   auto status = AeadConfig::Register();
   if (!status.ok()) {
     return status;
@@ -55,7 +55,7 @@ util::Status HybridConfig::Register() {
   // FIPS-validated implementations, therefore none will be registered in
   // FIPS only mode.
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Register non-FIPS key managers.

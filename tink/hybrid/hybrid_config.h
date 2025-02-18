@@ -40,7 +40,7 @@ class HybridConfig {
   // Registers HybridEncrypt and HybridDecrypt primitive wrappers, and key
   // managers for all implementations of HybridEncrypt and HybridDecrypt from
   // the current Tink release.
-  static crypto::tink::util::Status Register();
+  static absl::Status Register();
 
  private:
   HybridConfig() {}

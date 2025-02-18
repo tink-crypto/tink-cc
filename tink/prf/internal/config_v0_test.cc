@@ -53,7 +53,7 @@ using ::testing::Values;
 TEST(PrfV0Test, PrimitiveWrapper) {
   Configuration config;
   ASSERT_THAT(AddPrfV0(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore *> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -63,13 +63,13 @@ TEST(PrfV0Test, PrimitiveWrapper) {
 TEST(PrfV0Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddPrfV0(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore *> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddPrfKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -93,16 +93,16 @@ TEST_P(PrfV0KeyTypesTest, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddPrfV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PrfSet>> prf =
+  absl::StatusOr<std::unique_ptr<PrfSet>> prf =
       (*handle)->GetPrimitive<PrfSet>(config);
   ASSERT_THAT(prf, IsOk());
 
   size_t output_length = 16;
-  util::StatusOr<std::string> output =
+  absl::StatusOr<std::string> output =
       (*prf)->ComputePrimary("input", output_length);
   ASSERT_THAT(output, IsOk());
   EXPECT_THAT((*output).length(), Eq(output_length));

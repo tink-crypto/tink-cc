@@ -34,8 +34,8 @@ namespace tink {
 // for every salt, generates a new random keyset and caches it.
 class KeysetDeriver {
  public:
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  DeriveKeyset(absl::string_view salt) const = 0;
+  virtual absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeyset(
+      absl::string_view salt) const = 0;
 
   virtual ~KeysetDeriver() = default;
 };

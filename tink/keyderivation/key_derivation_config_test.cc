@@ -57,30 +57,30 @@ TEST(KeyDerivationConfigTest, Register) {
                   absl::make_unique<AesGcmKeyManager>(), true),
               IsOk());
 
-  util::StatusOr<::google::crypto::tink::KeyTemplate> templ =
+  absl::StatusOr<::google::crypto::tink::KeyTemplate> templ =
       KeyDerivationKeyTemplates::CreatePrfBasedKeyTemplate(
           PrfKeyTemplates::HkdfSha256(), AeadKeyTemplates::Aes256Gcm());
   ASSERT_THAT(templ, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(*templ, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
       (*handle)->GetPrimitive<crypto::tink::KeysetDeriver>(
           ConfigGlobalRegistry());
   ASSERT_THAT(deriver, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
       (*deriver)->DeriveKeyset("salty");
   ASSERT_THAT(derived_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*derived_handle)
           ->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(aead, IsOk());
   std::string plaintext = "plaintext";
   std::string ad = "ad";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, ad);
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, ad);
   ASSERT_THAT(ciphertext, IsOk());
-  util::StatusOr<std::string> got = (*aead)->Decrypt(*ciphertext, ad);
+  absl::StatusOr<std::string> got = (*aead)->Decrypt(*ciphertext, ad);
   ASSERT_THAT(got, IsOk());
   EXPECT_EQ(plaintext, *got);
 }

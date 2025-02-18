@@ -31,7 +31,7 @@ namespace tink {
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::PrfBasedDeriverKeyFormat;
 
-util::StatusOr<KeyTemplate>
+absl::StatusOr<KeyTemplate>
 KeyDerivationKeyTemplates::CreatePrfBasedKeyTemplate(
     const KeyTemplate& prf_key_template,
     const KeyTemplate& derived_key_template) {
@@ -48,12 +48,12 @@ KeyDerivationKeyTemplates::CreatePrfBasedKeyTemplate(
   format.SerializeToString(key_template.mutable_value());
 
   // Verify `key_template` is derivable.
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   if (!handle.ok()) {
     return handle.status();
   }
-  util::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
       (*handle)->GetPrimitive<crypto::tink::KeysetDeriver>(
           ConfigGlobalRegistry());
   if (!deriver.ok()) {

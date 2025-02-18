@@ -74,7 +74,7 @@ TEST_F(KeyDerivationKeyTemplatesTest, CreatePrfBasedKeyTemplate) {
   for (OutputPrefixType output_prefix_type : output_prefix_types) {
     KeyTemplate derived_key_template = AeadKeyTemplates::Aes256Gcm();
     derived_key_template.set_output_prefix_type(output_prefix_type);
-    util::StatusOr<KeyTemplate> key_template =
+    absl::StatusOr<KeyTemplate> key_template =
         KeyDerivationKeyTemplates::CreatePrfBasedKeyTemplate(
             PrfKeyTemplates::HkdfSha256(), derived_key_template);
 
@@ -135,7 +135,7 @@ TEST_F(KeyDerivationKeyTemplatesTest,
                                        /*new_key_allowed=*/true),
       IsOk());
 
-  util::StatusOr<KeyTemplate> derived_key_template =
+  absl::StatusOr<KeyTemplate> derived_key_template =
       KeyDerivationKeyTemplates::CreatePrfBasedKeyTemplate(
           PrfKeyTemplates::HkdfSha256(), AeadKeyTemplates::Aes256Gcm());
   ASSERT_THAT(derived_key_template, IsOk());

@@ -40,7 +40,7 @@ class KeyDerivationKeyTemplates {
   // KeysetDeriver primitive from it. This requires both the `prf_key_template`
   // and `derived_key_template` key types to be in the registry. It also
   // attempts to derive a key, returning an error on failure.
-  static util::StatusOr<google::crypto::tink::KeyTemplate>
+  static absl::StatusOr<google::crypto::tink::KeyTemplate>
   CreatePrfBasedKeyTemplate(
       const google::crypto::tink::KeyTemplate& prf_key_template,
       const google::crypto::tink::KeyTemplate& derived_key_template);

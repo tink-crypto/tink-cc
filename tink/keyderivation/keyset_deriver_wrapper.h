@@ -35,7 +35,7 @@ namespace tink {
 class KeysetDeriverWrapper
     : public PrimitiveWrapper<KeysetDeriver, KeysetDeriver> {
  public:
-  crypto::tink::util::StatusOr<std::unique_ptr<KeysetDeriver>> Wrap(
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> Wrap(
       std::unique_ptr<PrimitiveSet<KeysetDeriver>> deriver_set) const override;
 };
 

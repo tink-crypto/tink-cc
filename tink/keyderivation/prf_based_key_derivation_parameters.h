@@ -45,7 +45,7 @@ class PrfBasedKeyDerivationParameters : public KeyDerivationParameters {
     Builder& SetPrfParameters(const PrfParameters& prf_parameters);
     Builder& SetDerivedKeyParameters(const Parameters& derived_key_parameters);
 
-    util::StatusOr<PrfBasedKeyDerivationParameters> Build();
+    absl::StatusOr<PrfBasedKeyDerivationParameters> Build();
 
    private:
     std::unique_ptr<const Parameters> prf_parameters_;

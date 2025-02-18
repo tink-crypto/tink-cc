@@ -136,7 +136,7 @@ TEST(KeysetDeriverWrapperTest, WrapMultiple) {
   key_info.set_output_prefix_type(OutputPrefixType::LEGACY);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  util::StatusOr<PrimitiveSet<KeysetDeriver>::Entry<KeysetDeriver>*> entry =
+  absl::StatusOr<PrimitiveSet<KeysetDeriver>::Entry<KeysetDeriver> *> entry =
       pset->AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("k2"),
                          key_info);
   ASSERT_THAT(entry, IsOk());
@@ -153,11 +153,11 @@ TEST(KeysetDeriverWrapperTest, WrapMultiple) {
               IsOk());
   key_infos.push_back(key_info);
 
-  util::StatusOr<std::unique_ptr<KeysetDeriver>> wrapper_deriver =
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> wrapper_deriver =
       KeysetDeriverWrapper().Wrap(std::move(pset));
   ASSERT_THAT(wrapper_deriver, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> derived_keyset =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> derived_keyset =
       (*wrapper_deriver)->DeriveKeyset("salt");
   ASSERT_THAT(derived_keyset, IsOk());
   Keyset keyset = CleartextKeysetHandle::GetKeyset(**derived_keyset);

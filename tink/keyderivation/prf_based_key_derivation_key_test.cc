@@ -44,23 +44,23 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 
 TEST(PrfBasedKeyDerivationKeyTest, CreateWithIdRequirement) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -72,23 +72,23 @@ TEST(PrfBasedKeyDerivationKeyTest, CreateWithIdRequirement) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, CreateWithoutIdRequirement) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/absl::nullopt,
                                        GetPartialKeyAccess());
@@ -100,20 +100,20 @@ TEST(PrfBasedKeyDerivationKeyTest, CreateWithoutIdRequirement) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, CreateWithMismatchedPrfParametersFails) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<AesCmacPrfParameters> mismatched_prf_parameters =
+  absl::StatusOr<AesCmacPrfParameters> mismatched_prf_parameters =
       AesCmacPrfParameters::Create(16);
   ASSERT_THAT(mismatched_prf_parameters, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(*mismatched_prf_parameters)
           .SetDerivedKeyParameters(*derived_key_parameters)
@@ -131,28 +131,28 @@ TEST(PrfBasedKeyDerivationKeyTest, CreateWithMismatchedPrfParametersFails) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, CreateWithMismatchedIdRequirementFails) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> no_prefix_derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> no_prefix_derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(no_prefix_derived_key_parameters, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> tink_derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> tink_derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(tink_derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> no_prefix_parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> no_prefix_parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*no_prefix_derived_key_parameters)
           .Build();
   ASSERT_THAT(no_prefix_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> tink_parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> tink_parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*tink_derived_key_parameters)
@@ -174,23 +174,23 @@ TEST(PrfBasedKeyDerivationKeyTest, CreateWithMismatchedIdRequirementFails) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, CopyConstructor) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -204,45 +204,45 @@ TEST(PrfBasedKeyDerivationKeyTest, CopyConstructor) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, CopyAssignment) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCmacPrfKey> prf_key2 =
+  absl::StatusOr<AesCmacPrfKey> prf_key2 =
       AesCmacPrfKey::Create(RestrictedData(16), GetPartialKeyAccess());
   ASSERT_THAT(prf_key2, IsOk());
 
-  util::StatusOr<ChaCha20Poly1305Parameters> derived_key_parameters2 =
+  absl::StatusOr<ChaCha20Poly1305Parameters> derived_key_parameters2 =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(derived_key_parameters2, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters2 =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters2 =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key2->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters2)
           .Build();
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> copy =
+  absl::StatusOr<PrfBasedKeyDerivationKey> copy =
       PrfBasedKeyDerivationKey::Create(*parameters2, *prf_key2,
                                        /*id_requirement=*/absl::nullopt,
                                        GetPartialKeyAccess());
@@ -256,23 +256,23 @@ TEST(PrfBasedKeyDerivationKeyTest, CopyAssignment) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, MoveConstructor) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -286,45 +286,45 @@ TEST(PrfBasedKeyDerivationKeyTest, MoveConstructor) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, MoveAssignment) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCmacPrfKey> prf_key2 =
+  absl::StatusOr<AesCmacPrfKey> prf_key2 =
       AesCmacPrfKey::Create(RestrictedData(16), GetPartialKeyAccess());
   ASSERT_THAT(prf_key2, IsOk());
 
-  util::StatusOr<ChaCha20Poly1305Parameters> derived_key_parameters2 =
+  absl::StatusOr<ChaCha20Poly1305Parameters> derived_key_parameters2 =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(derived_key_parameters2, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters2 =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters2 =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key2->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters2)
           .Build();
   ASSERT_THAT(parameters2, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> move =
+  absl::StatusOr<PrfBasedKeyDerivationKey> move =
       PrfBasedKeyDerivationKey::Create(*parameters2, *prf_key2,
                                        /*id_requirement=*/absl::nullopt,
                                        GetPartialKeyAccess());
@@ -338,23 +338,23 @@ TEST(PrfBasedKeyDerivationKeyTest, MoveAssignment) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, Clone) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -366,29 +366,29 @@ TEST(PrfBasedKeyDerivationKeyTest, Clone) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, KeyEquals) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> other_key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> other_key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -401,41 +401,41 @@ TEST(PrfBasedKeyDerivationKeyTest, KeyEquals) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, DifferentParametersNotEqual) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<ChaCha20Poly1305Parameters> other_derived_key_parameters =
+  absl::StatusOr<ChaCha20Poly1305Parameters> other_derived_key_parameters =
       ChaCha20Poly1305Parameters::Create(
           ChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(other_derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> other_parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> other_parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*other_derived_key_parameters)
           .Build();
   ASSERT_THAT(other_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> other_key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> other_key =
       PrfBasedKeyDerivationKey::Create(*other_parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -448,33 +448,33 @@ TEST(PrfBasedKeyDerivationKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, DifferentPrfKeyNotEqual) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<AesCmacPrfKey> other_prf_key =
+  absl::StatusOr<AesCmacPrfKey> other_prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(other_prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> other_key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> other_key =
       PrfBasedKeyDerivationKey::Create(*parameters, *other_prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
@@ -487,29 +487,29 @@ TEST(PrfBasedKeyDerivationKeyTest, DifferentPrfKeyNotEqual) {
 }
 
 TEST(PrfBasedKeyDerivationKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<AesCmacPrfKey> prf_key =
+  absl::StatusOr<AesCmacPrfKey> prf_key =
       AesCmacPrfKey::Create(RestrictedData(32), GetPartialKeyAccess());
   ASSERT_THAT(prf_key, IsOk());
 
-  util::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> derived_key_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(derived_key_parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters(prf_key->GetParameters())
           .SetDerivedKeyParameters(*derived_key_parameters)
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/123,
                                        GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<PrfBasedKeyDerivationKey> other_key =
+  absl::StatusOr<PrfBasedKeyDerivationKey> other_key =
       PrfBasedKeyDerivationKey::Create(*parameters, *prf_key,
                                        /*id_requirement=*/456,
                                        GetPartialKeyAccess());

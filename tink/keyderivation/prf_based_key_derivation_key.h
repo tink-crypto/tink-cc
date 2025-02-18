@@ -43,7 +43,7 @@ class PrfBasedKeyDerivationKey : public KeyDerivationKey {
   PrfBasedKeyDerivationKey& operator=(PrfBasedKeyDerivationKey&& other) =
       default;
 
-  static util::StatusOr<PrfBasedKeyDerivationKey> Create(
+  static absl::StatusOr<PrfBasedKeyDerivationKey> Create(
       const PrfBasedKeyDerivationParameters& parameters, const PrfKey& prf_key,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 

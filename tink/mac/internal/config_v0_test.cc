@@ -51,7 +51,7 @@ using ::testing::Values;
 TEST(MacV0Test, PrimitiveWrappers) {
   Configuration config;
   ASSERT_THAT(AddMacV0(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore *> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -62,13 +62,13 @@ TEST(MacV0Test, PrimitiveWrappers) {
 TEST(MacV0Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddMacV0(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore *> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddMacKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -90,16 +90,16 @@ TEST_P(MacV0KeyTypesTest, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddMacV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       (*handle)->GetPrimitive<Mac>(config);
   ASSERT_THAT(mac, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac(data);
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac(data);
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT((*mac)->VerifyMac(*tag, data), IsOk());
 }
@@ -110,26 +110,26 @@ TEST_P(MacV0KeyTypesTest, GetPrimitiveChunkedMac) {
   Configuration config;
   ASSERT_THAT(AddMacV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       (*handle)->GetPrimitive<ChunkedMac>(config);
   ASSERT_THAT(chunked_mac, IsOk());
 
   std::string data1 = "da";
   std::string data2 = "ta";
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> compute =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> compute =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(compute, IsOk());
   ASSERT_THAT((*compute)->Update(data1), IsOk());
   ASSERT_THAT((*compute)->Update(data2), IsOk());
-  util::StatusOr<std::string> tag = (*compute)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*compute)->ComputeMac();
   ASSERT_THAT(tag, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verify =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verify =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verify, IsOk());
   ASSERT_THAT((*verify)->Update(data1), IsOk());

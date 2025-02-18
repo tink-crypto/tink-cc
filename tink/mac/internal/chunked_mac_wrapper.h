@@ -39,7 +39,7 @@ namespace internal {
 //     MAC prefixes.
 class ChunkedMacWrapper : public PrimitiveWrapper<ChunkedMac, ChunkedMac> {
  public:
-  util::StatusOr<std::unique_ptr<ChunkedMac>> Wrap(
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> Wrap(
       std::unique_ptr<PrimitiveSet<ChunkedMac>> mac_set) const override;
 };
 

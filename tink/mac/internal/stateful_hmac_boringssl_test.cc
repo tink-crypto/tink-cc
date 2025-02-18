@@ -156,13 +156,13 @@ TEST_P(StatefulHmacBoringSslTest, OnlyEmptyMessages) {
   if (!test_vector.message.empty()) {
     GTEST_SKIP() << "Test tests only empty messages";
   }
-  util::StatusOr<std::unique_ptr<StatefulMac>> hmac_result =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> hmac_result =
       StatefulHmacBoringSsl::New(
           test_vector.hash_type, test_vector.tag_size,
           util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
   ASSERT_THAT(hmac_result, IsOk());
   auto hmac = std::move(hmac_result.value());
-  util::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
@@ -177,7 +177,7 @@ TEST_P(StatefulHmacBoringSslTest, SingleUpdate) {
   ASSERT_THAT(hmac_result, IsOk());
   auto hmac = std::move(hmac_result.value());
   ASSERT_THAT(hmac->Update(test_vector.message), IsOk());
-  util::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
@@ -203,7 +203,7 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdates) {
     remaining_message.remove_prefix(amount_to_consume);
   }
   LOG(INFO) << "Done updating ";
-  util::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
@@ -215,7 +215,7 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdatesObjectFromFactory) {
   auto factory = absl::make_unique<StatefulHmacBoringSslFactory>(
       test_vector.hash_type, test_vector.tag_size,
       util::SecretDataFromStringView(HexDecodeOrDie(test_vector.hex_key)));
-  util::StatusOr<std::unique_ptr<StatefulMac>> hmac = factory->Create();
+  absl::StatusOr<std::unique_ptr<StatefulMac>> hmac = factory->Create();
   ASSERT_THAT(hmac, IsOk());
   absl::string_view remaining_message = test_vector.message;
   while (!remaining_message.empty()) {
@@ -226,7 +226,7 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdatesObjectFromFactory) {
                 IsOk());
     remaining_message.remove_prefix(amount_to_consume);
   }
-  util::StatusOr<SecretData> tag = (*hmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*hmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 
   EXPECT_THAT(*tag, SizeIs(test_vector.tag_size));
@@ -277,7 +277,7 @@ class StatefulHmacBoringSslTestVectorTest
     auto update_result = hmac->Update(msg);
     EXPECT_THAT(update_result, IsOk());
 
-    util::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
+    absl::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
     EXPECT_THAT(finalize_result, IsOk());
 
     EXPECT_EQ(SecretDataAsStringView(*finalize_result), tag);
@@ -310,7 +310,7 @@ bool WycheproofTest(const google::protobuf::Struct &parsed_input,
       auto update_result = hmac->Update(msg);
       EXPECT_THAT(update_result, IsOk());
 
-      util::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
+      absl::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
       CHECK_OK(finalize_result.status());
       bool success = SecretDataAsStringView(*finalize_result) == tag;
       if (success) {
@@ -335,13 +335,13 @@ bool WycheproofTest(const google::protobuf::Struct &parsed_input,
 
 TEST(StatefulHmacBoringSslTest, TestVectors) {
   // Test Hmac with SHA256
-  util::StatusOr<google::protobuf::Struct> parsed_input_256 =
+  absl::StatusOr<google::protobuf::Struct> parsed_input_256 =
       ReadTestVectors("hmac_sha256_test.json");
   ASSERT_THAT(parsed_input_256, IsOk());
   ASSERT_TRUE(WycheproofTest(*parsed_input_256, HashType::SHA256));
 
   // Test Hmac with SHA512
-  util::StatusOr<google::protobuf::Struct> parsed_input_sha512 =
+  absl::StatusOr<google::protobuf::Struct> parsed_input_sha512 =
       ReadTestVectors("hmac_sha512_test.json");
   ASSERT_THAT(parsed_input_sha512, IsOk());
   ASSERT_TRUE(WycheproofTest(*parsed_input_sha512, HashType::SHA512));

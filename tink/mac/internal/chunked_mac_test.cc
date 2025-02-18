@@ -66,37 +66,37 @@ TEST_P(ChunkedMacCompatibilityTest, ComputeAndVerify) {
 
   ASSERT_THAT(MacConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> key =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> key =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       (*key)->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       (*key)->GetPrimitive<crypto::tink::ChunkedMac>(ConfigGlobalRegistry());
   ASSERT_THAT(chunked_mac, IsOk());
 
   // Compute tag with chunked MAC.
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
   ASSERT_THAT((*computation)->Update("abc"), IsOk());
   ASSERT_THAT((*computation)->Update("xyz"), IsOk());
-  util::StatusOr<std::string> chunked_tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> chunked_tag = (*computation)->ComputeMac();
   ASSERT_THAT(chunked_tag, IsOk());
 
   // Verify tag with regular MAC.
   ASSERT_THAT((*mac)->VerifyMac(*chunked_tag, "abcxyz"), IsOk());
 
   // Compute tag with regular MAC.
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac("abcxyz");
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac("abcxyz");
   ASSERT_THAT(tag, IsOk());
   ASSERT_THAT(*tag, Eq(*chunked_tag));
 
   // Verify tag with chunked MAC.
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verification, IsOk());
   ASSERT_THAT((*verification)->Update("abc"), IsOk());
@@ -107,26 +107,26 @@ TEST_P(ChunkedMacCompatibilityTest, ComputeAndVerify) {
 TEST(ChunkedMacSlicingTest, DifferentChunkSizes) {
   ASSERT_THAT(MacConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
       MacKeyTemplates::HmacSha256(), KeyGenConfigGlobalRegistry());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       (*key)->GetPrimitive<crypto::tink::ChunkedMac>(ConfigGlobalRegistry());
   ASSERT_THAT(chunked_mac, IsOk());
 
   // Update three input chunks.
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
   ASSERT_THAT((*computation)->Update("ab"), IsOk());
   ASSERT_THAT((*computation)->Update("cx"), IsOk());
   ASSERT_THAT((*computation)->Update("yz"), IsOk());
-  util::StatusOr<std::string> tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*computation)->ComputeMac();
   ASSERT_THAT(tag, IsOk());
 
   // Update two input chunks.
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verification, IsOk());
   ASSERT_THAT((*verification)->Update("abc"), IsOk());
@@ -137,22 +137,22 @@ TEST(ChunkedMacSlicingTest, DifferentChunkSizes) {
 TEST(ChunkedMacTest, VerifyPrefixFails) {
   ASSERT_THAT(MacConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
       MacKeyTemplates::HmacSha256(), KeyGenConfigGlobalRegistry());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       (*key)->GetPrimitive<crypto::tink::ChunkedMac>(ConfigGlobalRegistry());
   ASSERT_THAT(chunked_mac, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
   ASSERT_THAT((*computation)->Update("abcxyz"), IsOk());
-  util::StatusOr<std::string> tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*computation)->ComputeMac();
   ASSERT_THAT(tag, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verification, IsOk());
   ASSERT_THAT((*verification)->Update("abc"), IsOk());
@@ -163,23 +163,23 @@ TEST(ChunkedMacTest, VerifyPrefixFails) {
 TEST(ChunkedMacTest, UpdateWrongOrderFails) {
   ASSERT_THAT(MacConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
       MacKeyTemplates::HmacSha256(), KeyGenConfigGlobalRegistry());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       (*key)->GetPrimitive<crypto::tink::ChunkedMac>(ConfigGlobalRegistry());
   ASSERT_THAT(chunked_mac, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
   ASSERT_THAT((*computation)->Update("abc"), IsOk());
   ASSERT_THAT((*computation)->Update("xyz"), IsOk());
-  util::StatusOr<std::string> tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*computation)->ComputeMac();
   ASSERT_THAT(tag, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verification, IsOk());
   ASSERT_THAT((*verification)->Update("xyz"), IsOk());
@@ -191,20 +191,20 @@ TEST(ChunkedMacTest, UpdateWrongOrderFails) {
 TEST(ChunkedMacTest, OperationsFailAfterComputeVerifyMac) {
   ASSERT_THAT(MacConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> key = KeysetHandle::GenerateNew(
       MacKeyTemplates::HmacSha256(), KeyGenConfigGlobalRegistry());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<ChunkedMac>> chunked_mac =
       (*key)->GetPrimitive<crypto::tink::ChunkedMac>(ConfigGlobalRegistry());
   ASSERT_THAT(chunked_mac, IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(computation, IsOk());
   ASSERT_THAT((*computation)->Update("abc"), IsOk());
   ASSERT_THAT((*computation)->Update("xyz"), IsOk());
-  util::StatusOr<std::string> tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*computation)->ComputeMac();
   ASSERT_THAT(tag, IsOk());
 
   // ChunkedMacComputation has already been finalized.
@@ -213,7 +213,7 @@ TEST(ChunkedMacTest, OperationsFailAfterComputeVerifyMac) {
   EXPECT_THAT((*computation)->ComputeMac().status(),
               StatusIs(absl::StatusCode::kFailedPrecondition));
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(verification, IsOk());
   ASSERT_THAT((*verification)->Update("abc"), IsOk());

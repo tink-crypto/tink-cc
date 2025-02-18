@@ -67,10 +67,10 @@ using ::testing::ValuesIn;
 TEST(StatefulCmacBoringSslTest, CmacEmptyInputRegularTagSize) {
   util::SecretData key =
       util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kTagSize, key);
   ASSERT_THAT(cmac, IsOk());
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*tag),
               Eq(HexDecodeOrDie(kCmacOnEmptyInputRegularTagSizeHex)));
@@ -79,10 +79,10 @@ TEST(StatefulCmacBoringSslTest, CmacEmptyInputRegularTagSize) {
 TEST(StatefulCmacBoringSslTest, CmacEmptyInputSmallTag) {
   util::SecretData key =
       util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kSmallTagSize, key);
   ASSERT_THAT(cmac, IsOk());
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*tag),
               Eq(HexDecodeOrDie(kCmacOnEmptyInputSmallTagSizeHex)));
@@ -91,11 +91,11 @@ TEST(StatefulCmacBoringSslTest, CmacEmptyInputSmallTag) {
 TEST(StatefulCmacBoringSslTest, CmacSomeDataRegularTagSize) {
   util::SecretData key =
       util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kTagSize, key);
   ASSERT_THAT(cmac, IsOk());
   EXPECT_THAT((*cmac)->Update(kData), IsOk());
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*tag),
               Eq(HexDecodeOrDie(kCmacOnDataRegularTagSizeHex)));
@@ -104,11 +104,11 @@ TEST(StatefulCmacBoringSslTest, CmacSomeDataRegularTagSize) {
 TEST(StatefulCmacBoringSslTest, CmacSomeDataSmallTag) {
   util::SecretData key =
       util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kSmallTagSize, key);
   ASSERT_THAT(cmac, IsOk());
   EXPECT_THAT((*cmac)->Update(kData), IsOk());
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*tag),
               Eq(HexDecodeOrDie(kCmacOnDataSmallTagSizeHex)));
@@ -118,13 +118,13 @@ TEST(StatefulCmacBoringSslTest,
      CmacMultipleUpdatesSameAsOneForWholeInputRegularTagSize) {
   util::SecretData key =
       util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kTagSize, key);
   ASSERT_THAT(cmac, IsOk());
   for (const std::string &token : {"Some ", "data ", "to ", "test."}) {
     EXPECT_THAT((*cmac)->Update(token), IsOk());
   }
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*tag),
               Eq(HexDecodeOrDie(kCmacOnDataRegularTagSizeHex)));
@@ -134,13 +134,13 @@ TEST(StatefulCmacBoringSslTest,
      CmacMultipleUpdatesSameAsOneForWholeInputSmallTagSize) {
   util::SecretData key =
       util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kSmallTagSize, key);
   ASSERT_THAT(cmac, IsOk());
   for (const std::string &token : {"Some ", "data ", "to ", "test."}) {
     EXPECT_THAT((*cmac)->Update(token), IsOk());
   }
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*tag),
               Eq(HexDecodeOrDie(kCmacOnDataSmallTagSizeHex)));
@@ -149,10 +149,10 @@ TEST(StatefulCmacBoringSslTest,
 TEST(StatefulCmacFactoryTest, FactoryGeneratesValidInstances) {
   auto factory = absl::make_unique<StatefulCmacBoringSslFactory>(
       kTagSize, util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex)));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac = factory->Create();
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac = factory->Create();
   ASSERT_THAT(cmac, IsOk());
   EXPECT_THAT((*cmac)->Update(kData), IsOk());
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*tag),
               Eq(HexDecodeOrDie(kCmacOnDataRegularTagSizeHex)));
@@ -168,7 +168,7 @@ struct StatefulCmacTestVector {
 
 // Reads the Wycheproof test vectors for AES-CMAC.
 std::vector<StatefulCmacTestVector> GetWycheproofCmakeTestVectors() {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors("aes_cmac_test.json");
   CHECK_OK(parsed_input.status());
   std::vector<StatefulCmacTestVector> test_vectors;
@@ -208,14 +208,14 @@ TEST_P(StatefulCmacBoringSslWycheproofTest, WycheproofTest) {
 
   util::SecretData key =
       util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
-  util::StatusOr<std::unique_ptr<StatefulMac>> cmac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(
           test_vector.tag.length(),
           util::SecretDataFromStringView(test_vector.key));
   ASSERT_THAT(cmac, IsOk());
   EXPECT_THAT((*cmac)->Update(test_vector.msg), IsOk());
 
-  util::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> tag = (*cmac)->FinalizeAsSecretData();
   if (test_vector.expected_result == "invalid") {
     if (!tag.ok()) {
       // Not ok is fine.

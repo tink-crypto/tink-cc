@@ -65,7 +65,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesGcmHkdfStreamingParametersTest, Build) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -214,7 +214,7 @@ TEST(AesGcmHkdfStreamingParametersTest, BuildWithInvalidSegmentSizeFails) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, CopyConstructor) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -233,7 +233,7 @@ TEST(AesGcmHkdfStreamingParametersTest, CopyConstructor) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, CopyAssignment) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -254,7 +254,7 @@ TEST(AesGcmHkdfStreamingParametersTest, CopyAssignment) {
 TEST_P(AesGcmHkdfStreamingParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -263,7 +263,7 @@ TEST_P(AesGcmHkdfStreamingParametersTest, ParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -279,7 +279,7 @@ TEST_P(AesGcmHkdfStreamingParametersTest, ParametersEquals) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, KeySizeNotEqual) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -288,7 +288,7 @@ TEST(AesGcmHkdfStreamingParametersTest, KeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(36)
           .SetDerivedKeySizeInBytes(32)
@@ -302,7 +302,7 @@ TEST(AesGcmHkdfStreamingParametersTest, KeySizeNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, DerivedKeySizeNotEqual) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -311,7 +311,7 @@ TEST(AesGcmHkdfStreamingParametersTest, DerivedKeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(16)
@@ -325,7 +325,7 @@ TEST(AesGcmHkdfStreamingParametersTest, DerivedKeySizeNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, HashTypeNotEqual) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -334,7 +334,7 @@ TEST(AesGcmHkdfStreamingParametersTest, HashTypeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -348,7 +348,7 @@ TEST(AesGcmHkdfStreamingParametersTest, HashTypeNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -357,7 +357,7 @@ TEST(AesGcmHkdfStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> other_parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -371,7 +371,7 @@ TEST(AesGcmHkdfStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, Clone) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)

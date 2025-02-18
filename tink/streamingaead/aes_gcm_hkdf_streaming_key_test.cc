@@ -39,7 +39,7 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 
 TEST(AesGcmHkdfStreamingKeyTest, CreateSucceeds) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -50,7 +50,7 @@ TEST(AesGcmHkdfStreamingKeyTest, CreateSucceeds) {
 
   RestrictedData initial_key_material =
       RestrictedData(parameters->KeySizeInBytes());
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -61,7 +61,7 @@ TEST(AesGcmHkdfStreamingKeyTest, CreateSucceeds) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -83,7 +83,7 @@ TEST(AesGcmHkdfStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, KeyEquals) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -95,11 +95,11 @@ TEST(AesGcmHkdfStreamingKeyTest, KeyEquals) {
   RestrictedData initial_key_material =
       RestrictedData(parameters->KeySizeInBytes());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> other_key =
+  absl::StatusOr<AesGcmHkdfStreamingKey> other_key =
       AesGcmHkdfStreamingKey::Create(*parameters, initial_key_material,
                                      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -111,7 +111,7 @@ TEST(AesGcmHkdfStreamingKeyTest, KeyEquals) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, DifferentSecretDataNotEqual) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -125,11 +125,11 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentSecretDataNotEqual) {
   RestrictedData initial_key_material2 =
       RestrictedData(parameters->KeySizeInBytes());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters, initial_key_material1, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> other_key =
+  absl::StatusOr<AesGcmHkdfStreamingKey> other_key =
       AesGcmHkdfStreamingKey::Create(*parameters, initial_key_material2,
                                      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -141,7 +141,7 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, DifferentParametersNotEqual) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters1 =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters1 =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -150,7 +150,7 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentParametersNotEqual) {
           .Build();
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters2 =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters2 =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -162,11 +162,11 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentParametersNotEqual) {
   RestrictedData initial_key_material =
       RestrictedData(parameters1->KeySizeInBytes());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters1, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> other_key =
+  absl::StatusOr<AesGcmHkdfStreamingKey> other_key =
       AesGcmHkdfStreamingKey::Create(*parameters2, initial_key_material,
                                      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -178,7 +178,7 @@ TEST(AesGcmHkdfStreamingKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(AesGcmHkdfStreamingKeyTest, Clone) {
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -190,7 +190,7 @@ TEST(AesGcmHkdfStreamingKeyTest, Clone) {
   RestrictedData initial_key_material =
       RestrictedData(parameters->KeySizeInBytes());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

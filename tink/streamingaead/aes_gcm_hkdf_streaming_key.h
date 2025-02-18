@@ -40,7 +40,7 @@ class AesGcmHkdfStreamingKey : public StreamingAeadKey {
   AesGcmHkdfStreamingKey& operator=(AesGcmHkdfStreamingKey&& other) = default;
 
   // Creates a new AES-GCM-HKDF Streaming key.
-  static util::StatusOr<AesGcmHkdfStreamingKey> Create(
+  static absl::StatusOr<AesGcmHkdfStreamingKey> Create(
       const AesGcmHkdfStreamingParameters& parameters,
       const RestrictedData& initial_key_material, PartialKeyAccessToken token);
 

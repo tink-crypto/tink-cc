@@ -158,7 +158,7 @@ TEST_F(StreamingAeadConfigTest,
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB());
@@ -169,7 +169,7 @@ TEST_F(StreamingAeadConfigTest,
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -205,7 +205,7 @@ TEST_F(StreamingAeadConfigTest,
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(
           StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB(),
           KeyGenConfigStreamingAeadV0());
@@ -216,7 +216,7 @@ TEST_F(StreamingAeadConfigTest,
                   (*before_handle)->GetPrimary().GetKey().get()),
               Not(IsNull()));
 
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -227,7 +227,7 @@ TEST_F(StreamingAeadConfigTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters,
       RestrictedData(subtle::Random::GetRandomBytes(35),
                      InsecureSecretKeyAccess::Get()),
@@ -244,7 +244,7 @@ TEST_F(StreamingAeadConfigTest,
 
   ASSERT_THAT(StreamingAeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(
           StreamingAeadKeyTemplates::Aes256CtrHmacSha256Segment4KB(),
           KeyGenConfigStreamingAeadV0());
@@ -267,7 +267,7 @@ TEST_F(StreamingAeadConfigTest,
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               StreamingAeadKeyTemplates::Aes128GcmHkdf4KB());
@@ -278,7 +278,7 @@ TEST_F(StreamingAeadConfigTest,
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -312,7 +312,7 @@ TEST_F(StreamingAeadConfigTest,
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(StreamingAeadKeyTemplates::Aes128GcmHkdf4KB(),
                                 KeyGenConfigStreamingAeadV0());
   ASSERT_THAT(before_handle, IsOk());
@@ -322,7 +322,7 @@ TEST_F(StreamingAeadConfigTest,
                   (*before_handle)->GetPrimary().GetKey().get()),
               Not(IsNull()));
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -331,7 +331,7 @@ TEST_F(StreamingAeadConfigTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters,
       RestrictedData(subtle::Random::GetRandomBytes(35),
                      InsecureSecretKeyAccess::Get()),
@@ -348,7 +348,7 @@ TEST_F(StreamingAeadConfigTest,
 
   ASSERT_THAT(StreamingAeadConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(StreamingAeadKeyTemplates::Aes128GcmHkdf4KB(),
                                 KeyGenConfigStreamingAeadV0());
   ASSERT_THAT(after_handle, IsOk());

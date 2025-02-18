@@ -39,7 +39,7 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 
 TEST(AesCtrHmacStreamingKeyTest, CreateSucceeds) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -52,7 +52,7 @@ TEST(AesCtrHmacStreamingKeyTest, CreateSucceeds) {
 
   RestrictedData initial_key_material =
       RestrictedData(parameters->KeySizeInBytes());
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -63,7 +63,7 @@ TEST(AesCtrHmacStreamingKeyTest, CreateSucceeds) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -87,7 +87,7 @@ TEST(AesCtrHmacStreamingKeyTest, CreateKeyWithMismatchedKeySizeFails) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, KeyEquals) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -101,11 +101,11 @@ TEST(AesCtrHmacStreamingKeyTest, KeyEquals) {
   RestrictedData initial_key_material =
       RestrictedData(parameters->KeySizeInBytes());
 
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingKey> other_key =
+  absl::StatusOr<AesCtrHmacStreamingKey> other_key =
       AesCtrHmacStreamingKey::Create(*parameters, initial_key_material,
                                      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -117,7 +117,7 @@ TEST(AesCtrHmacStreamingKeyTest, KeyEquals) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, DifferentSecretDataNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -133,11 +133,11 @@ TEST(AesCtrHmacStreamingKeyTest, DifferentSecretDataNotEqual) {
   RestrictedData initial_key_material2 =
       RestrictedData(parameters->KeySizeInBytes());
 
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material1, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingKey> other_key =
+  absl::StatusOr<AesCtrHmacStreamingKey> other_key =
       AesCtrHmacStreamingKey::Create(*parameters, initial_key_material2,
                                      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -149,7 +149,7 @@ TEST(AesCtrHmacStreamingKeyTest, DifferentSecretDataNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, DifferentParametersNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters1 =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters1 =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -160,7 +160,7 @@ TEST(AesCtrHmacStreamingKeyTest, DifferentParametersNotEqual) {
           .Build();
   ASSERT_THAT(parameters1, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters2 =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters2 =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -174,11 +174,11 @@ TEST(AesCtrHmacStreamingKeyTest, DifferentParametersNotEqual) {
   RestrictedData initial_key_material =
       RestrictedData(parameters1->KeySizeInBytes());
 
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters1, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingKey> other_key =
+  absl::StatusOr<AesCtrHmacStreamingKey> other_key =
       AesCtrHmacStreamingKey::Create(*parameters2, initial_key_material,
                                      GetPartialKeyAccess());
   ASSERT_THAT(other_key, IsOk());
@@ -190,7 +190,7 @@ TEST(AesCtrHmacStreamingKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingKeyTest, Clone) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -204,7 +204,7 @@ TEST(AesCtrHmacStreamingKeyTest, Clone) {
   RestrictedData initial_key_material =
       RestrictedData(parameters->KeySizeInBytes());
 
-  util::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 

@@ -333,12 +333,11 @@ TEST(StreamingAeadSetWrapperTest, EncryptWithTink) {
     keyset_key.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   }
 
-  crypto::tink::util::StatusOr<KeysetHandle> handle =
-      ParseKeysetFromProtoKeysetFormat(keyset.SerializeAsString(),
-                                       InsecureSecretKeyAccess::Get());
+  absl::StatusOr<KeysetHandle> handle = ParseKeysetFromProtoKeysetFormat(
+      keyset.SerializeAsString(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(handle.status(), IsOk());
 
-  crypto::tink::util::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
       handle->GetPrimitive<crypto::tink::StreamingAead>(ConfigGlobalRegistry());
 
   ASSERT_THAT(streaming_aead.status(), IsOk());
@@ -420,21 +419,20 @@ TEST(StreamingAeadSetWrapperTest, DecryptOldKeyWorks) {
     keyset_key.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   }
 
-  util::StatusOr<KeysetHandle> handle = ParseKeysetFromProtoKeysetFormat(
+  absl::StatusOr<KeysetHandle> handle = ParseKeysetFromProtoKeysetFormat(
       keyset.SerializeAsString(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(handle.status(), IsOk());
 
-  crypto::tink::util::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
       handle->GetPrimitive<crypto::tink::StreamingAead>(ConfigGlobalRegistry());
   ASSERT_THAT(streaming_aead.status(), IsOk());
 
   auto ciphertext_input_stream = std::make_unique<IstreamInputStream>(
       absl::make_unique<std::istringstream>(ciphertext));
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::InputStream>>
-      plaintext_stream =
-          (*streaming_aead)
-              ->NewDecryptingStream(std::move(ciphertext_input_stream),
-                                    associated_data);
+  absl::StatusOr<std::unique_ptr<crypto::tink::InputStream>> plaintext_stream =
+      (*streaming_aead)
+          ->NewDecryptingStream(std::move(ciphertext_input_stream),
+                                associated_data);
   ASSERT_THAT(plaintext_stream.status(), IsOk());
   std::string decrypted;
   ASSERT_THAT(ReadFromStream(plaintext_stream->get(), &decrypted), IsOk());
@@ -513,19 +511,17 @@ TEST(StreamingAeadSetWrapperTest, DecryptOldKeyWorksWithRandomAccess) {
     keyset_key.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   }
 
-  crypto::tink::util::StatusOr<KeysetHandle> handle =
-      ParseKeysetFromProtoKeysetFormat(keyset.SerializeAsString(),
-                                       InsecureSecretKeyAccess::Get());
+  absl::StatusOr<KeysetHandle> handle = ParseKeysetFromProtoKeysetFormat(
+      keyset.SerializeAsString(), InsecureSecretKeyAccess::Get());
   ASSERT_THAT(handle.status(), IsOk());
 
-  crypto::tink::util::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
+  absl::StatusOr<std::unique_ptr<StreamingAead>> streaming_aead =
       handle->GetPrimitive<crypto::tink::StreamingAead>(ConfigGlobalRegistry());
   ASSERT_THAT(streaming_aead.status(), IsOk());
 
   auto ciphertext_random_access_stream =
       std::make_unique<internal::TestRandomAccessStream>(ciphertext);
-  crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::RandomAccessStream>>
       plaintext_stream =
           (*streaming_aead)
               ->NewDecryptingRandomAccessStream(

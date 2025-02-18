@@ -39,7 +39,7 @@ class SharedInputStream : public crypto::tink::InputStream {
 
   ~SharedInputStream() override = default;
 
-  crypto::tink::util::StatusOr<int> Next(const void** data) override {
+  absl::StatusOr<int> Next(const void** data) override {
     return input_stream_->Next(data);
   }
 

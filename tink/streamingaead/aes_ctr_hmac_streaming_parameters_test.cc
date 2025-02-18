@@ -75,7 +75,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(AesCtrHmacStreamingParametersTest, Build) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -348,7 +348,7 @@ TEST(AesCtrHmacStreamingParametersTest, BuildWithInvalidSegmentSizeFails) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, CopyConstructor) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -372,7 +372,7 @@ TEST(AesCtrHmacStreamingParametersTest, CopyConstructor) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, CopyAssignment) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -398,7 +398,7 @@ TEST(AesCtrHmacStreamingParametersTest, CopyAssignment) {
 TEST_P(AesCtrHmacStreamingParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -409,7 +409,7 @@ TEST_P(AesCtrHmacStreamingParametersTest, ParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -427,7 +427,7 @@ TEST_P(AesCtrHmacStreamingParametersTest, ParametersEquals) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, KeySizeNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -438,7 +438,7 @@ TEST(AesCtrHmacStreamingParametersTest, KeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(36)
           .SetDerivedKeySizeInBytes(32)
@@ -454,7 +454,7 @@ TEST(AesCtrHmacStreamingParametersTest, KeySizeNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, DerivedKeySizeNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -465,7 +465,7 @@ TEST(AesCtrHmacStreamingParametersTest, DerivedKeySizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(16)
@@ -481,7 +481,7 @@ TEST(AesCtrHmacStreamingParametersTest, DerivedKeySizeNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, HkdfHashTypeNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -492,7 +492,7 @@ TEST(AesCtrHmacStreamingParametersTest, HkdfHashTypeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -508,7 +508,7 @@ TEST(AesCtrHmacStreamingParametersTest, HkdfHashTypeNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, HmacHashTypeNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -519,7 +519,7 @@ TEST(AesCtrHmacStreamingParametersTest, HmacHashTypeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -535,7 +535,7 @@ TEST(AesCtrHmacStreamingParametersTest, HmacHashTypeNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, HmacTagSizeNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -546,7 +546,7 @@ TEST(AesCtrHmacStreamingParametersTest, HmacTagSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -562,7 +562,7 @@ TEST(AesCtrHmacStreamingParametersTest, HmacTagSizeNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -573,7 +573,7 @@ TEST(AesCtrHmacStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> other_parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)
@@ -589,7 +589,7 @@ TEST(AesCtrHmacStreamingParametersTest, CiphertextSegmentSizeNotEqual) {
 }
 
 TEST(AesCtrHmacStreamingParametersTest, Clone) {
-  util::StatusOr<AesCtrHmacStreamingParameters> parameters =
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
       AesCtrHmacStreamingParameters::Builder()
           .SetKeySizeInBytes(35)
           .SetDerivedKeySizeInBytes(32)

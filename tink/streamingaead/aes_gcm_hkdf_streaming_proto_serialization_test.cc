@@ -118,17 +118,17 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseParameters) {
   format.set_key_size(test_case.key_size);
   *format.mutable_params() = proto_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parsed, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> expected =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> expected =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -143,12 +143,12 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
        ParseParametersWithInvalidSerializationFails) {
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -175,12 +175,12 @@ TEST_P(AesGcmHkdfStreamingParsePrefixTest, ParseParametersWithIgnoredPrefix) {
   format.set_key_size(35);
   *format.mutable_params() = proto_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, ignored_output_prefix_type, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(params, IsOk());
@@ -194,12 +194,12 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   format.set_version(1);  // Invalid version number.
   format.set_key_size(32);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(),
@@ -216,12 +216,12 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   format.set_version(0);
   format.set_key_size(32);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -240,12 +240,12 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   format.set_key_size(35);
   *format.mutable_params() = proto_params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -255,7 +255,7 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeParameters) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -264,7 +264,7 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeParameters) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -311,18 +311,18 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseKey) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> expected_parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> expected_parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -331,7 +331,7 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, ParseKey) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingKey> expected_key =
+  absl::StatusOr<AesGcmHkdfStreamingKey> expected_key =
       AesGcmHkdfStreamingKey::Create(
           *expected_parameters,
           RestrictedData(initial_key_material, InsecureSecretKeyAccess::Get()),
@@ -347,13 +347,13 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -370,13 +370,13 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -396,13 +396,13 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -427,14 +427,14 @@ TEST_P(AesGcmHkdfStreamingParsePrefixTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                               KeyData::SYMMETRIC,
                                               ignored_output_prefix_type,
                                               /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
@@ -451,13 +451,13 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
@@ -468,7 +468,7 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(test_case.key_size)
           .SetDerivedKeySizeInBytes(test_case.derived_key_size)
@@ -478,13 +478,13 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(parameters, IsOk());
 
   std::string initial_key_material = Random::GetRandomBytes(test_case.key_size);
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters,
       RestrictedData(initial_key_material, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -522,7 +522,7 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
        SerializeKeyWithoutSecretKeyAccessFails) {
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
-  util::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
           .SetKeySizeInBytes(19)
           .SetDerivedKeySizeInBytes(16)
@@ -532,13 +532,13 @@ TEST_F(AesGcmHkdfStreamingProtoSerializationTest,
   ASSERT_THAT(parameters, IsOk());
 
   std::string initial_key_material = Random::GetRandomBytes(19);
-  util::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters,
       RestrictedData(initial_key_material, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);

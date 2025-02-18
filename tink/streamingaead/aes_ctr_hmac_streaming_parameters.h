@@ -58,7 +58,7 @@ class AesCtrHmacStreamingParameters : public StreamingAeadParameters {
     Builder& SetCiphertextSegmentSizeInBytes(int segment_size);
 
     // Creates AES-CTR-HMAC Streaming parameters object from this builder.
-    util::StatusOr<AesCtrHmacStreamingParameters> Build();
+    absl::StatusOr<AesCtrHmacStreamingParameters> Build();
 
    private:
     absl::optional<int> key_size_in_bytes_;

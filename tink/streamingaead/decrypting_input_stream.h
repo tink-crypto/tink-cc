@@ -44,14 +44,14 @@ class DecryptingInputStream : public crypto::tink::InputStream {
   // (one of) provided 'primitives' to decrypt the contents of 'input_stream',
   // using 'associated_data' as authenticated associated data
   // of the decryption process.
-  static util::StatusOr<std::unique_ptr<InputStream>> New(
-      std::shared_ptr<
-          crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>> primitives,
+  static absl::StatusOr<std::unique_ptr<InputStream>> New(
+      std::shared_ptr<crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>>
+          primitives,
       std::unique_ptr<crypto::tink::InputStream> ciphertext_source,
       absl::string_view associated_data);
 
   ~DecryptingInputStream() override = default;
-  util::StatusOr<int> Next(const void** data) override;
+  absl::StatusOr<int> Next(const void** data) override;
   void BackUp(int count) override;
   int64_t Position() const override;
 

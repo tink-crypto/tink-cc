@@ -56,7 +56,7 @@ class AesGcmHkdfStreamingParameters : public StreamingAeadParameters {
     Builder& SetCiphertextSegmentSizeInBytes(int segment_size);
 
     // Creates AES-GCM-HKDF Streaming parameters object from this builder.
-    util::StatusOr<AesGcmHkdfStreamingParameters> Build();
+    absl::StatusOr<AesGcmHkdfStreamingParameters> Build();
 
    private:
     absl::optional<int> key_size_in_bytes_;

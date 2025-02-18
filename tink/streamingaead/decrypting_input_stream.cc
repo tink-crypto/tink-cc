@@ -48,7 +48,7 @@ using util::StatusOr;
 using StreamingAeadEntry = PrimitiveSet<StreamingAead>::Entry<StreamingAead>;
 
 // static
-StatusOr<std::unique_ptr<InputStream>> DecryptingInputStream::New(
+absl::StatusOr<std::unique_ptr<InputStream>> DecryptingInputStream::New(
     std::shared_ptr<PrimitiveSet<StreamingAead>> primitives,
     std::unique_ptr<crypto::tink::InputStream> ciphertext_source,
     absl::string_view associated_data) {
@@ -62,7 +62,7 @@ StatusOr<std::unique_ptr<InputStream>> DecryptingInputStream::New(
   return {std::move(dec_stream)};
 }
 
-util::StatusOr<int> DecryptingInputStream::Next(const void** data) {
+absl::StatusOr<int> DecryptingInputStream::Next(const void** data) {
   if (matching_stream_ != nullptr) {
     return matching_stream_->Next(data);
   }

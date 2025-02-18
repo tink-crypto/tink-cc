@@ -40,7 +40,7 @@ class AesCtrHmacStreamingKey : public StreamingAeadKey {
   AesCtrHmacStreamingKey& operator=(AesCtrHmacStreamingKey&& other) = default;
 
   // Creates a new AES-CTR-HMAC Streaming key.
-  static util::StatusOr<AesCtrHmacStreamingKey> Create(
+  static absl::StatusOr<AesCtrHmacStreamingKey> Create(
       const AesCtrHmacStreamingParameters& parameters,
       const RestrictedData& initial_key_material, PartialKeyAccessToken token);
 

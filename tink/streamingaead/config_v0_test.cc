@@ -56,11 +56,11 @@ INSTANTIATE_TEST_SUITE_P(
            StreamingAeadKeyTemplates::Aes128GcmHkdf4KB()));
 
 TEST_P(ConfigV0Test, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigStreamingAeadV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<StreamingAead>> saead =
+  absl::StatusOr<std::unique_ptr<StreamingAead>> saead =
       (*handle)->GetPrimitive<StreamingAead>(ConfigStreamingAeadV0());
   ASSERT_THAT(saead, IsOk());
 
@@ -72,7 +72,7 @@ TEST_P(ConfigV0Test, GetPrimitive) {
 
   auto ciphertext_out_stream =
       absl::make_unique<util::OstreamOutputStream>(std::move(ciphertext));
-  util::StatusOr<std::unique_ptr<OutputStream>> encrypt =
+  absl::StatusOr<std::unique_ptr<OutputStream>> encrypt =
       (*saead)->NewEncryptingStream(std::move(ciphertext_out_stream), ad);
   ASSERT_THAT(encrypt, IsOk());
   ASSERT_THAT(WriteToStream((*encrypt).get(), plaintext), IsOk());
@@ -81,7 +81,7 @@ TEST_P(ConfigV0Test, GetPrimitive) {
       absl::make_unique<std::stringstream>(ciphertext_buf->str());
   auto ciphertext_in_stream =
       absl::make_unique<util::IstreamInputStream>(std::move(ciphertext_in));
-  util::StatusOr<std::unique_ptr<InputStream>> decrypt =
+  absl::StatusOr<std::unique_ptr<InputStream>> decrypt =
       (*saead)->NewDecryptingStream(std::move(ciphertext_in_stream), ad);
   ASSERT_THAT(decrypt, IsOk());
   std::string got;

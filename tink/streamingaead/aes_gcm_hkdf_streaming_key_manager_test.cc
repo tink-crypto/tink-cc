@@ -235,7 +235,7 @@ TEST(AesGcmHkdfStreamingKeyManagerTest, DeriveKey) {
   IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("01234567890123456789012345678901")};
 
-  StatusOr<AesGcmHkdfStreamingKey> key_or =
+  absl::StatusOr<AesGcmHkdfStreamingKey> key_or =
       AesGcmHkdfStreamingKeyManager().DeriveKey(key_format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(),
@@ -293,23 +293,23 @@ TEST_P(AesGcmHkdfStreamingKeyManagerTestVectorTest, Decrypt) {
   auto ct_bytes = absl::make_unique<std::stringstream>(param.ciphertext);
   auto ct_source =
       absl::make_unique<util::IstreamInputStream>(std::move(ct_bytes));
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.streamingaead_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<StreamingAead>> decrypter =
+  absl::StatusOr<std::unique_ptr<StreamingAead>> decrypter =
       handle->GetPrimitive<StreamingAead>(ConfigGlobalRegistry());
   ASSERT_THAT(decrypter, IsOk());
   // Decrypt the ciphertext using the decrypter.
-  util::StatusOr<std::unique_ptr<InputStream>> plaintext_stream =
+  absl::StatusOr<std::unique_ptr<InputStream>> plaintext_stream =
       (*decrypter)
           ->NewDecryptingStream(std::move(ct_source), param.associated_data);
   ASSERT_THAT(plaintext_stream, IsOk());
 
-  util::StatusOr<std::string> decryption =
+  absl::StatusOr<std::string> decryption =
       ReadBytesFromStream(param.plaintext.size(), plaintext_stream->get());
   ASSERT_THAT(decryption, IsOk());
   EXPECT_THAT(*decryption, Eq(param.plaintext));

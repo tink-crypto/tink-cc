@@ -254,7 +254,7 @@ util::Status RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(AesCmacPrfProtoKeySerializer());
 }
 
-util::Status RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
   util::Status status =
       builder.RegisterParametersParser(AesCmacPrfProtoParametersParser());

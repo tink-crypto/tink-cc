@@ -141,7 +141,7 @@ util::StatusOr<HmacPrfParameters::HashType> ToHashType(HashType hash_type) {
     case HashType::SHA512:
       return HmacPrfParameters::HashType::kSha512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine HashType");
   }
 }

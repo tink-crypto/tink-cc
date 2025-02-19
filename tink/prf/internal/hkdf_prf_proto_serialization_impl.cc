@@ -285,7 +285,7 @@ HkdfPrfProtoKeySerializerImpl& HkdfPrfProtoKeySerializer() {
 
 util::Status RegisterHkdfPrfProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(&HkdfPrfProtoParametersParser());
   if (!status.ok()) {
     return status;

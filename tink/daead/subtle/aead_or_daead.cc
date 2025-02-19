@@ -34,12 +34,12 @@ namespace {
 
 // Functor implementing Encryption of a given plaintext.
 struct EncryptFunctor {
-  crypto::tink::util::StatusOr<std::string> operator()(
+  absl::StatusOr<std::string> operator()(
       absl::string_view plaintext, absl::string_view associated_data,
       const std::unique_ptr<const Aead>& aead_primitive) {
     return aead_primitive->Encrypt(plaintext, associated_data);
   }
-  crypto::tink::util::StatusOr<std::string> operator()(
+  absl::StatusOr<std::string> operator()(
       absl::string_view plaintext, absl::string_view associated_data,
       const std::unique_ptr<const DeterministicAead>& aead_primitive) {
     return aead_primitive->EncryptDeterministically(plaintext, associated_data);
@@ -48,12 +48,12 @@ struct EncryptFunctor {
 
 // Functor implementing Decryption of a given ciphertext.
 struct DecryptFunctor {
-  crypto::tink::util::StatusOr<std::string> operator()(
+  absl::StatusOr<std::string> operator()(
       absl::string_view ciphertext, absl::string_view associated_data,
       const std::unique_ptr<const Aead>& aead_primitive) {
     return aead_primitive->Decrypt(ciphertext, associated_data);
   }
-  crypto::tink::util::StatusOr<std::string> operator()(
+  absl::StatusOr<std::string> operator()(
       absl::string_view ciphertext, absl::string_view associated_data,
       const std::unique_ptr<const DeterministicAead>& aead_primitive) {
     return aead_primitive->DecryptDeterministically(ciphertext,
@@ -62,14 +62,14 @@ struct DecryptFunctor {
 };
 }  // namespace
 
-crypto::tink::util::StatusOr<std::string> AeadOrDaead::Encrypt(
+absl::StatusOr<std::string> AeadOrDaead::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data) const {
   return absl::visit(
       absl::bind_front(EncryptFunctor(), plaintext, associated_data),
       primitive_variant_);
 }
 
-crypto::tink::util::StatusOr<std::string> AeadOrDaead::Decrypt(
+absl::StatusOr<std::string> AeadOrDaead::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   return absl::visit(
       absl::bind_front(DecryptFunctor(), ciphertext, associated_data),

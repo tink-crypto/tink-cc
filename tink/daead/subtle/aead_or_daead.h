@@ -45,13 +45,13 @@ class AeadOrDaead {
 
   // Encrypts 'plaintext' using the underlying aead or determnistic aead
   // primitive, and returns the resulting ciphertext.
-  crypto::tink::util::StatusOr<std::string> Encrypt(
-      absl::string_view plaintext, absl::string_view associated_data) const;
+  absl::StatusOr<std::string> Encrypt(absl::string_view plaintext,
+                                      absl::string_view associated_data) const;
 
   // Decrypts 'ciphertext' using the underlying aead or determnistic aead
   // primitive, and returns the resulting plaintext.
-  crypto::tink::util::StatusOr<std::string> Decrypt(
-      absl::string_view ciphertext, absl::string_view associated_data) const;
+  absl::StatusOr<std::string> Decrypt(absl::string_view ciphertext,
+                                      absl::string_view associated_data) const;
 
  private:
   absl::variant<std::unique_ptr<const Aead>,

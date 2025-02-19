@@ -386,7 +386,7 @@ util::StatusOr<EcdsaParameters> ParseParameters(
       EcdsaKeyFormatStruct::GetParser().Parse(
           serialization.GetKeyTemplate().value());
   if (!proto_key_format.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse EcdsaKeyFormat proto");
   }
   if (proto_key_format->version != 0) {

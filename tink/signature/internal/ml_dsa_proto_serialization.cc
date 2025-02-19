@@ -189,7 +189,7 @@ util::StatusOr<MlDsaParameters::Instance> ToInstance(
     case MlDsaInstance::ML_DSA_65:
       return MlDsaParameters::Instance::kMlDsa65;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine MlDsaParameters::Instance");
   }
 }

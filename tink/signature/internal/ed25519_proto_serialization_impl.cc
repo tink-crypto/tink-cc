@@ -175,7 +175,7 @@ util::StatusOr<Ed25519Parameters> ParseParameters(
       Ed25519KeyFormatStruct::GetParser().Parse(
           serialization.GetKeyTemplate().value());
   if (!proto_key_format.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse Ed25519KeyFormat proto");
   }
   if (proto_key_format->version != 0) {

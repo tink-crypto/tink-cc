@@ -228,7 +228,7 @@ util::StatusOr<SlhDsaParameters::SignatureType> ToSignatureType(
     case SlhDsaSignatureType::SMALL_SIGNATURE:
       return SlhDsaParameters::SignatureType::kSmallSignature;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Could not determine SlhDsaParameters::SignatureType");
   }

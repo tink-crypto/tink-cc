@@ -41,13 +41,13 @@ TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
 
-  util::StatusOr<SlhDsaParameters> slhdsa_parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> slhdsa_parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(slhdsa_parameters, IsOk());
 
-  util::StatusOr<MlDsaParameters> mldsa_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> mldsa_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(mldsa_parameters, IsOk());
 
@@ -61,13 +61,13 @@ TEST(PqcSignatureKeyGenConfigV0Test, PqcSignaturesCreateKeysetHandlesWorks) {
           *mldsa_parameters, KeyStatus::kEnabled,
           /*is_primary=*/false);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry1))
                                             .AddEntry(std::move(entry2))
                                             .Build(key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 }

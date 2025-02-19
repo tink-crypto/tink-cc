@@ -29,9 +29,8 @@ namespace internal {
 
 // Creates a new instance of PublicKeyVerify, which uses the SLH-DSA-SHA2-128s
 // implementation from BoringSSL.
-crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>>
-NewSlhDsaVerifyBoringSsl(const SlhDsaPublicKey& public_key);
-
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
+    const SlhDsaPublicKey& public_key);
 
 }  // namespace internal
 }  // namespace tink

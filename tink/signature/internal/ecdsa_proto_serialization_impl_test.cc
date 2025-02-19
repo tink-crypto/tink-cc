@@ -167,13 +167,13 @@ TEST_P(EcdsaProtoSerializationTest, ParseParametersWithMutableRegistry) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(parameters, IsOk());
   EXPECT_EQ((*parameters)->HasIdRequirement(), test_case.id.has_value());
@@ -201,13 +201,13 @@ TEST_P(EcdsaProtoSerializationTest, ParseParametersWithRegistryBuilder) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(parameters, IsOk());
   EXPECT_EQ((*parameters)->HasIdRequirement(), test_case.id.has_value());
@@ -228,7 +228,7 @@ TEST_F(EcdsaProtoSerializationTest,
   ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
@@ -250,13 +250,13 @@ TEST_F(EcdsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -275,13 +275,13 @@ TEST_F(EcdsaProtoSerializationTest,
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -295,13 +295,13 @@ TEST_F(EcdsaProtoSerializationTest,
               IsOk());
 
   EcdsaKeyFormat key_format_proto;
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
 
   ASSERT_THAT(parameters.status(),
@@ -320,13 +320,13 @@ TEST_F(EcdsaProtoSerializationTest, ParseParametersWithUnkownCurveTypeFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -344,13 +344,13 @@ TEST_F(EcdsaProtoSerializationTest, ParseParametersWithUnkownHashTypeFails) {
   params.set_hash_type(HashType::UNKNOWN_HASH);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -368,13 +368,13 @@ TEST_F(EcdsaProtoSerializationTest, ParseParametersWithUnkownEncodingFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::UNKNOWN_ENCODING);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(
       parameters.status(),
@@ -388,7 +388,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -397,7 +397,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithMutableRegistry) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
@@ -427,7 +427,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -436,7 +436,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
@@ -470,7 +470,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPublicKey key_proto;
@@ -481,20 +481,20 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PUBLIC,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<EcdsaParameters> expected_parameters =
+  absl::StatusOr<EcdsaParameters> expected_parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -503,7 +503,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> expected_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> expected_key = EcdsaPublicKey::Create(
       *expected_parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
@@ -524,7 +524,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPublicKey key_proto;
@@ -535,20 +535,20 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PUBLIC,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<EcdsaParameters> expected_parameters =
+  absl::StatusOr<EcdsaParameters> expected_parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -557,7 +557,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePublicKeyWithRegistryBuilder) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> expected_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> expected_key = EcdsaPublicKey::Create(
       *expected_parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
@@ -575,14 +575,14 @@ TEST_F(EcdsaProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PUBLIC,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -599,7 +599,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
   google::crypto::tink::EcdsaPublicKey key_proto;
   key_proto.set_version(1);
@@ -609,14 +609,14 @@ TEST_F(EcdsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PUBLIC,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -629,7 +629,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
   ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -638,16 +638,16 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> key = EcdsaPublicKey::Create(
       *parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
                                                    /*token=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
@@ -686,7 +686,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -695,16 +695,16 @@ TEST_P(EcdsaProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> key = EcdsaPublicKey::Create(
       *parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
                                                    /*token=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
@@ -747,7 +747,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
@@ -764,20 +764,20 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> private_key =
+  absl::StatusOr<std::unique_ptr<Key>> private_key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<EcdsaParameters> expected_parameters =
+  absl::StatusOr<EcdsaParameters> expected_parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -786,13 +786,13 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
       *expected_parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<EcdsaPrivateKey> expected_private_key =
+  absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
           RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
@@ -814,7 +814,7 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   params.set_hash_type(test_case.hash);
   params.set_encoding(test_case.encoding);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
@@ -831,20 +831,20 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> private_key =
+  absl::StatusOr<std::unique_ptr<Key>> private_key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<EcdsaParameters> expected_parameters =
+  absl::StatusOr<EcdsaParameters> expected_parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -853,13 +853,13 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> expected_public_key = EcdsaPublicKey::Create(
       *expected_parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<EcdsaPrivateKey> expected_private_key =
+  absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
           RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
@@ -878,14 +878,14 @@ TEST_F(EcdsaProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -897,7 +897,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
   ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPrivateKey private_key_proto;
@@ -907,14 +907,14 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -929,7 +929,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersionFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
@@ -946,14 +946,14 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -971,7 +971,7 @@ TEST_F(EcdsaProtoSerializationTest,
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
@@ -988,14 +988,14 @@ TEST_F(EcdsaProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
@@ -1012,7 +1012,7 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
   params.set_hash_type(HashType::SHA256);
   params.set_encoding(EcdsaSignatureEncoding::DER);
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
   google::crypto::tink::EcdsaPublicKey public_key_proto;
@@ -1030,14 +1030,14 @@ TEST_F(EcdsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccessFails) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                     KeyData::ASYMMETRIC_PRIVATE,
                                     OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
                                      HasSubstr("SecretKeyAccess is required")));
@@ -1049,7 +1049,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
   ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -1058,23 +1058,23 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                            InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
           *private_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization, IsOk());
@@ -1119,7 +1119,7 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetVariant(test_case.variant)
           .SetHashType(test_case.hash_type)
@@ -1128,23 +1128,23 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(test_case.subtle_curve);
   ASSERT_THAT(ec_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                            InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
           *private_key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization, IsOk());
@@ -1187,7 +1187,7 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
   ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -1196,23 +1196,23 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters,
       EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y)),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                            InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*private_key,
                                                    /*token=*/absl::nullopt);
   ASSERT_THAT(serialization.status(),

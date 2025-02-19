@@ -39,13 +39,12 @@ namespace internal {
 // ECDSA raw signing using Boring SSL, generating signatures in DER-encoding.
 class EcdsaRawSignBoringSsl : public PublicKeySign {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>>
-  New(const crypto::tink::internal::EcKey& ec_key,
+  static absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> New(
+      const crypto::tink::internal::EcKey& ec_key,
       subtle::EcdsaSignatureEncoding encoding);
 
   // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;

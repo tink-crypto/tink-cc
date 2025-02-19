@@ -92,11 +92,11 @@ INSTANTIATE_TEST_SUITE_P(
 
 MlDsaPrivateKey GenerateMlDsa65PrivateKey(MlDsaParameters::Variant variant,
                                           absl::optional<int> id_requirement) {
-  util::StatusOr<MlDsaParameters> parameters =
+  absl::StatusOr<MlDsaParameters> parameters =
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
   CHECK_OK(parameters);
 
-  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
       internal::CreateMlDsaKey(*parameters, id_requirement);
   CHECK_OK(private_key);
 
@@ -116,13 +116,13 @@ TEST_P(MlDsaProtoSerializationTest, ParseMlDsa65ParametersWorks) {
   MlDsaParams& params = *key_format_proto.mutable_params();
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parameters, IsOk());
@@ -141,7 +141,7 @@ TEST_F(MlDsaProtoSerializationTest,
        ParseParametersWithInvalidSerializationFails) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
@@ -161,13 +161,13 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
   MlDsaParams& params = *key_format_proto.mutable_params();
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -180,13 +180,13 @@ TEST_F(MlDsaProtoSerializationTest,
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   MlDsaKeyFormat key_format_proto;
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
 
@@ -204,13 +204,13 @@ TEST_F(MlDsaProtoSerializationTest,
   MlDsaParams& params = *key_format_proto.mutable_params();
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -226,13 +226,13 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithUnkownInstanceFails) {
   MlDsaParams& params = *key_format_proto.mutable_params();
   params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_UNKNOWN_INSTANCE);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -245,11 +245,11 @@ TEST_P(MlDsaProtoSerializationTest, SerializeMlDsa65SignatureParametersWorks) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -278,11 +278,11 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripMlDsa65SignatureParametersWorks) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -293,7 +293,7 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripMlDsa65SignatureParametersWorks) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_serialization);
   ASSERT_THAT(parsed_parameters, IsOk());
@@ -320,13 +320,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
@@ -334,11 +334,11 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorks) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id_requirement.has_value());
 
-  util::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> expected_key =
+  absl::StatusOr<MlDsaPublicKey> expected_key =
       MlDsaPublicKey::Create(*expected_parameters, raw_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
@@ -354,13 +354,13 @@ TEST_P(MlDsaProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -388,13 +388,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(),
@@ -412,16 +412,16 @@ TEST_P(MlDsaProtoSerializationTest, SerializePublicKeyWorks) {
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> key =
+  absl::StatusOr<MlDsaPublicKey> key =
       MlDsaPublicKey::Create(*parameters, raw_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);
@@ -462,16 +462,16 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPublicKey) {
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> key =
+  absl::StatusOr<MlDsaPublicKey> key =
       MlDsaPublicKey::Create(*parameters, raw_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);
@@ -482,7 +482,7 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPublicKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(parsed_key, IsOk());
@@ -518,13 +518,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> private_key =
+  absl::StatusOr<std::unique_ptr<Key>> private_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(private_key, IsOk());
@@ -533,16 +533,16 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorks) {
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(),
               test_case.id_requirement.has_value());
 
-  util::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> expected_public_key =
+  absl::StatusOr<MlDsaPublicKey> expected_public_key =
       MlDsaPublicKey::Create(*expected_parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> expected_private_key =
+  absl::StatusOr<MlDsaPrivateKey> expected_private_key =
       MlDsaPrivateKey::Create(
           *expected_public_key,
           RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
@@ -559,13 +559,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -602,13 +602,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -645,13 +645,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
@@ -670,22 +670,22 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKey) {
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -732,22 +732,22 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, /*token=*/absl::nullopt);
@@ -769,22 +769,22 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPrivateKey) {
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -795,7 +795,7 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPrivateKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key, IsOk());
@@ -924,13 +924,13 @@ TEST_F(MlDsaProtoSerializationTest, ParseGoldenPrivateKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       test::HexDecodeOrDie(serialized_key_hex), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           OutputPrefixType::TINK, 0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> private_key =
+  absl::StatusOr<std::unique_ptr<Key>> private_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(private_key, IsOk());
@@ -938,16 +938,16 @@ TEST_F(MlDsaProtoSerializationTest, ParseGoldenPrivateKeyWorks) {
   EXPECT_THAT((*private_key)->GetIdRequirement(), Eq(0x03050709));
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(), true);
 
-  util::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> expected_public_key = MlDsaPublicKey::Create(
+  absl::StatusOr<MlDsaPublicKey> expected_public_key = MlDsaPublicKey::Create(
       *expected_parameters, test::HexDecodeOrDie(public_key_bytes_hex),
       0x03050709, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> expected_private_key =
+  absl::StatusOr<MlDsaPrivateKey> expected_private_key =
       MlDsaPrivateKey::Create(
           *expected_public_key,
           RestrictedData(test::HexDecodeOrDie(private_seed_bytes_hex),

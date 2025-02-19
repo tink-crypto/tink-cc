@@ -29,8 +29,8 @@ namespace internal {
 
 // Creates a new PublicKeySign primitive using the SLH-DSA implementation from
 // BoringSSL. Only SLH-DSA-SHA2-128s is currently supported.
-crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>>
-NewSlhDsaSignBoringSsl(const SlhDsaPrivateKey& private_key);
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
+    const SlhDsaPrivateKey& private_key);
 
 }  // namespace internal
 }  // namespace tink

@@ -46,12 +46,11 @@ class MlDsaSignBoringSsl : public PublicKeySign {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const MlDsaPrivateKey& private_key);
 
   // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   explicit MlDsaSignBoringSsl(
       MlDsaPrivateKey private_key,
@@ -63,8 +62,8 @@ class MlDsaSignBoringSsl : public PublicKeySign {
   util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key_;
 };
 
-crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>>
-MlDsaSignBoringSsl::New(const MlDsaPrivateKey& private_key) {
+absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsaSignBoringSsl::New(
+    const MlDsaPrivateKey& private_key) {
   auto status = internal::CheckFipsCompatibility<MlDsaSignBoringSsl>();
   if (!status.ok()) {
     return status;
@@ -93,7 +92,7 @@ MlDsaSignBoringSsl::New(const MlDsaPrivateKey& private_key) {
       std::move(private_key), std::move(boringssl_private_key));
 }
 
-util::StatusOr<std::string> MlDsaSignBoringSsl::Sign(
+absl::StatusOr<std::string> MlDsaSignBoringSsl::Sign(
     absl::string_view data) const {
   std::string signature(private_key_.GetOutputPrefix());
   subtle::ResizeStringUninitialized(
@@ -115,7 +114,7 @@ util::StatusOr<std::string> MlDsaSignBoringSsl::Sign(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
     MlDsaPrivateKey private_key) {
   return MlDsaSignBoringSsl::New(std::move(private_key));
 }

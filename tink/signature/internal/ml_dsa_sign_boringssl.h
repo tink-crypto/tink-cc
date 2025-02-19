@@ -29,7 +29,7 @@ namespace internal {
 
 // Creates a new PublicKeySign primitive using the ML-DSA implementation from
 // BoringSSL. Only ML-DSA-65 is supported at the moment.
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
     MlDsaPrivateKey private_key);
 
 }  // namespace internal

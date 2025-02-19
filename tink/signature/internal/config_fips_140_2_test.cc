@@ -66,7 +66,7 @@ TEST(SignatureV0Test, PrimitiveWrappers) {
 
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore *> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -81,7 +81,7 @@ TEST(SignatureV0Test, KeyManagers) {
 
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore *> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -113,22 +113,22 @@ TEST_P(SignatureV0Test, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*handle)->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
@@ -143,11 +143,11 @@ TEST(SignatureV0Test, GetPrimitiveNonFips1402KeyTypeFails) {
   Configuration config;
   ASSERT_THAT(AddSignatureFips140_2(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(SignatureKeyTemplates::Ed25519(),
                                 key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 

@@ -66,24 +66,24 @@ TEST_P(SlhDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   }
 
   TestCase test_case = GetParam();
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
       CreateSlhDsaKey(*parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
 
   // Check signature size.
@@ -100,28 +100,28 @@ TEST_F(SlhDsaSignBoringSslTest, SignatureIsNonDeterministic) {
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
       CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
   // Create a signer based on the private key.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewSlhDsaSignBoringSsl(*private_key.value());
   ASSERT_THAT(signer, IsOk());
 
   // Sign the same message twice, using the same private key.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> first_signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> first_signature = (*signer)->Sign(message);
   ASSERT_THAT(first_signature, IsOk());
 
-  util::StatusOr<std::string> second_signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> second_signature = (*signer)->Sign(message);
   ASSERT_THAT(second_signature, IsOk());
 
   // Check the signatures' sizes.
@@ -137,14 +137,14 @@ TEST_F(SlhDsaSignBoringSslTest, FipsMode) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
       CreateSlhDsaKey(*parameters, /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 

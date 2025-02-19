@@ -74,42 +74,42 @@ namespace internal {
 
 namespace {
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1SignBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1SignBoringSsl(
     const RsaSsaPkcs1PrivateKey& key) {
   return crypto::tink::subtle::RsaSsaPkcs1SignBoringSsl::New(key);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRsaSsaPkcs1VerifyBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRsaSsaPkcs1VerifyBoringSsl(
     const RsaSsaPkcs1PublicKey& key) {
   return crypto::tink::subtle::RsaSsaPkcs1VerifyBoringSsl::New(key);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSignBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSignBoringSsl(
     const RsaSsaPssPrivateKey& key) {
   return crypto::tink::subtle::RsaSsaPssSignBoringSsl::New(key);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRsaSsaPssVerifyBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewRsaSsaPssVerifyBoringSsl(
     const RsaSsaPssPublicKey& key) {
   return crypto::tink::subtle::RsaSsaPssVerifyBoringSsl::New(key);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSignBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSignBoringSsl(
     const EcdsaPrivateKey& key) {
   return crypto::tink::subtle::EcdsaSignBoringSsl::New(key);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEcdsaVerifyBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEcdsaVerifyBoringSsl(
     const EcdsaPublicKey& key) {
   return crypto::tink::subtle::EcdsaVerifyBoringSsl::New(key);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewEd25519SignBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEd25519SignBoringSsl(
     const Ed25519PrivateKey& key) {
   return crypto::tink::subtle::Ed25519SignBoringSsl::New(key);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEd25519VerifyBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEd25519VerifyBoringSsl(
     const Ed25519PublicKey& key) {
   return crypto::tink::subtle::Ed25519VerifyBoringSsl::New(key);
 }

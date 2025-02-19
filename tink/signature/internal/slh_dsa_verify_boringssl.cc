@@ -85,7 +85,7 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewSlhDsaVerifyBoringSsl(
     const SlhDsaPublicKey &public_key) {
   auto status = internal::CheckFipsCompatibility<SlhDsaVerifyBoringSsl>();
   if (!status.ok()) {

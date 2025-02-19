@@ -44,7 +44,7 @@ class MlDsaVerifyBoringSsl : public PublicKeyVerify {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       MlDsaPublicKey public_key);
 
   util::Status Verify(absl::string_view signature,
@@ -60,7 +60,7 @@ class MlDsaVerifyBoringSsl : public PublicKeyVerify {
   std::unique_ptr<MLDSA65_public_key> boringssl_public_key_;
 };
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
     MlDsaPublicKey public_key) {
   auto status = CheckFipsCompatibility<MlDsaVerifyBoringSsl>();
   if (!status.ok()) {
@@ -120,7 +120,7 @@ util::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> NewMlDsaVerifyBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewMlDsaVerifyBoringSsl(
     MlDsaPublicKey public_key) {
   return MlDsaVerifyBoringSsl::New(std::move(public_key));
 }

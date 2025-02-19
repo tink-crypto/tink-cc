@@ -108,13 +108,13 @@ TEST_P(SlhDsaProtoSerializationTest,
   params.set_hash_type(SlhDsaHashType::SHA2);
   params.set_key_size(64);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parameters, IsOk());
@@ -136,7 +136,7 @@ TEST_F(SlhDsaProtoSerializationTest,
        ParseParametersWithInvalidSerializationFails) {
   ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
@@ -158,13 +158,13 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
   params.set_hash_type(SlhDsaHashType::SHA2);
   params.set_key_size(64);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -177,13 +177,13 @@ TEST_F(SlhDsaProtoSerializationTest,
   ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
 
   SlhDsaKeyFormat key_format_proto;
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
 
@@ -203,13 +203,13 @@ TEST_F(SlhDsaProtoSerializationTest,
   params.set_hash_type(SlhDsaHashType::SHA2);
   params.set_key_size(64);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -227,13 +227,13 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithUnkownSigTypeFails) {
   params.set_hash_type(SlhDsaHashType::SHA2);
   params.set_key_size(64);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -252,13 +252,13 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithUnkownHashTypeFails) {
   params.set_hash_type(SlhDsaHashType::SLH_DSA_HASH_TYPE_UNSPECIFIED);
   params.set_key_size(64);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -272,12 +272,12 @@ TEST_P(SlhDsaProtoSerializationTest,
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -321,13 +321,13 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePublicKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
@@ -335,13 +335,13 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePublicKeyWorks) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id_requirement.has_value());
 
-  util::StatusOr<SlhDsaParameters> expected_parameters =
+  absl::StatusOr<SlhDsaParameters> expected_parameters =
       SlhDsaParameters::Create(
           SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
           SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> expected_key =
+  absl::StatusOr<SlhDsaPublicKey> expected_key =
       SlhDsaPublicKey::Create(*expected_parameters, raw_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
@@ -356,14 +356,14 @@ TEST_F(SlhDsaProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -387,14 +387,14 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(),
@@ -406,18 +406,18 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePublicKeyWorks) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(32);
-  util::StatusOr<SlhDsaPublicKey> key =
+  absl::StatusOr<SlhDsaPublicKey> key =
       SlhDsaPublicKey::Create(*parameters, raw_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);
@@ -481,13 +481,13 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePrivateKeyWorks) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> private_key =
+  absl::StatusOr<std::unique_ptr<Key>> private_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(private_key, IsOk());
@@ -496,18 +496,18 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePrivateKeyWorks) {
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(),
               test_case.id_requirement.has_value());
 
-  util::StatusOr<SlhDsaParameters> expected_parameters =
+  absl::StatusOr<SlhDsaParameters> expected_parameters =
       SlhDsaParameters::Create(
           SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
           SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> expected_public_key =
+  absl::StatusOr<SlhDsaPublicKey> expected_public_key =
       SlhDsaPublicKey::Create(*expected_parameters, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<SlhDsaPrivateKey> expected_private_key =
+  absl::StatusOr<SlhDsaPrivateKey> expected_private_key =
       SlhDsaPrivateKey::Create(
           *expected_public_key,
           RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get()),
@@ -523,14 +523,14 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -568,14 +568,14 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -613,14 +613,14 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
@@ -639,23 +639,23 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePrivateKey) {
       reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
       *public_key,
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -704,24 +704,24 @@ TEST_F(SlhDsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
       reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t*>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
       *public_key,
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, /*token=*/absl::nullopt);

@@ -68,11 +68,11 @@ TEST_P(KeyCreatorsTest, CreateMlDsaPrivateKeyWorks) {
   MlDsaParameters::Variant variant = test_case.id_requirement.has_value()
                                          ? MlDsaParameters::Variant::kTink
                                          : MlDsaParameters::Variant::kNoPrefix;
-  util::StatusOr<MlDsaParameters> parameters =
+  absl::StatusOr<MlDsaParameters> parameters =
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
       CreateMlDsaKey(*parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
@@ -87,7 +87,7 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithMlDsaKeyWorks) {
   MlDsaParameters::Variant variant = test_case.id_requirement.has_value()
                                          ? MlDsaParameters::Variant::kTink
                                          : MlDsaParameters::Variant::kNoPrefix;
-  util::StatusOr<MlDsaParameters> parameters =
+  absl::StatusOr<MlDsaParameters> parameters =
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -100,7 +100,7 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithMlDsaKeyWorks) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true,
           /*id=*/123);
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry))
                                             .Build(key_creator_config);
   ASSERT_THAT(handle.status(), IsOk());
@@ -119,13 +119,13 @@ TEST_P(KeyCreatorsTest, CreateSlhDsaPrivateKeyWorks) {
       test_case.id_requirement.has_value()
           ? SlhDsaParameters::Variant::kTink
           : SlhDsaParameters::Variant::kNoPrefix;
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> private_key =
       CreateSlhDsaKey(*parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
@@ -141,7 +141,7 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithSlhDsaKeyWorks) {
       test_case.id_requirement.has_value()
           ? SlhDsaParameters::Variant::kTink
           : SlhDsaParameters::Variant::kNoPrefix;
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, variant);
@@ -157,7 +157,7 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithSlhDsaKeyWorks) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true,
           /*id=*/123);
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry))
                                             .Build(key_creator_config);
   ASSERT_THAT(handle.status(), IsOk());
@@ -175,7 +175,7 @@ TEST_P(KeyCreatorsTest, CreateEcdsaPrivateKeyWorks) {
   EcdsaParameters::Variant variant = test_case.id_requirement.has_value()
                                          ? EcdsaParameters::Variant::kTink
                                          : EcdsaParameters::Variant::kNoPrefix;
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -184,7 +184,7 @@ TEST_P(KeyCreatorsTest, CreateEcdsaPrivateKeyWorks) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> private_key =
       CreateEcdsaKey(*parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
@@ -199,7 +199,7 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithEcdsaKeyWorks) {
   EcdsaParameters::Variant variant = test_case.id_requirement.has_value()
                                          ? EcdsaParameters::Variant::kTink
                                          : EcdsaParameters::Variant::kNoPrefix;
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP384)
           .SetHashType(EcdsaParameters::HashType::kSha384)
@@ -217,7 +217,7 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithEcdsaKeyWorks) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true,
           /*id=*/123);
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry))
                                             .Build(key_creator_config);
   ASSERT_THAT(handle.status(), IsOk());

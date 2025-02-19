@@ -29,7 +29,7 @@ namespace internal {
 
 // Creates a new PublicKeyVerify primitive using the ML-DSA implementation from
 // BoringSSL. Only ML-DSA-65 is supported at the moment.
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> NewMlDsaVerifyBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewMlDsaVerifyBoringSsl(
     MlDsaPublicKey public_key);
 
 }  // namespace internal

@@ -54,7 +54,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-util::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
+absl::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
     EcdsaParameters::CurveType curve_type) {
   switch (curve_type) {
     case EcdsaParameters::CurveType::kNistP256:
@@ -71,7 +71,7 @@ util::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
+absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
     const MlDsaParameters& params, absl::optional<int> id_requirement) {
   if (params.GetInstance() != MlDsaParameters::Instance::kMlDsa65) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -87,10 +87,10 @@ util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
                         "Failed to generate ML-DSA-65 key");
   }
 
-  util::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
       params, public_key_bytes, id_requirement, GetPartialKeyAccess());
 
-  util::StatusOr<MlDsaPrivateKey> key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> key = MlDsaPrivateKey::Create(
       *public_key,
       RestrictedData(
           util::internal::AsSecretData(std::move(private_seed_bytes)),
@@ -102,14 +102,14 @@ util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
   return absl::make_unique<MlDsaPrivateKey>(*key);
 }
 
-util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
+absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     const SlhDsaParameters& params, absl::optional<int> id_requirement) {
   uint8_t public_key_bytes[SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES];
   uint8_t private_key_bytes[SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES];
 
   SLHDSA_SHA2_128S_generate_key(public_key_bytes, private_key_bytes);
 
-  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
       params,
       absl::string_view(reinterpret_cast<const char*>(public_key_bytes),
                         SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES),
@@ -118,7 +118,7 @@ util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     return public_key.status();
   }
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
       *public_key,
       RestrictedData(
           absl::string_view(reinterpret_cast<const char*>(private_key_bytes),
@@ -132,22 +132,22 @@ util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
   return absl::make_unique<SlhDsaPrivateKey>(*private_key);
 }
 
-util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
+absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
     const EcdsaParameters& params, absl::optional<int> id_requirement) {
-  util::StatusOr<subtle::EllipticCurveType> curve_type =
+  absl::StatusOr<subtle::EllipticCurveType> curve_type =
       ToSubtleEllipticCurve(params.GetCurveType());
   if (!curve_type.ok()) {
     return curve_type.status();
   }
 
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(*curve_type);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(*curve_type);
   if (!ec_key.ok()) {
     return ec_key.status();
   }
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       params, public_point, id_requirement, GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
@@ -157,7 +157,7 @@ util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
                            GetInsecureSecretKeyAccessInternal());
 
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());
   if (!private_key.ok()) {
     return private_key.status();

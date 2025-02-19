@@ -49,9 +49,10 @@ using ::testing::Eq;
 using ::testing::Not;
 using ::testing::SizeIs;
 
-util::StatusOr<std::string> ComputeDigest(subtle::HashType hash_type,
+absl::StatusOr<std::string> ComputeDigest(subtle::HashType hash_type,
                                           absl::string_view data) {
-  util::StatusOr<const EVP_MD*> hash = internal::EvpHashFromHashType(hash_type);
+  absl::StatusOr<const EVP_MD *> hash =
+      internal::EvpHashFromHashType(hash_type);
   if (!hash.ok()) return hash.status();
 
   unsigned int digest_size;
@@ -74,24 +75,24 @@ TEST(EcdsaRawSignBoringSslTest, VerifySignature) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    util::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
+    absl::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
         subtle::EllipticCurveType::NIST_P256);
     ASSERT_THAT(ec_key, IsOk());
 
-    util::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
+    absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(*ec_key, encoding);
     ASSERT_THAT(signer, IsOk());
 
-    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
         subtle::EcdsaVerifyBoringSsl::New(*ec_key, subtle::HashType::SHA256,
                                           encoding);
     ASSERT_THAT(verifier, IsOk());
 
     std::string message = "some data to be signed";
-    util::StatusOr<std::string> message_digest =
+    absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    util::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
   }
@@ -106,25 +107,25 @@ TEST(EcdsaRawSignBoringSslTest, VerifySignatureWithEmptyMessage) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    util::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
+    absl::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
         subtle::EllipticCurveType::NIST_P256);
     ASSERT_THAT(ec_key, IsOk());
 
-    util::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
+    absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(*ec_key, encoding);
     ASSERT_THAT(signer, IsOk());
 
-    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
         subtle::EcdsaVerifyBoringSsl::New(*ec_key, subtle::HashType::SHA256,
                                           encoding);
     ASSERT_THAT(verifier, IsOk());
 
     // Message is a null string_view.
     const absl::string_view empty_message;
-    util::StatusOr<std::string> empty_message_digest =
+    absl::StatusOr<std::string> empty_message_digest =
         ComputeDigest(subtle::HashType::SHA256, empty_message);
     ASSERT_THAT(empty_message_digest, IsOk());
-    util::StatusOr<std::string> empty_msg_signature =
+    absl::StatusOr<std::string> empty_msg_signature =
         (*signer)->Sign(*empty_message_digest);
     ASSERT_THAT(empty_msg_signature, IsOkAndHolds(Not(Eq(empty_message))));
     EXPECT_THAT((*verifier)->Verify(*empty_msg_signature, empty_message),
@@ -141,24 +142,24 @@ TEST(EcdsaRawSignBoringSslTest, VerifyFailsWithInvalidMessageOrSignature) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    util::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
+    absl::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
         subtle::EllipticCurveType::NIST_P256);
     ASSERT_THAT(ec_key, IsOk());
 
-    util::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
+    absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(*ec_key, encoding);
     ASSERT_THAT(signer, IsOk());
 
-    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
         subtle::EcdsaVerifyBoringSsl::New(*ec_key, subtle::HashType::SHA256,
                                           encoding);
     ASSERT_THAT(verifier, IsOk());
 
     std::string message = "some data to be signed";
-    util::StatusOr<std::string> message_digest =
+    absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    util::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 
@@ -178,15 +179,15 @@ TEST(EcdsaRawSignBoringSslTest, VerifyFailsWhenEncodingDoesNotMatch) {
       subtle::EcdsaSignatureEncoding::DER,
       subtle::EcdsaSignatureEncoding::IEEE_P1363};
   for (subtle::EcdsaSignatureEncoding encoding : encodings) {
-    util::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
+    absl::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
         subtle::EllipticCurveType::NIST_P256);
     ASSERT_THAT(ec_key, IsOk());
 
-    util::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
+    absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(*ec_key, encoding);
     ASSERT_THAT(signer, IsOk());
 
-    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
         subtle::EcdsaVerifyBoringSsl::New(
             *ec_key, subtle::HashType::SHA256,
             encoding == subtle::EcdsaSignatureEncoding::DER
@@ -195,10 +196,10 @@ TEST(EcdsaRawSignBoringSslTest, VerifyFailsWhenEncodingDoesNotMatch) {
     ASSERT_THAT(verifier, IsOk());
 
     std::string message = "some data to be signed";
-    util::StatusOr<std::string> message_digest =
+    absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    util::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), Not(IsOk()));
   }
@@ -214,31 +215,31 @@ TEST(EcdsaRawSignBoringSslTest,
                                          subtle::EllipticCurveType::NIST_P384,
                                          subtle::EllipticCurveType::NIST_P521};
   for (subtle::EllipticCurveType curve : curves) {
-    util::StatusOr<EcKey> ec_key =
+    absl::StatusOr<EcKey> ec_key =
         subtle::SubtleUtilBoringSSL::GetNewEcKey(curve);
     ASSERT_THAT(ec_key, IsOk());
 
-    util::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
+    absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>> signer =
         EcdsaRawSignBoringSsl::New(*ec_key,
                                    subtle::EcdsaSignatureEncoding::IEEE_P1363);
     ASSERT_THAT(signer, IsOk());
 
-    util::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
+    absl::StatusOr<std::unique_ptr<subtle::EcdsaVerifyBoringSsl>> verifier =
         subtle::EcdsaVerifyBoringSsl::New(
             *ec_key, subtle::HashType::SHA256,
             subtle::EcdsaSignatureEncoding::IEEE_P1363);
     ASSERT_THAT(verifier, IsOk());
 
     std::string message = "some data to be signed";
-    util::StatusOr<std::string> message_digest =
+    absl::StatusOr<std::string> message_digest =
         ComputeDigest(subtle::HashType::SHA256, message);
     ASSERT_THAT(message_digest, IsOk());
-    util::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
+    absl::StatusOr<std::string> signature = (*signer)->Sign(*message_digest);
     ASSERT_THAT(signature, IsOkAndHolds(Not(Eq(message))));
     EXPECT_THAT((*verifier)->Verify(*signature, message), IsOk());
 
     // Check signature size.
-    util::StatusOr<int32_t> field_size_in_bytes =
+    absl::StatusOr<int32_t> field_size_in_bytes =
         internal::EcFieldSizeInBytes(curve);
     ASSERT_THAT(field_size_in_bytes, IsOk());
     EXPECT_THAT(*signature, SizeIs(2 * (*field_size_in_bytes)));
@@ -250,7 +251,7 @@ TEST(EcdsaRawSignBoringSslTest, CreateFailsWithBadPublicKey) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
-  util::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
+  absl::StatusOr<EcKey> ec_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
       subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
@@ -269,7 +270,7 @@ TEST(EcdsaRawSignBoringSslTest, FipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<EcKey> p256_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
+  absl::StatusOr<EcKey> p256_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
       subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(p256_key, IsOk());
   EXPECT_THAT(
@@ -277,7 +278,7 @@ TEST(EcdsaRawSignBoringSslTest, FipsFailWithoutBoringCrypto) {
           .status(),
       StatusIs(absl::StatusCode::kInternal));
 
-  util::StatusOr<EcKey> p384_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
+  absl::StatusOr<EcKey> p384_key = subtle::SubtleUtilBoringSSL::GetNewEcKey(
       subtle::EllipticCurveType::NIST_P384);
   ASSERT_THAT(p384_key, IsOk());
   EXPECT_THAT(
@@ -285,7 +286,7 @@ TEST(EcdsaRawSignBoringSslTest, FipsFailWithoutBoringCrypto) {
           .status(),
       StatusIs(absl::StatusCode::kInternal));
 
-  util::StatusOr<EcKey> p521_key = *subtle::SubtleUtilBoringSSL::GetNewEcKey(
+  absl::StatusOr<EcKey> p521_key = *subtle::SubtleUtilBoringSSL::GetNewEcKey(
       subtle::EllipticCurveType::NIST_P521);
   ASSERT_THAT(p521_key, IsOk());
   EXPECT_THAT(

@@ -61,8 +61,8 @@ namespace {
 // (https://tools.ietf.org/html/rfc5480#appendix-A): ECDSA-Sig-Value :: =
 // SEQUENCE { r INTEGER, s INTEGER }. In particular, the encoding is: 0x30 ||
 // totalLength || 0x02 || r's length || r || 0x02 || s's length || s.
-crypto::tink::util::StatusOr<std::string> DerToIeee(absl::string_view der,
-                                                    const EC_KEY* key) {
+absl::StatusOr<std::string> DerToIeee(absl::string_view der,
+                                      const EC_KEY* key) {
   size_t field_size_in_bytes =
       (EC_GROUP_get_degree(EC_KEY_get0_group(key)) + 7) / 8;
 
@@ -78,12 +78,12 @@ crypto::tink::util::StatusOr<std::string> DerToIeee(absl::string_view der,
   const BIGNUM* r_bn;
   const BIGNUM* s_bn;
   ECDSA_SIG_get0(ecdsa.get(), &r_bn, &s_bn);
-  util::StatusOr<std::string> r =
+  absl::StatusOr<std::string> r =
       internal::BignumToString(r_bn, field_size_in_bytes);
   if (!r.ok()) {
     return r.status();
   }
-  util::StatusOr<std::string> s =
+  absl::StatusOr<std::string> s =
       internal::BignumToString(s_bn, field_size_in_bytes);
   if (!s.ok()) {
     return s.status();
@@ -94,7 +94,7 @@ crypto::tink::util::StatusOr<std::string> DerToIeee(absl::string_view der,
 }  // namespace
 
 // static
-util::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>>
+absl::StatusOr<std::unique_ptr<EcdsaRawSignBoringSsl>>
 EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
                            subtle::EcdsaSignatureEncoding encoding) {
   auto status = internal::CheckFipsCompatibility<EcdsaRawSignBoringSsl>();
@@ -103,7 +103,7 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
   util::Status result = CallWithCoreDumpProtection([&]() -> util::Status {
     // Check curve.
-    util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+    absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
         internal::EcGroupFromCurveType(ec_key.curve);
     if (!group.ok()) {
       return group.status();
@@ -111,7 +111,7 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
     EC_KEY_set_group(key.get(), group->get());
 
     // Check key.
-    util::StatusOr<internal::SslUniquePtr<EC_POINT>> pub_key =
+    absl::StatusOr<internal::SslUniquePtr<EC_POINT>> pub_key =
         internal::GetEcPoint(ec_key.curve, ec_key.pub_x, ec_key.pub_y);
     if (!pub_key.ok()) {
       return pub_key.status();
@@ -139,7 +139,7 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
       absl::WrapUnique(new EcdsaRawSignBoringSsl(std::move(key), encoding))};
 }
 
-util::StatusOr<std::string> EcdsaRawSignBoringSsl::Sign(
+absl::StatusOr<std::string> EcdsaRawSignBoringSsl::Sign(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -151,8 +151,8 @@ util::StatusOr<std::string> EcdsaRawSignBoringSsl::Sign(
   // We allow core dump leakage of information written into the buffer. This is
   // anyhow only the signature, which is fine to give to the adversary.
   ScopedAssumeRegionCoreDumpSafe scope(buffer.data(), signature_buffer_size);
-  util::StatusOr<int> signature_length =
-      CallWithCoreDumpProtection([&]() -> util::StatusOr<int> {
+  absl::StatusOr<int> signature_length =
+      CallWithCoreDumpProtection([&]() -> absl::StatusOr<int> {
         unsigned int sig_length;
         int result = ECDSA_sign(0 /* unused */,
                           reinterpret_cast<const uint8_t*>(data.data()),

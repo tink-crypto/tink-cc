@@ -65,7 +65,7 @@ using ::testing::Values;
 TEST(SignatureV0Test, PrimitiveWrappers) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -76,13 +76,13 @@ TEST(SignatureV0Test, PrimitiveWrappers) {
 TEST(SignatureV0Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -108,29 +108,29 @@ TEST_P(SignatureV0KeyTypesTest, GetPrimitiveSignVerify) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*handle)->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
 
 #ifdef OPENSSL_IS_BORINGSSL
 SlhDsaParameters GetSlhDsaParameters(SlhDsaParameters::Variant variant) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, variant);
   CHECK_OK(parameters);
@@ -138,7 +138,7 @@ SlhDsaParameters GetSlhDsaParameters(SlhDsaParameters::Variant variant) {
 }
 
 MlDsaParameters GetMlDsaParameters(MlDsaParameters::Variant variant) {
-  util::StatusOr<MlDsaParameters> parameters =
+  absl::StatusOr<MlDsaParameters> parameters =
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
   CHECK_OK(parameters);
   return *parameters;
@@ -150,25 +150,25 @@ TEST(SignatureConfigV0Test, SlhDsaGetPrimitiveSignVerifyWorks) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<SlhDsaParameters> parameters =
+  absl::StatusOr<SlhDsaParameters> parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*handle)->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
@@ -179,25 +179,25 @@ TEST(SignatureConfigV0Test, SlhDsaVerifyWithWrongMessageFails) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<SlhDsaParameters> parameters =
+  absl::StatusOr<SlhDsaParameters> parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*handle)->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, "wrong_data"), Not(IsOk()));
 }
@@ -208,25 +208,25 @@ TEST(SignatureConfigV0Test, MlDsaGetPrimitiveSignVerifyWorks) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<MlDsaParameters> parameters =
+  absl::StatusOr<MlDsaParameters> parameters =
       GetMlDsaParameters(MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*handle)->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
@@ -237,25 +237,25 @@ TEST(SignatureConfigV0Test, MlDsaVerifyWithWrongMessageFails) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<MlDsaParameters> parameters =
+  absl::StatusOr<MlDsaParameters> parameters =
       GetMlDsaParameters(MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNewFromParameters(*parameters, key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*handle)->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, "wrong_data"), Not(IsOk()));
 }
@@ -267,11 +267,11 @@ TEST(SignatureConfigV0Test,
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<SlhDsaParameters> slhdsa_parameters =
+  absl::StatusOr<SlhDsaParameters> slhdsa_parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(slhdsa_parameters, IsOk());
 
-  util::StatusOr<MlDsaParameters> mldsa_parameters =
+  absl::StatusOr<MlDsaParameters> mldsa_parameters =
       GetMlDsaParameters(MlDsaParameters::Variant::kTink);
   ASSERT_THAT(mldsa_parameters, IsOk());
 
@@ -285,25 +285,25 @@ TEST(SignatureConfigV0Test,
           *mldsa_parameters, KeyStatus::kEnabled,
           /*is_primary=*/false);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry1))
                                             .AddEntry(std::move(entry2))
                                             .Build(key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       handle->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
@@ -315,11 +315,11 @@ TEST(SignatureConfigV0Test,
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<SlhDsaParameters> slhdsa_parameters =
+  absl::StatusOr<SlhDsaParameters> slhdsa_parameters =
       GetSlhDsaParameters(SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(slhdsa_parameters, IsOk());
 
-  util::StatusOr<MlDsaParameters> mldsa_parameters =
+  absl::StatusOr<MlDsaParameters> mldsa_parameters =
       GetMlDsaParameters(MlDsaParameters::Variant::kTink);
   ASSERT_THAT(mldsa_parameters, IsOk());
 
@@ -333,25 +333,25 @@ TEST(SignatureConfigV0Test,
                                                            KeyStatus::kEnabled,
                                                            /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry1))
                                             .AddEntry(std::move(entry2))
                                             .Build(key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       handle->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
@@ -367,17 +367,17 @@ TEST_P(DeterministicSignatureTests, ComputeSignatureInTestVector) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       handle->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(signer, IsOk());
-  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(param.message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT(*signature, Eq(param.signature));
 }
@@ -389,17 +389,17 @@ TEST_P(DeterministicSignatureTests, VerifySignatureInTestVector) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
@@ -417,23 +417,23 @@ TEST_P(RandomizedSignaturesTest, ComputeSignatureInTestVector) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       handle->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(signer, IsOk());
-  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(param.message);
   ASSERT_THAT(signature, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, param.message), IsOk());
@@ -446,17 +446,17 @@ TEST_P(RandomizedSignaturesTest, VerifySignatureInTestVector) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddSignatureKeyGenV0(key_gen_config), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
@@ -470,7 +470,7 @@ TEST_P(RandomizedSignaturesTest, VerifyWrongMessageInTestVectorFails) {
   Configuration config;
   ASSERT_THAT(AddSignatureV0(config), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               test_vector.signature_private_key, KeyStatus::kEnabled,
@@ -478,19 +478,19 @@ TEST_P(RandomizedSignaturesTest, VerifyWrongMessageInTestVectorFails) {
           .Build(key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       handle->GetPrimitive<PublicKeySign>(config);
   ASSERT_THAT(signer, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(config);
   ASSERT_THAT(verifier, IsOk());
 
   // Sign the message.
-  util::StatusOr<std::string> signature = (*signer)->Sign(test_vector.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(test_vector.message);
   ASSERT_THAT(signature, IsOk());
 
   EXPECT_THAT((*verifier)->Verify(*signature, "wrong_message"),

@@ -49,14 +49,13 @@ class SlhDsaSignBoringSsl : public PublicKeySign {
   ~SlhDsaSignBoringSsl() override = default;
 
   // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
  private:
   SlhDsaPrivateKey private_key_;
 };
 
-util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
+absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
     absl::string_view data) const {
   // The signature will be prepended with the output prefix for TINK keys.
   std::string signature(private_key_.GetOutputPrefix());
@@ -78,7 +77,7 @@ util::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewSlhDsaSignBoringSsl(
     const SlhDsaPrivateKey &private_key) {
   auto status = internal::CheckFipsCompatibility<SlhDsaSignBoringSsl>();
   if (!status.ok()) {

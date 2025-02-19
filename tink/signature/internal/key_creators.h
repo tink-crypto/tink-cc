@@ -34,19 +34,19 @@ namespace internal {
 // Creates a new ML-DSA private key from `parameters`. If `id_requirement` is
 // set, the key will have the specified ID requirement. Otherwise, the key will
 // have no ID requirement.
-util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
+absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
     const MlDsaParameters& params, absl::optional<int> id_requirement);
 
 // Creates a new SLH-DSA private key from `parameters`. If `id_requirement` is
 // set, the key will have the specified ID requirement. Otherwise, the key will
 // have no ID requirement.
-util::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
+absl::StatusOr<std::unique_ptr<SlhDsaPrivateKey>> CreateSlhDsaKey(
     const SlhDsaParameters& params, absl::optional<int> id_requirement);
 
 // Creates a new ECDSA private key from `parameters`. If `id_requirement` is
 // set, the key will have the specified ID requirement. Otherwise, the key will
 // have no ID requirement.
-util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
+absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
     const EcdsaParameters& params, absl::optional<int> id_requirement);
 
 }  // namespace internal

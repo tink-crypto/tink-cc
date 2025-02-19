@@ -67,20 +67,20 @@ TEST_P(MlDsaSignBoringSslTest, SignatureLengthIsCorrect) {
 
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
       CreateMlDsaKey(*key_parameters, test_case.id_requirement);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   std::string message = "message to be signed";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
 
   EXPECT_NE(*signature, message);
@@ -96,24 +96,24 @@ TEST(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
       CreateMlDsaKey(*key_parameters, absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       NewMlDsaSignBoringSsl(**private_key);
   ASSERT_THAT(signer, IsOk());
 
   // Sign the same message twice, using the same private key.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> first_signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> first_signature = (*signer)->Sign(message);
   ASSERT_THAT(first_signature, IsOk());
 
-  util::StatusOr<std::string> second_signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> second_signature = (*signer)->Sign(message);
   ASSERT_THAT(second_signature, IsOk());
 
   // Check the signatures' sizes.
@@ -128,11 +128,11 @@ TEST(MlDsaSignBoringSslTest, FipsMode) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
 
-  util::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
       CreateMlDsaKey(*key_parameters, absl::nullopt);
   ASSERT_THAT(private_key, IsOk());
 

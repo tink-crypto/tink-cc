@@ -88,8 +88,7 @@ class Cecpq2HkdfSenderKemBoringSsl {
   // be a big-endian byte array, and recipient's HRSS public key. This method is
   // made generic enough so that extending the ECC algorithm to support other
   // curves is trivial.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
+  static absl::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
   New(EllipticCurveType curve, absl::string_view ec_pubx,
       absl::string_view ec_puby, absl::string_view marshalled_hrss_pub);
 
@@ -99,10 +98,9 @@ class Cecpq2HkdfSenderKemBoringSsl {
   // Then it uses HKDF to derive the symmetric key from both shared secrets,
   // 'hkdf_info' and hkdf_salt. This method is made generic enough so that
   // extending the ECC algorithm to support other curves is trivial.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<const KemKey>>
-  GenerateKey(HashType hash, absl::string_view hkdf_salt,
-              absl::string_view hkdf_info, uint32_t key_size_in_bytes,
-              EcPointFormat point_format) const = 0;
+  virtual absl::StatusOr<std::unique_ptr<const KemKey>> GenerateKey(
+      HashType hash, absl::string_view hkdf_salt, absl::string_view hkdf_info,
+      uint32_t key_size_in_bytes, EcPointFormat point_format) const = 0;
 
   virtual ~Cecpq2HkdfSenderKemBoringSsl() = default;
 };
@@ -112,8 +110,7 @@ class Cecpq2HkdfX25519SenderKemBoringSsl : public Cecpq2HkdfSenderKemBoringSsl {
  public:
   // Constructs a sender CECPQ2 KEM for recipient's X25519 public key, which
   // must be a big-endian byte array, and recipient's HRSS public key.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
+  static absl::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
   New(EllipticCurveType curve, absl::string_view pubx, absl::string_view puby,
       absl::string_view marshalled_hrss_pub);
 
@@ -122,7 +119,7 @@ class Cecpq2HkdfX25519SenderKemBoringSsl : public Cecpq2HkdfSenderKemBoringSsl {
   // shared secret and encapsulates it using the recipient's HRSS public key.
   // Then it uses HKDF to derive the symmetric key from both shared secrets,
   // 'hkdf_info' and hkdf_salt.
-  crypto::tink::util::StatusOr<std::unique_ptr<const KemKey>> GenerateKey(
+  absl::StatusOr<std::unique_ptr<const KemKey>> GenerateKey(
       HashType hash, absl::string_view hkdf_salt, absl::string_view hkdf_info,
       uint32_t key_size_in_bytes, EcPointFormat point_format) const override;
 

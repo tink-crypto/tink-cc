@@ -38,10 +38,10 @@ class Cecpq2AeadHkdfHybridDecrypt : public HybridDecrypt {
  public:
   // Returns an HybridDecrypt-primitive that uses the key material
   // given in 'recipient_key'
-  static crypto::tink::util::StatusOr<std::unique_ptr<HybridDecrypt>> New(
+  static absl::StatusOr<std::unique_ptr<HybridDecrypt>> New(
       const google::crypto::tink::Cecpq2AeadHkdfPrivateKey& private_key);
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view context_info) const override;
 

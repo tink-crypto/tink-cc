@@ -47,13 +47,13 @@ struct Cecpq2KeyPair {
 // This is an utility function that generates a new HRSS key pair from a high
 // entropy seed (hrss_key_entropy). This function is expected to be called from
 // a key manager class, which will take care of generating a high entropy seed.
-crypto::tink::util::StatusOr<HrssKeyPair> GenerateHrssKeyPair(
+absl::StatusOr<HrssKeyPair> GenerateHrssKeyPair(
     util::SecretData hrss_key_entropy);
 
 // This method performs CECPQ2 (HRSS and X25519) key generation,
 // and HRSS public key marshaling.
-crypto::tink::util::StatusOr<crypto::tink::pqc::Cecpq2KeyPair>
-GenerateCecpq2Keypair(subtle::EllipticCurveType curve_type);
+absl::StatusOr<crypto::tink::pqc::Cecpq2KeyPair> GenerateCecpq2Keypair(
+    subtle::EllipticCurveType curve_type);
 
 }  // namespace pqc
 }  // namespace tink

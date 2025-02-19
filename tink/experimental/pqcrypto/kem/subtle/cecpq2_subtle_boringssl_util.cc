@@ -32,8 +32,8 @@ namespace crypto {
 namespace tink {
 namespace pqc {
 
-crypto::tink::util::StatusOr<crypto::tink::pqc::HrssKeyPair>
-GenerateHrssKeyPair(util::SecretData hrss_key_entropy) {
+absl::StatusOr<crypto::tink::pqc::HrssKeyPair> GenerateHrssKeyPair(
+    util::SecretData hrss_key_entropy) {
   crypto::tink::pqc::HrssKeyPair hrss_key_pair;
   hrss_key_pair.hrss_private_key_seed = std::move(hrss_key_entropy);
 
@@ -56,8 +56,8 @@ GenerateHrssKeyPair(util::SecretData hrss_key_entropy) {
   return hrss_key_pair;
 }
 
-crypto::tink::util::StatusOr<crypto::tink::pqc::Cecpq2KeyPair>
-GenerateCecpq2Keypair(subtle::EllipticCurveType curve_type) {
+absl::StatusOr<crypto::tink::pqc::Cecpq2KeyPair> GenerateCecpq2Keypair(
+    subtle::EllipticCurveType curve_type) {
   crypto::tink::pqc::Cecpq2KeyPair cecpq2_key_pair;
 
   // Generating a X25519 key pair

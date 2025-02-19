@@ -103,7 +103,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(EcdsaPublicKeyTest, CreatePublicKeyWorks) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(test_case.curve_type)
           .SetHashType(test_case.hash_type)
@@ -112,12 +112,12 @@ TEST_P(EcdsaPublicKeyTest, CreatePublicKeyWorks) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key, IsOk());
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
 
-  util::StatusOr<EcdsaPublicKey> public_key =
+  absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -130,7 +130,7 @@ TEST_P(EcdsaPublicKeyTest, CreatePublicKeyWorks) {
 }
 
 TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
-  util::StatusOr<EcdsaParameters> no_prefix_params =
+  absl::StatusOr<EcdsaParameters> no_prefix_params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -139,7 +139,7 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
           .Build();
   ASSERT_THAT(no_prefix_params, IsOk());
 
-  util::StatusOr<EcdsaParameters> tink_params =
+  absl::StatusOr<EcdsaParameters> tink_params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -173,7 +173,7 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidPointFails) {
       BigInteger(test::HexDecodeOrDie(
           "db71e509e3fd9b060ddb20ba5c51dcc5948d46fbf640dfe0441782cab85fa4ad")));
 
-  util::StatusOr<EcdsaParameters> params =
+  absl::StatusOr<EcdsaParameters> params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -182,7 +182,7 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidPointFails) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *params, invalid_point,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(), StatusIs(absl::StatusCode::kInternal));
@@ -191,7 +191,7 @@ TEST(EcdsaPublicKeyTest, CreatePublicKeyWithInvalidPointFails) {
 TEST_P(EcdsaPublicKeyTest, PublicKeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(test_case.curve_type)
           .SetHashType(test_case.hash_type)
@@ -200,17 +200,17 @@ TEST_P(EcdsaPublicKeyTest, PublicKeyEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key, IsOk());
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
 
-  util::StatusOr<EcdsaPublicKey> public_key =
+  absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> other_public_key =
+  absl::StatusOr<EcdsaPublicKey> other_public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -222,7 +222,7 @@ TEST_P(EcdsaPublicKeyTest, PublicKeyEquals) {
 }
 
 TEST(EcdsaPublicKeyTest, DifferentParametersNotEqual) {
-  util::StatusOr<EcdsaParameters> crunchy_params =
+  absl::StatusOr<EcdsaParameters> crunchy_params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -231,7 +231,7 @@ TEST(EcdsaPublicKeyTest, DifferentParametersNotEqual) {
           .Build();
   ASSERT_THAT(crunchy_params, IsOk());
 
-  util::StatusOr<EcdsaParameters> tink_params =
+  absl::StatusOr<EcdsaParameters> tink_params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -240,12 +240,12 @@ TEST(EcdsaPublicKeyTest, DifferentParametersNotEqual) {
           .Build();
   ASSERT_THAT(tink_params, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> crunchy_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> crunchy_public_key = EcdsaPublicKey::Create(
       *crunchy_params, kP256EcPoint,
       /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(crunchy_public_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> tink_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> tink_public_key = EcdsaPublicKey::Create(
       *tink_params, kP256EcPoint,
       /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(tink_public_key, IsOk());
@@ -257,7 +257,7 @@ TEST(EcdsaPublicKeyTest, DifferentParametersNotEqual) {
 }
 
 TEST(EcdsaPublicKeyTest, DifferentPublicPointsNotEqual) {
-  util::StatusOr<EcdsaParameters> params =
+  absl::StatusOr<EcdsaParameters> params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -266,22 +266,22 @@ TEST(EcdsaPublicKeyTest, DifferentPublicPointsNotEqual) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<internal::EcKey> ec_key1 =
+  absl::StatusOr<internal::EcKey> ec_key1 =
       internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key1, IsOk());
-  util::StatusOr<internal::EcKey> ec_key2 =
+  absl::StatusOr<internal::EcKey> ec_key2 =
       internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key2, IsOk());
 
   EcPoint public_point1(BigInteger(ec_key1->pub_x), BigInteger(ec_key1->pub_y));
   EcPoint public_point2(BigInteger(ec_key2->pub_x), BigInteger(ec_key2->pub_y));
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *params, public_point1,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> other_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> other_public_key = EcdsaPublicKey::Create(
       *params, public_point2,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -293,7 +293,7 @@ TEST(EcdsaPublicKeyTest, DifferentPublicPointsNotEqual) {
 }
 
 TEST(EcdsaPublicKeyTest, DifferentIdRequirementsNotEqual) {
-  util::StatusOr<EcdsaParameters> tink_params =
+  absl::StatusOr<EcdsaParameters> tink_params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -302,12 +302,12 @@ TEST(EcdsaPublicKeyTest, DifferentIdRequirementsNotEqual) {
           .Build();
   ASSERT_THAT(tink_params, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *tink_params, kP256EcPoint,
       /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> other_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> other_public_key = EcdsaPublicKey::Create(
       *tink_params, kP256EcPoint,
       /*id_requirement=*/0x02030405, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -319,7 +319,7 @@ TEST(EcdsaPublicKeyTest, DifferentIdRequirementsNotEqual) {
 }
 
 TEST(EcdsaPublicKeyTest, Clone) {
-  util::StatusOr<EcdsaParameters> params =
+  absl::StatusOr<EcdsaParameters> params =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -328,7 +328,7 @@ TEST(EcdsaPublicKeyTest, Clone) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *params, kP256EcPoint,
       /*id_requirement=*/0x01020304, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());

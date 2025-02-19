@@ -43,7 +43,7 @@ class EcdsaPublicKey : public SignaturePublicKey {
   EcdsaPublicKey(EcdsaPublicKey&& other) = default;
   EcdsaPublicKey& operator=(EcdsaPublicKey&& other) = default;
 
-  static util::StatusOr<EcdsaPublicKey> Create(
+  static absl::StatusOr<EcdsaPublicKey> Create(
       const EcdsaParameters& parameters, const EcPoint& public_point,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 

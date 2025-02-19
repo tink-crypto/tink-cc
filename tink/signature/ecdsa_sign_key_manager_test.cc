@@ -135,7 +135,7 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyFormatBadHashP521) {
 
 TEST(EcdsaSignKeyManagerTest, CreateKey) {
   EcdsaKeyFormat format = CreateValidKeyFormat();
-  StatusOr<EcdsaPrivateKeyProto> key_or =
+  absl::StatusOr<EcdsaPrivateKeyProto> key_or =
       EcdsaSignKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
   EcdsaPrivateKeyProto key = key_or.value();
@@ -157,7 +157,7 @@ TEST(EcdsaSignKeyManagerTest, CreateKey) {
 
 TEST(EcdsaSignKeyManagerTest, CreateKeyValid) {
   EcdsaKeyFormat format = CreateValidKeyFormat();
-  StatusOr<EcdsaPrivateKeyProto> key_or =
+  absl::StatusOr<EcdsaPrivateKeyProto> key_or =
       EcdsaSignKeyManager().CreateKey(format);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(EcdsaSignKeyManager().ValidateKey(key_or.value()), IsOk());
@@ -205,7 +205,7 @@ TEST(EcdsaSignKeyManagerTest, ValidateKeyBadHashP521) {
 
 TEST(EcdsaSignKeyManagerTest, GetPublicKey) {
   EcdsaPrivateKeyProto key = CreateValidKey();
-  StatusOr<EcdsaPublicKeyProto> public_key_or =
+  absl::StatusOr<EcdsaPublicKeyProto> public_key_or =
       EcdsaSignKeyManager().GetPublicKey(key);
 
   ASSERT_THAT(public_key_or, IsOk());
@@ -294,19 +294,19 @@ TEST(EcdsaSignKeyManagerTest, DeriveKeySignVerifySucceedsWithBoringSsl) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
-  util::StatusOr<EcdsaPrivateKeyProto> key =
+  absl::StatusOr<EcdsaPrivateKeyProto> key =
       EcdsaSignKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       EcdsaSignKeyManager().GetPrimitive<PublicKeySign>(*key);
   ASSERT_THAT(signer, IsOk());
 
   constexpr absl::string_view kMessage = "Some message";
-  util::StatusOr<std::string> signature = (*signer)->Sign(kMessage);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(kMessage);
   ASSERT_THAT(signature, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       EcdsaVerifyKeyManager().GetPrimitive<PublicKeyVerify>(key->public_key());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, kMessage), IsOk());
@@ -416,7 +416,7 @@ TEST_P(NistCurveParamsDeriveTest, TestVectors) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>(std::get<1>(GetParam()))};
 
-  util::StatusOr<EcdsaPrivateKeyProto> private_key =
+  absl::StatusOr<EcdsaPrivateKeyProto> private_key =
       EcdsaSignKeyManager().DeriveKey(key_format, &input_stream);
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT(private_key->key_value(),
@@ -430,17 +430,17 @@ using EcdsaSignKeyManagerTestVectorTest =
 TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
   const internal::SignatureTestVector& param = GetParam();
-  StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
@@ -449,23 +449,23 @@ TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
 TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyFreshSignature) {
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
   const internal::SignatureTestVector& param = GetParam();
-  StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       handle->GetPrimitive<PublicKeySign>(ConfigGlobalRegistry());
   ASSERT_THAT(signer, IsOk());
-  StatusOr<std::string> fresh_signature = (*signer)->Sign("some message");
+  absl::StatusOr<std::string> fresh_signature = (*signer)->Sign("some message");
   ASSERT_THAT(fresh_signature, IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(*fresh_signature, "some message"), IsOk());
@@ -474,17 +474,17 @@ TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyFreshSignature) {
 TEST_P(EcdsaSignKeyManagerTestVectorTest, VerifyWrongMessage) {
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
   const internal::SignatureTestVector& param = GetParam();
-  StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(

@@ -82,7 +82,7 @@ class EcdsaParameters : public SignatureParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates Ecdsa parameters object from this builder.
-    util::StatusOr<EcdsaParameters> Build();
+    absl::StatusOr<EcdsaParameters> Build();
 
    private:
     absl::optional<CurveType> curve_type_;

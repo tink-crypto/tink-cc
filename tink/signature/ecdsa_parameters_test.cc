@@ -73,7 +73,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(EcdsaParametersTest, BuildWorks) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(test_case.curve_type)
           .SetHashType(test_case.hash_type)
@@ -238,7 +238,7 @@ TEST(EcdsaParametersTest, BuildWithIncompatibleHashTypeForCurveP521Fails) {
 }
 
 TEST(EcdsaParametersTest, CopyConstructor) {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -258,7 +258,7 @@ TEST(EcdsaParametersTest, CopyConstructor) {
 }
 
 TEST(EcdsaParametersTest, CopyAssignment) {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -280,7 +280,7 @@ TEST(EcdsaParametersTest, CopyAssignment) {
 TEST_P(EcdsaParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(test_case.curve_type)
           .SetHashType(test_case.hash_type)
@@ -289,7 +289,7 @@ TEST_P(EcdsaParametersTest, ParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcdsaParameters> other_parameters =
+  absl::StatusOr<EcdsaParameters> other_parameters =
       EcdsaParameters::Builder()
           .SetCurveType(test_case.curve_type)
           .SetHashType(test_case.hash_type)
@@ -305,7 +305,7 @@ TEST_P(EcdsaParametersTest, ParametersEquals) {
 }
 
 TEST(EcdsaParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -314,7 +314,7 @@ TEST(EcdsaParametersTest, DifferentVariantNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcdsaParameters> other_parameters =
+  absl::StatusOr<EcdsaParameters> other_parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -328,7 +328,7 @@ TEST(EcdsaParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(EcdsaParametersTest, DifferentCurveTypeNotEqual) {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP384)
           .SetHashType(EcdsaParameters::HashType::kSha512)
@@ -337,7 +337,7 @@ TEST(EcdsaParametersTest, DifferentCurveTypeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcdsaParameters> other_parameters =
+  absl::StatusOr<EcdsaParameters> other_parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP521)
           .SetHashType(EcdsaParameters::HashType::kSha512)
@@ -351,7 +351,7 @@ TEST(EcdsaParametersTest, DifferentCurveTypeNotEqual) {
 }
 
 TEST(EcdsaParametersTest, DifferentHashTypeNotEqual) {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP384)
           .SetHashType(EcdsaParameters::HashType::kSha384)
@@ -360,7 +360,7 @@ TEST(EcdsaParametersTest, DifferentHashTypeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcdsaParameters> other_parameters =
+  absl::StatusOr<EcdsaParameters> other_parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP384)
           .SetHashType(EcdsaParameters::HashType::kSha512)
@@ -374,7 +374,7 @@ TEST(EcdsaParametersTest, DifferentHashTypeNotEqual) {
 }
 
 TEST(EcdsaParametersTest, DifferentSignatureEncodingNotEqual) {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -383,7 +383,7 @@ TEST(EcdsaParametersTest, DifferentSignatureEncodingNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EcdsaParameters> other_parameters =
+  absl::StatusOr<EcdsaParameters> other_parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -397,7 +397,7 @@ TEST(EcdsaParametersTest, DifferentSignatureEncodingNotEqual) {
 }
 
 TEST(EcdsaParametersTest, Clone) {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)

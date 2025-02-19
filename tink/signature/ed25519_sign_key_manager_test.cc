@@ -75,7 +75,7 @@ TEST(Ed25519SignKeyManagerTest, ValidateKeyFormat) {
 }
 
 TEST(Ed25519SignKeyManagerTest, CreateKey) {
-  StatusOr<Ed25519PrivateKeyProto> key_or =
+  absl::StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
   Ed25519PrivateKeyProto key = key_or.value();
@@ -89,7 +89,7 @@ TEST(Ed25519SignKeyManagerTest, CreateKey) {
 }
 
 TEST(Ed25519SignKeyManagerTest, CreateKeyValid) {
-  StatusOr<Ed25519PrivateKeyProto> key_or =
+  absl::StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(Ed25519SignKeyManager().ValidateKey(key_or.value()), IsOk());
@@ -99,7 +99,7 @@ TEST(Ed25519SignKeyManagerTest, CreateKeyAlwaysNew) {
   absl::flat_hash_set<std::string> keys;
   int num_tests = 100;
   for (int i = 0; i < num_tests; ++i) {
-    StatusOr<Ed25519PrivateKeyProto> key_or =
+    absl::StatusOr<Ed25519PrivateKeyProto> key_or =
         Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
     ASSERT_THAT(key_or, IsOk());
     keys.insert(std::string(key_or.value().key_value()));
@@ -108,10 +108,10 @@ TEST(Ed25519SignKeyManagerTest, CreateKeyAlwaysNew) {
 }
 
 TEST(Ed25519SignKeyManagerTest, GetPublicKey) {
-  StatusOr<Ed25519PrivateKeyProto> key_or =
+  absl::StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
-  StatusOr<Ed25519PublicKeyProto> public_key_or =
+  absl::StatusOr<Ed25519PublicKeyProto> public_key_or =
       Ed25519SignKeyManager().GetPublicKey(key_or.value());
   ASSERT_THAT(public_key_or, IsOk());
   EXPECT_THAT(public_key_or.value().version(),
@@ -121,7 +121,7 @@ TEST(Ed25519SignKeyManagerTest, GetPublicKey) {
 }
 
 TEST(Ed25519SignKeyManagerTest, Create) {
-  StatusOr<Ed25519PrivateKeyProto> key_or =
+  absl::StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
   Ed25519PrivateKeyProto key = key_or.value();
@@ -142,7 +142,7 @@ TEST(Ed25519SignKeyManagerTest, Create) {
 }
 
 TEST(Ed25519SignKeyManagerTest, CreateDifferentKey) {
-  StatusOr<Ed25519PrivateKeyProto> key_or =
+  absl::StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().CreateKey(Ed25519KeyFormat());
   ASSERT_THAT(key_or, IsOk());
   Ed25519PrivateKeyProto key = key_or.value();
@@ -168,7 +168,7 @@ TEST(Ed25519SignKeyManagerTest, DeriveKey) {
   util::IstreamInputStream input_stream{
       absl::make_unique<std::stringstream>("0123456789abcdef0123456789abcdef")};
 
-  StatusOr<Ed25519PrivateKeyProto> key_or =
+  absl::StatusOr<Ed25519PrivateKeyProto> key_or =
       Ed25519SignKeyManager().DeriveKey(format, &input_stream);
   ASSERT_THAT(key_or, IsOk());
   EXPECT_THAT(key_or.value().key_value(),
@@ -213,17 +213,17 @@ using Ed25519SignKeyManagerTestVectorTest =
 TEST_P(Ed25519SignKeyManagerTestVectorTest, ComputeSignatureInTestVector) {
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
   const internal::SignatureTestVector& param = GetParam();
-  StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       handle->GetPrimitive<PublicKeySign>(ConfigGlobalRegistry());
   ASSERT_THAT(signer, IsOk());
-  StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(param.message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT(*signature, Eq(param.signature));
 }
@@ -231,17 +231,17 @@ TEST_P(Ed25519SignKeyManagerTestVectorTest, ComputeSignatureInTestVector) {
 TEST_P(Ed25519SignKeyManagerTestVectorTest, VerifySignatureInTestVector) {
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
   const internal::SignatureTestVector& param = GetParam();
-  StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.signature_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       (*public_handle)->GetPrimitive<PublicKeyVerify>(ConfigGlobalRegistry());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());

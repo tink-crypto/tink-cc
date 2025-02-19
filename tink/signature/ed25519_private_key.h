@@ -41,7 +41,7 @@ class Ed25519PrivateKey : public SignaturePrivateKey {
   // Creates a new Ed25519 private key from `private_key_bytes`. Returns an
   // error if `public_key` does not belong to the same key pair as
   // `private_key_bytes`.
-  static util::StatusOr<Ed25519PrivateKey> Create(
+  static absl::StatusOr<Ed25519PrivateKey> Create(
       const Ed25519PublicKey& public_key,
       const RestrictedData& private_key_bytes, PartialKeyAccessToken token);
 

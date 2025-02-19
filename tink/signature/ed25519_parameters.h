@@ -50,7 +50,7 @@ class Ed25519Parameters : public SignatureParameters {
   Ed25519Parameters& operator=(Ed25519Parameters&& other) = default;
 
   // Creates a new Ed25519 parameters object unless `variant` is invalid.
-  static util::StatusOr<Ed25519Parameters> Create(Variant variant);
+  static absl::StatusOr<Ed25519Parameters> Create(Variant variant);
 
   Variant GetVariant() const { return variant_; }
 

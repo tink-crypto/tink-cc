@@ -50,7 +50,7 @@ EcdsaParameters::Builder& EcdsaParameters::Builder::SetVariant(
   return *this;
 }
 
-util::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
+absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   if (!curve_type_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "CurveType is not set.");

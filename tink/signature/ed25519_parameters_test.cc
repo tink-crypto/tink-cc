@@ -56,7 +56,7 @@ INSTANTIATE_TEST_SUITE_P(Ed25519ParametersTestSuite, Ed25519ParametersTest,
 TEST_P(Ed25519ParametersTest, Create) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -73,7 +73,7 @@ TEST(Ed25519ParametersTest, CreateWithInvalidVariantFails) {
 }
 
 TEST(Ed25519ParametersTest, CopyConstructor) {
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -84,7 +84,7 @@ TEST(Ed25519ParametersTest, CopyConstructor) {
 }
 
 TEST(Ed25519ParametersTest, CopyAssignment) {
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -97,11 +97,11 @@ TEST(Ed25519ParametersTest, CopyAssignment) {
 TEST_P(Ed25519ParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<Ed25519Parameters> other_parameters =
+  absl::StatusOr<Ed25519Parameters> other_parameters =
       Ed25519Parameters::Create(test_case.variant);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -112,11 +112,11 @@ TEST_P(Ed25519ParametersTest, ParametersEquals) {
 }
 
 TEST(Ed25519ParametersTest, VariantNotEqual) {
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<Ed25519Parameters> other_parameters =
+  absl::StatusOr<Ed25519Parameters> other_parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -125,7 +125,7 @@ TEST(Ed25519ParametersTest, VariantNotEqual) {
 }
 
 TEST(Ed25519ParametersTest, Clone) {
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 

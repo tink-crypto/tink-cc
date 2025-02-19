@@ -40,7 +40,7 @@ class EcdsaPrivateKey : public SignaturePrivateKey {
   EcdsaPrivateKey(EcdsaPrivateKey&& other) = default;
   EcdsaPrivateKey& operator=(EcdsaPrivateKey&& other) = default;
 
-  static util::StatusOr<EcdsaPrivateKey> Create(
+  static absl::StatusOr<EcdsaPrivateKey> Create(
       const EcdsaPublicKey& public_key,
       const RestrictedBigInteger& private_key_value,
       PartialKeyAccessToken token);

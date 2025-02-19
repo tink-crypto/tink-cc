@@ -31,37 +31,33 @@ namespace tink {
 
 // Serializes a keyset into a binary string in "ProtoKeysetFormat".
 // This function can serialize both keyset with or without secret key material.
-crypto::tink::util::StatusOr<util::SecretData>
-SerializeKeysetToProtoKeysetFormat(const KeysetHandle& keyset_handle,
-                                   SecretKeyAccessToken token);
+absl::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
+    const KeysetHandle& keyset_handle, SecretKeyAccessToken token);
 
 // Parses a keyset from a binary string in "ProtoKeysetFormat".
 // This function can parse both keyset with or without secret key material.
-crypto::tink::util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
+absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     absl::string_view serialized_keyset, SecretKeyAccessToken token);
 
 // Serializes a keyset into a binary string in "ProtoKeysetFormat".
 // This function will fail if the keyset contains secret key material.
-crypto::tink::util::StatusOr<std::string>
-SerializeKeysetWithoutSecretToProtoKeysetFormat(
+absl::StatusOr<std::string> SerializeKeysetWithoutSecretToProtoKeysetFormat(
     const KeysetHandle& keyset_handle);
 
 // Parses a keyset from a binary string in "ProtoKeysetFormat".
 // This function will fail if the keyset contains secret key material.
-crypto::tink::util::StatusOr<KeysetHandle>
-ParseKeysetWithoutSecretFromProtoKeysetFormat(
+absl::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(
     absl::string_view serialized_keyset);
 
 // Serializes `keyset_handle` into a ciphertext encrypted with
 // `keyset_encryption_aead` and `associated_data`.
-crypto::tink::util::StatusOr<std::string>
-SerializeKeysetToEncryptedKeysetFormat(const KeysetHandle& keyset_handle,
-                                       const Aead& keyset_encryption_aead,
-                                       absl::string_view associated_data);
+absl::StatusOr<std::string> SerializeKeysetToEncryptedKeysetFormat(
+    const KeysetHandle& keyset_handle, const Aead& keyset_encryption_aead,
+    absl::string_view associated_data);
 
 // Parses `encrypted_keyset` into a keyset handle by decrypting with
 // `keyset_encryption_aead` and `associated_data`.
-crypto::tink::util::StatusOr<KeysetHandle> ParseKeysetFromEncryptedKeysetFormat(
+absl::StatusOr<KeysetHandle> ParseKeysetFromEncryptedKeysetFormat(
     absl::string_view encrypted_keyset, const Aead& keyset_encryption_aead,
     absl::string_view associated_data);
 

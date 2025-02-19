@@ -28,12 +28,12 @@ namespace crypto {
 namespace tink {
 
 // Serialize `parameters` into Tink's binary format based on protobufs.
-crypto::tink::util::StatusOr<std::string> SerializeParametersToProtoFormat(
+absl::StatusOr<std::string> SerializeParametersToProtoFormat(
     const Parameters& parameters);
 
 // Parse `serialized_parameters` from Tink's binary format based on protobufs.
-crypto::tink::util::StatusOr<std::unique_ptr<Parameters>>
-ParseParametersFromProtoFormat(absl::string_view serialized_parameters);
+absl::StatusOr<std::unique_ptr<Parameters>> ParseParametersFromProtoFormat(
+    absl::string_view serialized_parameters);
 
 }  // namespace tink
 }  // namespace crypto

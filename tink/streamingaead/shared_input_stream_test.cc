@@ -60,10 +60,10 @@ std::unique_ptr<InputStream> GetInputStream(absl::string_view contents) {
 
 // Attempts to read 'count' bytes from 'input_stream', and writes the read
 // bytes to 'output'.
-util::Status ReadFromStream(InputStream* input_stream, int count,
+absl::Status ReadFromStream(InputStream* input_stream, int count,
                             std::string* output) {
   if (input_stream == nullptr || output == nullptr || count < 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Illegal read from a stream");
   }
   const void* buffer;
@@ -73,7 +73,7 @@ util::Status ReadFromStream(InputStream* input_stream, int count,
     auto next_result = input_stream->Next(&buffer);
     if (next_result.status().code() == absl::StatusCode::kOutOfRange) {
       // End of stream.
-      return util::OkStatus();
+      return absl::OkStatus();
     }
     if (!next_result.ok()) return next_result.status();
     auto read_bytes = next_result.value();
@@ -85,7 +85,7 @@ util::Status ReadFromStream(InputStream* input_stream, int count,
       if (bytes_to_read == 0) input_stream->BackUp(read_bytes - used_bytes);
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 TEST(SharedInputStreamTest, BasicOperations) {

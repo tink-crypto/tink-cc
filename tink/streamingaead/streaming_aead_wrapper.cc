@@ -51,7 +51,7 @@ Status Validate(PrimitiveSet<StreamingAead>* primitives) {
     return Status(absl::StatusCode::kInvalidArgument,
                   "primitive set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class StreamingAeadSetWrapper: public StreamingAead {

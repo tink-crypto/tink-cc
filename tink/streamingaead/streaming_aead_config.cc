@@ -31,7 +31,7 @@ namespace crypto {
 namespace tink {
 
 // static
-util::Status StreamingAeadConfig::Register() {
+absl::Status StreamingAeadConfig::Register() {
   // Register primitive wrapper.
   auto status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<StreamingAeadWrapper>());
@@ -39,7 +39,7 @@ util::Status StreamingAeadConfig::Register() {
   // Currently there are no streaming encryption key managers which only use
   // FIPS-validated implementations, therefore none will be registered in
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   status = Registry::RegisterKeyTypeManager(
@@ -64,7 +64,7 @@ util::Status StreamingAeadConfig::Register() {
     return status;
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

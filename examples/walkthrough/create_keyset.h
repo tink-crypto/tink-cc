@@ -24,7 +24,7 @@
 namespace tink_walkthrough {
 
 // Creates a keyset with a single AES128-GCM key and return a handle to it.
-crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>>
+absl::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>>
 CreateAead128GcmKeyset();
 
 }  // namespace tink_walkthrough

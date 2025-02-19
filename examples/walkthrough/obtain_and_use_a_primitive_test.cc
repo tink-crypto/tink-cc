@@ -56,12 +56,12 @@ using ::crypto::tink::util::StatusOr;
 
 TEST(LoadKeysetTest, EncryptDecrypt) {
   ASSERT_THAT(crypto::tink::AeadConfig::Register(), IsOk());
-  StatusOr<std::unique_ptr<KeysetHandle>> master_key_keyset =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> master_key_keyset =
       LoadKeyset(kSerializedKeyset);
   ASSERT_THAT(master_key_keyset, IsOk());
   constexpr absl::string_view kPlaintext = "Some data";
   constexpr absl::string_view kAssociatedData = "Some associated data";
-  StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       AeadEncrypt(**master_key_keyset, kPlaintext, kAssociatedData);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT(AeadDecrypt(**master_key_keyset, *ciphertext, kAssociatedData),

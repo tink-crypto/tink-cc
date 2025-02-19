@@ -41,10 +41,10 @@ using ::crypto::tink::util::StatusOr;
 //    tinkey create-key --key-template AES256_GCM \
 //      --out-format json --out keyset.json
 //
-StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>> LoadKeyset(
+absl::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>> LoadKeyset(
     absl::string_view serialized_keyset) {
   // To load a serialized keyset we need a JSON keyset reader.
-  StatusOr<std::unique_ptr<crypto::tink::KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<crypto::tink::KeysetReader>> reader =
       crypto::tink::JsonKeysetReader::New(serialized_keyset);
   if (!reader.ok()) return reader.status();
   // Parse and obtain the keyset using the reader.

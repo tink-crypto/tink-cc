@@ -38,9 +38,9 @@ bool FakeKmsClient::DoesSupport(absl::string_view key_uri) const {
   return absl::StartsWith(key_uri, "fake://");
 }
 
-StatusOr<std::unique_ptr<Aead>> FakeKmsClient::GetAead(
+absl::StatusOr<std::unique_ptr<Aead>> FakeKmsClient::GetAead(
     absl::string_view key_uri) const {
-  StatusOr<std::unique_ptr<KeysetHandle>> master_key_keyset =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> master_key_keyset =
       LoadKeyset(serialized_master_key_keyset_);
   if (!master_key_keyset.ok()) return master_key_keyset.status();
   return (*master_key_keyset)
@@ -51,7 +51,7 @@ bool AlwaysFailingFakeKmsClient::DoesSupport(absl::string_view key_uri) const {
   return absl::StartsWith(key_uri, "failing://");
 }
 
-StatusOr<std::unique_ptr<Aead>> AlwaysFailingFakeKmsClient::GetAead(
+absl::StatusOr<std::unique_ptr<Aead>> AlwaysFailingFakeKmsClient::GetAead(
     absl::string_view key_uri) const {
   return Status(absl::StatusCode::kUnimplemented, "Unimplemented");
 }

@@ -92,11 +92,11 @@ class WriteKeysetTest : public testing::Test {
 
 TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWithNullOutputStream) {
   auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
-  StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead("fake://some_key");
   ASSERT_THAT(keyset_encryption_aead, IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle_to_encrypt =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle_to_encrypt =
       LoadKeyset(kSerializedKeysetToEncrypt);
   ASSERT_THAT(keyset_handle_to_encrypt, IsOk());
 
@@ -108,11 +108,11 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWithNullOutputStream) {
 
 TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWhenStreamFails) {
   auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
-  StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead("fake://some_key");
   ASSERT_THAT(keyset_encryption_aead, IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle_to_encrypt =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle_to_encrypt =
       LoadKeyset(kSerializedKeysetToEncrypt);
   ASSERT_THAT(keyset_handle_to_encrypt, IsOk());
 
@@ -125,11 +125,11 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetFailsWhenStreamFails) {
 
 TEST_F(WriteKeysetTest, WriteEncryptedKeysetWithValidInputs) {
   auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
-  StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead("fake://some_key");
   ASSERT_THAT(keyset_encryption_aead, IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle_to_encrypt =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle_to_encrypt =
       LoadKeyset(kSerializedKeysetToEncrypt);
   ASSERT_THAT(keyset_handle_to_encrypt, IsOk());
 
@@ -139,7 +139,7 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetWithValidInputs) {
       WriteEncryptedKeyset(**keyset_handle_to_encrypt, std::move(output_stream),
                            **keyset_encryption_aead),
       IsOk());
-  StatusOr<std::unique_ptr<Aead>> expected_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> expected_aead =
       (*keyset_handle_to_encrypt)
           ->GetPrimitive<crypto::tink::Aead>(
               crypto::tink::ConfigGlobalRegistry());
@@ -147,16 +147,16 @@ TEST_F(WriteKeysetTest, WriteEncryptedKeysetWithValidInputs) {
   constexpr absl::string_view associated_data = "Some associated data";
   constexpr absl::string_view plaintext = "Some plaintext";
 
-  StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*expected_aead)->Encrypt(plaintext, associated_data);
   ASSERT_THAT(ciphertext, IsOk());
 
   // Make sure the encrypted keyset was written correctly by loading it and
   // trying to decrypt ciphertext.
-  StatusOr<std::unique_ptr<KeysetHandle>> loaded_keyset =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> loaded_keyset =
       LoadKeyset(buffer.str(), **keyset_encryption_aead);
   ASSERT_THAT(loaded_keyset, IsOk());
-  StatusOr<std::unique_ptr<Aead>> loaded_keyset_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> loaded_keyset_aead =
       (*loaded_keyset)
           ->GetPrimitive<crypto::tink::Aead>(
               crypto::tink::ConfigGlobalRegistry());

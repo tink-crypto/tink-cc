@@ -27,13 +27,13 @@ namespace tink_walkthrough {
 
 // AEAD encrypts `plaintext` with `associated_data` and the primary key in
 // `keyset_handle`.
-crypto::tink::util::StatusOr<std::string> AeadEncrypt(
+absl::StatusOr<std::string> AeadEncrypt(
     const crypto::tink::KeysetHandle& keyset_handle,
     absl::string_view palintext, absl::string_view associated_data);
 
 // AEAD decrypts `ciphertext` with `associated_data` and the correct key in
 // `keyset_handle`.
-crypto::tink::util::StatusOr<std::string> AeadDecrypt(
+absl::StatusOr<std::string> AeadDecrypt(
     const crypto::tink::KeysetHandle& keyset_handle,
     absl::string_view ciphertext, absl::string_view associated_data);
 

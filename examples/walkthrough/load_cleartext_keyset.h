@@ -26,8 +26,8 @@ namespace tink_walkthrough {
 
 // Loads a JSON-serialized unencrypted keyset `serialized_keyset` and returns a
 // KeysetHandle.
-crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>>
-LoadKeyset(absl::string_view serialized_keyset);
+absl::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>> LoadKeyset(
+    absl::string_view serialized_keyset);
 
 }  // namespace tink_walkthrough
 

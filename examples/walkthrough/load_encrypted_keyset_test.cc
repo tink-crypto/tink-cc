@@ -98,11 +98,11 @@ class LoadKeysetTest : public Test {
 
 TEST_F(LoadKeysetTest, LoadKeysetFailsWhenInvalidKeyset) {
   auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
-  StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead(kFakeKmsKeyUri);
   ASSERT_THAT(keyset_encryption_aead, IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> expected_keyset =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> expected_keyset =
       LoadKeyset("invalid", **keyset_encryption_aead);
   EXPECT_THAT(expected_keyset.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -110,22 +110,22 @@ TEST_F(LoadKeysetTest, LoadKeysetFailsWhenInvalidKeyset) {
 
 TEST_F(LoadKeysetTest, LoadKeysetSucceeds) {
   auto fake_kms = absl::make_unique<FakeKmsClient>(kSerializedMasterKeyKeyset);
-  StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       fake_kms->GetAead(kFakeKmsKeyUri);
   ASSERT_THAT(keyset_encryption_aead, IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       LoadKeyset(kEncryptedKeyset, **keyset_encryption_aead);
   ASSERT_THAT(handle, IsOk());
-  StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<crypto::tink::Aead>(
           crypto::tink::ConfigGlobalRegistry());
   ASSERT_THAT(aead, IsOk());
 
-  StatusOr<std::unique_ptr<KeysetHandle>> expected_keyset =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> expected_keyset =
       LoadKeyset(kSerializedKeysetToEncrypt);
   ASSERT_THAT(expected_keyset, IsOk());
-  StatusOr<std::unique_ptr<Aead>> expected_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> expected_aead =
       (*expected_keyset)
           ->GetPrimitive<crypto::tink::Aead>(
               crypto::tink::ConfigGlobalRegistry());
@@ -134,7 +134,7 @@ TEST_F(LoadKeysetTest, LoadKeysetSucceeds) {
   std::string associated_data = "Some associated data";
   std::string plaintext = "Some plaintext";
 
-  StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*aead)->Encrypt(plaintext, associated_data);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*expected_aead)->Decrypt(*ciphertext, associated_data),

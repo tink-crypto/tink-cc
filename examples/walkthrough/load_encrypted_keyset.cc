@@ -48,11 +48,11 @@ using ::crypto::tink::util::StatusOr;
 //      --credentials gcp_credentials.json
 //  - Get the keyset encryption AEAD for the key URI with KmsClient::GetAead.
 //
-StatusOr<std::unique_ptr<KeysetHandle>> LoadKeyset(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> LoadKeyset(
     absl::string_view serialized_encrypted_keyset,
     const crypto::tink::Aead& keyset_encryption_aead) {
   // Use a JSON reader to read the encrypted keyset.
-  StatusOr<std::unique_ptr<crypto::tink::KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<crypto::tink::KeysetReader>> reader =
       crypto::tink::JsonKeysetReader::New(serialized_encrypted_keyset);
   if (!reader.ok()) return reader.status();
   // Decrypt using the KMS, parse the keyset and retuns a handle to it.

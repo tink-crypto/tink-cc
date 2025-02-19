@@ -36,7 +36,7 @@ class FakeKmsClient : public crypto::tink::KmsClient {
 
   bool DoesSupport(absl::string_view key_uri) const override;
 
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::Aead>> GetAead(
+  absl::StatusOr<std::unique_ptr<crypto::tink::Aead>> GetAead(
       absl::string_view key_uri) const override;
 
  private:
@@ -48,7 +48,7 @@ class AlwaysFailingFakeKmsClient : public crypto::tink::KmsClient {
  public:
   bool DoesSupport(absl::string_view key_uri) const override;
 
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::Aead>> GetAead(
+  absl::StatusOr<std::unique_ptr<crypto::tink::Aead>> GetAead(
       absl::string_view key_uri) const override;
 };
 

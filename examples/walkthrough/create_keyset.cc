@@ -35,7 +35,7 @@ using ::google::crypto::tink::KeyTemplate;
 //
 // Prerequisites for this example:
 //  - Register AEAD implementations of Tink.
-StatusOr<std::unique_ptr<KeysetHandle>> CreateAead128GcmKeyset() {
+absl::StatusOr<std::unique_ptr<KeysetHandle>> CreateAead128GcmKeyset() {
   // Tink provides pre-baked templates. For example, we generate a key template
   // for AES128-GCM.
   KeyTemplate key_template = crypto::tink::AeadKeyTemplates::Aes128Gcm();

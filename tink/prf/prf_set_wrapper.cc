@@ -113,29 +113,29 @@ class PrfSetPrimitiveWrapper : public PrfSet {
   std::map<uint32_t, Prf*> prfs_;
 };
 
-util::Status Validate(PrimitiveSet<Prf>* prf_set) {
+absl::Status Validate(PrimitiveSet<Prf>* prf_set) {
   if (prf_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "prf_set must be non-NULL");
   }
   if (prf_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "prf_set has no primary");
   }
   for (auto prf : prf_set->get_all()) {
     if (prf->get_output_prefix_type() != OutputPrefixType::RAW) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "PrfSet should only be used with prefix type RAW");
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
 
 util::StatusOr<std::unique_ptr<PrfSet>> PrfSetWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<Prf>> prf_set) const {
-  util::Status status = Validate(prf_set.get());
+  absl::Status status = Validate(prf_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

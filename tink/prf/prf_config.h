@@ -31,7 +31,7 @@ class PrfConfig {
  public:
   // Registers Prf key managers for all Prf key types from the current Tink
   // release.
-  static crypto::tink::util::Status Register();
+  static absl::Status Register();
 };
 
 }  // namespace tink

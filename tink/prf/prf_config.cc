@@ -30,7 +30,7 @@
 namespace crypto {
 namespace tink {
 
-crypto::tink::util::Status PrfConfig::Register() {
+absl::Status PrfConfig::Register() {
   // Register primitive wrapper.
   auto status =
       Registry::RegisterPrimitiveWrapper(absl::make_unique<PrfSetWrapper>());
@@ -46,7 +46,7 @@ crypto::tink::util::Status PrfConfig::Register() {
 
   // When using FIPS only mode do not register other key managers.
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   status = Registry::RegisterKeyTypeManager(
@@ -76,7 +76,7 @@ crypto::tink::util::Status PrfConfig::Register() {
     return status;
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

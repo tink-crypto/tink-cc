@@ -188,7 +188,7 @@ class AlwaysFailingPrf : public Prf {
 
   util::StatusOr<std::string> Compute(absl::string_view input,
                                       size_t output_length) const override {
-    return util::Status(absl::StatusCode::kOutOfRange, "AlwaysFailingPrf");
+    return absl::Status(absl::StatusCode::kOutOfRange, "AlwaysFailingPrf");
   }
 };
 

@@ -16,7 +16,12 @@
 
 #include "tink/aead/internal/legacy_kms_aead_proto_serialization_impl.h"
 
+#include <cstdint>
+#include <string>
+
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/legacy_kms_aead_key.h"
@@ -29,24 +34,21 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/kms_aead.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::KmsAeadKey;
-using ::google::crypto::tink::KmsAeadKeyFormat;
-using ::google::crypto::tink::OutputPrefixType;
 
 using LegacyKmsAeadProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -60,100 +62,133 @@ using LegacyKmsAeadProtoKeySerializerImpl =
     internal::KeySerializerImpl<LegacyKmsAeadKey,
                                 internal::ProtoKeySerialization>;
 
+struct KmsAeadKeyFormatStruct {
+  std::string key_uri;
+
+  static ProtoParser<KmsAeadKeyFormatStruct> CreateParser() {
+    return ProtoParserBuilder<KmsAeadKeyFormatStruct>()
+        .AddBytesStringField(1, &KmsAeadKeyFormatStruct::key_uri)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<KmsAeadKeyFormatStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<KmsAeadKeyFormatStruct>> parser(
+        CreateParser());
+    return *parser;
+  }
+};
+
+struct KmsAeadKeyStruct {
+  uint32_t version;
+  KmsAeadKeyFormatStruct params;
+
+  static const ProtoParser<KmsAeadKeyStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<KmsAeadKeyStruct>> parser(
+        ProtoParserBuilder<KmsAeadKeyStruct>()
+            .AddUint32Field(1, &KmsAeadKeyStruct::version)
+            .AddMessageField(2, &KmsAeadKeyStruct::params,
+                             KmsAeadKeyFormatStruct::CreateParser())
+            .BuildOrDie());
+    return *parser;
+  }
+};
+
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.KmsAeadKey";
 
-util::StatusOr<LegacyKmsAeadParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<LegacyKmsAeadParameters::Variant> ToVariant(
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return LegacyKmsAeadParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return LegacyKmsAeadParameters::Variant::kTink;
     default:
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
+      return absl::InvalidArgumentError(
           "Could not determine LegacyKmsAeadParameters::Variant");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     LegacyKmsAeadParameters::Variant variant) {
   switch (variant) {
     case LegacyKmsAeadParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case LegacyKmsAeadParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<LegacyKmsAeadParameters> ParseParameters(
+absl::StatusOr<LegacyKmsAeadParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing LegacyKmsAeadParameters.");
+  const KeyTemplateStruct key_template = serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing LegacyKmsAeadParameters.");
   }
-
-  KmsAeadKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse KmsAeadKeyFormat proto");
+  absl::StatusOr<KmsAeadKeyFormatStruct> key_format =
+      KmsAeadKeyFormatStruct::GetParser().Parse(key_template.value);
+  if (!key_format.ok()) {
+    return key_format.status();
   }
-
-  util::StatusOr<LegacyKmsAeadParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
+  absl::StatusOr<LegacyKmsAeadParameters::Variant> variant =
+      ToVariant(key_template.output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
-
-  return LegacyKmsAeadParameters::Create(proto_key_format.key_uri(), *variant);
+  return LegacyKmsAeadParameters::Create(key_format->key_uri, *variant);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const LegacyKmsAeadParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  KmsAeadKeyFormat proto_key_format;
-  proto_key_format.set_key_uri(parameters.GetKeyUri());
+  KmsAeadKeyFormatStruct key_format;
+  key_format.key_uri = parameters.GetKeyUri();
+
+  absl::StatusOr<std::string> serialized_key_format =
+      KmsAeadKeyFormatStruct::GetParser().SerializeIntoString(key_format);
+  if (!serialized_key_format.ok()) {
+    return serialized_key_format.status();
+  }
 
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
+      kTypeUrl, *output_prefix_type, *serialized_key_format);
 }
 
-util::StatusOr<LegacyKmsAeadKey> ParseKey(
+absl::StatusOr<LegacyKmsAeadKey> ParseKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing LegacyKmsAeadKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing LegacyKmsAeadKey.");
   }
-  KmsAeadKey proto_key;
-  if (!proto_key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
-          GetInsecureSecretKeyAccessInternal()))) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse KmsAeadKey proto");
+  absl::StatusOr<KmsAeadKeyStruct> proto_key =
+      KmsAeadKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(
+              GetInsecureSecretKeyAccessInternal()));
+  if (!proto_key.ok()) {
+    return proto_key.status();
   }
-  if (proto_key.version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+  if (proto_key->version != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<LegacyKmsAeadParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+  absl::StatusOr<LegacyKmsAeadParameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<LegacyKmsAeadParameters> parameters =
-      LegacyKmsAeadParameters::Create(proto_key.params().key_uri(), *variant);
+  absl::StatusOr<LegacyKmsAeadParameters> parameters =
+      LegacyKmsAeadParameters::Create(proto_key->params.key_uri, *variant);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -161,25 +196,29 @@ util::StatusOr<LegacyKmsAeadKey> ParseKey(
   return LegacyKmsAeadKey::Create(*parameters, serialization.IdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     const LegacyKmsAeadKey& key, absl::optional<SecretKeyAccessToken> token) {
-  KmsAeadKeyFormat proto_key_format;
-  proto_key_format.set_key_uri(key.GetParameters().GetKeyUri());
-  KmsAeadKey proto_key;
-  proto_key.set_version(0);
-  *proto_key.mutable_params() = proto_key_format;
+  KmsAeadKeyStruct proto_key;
+  proto_key.version = 0;
+  proto_key.params = {/*key_uri=*/key.GetParameters().GetKeyUri()};
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output = RestrictedData(
-      proto_key.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
+  absl::StatusOr<SecretData> serialized_key =
+      KmsAeadKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
+  if (!serialized_key.ok()) {
+    return serialized_key.status();
+  }
+
+  RestrictedData restricted_output =
+      RestrictedData(*serialized_key, GetInsecureSecretKeyAccessInternal());
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::REMOTE,
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kRemote,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -209,9 +248,9 @@ LegacyKmsAeadProtoKeySerializerImpl* LegacyKmsAeadProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterLegacyKmsAeadProtoSerializationWithMutableRegistry(
+absl::Status RegisterLegacyKmsAeadProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(LegacyKmsAeadProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -231,9 +270,9 @@ util::Status RegisterLegacyKmsAeadProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(LegacyKmsAeadProtoKeySerializer());
 }
 
-util::Status RegisterLegacyKmsAeadProtoSerializationWithRegistryBuilder(
+absl::Status RegisterLegacyKmsAeadProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(LegacyKmsAeadProtoParametersParser());
   if (!status.ok()) {
     return status;

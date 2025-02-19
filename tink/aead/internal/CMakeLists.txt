@@ -750,7 +750,9 @@ tink_cc_library(
     legacy_kms_aead_proto_serialization_impl.cc
     legacy_kms_aead_proto_serialization_impl.h
   DEPS
+    absl::no_destructor
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::restricted_data
@@ -765,12 +767,10 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::kms_aead_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

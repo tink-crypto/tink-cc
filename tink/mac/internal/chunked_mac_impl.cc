@@ -48,14 +48,14 @@ using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 
-util::Status ChunkedMacComputationImpl::Update(absl::string_view data) {
+absl::Status ChunkedMacComputationImpl::Update(absl::string_view data) {
   if (!status_.ok()) return status_;
   return stateful_mac_->Update(data);
 }
 
 util::StatusOr<std::string> ChunkedMacComputationImpl::ComputeMac() {
   if (!status_.ok()) return status_;
-  status_ = util::Status(absl::StatusCode::kFailedPrecondition,
+  status_ = absl::Status(absl::StatusCode::kFailedPrecondition,
                          "MAC computation already finalized.");
   util::StatusOr<SecretData> result_tag =
       stateful_mac_->FinalizeAsSecretData();
@@ -68,14 +68,14 @@ util::StatusOr<std::string> ChunkedMacComputationImpl::ComputeMac() {
   return std::string(SecretDataAsStringView(*result_tag));
 }
 
-util::Status ChunkedMacVerificationImpl::Update(absl::string_view data) {
+absl::Status ChunkedMacVerificationImpl::Update(absl::string_view data) {
   if (!status_.ok()) return status_;
   return stateful_mac_->Update(data);
 }
 
-util::Status ChunkedMacVerificationImpl::VerifyMac() {
+absl::Status ChunkedMacVerificationImpl::VerifyMac() {
   if (!status_.ok()) return status_;
-  status_ = util::Status(absl::StatusCode::kFailedPrecondition,
+  status_ = absl::Status(absl::StatusCode::kFailedPrecondition,
                          "MAC verification already finalized.");
   util::StatusOr<SecretData> computed_mac =
       stateful_mac_->FinalizeAsSecretData();
@@ -83,15 +83,15 @@ util::Status ChunkedMacVerificationImpl::VerifyMac() {
     return computed_mac.status();
   }
   if (computed_mac->size() != tag_.size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Verification failed.");
   }
   if (!SafeCryptoMemEquals(computed_mac->data(), tag_.data(),
                            computed_mac->size())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Verification failed.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<std::unique_ptr<ChunkedMacComputation>>
@@ -117,7 +117,7 @@ ChunkedMacImpl::CreateVerification(absl::string_view tag) const {
 util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
     const AesCmacKeyProto& key) {
   if (!key.has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid key: missing parameters.");
   }
   util::SecretData secret_key_data =
@@ -131,7 +131,7 @@ util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
 util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
     const HmacKeyProto& key) {
   if (!key.has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid key: missing paramaters.");
   }
   subtle::HashType hash_type = util::Enums::ProtoToSubtle(key.params().hash());

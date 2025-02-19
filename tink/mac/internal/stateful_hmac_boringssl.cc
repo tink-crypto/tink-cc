@@ -55,10 +55,10 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
     // The key manager is responsible to security policies.
     // The checks here just ensure the preconditions of the primitive.
     // If this fails then something is wrong with the key manager.
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid tag size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid tag size");
   }
   if (key_value.size() < kMinKeySize) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
   }
 
   // Create and initialize the HMAC context
@@ -67,7 +67,7 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
   if (!CallWithCoreDumpProtection([&]() {
         return HMAC_Init(ctx.get(), key_value.data(), key_value.size(), *md);
       })) {
-    return util::Status(absl::StatusCode::kFailedPrecondition,
+    return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "HMAC initialization failed");
   }
 
@@ -75,7 +75,7 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
       new StatefulHmacBoringSsl(tag_size, std::move(ctx)));
 }
 
-util::Status StatefulHmacBoringSsl::Update(absl::string_view data) {
+absl::Status StatefulHmacBoringSsl::Update(absl::string_view data) {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
@@ -84,10 +84,10 @@ util::Status StatefulHmacBoringSsl::Update(absl::string_view data) {
                 reinterpret_cast<const uint8_t*>(data.data()), data.size());
   });
   if (!hmac_update_result) {
-    return util::Status(absl::StatusCode::kFailedPrecondition,
+    return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "Inputs to HMAC Update invalid");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<SecretData> StatefulHmacBoringSsl::FinalizeAsSecretData() {
@@ -97,7 +97,7 @@ util::StatusOr<SecretData> StatefulHmacBoringSsl::FinalizeAsSecretData() {
   if (!CallWithCoreDumpProtection([&]() {
         return HMAC_Final(hmac_context_.get(), buf.data(), &out_len);
       })) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "HMAC finalization failed");
   }
   return util::internal::AsSecretData(std::move(buf).substr(0, tag_size_));

@@ -29,8 +29,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddMacV0(Configuration& config) {
-  util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddMacV0(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<MacWrapper>(), config);
   if (!status.ok()) {
     return status;

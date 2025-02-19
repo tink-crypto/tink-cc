@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended MAC primitive wrappers and key managers to `config`, used to
 // generate primitives.
-util::Status AddMacV0(Configuration& config);
+absl::Status AddMacV0(Configuration& config);
 
 }  // namespace internal
 }  // namespace tink

@@ -43,7 +43,7 @@ class StatefulHmacBoringSsl : public StatefulMac {
   static util::StatusOr<std::unique_ptr<StatefulMac>> New(
       subtle::HashType hash_type, uint32_t tag_size,
       const util::SecretData& key_value);
-  util::Status Update(absl::string_view data) override;
+  absl::Status Update(absl::string_view data) override;
   util::StatusOr<util::SecretData> FinalizeAsSecretData() override;
 
  private:

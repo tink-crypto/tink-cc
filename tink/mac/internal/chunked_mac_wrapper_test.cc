@@ -56,9 +56,9 @@ class FakeStatefulMac : public StatefulMac {
  public:
   explicit FakeStatefulMac(absl::string_view name) : name_(name) {}
 
-  util::Status Update(absl::string_view data) override {
+  absl::Status Update(absl::string_view data) override {
     absl::StrAppend(&buffer_, data);
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   util::StatusOr<SecretData> FinalizeAsSecretData() override {
@@ -100,7 +100,7 @@ std::unique_ptr<ChunkedMac> CreateFakeChunkedMac(absl::string_view name) {
       absl::make_unique<FakeStatefulMacFactory>(name));
 }
 
-util::Status AddPrimitiveToSet(uint32_t key_id, bool set_primary,
+absl::Status AddPrimitiveToSet(uint32_t key_id, bool set_primary,
                                OutputPrefixType output_prefix_type,
                                std::unique_ptr<ChunkedMac> mac,
                                KeysetInfo& keyset_info,
@@ -117,12 +117,12 @@ util::Status AddPrimitiveToSet(uint32_t key_id, bool set_primary,
     return entry.status();
   }
   if (set_primary) {
-    util::Status set_primary_status = mac_set.set_primary(*entry);
+    absl::Status set_primary_status = mac_set.set_primary(*entry);
     if (!set_primary_status.ok()) {
       return set_primary_status;
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 TEST(ChunkedMacWrapperTest, ComputeMac) {

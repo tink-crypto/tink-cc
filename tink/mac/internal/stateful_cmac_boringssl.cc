@@ -52,7 +52,7 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
     return cipher.status();
   }
   if (tag_size > kMaxTagSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid tag size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid tag size");
   }
 
   // Create and initialize the CMAC context
@@ -63,7 +63,7 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
         return CMAC_Init(ctx.get(), key_value.data(), key_value.size(), *cipher,
                          nullptr /* engine */);
       })) {
-    return util::Status(absl::StatusCode::kFailedPrecondition,
+    return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "CMAC initialization failed");
   }
 
@@ -71,7 +71,7 @@ util::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
       absl::WrapUnique(new StatefulCmacBoringSsl(tag_size, std::move(ctx)))};
 }
 
-util::Status StatefulCmacBoringSsl::Update(absl::string_view data) {
+absl::Status StatefulCmacBoringSsl::Update(absl::string_view data) {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
@@ -82,10 +82,10 @@ util::Status StatefulCmacBoringSsl::Update(absl::string_view data) {
                        data.size());
   });
   if (!update_result) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Inputs to CMAC Update invalid");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<SecretData> StatefulCmacBoringSsl::FinalizeAsSecretData() {
@@ -95,7 +95,7 @@ util::StatusOr<SecretData> StatefulCmacBoringSsl::FinalizeAsSecretData() {
   if (!CallWithCoreDumpProtection([&]() {
         return CMAC_Final(cmac_context_.get(), buf.data(), &out_len);
       })) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "CMAC finalization failed");
   }
   return util::internal::AsSecretData(std::move(buf).substr(0, tag_size_));

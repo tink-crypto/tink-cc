@@ -38,13 +38,13 @@ class ChunkedMacComputationImpl : public ChunkedMacComputation {
   explicit ChunkedMacComputationImpl(std::unique_ptr<StatefulMac> stateful_mac)
       : stateful_mac_(std::move(stateful_mac)) {}
 
-  util::Status Update(absl::string_view data) override;
+  absl::Status Update(absl::string_view data) override;
 
   util::StatusOr<std::string> ComputeMac() override;
 
  private:
   const std::unique_ptr<StatefulMac> stateful_mac_;
-  util::Status status_ = util::OkStatus();
+  absl::Status status_ = absl::OkStatus();
 };
 
 class ChunkedMacVerificationImpl : public ChunkedMacVerification {
@@ -53,14 +53,14 @@ class ChunkedMacVerificationImpl : public ChunkedMacVerification {
                                       absl::string_view tag)
       : stateful_mac_(std::move(stateful_mac)), tag_(tag) {}
 
-  util::Status Update(absl::string_view data) override;
+  absl::Status Update(absl::string_view data) override;
 
-  util::Status VerifyMac() override;
+  absl::Status VerifyMac() override;
 
  private:
   const std::unique_ptr<StatefulMac> stateful_mac_;
   const std::string tag_;
-  util::Status status_ = util::OkStatus();
+  absl::Status status_ = absl::OkStatus();
 };
 
 class ChunkedMacImpl : public ChunkedMac {

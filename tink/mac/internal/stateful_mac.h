@@ -45,7 +45,7 @@ class StatefulMac {
   StatefulMac() = default;
   virtual ~StatefulMac() = default;
 
-  virtual util::Status Update(absl::string_view data) = 0;
+  virtual absl::Status Update(absl::string_view data) = 0;
 
   virtual util::StatusOr<util::SecretData> FinalizeAsSecretData() = 0;
 };

@@ -49,7 +49,7 @@ class ChunkedMacComputationSetWrapper : public ChunkedMacComputation {
         tag_prefix_(tag_prefix),
         output_prefix_type_(output_prefix_type) {}
 
-  util::Status Update(absl::string_view data) override;
+  absl::Status Update(absl::string_view data) override;
 
   util::StatusOr<std::string> ComputeMac() override;
 
@@ -59,13 +59,13 @@ class ChunkedMacComputationSetWrapper : public ChunkedMacComputation {
   const OutputPrefixType output_prefix_type_;
 };
 
-util::Status ChunkedMacComputationSetWrapper::Update(absl::string_view data) {
+absl::Status ChunkedMacComputationSetWrapper::Update(absl::string_view data) {
   return computation_->Update(data);
 }
 
 util::StatusOr<std::string> ChunkedMacComputationSetWrapper::ComputeMac() {
   if (output_prefix_type_ == OutputPrefixType::LEGACY) {
-    util::Status append_status = computation_->Update(std::string("\x00", 1));
+    absl::Status append_status = computation_->Update(std::string("\x00", 1));
     if (!append_status.ok()) return append_status;
   }
   util::StatusOr<std::string> raw_tag = computation_->ComputeMac();
@@ -81,23 +81,23 @@ class ChunkedMacVerificationWithPrefixType : public ChunkedMacVerification {
       : verification_(std::move(verification)),
         output_prefix_type_(output_prefix_type) {}
 
-  util::Status Update(absl::string_view data) override;
+  absl::Status Update(absl::string_view data) override;
 
-  util::Status VerifyMac() override;
+  absl::Status VerifyMac() override;
 
  private:
   const std::unique_ptr<ChunkedMacVerification> verification_;
   const OutputPrefixType output_prefix_type_;
 };
 
-util::Status ChunkedMacVerificationWithPrefixType::Update(
+absl::Status ChunkedMacVerificationWithPrefixType::Update(
     absl::string_view data) {
   return verification_->Update(data);
 }
 
-util::Status ChunkedMacVerificationWithPrefixType::VerifyMac() {
+absl::Status ChunkedMacVerificationWithPrefixType::VerifyMac() {
   if (output_prefix_type_ == OutputPrefixType::LEGACY) {
-    util::Status append_status = verification_->Update(std::string("\x00", 1));
+    absl::Status append_status = verification_->Update(std::string("\x00", 1));
     if (!append_status.ok()) return append_status;
   }
   return verification_->VerifyMac();
@@ -111,9 +111,9 @@ class ChunkedMacVerificationSetWrapper : public ChunkedMacVerification {
           verifications)
       : verifications_(std::move(verifications)) {}
 
-  util::Status Update(absl::string_view data) override;
+  absl::Status Update(absl::string_view data) override;
 
-  util::Status VerifyMac() override;
+  absl::Status VerifyMac() override;
 
  private:
   const std::unique_ptr<
@@ -121,20 +121,20 @@ class ChunkedMacVerificationSetWrapper : public ChunkedMacVerification {
       verifications_;
 };
 
-util::Status ChunkedMacVerificationSetWrapper::Update(absl::string_view data) {
-  util::Status status =
-      util::Status(absl::StatusCode::kUnknown, "Update failed.");
+absl::Status ChunkedMacVerificationSetWrapper::Update(absl::string_view data) {
+  absl::Status status =
+      absl::Status(absl::StatusCode::kUnknown, "Update failed.");
   for (auto& verification : *verifications_) {
-    util::Status individual_update_status = verification->Update(data);
+    absl::Status individual_update_status = verification->Update(data);
     if (individual_update_status.ok()) {
       // At least one update succeeded.
-      status = util::OkStatus();
+      status = absl::OkStatus();
     }
   }
   return status;
 }
 
-util::Status ChunkedMacVerificationSetWrapper::VerifyMac() {
+absl::Status ChunkedMacVerificationSetWrapper::VerifyMac() {
   for (auto& verification : *verifications_) {
     absl::Status status = verification->VerifyMac();
     if (status.ok()) {
@@ -142,7 +142,7 @@ util::Status ChunkedMacVerificationSetWrapper::VerifyMac() {
       return status;
     }
   }
-  return util::Status(absl::StatusCode::kUnknown, "Verification failed.");
+  return absl::Status(absl::StatusCode::kUnknown, "Verification failed.");
 }
 
 class ChunkedMacSetWrapper : public ChunkedMac {
@@ -163,16 +163,16 @@ class ChunkedMacSetWrapper : public ChunkedMac {
   std::unique_ptr<PrimitiveSet<ChunkedMac>> mac_set_;
 };
 
-util::Status Validate(PrimitiveSet<ChunkedMac>* mac_set) {
+absl::Status Validate(PrimitiveSet<ChunkedMac>* mac_set) {
   if (mac_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "mac_set must be non-NULL");
   }
   if (mac_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "mac_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<std::unique_ptr<ChunkedMacComputation>>
@@ -238,7 +238,7 @@ ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
 
 util::StatusOr<std::unique_ptr<ChunkedMac>> ChunkedMacWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<ChunkedMac>> mac_set) const {
-  util::Status status = Validate(mac_set.get());
+  absl::Status status = Validate(mac_set.get());
   if (!status.ok()) return status;
   return {absl::make_unique<ChunkedMacSetWrapper>(std::move(mac_set))};
 }

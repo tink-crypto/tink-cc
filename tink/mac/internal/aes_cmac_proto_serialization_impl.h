@@ -27,12 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for AES-CMAC parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status RegisterAesCmacProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesCmacProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-CMAC parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status RegisterAesCmacProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesCmacProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

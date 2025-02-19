@@ -27,8 +27,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddMacKeyGenV0(KeyGenConfiguration& config) {
-  util::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
+absl::Status AddMacKeyGenV0(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCmacKeyManager>(), config);
   if (!status.ok()) {
     return status;

@@ -25,7 +25,7 @@ namespace tink {
 namespace internal {
 
 // Add recommended MAC key managers to `config`, used to generate keys.
-util::Status AddMacKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddMacKeyGenV0(KeyGenConfiguration& config);
 
 }  // namespace internal
 }  // namespace tink

@@ -141,7 +141,7 @@ util::StatusOr<HmacParameters::Variant> ToVariant(
     case OutputPrefixType::TINK:
       return HmacParameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine HmacParameters::Variant");
   }
 }
@@ -158,7 +158,7 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
     case HmacParameters::Variant::kTink:
       return OutputPrefixType::TINK;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
   }
 }
@@ -176,7 +176,7 @@ util::StatusOr<HmacParameters::HashType> ToHashType(HashType hash_type) {
     case HashType::SHA512:
       return HmacParameters::HashType::kSha512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine HashType");
   }
 }
@@ -194,7 +194,7 @@ util::StatusOr<HashType> ToProtoHashType(HmacParameters::HashType hash_type) {
     case HmacParameters::HashType::kSha512:
       return HashType::SHA512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine HmacParameters::HashType");
   }
 }
@@ -202,7 +202,7 @@ util::StatusOr<HashType> ToProtoHashType(HmacParameters::HashType hash_type) {
 util::StatusOr<HmacParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing HmacParameters.");
   }
 
@@ -213,7 +213,7 @@ util::StatusOr<HmacParameters> ParseParameters(
     return proto_key_format.status();
   }
   if (proto_key_format->version != 0) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsing HmacParameters failed: only version 0 is accepted");
   }
@@ -259,11 +259,11 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
 util::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
                                  absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing HmacKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
 
@@ -273,7 +273,7 @@ util::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
     return proto_key.status();
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
@@ -299,7 +299,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   util::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
   if (!restricted_input.ok()) return restricted_input.status();
@@ -353,9 +353,9 @@ HmacProtoKeySerializerImpl* HmacProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterHmacProtoSerializationWithMutableRegistry(
+absl::Status RegisterHmacProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(HmacProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -375,9 +375,9 @@ util::Status RegisterHmacProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(HmacProtoKeySerializer());
 }
 
-util::Status RegisterHmacProtoSerializationWithRegistryBuilder(
+absl::Status RegisterHmacProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(HmacProtoParametersParser());
   if (!status.ok()) {
     return status;

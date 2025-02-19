@@ -43,7 +43,7 @@ class StatefulCmacBoringSsl : public StatefulMac {
   // Key must be 16 or 32 bytes, all other sizes will be rejected.
   static util::StatusOr<std::unique_ptr<StatefulMac>> New(
       uint32_t tag_size, const util::SecretData& key_value);
-  util::Status Update(absl::string_view data) override;
+  absl::Status Update(absl::string_view data) override;
   util::StatusOr<util::SecretData> FinalizeAsSecretData() override;
 
  private:

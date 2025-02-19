@@ -27,12 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for HMAC parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status RegisterHmacProtoSerializationWithMutableRegistry(
+absl::Status RegisterHmacProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for HMAC parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status RegisterHmacProtoSerializationWithRegistryBuilder(
+absl::Status RegisterHmacProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

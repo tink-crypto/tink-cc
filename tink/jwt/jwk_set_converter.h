@@ -34,7 +34,7 @@ namespace tink {
 // are supported.
 //
 // JWK is defined in https://www.rfc-editor.org/rfc/rfc7517.txt.
-util::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
     absl::string_view jwk_set);
 
 // Converts a Tink KeysetHandle with JWT keys into a Json Web Key (JWK) set.
@@ -43,7 +43,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
 // supported.
 //
 // JWK is defined in https://www.rfc-editor.org/rfc/rfc7517.txt.
-util::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
+absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     const KeysetHandle& keyset_handle);
 
 }  // namespace tink

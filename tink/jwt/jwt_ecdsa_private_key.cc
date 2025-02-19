@@ -46,7 +46,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
+absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
     JwtEcdsaParameters::Algorithm algorithm) {
   switch (algorithm) {
     case JwtEcdsaParameters::Algorithm::kEs256:
@@ -66,12 +66,12 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
                              PartialKeyAccessToken token) {
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
 
-  util::StatusOr<subtle::EllipticCurveType> curve =
+  absl::StatusOr<subtle::EllipticCurveType> curve =
       SubtleCurveType(public_key.GetParameters().GetAlgorithm());
   if (!curve.ok()) {
     return curve.status();
   }
-  util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
       internal::EcGroupFromCurveType(*curve);
   if (!group.ok()) {
     return group.status();
@@ -80,7 +80,7 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
 
   // Set EC_KEY public key.
   const EcPoint& ec_point = public_key.GetPublicPoint(token);
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> public_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> public_point =
       internal::GetEcPoint(*curve, ec_point.GetX().GetValue(),
                            ec_point.GetY().GetValue());
   if (!public_point.ok()) {
@@ -92,7 +92,7 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_big_num =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_big_num =
       internal::StringToBignum(
           private_key_value.GetSecret(InsecureSecretKeyAccess::Get()));
   if (!priv_big_num.ok()) {
@@ -119,7 +119,7 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
 
 }  // namespace
 
-util::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
+absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
     const JwtEcdsaPublicKey& public_key,
     const RestrictedBigInteger& private_key_value,
     PartialKeyAccessToken token) {

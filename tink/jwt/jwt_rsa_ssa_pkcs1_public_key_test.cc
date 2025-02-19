@@ -94,7 +94,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(JwtRsaSsaPkcs1PublicKeyTest, BuildWorks) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -114,7 +114,7 @@ TEST_P(JwtRsaSsaPkcs1PublicKeyTest, BuildWorks) {
     builder.SetCustomKid(*test_case.custom_kid);
   }
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -125,7 +125,7 @@ TEST_P(JwtRsaSsaPkcs1PublicKeyTest, BuildWorks) {
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, BuildWithoutModulusFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -134,7 +134,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, BuildWithoutModulusFails) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .Build(GetPartialKeyAccess());
@@ -143,7 +143,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, BuildWithoutModulusFails) {
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, BuildWithNonMatchingModulusSizeFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(3072)
           .SetPublicExponent(kF4)
@@ -153,7 +153,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, BuildWithNonMatchingModulusSizeFails) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -165,7 +165,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, BuildWithNonMatchingModulusSizeFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, BuildBase64EncodedKidWithoutIdRequirementFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -176,7 +176,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildBase64EncodedKidWithoutIdRequirementFails) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -189,7 +189,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildBase64EncodedKidWithoutIdRequirementFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, BuildBase64EncodedKidWithCustomKidFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -200,7 +200,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildBase64EncodedKidWithCustomKidFails) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -215,7 +215,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildBase64EncodedKidWithCustomKidFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, BuildCustomKidWithIdRequirementFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -225,7 +225,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildCustomKidWithIdRequirementFails) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -240,7 +240,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildCustomKidWithIdRequirementFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, BuildCustomKidWithoutCustomKidFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -250,7 +250,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildCustomKidWithoutCustomKidFails) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -263,7 +263,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildCustomKidWithoutCustomKidFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, BuildIgnoredKidWithIdRequirementFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -273,7 +273,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildIgnoredKidWithIdRequirementFails) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -287,7 +287,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildIgnoredKidWithIdRequirementFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, BuildIgnoredKidWithCustomKidFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -297,7 +297,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildIgnoredKidWithCustomKidFails) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -313,7 +313,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildIgnoredKidWithCustomKidFails) {
 
 TEST(JwtEcdsaPublicKeyTest, BuildWithMissingParametersFails) {
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder().SetModulus(modulus).Build(
           GetPartialKeyAccess());
 
@@ -323,7 +323,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildWithMissingParametersFails) {
 }
 
 TEST(JwtEcdsaPublicKeyTest, BuildWithMissingModulusFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -332,7 +332,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildWithMissingModulusFails) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .Build(GetPartialKeyAccess());
@@ -344,7 +344,7 @@ TEST(JwtEcdsaPublicKeyTest, BuildWithMissingModulusFails) {
 TEST_P(JwtRsaSsaPkcs1PublicKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -364,7 +364,7 @@ TEST_P(JwtRsaSsaPkcs1PublicKeyTest, KeyEquals) {
     builder.SetCustomKid(*test_case.custom_kid);
   }
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -379,7 +379,7 @@ TEST_P(JwtRsaSsaPkcs1PublicKeyTest, KeyEquals) {
     other_builder.SetCustomKid(*test_case.custom_kid);
   }
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
       other_builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
@@ -390,7 +390,7 @@ TEST_P(JwtRsaSsaPkcs1PublicKeyTest, KeyEquals) {
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -401,7 +401,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentIdRequirementNotEqual) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -409,7 +409,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentIdRequirementNotEqual) {
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -424,7 +424,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentModulusNotEqual) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -446,14 +446,14 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentModulusNotEqual) {
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   BigInteger other_modulus(other_modulus_bytes);
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(other_modulus)
@@ -467,7 +467,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentModulusNotEqual) {
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentCustomKidNotEqual) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -477,7 +477,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentCustomKidNotEqual) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -485,7 +485,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentCustomKidNotEqual) {
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> other_key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)
@@ -500,7 +500,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, DifferentCustomKidNotEqual) {
 }
 
 TEST(JwtRsaSsaPkcs1PublicKeyTest, Clone) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -510,7 +510,7 @@ TEST(JwtRsaSsaPkcs1PublicKeyTest, Clone) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> key =
       JwtRsaSsaPkcs1PublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(modulus)

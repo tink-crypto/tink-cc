@@ -60,7 +60,7 @@ JwtRsaSsaPssPublicKey::Builder::SetCustomKid(absl::string_view custom_kid) {
   return *this;
 }
 
-util::StatusOr<absl::optional<std::string>>
+absl::StatusOr<absl::optional<std::string>>
 JwtRsaSsaPssPublicKey::Builder::ComputeKid() {
   if (parameters_->GetKidStrategy() ==
       JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId) {
@@ -96,7 +96,7 @@ JwtRsaSsaPssPublicKey::Builder::ComputeKid() {
                       "Unknown kid strategy.");
 }
 
-util::StatusOr<JwtRsaSsaPssPublicKey> JwtRsaSsaPssPublicKey::Builder::Build(
+absl::StatusOr<JwtRsaSsaPssPublicKey> JwtRsaSsaPssPublicKey::Builder::Build(
     PartialKeyAccessToken token) {
   if (!parameters_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -127,7 +127,7 @@ util::StatusOr<JwtRsaSsaPssPublicKey> JwtRsaSsaPssPublicKey::Builder::Build(
                         parameters_->GetModulusSizeInBits(),
                         modulus_->SizeInBytes() * 8));
   }
-  util::StatusOr<absl::optional<std::string>> kid = ComputeKid();
+  absl::StatusOr<absl::optional<std::string>> kid = ComputeKid();
   if (!kid.ok()) {
     return kid.status();
   }

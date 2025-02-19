@@ -78,7 +78,7 @@ class JwtHmacParameters : public JwtMacParameters {
   // Creates JWT HMAC parameters object. Returns an error status if
   // `key_size_in_bytes` is less than 16 bytes, if `kid_strategy` is invalid, or
   // if `algorithm` is invalid.
-  static util::StatusOr<JwtHmacParameters> Create(int key_size_in_bytes,
+  static absl::StatusOr<JwtHmacParameters> Create(int key_size_in_bytes,
                                                   KidStrategy kid_strategy,
                                                   Algorithm algorithm);
 

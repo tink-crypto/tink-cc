@@ -54,10 +54,10 @@ class JwtHmacKey : public JwtMacKey {
     Builder& SetCustomKid(absl::string_view custom_kid);
 
     // Creates JWT HMAC key object from this builder.
-    util::StatusOr<JwtHmacKey> Build(PartialKeyAccessToken token);
+    absl::StatusOr<JwtHmacKey> Build(PartialKeyAccessToken token);
 
    private:
-    util::StatusOr<absl::optional<std::string>> ComputeKid();
+    absl::StatusOr<absl::optional<std::string>> ComputeKid();
 
     absl::optional<JwtHmacParameters> parameters_;
     absl::optional<RestrictedData> key_bytes_;

@@ -156,7 +156,7 @@ const absl::string_view kPublicTypeUrl =
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtEcdsaPrivateKey";
 
-util::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
+absl::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
     OutputPrefixType output_prefix_type, bool has_custom_kid) {
   switch (output_prefix_type) {
     case OutputPrefixType::RAW:
@@ -172,7 +172,7 @@ util::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixType> ToOutputPrefixType(
     JwtEcdsaParameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtEcdsaParameters::KidStrategy::kCustom:
@@ -188,7 +188,7 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
   }
 }
 
-util::StatusOr<JwtEcdsaParameters::Algorithm> FromProtoAlgorithm(
+absl::StatusOr<JwtEcdsaParameters::Algorithm> FromProtoAlgorithm(
     JwtEcdsaAlgorithm algorithm) {
   switch (algorithm) {
     case JwtEcdsaAlgorithm::ES256:
@@ -203,7 +203,7 @@ util::StatusOr<JwtEcdsaParameters::Algorithm> FromProtoAlgorithm(
   }
 }
 
-util::StatusOr<JwtEcdsaAlgorithm> ToProtoAlgorithm(
+absl::StatusOr<JwtEcdsaAlgorithm> ToProtoAlgorithm(
     JwtEcdsaParameters::Algorithm algorithm) {
   switch (algorithm) {
     case JwtEcdsaParameters::Algorithm::kEs256:
@@ -218,15 +218,15 @@ util::StatusOr<JwtEcdsaAlgorithm> ToProtoAlgorithm(
   }
 }
 
-util::StatusOr<JwtEcdsaParameters> ToParameters(
+absl::StatusOr<JwtEcdsaParameters> ToParameters(
     OutputPrefixType output_prefix_type, JwtEcdsaAlgorithm proto_algorithm,
     bool has_custom_kid) {
-  util::StatusOr<JwtEcdsaParameters::KidStrategy> kid_strategy =
+  absl::StatusOr<JwtEcdsaParameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
   if (!kid_strategy.ok()) {
     return kid_strategy.status();
   }
-  util::StatusOr<JwtEcdsaParameters::Algorithm> algorithm =
+  absl::StatusOr<JwtEcdsaParameters::Algorithm> algorithm =
       FromProtoAlgorithm(proto_algorithm);
   if (!algorithm.ok()) {
     return algorithm.status();
@@ -234,7 +234,7 @@ util::StatusOr<JwtEcdsaParameters> ToParameters(
   return JwtEcdsaParameters::Create(*kid_strategy, *algorithm);
 }
 
-util::StatusOr<int> GetEncodingLength(JwtEcdsaParameters::Algorithm algorithm) {
+absl::StatusOr<int> GetEncodingLength(JwtEcdsaParameters::Algorithm algorithm) {
   // We currently encode with one extra 0-byte at the beginning, to make sure
   // that parsing is correct. See also b/264525021.
   switch (algorithm) {
@@ -250,7 +250,7 @@ util::StatusOr<int> GetEncodingLength(JwtEcdsaParameters::Algorithm algorithm) {
   }
 }
 
-util::StatusOr<JwtEcdsaPublicKey> ToPublicKey(
+absl::StatusOr<JwtEcdsaPublicKey> ToPublicKey(
     const JwtEcdsaParameters& parameters,
     const JwtEcdsaPublicKeyStruct& public_key_struct,
     absl::optional<int> id_requirement) {
@@ -268,28 +268,28 @@ util::StatusOr<JwtEcdsaPublicKey> ToPublicKey(
   return builder.Build(GetPartialKeyAccess());
 }
 
-util::StatusOr<JwtEcdsaPublicKeyStruct> ToProtoPublicKey(
+absl::StatusOr<JwtEcdsaPublicKeyStruct> ToProtoPublicKey(
     const JwtEcdsaPublicKey& public_key) {
-  util::StatusOr<JwtEcdsaAlgorithm> proto_algorithm =
+  absl::StatusOr<JwtEcdsaAlgorithm> proto_algorithm =
       ToProtoAlgorithm(public_key.GetParameters().GetAlgorithm());
   if (!proto_algorithm.ok()) {
     return proto_algorithm.status();
   }
 
-  util::StatusOr<int> enc_length =
+  absl::StatusOr<int> enc_length =
       GetEncodingLength(public_key.GetParameters().GetAlgorithm());
   if (!enc_length.ok()) {
     return enc_length.status();
   }
 
-  util::StatusOr<std::string> x = internal::GetValueOfFixedLength(
+  absl::StatusOr<std::string> x = internal::GetValueOfFixedLength(
       public_key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue(),
       *enc_length);
   if (!x.ok()) {
     return x.status();
   }
 
-  util::StatusOr<std::string> y = internal::GetValueOfFixedLength(
+  absl::StatusOr<std::string> y = internal::GetValueOfFixedLength(
       public_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue(),
       *enc_length);
   if (!y.ok()) {
@@ -309,14 +309,14 @@ util::StatusOr<JwtEcdsaPublicKeyStruct> ToProtoPublicKey(
   return public_key_struct;
 }
 
-util::StatusOr<JwtEcdsaParameters> ParseParameters(
+absl::StatusOr<JwtEcdsaParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing JwtEcdsaParameters.");
   }
 
-  util::StatusOr<JwtEcdsaKeyFormatStruct> key_format_struct =
+  absl::StatusOr<JwtEcdsaKeyFormatStruct> key_format_struct =
       JwtEcdsaKeyFormatStruct::GetParser().Parse(
           serialization.GetKeyTemplate().value());
   if (!key_format_struct.ok()) {
@@ -332,19 +332,19 @@ util::StatusOr<JwtEcdsaParameters> ParseParameters(
                       key_format_struct->algorithm, /*has_custom_kid=*/false);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const JwtEcdsaParameters& parameters) {
   if (parameters.GetKidStrategy() == JwtEcdsaParameters::KidStrategy::kCustom) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Unable to serialize JwtEcdsaParameters::KidStrategy::kCustom.");
   }
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-  util::StatusOr<JwtEcdsaAlgorithm> proto_algorithm =
+  absl::StatusOr<JwtEcdsaAlgorithm> proto_algorithm =
       ToProtoAlgorithm(parameters.GetAlgorithm());
   if (!proto_algorithm.ok()) {
     return proto_algorithm.status();
@@ -354,7 +354,7 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   format.version = 0;
   format.algorithm = *proto_algorithm;
 
-  util::StatusOr<std::string> serialized_format =
+  absl::StatusOr<std::string> serialized_format =
       JwtEcdsaKeyFormatStruct::GetParser().SerializeIntoString(format);
   if (!serialized_format.ok()) {
     return serialized_format.status();
@@ -363,7 +363,7 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       kPrivateTypeUrl, *output_prefix_type, *serialized_format);
 }
 
-util::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
+absl::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
@@ -371,7 +371,7 @@ util::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
                         "Wrong type URL when parsing JwtEcdsaPublicKey.");
   }
 
-  util::StatusOr<JwtEcdsaPublicKeyStruct> public_key_struct =
+  absl::StatusOr<JwtEcdsaPublicKeyStruct> public_key_struct =
       JwtEcdsaPublicKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(
               InsecureSecretKeyAccess::Get()));
@@ -384,7 +384,7 @@ util::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
         "Parsing JwtEcdsaPublicKey failed: only version 0 is accepted.");
   }
 
-  util::StatusOr<JwtEcdsaParameters> parameters = ToParameters(
+  absl::StatusOr<JwtEcdsaParameters> parameters = ToParameters(
       serialization.GetOutputPrefixType(), public_key_struct->algorithm,
       public_key_struct->custom_kid.has_value());
   if (!parameters.ok()) {
@@ -395,21 +395,21 @@ util::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
                      serialization.IdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const JwtEcdsaPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<JwtEcdsaPublicKeyStruct> proto_public_key =
+  absl::StatusOr<JwtEcdsaPublicKeyStruct> proto_public_key =
       ToProtoPublicKey(key);
   if (!proto_public_key.ok()) {
     proto_public_key.status();
   }
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<std::string> serialized_proto =
+  absl::StatusOr<std::string> serialized_proto =
       JwtEcdsaPublicKeyStruct::GetParser().SerializeIntoString(
           *proto_public_key);
 
@@ -419,7 +419,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
       KeyData::ASYMMETRIC_PUBLIC, *output_prefix_type, key.GetIdRequirement());
 }
 
-util::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
+absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
@@ -431,7 +431,7 @@ util::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
                         "Wrong type URL when parsing JwtEcdsaPrivateKey.");
   }
 
-  util::StatusOr<JwtEcdsaPrivateKeyStruct> private_key_struct =
+  absl::StatusOr<JwtEcdsaPrivateKeyStruct> private_key_struct =
       JwtEcdsaPrivateKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(*token));
   if (!private_key_struct.ok()) {
@@ -443,7 +443,7 @@ util::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
         "Parsing JwtEcdsaPrivateKey failed: only version 0 is accepted.");
   }
 
-  util::StatusOr<JwtEcdsaParameters> parameters =
+  absl::StatusOr<JwtEcdsaParameters> parameters =
       ToParameters(serialization.GetOutputPrefixType(),
                    private_key_struct->public_key.algorithm,
                    private_key_struct->public_key.custom_kid.has_value());
@@ -451,7 +451,7 @@ util::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
     return parameters.status();
   }
 
-  util::StatusOr<JwtEcdsaPublicKey> public_key =
+  absl::StatusOr<JwtEcdsaPublicKey> public_key =
       ToPublicKey(*parameters, private_key_struct->public_key,
                   serialization.IdRequirement());
   if (!public_key.ok()) {
@@ -464,26 +464,26 @@ util::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
                                     GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     const JwtEcdsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
 
-  util::StatusOr<JwtEcdsaPublicKeyStruct> public_key_struct =
+  absl::StatusOr<JwtEcdsaPublicKeyStruct> public_key_struct =
       ToProtoPublicKey(key.GetPublicKey());
   if (!public_key_struct.ok()) {
     return public_key_struct.status();
   }
 
-  util::StatusOr<RestrictedBigInteger> restricted_input =
+  absl::StatusOr<RestrictedBigInteger> restricted_input =
       key.GetPrivateKeyValue(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
   }
 
-  util::StatusOr<int> enc_length =
+  absl::StatusOr<int> enc_length =
       GetEncodingLength(key.GetPublicKey().GetParameters().GetAlgorithm());
   if (!enc_length.ok()) {
     return enc_length.status();
@@ -495,13 +495,13 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   private_key_struct->key_value = *internal::GetSecretValueOfFixedLength(
       *restricted_input, *enc_length, *token);
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<util::SecretData> serialized_proto_private_key =
+  absl::StatusOr<util::SecretData> serialized_proto_private_key =
       JwtEcdsaPrivateKeyStruct::GetParser().SerializeIntoSecretData(
           *private_key_struct);
   if (!serialized_proto_private_key.ok()) {

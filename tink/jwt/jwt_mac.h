@@ -37,7 +37,7 @@ class JwtMac {
  public:
   // Computes a MAC and encodes the raw JWT token and the MAC in the JWS compact
   // serialization format.
-  virtual crypto::tink::util::StatusOr<std::string> ComputeMacAndEncode(
+  virtual absl::StatusOr<std::string> ComputeMacAndEncode(
       const RawJwt& token) const = 0;
 
   // Verifies and decodes a JWT token in the JWS compact serialization format.
@@ -53,7 +53,7 @@ class JwtMac {
   // (iat) or not_before (nbf), they will also be validated. validator allows to
   // set a clock skew, to deal with small clock differences among different
   // machines.
-  virtual crypto::tink::util::StatusOr<VerifiedJwt> VerifyMacAndDecode(
+  virtual absl::StatusOr<VerifiedJwt> VerifyMacAndDecode(
       absl::string_view compact, const JwtValidator& validator) const = 0;
 
   virtual ~JwtMac() = default;

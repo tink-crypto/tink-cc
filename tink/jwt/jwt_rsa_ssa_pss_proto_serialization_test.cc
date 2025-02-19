@@ -140,20 +140,20 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, ParseParametersSucceeds) {
   key_format_proto.set_public_exponent(kF4Str);
   key_format_proto.set_algorithm(test_case.proto_algorithm);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parsed_parameters, IsOk());
   EXPECT_THAT((*parsed_parameters)->HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<const JwtRsaSsaPssParameters> expected_parameters =
+  absl::StatusOr<const JwtRsaSsaPssParameters> expected_parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetAlgorithm(test_case.algorithm)
           .SetModulusSizeInBits(test_case.modulus_size_in_bits)
@@ -168,12 +168,12 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
        ParseParametersWithInvalidSerializationFails) {
   ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
 
@@ -191,7 +191,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   key_format_proto.set_public_exponent(kF4Str);
   key_format_proto.set_algorithm(JwtRsaSsaPssAlgorithm::PS256);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
@@ -223,13 +223,13 @@ TEST_P(JwtRsaSsaPssParseInvalidPrefixTest, ParseParametersWithInvalidPrefix) {
   key_format_proto.set_public_exponent(kF4Str);
   key_format_proto.set_algorithm(JwtRsaSsaPssAlgorithm::PS256);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, invalid_output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(
@@ -249,7 +249,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   key_format_proto.set_public_exponent(kF4Str);
   key_format_proto.set_algorithm(JwtRsaSsaPssAlgorithm::PS_UNKNOWN);
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
@@ -266,7 +266,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializeParametersSucceeds) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerialization(), IsOk());
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(test_case.expected_parameters_strategy)
           .SetAlgorithm(test_case.algorithm)
@@ -275,7 +275,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializeParametersSucceeds) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -307,7 +307,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
        SerializeParametersWithCustomKidFails) {
   ASSERT_THAT(RegisterJwtRsaSsaPssProtoSerialization(), IsOk());
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kCustom)
           .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
@@ -316,7 +316,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -355,34 +355,34 @@ KeyValues GenerateKeyValues(int modulus_size_in_bits) {
 
   RSA_get0_key(rsa.get(), &n_bn, &e_bn, &d_bn);
 
-  util::StatusOr<std::string> n_str =
+  absl::StatusOr<std::string> n_str =
       internal::BignumToString(n_bn, BN_num_bytes(n_bn));
   CHECK_OK(n_str);
-  util::StatusOr<std::string> e_str =
+  absl::StatusOr<std::string> e_str =
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
   CHECK_OK(e_str);
-  util::StatusOr<std::string> d_str =
+  absl::StatusOr<std::string> d_str =
       internal::BignumToString(d_bn, BN_num_bytes(d_bn));
   CHECK_OK(d_str);
 
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
 
-  util::StatusOr<std::string> p_str =
+  absl::StatusOr<std::string> p_str =
       internal::BignumToString(p_bn, BN_num_bytes(p_bn));
   CHECK_OK(p_str);
-  util::StatusOr<std::string> q_str =
+  absl::StatusOr<std::string> q_str =
       internal::BignumToString(q_bn, BN_num_bytes(q_bn));
   CHECK_OK(q_str);
 
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
 
-  util::StatusOr<std::string> dp_str =
+  absl::StatusOr<std::string> dp_str =
       internal::BignumToString(dp_bn, BN_num_bytes(dp_bn));
   CHECK_OK(dp_str);
-  util::StatusOr<std::string> dq_str =
+  absl::StatusOr<std::string> dq_str =
       internal::BignumToString(dq_bn, BN_num_bytes(dq_bn));
   CHECK_OK(dq_str);
-  util::StatusOr<std::string> q_inv_str =
+  absl::StatusOr<std::string> q_inv_str =
       internal::BignumToString(q_inv_bn, BN_num_bytes(q_inv_bn));
   CHECK_OK(q_inv_str);
 
@@ -407,13 +407,13 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, ParsePublicKeySucceeds) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
@@ -421,7 +421,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, ParsePublicKeySucceeds) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<JwtRsaSsaPssParameters> expected_parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> expected_parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
@@ -440,7 +440,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, ParsePublicKeySucceeds) {
   if (test_case.strategy == JwtRsaSsaPssParameters::KidStrategy::kCustom) {
     builder.SetCustomKid(test_case.kid.value());
   }
-  util::StatusOr<JwtRsaSsaPssPublicKey> expected_key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> expected_key =
       builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
 
@@ -454,14 +454,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -480,14 +480,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::RAW,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument,
@@ -508,13 +508,13 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           OutputPrefixType::TINK, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   // Omitting expectation on specific error message since the error occurs
@@ -536,14 +536,14 @@ TEST_P(JwtRsaSsaPssParseInvalidPrefixTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               invalid_output_prefix_type,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(
@@ -565,14 +565,14 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::RAW,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(parsed_key.status(),
@@ -586,7 +586,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializePublicKeySucceeds) {
   TestCase test_case = GetParam();
   KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
@@ -605,11 +605,11 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializePublicKeySucceeds) {
   if (test_case.strategy == JwtRsaSsaPssParameters::KidStrategy::kCustom) {
     builder.SetCustomKid(test_case.kid.value());
   }
-  util::StatusOr<JwtRsaSsaPssPublicKey> key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> key =
       builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);
@@ -671,13 +671,13 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, ParsePrivateKeySucceeds) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key, IsOk());
@@ -685,7 +685,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, ParsePrivateKeySucceeds) {
   EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<JwtRsaSsaPssParameters> expected_parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> expected_parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
@@ -705,11 +705,11 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, ParsePrivateKeySucceeds) {
     builder.SetCustomKid(test_case.kid.value());
   }
 
-  util::StatusOr<JwtRsaSsaPssPublicKey> expected_public_key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> expected_public_key =
       builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPssPrivateKey> expected_private_key =
+  absl::StatusOr<JwtRsaSsaPssPrivateKey> expected_private_key =
       JwtRsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*expected_public_key)
           .SetPrimeP(RestrictedBigInteger(key_values.p,
@@ -737,14 +737,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -775,14 +775,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::RAW,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -815,14 +815,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::RAW,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
@@ -848,14 +848,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::RAW,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -887,14 +887,14 @@ TEST_P(JwtRsaSsaPssParseInvalidPrefixTest,
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               invalid_output_prefix_type,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
@@ -929,14 +929,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::RAW,
                                               /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied,
@@ -949,7 +949,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializePrivateKeySucceeds) {
 
   KeyValues key_values = GenerateKeyValues(test_case.modulus_size_in_bits);
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(test_case.strategy)
           .SetAlgorithm(test_case.algorithm)
@@ -968,11 +968,11 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializePrivateKeySucceeds) {
   if (test_case.strategy == JwtRsaSsaPssParameters::KidStrategy::kCustom) {
     builder.SetCustomKid(test_case.kid.value());
   }
-  util::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
       builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
       JwtRsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(RestrictedBigInteger(key_values.p,
@@ -990,7 +990,7 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializePrivateKeySucceeds) {
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -1038,7 +1038,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
 
   KeyValues key_values = GenerateKeyValues(2048);
 
-  util::StatusOr<JwtRsaSsaPssParameters> parameters =
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
       JwtRsaSsaPssParameters::Builder()
           .SetKidStrategy(JwtRsaSsaPssParameters::KidStrategy::kIgnored)
           .SetAlgorithm(JwtRsaSsaPssParameters::Algorithm::kPs256)
@@ -1047,14 +1047,14 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPssPublicKey> public_key =
+  absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
       JwtRsaSsaPssPublicKey::Builder()
           .SetParameters(*parameters)
           .SetModulus(BigInteger(key_values.n))
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
       JwtRsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(RestrictedBigInteger(key_values.p,
@@ -1072,7 +1072,7 @@ TEST_F(JwtRsaSsaPssProtoSerializationTest,
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, /*token=*/absl::nullopt);

@@ -69,7 +69,7 @@ JwtRsaSsaPssParameters::Builder::SetPublicExponent(
   return *this;
 }
 
-util::StatusOr<JwtRsaSsaPssParameters>
+absl::StatusOr<JwtRsaSsaPssParameters>
 JwtRsaSsaPssParameters::Builder::Build() {
   if (!algorithm_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,

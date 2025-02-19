@@ -27,7 +27,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<JwtHmacParameters> JwtHmacParameters::Create(
+absl::StatusOr<JwtHmacParameters> JwtHmacParameters::Create(
     int key_size_in_bytes, KidStrategy kid_strategy, Algorithm algorithm) {
   if (key_size_in_bytes < 16) {
     return util::Status(

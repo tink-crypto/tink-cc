@@ -48,16 +48,16 @@ INSTANTIATE_TEST_SUITE_P(JwtMacV0KeyTypesTestSuite, JwtMacV0KeyTypesTest,
                                 RawJwtHs512Template()));
 
 TEST_P(JwtMacV0KeyTypesTest, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigJwtMacV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
       (*handle)->GetPrimitive<JwtMac>(ConfigJwtMacV0());
   ASSERT_THAT(jwt_mac, IsOk());
 
   absl::Time now = absl::Now();
-  util::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
+  absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
                                        .SetTypeHeader("typeHeader")
                                        .SetJwtId("id123")
                                        .SetNotBefore(now - absl::Seconds(300))
@@ -66,11 +66,11 @@ TEST_P(JwtMacV0KeyTypesTest, GetPrimitive) {
                                        .Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<JwtValidator> validator =
+  absl::StatusOr<JwtValidator> validator =
       JwtValidatorBuilder().ExpectTypeHeader("typeHeader").Build();
   ASSERT_THAT(validator, IsOk());
 
-  util::StatusOr<std::string> compact =
+  absl::StatusOr<std::string> compact =
       (*jwt_mac)->ComputeMacAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
   EXPECT_THAT((*jwt_mac)->VerifyMacAndDecode(*compact, *validator), IsOk());

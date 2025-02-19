@@ -64,14 +64,14 @@ util::Status ValidatePublicPoint(JwtEcdsaParameters::Algorithm algorithm,
   }
   // Internally calls EC_POINT_set_affine_coordinates_GFp, which, in BoringSSL
   // and OpenSSL versions > 1.1.0, already checks if the point is on the curve.
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
       internal::GetEcPoint(curve, point.GetX().GetValue(),
                            point.GetY().GetValue());
   if (!ec_point.ok()) {
     return ec_point.status();
   }
 
-  util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
       internal::EcGroupFromCurveType(curve);
   if (!group.ok()) {
     return group.status();
@@ -111,7 +111,7 @@ JwtEcdsaPublicKey::Builder& JwtEcdsaPublicKey::Builder::SetCustomKid(
   return *this;
 }
 
-util::StatusOr<absl::optional<std::string>>
+absl::StatusOr<absl::optional<std::string>>
 JwtEcdsaPublicKey::Builder::ComputeKid() {
   if (parameters_->GetKidStrategy() ==
       JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId) {
@@ -147,7 +147,7 @@ JwtEcdsaPublicKey::Builder::ComputeKid() {
                       "Unknown kid strategy.");
 }
 
-util::StatusOr<JwtEcdsaPublicKey> JwtEcdsaPublicKey::Builder::Build(
+absl::StatusOr<JwtEcdsaPublicKey> JwtEcdsaPublicKey::Builder::Build(
     PartialKeyAccessToken token) {
   if (!parameters_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -174,7 +174,7 @@ util::StatusOr<JwtEcdsaPublicKey> JwtEcdsaPublicKey::Builder::Build(
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  util::StatusOr<absl::optional<std::string>> kid = ComputeKid();
+  absl::StatusOr<absl::optional<std::string>> kid = ComputeKid();
   if (!kid.ok()) {
     return kid.status();
   }

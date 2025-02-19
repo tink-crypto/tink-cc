@@ -35,7 +35,7 @@ class JwtPublicKeySign {
  public:
   // Computes a signature, and encodes the JWT and the signature in the JWS
   // compact serialization format.
-  virtual crypto::tink::util::StatusOr<std::string> SignAndEncode(
+  virtual absl::StatusOr<std::string> SignAndEncode(
       const RawJwt& token) const = 0;
 
   virtual ~JwtPublicKeySign() = default;

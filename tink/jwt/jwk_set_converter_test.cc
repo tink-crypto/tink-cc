@@ -536,21 +536,21 @@ TEST_P(JwkSetConverterTest, ToAndFromPublicKeysetHandleIsIdentical) {
   std::string jwk_set = GetParam();
 
   // Convert JWK set to KeysetHandle
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       JwkSetToPublicKeysetHandle(jwk_set);
   ASSERT_THAT(keyset_handle, IsOk());
 
   // Convert KeysetHandle to JWK set
-  util::StatusOr<std::string> output =
+  absl::StatusOr<std::string> output =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   ASSERT_THAT(output, IsOk());
 
   // Check that output is the same as jwk_set. The order of the elements may
   // have changed.
-  util::StatusOr<google::protobuf::Struct> output_struct =
+  absl::StatusOr<google::protobuf::Struct> output_struct =
       jwt_internal::JsonStringToProtoStruct(*output);
   ASSERT_THAT(output_struct, IsOk());
-  util::StatusOr<google::protobuf::Struct> expected_struct =
+  absl::StatusOr<google::protobuf::Struct> expected_struct =
       jwt_internal::JsonStringToProtoStruct(jwk_set);
   ASSERT_THAT(expected_struct, IsOk());
 
@@ -581,42 +581,42 @@ TEST_P(JwkSetToPublicKeysetHandleTest, VerifyValidJwtWithSuccess) {
   std::tie(private_keyset, jwk_public_keyset) = GetParam();
 
   // Create a valid jwt using the private key
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(private_keyset);
   EXPECT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> private_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> private_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   EXPECT_THAT(private_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
       (*private_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeySign>(
               ConfigGlobalRegistry());
   ASSERT_THAT(sign, IsOk());
 
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
+  absl::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
 
   // verify the JWT using the JWK public keys
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwk_public_keyset);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
       (*public_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
               ConfigGlobalRegistry());
   ASSERT_THAT(verify, IsOk());
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectIssuer("issuer")
                                                .AllowMissingExpiration()
                                                .Build();
-  util::StatusOr<VerifiedJwt> verified_jwt =
+  absl::StatusOr<VerifiedJwt> verified_jwt =
       (*verify)->VerifyAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetIssuer(), IsOkAndHolds("issuer"));
@@ -671,7 +671,7 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Rs256WithSmallModulusGetPrimitiveFails) {
        "kid":"DfpE4Q"
       }]
     })";
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   ASSERT_THAT(public_handle, Not(IsOk()));
 }
@@ -688,7 +688,7 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Rs256CorrectlySetsKid) {
        "kid":"DfpE4Q"
       }]
     })";
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   EXPECT_THAT(public_handle, IsOk());
   const google::crypto::tink::Keyset &keyset =
@@ -854,7 +854,7 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256WithSmallXFails) {
     "use":"sig","alg":"ES256","key_ops":["verify"]}],
     "kid":"EhuduQ"
   })";
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   EXPECT_THAT(public_handle, Not(IsOk()));
 }
@@ -869,7 +869,7 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256WithSmallYFails) {
     "use":"sig","alg":"ES256","key_ops":["verify"]}],
     "kid":"EhuduQ"
   })";
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   EXPECT_THAT(public_handle, Not(IsOk()));
 }
@@ -884,7 +884,7 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256CorrectlySetsKid) {
     "use":"sig","alg":"ES256","key_ops":["verify"],
     "kid":"EhuduQ"}]
   })";
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   EXPECT_THAT(public_handle, IsOk());
   const google::crypto::tink::Keyset &keyset =
@@ -906,7 +906,7 @@ TEST_F(JwkSetToPublicKeysetHandleTest, Es256WithoutOptionalFieldsSucceeds) {
     "y":"7oRiYhnmkP6nqrdXWgtsWUWq5uFRLJkhyVFiWPRB278",
     "alg":"ES256"}]
   })";
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       JwkSetToPublicKeysetHandle(jwt_set);
   EXPECT_THAT(public_handle, IsOk());
 }
@@ -1071,22 +1071,22 @@ TEST_F(JwkSetFromPublicKeysetHandleTest,
           }
       ]
   })";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(public_keyset_with_tink_output_prefix);
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(keyset_handle, IsOk());
 
-  util::StatusOr<std::string> jwk_set =
+  absl::StatusOr<std::string> jwk_set =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   ASSERT_THAT(jwk_set, IsOk());
 
   // Check that jwk_set is equalivalent to kEs256JwkPublicKey.
-  util::StatusOr<google::protobuf::Struct> output_struct =
+  absl::StatusOr<google::protobuf::Struct> output_struct =
       jwt_internal::JsonStringToProtoStruct(*jwk_set);
   ASSERT_THAT(output_struct, IsOk());
-  util::StatusOr<google::protobuf::Struct> expected_struct =
+  absl::StatusOr<google::protobuf::Struct> expected_struct =
       jwt_internal::JsonStringToProtoStruct(kEs256JwkPublicKey);
   ASSERT_THAT(expected_struct, IsOk());
 
@@ -1114,22 +1114,22 @@ TEST_F(JwkSetFromPublicKeysetHandleTest,
       }
     ]
   })";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(public_keyset_with_tink_output_prefix);
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(keyset_handle, IsOk());
 
-  util::StatusOr<std::string> jwk_set =
+  absl::StatusOr<std::string> jwk_set =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   ASSERT_THAT(jwk_set, IsOk());
 
   // Check that jwk_set is equalivalent to kRs256JwkPublicKey.
-  util::StatusOr<google::protobuf::Struct> output_struct =
+  absl::StatusOr<google::protobuf::Struct> output_struct =
       jwt_internal::JsonStringToProtoStruct(*jwk_set);
   ASSERT_THAT(output_struct, IsOk());
-  util::StatusOr<google::protobuf::Struct> expected_struct =
+  absl::StatusOr<google::protobuf::Struct> expected_struct =
       jwt_internal::JsonStringToProtoStruct(kRs256JwkPublicKey);
   ASSERT_THAT(expected_struct, IsOk());
 
@@ -1156,14 +1156,14 @@ TEST_F(JwkSetFromPublicKeysetHandleTest, WithInvalidKeyMaterialTypeFails) {
           }
       ]
   })";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(public_keyset_with_invalid_key_material_type);
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(keyset_handle, IsOk());
 
-  util::StatusOr<std::string> jwk_set =
+  absl::StatusOr<std::string> jwk_set =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   EXPECT_THAT(jwk_set, Not(IsOk()));
 }
@@ -1184,14 +1184,14 @@ TEST_F(JwkSetFromPublicKeysetHandleTest, WithUnknownTypeUrlFails) {
           }
       ]
   })";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(public_keyset_with_invalid_key_material_type);
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(keyset_handle, IsOk());
 
-  util::StatusOr<std::string> jwk_set =
+  absl::StatusOr<std::string> jwk_set =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   EXPECT_THAT(jwk_set, Not(IsOk()));
 }
@@ -1210,10 +1210,10 @@ class JwkSetSmallCoordinateConverterTest
 
 TEST_P(JwkSetSmallCoordinateConverterTest,
        convertEcdsaKeysetsEncodesFixedSizedCoordinates) {
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(GetParam().public_keyset);
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(keyset_handle, IsOk());
   const google::crypto::tink::Keyset &public_keyset =
@@ -1225,14 +1225,14 @@ TEST_P(JwkSetSmallCoordinateConverterTest,
   ASSERT_FALSE(public_key.x().size() == GetParam().expected_encoded_size &&
                public_key.y().size() == GetParam().expected_encoded_size);
 
-  util::StatusOr<std::string> jwk_set_str =
+  absl::StatusOr<std::string> jwk_set_str =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   ASSERT_THAT(jwk_set_str, IsOk());
 
-  util::StatusOr<google::protobuf::Struct> output_struct =
+  absl::StatusOr<google::protobuf::Struct> output_struct =
       jwt_internal::JsonStringToProtoStruct(*jwk_set_str);
   ASSERT_THAT(output_struct, IsOk());
-  util::StatusOr<google::protobuf::Struct> expected_struct =
+  absl::StatusOr<google::protobuf::Struct> expected_struct =
       jwt_internal::JsonStringToProtoStruct(GetParam().jwk_set);
   ASSERT_THAT(expected_struct, IsOk());
 
@@ -1292,10 +1292,10 @@ TEST_F(JwkSetFromPublicKeysetHandleTest,
       }
     ]
   })";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(public_keyset_with_unknown_algorithm);
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(
       keyset_handle.status(),
@@ -1320,22 +1320,22 @@ TEST_F(JwkSetFromPublicKeysetHandleTest,
       }
     ]
   })";
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       JsonKeysetReader::New(public_keyset_with_tink_output_prefix);
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       CleartextKeysetHandle::Read(std::move(*reader));
   ASSERT_THAT(keyset_handle, IsOk());
 
-  util::StatusOr<std::string> jwk_set =
+  absl::StatusOr<std::string> jwk_set =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   ASSERT_THAT(jwk_set, IsOk());
 
   // Check that jwk_set is equalivalent to kEd25519JwkPublicKey.
-  util::StatusOr<google::protobuf::Struct> output_struct =
+  absl::StatusOr<google::protobuf::Struct> output_struct =
       jwt_internal::JsonStringToProtoStruct(*jwk_set);
   ASSERT_THAT(output_struct, IsOk());
-  util::StatusOr<google::protobuf::Struct> expected_struct =
+  absl::StatusOr<google::protobuf::Struct> expected_struct =
       jwt_internal::JsonStringToProtoStruct(kEd25519JwkPublicKey);
   ASSERT_THAT(expected_struct, IsOk());
 

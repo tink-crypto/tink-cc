@@ -55,10 +55,10 @@ class JwtEcdsaPublicKey : public JwtSignaturePublicKey {
     Builder& SetCustomKid(absl::string_view custom_kid);
 
     // Creates JWT ECDSA public key object from this builder.
-    util::StatusOr<JwtEcdsaPublicKey> Build(PartialKeyAccessToken token);
+    absl::StatusOr<JwtEcdsaPublicKey> Build(PartialKeyAccessToken token);
 
    private:
-    util::StatusOr<absl::optional<std::string>> ComputeKid();
+    absl::StatusOr<absl::optional<std::string>> ComputeKid();
 
     absl::optional<JwtEcdsaParameters> parameters_;
     absl::optional<EcPoint> public_point_;

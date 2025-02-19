@@ -77,7 +77,7 @@ class JwtEcdsaParameters : public JwtSignatureParameters {
 
   // Creates JWT ECDSA parameters object. Returns an error status if
   // if either `kid_strategy` is invalid or `algorithm` is invalid.
-  static util::StatusOr<JwtEcdsaParameters> Create(KidStrategy kid_strategy,
+  static absl::StatusOr<JwtEcdsaParameters> Create(KidStrategy kid_strategy,
                                                    Algorithm algorithm);
 
   KidStrategy GetKidStrategy() const { return kid_strategy_; }

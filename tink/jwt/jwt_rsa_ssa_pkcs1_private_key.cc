@@ -107,7 +107,7 @@ JwtRsaSsaPkcs1PrivateKey::Builder::SetCrtCoefficient(
   return *this;
 }
 
-util::StatusOr<JwtRsaSsaPkcs1PrivateKey>
+absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
 JwtRsaSsaPkcs1PrivateKey::Builder::Build(PartialKeyAccessToken token) {
   if (!public_key_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,

@@ -54,7 +54,7 @@ class JwtRsaSsaPkcs1PrivateKey : public JwtSignaturePrivateKey {
     Builder& SetCrtCoefficient(const RestrictedBigInteger& q_inv);
 
     // Creates JwtRsaSsaPkcs1 private key object from this builder.
-    util::StatusOr<JwtRsaSsaPkcs1PrivateKey> Build(PartialKeyAccessToken token);
+    absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> Build(PartialKeyAccessToken token);
 
    private:
     absl::optional<JwtRsaSsaPkcs1PublicKey> public_key_;

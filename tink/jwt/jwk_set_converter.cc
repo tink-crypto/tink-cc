@@ -72,7 +72,7 @@ bool HasItem(const Struct& key_struct, absl::string_view name) {
          key_struct.fields().end();
 }
 
-util::StatusOr<std::string> GetStringItem(const Struct& key_struct,
+absl::StatusOr<std::string> GetStringItem(const Struct& key_struct,
                                           absl::string_view name) {
   auto it = key_struct.fields().find(std::string(name));
   if (it == key_struct.fields().end()) {
@@ -86,7 +86,7 @@ util::StatusOr<std::string> GetStringItem(const Struct& key_struct,
 
 util::Status ExpectStringItem(const Struct& key_struct, absl::string_view name,
                               absl::string_view value) {
-  util::StatusOr<std::string> item = GetStringItem(key_struct, name);
+  absl::StatusOr<std::string> item = GetStringItem(key_struct, name);
   if (!item.ok()) {
     return item.status();
   }
@@ -133,11 +133,11 @@ util::Status ValidateKeyOpsIsVerify(const Struct& key_struct) {
   return util::OkStatus();
 }
 
-util::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
+absl::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   JwtRsaSsaPkcs1PublicKey public_key_proto;
   public_key_proto.set_version(0);
 
-  util::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
+  absl::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
   if (!alg.ok()) {
     return alg.status();
   }
@@ -170,7 +170,7 @@ util::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return status_key_ops;
   }
 
-  util::StatusOr<std::string> e = GetStringItem(key_struct, "e");
+  absl::StatusOr<std::string> e = GetStringItem(key_struct, "e");
   if (!e.ok()) {
     return e.status();
   }
@@ -181,7 +181,7 @@ util::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   public_key_proto.set_e(decoded_e);
 
-  util::StatusOr<std::string> n = GetStringItem(key_struct, "n");
+  absl::StatusOr<std::string> n = GetStringItem(key_struct, "n");
   if (!n.ok()) {
     return n.status();
   }
@@ -193,7 +193,7 @@ util::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   public_key_proto.set_n(decoded_n);
 
   if (HasItem(key_struct, "kid")) {
-    util::StatusOr<std::string> kid = GetStringItem(key_struct, "kid");
+    absl::StatusOr<std::string> kid = GetStringItem(key_struct, "kid");
     if (!kid.ok()) {
       return kid.status();
     }
@@ -207,11 +207,11 @@ util::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   return key_data_proto;
 }
 
-util::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
+absl::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   JwtRsaSsaPssPublicKey public_key_proto;
   public_key_proto.set_version(0);
 
-  util::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
+  absl::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
   if (!alg.ok()) {
     return alg.status();
   }
@@ -244,7 +244,7 @@ util::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return status_key_ops;
   }
 
-  util::StatusOr<std::string> e = GetStringItem(key_struct, "e");
+  absl::StatusOr<std::string> e = GetStringItem(key_struct, "e");
   if (!e.ok()) {
     return e.status();
   }
@@ -255,7 +255,7 @@ util::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   public_key_proto.set_e(decoded_e);
 
-  util::StatusOr<std::string> n = GetStringItem(key_struct, "n");
+  absl::StatusOr<std::string> n = GetStringItem(key_struct, "n");
   if (!n.ok()) {
     return n.status();
   }
@@ -267,7 +267,7 @@ util::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   public_key_proto.set_n(decoded_n);
 
   if (HasItem(key_struct, "kid")) {
-    util::StatusOr<std::string> kid = GetStringItem(key_struct, "kid");
+    absl::StatusOr<std::string> kid = GetStringItem(key_struct, "kid");
     if (!kid.ok()) {
       return kid.status();
     }
@@ -281,15 +281,15 @@ util::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   return key_data_proto;
 }
 
-util::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
+absl::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   JwtEcdsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
 
-  util::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
+  absl::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
   if (!alg.ok()) {
     return alg.status();
   }
-  util::StatusOr<std::string> curve = GetStringItem(key_struct, "crv");
+  absl::StatusOr<std::string> curve = GetStringItem(key_struct, "crv");
   if (!curve.ok()) {
     return curve.status();
   }
@@ -332,7 +332,7 @@ util::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
     return status_key_ops;
   }
 
-  util::StatusOr<std::string> x = GetStringItem(key_struct, "x");
+  absl::StatusOr<std::string> x = GetStringItem(key_struct, "x");
   if (!x.ok()) {
     return x.status();
   }
@@ -343,7 +343,7 @@ util::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   public_key_proto.set_x(decoded_x);
 
-  util::StatusOr<std::string> y = GetStringItem(key_struct, "y");
+  absl::StatusOr<std::string> y = GetStringItem(key_struct, "y");
   if (!y.ok()) {
     return y.status();
   }
@@ -355,7 +355,7 @@ util::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   public_key_proto.set_y(decoded_y);
 
   if (HasItem(key_struct, "kid")) {
-    util::StatusOr<std::string> kid = GetStringItem(key_struct, "kid");
+    absl::StatusOr<std::string> kid = GetStringItem(key_struct, "kid");
     if (!kid.ok()) {
       return kid.status();
     }
@@ -371,18 +371,18 @@ util::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
 
 // RFC 7518 specifies a fixed sized encoding for the x and y coordinates from
 // SEC 1 https://datatracker.ietf.org/doc/html/rfc7518#section-6.2.1.2
-util::StatusOr<std::pair<std::string, std::string>> Sec1EncodeCoordinates(
+absl::StatusOr<std::pair<std::string, std::string>> Sec1EncodeCoordinates(
     absl::string_view x, absl::string_view y,
     subtle::EllipticCurveType curve_type) {
-  util::StatusOr<int32_t> encoded_size =
+  absl::StatusOr<int32_t> encoded_size =
       internal::EcFieldSizeInBytes(curve_type);
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> point =
       internal::GetEcPoint(curve_type, x, y);
   if (!point.ok()) {
     return point.status();
   }
   // The uncompressed point is encoded as 0x04 || x || y.
-  util::StatusOr<std::string> uncompressed_point = internal::EcPointEncode(
+  absl::StatusOr<std::string> uncompressed_point = internal::EcPointEncode(
       curve_type, subtle::EcPointFormat::UNCOMPRESSED, (*point).get());
   if (!uncompressed_point.ok()) {
     return uncompressed_point.status();
@@ -398,9 +398,9 @@ util::StatusOr<std::pair<std::string, std::string>> Sec1EncodeCoordinates(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
     absl::string_view jwk_set) {
-  util::StatusOr<Struct> jwk_set_struct =
+  absl::StatusOr<Struct> jwk_set_struct =
       jwt_internal::JsonStringToProtoStruct(jwk_set);
   if (!jwk_set_struct.ok()) {
     return jwk_set_struct.status();
@@ -426,7 +426,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
     }
     const Struct& key_struct = value.struct_value();
 
-    util::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
+    absl::StatusOr<std::string> alg = GetStringItem(key_struct, "alg");
     if (!alg.ok()) {
       return alg.status();
     }
@@ -440,21 +440,21 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
     key->set_output_prefix_type(OutputPrefixType::RAW);
 
     if (alg_prefix == "RS") {
-      util::StatusOr<KeyData> key_data =
+      absl::StatusOr<KeyData> key_data =
           RsPublicKeyDataFromKeyStruct(key_struct);
       if (!key_data.ok()) {
         return key_data.status();
       }
       *key->mutable_key_data() = *key_data;
     } else if (alg_prefix == "PS") {
-      util::StatusOr<KeyData> key_data =
+      absl::StatusOr<KeyData> key_data =
           PsPublicKeyDataFromKeyStruct(key_struct);
       if (!key_data.ok()) {
         return key_data.status();
       }
       *key->mutable_key_data() = *key_data;
     } else if (alg_prefix == "ES") {
-      util::StatusOr<KeyData> key_data =
+      absl::StatusOr<KeyData> key_data =
           EsPublicKeyDataFromKeyStruct(key_struct);
       if (!key_data.ok()) {
         return key_data.status();
@@ -482,7 +482,7 @@ void AddKeyOpsVerifyEntry(Struct* key) {
       "verify");
 }
 
-util::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
+absl::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
   JwtEcdsaPublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -512,7 +512,7 @@ util::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
                           "unknown JwtEcdsaAlgorithm");
   }
 
-  util::StatusOr<std::pair<std::string, std::string>> encoded_point =
+  absl::StatusOr<std::pair<std::string, std::string>> encoded_point =
       Sec1EncodeCoordinates(public_key.x(), public_key.y(), curve_type);
   if (!encoded_point.ok()) {
     return encoded_point.status();
@@ -536,7 +536,7 @@ util::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
   return output_key;
 }
 
-util::StatusOr<Struct> RsPublicKeyToKeyStruct(const Keyset_Key& key) {
+absl::StatusOr<Struct> RsPublicKeyToKeyStruct(const Keyset_Key& key) {
   JwtRsaSsaPkcs1PublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -576,7 +576,7 @@ util::StatusOr<Struct> RsPublicKeyToKeyStruct(const Keyset_Key& key) {
   return output_key;
 }
 
-util::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
+absl::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
   JwtRsaSsaPssPublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -616,7 +616,7 @@ util::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
   return output_key;
 }
 
-util::StatusOr<Struct> Ed25519PublicKeyToKeyStruct(const Keyset_Key& key) {
+absl::StatusOr<Struct> Ed25519PublicKeyToKeyStruct(const Keyset_Key& key) {
   Ed25519PublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
     return ::crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
@@ -638,10 +638,10 @@ util::StatusOr<Struct> Ed25519PublicKeyToKeyStruct(const Keyset_Key& key) {
   return output_key;
 }
 
-util::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
+absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     const KeysetHandle& keyset_handle) {
   std::stringbuf keyset_buf;
-  util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
+  absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
       BinaryKeysetWriter::New(absl::make_unique<std::ostream>(&keyset_buf));
   if (!writer.ok()) {
     return writer.status();
@@ -676,7 +676,7 @@ util::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     }
     if (key.key_data().type_url() ==
         "type.googleapis.com/google.crypto.tink.JwtEcdsaPublicKey") {
-      util::StatusOr<Struct> output_key = EsPublicKeyToKeyStruct(key);
+      absl::StatusOr<Struct> output_key = EsPublicKeyToKeyStruct(key);
       if (!output_key.ok()) {
         return output_key.status();
       }
@@ -684,7 +684,7 @@ util::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     } else if (key.key_data().type_url() ==
                "type.googleapis.com/"
                "google.crypto.tink.JwtRsaSsaPkcs1PublicKey") {
-      util::StatusOr<Struct> output_key = RsPublicKeyToKeyStruct(key);
+      absl::StatusOr<Struct> output_key = RsPublicKeyToKeyStruct(key);
       if (!output_key.ok()) {
         return output_key.status();
       }
@@ -692,7 +692,7 @@ util::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     } else if (key.key_data().type_url() ==
                "type.googleapis.com/"
                "google.crypto.tink.JwtRsaSsaPssPublicKey") {
-      util::StatusOr<Struct> output_key = PsPublicKeyToKeyStruct(key);
+      absl::StatusOr<Struct> output_key = PsPublicKeyToKeyStruct(key);
       if (!output_key.ok()) {
         return output_key.status();
       }
@@ -700,7 +700,7 @@ util::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     } else if (key.key_data().type_url() ==
                "type.googleapis.com/"
                "google.crypto.tink.Ed25519PublicKey") {
-      util::StatusOr<Struct> output_key = Ed25519PublicKeyToKeyStruct(key);
+      absl::StatusOr<Struct> output_key = Ed25519PublicKeyToKeyStruct(key);
       if (!output_key.ok()) {
         return output_key.status();
       }

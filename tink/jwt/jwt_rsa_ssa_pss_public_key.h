@@ -54,10 +54,10 @@ class JwtRsaSsaPssPublicKey : public JwtSignaturePublicKey {
     Builder& SetCustomKid(absl::string_view custom_kid);
 
     // Creates JWT RSASSA-PSS public key object from this builder.
-    util::StatusOr<JwtRsaSsaPssPublicKey> Build(PartialKeyAccessToken token);
+    absl::StatusOr<JwtRsaSsaPssPublicKey> Build(PartialKeyAccessToken token);
 
    private:
-    util::StatusOr<absl::optional<std::string>> ComputeKid();
+    absl::StatusOr<absl::optional<std::string>> ComputeKid();
 
     absl::optional<JwtRsaSsaPssParameters> parameters_;
     absl::optional<BigInteger> modulus_;

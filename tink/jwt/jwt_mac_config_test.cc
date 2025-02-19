@@ -92,23 +92,23 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(JwtHs256Template());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
+  absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
       /*key_size_in_bytes=*/32,
       JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -117,12 +117,12 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(JwtMacRegister(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -140,7 +140,7 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoKeySerializationRegistered) {
   key_proto.set_algorithm(JwtHmacAlgorithm::HS256);
   key_proto.set_key_value(key_bytes);
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.JwtHmacKey",
           RestrictedData(key_proto.SerializeAsString(),
@@ -149,17 +149,17 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoKeySerializationRegistered) {
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
+  absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
       /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kIgnored,
       JwtHmacParameters::Algorithm::kHs256);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtHmacKey> key =
+  absl::StatusOr<JwtHmacKey> key =
       JwtHmacKey::Builder()
           .SetParameters(*parameters)
           .SetKeyBytes(
@@ -167,7 +167,7 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoKeySerializationRegistered) {
           .Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());
@@ -175,12 +175,12 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoKeySerializationRegistered) {
 
   ASSERT_THAT(JwtMacRegister(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, InsecureSecretKeyAccess::Get());

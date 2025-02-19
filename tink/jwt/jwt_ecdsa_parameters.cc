@@ -26,7 +26,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<JwtEcdsaParameters> JwtEcdsaParameters::Create(
+absl::StatusOr<JwtEcdsaParameters> JwtEcdsaParameters::Create(
     KidStrategy kid_strategy, Algorithm algorithm) {
   static const std::set<KidStrategy>* kSupportedKidStrategies =
       new std::set<KidStrategy>({KidStrategy::kBase64EncodedKeyId,

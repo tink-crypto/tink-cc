@@ -86,7 +86,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(JwtRsaSsaPkcs1ParametersTest, BuildWorks) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(test_case.modulus_size_in_bits)
           .SetPublicExponent(kF4)
@@ -105,7 +105,7 @@ TEST_P(JwtRsaSsaPkcs1ParametersTest, BuildWorks) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithInvalidKidStrategyFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -119,7 +119,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithInvalidKidStrategyFails) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutKidStrategyFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -131,7 +131,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutKidStrategyFails) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithInvalidAlgorithmFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -145,7 +145,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithInvalidAlgorithmFails) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutAlgorithmFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -156,7 +156,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutAlgorithmFails) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithLargeModulusSizeWorks) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(16789)
           .SetPublicExponent(kF4)
@@ -168,7 +168,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithLargeModulusSizeWorks) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithTooSmallModulusSizeFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2047)
           .SetPublicExponent(kF4)
@@ -182,7 +182,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithTooSmallModulusSizeFails) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutModulusSizeFails) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetPublicExponent(kF4)
           .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
@@ -195,7 +195,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutModulusSizeFails) {
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithValidNonF4PublicExponentWorks) {
   BigInteger nonF4_public_exponent =
       BigInteger(PublicExponentToString(1234567));
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(nonF4_public_exponent)
@@ -207,7 +207,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithValidNonF4PublicExponentWorks) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutPublicExponentDefaultsToF4) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetAlgorithm(JwtRsaSsaPkcs1Parameters::Algorithm::kRs256)
@@ -220,7 +220,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithoutPublicExponentDefaultsToF4) {
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithLargePublicExponentWorks) {
   BigInteger large_public_exponent =
       BigInteger(PublicExponentToString(100000001L));
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(large_public_exponent)
@@ -233,7 +233,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithLargePublicExponentWorks) {
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithEvenPublicExponentFails) {
   BigInteger even_public_exponent = BigInteger(PublicExponentToString(123456));
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(even_public_exponent)
@@ -247,7 +247,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithEvenPublicExponentFails) {
 
 TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithTooSmallPublicExponentFails) {
   BigInteger small_public_exponent = BigInteger(PublicExponentToString(3));
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(small_public_exponent)
@@ -264,7 +264,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithTooLargePublicExponentFails) {
   // Public exponent must have less than 32 bits.
   BigInteger too_large_public_exponent =
       BigInteger(PublicExponentToString(4294967297L));
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(too_large_public_exponent)
@@ -278,7 +278,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, BuildWithTooLargePublicExponentFails) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, CopyConstructor) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -300,7 +300,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, CopyConstructor) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, CopyAssignment) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -324,7 +324,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, CopyAssignment) {
 TEST_P(JwtRsaSsaPkcs1ParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(test_case.modulus_size_in_bits)
           .SetPublicExponent(kF4)
@@ -333,7 +333,7 @@ TEST_P(JwtRsaSsaPkcs1ParametersTest, ParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(test_case.modulus_size_in_bits)
           .SetPublicExponent(kF4)
@@ -349,7 +349,7 @@ TEST_P(JwtRsaSsaPkcs1ParametersTest, ParametersEquals) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, KidStrategyNotEqual) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -359,7 +359,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, KidStrategyNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -373,7 +373,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, KidStrategyNotEqual) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, AlgorithmNotEqual) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -383,7 +383,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, AlgorithmNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -398,7 +398,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, AlgorithmNotEqual) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, ModulusSizeNotEqual) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -408,7 +408,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, ModulusSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetModulusSizeInBits(3072)
           .SetPublicExponent(kF4)
@@ -423,7 +423,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, ModulusSizeNotEqual) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, PublicExponentNotEqual) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(
               JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId)
@@ -435,7 +435,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, PublicExponentNotEqual) {
 
   BigInteger nonF4_public_exponent =
       BigInteger(PublicExponentToString(1234567));
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> other_parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(
               JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId)
@@ -450,7 +450,7 @@ TEST(JwtRsaSsaPkcs1ParametersTest, PublicExponentNotEqual) {
 }
 
 TEST(JwtRsaSsaPkcs1ParametersTest, Clone) {
-  util::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
+  absl::StatusOr<JwtRsaSsaPkcs1Parameters> parameters =
       JwtRsaSsaPkcs1Parameters::Builder()
           .SetKidStrategy(
               JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId)

@@ -91,7 +91,7 @@ class JwtRsaSsaPssParameters : public JwtSignatureParameters {
     // Creates JWT RSASSA-PSS parameters object from this builder. Fails if
     // required fields are not set. The public exponent defaults to F4,
     // if not specified.
-    util::StatusOr<JwtRsaSsaPssParameters> Build();
+    absl::StatusOr<JwtRsaSsaPssParameters> Build();
 
    private:
     static BigInteger CreateDefaultPublicExponent();

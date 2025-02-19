@@ -86,7 +86,7 @@ KeyTemplate* NewJwtRsaSsaPkcs1KeyTemplate(JwtRsaSsaPkcs1Algorithm algorithm,
   key_format.set_modulus_size_in_bits(modulus_size_in_bits);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), public_exponent);
-  util::StatusOr<std::string> e_str =
+  absl::StatusOr<std::string> e_str =
       internal::BignumToString(e.get(), BN_num_bytes(e.get()));
   key_format.set_public_exponent(e_str.value());
   key_format.SerializeToString(key_template->mutable_value());
@@ -106,7 +106,7 @@ KeyTemplate* NewJwtRsaSsaPssKeyTemplate(JwtRsaSsaPssAlgorithm algorithm,
   key_format.set_modulus_size_in_bits(modulus_size_in_bits);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), public_exponent);
-  util::StatusOr<std::string> e_str =
+  absl::StatusOr<std::string> e_str =
       internal::BignumToString(e.get(), BN_num_bytes(e.get()));
   key_format.set_public_exponent(e_str.value());
   key_format.SerializeToString(key_template->mutable_value());

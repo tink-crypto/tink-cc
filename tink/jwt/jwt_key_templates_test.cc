@@ -52,33 +52,33 @@ class JwtMacKeyTemplatesTest : public testing::TestWithParam<KeyTemplate> {
 TEST_P(JwtMacKeyTemplatesTest, CreateComputeVerify) {
   KeyTemplate key_template = GetParam();
 
-  util::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>> keyset_handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(keyset_handle, IsOk());
-  util::StatusOr<std::unique_ptr<crypto::tink::JwtMac>> jwt_mac =
+  absl::StatusOr<std::unique_ptr<crypto::tink::JwtMac>> jwt_mac =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::JwtMac>(ConfigGlobalRegistry());
   ASSERT_THAT(jwt_mac, IsOk());
 
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<std::string> compact =
+  absl::StatusOr<std::string> compact =
       (*jwt_mac)->ComputeMacAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectIssuer("issuer")
                                                .AllowMissingExpiration()
                                                .Build();
   ASSERT_THAT(validator, IsOk());
-  util::StatusOr<VerifiedJwt> verified_jwt =
+  absl::StatusOr<VerifiedJwt> verified_jwt =
       (*jwt_mac)->VerifyMacAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
 
-  util::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
                                                 .ExpectIssuer("unknown")
                                                 .AllowMissingExpiration()
                                                 .Build();
@@ -98,44 +98,44 @@ class JwtSignatureKeyTemplatesTest
 TEST_P(JwtSignatureKeyTemplatesTest, CreateComputeVerify) {
   KeyTemplate key_template = GetParam();
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> private_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> private_handle =
       KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(private_handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> sign =
       (*private_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeySign>(
               ConfigGlobalRegistry());
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*private_handle)->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> verify =
       (*public_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
               ConfigGlobalRegistry());
   ASSERT_THAT(verify, IsOk());
 
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
 
-  util::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
+  absl::StatusOr<std::string> compact = (*sign)->SignAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
 
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
-                               .ExpectIssuer("issuer")
-                               .AllowMissingExpiration()
-                               .Build();
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+                                               .ExpectIssuer("issuer")
+                                               .AllowMissingExpiration()
+                                               .Build();
   ASSERT_THAT(validator, IsOk());
-  util::StatusOr<VerifiedJwt> verified_jwt =
+  absl::StatusOr<VerifiedJwt> verified_jwt =
       (*verify)->VerifyAndDecode(*compact, *validator);
   ASSERT_THAT(verified_jwt, IsOk());
   EXPECT_THAT(verified_jwt->GetIssuer(), test::IsOkAndHolds("issuer"));
 
-  util::StatusOr<JwtValidator>  validator2 = JwtValidatorBuilder()
-                                .ExpectIssuer("unknown")
-                                .AllowMissingExpiration()
-                                .Build();
+  absl::StatusOr<JwtValidator> validator2 = JwtValidatorBuilder()
+                                                .ExpectIssuer("unknown")
+                                                .AllowMissingExpiration()
+                                                .Build();
   ASSERT_THAT(validator, IsOk());
   EXPECT_FALSE((*verify)->VerifyAndDecode(*compact, *validator2).ok());
 }

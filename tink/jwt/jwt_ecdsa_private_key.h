@@ -38,7 +38,7 @@ class JwtEcdsaPrivateKey : public JwtSignaturePrivateKey {
   JwtEcdsaPrivateKey(JwtEcdsaPrivateKey&& other) = default;
   JwtEcdsaPrivateKey& operator=(JwtEcdsaPrivateKey&& other) = default;
 
-  static util::StatusOr<JwtEcdsaPrivateKey> Create(
+  static absl::StatusOr<JwtEcdsaPrivateKey> Create(
       const JwtEcdsaPublicKey& public_key,
       const RestrictedBigInteger& private_key_value,
       PartialKeyAccessToken token);

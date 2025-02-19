@@ -27,7 +27,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<std::unique_ptr<RawKemEncapsulate>>
+absl::StatusOr<std::unique_ptr<RawKemEncapsulate>>
 NewMlKemRawEncapsulateBoringSsl(MlKemPublicKey recipient_key);
 
 }  // namespace internal

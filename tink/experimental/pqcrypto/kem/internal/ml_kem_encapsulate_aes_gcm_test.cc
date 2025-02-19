@@ -49,7 +49,7 @@ using ::testing::HasSubstr;
 AesGcmParameters CreateAes256GcmParameters() {
   CHECK_OK(AeadConfig::Register());
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -61,15 +61,15 @@ AesGcmParameters CreateAes256GcmParameters() {
 }
 
 TEST(MlKemEncapsulateAes256GcmTest, InvalidAesKeySize) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<AesGcmParameters> aes_128_parameters =
+  absl::StatusOr<AesGcmParameters> aes_128_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -87,15 +87,15 @@ TEST(MlKemEncapsulateAes256GcmTest, InvalidAesKeySize) {
 }
 
 TEST(MlKemEncapsulateAes256GcmTest, InvalidIdRequirementForDerivedKey) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<AesGcmParameters> aes_tink_parameters =
+  absl::StatusOr<AesGcmParameters> aes_tink_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -113,32 +113,32 @@ TEST(MlKemEncapsulateAes256GcmTest, InvalidIdRequirementForDerivedKey) {
 }
 
 TEST(MlKemEncapsulateAes256GcmTest, EncapsulateDeriveAeadWorks) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
       NewMlKemEncapsulateAes256Gcm(private_key->GetPublicKey(),
                                    CreateAes256GcmParameters());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<KemEncapsulation> encapsulation =
+  absl::StatusOr<KemEncapsulation> encapsulation =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       encapsulation->keyset_handle.GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(aead, IsOk());
 
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*aead)->Encrypt("plaintext", "associated data");
   ASSERT_THAT(ciphertext, IsOk());
 
-  util::StatusOr<std::string> decrypted =
+  absl::StatusOr<std::string> decrypted =
       (*aead)->Decrypt(*ciphertext, "associated data");
   EXPECT_THAT(decrypted, IsOkAndHolds("plaintext"));
 
@@ -151,11 +151,11 @@ TEST(MlKemRawEncapsulateAes256GcmTest, FipsMode) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
 
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 

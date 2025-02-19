@@ -39,19 +39,19 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 
 TEST(MlKemRawEncapsulateBoringSslTest, EncapsulationLengthsAreCorrect) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
       NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<RawKemEncapsulation> kem_encasulation =
+  absl::StatusOr<RawKemEncapsulation> kem_encasulation =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(kem_encasulation, IsOk());
 
@@ -61,23 +61,23 @@ TEST(MlKemRawEncapsulateBoringSslTest, EncapsulationLengthsAreCorrect) {
 }
 
 TEST(MlKemRawEncapsulateBoringSslTest, EncapsulationIsNonDeterministic) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
       NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<RawKemEncapsulation> kem_encasulation1 =
+  absl::StatusOr<RawKemEncapsulation> kem_encasulation1 =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(kem_encasulation1, IsOk());
 
-  util::StatusOr<RawKemEncapsulation> kem_encasulation2 =
+  absl::StatusOr<RawKemEncapsulation> kem_encasulation2 =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(kem_encasulation2, IsOk());
 
@@ -90,11 +90,11 @@ TEST(MlKemRawEncapsulateBoringSslTest, FipsMode) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
 
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 

@@ -26,9 +26,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
+absl::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
     const MlKemParameters& key_parameters, absl::optional<int> id_requirement);
-
 }
 }  // namespace tink
 }  // namespace crypto

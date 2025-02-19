@@ -31,11 +31,11 @@ namespace {
 using ::crypto::tink::test::IsOk;
 
 TEST(MlKemTestUtilTest, GenerateMlKemPrivateKeyWorks) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 }

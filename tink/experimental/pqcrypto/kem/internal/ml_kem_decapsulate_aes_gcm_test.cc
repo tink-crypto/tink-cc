@@ -59,7 +59,7 @@ using ::testing::HasSubstr;
 AesGcmParameters CreateAes256GcmParameters() {
   CHECK_OK(AeadConfig::Register());
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -71,15 +71,15 @@ AesGcmParameters CreateAes256GcmParameters() {
 }
 
 TEST(MlKemDecapsulateAes256GcmTest, InvalidAesKeySize) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<AesGcmParameters> aes_128_parameters =
+  absl::StatusOr<AesGcmParameters> aes_128_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -95,15 +95,15 @@ TEST(MlKemDecapsulateAes256GcmTest, InvalidAesKeySize) {
 }
 
 TEST(MlKemEncapsulateAes256GcmTest, InvalidIdRequirementForDerivedKey) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<AesGcmParameters> aes_tink_parameters =
+  absl::StatusOr<AesGcmParameters> aes_tink_parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -120,47 +120,47 @@ TEST(MlKemEncapsulateAes256GcmTest, InvalidIdRequirementForDerivedKey) {
 }
 
 TEST(MlKemDecapsulateAes256GcmTest, EncapsulateDecapsulateAeadWorks) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
   // Exchange a key pair.
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
       NewMlKemEncapsulateAes256Gcm(private_key->GetPublicKey(),
                                    CreateAes256GcmParameters());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
       NewMlKemDecapsulateAes256Gcm(*private_key, CreateAes256GcmParameters());
   ASSERT_THAT(decapsulate, IsOk());
 
   // Exchange an encapsulation and derive AEAD primitives.
-  util::StatusOr<KemEncapsulation> encapsulation =
+  absl::StatusOr<KemEncapsulation> encapsulation =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
-  util::StatusOr<KeysetHandle> decapsulation =
+  absl::StatusOr<KeysetHandle> decapsulation =
       (*decapsulate)->Decapsulate(encapsulation->ciphertext);
   ASSERT_THAT(decapsulation, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> encaps_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> encaps_aead =
       encapsulation->keyset_handle.GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(encaps_aead, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> decaps_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> decaps_aead =
       decapsulation->GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(decaps_aead, IsOk());
 
   // Check that the AEAD primitives are compatible.
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*encaps_aead)->Encrypt("plaintext", "associated data");
   ASSERT_THAT(ciphertext, IsOk());
 
-  util::StatusOr<std::string> decrypted =
+  absl::StatusOr<std::string> decrypted =
       (*decaps_aead)->Decrypt(*ciphertext, "associated data");
   EXPECT_THAT(decrypted, IsOkAndHolds("plaintext"));
 
@@ -170,11 +170,11 @@ TEST(MlKemDecapsulateAes256GcmTest, EncapsulateDecapsulateAeadWorks) {
 
   // The AEAD primitives are also compatible for messages sent in the other
   // direction.
-  util::StatusOr<std::string> ciphertext2 =
+  absl::StatusOr<std::string> ciphertext2 =
       (*decaps_aead)->Encrypt("plaintext 2", "associated data 2");
   ASSERT_THAT(ciphertext2, IsOk());
 
-  util::StatusOr<std::string> decrypted2 =
+  absl::StatusOr<std::string> decrypted2 =
       (*encaps_aead)->Decrypt(*ciphertext2, "associated data 2");
   EXPECT_THAT(decrypted2, IsOkAndHolds("plaintext 2"));
 
@@ -185,53 +185,53 @@ TEST(MlKemDecapsulateAes256GcmTest, EncapsulateDecapsulateAeadWorks) {
 
 TEST(MlKemDecapsulateAes256GcmTest,
      WrongCiphertextDecapsulateAeadIsIncompatible) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
   // Exchange a key pair.
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
       NewMlKemEncapsulateAes256Gcm(private_key->GetPublicKey(),
                                    CreateAes256GcmParameters());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
       NewMlKemDecapsulateAes256Gcm(*private_key, CreateAes256GcmParameters());
   ASSERT_THAT(decapsulate, IsOk());
 
   // Exchange an encapsulation and derive AEAD primitives.
-  util::StatusOr<KemEncapsulation> encapsulation =
+  absl::StatusOr<KemEncapsulation> encapsulation =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
-  util::StatusOr<KeysetHandle> decapsulation =
+  absl::StatusOr<KeysetHandle> decapsulation =
       (*decapsulate)
           ->Decapsulate(
               absl::StrCat(private_key->GetOutputPrefix(),
                            std::string(MLKEM768_CIPHERTEXT_BYTES, 'A')));
   ASSERT_THAT(decapsulation, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> encaps_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> encaps_aead =
       encapsulation->keyset_handle.GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(encaps_aead, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> decaps_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> decaps_aead =
       decapsulation->GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(decaps_aead, IsOk());
 
   // Check that the AEAD primitives are incompatible, in either direction.
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*encaps_aead)->Encrypt("plaintext", "associated data");
   ASSERT_THAT(ciphertext, IsOk());
 
   EXPECT_THAT((*decaps_aead)->Decrypt(*ciphertext, "associated data").status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 
-  util::StatusOr<std::string> ciphertext2 =
+  absl::StatusOr<std::string> ciphertext2 =
       (*decaps_aead)->Encrypt("plaintext 2", "associated data 2");
   ASSERT_THAT(ciphertext2, IsOk());
 
@@ -245,11 +245,11 @@ TEST(MlKemDecapsulateAes256GcmTest, FipsMode) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
 
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
@@ -336,34 +336,34 @@ TEST(MlKemRawDecapsulateBoringSslTest, TestVectorEncapsulateDecapsulate) {
   constexpr absl::string_view kPlaintext = "Hello world";
   constexpr absl::string_view kAssociatedData = "associated data";
 
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
   std::string public_key_bytes = test::HexDecodeOrDie(kHexPublicKey);
-  util::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       *key_parameters, public_key_bytes, 0x41424344, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   std::string private_seed_bytes = test::HexDecodeOrDie(kHexPrivateSeed);
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
   // Create a KEM pair.
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
       NewMlKemDecapsulateAes256Gcm(*private_key, CreateAes256GcmParameters());
   ASSERT_THAT(decapsulate, IsOk());
 
   std::string ciphertext_bytes =
       test::HexDecodeOrDie(kHexKemCiphertextWithTinkPrefix);
-  util::StatusOr<KeysetHandle> keyset_handle =
+  absl::StatusOr<KeysetHandle> keyset_handle =
       (*decapsulate)->Decapsulate(ciphertext_bytes);
   ASSERT_THAT(keyset_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> decaps_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> decaps_aead =
       keyset_handle->GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(decaps_aead, IsOk());
 

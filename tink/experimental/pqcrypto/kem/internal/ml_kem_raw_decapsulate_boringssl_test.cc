@@ -52,27 +52,27 @@ using ::crypto::tink::test::StatusIs;
 using ::testing::HasSubstr;
 
 TEST(MlKemRawDecapsulateBoringSslTest, EncapsulateDecapsulateWorks) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
       NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<RawKemEncapsulation> encapsulation =
+  absl::StatusOr<RawKemEncapsulation> encapsulation =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
       NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
-  util::StatusOr<RestrictedData> shared_secret =
+  absl::StatusOr<RestrictedData> shared_secret =
       (*decapsulate)->Decapsulate(encapsulation->ciphertext);
   ASSERT_THAT(shared_secret, IsOk());
 
@@ -80,27 +80,27 @@ TEST(MlKemRawDecapsulateBoringSslTest, EncapsulateDecapsulateWorks) {
 }
 
 TEST(MlKemRawDecapsulateBoringSslTest, WrongCiphertextYieldsWrongSharedSecret) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
       NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<RawKemEncapsulation> encapsulation =
+  absl::StatusOr<RawKemEncapsulation> encapsulation =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
       NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
-  util::StatusOr<RestrictedData> shared_secret =
+  absl::StatusOr<RestrictedData> shared_secret =
       (*decapsulate)
           ->Decapsulate(
               absl::StrCat(private_key->GetOutputPrefix(),
@@ -112,23 +112,23 @@ TEST(MlKemRawDecapsulateBoringSslTest, WrongCiphertextYieldsWrongSharedSecret) {
 
 TEST(MlKemRawDecapsulateBoringSslTest,
      DecapsulateWithModifiedOutputPrefixFails) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemEncapsulate>> encapsulate =
       NewMlKemRawEncapsulateBoringSsl(private_key->GetPublicKey());
   ASSERT_THAT(encapsulate, IsOk());
 
-  util::StatusOr<RawKemEncapsulation> encapsulation =
+  absl::StatusOr<RawKemEncapsulation> encapsulation =
       (*encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
       NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
@@ -144,11 +144,11 @@ TEST(MlKemRawDecapsulateBoringSslTest, FipsMode) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
 
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, 0x42434445);
   ASSERT_THAT(private_key, IsOk());
 
@@ -231,29 +231,29 @@ TEST(MlKemRawDecapsulateBoringSslTest, TestVectorEncapsulateDecapsulate) {
   constexpr absl::string_view kHexSharedSecret =
       "e7184a0975ee3470878d2d159ec83129c8aec253d4ee17b4810311d198cd0368";
 
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   ASSERT_THAT(key_parameters, IsOk());
 
   std::string public_key_bytes = test::HexDecodeOrDie(kHexPublicKey);
-  util::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       *key_parameters, public_key_bytes, 0x41424344, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   std::string private_seed_bytes = test::HexDecodeOrDie(kHexPrivateSeed);
-  util::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
+  absl::StatusOr<MlKemPrivateKey> private_key = MlKemPrivateKey::Create(
       *public_key,
       RestrictedData(private_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemDecapsulate>> decapsulate =
       NewMlKemRawDecapsulateBoringSsl(*private_key);
   ASSERT_THAT(decapsulate, IsOk());
 
   std::string ciphertext_bytes =
       test::HexDecodeOrDie(kHexCiphertextWithTinkPrefix);
-  util::StatusOr<RestrictedData> shared_secret =
+  absl::StatusOr<RestrictedData> shared_secret =
       (*decapsulate)->Decapsulate(ciphertext_bytes);
   ASSERT_THAT(shared_secret, IsOk());
 

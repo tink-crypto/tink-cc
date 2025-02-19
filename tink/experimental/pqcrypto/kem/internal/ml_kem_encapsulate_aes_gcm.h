@@ -34,7 +34,7 @@ namespace internal {
 //
 // This function will return an error if the AesGcmParameters have an ID
 // requirement.
-util::StatusOr<std::unique_ptr<KemEncapsulate>> NewMlKemEncapsulateAes256Gcm(
+absl::StatusOr<std::unique_ptr<KemEncapsulate>> NewMlKemEncapsulateAes256Gcm(
     MlKemPublicKey recipient_key, AesGcmParameters aes_gcm_parameters);
 
 }  // namespace internal

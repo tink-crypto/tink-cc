@@ -43,19 +43,18 @@ namespace internal {
 
 using ::crypto::tink::util::SecretUniquePtr;
 
-util::StatusOr<SenderHpkeContextBoringSsl>
-HpkeContextBoringSsl::SetupSender(const HpkeParams& params,
-                                  absl::string_view recipient_public_key,
-                                  absl::string_view context_info) {
-  util::StatusOr<const EVP_HPKE_KEM *> kem = KemParam(params);
+absl::StatusOr<SenderHpkeContextBoringSsl> HpkeContextBoringSsl::SetupSender(
+    const HpkeParams &params, absl::string_view recipient_public_key,
+    absl::string_view context_info) {
+  absl::StatusOr<const EVP_HPKE_KEM *> kem = KemParam(params);
   if (!kem.ok()) {
     return kem.status();
   }
-  util::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
+  absl::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
   if (!kdf.ok()) {
     return kdf.status();
   }
-  util::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
+  absl::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
   if (!aead.ok()) {
     return aead.status();
   }
@@ -79,19 +78,19 @@ HpkeContextBoringSsl::SetupSender(const HpkeParams& params,
   return std::move(tuple);
 }
 
-util::StatusOr<std::unique_ptr<HpkeContextBoringSsl>>
+absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>>
 HpkeContextBoringSsl::SetupRecipient(
-    const HpkeParams& params, const util::SecretData& recipient_private_key,
+    const HpkeParams &params, const util::SecretData &recipient_private_key,
     absl::string_view encapsulated_key, absl::string_view info) {
-  util::StatusOr<const EVP_HPKE_KEM *> kem = KemParam(params);
+  absl::StatusOr<const EVP_HPKE_KEM *> kem = KemParam(params);
   if (!kem.ok()) {
     return kem.status();
   }
-  util::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
+  absl::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
   if (!kdf.ok()) {
     return kdf.status();
   }
-  util::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
+  absl::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
   if (!aead.ok()) {
     return aead.status();
   }
@@ -123,7 +122,7 @@ HpkeContextBoringSsl::SetupRecipient(
   return absl::WrapUnique(new HpkeContextBoringSsl(std::move(context)));
 }
 
-util::StatusOr<std::string> HpkeContextBoringSsl::Seal(
+absl::StatusOr<std::string> HpkeContextBoringSsl::Seal(
     absl::string_view plaintext, absl::string_view associated_data) {
   std::string ciphertext;
   subtle::ResizeStringUninitialized(
@@ -149,7 +148,7 @@ util::StatusOr<std::string> HpkeContextBoringSsl::Seal(
   return ciphertext;
 }
 
-util::StatusOr<std::string> HpkeContextBoringSsl::Open(
+absl::StatusOr<std::string> HpkeContextBoringSsl::Open(
     absl::string_view ciphertext, absl::string_view associated_data) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(&plaintext, ciphertext.size());
@@ -175,7 +174,7 @@ util::StatusOr<std::string> HpkeContextBoringSsl::Open(
   return plaintext;
 }
 
-util::StatusOr<util::SecretData> HpkeContextBoringSsl::Export(
+absl::StatusOr<util::SecretData> HpkeContextBoringSsl::Export(
     absl::string_view exporter_context, int64_t secret_length) {
   std::string secret;
   subtle::ResizeStringUninitialized(&secret, secret_length);

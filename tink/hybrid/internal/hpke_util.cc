@@ -31,7 +31,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-util::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
+absl::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
   switch (kem) {
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       return HpkeKem::kX25519HkdfSha256;
@@ -44,7 +44,7 @@ util::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
   }
 }
 
-util::StatusOr<HpkeKdf> HpkeKdfProtoToEnum(google::crypto::tink::HpkeKdf kdf) {
+absl::StatusOr<HpkeKdf> HpkeKdfProtoToEnum(google::crypto::tink::HpkeKdf kdf) {
   switch (kdf) {
     case google::crypto::tink::HpkeKdf::HKDF_SHA256:
       return HpkeKdf::kHkdfSha256;
@@ -55,7 +55,7 @@ util::StatusOr<HpkeKdf> HpkeKdfProtoToEnum(google::crypto::tink::HpkeKdf kdf) {
   }
 }
 
-util::StatusOr<HpkeAead> HpkeAeadProtoToEnum(
+absl::StatusOr<HpkeAead> HpkeAeadProtoToEnum(
     google::crypto::tink::HpkeAead aead) {
   switch (aead) {
     case google::crypto::tink::HpkeAead::AES_128_GCM:
@@ -73,18 +73,18 @@ util::StatusOr<HpkeAead> HpkeAeadProtoToEnum(
 
 }  // namespace
 
-util::StatusOr<HpkeParams> HpkeParamsProtoToStruct(
+absl::StatusOr<HpkeParams> HpkeParamsProtoToStruct(
     google::crypto::tink::HpkeParams params) {
-  util::StatusOr<HpkeKem> kem = HpkeKemProtoToEnum(params.kem());
+  absl::StatusOr<HpkeKem> kem = HpkeKemProtoToEnum(params.kem());
   if (!kem.ok()) return kem.status();
-  util::StatusOr<HpkeKdf> kdf = HpkeKdfProtoToEnum(params.kdf());
+  absl::StatusOr<HpkeKdf> kdf = HpkeKdfProtoToEnum(params.kdf());
   if (!kdf.ok()) return kdf.status();
-  util::StatusOr<HpkeAead> aead = HpkeAeadProtoToEnum(params.aead());
+  absl::StatusOr<HpkeAead> aead = HpkeAeadProtoToEnum(params.aead());
   if (!aead.ok()) return aead.status();
   return HpkeParams{*kem, *kdf, *aead};
 }
 
-util::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
+absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
     google::crypto::tink::HpkeKem kem) {
   switch (kem) {
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:

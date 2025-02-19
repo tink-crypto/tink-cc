@@ -49,7 +49,7 @@ using HpkeKemProto = ::google::crypto::tink::HpkeKem;
 using HpkeParamsProto = ::google::crypto::tink::HpkeParams;
 using HpkePrivateKeyProto = ::google::crypto::tink::HpkePrivateKey;
 
-util::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
+absl::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
   switch (kem_id) {
     case HpkeParameters::KemId::kDhkemP256HkdfSha256:
       return HpkeKemProto::DHKEM_P256_HKDF_SHA256;
@@ -65,7 +65,7 @@ util::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
   }
 }
 
-util::StatusOr<HpkeKdfProto> FromKdfId(HpkeParameters::KdfId kdf_id) {
+absl::StatusOr<HpkeKdfProto> FromKdfId(HpkeParameters::KdfId kdf_id) {
   switch (kdf_id) {
     case HpkeParameters::KdfId::kHkdfSha256:
       return HpkeKdfProto::HKDF_SHA256;
@@ -79,7 +79,7 @@ util::StatusOr<HpkeKdfProto> FromKdfId(HpkeParameters::KdfId kdf_id) {
   }
 }
 
-util::StatusOr<HpkeAeadProto> FromAeadId(HpkeParameters::AeadId aead_id) {
+absl::StatusOr<HpkeAeadProto> FromAeadId(HpkeParameters::AeadId aead_id) {
   switch (aead_id) {
     case HpkeParameters::AeadId::kAesGcm128:
       return HpkeAeadProto::AES_128_GCM;
@@ -93,18 +93,18 @@ util::StatusOr<HpkeAeadProto> FromAeadId(HpkeParameters::AeadId aead_id) {
   }
 }
 
-util::StatusOr<HpkeParamsProto> FromParameters(HpkeParameters parameters) {
-  util::StatusOr<HpkeKemProto> kem = FromKemId(parameters.GetKemId());
+absl::StatusOr<HpkeParamsProto> FromParameters(HpkeParameters parameters) {
+  absl::StatusOr<HpkeKemProto> kem = FromKemId(parameters.GetKemId());
   if (!kem.ok()) {
     return kem.status();
   }
 
-  util::StatusOr<HpkeKdfProto> kdf = FromKdfId(parameters.GetKdfId());
+  absl::StatusOr<HpkeKdfProto> kdf = FromKdfId(parameters.GetKdfId());
   if (!kdf.ok()) {
     return kdf.status();
   }
 
-  util::StatusOr<HpkeAeadProto> aead = FromAeadId(parameters.GetAeadId());
+  absl::StatusOr<HpkeAeadProto> aead = FromAeadId(parameters.GetAeadId());
   if (!aead.ok()) {
     return aead.status();
   }
@@ -119,9 +119,9 @@ util::StatusOr<HpkeParamsProto> FromParameters(HpkeParameters parameters) {
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
     const HpkePrivateKey& recipient_private_key) {
-  util::StatusOr<HpkeParamsProto> params =
+  absl::StatusOr<HpkeParamsProto> params =
       FromParameters(recipient_private_key.GetParameters());
   if (!params.ok()) {
     return params.status();
@@ -132,7 +132,7 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
              recipient_private_key.GetOutputPrefix());
 }
 
-util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
     const HpkePrivateKeyProto& recipient_private_key) {
   if (recipient_private_key.private_key().empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -152,7 +152,7 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
       /*output_prefix=*/"");
 }
 
-util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
     const google::crypto::tink::HpkeParams& hpke_params,
     const util::SecretData& recipient_private_key,
     absl::string_view output_prefix) {
@@ -174,9 +174,9 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
       new HpkeDecrypt(hpke_params, recipient_private_key, output_prefix))};
 }
 
-util::StatusOr<std::string> HpkeDecrypt::DecryptNoPrefix(
+absl::StatusOr<std::string> HpkeDecrypt::DecryptNoPrefix(
     absl::string_view ciphertext, absl::string_view context_info) const {
-  util::StatusOr<int32_t> encoding_size =
+  absl::StatusOr<int32_t> encoding_size =
       internal::HpkeEncapsulatedKeyLength(hpke_params_.kem());
   if (!encoding_size.ok()) return encoding_size.status();
 
@@ -188,11 +188,11 @@ util::StatusOr<std::string> HpkeDecrypt::DecryptNoPrefix(
   absl::string_view encapsulated_key = ciphertext.substr(0, *encoding_size);
   absl::string_view ciphertext_payload = ciphertext.substr(*encoding_size);
 
-  util::StatusOr<internal::HpkeParams> params =
+  absl::StatusOr<internal::HpkeParams> params =
       internal::HpkeParamsProtoToStruct(hpke_params_);
   if (!params.ok()) return params.status();
 
-  util::StatusOr<std::unique_ptr<internal::HpkeContext>> recipient_context =
+  absl::StatusOr<std::unique_ptr<internal::HpkeContext>> recipient_context =
       internal::HpkeContext::SetupRecipient(*params, recipient_private_key_,
                                             encapsulated_key, context_info);
   if (!recipient_context.ok()) return recipient_context.status();
@@ -200,7 +200,7 @@ util::StatusOr<std::string> HpkeDecrypt::DecryptNoPrefix(
   return (*recipient_context)->Open(ciphertext_payload, /*associated_data=*/"");
 }
 
-util::StatusOr<std::string> HpkeDecrypt::Decrypt(
+absl::StatusOr<std::string> HpkeDecrypt::Decrypt(
     absl::string_view ciphertext, absl::string_view context_info) const {
   if (!absl::StartsWith(ciphertext, output_prefix_)) {
     return util::Status(absl::StatusCode::kInvalidArgument,

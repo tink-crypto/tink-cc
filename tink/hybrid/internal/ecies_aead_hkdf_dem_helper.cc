@@ -59,18 +59,16 @@ using ::google::crypto::tink::AesSivKeyFormat;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
 
-crypto::tink::util::StatusOr<std::unique_ptr<AeadOrDaead>> Wrap(
-    crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::Aead>> aead_or) {
+absl::StatusOr<std::unique_ptr<AeadOrDaead>> Wrap(
+    absl::StatusOr<std::unique_ptr<crypto::tink::Aead>> aead_or) {
   if (!aead_or.ok()) {
     return aead_or.status();
   }
   return std::make_unique<AeadOrDaead>(std::move(aead_or.value()));
 }
 
-crypto::tink::util::StatusOr<std::unique_ptr<AeadOrDaead>> Wrap(
-    crypto::tink::util::StatusOr<
-        std::unique_ptr<crypto::tink::DeterministicAead>>
-        daead_or) {
+absl::StatusOr<std::unique_ptr<AeadOrDaead>> Wrap(
+    absl::StatusOr<std::unique_ptr<crypto::tink::DeterministicAead>> daead_or) {
   if (!daead_or.ok()) {
     return daead_or.status();
   }
@@ -79,7 +77,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<AeadOrDaead>> Wrap(
 
 }  // namespace
 
-util::StatusOr<EciesAeadHkdfDemHelper::DemKeyParams>
+absl::StatusOr<EciesAeadHkdfDemHelper::DemKeyParams>
 EciesAeadHkdfDemHelper::GetKeyParams(const KeyTemplate& key_template) {
   const std::string& type_url = key_template.type_url();
   if (type_url == "type.googleapis.com/google.crypto.tink.AesGcmKey") {
@@ -126,7 +124,7 @@ EciesAeadHkdfDemHelper::GetKeyParams(const KeyTemplate& key_template) {
 }
 
 // static
-util::StatusOr<std::unique_ptr<const EciesAeadHkdfDemHelper>>
+absl::StatusOr<std::unique_ptr<const EciesAeadHkdfDemHelper>>
 EciesAeadHkdfDemHelper::New(const KeyTemplate& dem_key_template) {
   auto key_params_or = GetKeyParams(dem_key_template);
   if (!key_params_or.ok()) return key_params_or.status();
@@ -135,7 +133,7 @@ EciesAeadHkdfDemHelper::New(const KeyTemplate& dem_key_template) {
       new EciesAeadHkdfDemHelper(dem_key_template, key_params));
 }
 
-crypto::tink::util::StatusOr<std::unique_ptr<AeadOrDaead>>
+absl::StatusOr<std::unique_ptr<AeadOrDaead>>
 EciesAeadHkdfDemHelper::GetAeadOrDaead(
     const util::SecretData& symmetric_key_value) const {
   if (symmetric_key_value.size() != key_params_.key_size_in_bytes) {

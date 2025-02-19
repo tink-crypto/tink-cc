@@ -46,7 +46,7 @@ using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 
 util::Status GenerateX25519Key(HpkePublicKeyProto& public_key,
                                HpkePrivateKeyProto& private_key) {
-  util::StatusOr<std::unique_ptr<internal::X25519Key>> key =
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> key =
       internal::NewX25519Key();
   if (!key.ok()) {
     return key.status();
@@ -60,18 +60,18 @@ util::Status GenerateX25519Key(HpkePublicKeyProto& public_key,
 util::Status GenerateEcKey(HpkePublicKeyProto& public_key,
                            HpkePrivateKeyProto& private_key,
                            EllipticCurveType ec_curve_type) {
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(ec_curve_type);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(ec_curve_type);
   if (!ec_key.ok()) {
     return ec_key.status();
   }
 
-  util::StatusOr<SslUniquePtr<EC_POINT>> pub_point =
+  absl::StatusOr<SslUniquePtr<EC_POINT>> pub_point =
       internal::GetEcPoint(ec_curve_type, ec_key->pub_x, ec_key->pub_y);
   if (!pub_point.ok()) {
     return pub_point.status();
   }
 
-  util::StatusOr<std::string> encoded_pub_point = EcPointEncode(
+  absl::StatusOr<std::string> encoded_pub_point = EcPointEncode(
       ec_curve_type, EcPointFormat::UNCOMPRESSED, pub_point->get());
   if (!encoded_pub_point.ok()) {
     return encoded_pub_point.status();
@@ -93,7 +93,7 @@ util::Status HpkePrivateKeyManager::ValidateKeyFormat(
   return ValidateParams(key_format.params());
 }
 
-util::StatusOr<HpkePrivateKeyProto> HpkePrivateKeyManager::CreateKey(
+absl::StatusOr<HpkePrivateKeyProto> HpkePrivateKeyManager::CreateKey(
     const HpkeKeyFormat& key_format) const {
   // Set key metadata.
   HpkePrivateKeyProto private_key;
@@ -142,7 +142,7 @@ util::StatusOr<HpkePrivateKeyProto> HpkePrivateKeyManager::CreateKey(
   return private_key;
 }
 
-util::StatusOr<HpkePublicKeyProto> HpkePrivateKeyManager::GetPublicKey(
+absl::StatusOr<HpkePublicKeyProto> HpkePrivateKeyManager::GetPublicKey(
     const HpkePrivateKeyProto& private_key) const {
   return private_key.public_key();
 }

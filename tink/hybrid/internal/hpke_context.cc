@@ -43,7 +43,7 @@ std::string ConcatenatePayload(absl::string_view encapsulated_key,
   return absl::StrCat(encapsulated_key, ciphertext);
 }
 
-util::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
+absl::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
                                              absl::string_view payload) {
   if (kem == HpkeKem::kP256HkdfSha256) {
     return HpkePayloadView(payload.substr(0, kP256KemEncodingLengthInBytes),
@@ -57,14 +57,14 @@ util::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
       absl::StrCat("Unable to split HPKE payload for KEM type ", kem));
 }
 
-util::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupSender(
+absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupSender(
     const HpkeParams& params, absl::string_view recipient_public_key,
     absl::string_view info) {
   if (recipient_public_key.empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is empty.");
   }
-  util::StatusOr<SenderHpkeContextBoringSsl> sender_context =
+  absl::StatusOr<SenderHpkeContextBoringSsl> sender_context =
       HpkeContextBoringSsl::SetupSender(params, recipient_public_key, info);
   if (!sender_context.ok()) {
     return sender_context.status();
@@ -73,7 +73,7 @@ util::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupSender(
       sender_context->encapsulated_key, std::move(sender_context->context)))};
 }
 
-util::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupRecipient(
+absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupRecipient(
     const HpkeParams& params, const util::SecretData& recipient_private_key,
     absl::string_view encapsulated_key, absl::string_view info) {
   if (recipient_private_key.empty()) {
@@ -84,7 +84,7 @@ util::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupRecipient(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Encapsulated key is empty.");
   }
-  util::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> context =
+  absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> context =
       HpkeContextBoringSsl::SetupRecipient(params, recipient_private_key,
                                            encapsulated_key, info);
   if (!context.ok()) {

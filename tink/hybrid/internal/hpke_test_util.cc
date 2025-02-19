@@ -167,7 +167,7 @@ HpkeTestParams DefaultHpkeTestParams() {
   return HpkeTestParams(kTestX25519HkdfSha256Aes128Gcm);
 }
 
-util::StatusOr<HpkeTestParams> CreateHpkeTestParams(
+absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(
     const google::crypto::tink::HpkeParams& proto_params) {
   HpkeParams params;
 
@@ -212,7 +212,7 @@ util::StatusOr<HpkeTestParams> CreateHpkeTestParams(
   return CreateHpkeTestParams(params);
 }
 
-util::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params) {
+absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params) {
   if (params.kdf != HpkeKdf::kHkdfSha256) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,

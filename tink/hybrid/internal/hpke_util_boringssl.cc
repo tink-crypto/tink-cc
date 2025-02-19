@@ -29,7 +29,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
+absl::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
   switch (params.kem) {
     case HpkeKem::kP256HkdfSha256:
       return EVP_hpke_p256_hkdf_sha256();
@@ -42,7 +42,7 @@ util::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
   }
 }
 
-util::StatusOr<const EVP_HPKE_KEM*> KemParam(
+absl::StatusOr<const EVP_HPKE_KEM*> KemParam(
     const google::crypto::tink::HpkeKem& kem) {
   switch (kem) {
     case google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256:
@@ -56,12 +56,12 @@ util::StatusOr<const EVP_HPKE_KEM*> KemParam(
   }
 }
 
-util::StatusOr<const EVP_HPKE_KEM*> KemParam(
+absl::StatusOr<const EVP_HPKE_KEM*> KemParam(
     const google::crypto::tink::HpkeParams& params) {
   return KemParam(params.kem());
 }
 
-util::StatusOr<const EVP_HPKE_KDF*> KdfParam(const HpkeParams& params) {
+absl::StatusOr<const EVP_HPKE_KDF*> KdfParam(const HpkeParams& params) {
   switch (params.kdf) {
     case HpkeKdf::kHkdfSha256:
       return EVP_hpke_hkdf_sha256();
@@ -72,7 +72,7 @@ util::StatusOr<const EVP_HPKE_KDF*> KdfParam(const HpkeParams& params) {
   }
 }
 
-util::StatusOr<const EVP_HPKE_KDF*> KdfParam(
+absl::StatusOr<const EVP_HPKE_KDF*> KdfParam(
     const google::crypto::tink::HpkeParams& params) {
   switch (params.kdf()) {
     case google::crypto::tink::HpkeKdf::HKDF_SHA256:
@@ -84,7 +84,7 @@ util::StatusOr<const EVP_HPKE_KDF*> KdfParam(
   }
 }
 
-util::StatusOr<const EVP_HPKE_AEAD*> AeadParam(const HpkeParams& params) {
+absl::StatusOr<const EVP_HPKE_AEAD*> AeadParam(const HpkeParams& params) {
   switch (params.aead) {
     case HpkeAead::kAes128Gcm:
       return EVP_hpke_aes_128_gcm();
@@ -99,7 +99,7 @@ util::StatusOr<const EVP_HPKE_AEAD*> AeadParam(const HpkeParams& params) {
   }
 }
 
-util::StatusOr<const EVP_HPKE_AEAD*> AeadParam(
+absl::StatusOr<const EVP_HPKE_AEAD*> AeadParam(
     const google::crypto::tink::HpkeParams& params) {
   switch (params.aead()) {
     case google::crypto::tink::HpkeAead::AES_128_GCM:

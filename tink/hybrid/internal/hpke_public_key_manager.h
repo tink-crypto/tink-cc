@@ -45,7 +45,7 @@ class HpkePublicKeyManager
                             List<HybridEncrypt>> {
  public:
   class HybridEncryptFactory : public PrimitiveFactory<HybridEncrypt> {
-    crypto::tink::util::StatusOr<std::unique_ptr<HybridEncrypt>> Create(
+    absl::StatusOr<std::unique_ptr<HybridEncrypt>> Create(
         const google::crypto::tink::HpkePublicKey& public_key) const override {
       return HpkeEncrypt::New(public_key);
     }

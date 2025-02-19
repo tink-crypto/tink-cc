@@ -50,9 +50,10 @@ using ::testing::HasSubstr;
 crypto::tink::util::Status EncryptThenDecrypt(
     const AeadOrDaead& dem, absl::string_view message,
     absl::string_view associated_data) {
-  StatusOr<std::string> encryption_or = dem.Encrypt(message, associated_data);
+  absl::StatusOr<std::string> encryption_or =
+      dem.Encrypt(message, associated_data);
   if (!encryption_or.status().ok()) return encryption_or.status();
-  StatusOr<std::string> decryption_or =
+  absl::StatusOr<std::string> decryption_or =
       dem.Decrypt(encryption_or.value(), associated_data);
   if (!decryption_or.status().ok()) return decryption_or.status();
   if (decryption_or.value() != message) {
@@ -87,7 +88,7 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeAeadKeyType) {
 
   util::SecretData key128 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
+  absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
       dem_helper->GetAeadOrDaead(key128);
   ASSERT_THAT(aead_or_daead_result_or, IsOk());
 
@@ -113,7 +114,7 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeDeterministicAeadKeyType) {
   util::SecretData key128 = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f00010203"
       "0405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
-  StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
+  absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
       dem_helper->GetAeadOrDaead(key128);
   ASSERT_THAT(aead_or_daead_result_or, IsOk());
 

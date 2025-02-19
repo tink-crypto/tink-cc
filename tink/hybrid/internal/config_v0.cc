@@ -45,13 +45,13 @@ namespace internal {
 namespace {
 
 #ifdef OPENSSL_IS_BORINGSSL
-util::StatusOr<std::unique_ptr<HybridDecrypt>>
-NewHpkeDecrypt(const HpkePrivateKey& key) {
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> NewHpkeDecrypt(
+    const HpkePrivateKey& key) {
   return crypto::tink::internal::HpkeDecrypt::New(key);
 }
 
-util::StatusOr<std::unique_ptr<HybridEncrypt>>
-NewHpkeEncrypt(const HpkePublicKey& key) {
+absl::StatusOr<std::unique_ptr<HybridEncrypt>> NewHpkeEncrypt(
+    const HpkePublicKey& key) {
   return crypto::tink::internal::HpkeEncrypt::New(key);
 }
 #endif

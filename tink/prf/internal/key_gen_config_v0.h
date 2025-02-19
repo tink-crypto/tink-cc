@@ -25,7 +25,7 @@ namespace tink {
 namespace internal {
 
 // Add recommended PRF key managers to `config`, used to generate keys.
-util::Status AddPrfKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddPrfKeyGenV0(KeyGenConfiguration& config);
 
 }  // namespace internal
 }  // namespace tink

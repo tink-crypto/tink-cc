@@ -27,14 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for AES-CMAC-PRF parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status
-RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-CMAC-PRF parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status
-RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

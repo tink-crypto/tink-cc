@@ -28,8 +28,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddPrfKeyGenV0(KeyGenConfiguration& config) {
-  util::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
+absl::Status AddPrfKeyGenV0(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCmacPrfKeyManager>(), config);
   if (!status.ok()) {
     return status;

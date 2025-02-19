@@ -29,8 +29,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddPrfV0(Configuration& config) {
-  util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddPrfV0(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<PrfSetWrapper>(), config);
   if (!status.ok()) {
     return status;

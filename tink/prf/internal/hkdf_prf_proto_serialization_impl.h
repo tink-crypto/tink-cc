@@ -27,12 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for HKDF-PRF parameters and
 // keys into specified mutable serialization `registry`.
-crypto::tink::util::Status RegisterHkdfPrfProtoSerializationWithMutableRegistry(
+absl::Status RegisterHkdfPrfProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for HKDF-PRF parameters and
 // keys into specified immutable serialization registry `builder`.
-crypto::tink::util::Status RegisterHkdfPrfProtoSerializationWithRegistryBuilder(
+absl::Status RegisterHkdfPrfProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

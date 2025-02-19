@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended PRF primitive wrappers and key managers to `config`, used to
 // generate primitives.
-util::Status AddPrfV0(Configuration& config);
+absl::Status AddPrfV0(Configuration& config);
 
 }  // namespace internal
 }  // namespace tink

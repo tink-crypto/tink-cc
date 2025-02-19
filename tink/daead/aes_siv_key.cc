@@ -41,19 +41,19 @@ util::StatusOr<std::string> ComputeOutputPrefix(
       return std::string("");  // Empty prefix.
     case AesSivParameters::Variant::kCrunchy:
       if (!id_requirement.has_value()) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "id requirement must have value with kCrunchy or kLegacy");
       }
       return internal::ComputeOutputPrefix(0, *id_requirement);
     case AesSivParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "id requirement must have value with kTink");
       }
       return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid variant: ", parameters.GetVariant()));
   }
@@ -66,17 +66,17 @@ util::StatusOr<AesSivKey> AesSivKey::Create(const AesSivParameters& parameters,
                                             absl::optional<int> id_requirement,
                                             PartialKeyAccessToken token) {
   if (parameters.KeySizeInBytes() != key_bytes.size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size does not match AES-SIV parameters");
   }
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key without ID requirement with parameters with ID "
         "requirement");
   }
   if (!parameters.HasIdRequirement() && id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");

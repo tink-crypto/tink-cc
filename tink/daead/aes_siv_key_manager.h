@@ -68,15 +68,14 @@ class AesSivKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesSivKey& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     return ValidateKeySize(key.key_value().size());
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::AesSivKeyFormat& key_format) const override {
     return ValidateKeySize(key_format.key_size());
   }
@@ -92,8 +91,7 @@ class AesSivKeyManager
   crypto::tink::util::StatusOr<google::crypto::tink::AesSivKey> DeriveKey(
       const google::crypto::tink::AesSivKeyFormat& key_format,
       InputStream* input_stream) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key_format.version(), get_version());
+    absl::Status status = ValidateVersion(key_format.version(), get_version());
     if (!status.ok()) return status;
 
     crypto::tink::util::StatusOr<std::string> randomness =
@@ -101,7 +99,7 @@ class AesSivKeyManager
 
     if (!randomness.ok()) {
       if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
-        return crypto::tink::util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "Could not get enough pseudorandomness from input stream");
       }
@@ -114,14 +112,14 @@ class AesSivKeyManager
   }
 
  private:
-  crypto::tink::util::Status ValidateKeySize(uint32_t key_size) const {
+  absl::Status ValidateKeySize(uint32_t key_size) const {
     if (key_size != kKeySizeInBytes) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid key size: key size is ", key_size,
                        " bytes; supported size: ", kKeySizeInBytes, " bytes."));
     }
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
   const std::string key_type_ = absl::StrCat(

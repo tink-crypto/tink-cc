@@ -37,7 +37,7 @@ class DeterministicAeadConfig {
  public:
   // Registers DeterministicAead primitive wrapper and key managers for all
   // DeterministicAead key types from the current Tink release.
-  static crypto::tink::util::Status Register();
+  static absl::Status Register();
 
  private:
   DeterministicAeadConfig() {}

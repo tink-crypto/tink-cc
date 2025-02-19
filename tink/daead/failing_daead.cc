@@ -40,7 +40,7 @@ class AlwaysFailDeterministicAead : public DeterministicAead {
   util::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
       absl::string_view associated_data) const override {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat(
             "AlwaysFailDeterministicAead will always fail on encrypt (msg=",
@@ -50,7 +50,7 @@ class AlwaysFailDeterministicAead : public DeterministicAead {
   util::StatusOr<std::string> DecryptDeterministically(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat(
             "AlwaysFailDeterministicAead will always fail on decrypt (msg=",

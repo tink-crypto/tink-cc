@@ -28,11 +28,11 @@ namespace crypto {
 namespace tink {
 
 // static
-util::Status DeterministicAeadConfig::Register() {
+absl::Status DeterministicAeadConfig::Register() {
   // Currently there are no FIPS-validated deterministic AEAD key managers
   // available, therefore none will be registered in FIPS only mode.
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Register non-FIPS key managers.

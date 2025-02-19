@@ -42,16 +42,16 @@ constexpr absl::string_view kPrimitive = "daead";
 constexpr absl::string_view kEncryptApi = "encrypt";
 constexpr absl::string_view kDecryptApi = "decrypt";
 
-util::Status Validate(PrimitiveSet<DeterministicAead>* daead_set) {
+absl::Status Validate(PrimitiveSet<DeterministicAead>* daead_set) {
   if (daead_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "daead_set must be non-NULL");
   }
   if (daead_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "daead_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class  DeterministicAeadSetWrapper : public DeterministicAead {
@@ -156,7 +156,7 @@ DeterministicAeadSetWrapper::DecryptDeterministically(
   if (monitoring_decryption_client_ != nullptr) {
     monitoring_decryption_client_->LogFailure();
   }
-  return util::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
+  return absl::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
 }
 
 }  // anonymous namespace
@@ -164,7 +164,7 @@ DeterministicAeadSetWrapper::DecryptDeterministically(
 util::StatusOr<std::unique_ptr<DeterministicAead>>
 DeterministicAeadWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<DeterministicAead>> primitive_set) const {
-  util::Status status = Validate(primitive_set.get());
+  absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

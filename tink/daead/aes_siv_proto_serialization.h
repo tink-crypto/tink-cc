@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for AES-SIV parameters and keys into
 // global serialization registry.
-inline crypto::tink::util::Status RegisterAesSivProtoSerialization() {
+inline absl::Status RegisterAesSivProtoSerialization() {
   return internal::RegisterAesSivProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

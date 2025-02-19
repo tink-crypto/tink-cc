@@ -31,7 +31,7 @@ util::StatusOr<AesSivParameters> AesSivParameters::Create(int key_size_in_bytes,
                                                           Variant variant) {
   if (key_size_in_bytes != 32 && key_size_in_bytes != 48 &&
       key_size_in_bytes != 64) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Key size should be 32, 48, or 64 bytes, got ",
                      key_size_in_bytes, " bytes."));
@@ -39,7 +39,7 @@ util::StatusOr<AesSivParameters> AesSivParameters::Create(int key_size_in_bytes,
   static const std::set<Variant>* supported_variants = new std::set<Variant>(
       {Variant::kTink, Variant::kCrunchy, Variant::kNoPrefix});
   if (supported_variants->find(variant) == supported_variants->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create AES-SIV parameters with unknown variant.");
   }

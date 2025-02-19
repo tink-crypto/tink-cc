@@ -63,9 +63,8 @@ class DummyRandomAccessStream : public RandomAccessStream {
   explicit DummyRandomAccessStream(int64_t size, int ct_offset)
       : size_(size), ct_offset_(ct_offset) {}
 
-  crypto::tink::util::Status PRead(
-      int64_t position, int count,
-      crypto::tink::util::Buffer* dest_buffer) override {
+  absl::Status PRead(int64_t position, int count,
+                     crypto::tink::util::Buffer* dest_buffer) override {
     if (position == ct_offset_) {
       // Someone attempts to read the header, return the same dummy value that
       // DummyStreamSegmentDecrypter expects.
@@ -73,7 +72,7 @@ class DummyRandomAccessStream : public RandomAccessStream {
       if (!status.ok()) return status;
       std::memset(dest_buffer->get_mem_block(), 'h', count);
     }
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   crypto::tink::util::StatusOr<int64_t> size() override { return size_; }

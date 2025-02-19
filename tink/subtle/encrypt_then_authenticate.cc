@@ -50,7 +50,7 @@ util::StatusOr<std::unique_ptr<Aead>> EncryptThenAuthenticate::New(
     std::unique_ptr<IndCpaCipher> ind_cpa_cipher, std::unique_ptr<Mac> mac,
     uint8_t tag_size) {
   if (tag_size < kMinTagSizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "tag size too small");
   }
   std::unique_ptr<Aead> aead(new EncryptThenAuthenticate(
@@ -69,7 +69,7 @@ util::StatusOr<std::string> EncryptThenAuthenticate::Encrypt(
   uint64_t associated_data_size_in_bits = associated_data_size_in_bytes * 8;
   if (associated_data_size_in_bits / 8 !=
       associated_data_size_in_bytes /* overflow occured! */) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "associated data too long");
   }
 
@@ -84,7 +84,7 @@ util::StatusOr<std::string> EncryptThenAuthenticate::Encrypt(
     return tag.status();
   }
   if (tag->size() != tag_size_) {
-    return util::Status(absl::StatusCode::kInternal, "invalid tag size");
+    return absl::Status(absl::StatusCode::kInternal, "invalid tag size");
   }
   return ciphertext->append(tag.value());
 }
@@ -96,7 +96,7 @@ util::StatusOr<std::string> EncryptThenAuthenticate::Decrypt(
   associated_data = internal::EnsureStringNonNull(associated_data);
 
   if (ciphertext.size() < tag_size_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
 
@@ -104,7 +104,7 @@ util::StatusOr<std::string> EncryptThenAuthenticate::Decrypt(
   uint64_t associated_data_size_in_bits = associated_data_size_in_bytes * 8;
   if (associated_data_size_in_bits / 8 !=
       associated_data_size_in_bytes /* overflow occured! */) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "additional data too long");
   }
 

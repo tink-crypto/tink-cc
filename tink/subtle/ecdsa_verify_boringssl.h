@@ -56,9 +56,8 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
   }
 
   // Verifies that 'signature' is a digital signature for 'data'.
-  crypto::tink::util::Status Verify(
-      absl::string_view signature,
-      absl::string_view data) const override;
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
@@ -83,8 +82,8 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
         output_prefix_(output_prefix),
         message_suffix_(message_suffix) {}
 
-  crypto::tink::util::Status VerifyWithoutPrefix(absl::string_view signature,
-                                                 absl::string_view data) const;
+  absl::Status VerifyWithoutPrefix(absl::string_view signature,
+                                   absl::string_view data) const;
 
   internal::SslUniquePtr<EC_KEY> key_;
   const EVP_MD* hash_;  // Owned by BoringSSL.

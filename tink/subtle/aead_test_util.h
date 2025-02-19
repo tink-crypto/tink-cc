@@ -26,17 +26,16 @@ namespace tink {
 
 // Encrypt, then decrypt. Any error will be propagated to the caller. Returns OK
 // if the resulting decryption is equal to the plaintext.
-crypto::tink::util::Status EncryptThenDecrypt(const Aead& encrypter,
-                                              const Aead& decrypter,
-                                              absl::string_view message,
-                                              absl::string_view aad);
+absl::Status EncryptThenDecrypt(const Aead& encrypter, const Aead& decrypter,
+                                absl::string_view message,
+                                absl::string_view aad);
 
 // Encrypt, then decrypt. Any error will be propagated to the caller. Returns OK
 // if the resulting decryption is equal to the plaintext.
-crypto::tink::util::Status EncryptThenDecrypt(const CordAead& encrypter,
-                                              const CordAead& decrypter,
-                                              absl::string_view message,
-                                              absl::string_view aad);
+absl::Status EncryptThenDecrypt(const CordAead& encrypter,
+                                const CordAead& decrypter,
+                                absl::string_view message,
+                                absl::string_view aad);
 
 }  // namespace tink
 }  // namespace crypto

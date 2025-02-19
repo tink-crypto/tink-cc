@@ -83,7 +83,7 @@ class AesGcmHkdfStreamSegmentEncrypter : public StreamSegmentEncrypter {
   static util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> New(
       Params params);
 
-  util::Status EncryptSegment(const std::vector<uint8_t>& plaintext,
+  absl::Status EncryptSegment(const std::vector<uint8_t>& plaintext,
                               bool is_last_segment,
                               std::vector<uint8_t>* ciphertext_buffer) override;
 

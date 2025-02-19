@@ -47,9 +47,8 @@ class HmacBoringSsl : public Mac {
 
   // Verifies if 'mac' is a correct HMAC for 'data'.
   // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.
-  crypto::tink::util::Status VerifyMac(
-      absl::string_view mac,
-      absl::string_view data) const override;
+  absl::Status VerifyMac(absl::string_view mac,
+                         absl::string_view data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;

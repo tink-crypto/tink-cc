@@ -120,7 +120,7 @@ class AesSivBoringSsl : public DeterministicAead {
 
   // Encrypts (or decrypts) `in` using an SIV `siv` and key `key`, and writes
   // the result to `out`.
-  util::Status AesCtrCrypt(absl::string_view in, const uint8_t siv[kBlockSize],
+  absl::Status AesCtrCrypt(absl::string_view in, const uint8_t siv[kBlockSize],
                            const AES_KEY* key, absl::Span<char> out) const;
 
   const util::SecretUniquePtr<AES_KEY> k1_;

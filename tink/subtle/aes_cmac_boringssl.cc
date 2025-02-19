@@ -111,7 +111,7 @@ util::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
   uint8_t* result_ptr = reinterpret_cast<uint8_t*>(&result[0]);
   internal::ScopedAssumeRegionCoreDumpSafe scoped(result_ptr, kMaxTagSize);
   if (!ComputeMacInternal(key_, result_ptr, data)) {
-    return util::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
+    return absl::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
   }
   // Declassify the tag. Safe because it is in a std::string anyhow and can
   // be given to the adversary (though the core dump could expose longer tags
@@ -121,7 +121,7 @@ util::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
   return result;
 }
 
-util::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
+absl::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
                                          absl::string_view data) const {
   if (mac.size() != tag_size_) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
@@ -131,16 +131,16 @@ util::Status AesCmacBoringSsl::VerifyMac(absl::string_view mac,
   internal::SecretBuffer computed_mac(kMaxTagSize);
 
   if (!ComputeMacInternal(key_, computed_mac.data(), data)) {
-    return util::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
+    return absl::Status(absl::StatusCode::kInternal, "Failed to compute CMAC");
   }
   computed_mac.resize(tag_size_);
 
   if (!internal::SafeCryptoMemEquals(computed_mac.data(), mac.data(),
                                      tag_size_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "CMAC verification failed");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace subtle

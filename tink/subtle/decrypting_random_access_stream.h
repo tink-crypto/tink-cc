@@ -57,21 +57,20 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
 
   // -----------------------
   // Methods of RandomAccessStream-interface implemented by this class.
-  crypto::tink::util::Status PRead(
-      int64_t position, int count,
-      crypto::tink::util::Buffer* dest_buffer) override;
+  absl::Status PRead(int64_t position, int count,
+                     crypto::tink::util::Buffer* dest_buffer) override;
   crypto::tink::util::StatusOr<int64_t> size() override;
 
  private:
   DecryptingRandomAccessStream() {}
-  crypto::tink::util::Status PReadAndDecrypt(
-      int64_t position, int count, crypto::tink::util::Buffer* dest_buffer);
+  absl::Status PReadAndDecrypt(int64_t position, int count,
+                               crypto::tink::util::Buffer* dest_buffer);
   // Reads the specified ciphertext segment from ct_source_, decrypts it,
   // and writes the resulting plaintext bytes to pt_segment.
   // Uses the provided ct_buffer as a buffer for the ciphertext segment.
-  crypto::tink::util::Status ReadAndDecryptSegment(
-      int64_t segment_nr, crypto::tink::util::Buffer* ct_buffer,
-      std::vector<uint8_t>* pt_segment);
+  absl::Status ReadAndDecryptSegment(int64_t segment_nr,
+                                     crypto::tink::util::Buffer* ct_buffer,
+                                     std::vector<uint8_t>* pt_segment);
   // Returns the segment number that contains the specified 'pt_position'.
   int64_t GetSegmentNr(int64_t pt_position);
   // Returns the offset within a segment for the specified 'pt_position'.
@@ -84,7 +83,7 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
   std::unique_ptr<crypto::tink::RandomAccessStream> ct_source_;
 
   mutable absl::Mutex status_mutex_;
-  crypto::tink::util::Status status_ ABSL_GUARDED_BY(status_mutex_);
+  absl::Status status_ ABSL_GUARDED_BY(status_mutex_);
   int header_size_;
   int ct_offset_;
   int ct_segment_size_;

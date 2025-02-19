@@ -66,7 +66,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
       internal::Ed25519KeyPrivKeySize() + internal::Ed25519KeyPubKeySize();
 
   if (private_key.size() != kSslPrivateKeySize) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid ED25519 private key size (%d). "
                         "The only valid size is %d.",
@@ -80,7 +80,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
             internal::Ed25519KeyPrivKeySize());
       }));
   if (ssl_priv_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_new_raw_private_key failed");
   }
 
@@ -112,7 +112,7 @@ util::StatusOr<std::string> Ed25519SignBoringSsl::SignWithoutPrefix(
                data.size()) == 1;
   });
   if (!success) {
-    return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
   }
   // It is fine to leak the signature to the adversary so we can now clear the
   // label.

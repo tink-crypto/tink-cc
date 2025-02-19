@@ -57,7 +57,7 @@ util::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
     case EcdsaParameters::CurveType::kNistP521:
       return NIST_P521;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid curve in EcdsaVerifyBoringSsl::New: ",
                        curve_type));
@@ -75,7 +75,7 @@ util::StatusOr<HashType> ConvertHashType(
     case EcdsaParameters::HashType::kSha512:
       return SHA512;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid hash type in EcdsaVerifyBoringSsl::New: ",
                        hash_type));
@@ -90,7 +90,7 @@ util::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
     case EcdsaParameters::SignatureEncoding::kDer:
       return DER;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat(
               "Invalid signature encoding in EcdsaVerifyBoringSsl::New: ",
@@ -145,7 +145,7 @@ util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
   if (!status.ok()) return status;
 
   // Check if the hash type is safe to use.
-  util::Status is_safe = internal::IsHashTypeSafeForSignature(hash_type);
+  absl::Status is_safe = internal::IsHashTypeSafeForSignature(hash_type);
   if (!is_safe.ok()) {
     return is_safe;
   }
@@ -173,7 +173,7 @@ util::StatusOr<std::string> EcdsaSignBoringSsl::SignWithoutPrefix(
   uint8_t digest[EVP_MAX_MD_SIZE];
   if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, hash_,
                       nullptr)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Could not compute digest.");
   }
 

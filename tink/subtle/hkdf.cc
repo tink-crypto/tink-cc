@@ -55,7 +55,7 @@ namespace {
 
 // Compute HKDF using `evp_md` hashing, key `ikm`, salt `salt` and info `info`.
 // The result is written to `key`.
-util::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
+absl::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
                      absl::string_view salt, absl::string_view info,
                      absl::Span<uint8_t> out_key) {
   const uint8_t *ikm_ptr = reinterpret_cast<const uint8_t *>(ikm.data());
@@ -64,9 +64,9 @@ util::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
 #ifdef OPENSSL_IS_BORINGSSL
   if (HKDF(out_key.data(), out_key.size(), evp_md, ikm_ptr, ikm.size(),
            salt_ptr, salt.size(), info_ptr, info.size()) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "HKDF failed");
+    return absl::Status(absl::StatusCode::kInternal, "HKDF failed");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 #else
   internal::SslUniquePtr<EVP_PKEY_CTX> pctx(
       EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, /*e=*/nullptr));
@@ -99,7 +99,7 @@ util::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
   }
 
   internal::SecretBuffer out_key(out_len);
-  util::Status result = CallWithCoreDumpProtection([&]() {
+  absl::Status result = CallWithCoreDumpProtection([&]() {
     return SslHkdf(*evp_md, util::SecretDataAsStringView(ikm), salt, info,
                    absl::MakeSpan(out_key.data(), out_key.size()));
   });
@@ -120,7 +120,7 @@ util::StatusOr<std::string> Hkdf::ComputeHkdf(HashType hash,
   }
   std::string out_key;
   ResizeStringUninitialized(&out_key, out_len);
-  util::Status result = SslHkdf(
+  absl::Status result = SslHkdf(
       *evp_md, ikm, salt, info,
       absl::MakeSpan(reinterpret_cast<uint8_t *>(&out_key[0]), out_key.size()));
   if (!result.ok()) {

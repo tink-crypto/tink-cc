@@ -115,8 +115,8 @@ class AesEaxBoringSsl : public Aead {
   // of an OMAC computation over the nonce. `in` are the bytes that are
   // encrypted or decrypted, and the result is written to `out`. `in`.data()
   // MUST NOT be null.
-  crypto::tink::util::Status CtrCrypt(const Block& N, absl::string_view in,
-                                      absl::Span<char> out) const;
+  absl::Status CtrCrypt(const Block& N, absl::string_view in,
+                        absl::Span<char> out) const;
 
   const util::SecretUniquePtr<AES_KEY> aeskey_;
   const size_t nonce_size_;

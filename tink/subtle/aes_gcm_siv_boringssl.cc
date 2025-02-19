@@ -65,7 +65,7 @@ util::StatusOr<std::string> AesGcmSivBoringSsl::Encrypt(
       kIvSizeInBytes + aead_->CiphertextSize(plaintext.size());
   std::string ct;
   ResizeStringUninitialized(&ct, kCiphertextSize);
-  util::Status res =
+  absl::Status res =
       Random::GetRandomBytes(absl::MakeSpan(ct).subspan(0, kIvSizeInBytes));
   if (!res.ok()) {
     return res;
@@ -83,7 +83,7 @@ util::StatusOr<std::string> AesGcmSivBoringSsl::Encrypt(
 util::StatusOr<std::string> AesGcmSivBoringSsl::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   if (ciphertext.size() < kIvSizeInBytes + kTagSizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Ciphertext too short; expected at least ",
                                      kIvSizeInBytes + kTagSizeInBytes, " got ",
                                      ciphertext.size()));

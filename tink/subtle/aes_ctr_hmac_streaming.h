@@ -114,7 +114,7 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
       absl::string_view associated_data);
 
   // Overridden methods of StreamSegmentEncrypter.
-  util::Status EncryptSegment(const std::vector<uint8_t>& plaintext,
+  absl::Status EncryptSegment(const std::vector<uint8_t>& plaintext,
                               bool is_last_segment,
                               std::vector<uint8_t>* ciphertext_buffer) override;
 
@@ -168,9 +168,9 @@ class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
       absl::string_view associated_data);
 
   // Overridden methods of StreamSegmentDecrypter.
-  util::Status Init(const std::vector<uint8_t>& header) override;
+  absl::Status Init(const std::vector<uint8_t>& header) override;
 
-  util::Status DecryptSegment(const std::vector<uint8_t>& ciphertext,
+  absl::Status DecryptSegment(const std::vector<uint8_t>& ciphertext,
                               int64_t segment_number, bool is_last_segment,
                               std::vector<uint8_t>* plaintext_buffer) override;
 

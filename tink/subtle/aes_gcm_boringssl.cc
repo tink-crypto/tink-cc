@@ -35,7 +35,7 @@ namespace subtle {
 
 util::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
     const util::SecretData& key) {
-  util::Status status = internal::CheckFipsCompatibility<AesGcmBoringSsl>();
+  absl::Status status = internal::CheckFipsCompatibility<AesGcmBoringSsl>();
   if (!status.ok()) {
     return status;
   }

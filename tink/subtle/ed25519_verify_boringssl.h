@@ -45,8 +45,8 @@ class Ed25519VerifyBoringSsl : public PublicKeyVerify {
   }
 
   // Verifies that 'signature' is a digital signature for 'data'.
-  crypto::tink::util::Status Verify(absl::string_view signature,
-                                    absl::string_view data) const override;
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
@@ -63,8 +63,8 @@ class Ed25519VerifyBoringSsl : public PublicKeyVerify {
         output_prefix_(output_prefix),
         message_suffix_(message_suffix) {}
 
-  crypto::tink::util::Status VerifyWithoutPrefix(absl::string_view signature,
-                                                 absl::string_view data) const;
+  absl::Status VerifyWithoutPrefix(absl::string_view signature,
+                                   absl::string_view data) const;
 
   const internal::SslUniquePtr<EVP_PKEY> public_key_;
   const std::string output_prefix_;

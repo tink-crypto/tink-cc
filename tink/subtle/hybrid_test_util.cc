@@ -25,9 +25,10 @@
 namespace crypto {
 namespace tink {
 
-crypto::tink::util::Status HybridEncryptThenDecrypt(
-    HybridEncrypt* encrypter, HybridDecrypt* decrypter,
-    absl::string_view plaintext, absl::string_view context_info) {
+absl::Status HybridEncryptThenDecrypt(HybridEncrypt* encrypter,
+                                      HybridDecrypt* decrypter,
+                                      absl::string_view plaintext,
+                                      absl::string_view context_info) {
   auto ciphertext = encrypter->Encrypt(plaintext, context_info);
   if (!ciphertext.ok()) return ciphertext.status();
 
@@ -35,10 +36,10 @@ crypto::tink::util::Status HybridEncryptThenDecrypt(
   if (!decryption.ok()) return decryption.status();
 
   if (decryption.value() != plaintext) {
-    return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                      "decryption and encryption differ");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "decryption and encryption differ");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

@@ -73,13 +73,11 @@ class AesGcmHkdfStreamSegmentDecrypter : public StreamSegmentDecrypter {
   static util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> New(
       Params params);
 
-  util::Status Init(const std::vector<uint8_t>& header) override;
+  absl::Status Init(const std::vector<uint8_t>& header) override;
 
-  util::Status DecryptSegment(
-      const std::vector<uint8_t>& ciphertext,
-      int64_t segment_number,
-      bool is_last_segment,
-      std::vector<uint8_t>* plaintext_buffer) override;
+  absl::Status DecryptSegment(const std::vector<uint8_t>& ciphertext,
+                              int64_t segment_number, bool is_last_segment,
+                              std::vector<uint8_t>* plaintext_buffer) override;
 
   int get_header_size() const override {
     return header_size_;

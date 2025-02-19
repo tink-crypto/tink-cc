@@ -28,9 +28,10 @@
 namespace crypto {
 namespace tink {
 
-crypto::tink::util::Status HybridEncryptThenDecrypt(
-    HybridEncrypt* encrypter, HybridDecrypt* decrypter,
-    absl::string_view plaintext, absl::string_view context_info);
+absl::Status HybridEncryptThenDecrypt(HybridEncrypt* encrypter,
+                                      HybridDecrypt* decrypter,
+                                      absl::string_view plaintext,
+                                      absl::string_view context_info);
 
 }  // namespace tink
 }  // namespace crypto

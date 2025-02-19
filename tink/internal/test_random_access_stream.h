@@ -47,7 +47,7 @@ class TestRandomAccessStream : public RandomAccessStream {
   absl::Status PRead(int64_t position, int count,
                      util::Buffer* dest_buffer) override;
 
-  util::StatusOr<int64_t> size() override { return content_.size(); }
+  absl::StatusOr<int64_t> size() override { return content_.size(); }
 
  private:
   std::string content_;

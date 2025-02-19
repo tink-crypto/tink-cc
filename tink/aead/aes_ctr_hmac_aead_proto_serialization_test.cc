@@ -219,8 +219,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance()
           .ParseParameters(*serialization)
           .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse AesCtrHmacAeadKeyFormat proto")));
+      StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesCtrHmacAeadProtoSerializationTest,

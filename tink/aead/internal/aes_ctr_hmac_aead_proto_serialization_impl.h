@@ -17,9 +17,9 @@
 #ifndef TINK_AEAD_INTERNAL_AES_CTR_HMAC_AEAD_PROTO_SERIALIZATION_IMPL_H_
 #define TINK_AEAD_INTERNAL_AES_CTR_HMAC_AEAD_PROTO_SERIALIZATION_IMPL_H_
 
+#include "absl/status/status.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/serialization_registry.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {

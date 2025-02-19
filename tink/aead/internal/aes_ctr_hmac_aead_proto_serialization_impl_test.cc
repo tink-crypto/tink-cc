@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
@@ -53,6 +54,7 @@ namespace {
 
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
+using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using AesCtrKeyProto = ::google::crypto::tink::AesCtrKey;
@@ -68,6 +70,7 @@ using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
 using ::testing::NotNull;
+using ::testing::Pointee;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -276,10 +279,8 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
                                            "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  EXPECT_THAT(
-      registry.ParseParameters(*serialization).status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse AesCtrHmacAeadKeyFormat proto")));
+  EXPECT_THAT(registry.ParseParameters(*serialization).status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesCtrHmacAeadProtoSerializationTest,
@@ -451,6 +452,40 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest,
       Eq(test_case.tag_size));
   ASSERT_THAT(aes_ctr_hmac_aead_key_format.hmac_key_format().params().hash(),
               Eq(test_case.proto_hash_type));
+}
+
+TEST_P(AesCtrHmacAeadProtoSerializationTest,
+       SerializeThenParseParametersWithRegistryBuilder) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(
+      RegisterAesCtrHmacAeadProtoSerializationWithRegistryBuilder(builder),
+      IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  absl::StatusOr<AesCtrHmacAeadParameters> parameters =
+      AesCtrHmacAeadParameters::Builder()
+          .SetAesKeySizeInBytes(test_case.aes_key_size)
+          .SetHmacKeySizeInBytes(test_case.hmac_key_size)
+          .SetIvSizeInBytes(test_case.iv_size)
+          .SetTagSizeInBytes(test_case.tag_size)
+          .SetHashType(test_case.hash_type)
+          .SetVariant(test_case.variant)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
+
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+      registry.ParseParameters(*proto_serialization);
+  EXPECT_THAT(parsed_parameters, IsOkAndHolds(Pointee(Eq(*parameters))));
 }
 
 TEST_P(AesCtrHmacAeadProtoSerializationTest, ParseKeyWithMutableRegistry) {

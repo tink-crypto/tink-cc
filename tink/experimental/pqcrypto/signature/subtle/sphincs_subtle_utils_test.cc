@@ -97,7 +97,7 @@ TEST_P(SphincsUtilsTest, SphincsKeysLength) {
   };
 
   // Generate sphincs key pair.
-  util::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
+  absl::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
   ASSERT_THAT(key_pair, IsOk());
 
   // Check keys size.
@@ -118,7 +118,7 @@ TEST_P(SphincsUtilsTest, DifferentContent) {
   };
 
   // Generate sphincs key pair.
-  util::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
+  absl::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
   ASSERT_THAT(key_pair, IsOk());
 
   // Check keys content is different.

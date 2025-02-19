@@ -39,14 +39,13 @@ class SphincsSign : public PublicKeySign {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       SphincsPrivateKeyPqclean key);
 
   ~SphincsSign() override = default;
 
   // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
  private:
   explicit SphincsSign(SphincsPrivateKeyPqclean key) : key_(std::move(key)) {}

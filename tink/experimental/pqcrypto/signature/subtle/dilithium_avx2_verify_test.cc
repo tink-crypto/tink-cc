@@ -102,7 +102,7 @@ TEST_P(DilithiumAvx2VerifyTest, BasicSignVerify) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);
@@ -110,7 +110,7 @@ TEST_P(DilithiumAvx2VerifyTest, BasicSignVerify) {
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       DilithiumAvx2Sign::New(key_pair->first);
   ASSERT_THAT(signer, IsOk());
 
@@ -137,7 +137,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithWrongMessage) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);
@@ -145,7 +145,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithWrongMessage) {
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       DilithiumAvx2Sign::New(key_pair->first);
   ASSERT_THAT(signer, IsOk());
 
@@ -172,7 +172,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithWrongSignature) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);
@@ -180,7 +180,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithWrongSignature) {
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       DilithiumAvx2Sign::New(key_pair->first);
   ASSERT_THAT(signer, IsOk());
 
@@ -208,7 +208,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithByteFlipped) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);
@@ -216,7 +216,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithByteFlipped) {
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       DilithiumAvx2Sign::New(key_pair->first);
   ASSERT_THAT(signer, IsOk());
 
@@ -246,7 +246,7 @@ TEST_P(DilithiumAvx2VerifyTest, FipsMode) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);

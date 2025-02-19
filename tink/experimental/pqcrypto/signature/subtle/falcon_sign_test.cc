@@ -60,18 +60,18 @@ TEST_P(FalconSignTest, ValidSignatureLength) {
   const FalconTestCase& test_case = GetParam();
 
   // Generate falcon key pair.
-  util::StatusOr<FalconKeyPair> key_pair =
+  absl::StatusOr<FalconKeyPair> key_pair =
       GenerateFalconKeyPair(test_case.private_key_size);
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       FalconSign::New(key_pair->GetPrivateKey());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> signature = ((*signer)->Sign(message));
+  absl::StatusOr<std::string> signature = ((*signer)->Sign(message));
   ASSERT_THAT(signature, IsOk());
 
   // Check signature size.
@@ -87,21 +87,21 @@ TEST_P(FalconSignTest, NonDeterminism) {
   const FalconTestCase& test_case = GetParam();
 
   // Generate falcon key pair.
-  util::StatusOr<FalconKeyPair> key_pair =
+  absl::StatusOr<FalconKeyPair> key_pair =
       GenerateFalconKeyPair(test_case.private_key_size);
   ASSERT_THAT(key_pair, IsOk());
 
   // Create two signers based on same private key.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       FalconSign::New(key_pair->GetPrivateKey());
   ASSERT_THAT(signer, IsOk());
 
   // Sign the same message twice, using the same private key.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> first_signature = ((*signer))->Sign(message);
+  absl::StatusOr<std::string> first_signature = ((*signer))->Sign(message);
   ASSERT_THAT(first_signature, IsOk());
 
-  util::StatusOr<std::string> second_signature = ((*signer))->Sign(message);
+  absl::StatusOr<std::string> second_signature = ((*signer))->Sign(message);
   ASSERT_THAT(second_signature, IsOk());
 
   // Check signatures size.
@@ -123,7 +123,7 @@ TEST_P(FalconSignTest, FipsMode) {
   const FalconTestCase& test_case = GetParam();
 
   // Generate falcon key pair.
-  util::StatusOr<FalconKeyPair> key_pair =
+  absl::StatusOr<FalconKeyPair> key_pair =
       GenerateFalconKeyPair(test_case.private_key_size);
   ASSERT_THAT(key_pair, IsOk());
 

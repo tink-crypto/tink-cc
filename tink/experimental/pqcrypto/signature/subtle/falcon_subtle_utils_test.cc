@@ -50,7 +50,7 @@ TEST_P(FalconUtilsTest, FalconKeyGeneration) {
   const FalconTestCase& test_case = GetParam();
 
   // Generate falcon key pair.
-  util::StatusOr<FalconKeyPair> key_pair =
+  absl::StatusOr<FalconKeyPair> key_pair =
       GenerateFalconKeyPair(test_case.private_key_size);
   ASSERT_THAT(key_pair, IsOk());
 
@@ -65,7 +65,7 @@ TEST_P(FalconUtilsTest, DifferentContent) {
   const FalconTestCase& test_case = GetParam();
 
   // Generate falcon key pair.
-  util::StatusOr<FalconKeyPair> key_pair =
+  absl::StatusOr<FalconKeyPair> key_pair =
       GenerateFalconKeyPair(test_case.private_key_size);
   ASSERT_THAT(key_pair, IsOk());
 
@@ -110,7 +110,7 @@ TEST(FalconUtilsTest, InvalidPublicKeySize) {
 
 TEST(FalconUtilsTest, InvalidPrivateKey) {
   std::string bad_private_key_data = "bad private key";
-  util::StatusOr<FalconPrivateKeyPqclean> private_key =
+  absl::StatusOr<FalconPrivateKeyPqclean> private_key =
       FalconPrivateKeyPqclean::NewPrivateKey(
           util::SecretDataFromStringView(bad_private_key_data));
 
@@ -119,7 +119,7 @@ TEST(FalconUtilsTest, InvalidPrivateKey) {
 
 TEST(FalconUtilsTest, InvalidPubliceKey) {
   std::string bad_public_key_data = "bad public key";
-  util::StatusOr<FalconPublicKeyPqclean> public_key =
+  absl::StatusOr<FalconPublicKeyPqclean> public_key =
       FalconPublicKeyPqclean::NewPublicKey(bad_public_key_data);
 
   EXPECT_THAT(public_key, Not(IsOk()));

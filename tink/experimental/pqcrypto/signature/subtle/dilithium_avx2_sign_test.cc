@@ -93,7 +93,7 @@ TEST_P(DilithiumAvx2SignTest, SignatureLength) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);
@@ -101,13 +101,13 @@ TEST_P(DilithiumAvx2SignTest, SignatureLength) {
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       DilithiumAvx2Sign::New(key_pair->first);
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> signature = (*std::move(signer))->Sign(message);
+  absl::StatusOr<std::string> signature = (*std::move(signer))->Sign(message);
   ASSERT_THAT(signature, IsOk());
 
   // Check signature size.
@@ -123,7 +123,7 @@ TEST_P(DilithiumAvx2SignTest, Determinism) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);
@@ -131,21 +131,21 @@ TEST_P(DilithiumAvx2SignTest, Determinism) {
   ASSERT_THAT(key_pair, IsOk());
 
   // Create two signers based on same private key.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> first_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> first_signer =
       DilithiumAvx2Sign::New(key_pair->first);
   ASSERT_THAT(first_signer, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> second_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> second_signer =
       DilithiumAvx2Sign::New(key_pair->first);
   ASSERT_THAT(second_signer, IsOk());
 
   // Sign the same message twice, using the same private key.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> first_signature =
+  absl::StatusOr<std::string> first_signature =
       (*std::move(first_signer))->Sign(message);
   ASSERT_THAT(first_signature, IsOk());
 
-  util::StatusOr<std::string> second_signature =
+  absl::StatusOr<std::string> second_signature =
       (*std::move(second_signer))->Sign(message);
   ASSERT_THAT(second_signature, IsOk());
 
@@ -168,7 +168,7 @@ TEST_P(DilithiumAvx2SignTest, FipsMode) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.key_size, test_case.seed_expansion);

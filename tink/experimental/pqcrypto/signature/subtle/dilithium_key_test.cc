@@ -57,7 +57,7 @@ TEST_P(DilithiumKeyTest, DilithiumKeysLength) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.private_key_size, test_case.seed_expansion);
@@ -73,7 +73,7 @@ TEST_P(DilithiumKeyTest, DifferentContent) {
   const DilithiumTestCase& test_case = GetParam();
 
   // Generate key pair.
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           test_case.private_key_size, test_case.seed_expansion);

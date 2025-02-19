@@ -36,12 +36,11 @@ namespace subtle {
 // based on AVX2 vector instructions
 class DilithiumAvx2Sign : public PublicKeySign {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       DilithiumPrivateKeyPqclean private_key);
 
   // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   ~DilithiumAvx2Sign() override = default;
 

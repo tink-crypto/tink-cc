@@ -109,17 +109,17 @@ TEST_P(SphincsSignTest, SignatureLength) {
   };
 
   // Generate sphincs key pair.
-  util::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
+  absl::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       SphincsSign::New(key_pair->GetPrivateKey());
   ASSERT_THAT(signer, IsOk());
 
   // Sign a message.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> signature = (*signer)->Sign(message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(message);
   ASSERT_THAT(signature, IsOk());
 
   // Check signature size.
@@ -142,24 +142,24 @@ TEST_P(SphincsSignTest, NonDeterminism) {
   };
 
   // Generate sphincs key pair.
-  util::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
+  absl::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
   ASSERT_THAT(key_pair, IsOk());
 
   // Create two signers based on same private key.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> first_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> first_signer =
       SphincsSign::New(key_pair->GetPrivateKey());
   ASSERT_THAT(first_signer, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> second_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> second_signer =
       SphincsSign::New(key_pair->GetPrivateKey());
   ASSERT_THAT(second_signer, IsOk());
 
   // Sign the same message twice, using the same private key.
   std::string message = "message to be signed";
-  util::StatusOr<std::string> first_signature = (*first_signer)->Sign(message);
+  absl::StatusOr<std::string> first_signature = (*first_signer)->Sign(message);
   ASSERT_THAT(first_signature, IsOk());
 
-  util::StatusOr<std::string> second_signature =
+  absl::StatusOr<std::string> second_signature =
       (*second_signer)->Sign(message);
   ASSERT_THAT(second_signature, IsOk());
 
@@ -189,7 +189,7 @@ TEST_P(SphincsSignTest, FipsMode) {
   };
 
   // Generate sphincs key pair.
-  util::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
+  absl::StatusOr<SphincsKeyPair> key_pair = GenerateSphincsKeyPair(params);
   ASSERT_THAT(key_pair, IsOk());
 
   // Create a new signer.

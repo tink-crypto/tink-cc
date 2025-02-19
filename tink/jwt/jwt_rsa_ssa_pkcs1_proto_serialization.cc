@@ -24,6 +24,7 @@
 
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
@@ -36,6 +37,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_private_key.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_public_key.h"
@@ -44,11 +46,6 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/jwt_ecdsa.pb.h"
-#include "proto/jwt_rsa_ssa_pkcs1.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -57,9 +54,6 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 
 using JwtRsaSsaPkcs1ProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -81,8 +75,15 @@ using JwtRsaSsaPkcs1ProtoPrivateKeySerializerImpl =
                                 internal::ProtoKeySerialization>;
 
 bool JwtRsaSsaPkcs1AlgorithmValid(int value) {
-  return google::crypto::tink::JwtRsaSsaPkcs1Algorithm_IsValid(value);
+  return value >= 0 && value <= 3;
 }
+
+enum class JwtRsaSsaPkcs1AlgorithmEnum : uint32_t {
+  kRsUnknown = 0,
+  kRs256 = 1,
+  kRs384 = 2,
+  kRs512 = 3,
+};
 
 struct CustomKidStruct {
   std::string value;
@@ -96,7 +97,7 @@ struct CustomKidStruct {
 
 struct JwtRsaSsaPkcs1PublicKeyStruct {
   uint32_t version;
-  JwtRsaSsaPkcs1Algorithm algorithm;
+  JwtRsaSsaPkcs1AlgorithmEnum algorithm;
   std::string n;
   std::string e;
   std::optional<CustomKidStruct> custom_kid;
@@ -152,7 +153,7 @@ struct JwtRsaSsaPkcs1PrivateKeyStruct {
 
 struct JwtRsaSsaPkcs1KeyFormatStruct {
   uint32_t version;
-  JwtRsaSsaPkcs1Algorithm algorithm;
+  JwtRsaSsaPkcs1AlgorithmEnum algorithm;
   uint32_t modulus_size_in_bits;
   std::string public_exponent;
 
@@ -177,71 +178,68 @@ const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtRsaSsaPkcs1PublicKey";
 
 absl::StatusOr<JwtRsaSsaPkcs1Parameters::KidStrategy> ToKidStrategy(
-    OutputPrefixType output_prefix_type, bool has_custom_kid) {
+    internal::OutputPrefixTypeEnum output_prefix_type, bool has_custom_kid) {
   switch (output_prefix_type) {
-    case OutputPrefixType::RAW:
+    case crypto::tink::internal::OutputPrefixTypeEnum::kRaw:
       if (has_custom_kid) {
         return JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom;
       }
       return JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored;
-    case OutputPrefixType::TINK:
+    case crypto::tink::internal::OutputPrefixTypeEnum::kTink:
       return JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId;
     default:
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
+      return absl::InvalidArgumentError(
           "Invalid OutputPrefixType for JwtRsaSsaPkcs1KeyFormat.");
   }
 }
 
-absl::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<internal::OutputPrefixTypeEnum> ToOutputPrefixType(
     JwtRsaSsaPkcs1Parameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom:
     case JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored:
-      return OutputPrefixType::RAW;
+      return internal::OutputPrefixTypeEnum::kRaw;
     case JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId:
-      return OutputPrefixType::TINK;
+      return internal::OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
+      return absl::InvalidArgumentError(
           "Could not determine JwtRsaSsaPkcs1Parameters::KidStrategy.");
   }
 }
 
 absl::StatusOr<JwtRsaSsaPkcs1Parameters::Algorithm> FromProtoAlgorithm(
-    JwtRsaSsaPkcs1Algorithm algorithm) {
+    JwtRsaSsaPkcs1AlgorithmEnum algorithm) {
   switch (algorithm) {
-    case JwtRsaSsaPkcs1Algorithm::RS256:
+    case JwtRsaSsaPkcs1AlgorithmEnum::kRs256:
       return JwtRsaSsaPkcs1Parameters::Algorithm::kRs256;
-    case JwtRsaSsaPkcs1Algorithm::RS384:
+    case JwtRsaSsaPkcs1AlgorithmEnum::kRs384:
       return JwtRsaSsaPkcs1Parameters::Algorithm::kRs384;
-    case JwtRsaSsaPkcs1Algorithm::RS512:
+    case JwtRsaSsaPkcs1AlgorithmEnum::kRs512:
       return JwtRsaSsaPkcs1Parameters::Algorithm::kRs512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine JwtRsaSsaPkcs1Algorithm.");
+      return absl::InvalidArgumentError(
+          "Could not determine JwtRsaSsaPkcs1Algorithm.");
   }
 }
 
-absl::StatusOr<JwtRsaSsaPkcs1Algorithm> ToProtoAlgorithm(
+absl::StatusOr<JwtRsaSsaPkcs1AlgorithmEnum> ToProtoAlgorithm(
     JwtRsaSsaPkcs1Parameters::Algorithm algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs256:
-      return JwtRsaSsaPkcs1Algorithm::RS256;
+      return JwtRsaSsaPkcs1AlgorithmEnum::kRs256;
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs384:
-      return JwtRsaSsaPkcs1Algorithm::RS384;
+      return JwtRsaSsaPkcs1AlgorithmEnum::kRs384;
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs512:
-      return JwtRsaSsaPkcs1Algorithm::RS512;
+      return JwtRsaSsaPkcs1AlgorithmEnum::kRs512;
     default:
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
+      return absl::InvalidArgumentError(
           "Could not determine JwtRsaSsaPkcs1Parameters::Algorithm");
   }
 }
 
 absl::StatusOr<JwtRsaSsaPkcs1Parameters> ToParameters(
-    OutputPrefixType output_prefix_type,
-    JwtRsaSsaPkcs1Algorithm proto_algorithm, int modulus_size_in_bits,
+    internal::OutputPrefixTypeEnum output_prefix_type,
+    JwtRsaSsaPkcs1AlgorithmEnum proto_algorithm, int modulus_size_in_bits,
     const BigInteger& public_exponent, bool has_custom_kid) {
   absl::StatusOr<JwtRsaSsaPkcs1Parameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
@@ -266,8 +264,7 @@ absl::StatusOr<JwtRsaSsaPkcs1Parameters> ToParameters(
 absl::StatusOr<JwtRsaSsaPkcs1Parameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtRsaSsaPkcs1Parameters.");
   }
 
@@ -278,12 +275,11 @@ absl::StatusOr<JwtRsaSsaPkcs1Parameters> ParseParameters(
     return key_format_struct.status();
   }
   if (key_format_struct->version != 0) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Parsing JwtRsaSsaPkcs1Parameters failed: only version 0 is accepted.");
   }
 
-  return ToParameters(serialization.GetKeyTemplate().output_prefix_type(),
+  return ToParameters(serialization.GetKeyTemplateStruct().output_prefix_type,
                       key_format_struct->algorithm,
                       key_format_struct->modulus_size_in_bits,
                       BigInteger(key_format_struct->public_exponent),
@@ -292,7 +288,8 @@ absl::StatusOr<JwtRsaSsaPkcs1Parameters> ParseParameters(
 
 absl::StatusOr<JwtRsaSsaPkcs1PublicKey> ToPublicKey(
     const JwtRsaSsaPkcs1PublicKeyStruct& proto_public_key,
-    OutputPrefixType output_prefix_type, absl::optional<int> id_requirement) {
+    internal::OutputPrefixTypeEnum output_prefix_type,
+    absl::optional<int> id_requirement) {
   BigInteger modulus(proto_public_key.n);
   int modulus_size_in_bits = modulus.SizeInBytes() * 8;
 
@@ -319,8 +316,8 @@ absl::StatusOr<JwtRsaSsaPkcs1PublicKey> ParsePublicKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing JwtRsaSsaPkcs1PublicKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing JwtRsaSsaPkcs1PublicKey.");
   }
 
   absl::StatusOr<JwtRsaSsaPkcs1PublicKeyStruct> public_key_struct =
@@ -331,11 +328,12 @@ absl::StatusOr<JwtRsaSsaPkcs1PublicKey> ParsePublicKey(
     return public_key_struct.status();
   }
   if (public_key_struct->version != 0) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Parsing JwtRsaSsaPkcs1PublicKey failed: only version 0 is accepted.");
   }
-  return ToPublicKey(*public_key_struct, serialization.GetOutputPrefixType(),
+  return ToPublicKey(*public_key_struct,
+                     static_cast<internal::OutputPrefixTypeEnum>(
+                         serialization.GetOutputPrefixType()),
                      serialization.IdRequirement());
 }
 
@@ -343,12 +341,10 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtRsaSsaPkcs1PrivateKey.");
   }
 
@@ -359,17 +355,18 @@ absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> ParsePrivateKey(
     return private_key_struct.status();
   }
   if (private_key_struct->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
   if (private_key_struct->public_key.version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 public keys are accepted.");
+    return absl::InvalidArgumentError(
+        "Only version 0 public keys are accepted.");
   }
 
-  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key = ToPublicKey(
-      private_key_struct->public_key, serialization.GetOutputPrefixType(),
-      serialization.IdRequirement());
+  absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
+      ToPublicKey(private_key_struct->public_key,
+                  static_cast<internal::OutputPrefixTypeEnum>(
+                      serialization.GetOutputPrefixType()),
+                  serialization.IdRequirement());
   if (!public_key.ok()) {
     return public_key.status();
   }
@@ -389,16 +386,15 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const JwtRsaSsaPkcs1Parameters& parameters) {
   if (parameters.GetKidStrategy() ==
       JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Unable to serialize JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom.");
   }
-  absl::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-  absl::StatusOr<JwtRsaSsaPkcs1Algorithm> proto_algorithm =
+  absl::StatusOr<JwtRsaSsaPkcs1AlgorithmEnum> proto_algorithm =
       ToProtoAlgorithm(parameters.GetAlgorithm());
   if (!proto_algorithm.ok()) {
     return proto_algorithm.status();
@@ -426,7 +422,7 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<JwtRsaSsaPkcs1PublicKeyStruct> ToStruct(
     const JwtRsaSsaPkcs1PublicKey& public_key) {
-  absl::StatusOr<JwtRsaSsaPkcs1Algorithm> proto_algorithm =
+  absl::StatusOr<JwtRsaSsaPkcs1AlgorithmEnum> proto_algorithm =
       ToProtoAlgorithm(public_key.GetParameters().GetAlgorithm());
   if (!proto_algorithm.ok()) {
     return proto_algorithm.status();
@@ -454,7 +450,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     return public_key_struct.status();
   }
 
-  absl::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(public_key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -470,16 +466,16 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_public_key, InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
-      kPublicTypeUrl, std::move(restricted_output), KeyData::ASYMMETRIC_PUBLIC,
-      *output_prefix_type, public_key.GetIdRequirement());
+      kPublicTypeUrl, std::move(restricted_output),
+      internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      public_key.GetIdRequirement());
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     const JwtRsaSsaPkcs1PrivateKey& private_key,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
   absl::StatusOr<JwtRsaSsaPkcs1PublicKeyStruct> public_key_struct =
@@ -501,8 +497,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   private_key_struct.crt =
       private_key.GetCrtCoefficient().GetSecretData(*token);
 
-  absl::StatusOr<OutputPrefixType> output_prefix_type = ToOutputPrefixType(
-      private_key.GetPublicKey().GetParameters().GetKidStrategy());
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
+      ToOutputPrefixType(
+          private_key.GetPublicKey().GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
@@ -517,7 +514,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
       RestrictedData(*std::move(serialized_key), *token);
   return internal::ProtoKeySerialization::Create(
       kPrivateTypeUrl, std::move(restricted_output),
-      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type,
+      internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
       private_key.GetIdRequirement());
 }
 
@@ -562,8 +559,8 @@ JwtRsaSsaPkcs1ProtoPrivateKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterJwtRsaSsaPkcs1ProtoSerialization() {
-  util::Status status =
+absl::Status RegisterJwtRsaSsaPkcs1ProtoSerialization() {
+  absl::Status status =
       internal::MutableSerializationRegistry::GlobalInstance()
           .RegisterParametersParser(&JwtRsaSsaPkcs1ProtoParametersParser());
   if (!status.ok()) {

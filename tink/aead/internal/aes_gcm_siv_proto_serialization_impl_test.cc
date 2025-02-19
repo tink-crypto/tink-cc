@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_siv_key.h"
 #include "tink/aead/aes_gcm_siv_parameters.h"
@@ -37,7 +38,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_gcm_siv.pb.h"
 #include "proto/tink.pb.h"
@@ -110,13 +110,13 @@ TEST_P(AesGcmSivProtoSerializationTest, ParseParametersWithMutableRegistry) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(test_case.key_size);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           test_case.output_prefix_type, key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), test_case.id.has_value());
@@ -139,13 +139,13 @@ TEST_P(AesGcmSivProtoSerializationTest, ParseParametersWithRegistryBuilder) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(test_case.key_size);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           test_case.output_prefix_type, key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), test_case.id.has_value());
@@ -163,13 +163,13 @@ TEST_F(AesGcmSivProtoSerializationTest,
   ASSERT_THAT(RegisterAesGcmSivProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -183,14 +183,14 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(16);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -204,13 +204,13 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseParametersWithInvalidVersion) {
   key_format_proto.set_version(1);
   key_format_proto.set_key_size(16);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           OutputPrefixType::RAW, key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -222,11 +222,11 @@ TEST_P(AesGcmSivProtoSerializationTest,
   ASSERT_THAT(RegisterAesGcmSivProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<AesGcmSivParameters> parameters =
+  absl::StatusOr<AesGcmSivParameters> parameters =
       AesGcmSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(),
@@ -255,11 +255,11 @@ TEST_P(AesGcmSivProtoSerializationTest,
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<AesGcmSivParameters> parameters =
+  absl::StatusOr<AesGcmSivParameters> parameters =
       AesGcmSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(),
@@ -293,24 +293,24 @@ TEST_P(AesGcmSivProtoSerializationTest, ParseKeyWithMutableRegistry) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
           KeyData::SYMMETRIC, test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<AesGcmSivParameters> expected_parameters =
+  absl::StatusOr<AesGcmSivParameters> expected_parameters =
       AesGcmSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<AesGcmSivKey> expected_key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> expected_key = AesGcmSivKey::Create(
       *expected_parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
@@ -333,24 +333,24 @@ TEST_P(AesGcmSivProtoSerializationTest, ParseKeyWithRegistryBuilder) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
           KeyData::SYMMETRIC, test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<AesGcmSivParameters> expected_parameters =
+  absl::StatusOr<AesGcmSivParameters> expected_parameters =
       AesGcmSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<AesGcmSivKey> expected_key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> expected_key = AesGcmSivKey::Create(
       *expected_parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
@@ -371,13 +371,13 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
           KeyData::SYMMETRIC, OutputPrefixType::LEGACY, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
 
@@ -396,14 +396,14 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
           KeyData::SYMMETRIC, OutputPrefixType::TINK,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -420,14 +420,14 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
           KeyData::SYMMETRIC, OutputPrefixType::TINK,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
 }
@@ -444,14 +444,14 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
           KeyData::SYMMETRIC, OutputPrefixType::TINK,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -462,18 +462,18 @@ TEST_P(AesGcmSivProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   ASSERT_THAT(RegisterAesGcmSivProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<AesGcmSivParameters> parameters =
+  absl::StatusOr<AesGcmSivParameters> parameters =
       AesGcmSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
           *key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization, IsOk());
@@ -505,18 +505,18 @@ TEST_P(AesGcmSivProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<AesGcmSivParameters> parameters =
+  absl::StatusOr<AesGcmSivParameters> parameters =
       AesGcmSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
           *key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization, IsOk());
@@ -546,18 +546,18 @@ TEST_F(AesGcmSivProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   ASSERT_THAT(RegisterAesGcmSivProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
+  absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(16);
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key,
                                                    /*token=*/absl::nullopt);
   EXPECT_THAT(serialization.status(),

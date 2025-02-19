@@ -868,7 +868,9 @@ tink_cc_library(
     aes_gcm_siv_proto_serialization_impl.h
   DEPS
     absl::core_headers
+    absl::no_destructor
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::partial_key_access
@@ -876,7 +878,6 @@ tink_cc_library(
     tink::core::secret_key_access_token
     tink::aead::aes_gcm_siv_key
     tink::aead::aes_gcm_siv_parameters
-    tink::internal::call_with_core_dump_protection
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -884,13 +885,11 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::secret_proto
     tink::util::status
-    tink::util::statusor
-    tink::proto::aes_gcm_siv_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -901,6 +900,7 @@ tink_cc_test(
     tink::aead::internal::aes_gcm_siv_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
@@ -915,7 +915,6 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_gcm_siv_cc_proto
     tink::proto::tink_cc_proto

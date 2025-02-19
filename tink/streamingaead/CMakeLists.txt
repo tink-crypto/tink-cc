@@ -276,6 +276,7 @@ tink_cc_library(
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     absl::no_destructor
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -290,13 +291,9 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
+    tink::internal::tink_proto_structs
     tink::util::secret_data
     tink::util::status
-    tink::util::statusor
-    tink::proto::aes_ctr_hmac_streaming_cc_proto
-    tink::proto::common_cc_proto
-    tink::proto::hmac_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(
@@ -356,12 +353,9 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
+    tink::internal::tink_proto_structs
     tink::util::secret_data
     tink::util::status
-    tink::util::statusor
-    tink::proto::aes_gcm_hkdf_streaming_cc_proto
-    tink::proto::common_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 # tests

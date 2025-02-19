@@ -41,7 +41,7 @@ class KeyFactory {
   // Helper function which creates a factory which always fails with a specified
   // status.
   static std::unique_ptr<KeyFactory> AlwaysFailingFactory(
-      const crypto::tink::util::Status& status);
+      const absl::Status& status);
 
   // Generates a new random key, based on the specified 'key_format'.
   virtual crypto::tink::util::StatusOr<

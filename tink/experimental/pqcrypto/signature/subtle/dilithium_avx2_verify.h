@@ -37,8 +37,8 @@ class DilithiumAvx2Verify : public PublicKeyVerify {
       DilithiumPublicKeyPqclean public_key);
 
   // Verifies that 'signature' is a digital signature for 'data'.
-  crypto::tink::util::Status Verify(absl::string_view signature,
-                                    absl::string_view data) const override;
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;

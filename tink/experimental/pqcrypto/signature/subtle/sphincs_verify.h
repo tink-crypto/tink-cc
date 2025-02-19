@@ -42,8 +42,8 @@ class SphincsVerify : public PublicKeyVerify {
       SphincsPublicKeyPqclean key);
 
   // Verifies that 'signature' is a digital signature for 'data'.
-  crypto::tink::util::Status Verify(absl::string_view signature,
-                                    absl::string_view data) const override;
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
 
  private:
   explicit SphincsVerify(SphincsPublicKeyPqclean key) : key_(std::move(key)) {}

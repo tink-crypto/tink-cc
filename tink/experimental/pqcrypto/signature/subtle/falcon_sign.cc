@@ -81,12 +81,12 @@ util::StatusOr<std::string> FalconSign::Sign(absl::string_view data) const {
       break;
     }
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid keysize.");
   }
 
   if (result != 0) {
-    return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
   }
 
   signature.resize(sig_length);

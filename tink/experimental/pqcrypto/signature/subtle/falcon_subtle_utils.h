@@ -107,10 +107,10 @@ crypto::tink::util::StatusOr<FalconKeyPair> GenerateFalconKeyPair(
     int32_t private_key_size);
 
 // Validates whether the private key size is safe to use for falcon signature.
-crypto::tink::util::Status ValidateFalconPrivateKeySize(int32_t key_size);
+absl::Status ValidateFalconPrivateKeySize(int32_t key_size);
 
 // Validates whether the public key size is safe to use for falcon signature.
-crypto::tink::util::Status ValidateFalconPublicKeySize(int32_t key_size);
+absl::Status ValidateFalconPublicKeySize(int32_t key_size);
 
 }  // namespace subtle
 }  // namespace tink

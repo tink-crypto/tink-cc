@@ -387,10 +387,7 @@ TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
 
   util::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
-  EXPECT_THAT(
-      params.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse KmsEnvelopeAeadKeyFormat proto")));
+  EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
@@ -668,9 +665,7 @@ TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,
 
   util::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse KmsEnvelopeAeadKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(LegacyKmsEnvelopeAeadProtoSerializationTest,

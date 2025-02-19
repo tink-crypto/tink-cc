@@ -51,7 +51,7 @@ Status Ed25519VerifyKeyManager::ValidateKey(
     return Status(absl::StatusCode::kInvalidArgument,
                   "The ED25519 public key must be 32-bytes long.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

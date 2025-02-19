@@ -38,7 +38,7 @@ util::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
     const Ed25519PublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
   if (private_key_bytes.size() != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ed25519 private key length must be 32 bytes.");
   }
   // Confirm that private key and public key are a valid Ed25519 key pair.
@@ -48,7 +48,7 @@ util::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
   absl::string_view expected_public_key = public_key.GetPublicKeyBytes(token);
   if (CRYPTO_memcmp(expected_public_key.data(), (*key_pair)->public_key.data(),
                     32) != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid public key for private key bytes.");
   }
   return Ed25519PrivateKey(public_key, private_key_bytes);

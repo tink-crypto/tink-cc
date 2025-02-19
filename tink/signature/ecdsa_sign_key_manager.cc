@@ -72,12 +72,11 @@ StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::CreateKey(
 StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
     const EcdsaKeyFormat& ecdsa_key_format, InputStream* input_stream) const {
   if (IsFipsModeEnabled()) {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kInternal,
-        "Deriving EC keys is not allowed in FIPS mode.");
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Deriving EC keys is not allowed in FIPS mode.");
   }
 
-  util::Status status =
+  absl::Status status =
       ValidateVersion(ecdsa_key_format.version(), get_version());
   if (!status.ok()) {
     return status;
@@ -100,16 +99,15 @@ StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
       random_bytes_used = 32;
       break;
     default:
-      return crypto::tink::util::Status(
-          absl::StatusCode::kInvalidArgument,
-          "Curve does not support key derivation.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Curve does not support key derivation.");
   }
 
   crypto::tink::util::StatusOr<util::SecretData> randomness =
       ReadSecretBytesFromStream(random_bytes_used, input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Could not get enough pseudorandomness from input stream");
     }

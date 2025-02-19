@@ -103,14 +103,14 @@ Status Ed25519SignKeyManager::ValidateKey(
 
 StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
     const Ed25519KeyFormat& key_format, InputStream* input_stream) const {
-  util::Status status = ValidateVersion(key_format.version(), get_version());
+  absl::Status status = ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
 
   util::StatusOr<util::SecretData> randomness =
       ReadSecretBytesFromStream(kEd25519SecretSeedSize, input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Could not get enough pseudorandomness from input stream");
     }
@@ -134,7 +134,7 @@ StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
 
 Status Ed25519SignKeyManager::ValidateKeyFormat(
     const Ed25519KeyFormat& key_format) const {
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

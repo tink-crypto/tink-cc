@@ -43,19 +43,19 @@ util::StatusOr<std::string> ComputeOutputPrefix(
       ABSL_FALLTHROUGH_INTENDED;
     case Ed25519Parameters::Variant::kCrunchy:
       if (!id_requirement.has_value()) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "ID requirement must have value with kCrunchy or kLegacy");
       }
       return internal::ComputeOutputPrefix(0, *id_requirement);
     case Ed25519Parameters::Variant::kTink:
       if (!id_requirement.has_value()) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must have value with kTink");
       }
       return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid variant: ", parameters.GetVariant()));
   }
@@ -67,19 +67,19 @@ util::StatusOr<Ed25519PublicKey> Ed25519PublicKey::Create(
     const Ed25519Parameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key without ID requirement with parameters with ID "
         "requirement");
   }
   if (!parameters.HasIdRequirement() && id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
   if (public_key_bytes.size() != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ed25519 public key length must be 32 bytes.");
   }
   util::StatusOr<std::string> output_prefix =

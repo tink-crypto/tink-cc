@@ -40,7 +40,7 @@ class AlwaysFailPublicKeySign : public PublicKeySign {
 
   util::StatusOr<std::string> Sign(
       absl::string_view /*message*/) const override {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("AlwaysFailPublicKeySign will always fail on sign (msg=",
                      message_, ")"));
@@ -56,7 +56,7 @@ class AlwaysFailPublicKeyVerify : public PublicKeyVerify {
   explicit AlwaysFailPublicKeyVerify(std::string message)
       : message_(std::move(message)) {}
 
-  util::Status Verify(absl::string_view /*signature*/,
+  absl::Status Verify(absl::string_view /*signature*/,
                       absl::string_view /*message*/) const override {
     return absl::InternalError(
         absl::StrCat(

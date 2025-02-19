@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for ECDSA parameters and keys into
 // global serialization registry.
-inline crypto::tink::util::Status RegisterEcdsaProtoSerialization() {
+inline absl::Status RegisterEcdsaProtoSerialization() {
   return internal::RegisterEcdsaProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

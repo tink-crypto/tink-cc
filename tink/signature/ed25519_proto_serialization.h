@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for Ed25519 parameters and keys into
 // global serialization registry.
-inline crypto::tink::util::Status RegisterEd25519ProtoSerialization() {
+inline absl::Status RegisterEd25519ProtoSerialization() {
   return internal::RegisterEd25519ProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

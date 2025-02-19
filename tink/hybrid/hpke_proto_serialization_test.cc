@@ -227,13 +227,13 @@ TEST_P(HpkeProtoSerializationTest, ParseParameters) {
   HpkeKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parameters, IsOk());
@@ -258,13 +258,13 @@ TEST_F(HpkeProtoSerializationTest, ParseLegacyAsCrunchy) {
   HpkeKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::LEGACY,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   ASSERT_THAT(parameters, IsOk());
@@ -286,12 +286,12 @@ TEST_F(HpkeProtoSerializationTest, ParseLegacyAsCrunchy) {
 TEST_F(HpkeProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -307,13 +307,13 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   HpkeKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -330,13 +330,13 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKem) {
   HpkeKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -353,13 +353,13 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKdf) {
   HpkeKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -376,13 +376,13 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownAead) {
   HpkeKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           kPrivateTypeUrl, OutputPrefixType::TINK,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
@@ -393,7 +393,7 @@ TEST_P(HpkeProtoSerializationTest, SerializeParameters) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
 
-  util::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
+  absl::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
                                                   .SetVariant(test_case.variant)
                                                   .SetKemId(test_case.kem_id)
                                                   .SetKdfId(test_case.kdf_id)
@@ -401,7 +401,7 @@ TEST_P(HpkeProtoSerializationTest, SerializeParameters) {
                                                   .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
@@ -432,9 +432,9 @@ struct KeyPair {
   std::string private_key;
 };
 
-util::StatusOr<KeyPair> GenerateKeyPair(subtle::EllipticCurveType curve) {
+absl::StatusOr<KeyPair> GenerateKeyPair(subtle::EllipticCurveType curve) {
   if (curve == subtle::EllipticCurveType::CURVE25519) {
-    util::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+    absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
         internal::NewX25519Key();
     if (!x25519_key.ok()) {
       return x25519_key.status();
@@ -444,16 +444,16 @@ util::StatusOr<KeyPair> GenerateKeyPair(subtle::EllipticCurveType curve) {
                     internal::X25519KeyPubKeySize()),
         std::string(util::SecretDataAsStringView((*x25519_key)->private_key))};
   }
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(curve);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(curve);
   if (!ec_key.ok()) {
     return ec_key.status();
   }
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
       internal::GetEcPoint(curve, ec_key->pub_x, ec_key->pub_y);
   if (!ec_point.ok()) {
     return ec_point.status();
   }
-  util::StatusOr<std::string> pub = internal::EcPointEncode(
+  absl::StatusOr<std::string> pub = internal::EcPointEncode(
       curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
   if (!pub.ok()) {
     return pub.status();
@@ -470,7 +470,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKey) {
   params.set_kdf(test_case.kdf);
   params.set_aead(test_case.aead);
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
   ASSERT_THAT(key_pair, IsOk());
 
   google::crypto::tink::HpkePublicKey key_proto;
@@ -480,13 +480,13 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKey) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   ASSERT_THAT(key, IsOk());
@@ -494,7 +494,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKey) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<HpkeParameters> expected_parameters =
+  absl::StatusOr<HpkeParameters> expected_parameters =
       HpkeParameters::Builder()
           .SetVariant(test_case.variant)
           .SetKemId(test_case.kem_id)
@@ -503,7 +503,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKey) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<HpkePublicKey> expected_key =
+  absl::StatusOr<HpkePublicKey> expected_key =
       HpkePublicKey::Create(*expected_parameters, key_pair->public_key,
                             test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
@@ -517,14 +517,14 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -538,7 +538,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
   params.set_kdf(HpkeKdf::HKDF_SHA256);
   params.set_aead(HpkeAead::CHACHA20_POLY1305);
 
-  util::StatusOr<KeyPair> key_pair =
+  absl::StatusOr<KeyPair> key_pair =
       GenerateKeyPair(subtle::EllipticCurveType::CURVE25519);
   ASSERT_THAT(key_pair, IsOk());
 
@@ -549,14 +549,14 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PUBLIC,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -566,7 +566,7 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
 
-  util::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
+  absl::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
                                                   .SetVariant(test_case.variant)
                                                   .SetKemId(test_case.kem_id)
                                                   .SetKdfId(test_case.kdf_id)
@@ -574,14 +574,14 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKey) {
                                                   .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<HpkePublicKey> key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> key = HpkePublicKey::Create(
       *parameters, key_pair->public_key, test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *key, /*token=*/absl::nullopt);
@@ -621,7 +621,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKey) {
   params.set_kdf(test_case.kdf);
   params.set_aead(test_case.aead);
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
   ASSERT_THAT(key_pair, IsOk());
 
   google::crypto::tink::HpkePublicKey public_key_proto;
@@ -637,13 +637,13 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKey) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
@@ -651,7 +651,7 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKey) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<HpkeParameters> expected_parameters =
+  absl::StatusOr<HpkeParameters> expected_parameters =
       HpkeParameters::Builder()
           .SetVariant(test_case.variant)
           .SetKemId(test_case.kem_id)
@@ -660,12 +660,12 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKey) {
           .Build();
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<HpkePublicKey> expected_public_key =
+  absl::StatusOr<HpkePublicKey> expected_public_key =
       HpkePublicKey::Create(*expected_parameters, key_pair->public_key,
                             test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
-  util::StatusOr<HpkePrivateKey> expected_private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> expected_private_key = HpkePrivateKey::Create(
       *expected_public_key,
       RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
@@ -679,14 +679,14 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -695,7 +695,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
 TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
 
-  util::StatusOr<KeyPair> key_pair =
+  absl::StatusOr<KeyPair> key_pair =
       GenerateKeyPair(subtle::EllipticCurveType::CURVE25519);
   ASSERT_THAT(key_pair, IsOk());
 
@@ -706,14 +706,14 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -727,7 +727,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   params.set_kdf(HpkeKdf::HKDF_SHA256);
   params.set_aead(HpkeAead::CHACHA20_POLY1305);
 
-  util::StatusOr<KeyPair> key_pair =
+  absl::StatusOr<KeyPair> key_pair =
       GenerateKeyPair(subtle::EllipticCurveType::CURVE25519);
   ASSERT_THAT(key_pair, IsOk());
 
@@ -744,14 +744,14 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
@@ -768,7 +768,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidPublicKeyVersion) {
   params.set_kdf(HpkeKdf::HKDF_SHA256);
   params.set_aead(HpkeAead::CHACHA20_POLY1305);
 
-  util::StatusOr<KeyPair> key_pair =
+  absl::StatusOr<KeyPair> key_pair =
       GenerateKeyPair(subtle::EllipticCurveType::CURVE25519);
   ASSERT_THAT(key_pair, IsOk());
 
@@ -785,14 +785,14 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidPublicKeyVersion) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(
@@ -809,7 +809,7 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   params.set_kdf(HpkeKdf::HKDF_SHA256);
   params.set_aead(HpkeAead::CHACHA20_POLY1305);
 
-  util::StatusOr<KeyPair> key_pair =
+  absl::StatusOr<KeyPair> key_pair =
       GenerateKeyPair(subtle::EllipticCurveType::CURVE25519);
   ASSERT_THAT(key_pair, IsOk());
 
@@ -826,14 +826,14 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   RestrictedData serialized_key = RestrictedData(
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
                                               KeyData::ASYMMETRIC_PRIVATE,
                                               OutputPrefixType::TINK,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kPermissionDenied));
@@ -843,7 +843,7 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
 
-  util::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
+  absl::StatusOr<HpkeParameters> parameters = HpkeParameters::Builder()
                                                   .SetVariant(test_case.variant)
                                                   .SetKemId(test_case.kem_id)
                                                   .SetKdfId(test_case.kdf_id)
@@ -851,20 +851,20 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKey) {
                                                   .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.curve);
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, key_pair->public_key, test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key,
       RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -902,7 +902,7 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKey) {
 TEST_F(HpkeProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
 
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -911,22 +911,22 @@ TEST_F(HpkeProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair =
+  absl::StatusOr<KeyPair> key_pair =
       GenerateKeyPair(subtle::EllipticCurveType::CURVE25519);
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, key_pair->public_key, /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key,
       RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, /*token=*/absl::nullopt);
@@ -953,10 +953,10 @@ TEST_P(SerializationTest, SerializesCorrectly) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
   const KeyAndSerialization& test_key = GetParam();
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<ProtoKeySerialization>(
-              *test_key.key, InsecureSecretKeyAccess::Get());
+          .SerializeKey<ProtoKeySerialization>(*test_key.key,
+                                               InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization.status(), IsOk());
   ProtoKeySerialization* proto_serialization =
       dynamic_cast<ProtoKeySerialization*>(serialization->get());
@@ -969,7 +969,7 @@ TEST_P(ParseTest, ParserCorrectly) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
   const KeyAndSerialization& test_key = GetParam();
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           test_key.proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
@@ -977,7 +977,7 @@ TEST_P(ParseTest, ParserCorrectly) {
 }
 
 KeyAndSerialization PrivateKeyAndSerializationNistP256() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -985,11 +985,11 @@ KeyAndSerialization PrivateKeyAndSerializationNistP256() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -1014,7 +1014,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP256() {
 }
 
 KeyAndSerialization PrivateKeyAndSerializationNistP384() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP384HkdfSha384)
@@ -1022,11 +1022,11 @@ KeyAndSerialization PrivateKeyAndSerializationNistP384() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P384PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -1051,7 +1051,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP384() {
 }
 
 KeyAndSerialization PrivateKeyAndSerializationNistP521() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP521HkdfSha512)
@@ -1059,11 +1059,11 @@ KeyAndSerialization PrivateKeyAndSerializationNistP521() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P521PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P521SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -1088,7 +1088,7 @@ KeyAndSerialization PrivateKeyAndSerializationNistP521() {
 }
 
 KeyAndSerialization PrivateKeyAndSerializationX25519() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -1096,11 +1096,11 @@ KeyAndSerialization PrivateKeyAndSerializationX25519() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, X25519PublicValue(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, X25519SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -1125,7 +1125,7 @@ KeyAndSerialization PrivateKeyAndSerializationX25519() {
 }
 
 KeyAndSerialization PrivateKeyAndSerializationTink() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kTink)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -1133,11 +1133,11 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x12341234,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -1162,7 +1162,7 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
 }
 
 KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kCrunchy)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -1170,11 +1170,11 @@ KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x12341234,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -1199,7 +1199,7 @@ KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
 }
 
 KeyAndSerialization PublicKeyAndSerializationNistP256() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -1207,7 +1207,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP256() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -1228,7 +1228,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP256() {
 }
 
 KeyAndSerialization PublicKeyAndSerializationNistP384() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP384HkdfSha384)
@@ -1236,7 +1236,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP384() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P384PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -1257,7 +1257,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP384() {
 }
 
 KeyAndSerialization PublicKeyAndSerializationNistP521() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP521HkdfSha512)
@@ -1265,7 +1265,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP521() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P521PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -1286,7 +1286,7 @@ KeyAndSerialization PublicKeyAndSerializationNistP521() {
 }
 
 KeyAndSerialization PublicKeyAndSerializationX25519() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -1294,7 +1294,7 @@ KeyAndSerialization PublicKeyAndSerializationX25519() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, X25519PublicValue(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -1315,7 +1315,7 @@ KeyAndSerialization PublicKeyAndSerializationX25519() {
 }
 
 KeyAndSerialization PublicKeyAndSerializationTink() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kTink)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -1323,7 +1323,7 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x12341234,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -1344,7 +1344,7 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
 }
 
 KeyAndSerialization PublicKeyAndSerializationCrunchy() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kCrunchy)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -1352,7 +1352,7 @@ KeyAndSerialization PublicKeyAndSerializationCrunchy() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x12341234,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -1375,7 +1375,7 @@ KeyAndSerialization PublicKeyAndSerializationCrunchy() {
 // We check that some non-standard feature of proto are respected (unknown
 // fields, overwritten fields, explicitly serialized versions)
 KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -1383,11 +1383,11 @@ KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 

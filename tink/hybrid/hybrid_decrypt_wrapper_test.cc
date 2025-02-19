@@ -230,7 +230,7 @@ class HybridDecryptSetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(decryption_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -270,7 +270,7 @@ TEST_F(HybridDecryptSetWrapperWithMonitoringTest,
           .status(),
       IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<HybridDecrypt>::Entry<HybridDecrypt>*> last =
+  absl::StatusOr<PrimitiveSet<HybridDecrypt>::Entry<HybridDecrypt>*> last =
       hybrid_decrypt_primitive_set->AddPrimitive(
           absl::make_unique<DummyHybridDecrypt>("hybrid2"),
           keyset_info.key_info(2));
@@ -280,7 +280,7 @@ TEST_F(HybridDecryptSetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a Hybrid Encrypt and encrypt some data, so we can decrypt it later.
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hybrid_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hybrid_decrypt =
       HybridDecryptWrapper().Wrap(std::move(hybrid_decrypt_primitive_set));
   ASSERT_THAT(hybrid_decrypt, IsOkAndHolds(NotNull()));
 
@@ -315,14 +315,14 @@ TEST_F(HybridDecryptSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<HybridDecrypt>::Entry<HybridDecrypt>*> last =
+  absl::StatusOr<PrimitiveSet<HybridDecrypt>::Entry<HybridDecrypt>*> last =
       hybrid_decrypt_primitive_set->AddPrimitive(
           CreateAlwaysFailingHybridDecrypt("hybrid2"), keyset_info.key_info(2));
   ASSERT_THAT(last, IsOkAndHolds(NotNull()));
   ASSERT_THAT(hybrid_decrypt_primitive_set->set_primary(*last), IsOk());
 
   // Create a Hybrid Decrypt and decrypt some invalid ciphertext.
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hybrid_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hybrid_decrypt =
       HybridDecryptWrapper().Wrap(std::move(hybrid_decrypt_primitive_set));
   ASSERT_THAT(hybrid_decrypt, IsOk());
 

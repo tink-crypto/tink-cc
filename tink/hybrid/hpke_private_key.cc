@@ -50,7 +50,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<subtle::EllipticCurveType> CurveTypeFromKemId(
+absl::StatusOr<subtle::EllipticCurveType> CurveTypeFromKemId(
     HpkeParameters::KemId kem_id) {
   switch (kem_id) {
     case HpkeParameters::KemId::kDhkemP256HkdfSha256:
@@ -112,7 +112,7 @@ util::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
                                    absl::string_view public_key_bytes,
                                    const util::SecretData& private_key_bytes) {
   // Construct EC_KEY from public and private key bytes.
-  util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
       internal::EcGroupFromCurveType(curve);
   if (!group.ok()) {
     return group.status();
@@ -120,7 +120,7 @@ util::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
   EC_KEY_set_group(key.get(), group->get());
 
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> public_key =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> public_key =
       internal::EcPointDecode(curve, subtle::EcPointFormat::UNCOMPRESSED,
                               public_key_bytes);
   if (!public_key.ok()) {
@@ -133,7 +133,7 @@ util::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_key =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_key =
       internal::SecretDataToBignum(private_key_bytes);
   if (!priv_key.ok()) {
     return priv_key.status();
@@ -160,7 +160,7 @@ util::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
 
 util::Status ValidateX25519KeyPair(absl::string_view public_key_bytes,
                                    const util::SecretData& private_key_bytes) {
-  util::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
       internal::X25519KeyFromPrivateKey(private_key_bytes);
   if (!x25519_key.ok()) {
     return x25519_key.status();
@@ -185,7 +185,7 @@ util::Status ValidateKeyPair(const HpkePublicKey& public_key,
       private_key_bytes.Get(InsecureSecretKeyAccess::Get());
 
   if (IsNistKem(kem_id)) {
-    util::StatusOr<subtle::EllipticCurveType> curve =
+    absl::StatusOr<subtle::EllipticCurveType> curve =
         CurveTypeFromKemId(kem_id);
     if (!curve.ok()) {
       return curve.status();
@@ -197,7 +197,7 @@ util::Status ValidateKeyPair(const HpkePublicKey& public_key,
 
 }  // namespace
 
-util::StatusOr<HpkePrivateKey> HpkePrivateKey::Create(
+absl::StatusOr<HpkePrivateKey> HpkePrivateKey::Create(
     const HpkePublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
   util::Status key_length_validation = ValidatePrivateKeyLength(

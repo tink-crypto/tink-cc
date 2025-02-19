@@ -55,22 +55,22 @@ INSTANTIATE_TEST_SUITE_P(
 #endif
 
 TEST_P(ConfigV0Test, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), KeyGenConfigHybridV0());
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(KeyGenConfigHybridV0());
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
       (*public_handle)->GetPrimitive<HybridEncrypt>(ConfigHybridV0());
   ASSERT_THAT(encrypt, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
       (*handle)->GetPrimitive<HybridDecrypt>(ConfigHybridV0());
   ASSERT_THAT(decrypt, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext = (*encrypt)->Encrypt(plaintext, "ad");
+  absl::StatusOr<std::string> ciphertext = (*encrypt)->Encrypt(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*decrypt)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }

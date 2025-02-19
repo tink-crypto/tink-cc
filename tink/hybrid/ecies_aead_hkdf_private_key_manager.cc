@@ -54,11 +54,12 @@ Status EciesAeadHkdfPrivateKeyManager::ValidateKeyFormat(
   return EciesAeadHkdfPublicKeyManager().ValidateParams(key_format.params());
 }
 
-StatusOr<EciesAeadHkdfPrivateKey> EciesAeadHkdfPrivateKeyManager::CreateKey(
+absl::StatusOr<EciesAeadHkdfPrivateKey>
+EciesAeadHkdfPrivateKeyManager::CreateKey(
     const EciesAeadHkdfKeyFormat& ecies_key_format) const {
   // Generate new EC key.
   const EciesHkdfKemParams& kem_params = ecies_key_format.params().kem_params();
-  util::StatusOr<internal::EcKey> ec_key =
+  absl::StatusOr<internal::EcKey> ec_key =
       internal::NewEcKey(util::Enums::ProtoToSubtle(kem_params.curve_type()));
   if (!ec_key.ok()) {
     return ec_key.status();
@@ -77,7 +78,8 @@ StatusOr<EciesAeadHkdfPrivateKey> EciesAeadHkdfPrivateKeyManager::CreateKey(
   return ecies_private_key;
 }
 
-StatusOr<EciesAeadHkdfPublicKey> EciesAeadHkdfPrivateKeyManager::GetPublicKey(
+absl::StatusOr<EciesAeadHkdfPublicKey>
+EciesAeadHkdfPrivateKeyManager::GetPublicKey(
     const EciesAeadHkdfPrivateKey& private_key) const {
   return private_key.public_key();
 }

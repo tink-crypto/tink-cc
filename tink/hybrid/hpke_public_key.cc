@@ -90,7 +90,7 @@ util::Status ValidatePublicKey(HpkeParameters::KemId kem_id,
   return util::OkStatus();
 }
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const HpkeParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case HpkeParameters::Variant::kNoPrefix:
@@ -116,7 +116,7 @@ util::StatusOr<std::string> ComputeOutputPrefix(
 
 }  // namespace
 
-util::StatusOr<HpkePublicKey> HpkePublicKey::Create(
+absl::StatusOr<HpkePublicKey> HpkePublicKey::Create(
     const HpkeParameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
@@ -138,7 +138,7 @@ util::StatusOr<HpkePublicKey> HpkePublicKey::Create(
     return validation;
   }
 
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();

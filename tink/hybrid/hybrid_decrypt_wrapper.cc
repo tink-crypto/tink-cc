@@ -50,7 +50,7 @@ class HybridDecryptSetWrapper : public HybridDecrypt {
         monitoring_decryption_client_(std::move(monitoring_decryption_client)) {
   }
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view context_info) const override;
 
@@ -61,7 +61,7 @@ class HybridDecryptSetWrapper : public HybridDecrypt {
   std::unique_ptr<MonitoringClient> monitoring_decryption_client_;
 };
 
-util::StatusOr<std::string> HybridDecryptSetWrapper::Decrypt(
+absl::StatusOr<std::string> HybridDecryptSetWrapper::Decrypt(
     absl::string_view ciphertext, absl::string_view context_info) const {
   // BoringSSL expects a non-null pointer for context_info,
   // regardless of whether the size is 0.
@@ -121,7 +121,7 @@ util::Status Validate(PrimitiveSet<HybridDecrypt>* hybrid_decrypt_set) {
 }  // anonymous namespace
 
 // static
-util::StatusOr<std::unique_ptr<HybridDecrypt>> HybridDecryptWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> HybridDecryptWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<HybridDecrypt>> primitive_set) const {
   util::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
@@ -135,13 +135,13 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> HybridDecryptWrapper::Wrap(
         absl::make_unique<HybridDecryptSetWrapper>(std::move(primitive_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<MonitoringClient>>
       monitoring_decryption_client = monitoring_factory->New(
           MonitoringContext(kPrimitive, kDecryptApi, *keyset_info));
   if (!monitoring_decryption_client.ok()) {

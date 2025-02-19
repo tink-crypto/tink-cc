@@ -45,7 +45,7 @@ class HpkePublicKey : public HybridPublicKey {
   // Creates a new HPKE public key from `public_key_bytes`. If `parameters`
   // specify a variant that uses a prefix, then `id_requirement` is used to
   // compute this prefix.
-  static util::StatusOr<HpkePublicKey> Create(
+  static absl::StatusOr<HpkePublicKey> Create(
       const HpkeParameters& parameters, absl::string_view public_key_bytes,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 

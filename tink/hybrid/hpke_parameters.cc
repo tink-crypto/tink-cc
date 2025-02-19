@@ -46,7 +46,7 @@ HpkeParameters::Builder& HpkeParameters::Builder::SetVariant(Variant variant) {
   return *this;
 }
 
-util::StatusOr<HpkeParameters> HpkeParameters::Builder::Build() {
+absl::StatusOr<HpkeParameters> HpkeParameters::Builder::Build() {
   static const std::set<KemId>* supported_kem_ids = new std::set<KemId>(
       {KemId::kDhkemP256HkdfSha256, KemId::kDhkemP384HkdfSha384,
        KemId::kDhkemP521HkdfSha512, KemId::kDhkemX25519HkdfSha256});

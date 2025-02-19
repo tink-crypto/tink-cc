@@ -35,7 +35,7 @@ namespace tink {
 class HybridEncryptWrapper
     : public PrimitiveWrapper<HybridEncrypt, HybridEncrypt> {
  public:
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> Wrap(
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> Wrap(
       std::unique_ptr<PrimitiveSet<HybridEncrypt>> primitive_set)
       const override;
 };

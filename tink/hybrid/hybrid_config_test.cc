@@ -189,18 +189,18 @@ TEST_F(HybridConfigTest, EciesProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               HybridKeyTemplates::EciesX25519HkdfHmacSha256Aes256Gcm());
   ASSERT_THAT(proto_params_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kX25519)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -209,7 +209,7 @@ TEST_F(HybridConfigTest, EciesProtoParamsSerializationRegistered) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params.status(),
@@ -217,12 +217,12 @@ TEST_F(HybridConfigTest, EciesProtoParamsSerializationRegistered) {
 
   ASSERT_THAT(HybridConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_params2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *proto_params_serialization);
   ASSERT_THAT(parsed_params2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_params2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialized_params2, IsOk());
@@ -264,7 +264,7 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
   public_key_proto.set_x(public_key_bytes);
   *public_key_proto.mutable_params() = CreateParams();
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
@@ -273,12 +273,12 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<EciesParameters> parameters =
+  absl::StatusOr<EciesParameters> parameters =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kX25519)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -287,13 +287,13 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*parameters, public_key_bytes,
                                            /*id_requirement=*/absl::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *public_key, InsecureSecretKeyAccess::Get());
@@ -301,12 +301,12 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
 
   ASSERT_THAT(HybridConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *public_key, InsecureSecretKeyAccess::Get());
@@ -318,7 +318,7 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
       internal::NewX25519Key();
   ASSERT_THAT(x25519_key, IsOk());
 
@@ -338,7 +338,7 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
   *private_key_proto.mutable_public_key() = public_key_proto;
   private_key_proto.set_key_value(private_key_bytes);
 
-  util::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> proto_key_serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
@@ -347,12 +347,12 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<EciesParameters> parameters =
+  absl::StatusOr<EciesParameters> parameters =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kX25519)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -361,20 +361,20 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(*parameters, public_key_bytes,
                                            /*id_requirement=*/absl::nullopt,
                                            GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForCurveX25519(
           *public_key,
           RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());
@@ -382,12 +382,12 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
 
   ASSERT_THAT(HybridConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *proto_key_serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(parsed_key2, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialized_key2 =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               *private_key, InsecureSecretKeyAccess::Get());

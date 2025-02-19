@@ -51,7 +51,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
+absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
     EciesParameters::CurveType curve_type) {
   switch (curve_type) {
     case EciesParameters::CurveType::kNistP256:
@@ -74,12 +74,12 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
 
   // Set EC_KEY group.
-  util::StatusOr<subtle::EllipticCurveType> curve =
+  absl::StatusOr<subtle::EllipticCurveType> curve =
       SubtleCurveType(public_key.GetParameters().GetCurveType());
   if (!curve.ok()) {
     return curve.status();
   }
-  util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
       internal::EcGroupFromCurveType(*curve);
   if (!group.ok()) {
     return group.status();
@@ -92,7 +92,7 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Missing public point for NIST curve public key.");
   }
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> public_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> public_point =
       internal::GetEcPoint(*curve, ec_point->GetX().GetValue(),
                            ec_point->GetY().GetValue());
   if (!public_point.ok()) {
@@ -105,7 +105,7 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
   }
 
   // Set EC_KEY private key.
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_big_num =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> priv_big_num =
       internal::StringToBignum(
           private_key_value.GetSecret(InsecureSecretKeyAccess::Get()));
   if (!priv_big_num.ok()) {
@@ -134,7 +134,7 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
 util::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
                                    const RestrictedData& private_key_bytes,
                                    PartialKeyAccessToken token) {
-  util::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
       internal::X25519KeyFromPrivateKey(
           private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
   if (!x25519_key.ok()) {
@@ -163,7 +163,7 @@ util::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
 
 }  // namespace
 
-util::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
+absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
     const EciesPublicKey& public_key,
     const RestrictedBigInteger& private_key_value,
     PartialKeyAccessToken token) {
@@ -176,7 +176,7 @@ util::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
   return EciesPrivateKey(public_key, private_key_value);
 }
 
-util::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForCurveX25519(
+absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForCurveX25519(
     const EciesPublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
   // Validate private key length.

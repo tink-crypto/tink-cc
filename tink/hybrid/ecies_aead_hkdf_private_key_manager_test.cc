@@ -288,14 +288,14 @@ using EciesTestVectorTest = testing::TestWithParam<HybridTestVector>;
 TEST_P(EciesTestVectorTest, DecryptWorks) {
   ASSERT_THAT(HybridConfig::Register(), IsOk());
   const HybridTestVector& param = GetParam();
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(decrypter, IsOk());
   EXPECT_THAT((*decrypter)->Decrypt(param.ciphertext, param.context_info),
@@ -305,14 +305,14 @@ TEST_P(EciesTestVectorTest, DecryptWorks) {
 TEST_P(EciesTestVectorTest, DecryptDifferentContextInfoFails) {
   ASSERT_THAT(HybridConfig::Register(), IsOk());
   const HybridTestVector& param = GetParam();
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(decrypter, IsOk());
   EXPECT_THAT(
@@ -324,25 +324,25 @@ TEST_P(EciesTestVectorTest, DecryptDifferentContextInfoFails) {
 TEST_P(EciesTestVectorTest, EncryptThenDecryptWorks) {
   ASSERT_THAT(HybridConfig::Register(), IsOk());
   const HybridTestVector& param = GetParam();
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(decrypter, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
       (*public_handle)->GetPrimitive<HybridEncrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(encrypter, IsOk());
 
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*encrypter)->Encrypt(param.plaintext, param.context_info);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*decrypter)->Decrypt(*ciphertext, param.context_info),

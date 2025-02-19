@@ -41,12 +41,12 @@ class EciesPrivateKey : public HybridPrivateKey {
   EciesPrivateKey(EciesPrivateKey&& other) = default;
   EciesPrivateKey& operator=(EciesPrivateKey&& other) = default;
 
-  static util::StatusOr<EciesPrivateKey> CreateForNistCurve(
+  static absl::StatusOr<EciesPrivateKey> CreateForNistCurve(
       const EciesPublicKey& public_key,
       const RestrictedBigInteger& private_key_value,
       PartialKeyAccessToken token);
 
-  static util::StatusOr<EciesPrivateKey> CreateForCurveX25519(
+  static absl::StatusOr<EciesPrivateKey> CreateForCurveX25519(
       const EciesPublicKey& public_key, const RestrictedData& private_key_bytes,
       PartialKeyAccessToken token);
 

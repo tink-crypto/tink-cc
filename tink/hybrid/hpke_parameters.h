@@ -86,7 +86,7 @@ class HpkeParameters : public HybridParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates HPKE parameters object from this builder.
-    util::StatusOr<HpkeParameters> Build();
+    absl::StatusOr<HpkeParameters> Build();
 
    private:
     KemId kem_id_;

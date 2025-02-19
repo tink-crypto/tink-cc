@@ -165,7 +165,7 @@ const absl::string_view kPublicTypeUrl =
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.HpkePrivateKey";
 
-util::StatusOr<HpkeParameters::Variant> ToVariant(
+absl::StatusOr<HpkeParameters::Variant> ToVariant(
     OutputPrefixType output_prefix_type) {
   switch (output_prefix_type) {
     case OutputPrefixType::LEGACY:
@@ -182,7 +182,7 @@ util::StatusOr<HpkeParameters::Variant> ToVariant(
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixType> ToOutputPrefixType(
     HpkeParameters::Variant variant) {
   switch (variant) {
     case HpkeParameters::Variant::kCrunchy:
@@ -197,7 +197,7 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
   }
 }
 
-util::StatusOr<HpkeParameters::KemId> ToKemId(HpkeKem kem) {
+absl::StatusOr<HpkeParameters::KemId> ToKemId(HpkeKem kem) {
   switch (kem) {
     case HpkeKem::DHKEM_P256_HKDF_SHA256:
       return HpkeParameters::KemId::kDhkemP256HkdfSha256;
@@ -213,7 +213,7 @@ util::StatusOr<HpkeParameters::KemId> ToKemId(HpkeKem kem) {
   }
 }
 
-util::StatusOr<HpkeKem> FromKemId(HpkeParameters::KemId kem_id) {
+absl::StatusOr<HpkeKem> FromKemId(HpkeParameters::KemId kem_id) {
   switch (kem_id) {
     case HpkeParameters::KemId::kDhkemP256HkdfSha256:
       return HpkeKem::DHKEM_P256_HKDF_SHA256;
@@ -229,7 +229,7 @@ util::StatusOr<HpkeKem> FromKemId(HpkeParameters::KemId kem_id) {
   }
 }
 
-util::StatusOr<HpkeParameters::KdfId> ToKdfId(HpkeKdf kdf) {
+absl::StatusOr<HpkeParameters::KdfId> ToKdfId(HpkeKdf kdf) {
   switch (kdf) {
     case HpkeKdf::HKDF_SHA256:
       return HpkeParameters::KdfId::kHkdfSha256;
@@ -243,7 +243,7 @@ util::StatusOr<HpkeParameters::KdfId> ToKdfId(HpkeKdf kdf) {
   }
 }
 
-util::StatusOr<HpkeKdf> FromKdfId(HpkeParameters::KdfId kdf_id) {
+absl::StatusOr<HpkeKdf> FromKdfId(HpkeParameters::KdfId kdf_id) {
   switch (kdf_id) {
     case HpkeParameters::KdfId::kHkdfSha256:
       return HpkeKdf::HKDF_SHA256;
@@ -257,7 +257,7 @@ util::StatusOr<HpkeKdf> FromKdfId(HpkeParameters::KdfId kdf_id) {
   }
 }
 
-util::StatusOr<HpkeParameters::AeadId> ToAeadId(HpkeAead aead) {
+absl::StatusOr<HpkeParameters::AeadId> ToAeadId(HpkeAead aead) {
   switch (aead) {
     case HpkeAead::AES_128_GCM:
       return HpkeParameters::AeadId::kAesGcm128;
@@ -271,7 +271,7 @@ util::StatusOr<HpkeParameters::AeadId> ToAeadId(HpkeAead aead) {
   }
 }
 
-util::StatusOr<HpkeAead> FromAeadId(HpkeParameters::AeadId aead_id) {
+absl::StatusOr<HpkeAead> FromAeadId(HpkeParameters::AeadId aead_id) {
   switch (aead_id) {
     case HpkeParameters::AeadId::kAesGcm128:
       return HpkeAead::AES_128_GCM;
@@ -285,25 +285,25 @@ util::StatusOr<HpkeAead> FromAeadId(HpkeParameters::AeadId aead_id) {
   }
 }
 
-util::StatusOr<HpkeParameters> ToParameters(
-    OutputPrefixType output_prefix_type, const HpkeParamsStruct& params) {
-  util::StatusOr<HpkeParameters::Variant> variant =
+absl::StatusOr<HpkeParameters> ToParameters(OutputPrefixType output_prefix_type,
+                                            const HpkeParamsStruct& params) {
+  absl::StatusOr<HpkeParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<HpkeParameters::KemId> kem_id = ToKemId(params.kem);
+  absl::StatusOr<HpkeParameters::KemId> kem_id = ToKemId(params.kem);
   if (!kem_id.ok()) {
     return kem_id.status();
   }
 
-  util::StatusOr<HpkeParameters::KdfId> kdf_id = ToKdfId(params.kdf);
+  absl::StatusOr<HpkeParameters::KdfId> kdf_id = ToKdfId(params.kdf);
   if (!kdf_id.ok()) {
     return kdf_id.status();
   }
 
-  util::StatusOr<HpkeParameters::AeadId> aead_id = ToAeadId(params.aead);
+  absl::StatusOr<HpkeParameters::AeadId> aead_id = ToAeadId(params.aead);
   if (!aead_id.ok()) {
     return aead_id.status();
   }
@@ -316,18 +316,18 @@ util::StatusOr<HpkeParameters> ToParameters(
       .Build();
 }
 
-util::StatusOr<HpkeParamsStruct> FromParameters(HpkeParameters parameters) {
-  util::StatusOr<HpkeKem> kem = FromKemId(parameters.GetKemId());
+absl::StatusOr<HpkeParamsStruct> FromParameters(HpkeParameters parameters) {
+  absl::StatusOr<HpkeKem> kem = FromKemId(parameters.GetKemId());
   if (!kem.ok()) {
     return kem.status();
   }
 
-  util::StatusOr<HpkeKdf> kdf = FromKdfId(parameters.GetKdfId());
+  absl::StatusOr<HpkeKdf> kdf = FromKdfId(parameters.GetKdfId());
   if (!kdf.ok()) {
     return kdf.status();
   }
 
-  util::StatusOr<HpkeAead> aead = FromAeadId(parameters.GetAeadId());
+  absl::StatusOr<HpkeAead> aead = FromAeadId(parameters.GetAeadId());
   if (!aead.ok()) {
     return aead.status();
   }
@@ -340,7 +340,7 @@ util::StatusOr<HpkeParamsStruct> FromParameters(HpkeParameters parameters) {
   return params;
 }
 
-util::StatusOr<HpkeParameters> ParseParameters(
+absl::StatusOr<HpkeParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -357,7 +357,7 @@ util::StatusOr<HpkeParameters> ParseParameters(
                       proto_key_format->params);
 }
 
-util::StatusOr<HpkePublicKey> ParsePublicKey(
+absl::StatusOr<HpkePublicKey> ParsePublicKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
@@ -366,7 +366,7 @@ util::StatusOr<HpkePublicKey> ParsePublicKey(
   }
 
   const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  util::StatusOr<HpkePublicKeyStruct> proto_key = GetPublicKeyParser().Parse(
+  absl::StatusOr<HpkePublicKeyStruct> proto_key = GetPublicKeyParser().Parse(
       restricted_data.GetSecret(InsecureSecretKeyAccess::Get()));
   if (!proto_key.ok()) {
     return proto_key.status();
@@ -376,7 +376,7 @@ util::StatusOr<HpkePublicKey> ParsePublicKey(
                         "Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       ToParameters(serialization.GetOutputPrefixType(), proto_key->params);
   if (!parameters.ok()) {
     return parameters.status();
@@ -387,7 +387,7 @@ util::StatusOr<HpkePublicKey> ParsePublicKey(
                                GetPartialKeyAccess());
 }
 
-util::StatusOr<HpkePrivateKey> ParsePrivateKey(
+absl::StatusOr<HpkePrivateKey> ParsePrivateKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
@@ -398,7 +398,7 @@ util::StatusOr<HpkePrivateKey> ParsePrivateKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
-  util::StatusOr<HpkePrivateKeyStruct> proto_key = GetPrivateKeyParser().Parse(
+  absl::StatusOr<HpkePrivateKeyStruct> proto_key = GetPrivateKeyParser().Parse(
       serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -414,19 +414,19 @@ util::StatusOr<HpkePrivateKey> ParsePrivateKey(
                         "Only version 0 public keys are accepted.");
   }
 
-  util::StatusOr<HpkeParameters::Variant> variant =
+  absl::StatusOr<HpkeParameters::Variant> variant =
       ToVariant(serialization.GetOutputPrefixType());
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<HpkeParameters> parameters = ToParameters(
+  absl::StatusOr<HpkeParameters> parameters = ToParameters(
       serialization.GetOutputPrefixType(), proto_key->public_key.params);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, proto_key->public_key.public_key,
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
@@ -438,22 +438,22 @@ util::StatusOr<HpkePrivateKey> ParsePrivateKey(
       GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const HpkeParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<HpkeParamsStruct> params = FromParameters(parameters);
+  absl::StatusOr<HpkeParamsStruct> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
   HpkeKeyFormatStruct proto_key_format;
   proto_key_format.params = *params;
 
-  util::StatusOr<std::string> serialized =
+  absl::StatusOr<std::string> serialized =
       GetKeyFormatParser().SerializeIntoString(proto_key_format);
   if (!serialized.ok()) {
     return serialized.status();
@@ -463,9 +463,9 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       kPrivateTypeUrl, *output_prefix_type, *serialized);
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const HpkePublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<HpkeParamsStruct> params = FromParameters(key.GetParameters());
+  absl::StatusOr<HpkeParamsStruct> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
@@ -476,13 +476,13 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   proto_key.public_key =
       std::string(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<std::string> serialized =
+  absl::StatusOr<std::string> serialized =
       GetPublicKeyParser().SerializeIntoString(proto_key);
   if (!serialized.ok()) {
     return serialized.status();
@@ -494,9 +494,9 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
       *output_prefix_type, key.GetIdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     const HpkePrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetPrivateKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
@@ -506,7 +506,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
                         "SecretKeyAccess is required");
   }
 
-  util::StatusOr<HpkeParamsStruct> params = FromParameters(key.GetParameters());
+  absl::StatusOr<HpkeParamsStruct> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
@@ -520,13 +520,13 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   proto_key.private_key =
       util::SecretDataFromStringView(restricted_input->GetSecret(*token));
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixType> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<util::SecretData> serialized =
+  absl::StatusOr<util::SecretData> serialized =
       GetPrivateKeyParser().SerializeIntoSecretData(proto_key);
   if (!serialized.ok()) {
     return serialized.status();

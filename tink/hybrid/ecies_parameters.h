@@ -106,7 +106,7 @@ class EciesParameters : public HybridParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates ECIES parameters object from this builder.
-    util::StatusOr<EciesParameters> Build();
+    absl::StatusOr<EciesParameters> Build();
 
    private:
     CurveType curve_type_;
@@ -137,7 +137,7 @@ class EciesParameters : public HybridParameters {
 
   Variant GetVariant() const { return variant_; }
 
-  util::StatusOr<std::unique_ptr<Parameters>> CreateDemParameters() const;
+  absl::StatusOr<std::unique_ptr<Parameters>> CreateDemParameters() const;
 
   bool HasIdRequirement() const override {
     return variant_ != Variant::kNoPrefix;

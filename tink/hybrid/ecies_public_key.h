@@ -43,11 +43,11 @@ class EciesPublicKey : public HybridPublicKey {
   EciesPublicKey(EciesPublicKey&& other) = default;
   EciesPublicKey& operator=(EciesPublicKey&& other) = default;
 
-  static util::StatusOr<EciesPublicKey> CreateForNistCurve(
+  static absl::StatusOr<EciesPublicKey> CreateForNistCurve(
       const EciesParameters& parameters, const EcPoint& point,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 
-  static util::StatusOr<EciesPublicKey> CreateForCurveX25519(
+  static absl::StatusOr<EciesPublicKey> CreateForCurveX25519(
       const EciesParameters& parameters, absl::string_view public_key_bytes,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 

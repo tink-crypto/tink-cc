@@ -38,7 +38,7 @@ class AlwaysFailHybridEncrypt : public HybridEncrypt {
   explicit AlwaysFailHybridEncrypt(std::string message)
       : message_(std::move(message)) {}
 
-  util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override {
     return util::Status(
@@ -58,7 +58,7 @@ class AlwaysFailHybridDecrypt : public HybridDecrypt {
   explicit AlwaysFailHybridDecrypt(std::string message)
       : message_(std::move(message)) {}
 
-  util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override {
     return util::Status(

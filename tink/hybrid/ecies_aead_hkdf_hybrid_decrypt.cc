@@ -66,7 +66,7 @@ util::Status Validate(const EciesAeadHkdfPrivateKey& key) {
 }  // namespace
 
 // static
-util::StatusOr<std::unique_ptr<HybridDecrypt>> EciesAeadHkdfHybridDecrypt::New(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> EciesAeadHkdfHybridDecrypt::New(
     const EciesAeadHkdfPrivateKey& recipient_key) {
   util::Status status = Validate(recipient_key);
   if (!status.ok()) return status;
@@ -86,7 +86,7 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> EciesAeadHkdfHybridDecrypt::New(
       std::move(dem_result).value()))};
 }
 
-util::StatusOr<std::string> EciesAeadHkdfHybridDecrypt::Decrypt(
+absl::StatusOr<std::string> EciesAeadHkdfHybridDecrypt::Decrypt(
     absl::string_view ciphertext, absl::string_view context_info) const {
   // Extract KEM-bytes from the ciphertext.
   auto header_size_result = internal::EcPointEncodingSizeInBytes(
@@ -101,7 +101,7 @@ util::StatusOr<std::string> EciesAeadHkdfHybridDecrypt::Decrypt(
   }
 
   // Use KEM to get a symmetric key.
-  crypto::tink::util::StatusOr<util::SecretData> symmetric_key_result =
+  absl::StatusOr<util::SecretData> symmetric_key_result =
       recipient_kem_->GenerateKey(
           absl::string_view(ciphertext).substr(0, header_size),
           util::Enums::ProtoToSubtle(

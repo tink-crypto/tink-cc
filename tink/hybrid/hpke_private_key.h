@@ -43,7 +43,7 @@ class HpkePrivateKey : public HybridPrivateKey {
   // Creates a new HPKE private key from `private_key_bytes`. Returns an
   // error if `public_key` does not belong to the same key pair as
   // `private_key_bytes`.
-  static util::StatusOr<HpkePrivateKey> Create(
+  static absl::StatusOr<HpkePrivateKey> Create(
       const HpkePublicKey& public_key, const RestrictedData& private_key_bytes,
       PartialKeyAccessToken token);
 

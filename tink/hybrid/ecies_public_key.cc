@@ -64,13 +64,13 @@ util::Status ValidateNistCurvePublicKey(EciesParameters::CurveType curve_type,
       return util::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unknown curve type: ", curve_type));
   }
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
       internal::GetEcPoint(curve, point.GetX().GetValue(),
                            point.GetY().GetValue());
   if (!ec_point.ok()) {
     return ec_point.status();
   }
-  util::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
+  absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
       internal::EcGroupFromCurveType(curve);
   if (!group.ok()) {
     return group.status();
@@ -84,7 +84,7 @@ util::Status ValidateNistCurvePublicKey(EciesParameters::CurveType curve_type,
   return util::OkStatus();
 }
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const EciesParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case EciesParameters::Variant::kNoPrefix:
@@ -127,7 +127,7 @@ util::Status ValidateIdRequirement(const EciesParameters& parameters,
 
 }  // namespace
 
-util::StatusOr<EciesPublicKey> EciesPublicKey::CreateForNistCurve(
+absl::StatusOr<EciesPublicKey> EciesPublicKey::CreateForNistCurve(
     const EciesParameters& parameters, const EcPoint& point,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   util::Status id_requirement_validation =
@@ -142,7 +142,7 @@ util::StatusOr<EciesPublicKey> EciesPublicKey::CreateForNistCurve(
     return public_key_validation;
   }
 
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();
@@ -151,7 +151,7 @@ util::StatusOr<EciesPublicKey> EciesPublicKey::CreateForNistCurve(
   return EciesPublicKey(parameters, point, id_requirement, *output_prefix);
 }
 
-util::StatusOr<EciesPublicKey> EciesPublicKey::CreateForCurveX25519(
+absl::StatusOr<EciesPublicKey> EciesPublicKey::CreateForCurveX25519(
     const EciesParameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   util::Status id_requirement_validation =
@@ -169,7 +169,7 @@ util::StatusOr<EciesPublicKey> EciesPublicKey::CreateForCurveX25519(
             internal::X25519KeyPubKeySize(), public_key_bytes.length()));
   }
 
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();

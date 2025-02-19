@@ -67,7 +67,7 @@ util::Status Validate(const EciesAeadHkdfPublicKey& key) {
 }  // namespace
 
 // static
-util::StatusOr<std::unique_ptr<HybridEncrypt>> EciesAeadHkdfHybridEncrypt::New(
+absl::StatusOr<std::unique_ptr<HybridEncrypt>> EciesAeadHkdfHybridEncrypt::New(
     const EciesAeadHkdfPublicKey& recipient_key) {
   util::Status status = Validate(recipient_key);
   if (!status.ok()) return status;
@@ -87,7 +87,7 @@ util::StatusOr<std::unique_ptr<HybridEncrypt>> EciesAeadHkdfHybridEncrypt::New(
       std::move(dem_result).value()))};
 }
 
-util::StatusOr<std::string> EciesAeadHkdfHybridEncrypt::Encrypt(
+absl::StatusOr<std::string> EciesAeadHkdfHybridEncrypt::Encrypt(
     absl::string_view plaintext, absl::string_view context_info) const {
   // Use KEM to get a symmetric key.
   auto kem_key_result = sender_kem_->GenerateKey(

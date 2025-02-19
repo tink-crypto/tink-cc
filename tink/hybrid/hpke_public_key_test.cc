@@ -87,7 +87,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKey) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HpkeParameters> params = HpkeParameters::Builder()
+  absl::StatusOr<HpkeParameters> params = HpkeParameters::Builder()
                                               .SetVariant(test_case.variant)
                                               .SetKemId(test_case.kem_id)
                                               .SetKdfId(test_case.kdf_id)
@@ -95,16 +95,16 @@ TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKey) {
                                               .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key, IsOk());
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
       internal::GetEcPoint(test_case.curve, ec_key->pub_x, ec_key->pub_y);
   ASSERT_THAT(ec_point, IsOk());
-  util::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
+  absl::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
       test_case.curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
   ASSERT_THAT(public_key_bytes, IsOk());
 
-  util::StatusOr<HpkePublicKey> public_key =
+  absl::StatusOr<HpkePublicKey> public_key =
       HpkePublicKey::Create(*params, *public_key_bytes,
                             test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -117,7 +117,7 @@ TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKey) {
 }
 
 TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
-  util::StatusOr<HpkeParameters> params =
+  absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -128,7 +128,7 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -143,7 +143,7 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
 TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidLength) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HpkeParameters> params = HpkeParameters::Builder()
+  absl::StatusOr<HpkeParameters> params = HpkeParameters::Builder()
                                               .SetVariant(test_case.variant)
                                               .SetKemId(test_case.kem_id)
                                               .SetKdfId(test_case.kdf_id)
@@ -151,16 +151,16 @@ TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidLength) {
                                               .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key, IsOk());
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
       internal::GetEcPoint(test_case.curve, ec_key->pub_x, ec_key->pub_y);
   ASSERT_THAT(ec_point, IsOk());
-  util::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
+  absl::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
       test_case.curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
   ASSERT_THAT(public_key_bytes, IsOk());
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes->substr(0, public_key_bytes->size() - 1),
       test_case.id_requirement, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
@@ -168,7 +168,7 @@ TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidLength) {
 }
 
 TEST(HpkePublicKeyTest, CreateX25519PublicKeyWithInvalidLength) {
-  util::StatusOr<HpkeParameters> params =
+  absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -179,7 +179,7 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKeyWithInvalidLength) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(),
@@ -194,7 +194,7 @@ TEST(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidPoint) {
       "48a4b95d3a46952a5ba72da0d702dc97a64e99799d8cff7a5c4b925e4360ece25ccf307d"
       "7a9a7063286bbd16ef64c65f546757e4");
 
-  util::StatusOr<int32_t> point_size =
+  absl::StatusOr<int32_t> point_size =
       internal::EcPointEncodingSizeInBytes(subtle::EllipticCurveType::NIST_P256,
                                            subtle::EcPointFormat::UNCOMPRESSED);
   ASSERT_THAT(point_size, IsOk());
@@ -205,7 +205,7 @@ TEST(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidPoint) {
   // Uncompressed point format starts with a 0x04-byte.
   ASSERT_THAT(public_key_bytes[0], Eq(0x04));
 
-  util::StatusOr<HpkeParameters> params =
+  absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -214,14 +214,14 @@ TEST(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidPoint) {
           .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes, /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   EXPECT_THAT(public_key.status(), StatusIs(absl::StatusCode::kInternal));
 }
 
 TEST(HpkePublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
-  util::StatusOr<HpkeParameters> no_prefix_params =
+  absl::StatusOr<HpkeParameters> no_prefix_params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -230,7 +230,7 @@ TEST(HpkePublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
           .Build();
   ASSERT_THAT(no_prefix_params, IsOk());
 
-  util::StatusOr<HpkeParameters> tink_params =
+  absl::StatusOr<HpkeParameters> tink_params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kTink)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -257,7 +257,7 @@ TEST(HpkePublicKeyTest, CreatePublicKeyWithInvalidIdRequirementFails) {
 TEST_P(HpkePublicKeyTest, NistCurvePublicKeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<HpkeParameters> params = HpkeParameters::Builder()
+  absl::StatusOr<HpkeParameters> params = HpkeParameters::Builder()
                                               .SetVariant(test_case.variant)
                                               .SetKemId(test_case.kem_id)
                                               .SetKdfId(test_case.kdf_id)
@@ -265,21 +265,21 @@ TEST_P(HpkePublicKeyTest, NistCurvePublicKeyEquals) {
                                               .Build();
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(test_case.curve);
   ASSERT_THAT(ec_key, IsOk());
-  util::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
+  absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
       internal::GetEcPoint(test_case.curve, ec_key->pub_x, ec_key->pub_y);
   ASSERT_THAT(ec_point, IsOk());
-  util::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
+  absl::StatusOr<std::string> public_key_bytes = internal::EcPointEncode(
       test_case.curve, subtle::EcPointFormat::UNCOMPRESSED, ec_point->get());
   ASSERT_THAT(public_key_bytes, IsOk());
 
-  util::StatusOr<HpkePublicKey> public_key =
+  absl::StatusOr<HpkePublicKey> public_key =
       HpkePublicKey::Create(*params, *public_key_bytes,
                             test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<HpkePublicKey> other_public_key =
+  absl::StatusOr<HpkePublicKey> other_public_key =
       HpkePublicKey::Create(*params, *public_key_bytes,
                             test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -291,7 +291,7 @@ TEST_P(HpkePublicKeyTest, NistCurvePublicKeyEquals) {
 }
 
 TEST(HpkePublicKeyTest, X25519PublicKeyEquals) {
-  util::StatusOr<HpkeParameters> params =
+  absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -302,12 +302,12 @@ TEST(HpkePublicKeyTest, X25519PublicKeyEquals) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -319,7 +319,7 @@ TEST(HpkePublicKeyTest, X25519PublicKeyEquals) {
 }
 
 TEST(HpkePublicKeyTest, DifferentVariantNotEqual) {
-  util::StatusOr<HpkeParameters> crunchy_params =
+  absl::StatusOr<HpkeParameters> crunchy_params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kCrunchy)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -328,7 +328,7 @@ TEST(HpkePublicKeyTest, DifferentVariantNotEqual) {
           .Build();
   ASSERT_THAT(crunchy_params, IsOk());
 
-  util::StatusOr<HpkeParameters> tink_params =
+  absl::StatusOr<HpkeParameters> tink_params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kTink)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -339,12 +339,12 @@ TEST(HpkePublicKeyTest, DifferentVariantNotEqual) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *crunchy_params, public_key_bytes, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
       *tink_params, public_key_bytes, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -356,7 +356,7 @@ TEST(HpkePublicKeyTest, DifferentVariantNotEqual) {
 }
 
 TEST(HpkePublicKeyTest, DifferentPublicKeyBytesNotEqual) {
-  util::StatusOr<HpkeParameters> params =
+  absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kTink)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -368,12 +368,12 @@ TEST(HpkePublicKeyTest, DifferentPublicKeyBytesNotEqual) {
   std::string public_key_bytes1 = subtle::Random::GetRandomBytes(32);
   std::string public_key_bytes2 = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes1, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
       *params, public_key_bytes2, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -385,7 +385,7 @@ TEST(HpkePublicKeyTest, DifferentPublicKeyBytesNotEqual) {
 }
 
 TEST(HpkePublicKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<HpkeParameters> params =
+  absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kTink)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -396,12 +396,12 @@ TEST(HpkePublicKeyTest, DifferentIdRequirementNotEqual) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
       *params, public_key_bytes, /*id_requirement=*/0x02030405,
       GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -413,7 +413,7 @@ TEST(HpkePublicKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(HpkePublicKeyTest, Clone) {
-  util::StatusOr<HpkeParameters> params =
+  absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -424,7 +424,7 @@ TEST(HpkePublicKeyTest, Clone) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());

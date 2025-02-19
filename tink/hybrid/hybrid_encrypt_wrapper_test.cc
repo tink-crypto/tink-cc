@@ -194,7 +194,7 @@ class HybridEncryptSetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(encryption_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -232,8 +232,8 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
                          keyset_info.key_info(1))
           , IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<HybridEncrypt>::Entry<HybridEncrypt>*>
-      last = hybrid_encrypt_primitive_set->AddPrimitive(
+  absl::StatusOr<PrimitiveSet<HybridEncrypt>::Entry<HybridEncrypt>*> last =
+      hybrid_encrypt_primitive_set->AddPrimitive(
           absl::make_unique<DummyHybridEncrypt>("hybrid2"),
           keyset_info.key_info(2));
   ASSERT_THAT(last, IsOk());
@@ -242,7 +242,7 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a Hybrid Encrypt and encrypt some data.
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt =
       HybridEncryptWrapper().Wrap(std::move(hybrid_encrypt_primitive_set));
   ASSERT_THAT(hybrid_encrypt, IsOkAndHolds(NotNull()));
 
@@ -252,7 +252,7 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
   // Check that calling Encrypt triggers a Log() call.
   EXPECT_CALL(*encryption_monitoring_client_,
               Log(primary_key_id, plaintext.size()));
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*hybrid_encrypt)->Encrypt(plaintext, context);
   EXPECT_THAT(ciphertext, IsOk());
 }
@@ -276,7 +276,7 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<HybridEncrypt>::Entry<HybridEncrypt>*> last =
+  absl::StatusOr<PrimitiveSet<HybridEncrypt>::Entry<HybridEncrypt>*> last =
       hybrid_encrypt_primitive_set->AddPrimitive(
           CreateAlwaysFailingHybridEncrypt("hybrid2"), keyset_info.key_info(2));
   ASSERT_THAT(last, IsOkAndHolds(NotNull()));
@@ -284,7 +284,7 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
 
 
   // Create a Hybrid Encrypt and encrypt some data.
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt =
       HybridEncryptWrapper().Wrap(std::move(hybrid_encrypt_primitive_set));
   ASSERT_THAT(hybrid_encrypt, IsOk());
 
@@ -293,7 +293,7 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
 
   // Check that calling Encrypt triggers a LogFailure() call.
   EXPECT_CALL(*encryption_monitoring_client_, LogFailure());
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*hybrid_encrypt)->Encrypt(plaintext, context);
   EXPECT_THAT(ciphertext.status(),
               StatusIs(absl::StatusCode::kInternal));

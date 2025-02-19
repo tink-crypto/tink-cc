@@ -31,9 +31,9 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddAeadKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddAeadKeyGenV0(KeyGenConfiguration& config) {
   // TODO(b/296630956): Alphabetize in all AEAD config files.
-  util::Status status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+  absl::Status status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCtrHmacAeadKeyManager>(), config);
   if (!status.ok()) {
     return status;

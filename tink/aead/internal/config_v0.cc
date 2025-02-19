@@ -33,8 +33,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddAeadV0(Configuration& config) {
-  util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddAeadV0(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<AeadWrapper>(), config);
   if (!status.ok()) {
     return status;

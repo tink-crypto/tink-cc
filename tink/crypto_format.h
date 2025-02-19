@@ -49,7 +49,7 @@ class CryptoFormat {
 
   // Generates the prefix for the outputs handled with the given key_info.
   // Returns an error if the prefix type 'output_prefix_type' is invalid.
-  static crypto::tink::util::StatusOr<std::string> GetOutputPrefix(
+  static absl::StatusOr<std::string> GetOutputPrefix(
       const google::crypto::tink::KeysetInfo::KeyInfo& key_info);
 };
 

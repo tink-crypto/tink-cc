@@ -62,14 +62,14 @@ util::StatusOr<Result> ReadBytesFromStreamImpl(int num_bytes,
 }
 }  // namespace
 
-util::StatusOr<std::string> ReadBytesFromStream(int num_bytes,
+absl::StatusOr<std::string> ReadBytesFromStream(int num_bytes,
                                                 InputStream* input_stream) {
   return ReadBytesFromStreamImpl<std::string>(num_bytes, input_stream);
 }
 
-util::StatusOr<util::SecretData> ReadSecretBytesFromStream(
+absl::StatusOr<util::SecretData> ReadSecretBytesFromStream(
     int num_bytes, InputStream* input_stream) {
-  util::StatusOr<SecretBuffer> result =
+  absl::StatusOr<SecretBuffer> result =
       ReadBytesFromStreamImpl<SecretBuffer>(num_bytes, input_stream);
   if (!result.ok()) { return result.status(); }
   return util::internal::AsSecretData(*std::move(result));

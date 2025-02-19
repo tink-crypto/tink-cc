@@ -152,7 +152,8 @@ TYPED_TEST(SecretProtoTest, AsSecretData) {
   TypeParam proto = CreateProto<TypeParam>();
   std::string serialized = proto.SerializeAsString();
   SecretProto<TypeParam> secret_proto(proto);
-  StatusOr<SecretData> secret_serialized = secret_proto.SerializeAsSecretData();
+  absl::StatusOr<SecretData> secret_serialized =
+      secret_proto.SerializeAsSecretData();
   ASSERT_TRUE(secret_serialized.ok()) << secret_serialized.status();
   EXPECT_EQ(serialized, SecretDataAsStringView(*secret_serialized));
 }

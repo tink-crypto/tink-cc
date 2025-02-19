@@ -55,7 +55,7 @@ class Enums {
 
   // Returns the length in bytes of the given hash type `hash_type`. Returns
   // INVALID_ARGUMENT if the algorithm is unsupported.
-  static util::StatusOr<int> HashLength(
+  static absl::StatusOr<int> HashLength(
       google::crypto::tink::HashType hash_type);
 
   // EcdsaSignatureEncoding.

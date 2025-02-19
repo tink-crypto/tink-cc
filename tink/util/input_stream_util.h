@@ -29,10 +29,10 @@ namespace tink {
 // A utility function which reads num_bytes from the given input stream, calling
 // Next repeatedly until 'num_bytes' are obtained. All stream errors are
 // propagated. This can loop indefinitely (in case Next() repeatedly returns 0).
-util::StatusOr<std::string> ReadBytesFromStream(int num_bytes,
+absl::StatusOr<std::string> ReadBytesFromStream(int num_bytes,
                                                 InputStream* input_stream);
 // A SecretData variant of ReadBytesFromStream
-util::StatusOr<util::SecretData> ReadSecretBytesFromStream(
+absl::StatusOr<util::SecretData> ReadSecretBytesFromStream(
     int num_bytes, InputStream* input_stream);
 
 }  // namespace tink

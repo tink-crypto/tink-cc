@@ -34,7 +34,7 @@ class KeyDerivationConfig {
  public:
   // Registers KeysetDeriver primitive wrapper and key managers for all
   // KeyDerivation key types from the current Tink release.
-  static crypto::tink::util::Status Register();
+  static absl::Status Register();
 
  private:
   KeyDerivationConfig() {}

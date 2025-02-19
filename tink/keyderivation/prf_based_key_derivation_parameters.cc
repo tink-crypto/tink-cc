@@ -46,11 +46,11 @@ PrfBasedKeyDerivationParameters::Builder::SetDerivedKeyParameters(
 util::StatusOr<PrfBasedKeyDerivationParameters>
 PrfBasedKeyDerivationParameters::Builder::Build() {
   if (prf_parameters_ == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "PRF parameters must be set.");
   }
   if (derived_key_parameters_ == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Derived key parameters must be set.");
   }
 

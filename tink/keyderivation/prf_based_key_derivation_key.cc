@@ -42,13 +42,13 @@ util::StatusOr<PrfBasedKeyDerivationKey> PrfBasedKeyDerivationKey::Create(
   }
   if (parameters.GetDerivedKeyParameters().HasIdRequirement() &&
       !id_requirement.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create key without ID requirement with derived "
                         "key parameters with ID requirement");
   }
   if (!parameters.GetDerivedKeyParameters().HasIdRequirement() &&
       id_requirement.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create key with ID requirement with derived "
                         "key parameters without ID requirement");
   }

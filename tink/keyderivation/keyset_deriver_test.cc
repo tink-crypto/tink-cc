@@ -419,7 +419,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
         dynamic_cast<const internal::ProtoParametersSerialization*>(
             serialization->get());
     if (proto_serialization == nullptr) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Serialization is not ProtoParametersSerialization");
     }
     KeyTemplate derived_key_template = proto_serialization->GetKeyTemplate();

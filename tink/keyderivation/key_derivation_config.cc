@@ -28,9 +28,9 @@ namespace crypto {
 namespace tink {
 
 // static
-util::Status KeyDerivationConfig::Register() {
+absl::Status KeyDerivationConfig::Register() {
   // Register primitive wrappers.
-  util::Status status = Registry::RegisterPrimitiveWrapper(
+  absl::Status status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<KeysetDeriverWrapper>());
   if (!status.ok()) {
     return status;
@@ -39,7 +39,7 @@ util::Status KeyDerivationConfig::Register() {
   // Currently, no KeysetDeriver key managers only use FIPS-validated
   // implementations, so none are registered in FIPS-only mode.
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Register required key manager for PrfBasedDeriverKeyManager.

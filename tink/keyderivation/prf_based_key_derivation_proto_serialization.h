@@ -26,8 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for PRF-based key derivation
 // parameters and keys into global serialization registry.
-inline crypto::tink::util::Status
-RegisterPrfBasedKeyDerivationProtoSerialization() {
+inline absl::Status RegisterPrfBasedKeyDerivationProtoSerialization() {
   return internal::
       RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
           internal::MutableSerializationRegistry::GlobalInstance());

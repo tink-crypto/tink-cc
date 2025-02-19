@@ -36,7 +36,7 @@ namespace subtle {
 
 class HkdfStreamingPrf : public StreamingPrf {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<StreamingPrf>> New(
+  static absl::StatusOr<std::unique_ptr<StreamingPrf>> New(
       HashType hash, util::SecretData secret, absl::string_view salt);
 
   std::unique_ptr<InputStream> ComputePrf(

@@ -35,7 +35,7 @@ namespace tink {
 class StreamingPrfWrapper
     : public PrimitiveWrapper<StreamingPrf, StreamingPrf> {
  public:
-  util::StatusOr<std::unique_ptr<StreamingPrf>> Wrap(
+  absl::StatusOr<std::unique_ptr<StreamingPrf>> Wrap(
       std::unique_ptr<PrimitiveSet<StreamingPrf>> streaming_prf_set)
       const override;
 };

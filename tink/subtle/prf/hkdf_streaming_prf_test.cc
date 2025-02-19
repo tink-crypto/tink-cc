@@ -170,7 +170,7 @@ TEST(HkdfStreamingPrf, BackupFullStream) {
       streaming_prf_or.value()->ComputePrf("input");
 
   const void* data;
-  crypto::tink::util::StatusOr<int> result = stream->Next(&data);
+  absl::StatusOr<int> result = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
   int bytes_read = result.value();
   std::string first_read =
@@ -203,7 +203,7 @@ TEST(HkdfStreamingPrf, BackupHalf) {
       streaming_prf_or.value()->ComputePrf("input");
 
   const void* data;
-  crypto::tink::util::StatusOr<int> result = stream->Next(&data);
+  absl::StatusOr<int> result = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
   int bytes_read = result.value();
   int backup_amount = bytes_read / 2;
@@ -253,7 +253,7 @@ TEST(HkdfStreamingPrf, PositionSingleRead) {
       streaming_prf_or.value()->ComputePrf("input");
 
   const void* data;
-  crypto::tink::util::StatusOr<int> result = stream->Next(&data);
+  absl::StatusOr<int> result = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
   EXPECT_THAT(stream->Position(), Eq(result.value()));
 }
@@ -271,10 +271,10 @@ TEST(HkdfStreamingPrf, PositionTwoReads) {
       streaming_prf_or.value()->ComputePrf("input");
 
   const void* data;
-  crypto::tink::util::StatusOr<int> result = stream->Next(&data);
+  absl::StatusOr<int> result = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
 
-  crypto::tink::util::StatusOr<int> result2 = stream->Next(&data);
+  absl::StatusOr<int> result2 = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
 
   EXPECT_THAT(stream->Position(), Eq(result.value() + result2.value()));
@@ -293,7 +293,7 @@ TEST(HkdfStreamingPrf, BackupSingleRead) {
       streaming_prf_or.value()->ComputePrf("input");
 
   const void* data;
-  crypto::tink::util::StatusOr<int> result = stream->Next(&data);
+  absl::StatusOr<int> result = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
   stream->BackUp(result.value());
   EXPECT_THAT(stream->Position(), Eq(0));
@@ -312,10 +312,10 @@ TEST(HkdfStreamingPrf, BackupSecondRead) {
       streaming_prf_or.value()->ComputePrf("input");
 
   const void* data;
-  crypto::tink::util::StatusOr<int> result = stream->Next(&data);
+  absl::StatusOr<int> result = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
 
-  crypto::tink::util::StatusOr<int> result2 = stream->Next(&data);
+  absl::StatusOr<int> result2 = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
 
   stream->BackUp(result2.value());
@@ -336,7 +336,7 @@ TEST(HkdfStreamingPrf, PartialBackup) {
       streaming_prf_or.value()->ComputePrf("input");
 
   const void* data;
-  crypto::tink::util::StatusOr<int> result = stream->Next(&data);
+  absl::StatusOr<int> result = stream->Next(&data);
   ASSERT_THAT(result, IsOk());
 
   stream->BackUp(result.value() / 2);
@@ -391,9 +391,11 @@ TEST(HkdfStreamingPrf, TestVector1) {
   EXPECT_THAT(result_or.value(), Eq(expected_result));
 }
 
-crypto::tink::util::StatusOr<std::string> ComputeWithHkdfStreamingPrf(
-    HashType hash, util::SecretData ikm, std::string salt, std::string info,
-    int length) {
+absl::StatusOr<std::string> ComputeWithHkdfStreamingPrf(HashType hash,
+                                                        util::SecretData ikm,
+                                                        std::string salt,
+                                                        std::string info,
+                                                        int length) {
   auto streaming_prf_or = HkdfStreamingPrf::New(hash, std::move(ikm), salt);
   if (!streaming_prf_or.status().ok()) {
     return streaming_prf_or.status();

@@ -34,6 +34,7 @@ tink_cc_library(
     aes_siv_proto_serialization_impl.h
   DEPS
     absl::core_headers
+    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -43,7 +44,6 @@ tink_cc_library(
     tink::core::secret_key_access_token
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
-    tink::internal::call_with_core_dump_protection
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -51,13 +51,12 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::secret_proto
     tink::util::status
     tink::util::statusor
-    tink::proto::aes_siv_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 # tests

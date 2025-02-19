@@ -16,16 +16,17 @@
 
 #include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <string>
 
 #include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_key.h"
 #include "tink/daead/aes_siv_parameters.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -33,25 +34,59 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
-#include "proto/aes_siv.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::AesSivKeyFormat;
-using ::google::crypto::tink::OutputPrefixType;
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
+
+struct AesSivKeyFormatStruct {
+  uint32_t key_size;
+  uint32_t version;
+
+  static ProtoParser<AesSivKeyFormatStruct> CreateParser() {
+    return ProtoParserBuilder<AesSivKeyFormatStruct>()
+        .AddUint32Field(1, &AesSivKeyFormatStruct::key_size)
+        .AddUint32Field(2, &AesSivKeyFormatStruct::version)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<AesSivKeyFormatStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<AesSivKeyFormatStruct>> parser(
+        CreateParser());
+    return *parser;
+  }
+};
+
+struct AesSivKeyStruct {
+  uint32_t version;
+  util::SecretData key_value;
+
+  static ProtoParser<AesSivKeyStruct> CreateParser() {
+    return ProtoParserBuilder<AesSivKeyStruct>()
+        .AddUint32Field(1, &AesSivKeyStruct::version)
+        .AddBytesSecretDataField(2, &AesSivKeyStruct::key_value)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<AesSivKeyStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<AesSivKeyStruct>> parser(
+        CreateParser());
+    return *parser;
+  }
+};
 
 using AesSivProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesSivParameters>;
@@ -66,15 +101,15 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesSivKey";
 
 util::StatusOr<AesSivParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return AesSivParameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return AesSivParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return AesSivParameters::Variant::kTink;
     default:
       return util::Status(absl::StatusCode::kInvalidArgument,
@@ -82,15 +117,15 @@ util::StatusOr<AesSivParameters::Variant> ToVariant(
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     AesSivParameters::Variant variant) {
   switch (variant) {
     case AesSivParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case AesSivParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case AesSivParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
       return util::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
@@ -99,40 +134,47 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
 
 util::StatusOr<AesSivParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
+  if (serialization.GetKeyTemplateStruct().type_url != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesSivParameters.");
   }
 
-  AesSivKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesSivKeyFormat proto");
+  absl::StatusOr<AesSivKeyFormatStruct> proto_key_format =
+      AesSivKeyFormatStruct::GetParser().Parse(
+          serialization.GetKeyTemplateStruct().value);
+  if (!proto_key_format.ok()) {
+    return proto_key_format.status();
   }
-  if (proto_key_format.version() != 0) {
+  if (proto_key_format->version != 0) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
   util::StatusOr<AesSivParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
+      ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
   if (!variant.ok()) return variant.status();
 
-  return AesSivParameters::Create(proto_key_format.key_size(), *variant);
+  return AesSivParameters::Create(proto_key_format->key_size, *variant);
 }
 
 util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesSivParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  AesSivKeyFormat proto_key_format;
-  proto_key_format.set_key_size(parameters.KeySizeInBytes());
+  AesSivKeyFormatStruct proto_key_format;
+  proto_key_format.key_size = parameters.KeySizeInBytes();
+  proto_key_format.version = 0;
 
-  return ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
+  absl::StatusOr<std::string> serialized_proto =
+      AesSivKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
+
+  return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
+                                              *serialized_proto);
 }
 
 util::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
@@ -145,28 +187,27 @@ util::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
-  absl::StatusOr<SecretProto<google::crypto::tink::AesSivKey>> proto_key =
-      SecretProto<google::crypto::tink::AesSivKey>::ParseFromSecretData(
-          serialization.SerializedKeyProto().Get(*token));
+  absl::StatusOr<AesSivKeyStruct> proto_key =
+      AesSivKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesSivKey proto");
+    return proto_key.status();
   }
-  if ((*proto_key)->version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+  if (proto_key->version != 0) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<AesSivParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+  absl::StatusOr<AesSivParameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) return variant.status();
 
   util::StatusOr<AesSivParameters> parameters =
-      AesSivParameters::Create((*proto_key)->key_value().length(), *variant);
+      AesSivParameters::Create(proto_key->key_value.size(), *variant);
   if (!parameters.ok()) return parameters.status();
 
   return AesSivKey::Create(
-      *parameters, RestrictedData((*proto_key)->key_value(), *token),
+      *parameters, RestrictedData(proto_key->key_value, *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -180,23 +221,22 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required");
   }
 
-  SecretProto<google::crypto::tink::AesSivKey> proto_key;
-  proto_key->set_version(0);
+  AesSivKeyStruct proto_key;
+  proto_key.version = 0;
+  proto_key.key_value = restricted_input->Get(*token);
 
-  CallWithCoreDumpProtection(
-      [&] { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  util::StatusOr<util::SecretData> serialized_proto =
-      proto_key.SerializeAsSecretData();
+  absl::StatusOr<util::SecretData> serialized_proto =
+      AesSivKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
   }
   return ProtoKeySerialization::Create(
       kTypeUrl, RestrictedData(*serialized_proto, *token),
-      google::crypto::tink::KeyData::SYMMETRIC, *output_prefix_type,
+      KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }
 

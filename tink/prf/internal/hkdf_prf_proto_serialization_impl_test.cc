@@ -467,7 +467,7 @@ TEST_F(HkdfPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse HkdfPrfKey proto")));
+                       HasSubstr("Not enough data to read kFixed64")));
 }
 
 TEST_P(HkdfPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {

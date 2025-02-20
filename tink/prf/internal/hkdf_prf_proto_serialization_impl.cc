@@ -16,13 +16,15 @@
 
 #include "tink/prf/internal/hkdf_prf_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -30,31 +32,90 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/common.pb.h"
-#include "proto/hkdf_prf.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HkdfPrfKeyFormat;
-using ::google::crypto::tink::HkdfPrfParams;
-using ::google::crypto::tink::OutputPrefixType;
+
+bool HashTypeValid(int c) { return google::crypto::tink::HashType_IsValid(c); }
+
+struct HkdfPrfParamsStruct {
+  HashType hash;
+  std::string salt;
+
+  static ProtoParser<HkdfPrfParamsStruct> CreateParser() {
+    return ProtoParserBuilder<HkdfPrfParamsStruct>()
+        .AddEnumField(1, &HkdfPrfParamsStruct::hash, &HashTypeValid)
+        .AddBytesStringField(2, &HkdfPrfParamsStruct::salt)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<HkdfPrfParamsStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<HkdfPrfParamsStruct>> kParser(
+        CreateParser());
+    return *kParser;
+  }
+};
+
+struct HkdfPrfKeyStruct {
+  uint32_t version;
+  HkdfPrfParamsStruct params;
+  util::SecretData key_value;
+
+  static ProtoParser<HkdfPrfKeyStruct> CreateParser() {
+    return ProtoParserBuilder<HkdfPrfKeyStruct>()
+        .AddUint32Field(1, &HkdfPrfKeyStruct::version)
+        .AddMessageField(2, &HkdfPrfKeyStruct::params,
+                         HkdfPrfParamsStruct::CreateParser())
+        .AddBytesSecretDataField(3, &HkdfPrfKeyStruct::key_value)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<HkdfPrfKeyStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<HkdfPrfKeyStruct>> kParser(
+        CreateParser());
+    return *kParser;
+  }
+};
+
+struct HkdfPrfKeyFormatStruct {
+  HkdfPrfParamsStruct params;
+  uint32_t key_size;
+  uint32_t version;
+
+  static ProtoParser<HkdfPrfKeyFormatStruct> CreateParser() {
+    return ProtoParserBuilder<HkdfPrfKeyFormatStruct>()
+        .AddMessageField(1, &HkdfPrfKeyFormatStruct::params,
+                         HkdfPrfParamsStruct::CreateParser())
+        .AddUint32Field(2, &HkdfPrfKeyFormatStruct::key_size)
+        .AddUint32Field(3, &HkdfPrfKeyFormatStruct::version)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<HkdfPrfKeyFormatStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<HkdfPrfKeyFormatStruct>>
+        kParser(CreateParser());
+    return *kParser;
+  }
+};
 
 using HkdfPrfProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, HkdfPrfParameters>;
@@ -107,40 +168,41 @@ util::StatusOr<HashType> ToProtoHashType(
 
 util::StatusOr<HkdfPrfParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
+  if (serialization.GetKeyTemplateStruct().type_url != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing HkdfPrfParameters.");
   }
-  if (serialization.GetKeyTemplate().output_prefix_type() !=
-      OutputPrefixType::RAW) {
+  if (serialization.GetKeyTemplateStruct().output_prefix_type !=
+      OutputPrefixTypeEnum::kRaw) {
     return util::Status(
         absl::StatusCode::kInvalidArgument,
         "Output prefix type must be RAW for HkdfPrfParameters.");
   }
 
-  HkdfPrfKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+  absl::StatusOr<HkdfPrfKeyFormatStruct> proto_key_format =
+      HkdfPrfKeyFormatStruct::GetParser().Parse(
+          serialization.GetKeyTemplateStruct().value);
+  if (!proto_key_format.ok()) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse HkdfPrfKeyFormat proto");
   }
-  if (proto_key_format.version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+  if (proto_key_format->version != 0) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
   util::StatusOr<HkdfPrfParameters::HashType> hash_type =
-      ToHashType(proto_key_format.params().hash());
+      ToHashType(proto_key_format->params.hash);
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
-  if (!proto_key_format.params().salt().empty()) {
-    return HkdfPrfParameters::Create(proto_key_format.key_size(), *hash_type,
-                                     proto_key_format.params().salt());
+  if (!proto_key_format->params.salt.empty()) {
+    return HkdfPrfParameters::Create(proto_key_format->key_size, *hash_type,
+                                     proto_key_format->params.salt);
   }
 
-  return HkdfPrfParameters::Create(proto_key_format.key_size(), *hash_type,
+  return HkdfPrfParameters::Create(proto_key_format->key_size, *hash_type,
                                    absl::nullopt);
 }
 
@@ -152,19 +214,22 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return proto_hash_type.status();
   }
 
-  HkdfPrfKeyFormat proto_key_format;
-  proto_key_format.set_version(0);
-  proto_key_format.set_key_size(parameters.KeySizeInBytes());
-
-  HkdfPrfParams params;
-  params.set_hash(*proto_hash_type);
+  HkdfPrfKeyFormatStruct proto_key_format;
+  proto_key_format.version = 0;
+  proto_key_format.key_size = parameters.KeySizeInBytes();
+  proto_key_format.params.hash = *proto_hash_type;
   if (parameters.GetSalt().has_value()) {
-    params.set_salt(*parameters.GetSalt());
+    proto_key_format.params.salt = *parameters.GetSalt();
   }
-  *proto_key_format.mutable_params() = params;
+
+  absl::StatusOr<std::string> serialized_key_format =
+      HkdfPrfKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
+  if (!serialized_key_format.ok()) {
+    return serialized_key_format.status();
+  }
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixType::RAW, proto_key_format.SerializeAsString());
+      kTypeUrl, OutputPrefixTypeEnum::kRaw, *serialized_key_format);
 }
 
 util::StatusOr<HkdfPrfKey> ParseKey(
@@ -178,42 +243,42 @@ util::StatusOr<HkdfPrfKey> ParseKey(
     return util::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required.");
   }
-  if (serialization.GetOutputPrefixType() != OutputPrefixType::RAW) {
+  if (static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()) !=
+      OutputPrefixTypeEnum::kRaw) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Output prefix type must be RAW for HkdfPrfKey.");
   }
 
-  util::StatusOr<SecretProto<google::crypto::tink::HkdfPrfKey>> proto_key =
-      SecretProto<google::crypto::tink::HkdfPrfKey>::ParseFromSecretData(
-          serialization.SerializedKeyProto().Get(*token));
+  absl::StatusOr<HkdfPrfKeyStruct> proto_key =
+      HkdfPrfKeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse HkdfPrfKey proto");
+    return proto_key.status();
   }
-  if ((*proto_key)->version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+  if (proto_key->version != 0) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
   util::StatusOr<HkdfPrfParameters::HashType> hash_type =
-      ToHashType((*proto_key)->params().hash());
+      ToHashType(proto_key->params.hash);
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   absl::optional<std::string> salt = absl::nullopt;
-  if (!(*proto_key)->params().salt().empty()) {
-    salt = (*proto_key)->params().salt();
+  if (!proto_key->params.salt.empty()) {
+    salt = proto_key->params.salt;
   }
 
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
-      (*proto_key)->key_value().length(), *hash_type, salt);
+  absl::StatusOr<HkdfPrfParameters> parameters =
+      HkdfPrfParameters::Create(proto_key->key_value.size(), *hash_type, salt);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return HkdfPrfKey::Create(*parameters,
-                            RestrictedData((*proto_key)->key_value(), *token),
+                            RestrictedData(proto_key->key_value, *token),
                             GetPartialKeyAccess());
 }
 
@@ -235,19 +300,16 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
     return proto_hash_type.status();
   }
 
-  HkdfPrfParams params;
-  params.set_hash(*proto_hash_type);
+  HkdfPrfKeyStruct proto_key;
+  proto_key.version = 0;
+  proto_key.params.hash = *proto_hash_type;
   if (key.GetParameters().GetSalt().has_value()) {
-    params.set_salt(*key.GetParameters().GetSalt());
+    proto_key.params.salt = *key.GetParameters().GetSalt();
   }
+  proto_key.key_value = restricted_input->Get(*token);
 
-  SecretProto<google::crypto::tink::HkdfPrfKey> proto_key;
-  proto_key->set_version(0);
-  *proto_key->mutable_params() = params;
-  CallWithCoreDumpProtection(
-      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
-
-  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  absl::StatusOr<SecretData> serialized_key =
+      HkdfPrfKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }
@@ -255,8 +317,8 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
       RestrictedData(*std::move(serialized_key), *token);
 
   return ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
-      OutputPrefixType::RAW, key.GetIdRequirement());
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
+      OutputPrefixTypeEnum::kRaw, key.GetIdRequirement());
 }
 
 HkdfPrfProtoParametersParserImpl& HkdfPrfProtoParametersParser() {

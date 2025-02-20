@@ -32,7 +32,7 @@ namespace internal {
 class RawKemDecapsulate {
  public:
   // Decapsulates the ciphertext and returns the shared secret bytes.
-  virtual util::StatusOr<RestrictedData> Decapsulate(
+  virtual absl::StatusOr<RestrictedData> Decapsulate(
       absl::string_view ciphertext) const = 0;
 
   virtual ~RawKemDecapsulate() = default;

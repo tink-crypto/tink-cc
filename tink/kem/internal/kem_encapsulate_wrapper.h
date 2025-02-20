@@ -32,7 +32,7 @@ namespace internal {
 class KemEncapsulateWrapper
     : public PrimitiveWrapper<KemEncapsulate, KemEncapsulate> {
  public:
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> Wrap(
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> Wrap(
       std::unique_ptr<PrimitiveSet<KemEncapsulate>> primitive_set)
       const override;
 };

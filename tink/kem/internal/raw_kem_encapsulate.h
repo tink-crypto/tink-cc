@@ -42,7 +42,7 @@ class RawKemEncapsulate {
  public:
   // Generates a new encapsulation, containing the ciphertext and the shared
   // secret bytes.
-  virtual util::StatusOr<RawKemEncapsulation> Encapsulate() const = 0;
+  virtual absl::StatusOr<RawKemEncapsulation> Encapsulate() const = 0;
 
   virtual ~RawKemEncapsulate() = default;
 };

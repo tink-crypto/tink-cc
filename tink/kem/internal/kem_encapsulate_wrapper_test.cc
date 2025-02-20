@@ -64,7 +64,7 @@ using ::testing::StrictMock;
 AesGcmParameters CreateAes256GcmParameters() {
   CHECK_OK(AeadConfig::Register());
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -77,15 +77,15 @@ AesGcmParameters CreateAes256GcmParameters() {
 
 std::unique_ptr<KemEncapsulate> CreateMlKemEncapsulateAes256Gcm(
     absl::optional<int> id_requirement) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   CHECK_OK(key_parameters);
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, id_requirement);
   CHECK_OK(private_key);
 
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
       NewMlKemEncapsulateAes256Gcm(private_key->GetPublicKey(),
                                    CreateAes256GcmParameters());
   CHECK_OK(encapsulate.status());
@@ -123,7 +123,7 @@ class KemEncapsulateWrapperTest : public ::testing::Test {
   void SetUp() override {
     KeysetInfo keyset_info = CreateKeysetInfo();
 
-    util::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
+    absl::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
         PrimitiveSet<KemEncapsulate>::Builder()
             .AddPrimitive(CreateMlKemEncapsulateAes256Gcm(0x1234543),
                           keyset_info.key_info(0))
@@ -163,7 +163,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapNoPrimary) {
   key_info.set_status(KeyStatusType::ENABLED);
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
 
-  util::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
+  absl::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
       PrimitiveSet<KemEncapsulate>::Builder()
           .AddPrimitive(CreateMlKemEncapsulateAes256Gcm(0x1234), key_info)
           .Build();
@@ -193,7 +193,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapNonTinkOutputPrefix) {
   key_info->set_key_id(key_id_1);
   key_info->set_status(KeyStatusType::ENABLED);
 
-  util::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
+  absl::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
       PrimitiveSet<KemEncapsulate>::Builder()
           .AddPrimaryPrimitive(CreateMlKemEncapsulateAes256Gcm(key_id_0),
                                keyset_info.key_info(0))
@@ -227,7 +227,7 @@ TEST_F(KemEncapsulateWrapperTest, WrapRepeatedKeyId) {
   key_info->set_key_id(key_id);
   key_info->set_status(KeyStatusType::ENABLED);
 
-  util::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
+  absl::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
       PrimitiveSet<KemEncapsulate>::Builder()
           .AddPrimaryPrimitive(CreateMlKemEncapsulateAes256Gcm(key_id),
                                keyset_info.key_info(0))
@@ -249,11 +249,11 @@ TEST_F(KemEncapsulateWrapperTest, WrapRepeatedKeyId) {
 
 TEST_F(KemEncapsulateWrapperTest, WrapMultiple) {
   // Wrap kem_encapsulate_set and test the resulting KemEncapsulate.
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
       KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
   ASSERT_THAT(kem_encapsulate, IsOk());
 
-  util::StatusOr<KemEncapsulation> encapsulate_result =
+  absl::StatusOr<KemEncapsulation> encapsulate_result =
       (*kem_encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulate_result, IsOk());
   EXPECT_THAT(encapsulate_result->ciphertext.size(),
@@ -278,7 +278,7 @@ class KemEncapsulateWrapperTestWithMonitoring
 
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(encapsulation_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -297,12 +297,12 @@ class KemEncapsulateWrapperTestWithMonitoring
 };
 
 TEST_F(KemEncapsulateWrapperTestWithMonitoring, Encapsulate) {
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
       KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
   ASSERT_THAT(kem_encapsulate, IsOk());
 
   EXPECT_CALL(*encapsulation_monitoring_client_ptr_, Log(kPrimaryKeyId, 0));
-  util::StatusOr<KemEncapsulation> encapsulate_result =
+  absl::StatusOr<KemEncapsulation> encapsulate_result =
       (*kem_encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulate_result, IsOk());
   EXPECT_THAT(encapsulate_result->ciphertext.size(),

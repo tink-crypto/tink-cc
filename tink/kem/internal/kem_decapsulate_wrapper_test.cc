@@ -73,7 +73,7 @@ using ::testing::StrictMock;
 AesGcmParameters CreateAes256GcmParameters() {
   CHECK_OK(AeadConfig::Register());
 
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(12)
@@ -86,15 +86,15 @@ AesGcmParameters CreateAes256GcmParameters() {
 
 std::unique_ptr<KemDecapsulate> CreateMlKemDecapsulateAes256Gcm(
     absl::optional<int> id_requirement) {
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   CHECK_OK(key_parameters);
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, id_requirement);
   CHECK_OK(private_key);
 
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
       NewMlKemDecapsulateAes256Gcm(*private_key, CreateAes256GcmParameters());
   CHECK_OK(decapsulate.status());
 
@@ -105,20 +105,20 @@ std::pair<std::unique_ptr<KemEncapsulate>, std::unique_ptr<KemDecapsulate>>
 CreateMlKemPairAes256Gcm(absl::optional<int> id_requirement) {
   AesGcmParameters aes_gcm_parameters = CreateAes256GcmParameters();
 
-  util::StatusOr<MlKemParameters> key_parameters =
+  absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
   CHECK_OK(key_parameters);
 
-  util::StatusOr<MlKemPrivateKey> private_key =
+  absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, id_requirement);
   CHECK_OK(private_key);
 
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
       NewMlKemEncapsulateAes256Gcm(private_key->GetPublicKey(),
                                    aes_gcm_parameters);
   CHECK_OK(encapsulate.status());
 
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> decapsulate =
       NewMlKemDecapsulateAes256Gcm(*private_key, aes_gcm_parameters);
   CHECK_OK(decapsulate.status());
 
@@ -162,7 +162,7 @@ class KemDecapsulateWrapperTest : public ::testing::Test {
     std::pair<std::unique_ptr<KemEncapsulate>, std::unique_ptr<KemDecapsulate>>
         pair2 = CreateMlKemPairAes256Gcm(0x7213743);
 
-    util::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
+    absl::StatusOr<PrimitiveSet<KemEncapsulate>> kem_encapsulate_set =
         PrimitiveSet<KemEncapsulate>::Builder()
             .AddPrimitive(std::move(pair0.first), keyset_info.key_info(0))
             .AddPrimitive(std::move(pair1.first), keyset_info.key_info(1))
@@ -172,7 +172,7 @@ class KemDecapsulateWrapperTest : public ::testing::Test {
             .Build();
     CHECK_OK(kem_encapsulate_set.status());
 
-    util::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
+    absl::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
         PrimitiveSet<KemDecapsulate>::Builder()
             .AddPrimitive(std::move(pair0.second), keyset_info.key_info(0))
             .AddPrimitive(std::move(pair1.second), keyset_info.key_info(1))
@@ -213,7 +213,7 @@ TEST_F(KemDecapsulateWrapperTest, WrapNoPrimary) {
   key_info.set_status(KeyStatusType::ENABLED);
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
 
-  util::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
+  absl::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
       PrimitiveSet<KemDecapsulate>::Builder()
           .AddPrimitive(CreateMlKemDecapsulateAes256Gcm(0x1234), key_info)
           .Build();
@@ -243,7 +243,7 @@ TEST_F(KemDecapsulateWrapperTest, WrapNonTinkOutputPrefix) {
   key_info->set_key_id(key_id_1);
   key_info->set_status(KeyStatusType::ENABLED);
 
-  util::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
+  absl::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
       PrimitiveSet<KemDecapsulate>::Builder()
           .AddPrimaryPrimitive(CreateMlKemDecapsulateAes256Gcm(0x1234543),
                                keyset_info.key_info(0))
@@ -277,7 +277,7 @@ TEST_F(KemDecapsulateWrapperTest, WrapRepeatedKeyId) {
   key_info->set_key_id(key_id);
   key_info->set_status(KeyStatusType::ENABLED);
 
-  util::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
+  absl::StatusOr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set =
       PrimitiveSet<KemDecapsulate>::Builder()
           .AddPrimaryPrimitive(CreateMlKemDecapsulateAes256Gcm(0x1234543),
                                keyset_info.key_info(0))
@@ -298,17 +298,17 @@ TEST_F(KemDecapsulateWrapperTest, WrapRepeatedKeyId) {
 }
 
 TEST_F(KemDecapsulateWrapperTest, WrapMultiple) {
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
       KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
   EXPECT_THAT(kem_decapsulate, IsOk());
 }
 
 TEST_F(KemDecapsulateWrapperTest, DecapsulateUnknownKeyID) {
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
       KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
   ASSERT_THAT(kem_decapsulate, IsOk());
 
-  util::StatusOr<KeysetHandle> decapsulate =
+  absl::StatusOr<KeysetHandle> decapsulate =
       (*kem_decapsulate)->Decapsulate("random_bytes");
   EXPECT_THAT(
       decapsulate.status(),
@@ -318,12 +318,12 @@ TEST_F(KemDecapsulateWrapperTest, DecapsulateUnknownKeyID) {
 }
 
 TEST_F(KemDecapsulateWrapperTest, DecapsulateArbitraryBytes) {
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
       KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
   ASSERT_THAT(kem_decapsulate, IsOk());
 
   // Decapsulating with the primary key works.
-  util::StatusOr<KeysetHandle> decapsulate =
+  absl::StatusOr<KeysetHandle> decapsulate =
       (*kem_decapsulate)
           ->Decapsulate(
               absl::StrCat("\x01", HexDecodeOrDie("07213743"),
@@ -351,38 +351,38 @@ TEST_F(KemDecapsulateWrapperTest, DecapsulateArbitraryBytes) {
 
 TEST_F(KemDecapsulateWrapperTest, EncapsulateDecapsulate) {
   // KEM encapsulate.
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
       KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
   ASSERT_THAT(kem_encapsulate, IsOk());
 
   // KEM decapsulate.
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
       KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
   ASSERT_THAT(kem_decapsulate, IsOk());
 
   // Exchange an encapsulation and derive AEAD primitives.
-  util::StatusOr<KemEncapsulation> encapsulation =
+  absl::StatusOr<KemEncapsulation> encapsulation =
       (*kem_encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
-  util::StatusOr<KeysetHandle> decapsulation =
+  absl::StatusOr<KeysetHandle> decapsulation =
       (*kem_decapsulate)->Decapsulate(encapsulation->ciphertext);
   ASSERT_THAT(decapsulation, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> encaps_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> encaps_aead =
       encapsulation->keyset_handle.GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(encaps_aead, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> decaps_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> decaps_aead =
       decapsulation->GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(decaps_aead, IsOk());
 
   // Check that the AEAD primitives are compatible.
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*encaps_aead)->Encrypt("plaintext", "associated data");
   ASSERT_THAT(ciphertext, IsOk());
 
-  util::StatusOr<std::string> decrypted =
+  absl::StatusOr<std::string> decrypted =
       (*decaps_aead)->Decrypt(*ciphertext, "associated data");
   EXPECT_THAT(decrypted, IsOkAndHolds("plaintext"));
 
@@ -392,11 +392,11 @@ TEST_F(KemDecapsulateWrapperTest, EncapsulateDecapsulate) {
 
   // The AEAD primitives are also compatible for messages sent in the other
   // direction.
-  util::StatusOr<std::string> ciphertext2 =
+  absl::StatusOr<std::string> ciphertext2 =
       (*decaps_aead)->Encrypt("plaintext 2", "associated data 2");
   ASSERT_THAT(ciphertext2, IsOk());
 
-  util::StatusOr<std::string> decrypted2 =
+  absl::StatusOr<std::string> decrypted2 =
       (*encaps_aead)->Decrypt(*ciphertext2, "associated data 2");
   EXPECT_THAT(decrypted2, IsOkAndHolds("plaintext 2"));
 
@@ -428,10 +428,10 @@ class KemDecapsulateWrapperTestWithMonitoring
 
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(encapsulation_monitoring_client)))))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(decapsulation_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -452,41 +452,41 @@ class KemDecapsulateWrapperTestWithMonitoring
 
 TEST_F(KemDecapsulateWrapperTestWithMonitoring, EncapsulateDecapsulate) {
   // KEM encapsulate.
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
       KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
   ASSERT_THAT(kem_encapsulate, IsOk());
 
   // KEM decapsulate.
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
       KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
   ASSERT_THAT(kem_decapsulate, IsOk());
 
   // Exchange an encapsulation and derive AEAD primitives.
   EXPECT_CALL(*encapsulation_monitoring_client_ptr_, Log(kPrimaryKeyId, 0));
-  util::StatusOr<KemEncapsulation> encapsulation =
+  absl::StatusOr<KemEncapsulation> encapsulation =
       (*kem_encapsulate)->Encapsulate();
   ASSERT_THAT(encapsulation, IsOk());
 
   EXPECT_CALL(*decapsulation_monitoring_client_ptr_,
               Log(kPrimaryKeyId, encapsulation->ciphertext.size()));
-  util::StatusOr<KeysetHandle> decapsulation =
+  absl::StatusOr<KeysetHandle> decapsulation =
       (*kem_decapsulate)->Decapsulate(encapsulation->ciphertext);
   ASSERT_THAT(decapsulation, IsOk());
 }
 
 TEST_F(KemDecapsulateWrapperTestWithMonitoring, DecapsulateUnknownKeyID) {
   // KEM encapsulate.
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
       KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
   ASSERT_THAT(kem_encapsulate, IsOk());
 
   // KEM decapsulate.
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
       KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
   ASSERT_THAT(kem_decapsulate, IsOk());
 
   EXPECT_CALL(*decapsulation_monitoring_client_ptr_, LogFailure());
-  util::StatusOr<KeysetHandle> decapsulate =
+  absl::StatusOr<KeysetHandle> decapsulate =
       (*kem_decapsulate)->Decapsulate("random_bytes");
   EXPECT_THAT(
       decapsulate.status(),
@@ -497,19 +497,19 @@ TEST_F(KemDecapsulateWrapperTestWithMonitoring, DecapsulateUnknownKeyID) {
 
 TEST_F(KemDecapsulateWrapperTestWithMonitoring, DecapsulateArbitraryBytes) {
   // KEM encapsulate.
-  util::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
+  absl::StatusOr<std::unique_ptr<KemEncapsulate>> kem_encapsulate =
       KemEncapsulateWrapper().Wrap(std::move(kem_encapsulate_set_));
   ASSERT_THAT(kem_encapsulate, IsOk());
 
   // KEM decapsulate.
-  util::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<KemDecapsulate>> kem_decapsulate =
       KemDecapsulateWrapper().Wrap(std::move(kem_decapsulate_set_));
   ASSERT_THAT(kem_decapsulate, IsOk());
 
   // Decapsulating with the primary key works.
   EXPECT_CALL(*decapsulation_monitoring_client_ptr_,
               Log(0x07213743, MLKEM768_CIPHERTEXT_BYTES + 5));
-  util::StatusOr<KeysetHandle> decapsulate =
+  absl::StatusOr<KeysetHandle> decapsulate =
       (*kem_decapsulate)
           ->Decapsulate(
               absl::StrCat("\x01", HexDecodeOrDie("07213743"),

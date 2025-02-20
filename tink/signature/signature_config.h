@@ -40,7 +40,7 @@ class SignatureConfig {
   // Registers PublicKeySign and PublicKeyVerify primitive wrappers, and key
   // managers for all implementations of PublicKeySign and PublicKeyVerify from
   // the current Tink release.
-  static crypto::tink::util::Status Register();
+  static absl::Status Register();
 
  private:
   SignatureConfig() {}

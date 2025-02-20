@@ -41,7 +41,7 @@ namespace crypto {
 namespace tink {
 
 // static
-util::Status SignatureConfig::Register() {
+absl::Status SignatureConfig::Register() {
   // Register primitive wrappers.
   auto status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<PublicKeySignWrapper>());
@@ -82,7 +82,7 @@ util::Status SignatureConfig::Register() {
   if (!status.ok()) return status;
 
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // ED25519
@@ -94,7 +94,7 @@ util::Status SignatureConfig::Register() {
   status = RegisterEd25519ProtoSerialization();
   if (!status.ok()) return status;
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

@@ -23,8 +23,8 @@
 namespace crypto {
 namespace tink {
 
-crypto::tink::util::Status SignAndVerify(const PublicKeySign* signer,
-                                         const PublicKeyVerify* verifier) {
+absl::Status SignAndVerify(const PublicKeySign* signer,
+                           const PublicKeyVerify* verifier) {
   static constexpr char kTestMessage[] = "Wycheproof and Tink.";
   auto sign_result = signer->Sign(kTestMessage);
   if (!sign_result.ok()) return sign_result.status();

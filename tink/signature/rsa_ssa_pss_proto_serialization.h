@@ -23,7 +23,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for RsaSsaPss parameters and keys.
-crypto::tink::util::Status RegisterRsaSsaPssProtoSerialization();
+absl::Status RegisterRsaSsaPssProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

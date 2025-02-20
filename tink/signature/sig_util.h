@@ -23,8 +23,8 @@
 namespace crypto {
 namespace tink {
 
-crypto::tink::util::Status SignAndVerify(const PublicKeySign* signer,
-                                         const PublicKeyVerify* verifier);
+absl::Status SignAndVerify(const PublicKeySign* signer,
+                           const PublicKeyVerify* verifier);
 
 }  // namespace tink
 }  // namespace crypto

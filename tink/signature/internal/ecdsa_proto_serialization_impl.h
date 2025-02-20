@@ -27,12 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for ECDSA parameters and keys into
 // specified mutable serialization `registry`.
-crypto::tink::util::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
+absl::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for ECDSA parameters and keys into
 // specified immutable serialization registry `builder`.
-crypto::tink::util::Status RegisterEcdsaProtoSerializationWithRegistryBuilder(
+absl::Status RegisterEcdsaProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

@@ -27,12 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for Ed25519 parameters and keys into
 // specified mutable serialization `registry`.
-crypto::tink::util::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
+absl::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for Ed25519 parameters and keys into
 // specified immutable serialization registry `builder`.
-crypto::tink::util::Status RegisterEd25519ProtoSerializationWithRegistryBuilder(
+absl::Status RegisterEd25519ProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

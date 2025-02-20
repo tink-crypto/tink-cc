@@ -35,13 +35,13 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddSignatureFips140_2(Configuration& config) {
+absl::Status AddSignatureFips140_2(Configuration& config) {
   if (!IsFipsEnabledInSsl()) {
-    return util::Status(absl::StatusCode::kFailedPrecondition,
+    return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "BoringSSL must be in FIPS mode.");
   }
 
-  util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {
     return status;

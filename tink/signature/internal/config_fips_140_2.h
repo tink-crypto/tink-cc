@@ -26,7 +26,7 @@ namespace internal {
 
 // Add FIPS 140-2-compliant Signature primitive wrappers and key managers to
 // `config`, used to generate primitives.
-util::Status AddSignatureFips140_2(Configuration& config);
+absl::Status AddSignatureFips140_2(Configuration& config);
 
 }  // namespace internal
 }  // namespace tink

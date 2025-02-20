@@ -40,8 +40,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
-  util::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+absl::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<EcdsaSignKeyManager>(),
       absl::make_unique<EcdsaVerifyKeyManager>(), config);
   if (!status.ok()) {
@@ -89,7 +89,7 @@ util::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
     return status;
   }
 #endif
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace internal

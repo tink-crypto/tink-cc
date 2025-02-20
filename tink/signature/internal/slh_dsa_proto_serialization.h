@@ -23,7 +23,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for SLH-DSA parameters and keys.
-crypto::tink::util::Status RegisterSlhDsaProtoSerialization();
+absl::Status RegisterSlhDsaProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

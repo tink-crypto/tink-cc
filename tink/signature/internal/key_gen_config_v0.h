@@ -25,7 +25,7 @@ namespace tink {
 namespace internal {
 
 // Add recommended Signature key managers to `config`, used to generate keys.
-util::Status AddSignatureKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddSignatureKeyGenV0(KeyGenConfiguration& config);
 
 }  // namespace internal
 }  // namespace tink

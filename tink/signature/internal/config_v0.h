@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended Signature primitive wrappers and key managers to `config`,
 // used to generate primitives.
-util::Status AddSignatureV0(Configuration& config);
+absl::Status AddSignatureV0(Configuration& config);
 
 }  // namespace internal
 }  // namespace tink

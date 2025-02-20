@@ -40,23 +40,22 @@ class Ed25519SignBoringSsl : public PublicKeySign {
   // Creates a new PublicKeySign. private-key must be the concatenation of the
   // Ed25519 private key material with the public key material (following the
   // OpenSSL/BoringSSL API).
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       util::SecretData private_key) {
     return New(private_key, "", "");
   }
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       const Ed25519PrivateKey& key);
 
   // Computes the signature for 'data'.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeySign>> New(
       util::SecretData private_key, absl::string_view output_prefix,
       absl::string_view message_suffix);
 
@@ -67,8 +66,7 @@ class Ed25519SignBoringSsl : public PublicKeySign {
         output_prefix_(output_prefix),
         message_suffix_(message_suffix) {}
 
-  crypto::tink::util::StatusOr<std::string> SignWithoutPrefix(
-      absl::string_view data) const;
+  absl::StatusOr<std::string> SignWithoutPrefix(absl::string_view data) const;
 
   const internal::SslUniquePtr<EVP_PKEY> priv_key_;
   const std::string output_prefix_;

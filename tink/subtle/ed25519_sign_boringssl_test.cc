@@ -63,8 +63,8 @@ struct Ed25519KeyPair {
   util::SecretData private_key;
 };
 
-util::StatusOr<Ed25519KeyPair> NewKeyPair() {
-  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
+absl::StatusOr<Ed25519KeyPair> NewKeyPair() {
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
       internal::NewEd25519Key();
   if (!key.ok()) {
     return key.status();
@@ -86,7 +86,7 @@ TEST_F(Ed25519SignBoringSslTest, testBasicSign) {
   }
 
   // Generate a new key pair.
-  util::StatusOr<Ed25519KeyPair> key = NewKeyPair();
+  absl::StatusOr<Ed25519KeyPair> key = NewKeyPair();
   ASSERT_THAT(key, IsOk());
 
   // Create a new signer.
@@ -150,7 +150,7 @@ TEST_F(Ed25519SignBoringSslTest, testMessageEmptyVersusNullStringView) {
   }
 
   // Generate a new key pair.
-  util::StatusOr<Ed25519KeyPair> key = NewKeyPair();
+  absl::StatusOr<Ed25519KeyPair> key = NewKeyPair();
   ASSERT_THAT(key, IsOk());
 
   // Create a new signer.
@@ -357,7 +357,7 @@ TEST_F(Ed25519SignBoringSslTest, testFipsMode) {
   }
 
   // Generate a new key pair.
-  util::StatusOr<Ed25519KeyPair> key = NewKeyPair();
+  absl::StatusOr<Ed25519KeyPair> key = NewKeyPair();
   ASSERT_THAT(key, IsOk());
 
   // Create a new signer.
@@ -380,10 +380,10 @@ TEST_P(Ed25519SignBoringSSLTestVectorTest, ComputeSignatureInTestVector) {
     ASSERT_THAT(Ed25519SignBoringSsl::New(*typed_key), Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       Ed25519SignBoringSsl::New(*typed_key);
   ASSERT_THAT(signer, IsOk());
-  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(param.message);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT(*signature, Eq(param.signature));
 }

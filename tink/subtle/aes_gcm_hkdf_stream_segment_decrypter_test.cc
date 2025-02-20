@@ -41,7 +41,7 @@ namespace tink {
 namespace subtle {
 namespace {
 
-util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> GetEncrypter(
+absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> GetEncrypter(
     const util::SecretData& ikm, HashType hkdf_hash, int derived_key_size,
     int ciphertext_offset, int ciphertext_segment_size,
     absl::string_view associated_data) {

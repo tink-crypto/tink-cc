@@ -51,14 +51,13 @@ namespace subtle {
 // https://eprint.iacr.org/2017/702.pdf
 class AesGcmSivBoringSsl : public Aead {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<Aead>> New(
-      const util::SecretData& key);
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const util::SecretData& key);
 
-  crypto::tink::util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 

@@ -39,14 +39,13 @@ class EciesHkdfRecipientKemBoringSsl {
  public:
   // Constructs a recipient KEM for the specified curve and recipient's
   // private key, which must be a big-endian byte array.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
-  New(EllipticCurveType curve, util::SecretData priv_key);
+  static absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>> New(
+      EllipticCurveType curve, util::SecretData priv_key);
 
   // Computes the ecdh's shared secret from our private key and peer's encoded
   // public key, then uses hkdf to derive the symmetric key from the shared
   // secret, hkdf info and hkdf salt.
-  virtual crypto::tink::util::StatusOr<util::SecretData> GenerateKey(
+  virtual absl::StatusOr<util::SecretData> GenerateKey(
       absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
       absl::string_view hkdf_info, uint32_t key_size_in_bytes,
       EcPointFormat point_format) const = 0;
@@ -60,14 +59,13 @@ class EciesHkdfNistPCurveRecipientKemBoringSsl
  public:
   // Constructs a recipient KEM for the specified curve and recipient's
   // private key, which must be a big-endian byte array.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
-  New(EllipticCurveType curve, util::SecretData priv_key);
+  static absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>> New(
+      EllipticCurveType curve, util::SecretData priv_key);
 
   // Computes the ecdh's shared secret from our private key and peer's encoded
   // public key, then uses hkdf to derive the symmetric key from the shared
   // secret, hkdf info and hkdf salt.
-  crypto::tink::util::StatusOr<util::SecretData> GenerateKey(
+  absl::StatusOr<util::SecretData> GenerateKey(
       absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
       absl::string_view hkdf_info, uint32_t key_size_in_bytes,
       EcPointFormat point_format) const override;
@@ -91,14 +89,13 @@ class EciesHkdfX25519RecipientKemBoringSsl
  public:
   // Constructs a recipient KEM for the specified curve and recipient's
   // private key, which must be a big-endian byte array.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
-  New(EllipticCurveType curve, util::SecretData priv_key);
+  static absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>> New(
+      EllipticCurveType curve, util::SecretData priv_key);
 
   // Computes the ecdh's shared secret from our private key and peer's encoded
   // public key, then uses hkdf to derive the symmetric key from the shared
   // secret, hkdf info and hkdf salt.
-  crypto::tink::util::StatusOr<util::SecretData> GenerateKey(
+  absl::StatusOr<util::SecretData> GenerateKey(
       absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
       absl::string_view hkdf_info, uint32_t key_size_in_bytes,
       EcPointFormat point_format) const override;

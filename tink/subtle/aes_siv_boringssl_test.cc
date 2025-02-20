@@ -278,7 +278,7 @@ TEST(AesSivBoringSslTest, TestVectors) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors("aes_siv_cmac_test.json");
   ASSERT_THAT(parsed_input, IsOk());
   WycheproofTest(*parsed_input, /*expected_skipped_tests_groups=*/2);

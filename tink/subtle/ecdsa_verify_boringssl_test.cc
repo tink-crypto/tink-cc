@@ -146,7 +146,7 @@ TEST_F(EcdsaVerifyBoringSslTest, NewErrors) {
   EXPECT_FALSE(verifier_result.ok()) << verifier_result.status();
 }
 
-static util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(
+static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(
     const google::protobuf::Value& test_group,
     subtle::EcdsaSignatureEncoding encoding) {
   SubtleUtilBoringSSL::EcKey key;
@@ -171,7 +171,7 @@ static util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> GetVerifier(
 bool TestSignatures(const std::string& filename,
                     int expected_skipped_test_groups,
                     subtle::EcdsaSignatureEncoding encoding) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(filename);
   CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
@@ -315,7 +315,7 @@ TEST_P(EcdsaVerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
@@ -332,7 +332,7 @@ TEST_P(EcdsaVerifyBoringSslTestVectorTest, DifferentMessageDoesNotVerify) {
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(

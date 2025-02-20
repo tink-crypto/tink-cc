@@ -150,7 +150,7 @@ TEST_F(EcdsaSignBoringSslTest, testSignatureSizesWithIEEE_P1364Encoding) {
     EXPECT_TRUE(status.ok()) << status;
 
     // Check signature size.
-    util::StatusOr<int32_t> field_size_in_bytes =
+    absl::StatusOr<int32_t> field_size_in_bytes =
         internal::EcFieldSizeInBytes(curve);
     ASSERT_THAT(field_size_in_bytes, IsOk());
     EXPECT_EQ(signature.size(), 2 * (*field_size_in_bytes));
@@ -216,13 +216,13 @@ TEST_P(EcdsaSignBoringSSLTestVectorTest, FreshSignatureInTestVector) {
     ASSERT_THAT(EcdsaSignBoringSsl::New(*typed_key), Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       EcdsaSignBoringSsl::New(*typed_key);
   ASSERT_THAT(signer, IsOk());
-  util::StatusOr<std::string> signature = (*signer)->Sign(param.message);
+  absl::StatusOr<std::string> signature = (*signer)->Sign(param.message);
   ASSERT_THAT(signature, IsOk());
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       EcdsaVerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(*signature, param.message), IsOk());

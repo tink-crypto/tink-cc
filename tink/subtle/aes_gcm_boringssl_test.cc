@@ -65,7 +65,7 @@ class AesGcmBoringSslTest : public Test {
 
     util::SecretData key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128));
-    util::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmBoringSsl::New(key);
+    absl::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmBoringSsl::New(key);
     ASSERT_THAT(cipher, IsOk());
     cipher_ = std::move(*cipher);
   }
@@ -73,18 +73,18 @@ class AesGcmBoringSslTest : public Test {
 };
 
 TEST_F(AesGcmBoringSslTest, BasicEncryptDecrypt) {
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       cipher_->Encrypt(kMessage, kAssociatedData);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_EQ(ciphertext->size(), kMessage.size() + 12 + 16);
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       cipher_->Decrypt(*ciphertext, kAssociatedData);
   ASSERT_THAT(plaintext, IsOk());
   EXPECT_EQ(*plaintext, kMessage);
 }
 
 TEST_F(AesGcmBoringSslTest, ModifyMessageAndAssociatedData) {
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       cipher_->Encrypt(kMessage, kAssociatedData);
   ASSERT_THAT(ciphertext, IsOk());
   ASSERT_THAT(cipher_->Decrypt(*ciphertext, kAssociatedData), IsOk());
@@ -116,18 +116,18 @@ void TestDecryptWithEmptyAssociatedData(Aead* cipher, absl::string_view ct,
                              absl::string_view message) {
   {  // associated_data is a null string_view.
     const absl::string_view associated_data;
-    util::StatusOr<std::string> plaintext =
+    absl::StatusOr<std::string> plaintext =
         cipher->Decrypt(ct, associated_data);
     EXPECT_THAT(plaintext, IsOk());
     EXPECT_EQ(message, *plaintext);
   }
   {  // associated_data is a an empty string.
-    util::StatusOr<std::string> plaintext = cipher->Decrypt(ct, "");
+    absl::StatusOr<std::string> plaintext = cipher->Decrypt(ct, "");
     EXPECT_THAT(plaintext, IsOk());
     EXPECT_EQ(message, *plaintext);
   }
   {  // associated_data is a default constructed string_view.
-    util::StatusOr<std::string> plaintext =
+    absl::StatusOr<std::string> plaintext =
         cipher->Decrypt(ct, absl::string_view());
     EXPECT_THAT(plaintext, IsOk());
     EXPECT_EQ(message, *plaintext);
@@ -157,7 +157,7 @@ TEST_F(AesGcmBoringSslTest, AssociatedDataEmptyVersusNullStringView) {
 TEST_F(AesGcmBoringSslTest, MessageEmptyVersusNullStringView) {
   {  // Message is a null string_view.
     const absl::string_view message;
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         cipher_->Encrypt(message, kAssociatedData);
     ASSERT_THAT(ciphertext, IsOk());
     auto plaintext = cipher_->Decrypt(*ciphertext, kAssociatedData);
@@ -166,7 +166,7 @@ TEST_F(AesGcmBoringSslTest, MessageEmptyVersusNullStringView) {
   }
   {  // Message is an empty string.
     const std::string message = "";
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         cipher_->Encrypt(message, kAssociatedData);
     ASSERT_THAT(ciphertext, IsOk());
     auto plaintext = cipher_->Decrypt(*ciphertext, kAssociatedData);
@@ -174,7 +174,7 @@ TEST_F(AesGcmBoringSslTest, MessageEmptyVersusNullStringView) {
     EXPECT_EQ(*plaintext, "");
   }
   {  // Message is a default constructed string_view.
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         cipher_->Encrypt(absl::string_view(), kAssociatedData);
     ASSERT_THAT(ciphertext, IsOk());
     auto plaintext = cipher_->Decrypt(*ciphertext, kAssociatedData);
@@ -187,7 +187,7 @@ TEST_F(AesGcmBoringSslTest, BothMessageAndAssociatedDataEmpty) {
   {  // Both are null string_view.
     const absl::string_view message;
     const absl::string_view associated_data;
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         cipher_->Encrypt(message, associated_data);
     ASSERT_THAT(ciphertext, IsOk());
     auto plaintext = cipher_->Decrypt(*ciphertext, associated_data);
@@ -197,7 +197,7 @@ TEST_F(AesGcmBoringSslTest, BothMessageAndAssociatedDataEmpty) {
   {  // Both are empty string.
     const std::string message = "";
     const std::string associated_data = "";
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         cipher_->Encrypt(message, associated_data);
     ASSERT_THAT(ciphertext, IsOk());
     auto plaintext = cipher_->Decrypt(*ciphertext, associated_data);
@@ -205,7 +205,7 @@ TEST_F(AesGcmBoringSslTest, BothMessageAndAssociatedDataEmpty) {
     EXPECT_EQ(*plaintext, "");
   }
   {  // Both are default constructed string_view.
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         cipher_->Encrypt(absl::string_view(), absl::string_view());
     ASSERT_THAT(ciphertext, IsOk());
     auto plaintext = cipher_->Decrypt(*ciphertext, absl::string_view());
@@ -217,7 +217,7 @@ TEST_F(AesGcmBoringSslTest, BothMessageAndAssociatedDataEmpty) {
 TEST_F(AesGcmBoringSslTest, InvalidKeySizes) {
   for (int keysize = 0; keysize < 65; keysize++) {
     util::SecretData key(keysize, 'x');
-    util::StatusOr<std::unique_ptr<crypto::tink::Aead>> cipher =
+    absl::StatusOr<std::unique_ptr<crypto::tink::Aead>> cipher =
         AesGcmBoringSsl::New(key);
     if (keysize == 16 || keysize == 32) {
       EXPECT_THAT(cipher, IsOk());
@@ -280,11 +280,11 @@ class AesGcmBoringSslWycheproofTest
 TEST_P(AesGcmBoringSslWycheproofTest, Decrypt) {
   internal::WycheproofTestVector test_vector = GetParam();
   util::SecretData key = util::SecretDataFromStringView(test_vector.key);
-  util::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmBoringSsl::New(key);
+  absl::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());
   std::string ciphertext =
       absl::StrCat(test_vector.nonce, test_vector.ct, test_vector.tag);
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*cipher)->Decrypt(ciphertext, test_vector.aad);
   if (plaintext.ok()) {
     EXPECT_NE(test_vector.expected, "invalid");

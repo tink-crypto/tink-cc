@@ -34,10 +34,12 @@ namespace subtle {
 class Hkdf {
  public:
   // Computes hkdf according to RFC5869.
-  static crypto::tink::util::StatusOr<std::string> ComputeHkdf(
-      HashType hash, absl::string_view ikm, absl::string_view salt,
-      absl::string_view info, size_t out_len);
-  static crypto::tink::util::StatusOr<util::SecretData> ComputeHkdf(
+  static absl::StatusOr<std::string> ComputeHkdf(HashType hash,
+                                                 absl::string_view ikm,
+                                                 absl::string_view salt,
+                                                 absl::string_view info,
+                                                 size_t out_len);
+  static absl::StatusOr<util::SecretData> ComputeHkdf(
       HashType hash, const util::SecretData& ikm, absl::string_view salt,
       absl::string_view info, size_t out_len);
 
@@ -45,11 +47,10 @@ class Hkdf {
   // This function follows Shoup's recommendation of including ECIES
   // ephemeral KEM bytes into the commputation of the symmetric key
   // (cf. http://eprint.iacr.org/2001/112.pdf, Sections 15.6 and 15.6.1)
-  static crypto::tink::util::StatusOr<util::SecretData>
-  ComputeEciesHkdfSymmetricKey(HashType hash, absl::string_view kem_bytes,
-                               const util::SecretData& shared_secret,
-                               absl::string_view salt, absl::string_view info,
-                               size_t out_len);
+  static absl::StatusOr<util::SecretData> ComputeEciesHkdfSymmetricKey(
+      HashType hash, absl::string_view kem_bytes,
+      const util::SecretData& shared_secret, absl::string_view salt,
+      absl::string_view info, size_t out_len);
 };
 }  // namespace subtle
 }  // namespace tink

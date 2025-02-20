@@ -544,7 +544,7 @@ TEST(AesCtrHmacStreamingTest, SizeIsNotAuthenticated) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   AesCtrHmacStreaming::Params params = ValidParams();
-  util::StatusOr<std::unique_ptr<AesCtrHmacStreaming>> streaming_aead =
+  absl::StatusOr<std::unique_ptr<AesCtrHmacStreaming>> streaming_aead =
       AesCtrHmacStreaming::New(std::move(params));
   ASSERT_THAT(streaming_aead.status(), IsOk());
 

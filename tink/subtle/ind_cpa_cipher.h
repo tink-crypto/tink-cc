@@ -35,11 +35,11 @@ class IndCpaCipher {
  public:
   // Encrypts 'plaintext'. The resulting ciphertext is indistinguishable under
   // chosen-plaintext attack. However, it does not have integrity protection.
-  virtual crypto::tink::util::StatusOr<std::string> Encrypt(
+  virtual absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext) const = 0;
 
   // Decrypts 'ciphertext' and returns the resulting plaintext.
-  virtual crypto::tink::util::StatusOr<std::string> Decrypt(
+  virtual absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext) const = 0;
 
   virtual ~IndCpaCipher() = default;

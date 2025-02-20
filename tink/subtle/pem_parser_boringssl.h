@@ -35,45 +35,45 @@ class PemParser {
  public:
   // Parses a given PEM serialized RSA public key `pem_serialized_key` into a
   // internal::RsaPublicKey.
-  static util::StatusOr<std::unique_ptr<internal::RsaPublicKey>>
+  static absl::StatusOr<std::unique_ptr<internal::RsaPublicKey>>
   ParseRsaPublicKey(absl::string_view pem_serialized_key);
 
   // Parses a given PEM serialized RSA private key `pem_serialized_key` into a
   // internal::RsaPublicKey.
-  static util::StatusOr<std::unique_ptr<internal::RsaPrivateKey>>
+  static absl::StatusOr<std::unique_ptr<internal::RsaPrivateKey>>
   ParseRsaPrivateKey(absl::string_view pem_serialized_key);
 
   // Writes a given internal::RsaPublicKey `rsa_key` into a PEM
   // serialized RSA public key.
-  static util::StatusOr<std::string> WriteRsaPublicKey(
+  static absl::StatusOr<std::string> WriteRsaPublicKey(
       const internal::RsaPublicKey& rsa_public_key);
 
   // Writes a given internal::RsaPrivateKey `rsa_key` into a PEM
   // serialized RSA private key.
-  static util::StatusOr<std::string> WriteRsaPrivateKey(
+  static absl::StatusOr<std::string> WriteRsaPrivateKey(
       const internal::RsaPrivateKey& rsa_private_key);
 
   // Parses a given PEM serialized EC public key `pem_serialized_key` into a
   // SubtleUtilBoringSSL::EcKey.
-  static util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
+  static absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
   ParseEcPublicKey(absl::string_view pem_serialized_key);
 
-  static util::StatusOr<std::unique_ptr<crypto::tink::internal::Ed25519Key>>
+  static absl::StatusOr<std::unique_ptr<crypto::tink::internal::Ed25519Key>>
   ParseEd25519PublicKey(absl::string_view pem_serialized_key);
 
   // Parses a given PEM serialized EC private key `pem_serialized_key` into a
   // SubtleUtilBoringSSL::EcKey.
-  static util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
+  static absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>>
   ParseEcPrivateKey(absl::string_view pem_serialized_key);
 
   // Writes a given SubtleUtilBoringSSL::EcKey `ec_key` into a PEM serialized
   // EC public key.
-  static util::StatusOr<std::string> WriteEcPublicKey(
+  static absl::StatusOr<std::string> WriteEcPublicKey(
       const SubtleUtilBoringSSL::EcKey& ec_key);
 
   // Writes a given SubtleUtilBoringSSL::EcKey `ec_key` into a PEM serialized
   // EC private key.
-  static util::StatusOr<std::string> WriteEcPrivateKey(
+  static absl::StatusOr<std::string> WriteEcPrivateKey(
       const SubtleUtilBoringSSL::EcKey& ec_key);
 };
 

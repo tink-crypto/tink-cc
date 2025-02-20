@@ -39,7 +39,7 @@ namespace subtle {
 // http://tools.ietf.org/html/draft-mcgrew-aead-aes-cbc-hmac-sha2-05.
 class EncryptThenAuthenticate : public Aead {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<Aead>> New(
+  static absl::StatusOr<std::unique_ptr<Aead>> New(
       std::unique_ptr<IndCpaCipher> ind_cpa_cipher, std::unique_ptr<Mac> mac,
       uint8_t tag_size);
 
@@ -51,11 +51,11 @@ class EncryptThenAuthenticate : public Aead {
   // (associated_data || ciphertext || t) where t is associated_data's length
   // in bits represented as 64-bit bigendian unsigned integer. The final
   // ciphertext format is (ind-cpa ciphertext || mac).
-  crypto::tink::util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 

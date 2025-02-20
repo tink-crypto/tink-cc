@@ -68,15 +68,15 @@ TEST(AesGcmSivBoringSslTest, EncryptDecrypt) {
     EXPECT_THAT(AesGcmSivBoringSsl::New(key).status(),
                 StatusIs(absl::StatusCode::kUnimplemented));
   } else {
-    util::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
+    absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
     ASSERT_THAT(aead, IsOk());
 
-    util::StatusOr<std::string> ciphertext =
+    absl::StatusOr<std::string> ciphertext =
         (*aead)->Encrypt(kMessage, kAssociatedData);
     ASSERT_THAT(ciphertext, IsOk());
     EXPECT_THAT(*ciphertext,
                 SizeIs(kMessage.size() + kIvSizeInBytes + kTagSizeInBytes));
-    util::StatusOr<std::string> plaintext =
+    absl::StatusOr<std::string> plaintext =
         (*aead)->Decrypt(*ciphertext, kAssociatedData);
     ASSERT_THAT(plaintext, IsOk());
     EXPECT_EQ(*plaintext, kMessage);
@@ -93,7 +93,7 @@ TEST(AesGcmSivBoringSslTest, DecryptFailsIfCiphertextTooSmall) {
 
   util::SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
-  util::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
+  absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
   ASSERT_THAT(aead, IsOk());
 
   for (int i = 1; i < kIvSizeInBytes + kTagSizeInBytes; i++) {
@@ -147,11 +147,11 @@ class AesGcmSivBoringSslWycheproofTest
 TEST_P(AesGcmSivBoringSslWycheproofTest, Decrypt) {
   internal::WycheproofTestVector test_vector = GetParam();
   util::SecretData key = util::SecretDataFromStringView(test_vector.key);
-  util::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmSivBoringSsl::New(key);
+  absl::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmSivBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());
   std::string ciphertext =
       absl::StrCat(test_vector.nonce, test_vector.ct, test_vector.tag);
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*cipher)->Decrypt(ciphertext, test_vector.aad);
   if (plaintext.ok()) {
     EXPECT_NE(test_vector.expected, "invalid");

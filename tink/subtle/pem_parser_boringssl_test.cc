@@ -430,7 +430,7 @@ class PemParserRsaTest : public Test {
 
   // Utility function that sets expectations to test that `bn_str` equals `bn`.
   void ExpectBnEqual(absl::string_view bn_str, const BIGNUM *bn) {
-    util::StatusOr<std::string> expected_bn_str =
+    absl::StatusOr<std::string> expected_bn_str =
         internal::BignumToString(bn, BN_num_bytes(bn));
     ASSERT_THAT(expected_bn_str, IsOk());
     EXPECT_EQ(bn_str, *expected_bn_str);
@@ -519,7 +519,7 @@ TEST_P(ParametrizedPemParserRsaTest, WriteRsaPrivateKey) {
   key.crt = util::SecretDataFromStringView(
       test::HexDecodeOrDie(test_vector.coefficient_hex_str));
 
-  util::StatusOr<std::string> pem_result = PemParser::WriteRsaPrivateKey(key);
+  absl::StatusOr<std::string> pem_result = PemParser::WriteRsaPrivateKey(key);
   EXPECT_THAT(pem_result, IsOk()) << internal::GetSslErrors();
   EXPECT_EQ(absl::StripAsciiWhitespace(*pem_result), test_vector.private_pem);
 }
@@ -575,7 +575,7 @@ TEST_P(ParametrizedPemParserEcTest, ReadEcPublicKeySuccess) {
 
 TEST_P(ParametrizedPemParserEcTest, ReadEcPrivateKeySuccess) {
   EcKeyTestVector test_vector = GetParam();
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPrivateKey(
           absl::StripAsciiWhitespace(test_vector.priv_pem));
 
@@ -607,7 +607,7 @@ TEST_P(ParametrizedPemParserEcTest, ReadEcPrivateKeyInvalid) {
   std::string corrupt_pem = test_vector.pub_pem;
   Corrupt(&corrupt_pem);
 
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPrivateKey(absl::StripAsciiWhitespace(corrupt_pem));
 
   EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -624,7 +624,7 @@ TEST_P(ParametrizedPemParserEcTest, WriteEcPublicKeySucceeds) {
       test::HexDecodeOrDie(test_vector.priv_hex_str));
 
   // Check that converting the public key with WriteEcPublicKey() succeeds.
-  util::StatusOr<std::string> pem_material =
+  absl::StatusOr<std::string> pem_material =
       PemParser::WriteEcPublicKey(ec_key);
   ASSERT_THAT(pem_material, IsOk()) << internal::GetSslErrors();
   EXPECT_EQ(absl::StripAsciiWhitespace(*pem_material),
@@ -642,7 +642,7 @@ TEST_P(ParametrizedPemParserEcTest, WriteEcPrivateKeySucceeds) {
       test::HexDecodeOrDie(test_vector.priv_hex_str));
 
   // Check that converting the private key with WriteEcPrivateKey() succeeds.
-  util::StatusOr<std::string> pem_material =
+  absl::StatusOr<std::string> pem_material =
       PemParser::WriteEcPrivateKey(ec_key);
   ASSERT_THAT(pem_material, IsOk());
   EXPECT_EQ(absl::StripAsciiWhitespace(*pem_material),
@@ -662,13 +662,13 @@ INSTANTIATE_TEST_SUITE_P(ParametrizedPemParserEcTest,
                          ValuesIn(GetEcKeyTestVectors()));
 
 TEST(PemParserEcTest, NewKeyWriteAndReadPublicKeySuccess) {
-  util::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key =
+  absl::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key =
       SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
-  util::StatusOr<std::string> public_pem = PemParser::WriteEcPublicKey(*ec_key);
+  absl::StatusOr<std::string> public_pem = PemParser::WriteEcPublicKey(*ec_key);
   ASSERT_THAT(public_pem, IsOk());
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> public_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> public_key =
       PemParser::ParseEcPublicKey(*public_pem);
   EXPECT_THAT(public_key, IsOk()) << internal::GetSslErrors();
   EXPECT_EQ((*public_key)->pub_x, ec_key->pub_x);
@@ -677,14 +677,14 @@ TEST(PemParserEcTest, NewKeyWriteAndReadPublicKeySuccess) {
 }
 
 TEST(PemParserEcTest, NewKeyWriteAndReadPrivateKeySuccess) {
-  util::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key =
+  absl::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key =
       SubtleUtilBoringSSL::GetNewEcKey(EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
 
-  util::StatusOr<std::string> private_pem =
+  absl::StatusOr<std::string> private_pem =
       PemParser::WriteEcPrivateKey(*ec_key);
   ASSERT_THAT(private_pem, IsOk());
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> parsed_ec_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> parsed_ec_key =
       PemParser::ParseEcPrivateKey(*private_pem);
   EXPECT_THAT(parsed_ec_key, IsOk()) << internal::GetSslErrors();
 
@@ -708,14 +708,14 @@ sEUoYDu3Oi24YuZAFbwVIdX69RME4FB5PbxISleynMI=
 }
 
 TEST(PemParserEcTest, ReadInvalidEcPublicKey) {
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPublicKey("invalid");
 
   EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(PemParserEcTest, ReadInvalidEcPrivateKey) {
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPrivateKey("invalid");
 
   EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -734,7 +734,7 @@ MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEC9naJNDkHKVBjfDK90szJegpzatlUcFO
 BLrJS8EVf4tMw52zdhXpKBF2FGpD54dNo+Ut2s6JIE+LoaX/FSvifw==
 -----END PUBLIC KEY-----)";
 
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPublicKey(
           absl::StripAsciiWhitespace(kSecp256k1PublicKey));
   // With BoringSSL parsing of the PEM key fails when an unsupported curve is
@@ -766,7 +766,7 @@ oUQDQgAEC9naJNDkHKVBjfDK90szJegpzatlUcFOBLrJS8EVf4tMw52zdhXpKBF2
 FGpD54dNo+Ut2s6JIE+LoaX/FSvifw==
 -----END EC PRIVATE KEY-----)";
 
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPrivateKey(
           absl::StripAsciiWhitespace(kSecp256k1PrivateKey));
 
@@ -796,14 +796,14 @@ iJ76WplZagsJzsAg/5gIJ/YcTry266rP2SBVTsuCY/GOh2vU/x6XFbPi9JCM0nvH
 GTi1cWyqIwzGqfw8ZGejtvg4SAGulZ7/MWVCZV51C6JakfY1v3z24BQG1m50jMs=
 -----END ENCRYPTED PRIVATE KEY-----)";
 
-  util::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
+  absl::StatusOr<std::unique_ptr<SubtleUtilBoringSSL::EcKey>> ecdsa_key =
       PemParser::ParseEcPrivateKey(absl::StripAsciiWhitespace(kPrivateKey));
 
   EXPECT_THAT(ecdsa_key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(PemParserEcTest, WriteEcPublicKeyWithBadXFails) {
-  util::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key_statusor =
+  absl::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key_statusor =
       SubtleUtilBoringSSL::GetNewEcKey(subtle::NIST_P256);
   ASSERT_THAT(ec_key_statusor, IsOk());
   SubtleUtilBoringSSL::EcKey ec_key = *ec_key_statusor;
@@ -814,7 +814,7 @@ TEST(PemParserEcTest, WriteEcPublicKeyWithBadXFails) {
 }
 
 TEST(PemParserEcTest, WriteEcPublicKeyWithBadYFails) {
-  util::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key_statusor =
+  absl::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key_statusor =
       SubtleUtilBoringSSL::GetNewEcKey(subtle::NIST_P256);
   ASSERT_THAT(ec_key_statusor, IsOk());
   SubtleUtilBoringSSL::EcKey ec_key = *ec_key_statusor;
@@ -824,7 +824,7 @@ TEST(PemParserEcTest, WriteEcPublicKeyWithBadYFails) {
 }
 
 TEST(PemParserEcTest, WriteEcPrivateKeyWithBadPrivFails) {
-  util::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key_statusor =
+  absl::StatusOr<SubtleUtilBoringSSL::EcKey> ec_key_statusor =
       SubtleUtilBoringSSL::GetNewEcKey(subtle::NIST_P256);
   ASSERT_THAT(ec_key_statusor, IsOk());
   SubtleUtilBoringSSL::EcKey ec_key = *ec_key_statusor;
@@ -851,7 +851,7 @@ constexpr absl::string_view kEd25519PublicKeyX =
     "6459b3b37af2f59f6ee8c714065158a549b47897ac903dd9a1d308fe9b68ae0e";
 
 TEST(PemParserEcTest, ParseEd25519PublicKey) {
-  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> ed25519_pub_key =
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> ed25519_pub_key =
       PemParser::ParseEd25519PublicKey(kEd25519PublicKey);
   ASSERT_THAT(ed25519_pub_key, IsOk());
   EXPECT_THAT((*ed25519_pub_key)->private_key.size(), Eq(0));

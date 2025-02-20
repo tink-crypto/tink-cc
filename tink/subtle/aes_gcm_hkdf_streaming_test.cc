@@ -227,7 +227,7 @@ TEST(AesGcmHkdfStreamingTest, SizeIsUnauthenticated) {
   params.derived_key_size = 16;
   params.ciphertext_segment_size = 100;
   params.ciphertext_offset = 0;
-  util::StatusOr<std::unique_ptr<AesGcmHkdfStreaming>> streaming_aead =
+  absl::StatusOr<std::unique_ptr<AesGcmHkdfStreaming>> streaming_aead =
       AesGcmHkdfStreaming::New(std::move(params));
   ASSERT_THAT(streaming_aead.status(), IsOk());
 

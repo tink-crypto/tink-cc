@@ -34,13 +34,13 @@ namespace subtle {
 
 class AesCtrBoringSsl : public IndCpaCipher {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<IndCpaCipher>> New(
-      util::SecretData key, int iv_size);
+  static absl::StatusOr<std::unique_ptr<IndCpaCipher>> New(util::SecretData key,
+                                                           int iv_size);
 
-  crypto::tink::util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext) const override;
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext) const override;
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =

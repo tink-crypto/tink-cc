@@ -91,7 +91,7 @@ constexpr TestVector test_vectors[] = {
      HashType::SHA512, 16, 32},
 };
 
-util::StatusOr<std::unique_ptr<Aead>> createAead2(
+absl::StatusOr<std::unique_ptr<Aead>> createAead2(
     util::SecretData encryption_key, int iv_size, util::SecretData mac_key,
     uint8_t tag_size, HashType hash_type) {
   auto ind_cipher_res =
@@ -112,7 +112,7 @@ util::StatusOr<std::unique_ptr<Aead>> createAead2(
   return std::move(cipher_res.value());
 }
 
-util::StatusOr<std::unique_ptr<Aead>> createAead(int encryption_key_size,
+absl::StatusOr<std::unique_ptr<Aead>> createAead(int encryption_key_size,
                                                  int iv_size, int mac_key_size,
                                                  int tag_size,
                                                  HashType hash_type) {

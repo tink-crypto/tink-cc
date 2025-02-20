@@ -194,7 +194,7 @@ TEST_F(Ed25519VerifyBoringSslTest, InvalidPublicKey) {
 // string_view.
 TEST_F(Ed25519VerifyBoringSslTest, MessageEmptyVersusNullStringView) {
   TestVector empty_message_test_vector = GetTestVectors()[0];
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       Ed25519VerifyBoringSsl::New(empty_message_test_vector.public_key);
   ASSERT_THAT(verifier, IsOk());
 
@@ -224,7 +224,7 @@ TEST_P(Ed25519VerifyBoringSslParamsTest, VerifiesCorrectly) {
   }
   TestVector test_vector = GetParam();
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       Ed25519VerifyBoringSsl::New(test_vector.public_key);
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(test_vector.signature, test_vector.message),
@@ -235,7 +235,7 @@ INSTANTIATE_TEST_SUITE_P(Ed25519VerifyBoringSslParamsTests,
                          Ed25519VerifyBoringSslParamsTest,
                          ValuesIn(GetTestVectors()));
 
-static util::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
+static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
     const google::protobuf::Value& test_group) {
   const google::protobuf::Value& key =
       test_group.struct_value().fields().at("key");
@@ -254,7 +254,7 @@ static util::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
 // if a file contains test vectors that are not necessarily supported
 // by tink.
 bool TestSignatures(const std::string& filename) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(filename);
   CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
@@ -344,7 +344,7 @@ TEST_P(Ed25519VerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       Ed25519VerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
@@ -361,7 +361,7 @@ TEST_P(Ed25519VerifyBoringSslTestVectorTest, DifferentMessageDoesNotVerify) {
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       Ed25519VerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(
@@ -381,7 +381,7 @@ TEST_P(Ed25519VerifyBoringSslTestVectorTest,
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       Ed25519VerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   std::string modified_signature = param.signature;

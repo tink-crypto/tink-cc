@@ -39,18 +39,17 @@ namespace subtle {
 class NonceBasedStreamingAead : public StreamingAead {
  public:
   // Methods of StreamingAead-interface implemented by this class.
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
   NewEncryptingStream(
       std::unique_ptr<crypto::tink::OutputStream> ciphertext_destination,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::InputStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::InputStream>>
   NewDecryptingStream(
       std::unique_ptr<crypto::tink::InputStream> ciphertext_source,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::RandomAccessStream>>
   NewDecryptingRandomAccessStream(
       std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
       absl::string_view associated_data) const override;
@@ -59,11 +58,11 @@ class NonceBasedStreamingAead : public StreamingAead {
   // Methods to be implemented by a subclass of this class.
 
   // Returns a new StreamSegmentEncrypter that uses `associated_data` for AEAD.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
+  virtual absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
   NewSegmentEncrypter(absl::string_view associated_data) const = 0;
 
   // Returns a new StreamSegmentDecrypter that uses `associated_data` for AEAD.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
+  virtual absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
   NewSegmentDecrypter(absl::string_view associated_data) const = 0;
 };
 

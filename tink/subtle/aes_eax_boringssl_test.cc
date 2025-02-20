@@ -331,7 +331,7 @@ TEST(AesEaxBoringSslTest, TestVectors) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors("aes_eax_test.json");
   ASSERT_THAT(parsed_input, IsOk());
   ASSERT_TRUE(WycheproofTest(*parsed_input,

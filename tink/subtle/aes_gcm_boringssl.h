@@ -34,13 +34,12 @@ namespace subtle {
 class AesGcmBoringSsl {
  public:
   ABSL_DEPRECATED("Use AesGcmBoringSsl::New(const util::SecretData&) instead.")
-  static crypto::tink::util::StatusOr<std::unique_ptr<Aead>> New(
+  static absl::StatusOr<std::unique_ptr<Aead>> New(
       absl::string_view key_value) {
     return AesGcmBoringSsl::New(util::SecretDataFromStringView(key_value));
   }
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<Aead>> New(
-      const util::SecretData& key);
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const util::SecretData& key);
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;

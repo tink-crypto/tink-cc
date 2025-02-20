@@ -43,17 +43,17 @@ class AesGcmHkdfStreaming : public NonceBasedStreamingAead {
     int ciphertext_offset;
   };
 
-  static util::StatusOr<std::unique_ptr<AesGcmHkdfStreaming>> New(
+  static absl::StatusOr<std::unique_ptr<AesGcmHkdfStreaming>> New(
       Params params);
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  protected:
-  util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> NewSegmentEncrypter(
+  absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> NewSegmentEncrypter(
       absl::string_view associated_data) const override;
 
-  util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> NewSegmentDecrypter(
+  absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> NewSegmentDecrypter(
       absl::string_view associated_data) const override;
 
  private:

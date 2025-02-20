@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_parser.h"
@@ -32,15 +33,13 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -50,7 +49,6 @@ namespace {
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
-using ::google::crypto::tink::OutputPrefixType;
 
 struct AesCmacParamStruct {
   uint32_t tag_size;
@@ -112,64 +110,65 @@ using AesCmacProtoKeySerializerImpl =
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCmacKey";
 
-util::StatusOr<AesCmacParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<AesCmacParameters::Variant> ToVariant(
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return AesCmacParameters::Variant::kCrunchy;
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       return AesCmacParameters::Variant::kLegacy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return AesCmacParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return AesCmacParameters::Variant::kTink;
     default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine AesCmacParameters::Variant");
+      return absl::InvalidArgumentError(
+          "Could not determine AesCmacParameters::Variant");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     AesCmacParameters::Variant variant) {
   switch (variant) {
     case AesCmacParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case AesCmacParameters::Variant::kLegacy:
-      return OutputPrefixType::LEGACY;
+      return OutputPrefixTypeEnum::kLegacy;
     case AesCmacParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case AesCmacParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<AesCmacParameters> ParseParameters(
+absl::StatusOr<AesCmacParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing AesCmacParameters.");
+  const KeyTemplateStruct key_template = serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing AesCmacParameters.");
   }
 
-  util::StatusOr<AesCmacKeyFormatStruct> proto_key_format =
-      GetFormatParser().Parse(serialization.GetKeyTemplate().value());
+  absl::StatusOr<AesCmacKeyFormatStruct> proto_key_format =
+      GetFormatParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }
 
-  util::StatusOr<AesCmacParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
+  absl::StatusOr<AesCmacParameters::Variant> variant =
+      ToVariant(key_template.output_prefix_type);
   if (!variant.ok()) return variant.status();
 
   return AesCmacParameters::Create(proto_key_format->key_size,
                                    proto_key_format->params.tag_size, *variant);
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesCmacParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
@@ -177,7 +176,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   proto_key_format.params.tag_size = parameters.CryptographicTagSizeInBytes();
   proto_key_format.key_size = parameters.KeySizeInBytes();
 
-  util::StatusOr<std::string> serialized =
+  absl::StatusOr<std::string> serialized =
       GetFormatParser().SerializeIntoString(proto_key_format);
   if (!serialized.ok()) {
     return serialized.status();
@@ -186,37 +185,34 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
                                               *serialized);
 }
 
-util::StatusOr<AesCmacKey> ParseKey(
+absl::StatusOr<AesCmacKey> ParseKey(
     const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing AesCmacKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing AesCmacKey.");
   }
   if (!token.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
-  util::StatusOr<AesCmacKeyStruct> proto_key = GetKeyParser().Parse(
+  absl::StatusOr<AesCmacKeyStruct> proto_key = GetKeyParser().Parse(
       SecretDataAsStringView(serialization.SerializedKeyProto().Get(*token)));
   if (!proto_key.ok()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse AesCmacKey proto");
+    return absl::InvalidArgumentError("Failed to parse AesCmacKey proto");
   }
   if (proto_key->version != 0) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<AesCmacParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+  absl::StatusOr<AesCmacParameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) return variant.status();
 
-  util::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
       proto_key->key_value.size(), proto_key->params.tag_size, *variant);
   if (!parameters.ok()) return parameters.status();
 
-  util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *parameters, RestrictedData(proto_key->key_value, *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!key.ok()) return key.status();
@@ -224,14 +220,13 @@ util::StatusOr<AesCmacKey> ParseKey(
   return *key;
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeKey(
+absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesCmacKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
   AesCmacKeyStruct proto_key;
@@ -240,11 +235,11 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.key_value =
       SecretDataFromStringView(restricted_input->GetSecret(*token));
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  util::StatusOr<SecretData> serialized_key =
+  absl::StatusOr<SecretData> serialized_key =
       GetKeyParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();
@@ -252,7 +247,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(*std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

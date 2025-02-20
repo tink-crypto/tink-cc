@@ -137,6 +137,7 @@ tink_cc_library(
     aes_cmac_proto_serialization_impl.h
   DEPS
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::partial_key_access
@@ -151,12 +152,10 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::mac::aes_cmac_key
     tink::mac::aes_cmac_parameters
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
 )
 
 # tests
@@ -334,6 +333,7 @@ tink_cc_library(
   DEPS
     absl::no_destructor
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::partial_key_access
@@ -348,14 +348,10 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::common_cc_proto
-    tink::proto::hmac_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

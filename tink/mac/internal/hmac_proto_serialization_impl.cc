@@ -22,6 +22,7 @@
 
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_parser.h"
@@ -33,17 +34,13 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/common.pb.h"
-#include "proto/hmac.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -53,13 +50,21 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::OutputPrefixType;
 
-bool HashTypeValid(int c) { return google::crypto::tink::HashType_IsValid(c); }
+bool HashTypeValid(uint32_t c) { return 0 <= c && c <= 5; }
+
+// Enum representing the proto enum `google.crypto.tink.HashType`.
+enum class HashTypeEnum : uint32_t {
+  kUnknownHash = 0,
+  kSha1,
+  kSha384,
+  kSha256,
+  kSha512,
+  kSha224,
+};
 
 struct HmacParamsStruct {
-  HashType hash;
+  HashTypeEnum hash;
   uint32_t tag_size;
 
   static ProtoParser<HmacParamsStruct> CreateParser() {
@@ -129,86 +134,86 @@ using HmacProtoKeySerializerImpl =
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.HmacKey";
 
-util::StatusOr<HmacParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<HmacParameters::Variant> ToVariant(
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return HmacParameters::Variant::kCrunchy;
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       return HmacParameters::Variant::kLegacy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return HmacParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return HmacParameters::Variant::kTink;
     default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine HmacParameters::Variant");
+      return absl::InvalidArgumentError(
+          "Could not determine HmacParameters::Variant");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     HmacParameters::Variant variant) {
   switch (variant) {
     case HmacParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case HmacParameters::Variant::kLegacy:
-      return OutputPrefixType::LEGACY;
+      return OutputPrefixTypeEnum::kLegacy;
     case HmacParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case HmacParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<HmacParameters::HashType> ToHashType(HashType hash_type) {
+absl::StatusOr<HmacParameters::HashType> ToHashType(HashTypeEnum hash_type) {
   switch (hash_type) {
-    case HashType::SHA1:
+    case HashTypeEnum::kSha1:
       return HmacParameters::HashType::kSha1;
-    case HashType::SHA224:
+    case HashTypeEnum::kSha224:
       return HmacParameters::HashType::kSha224;
-    case HashType::SHA256:
+    case HashTypeEnum::kSha256:
       return HmacParameters::HashType::kSha256;
-    case HashType::SHA384:
+    case HashTypeEnum::kSha384:
       return HmacParameters::HashType::kSha384;
-    case HashType::SHA512:
+    case HashTypeEnum::kSha512:
       return HmacParameters::HashType::kSha512;
     default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine HashType");
+      return absl::InvalidArgumentError("Could not determine HashType");
   }
 }
 
-util::StatusOr<HashType> ToProtoHashType(HmacParameters::HashType hash_type) {
+absl::StatusOr<HashTypeEnum> ToProtoHashType(
+    HmacParameters::HashType hash_type) {
   switch (hash_type) {
     case HmacParameters::HashType::kSha1:
-      return HashType::SHA1;
+      return HashTypeEnum::kSha1;
     case HmacParameters::HashType::kSha224:
-      return HashType::SHA224;
+      return HashTypeEnum::kSha224;
     case HmacParameters::HashType::kSha256:
-      return HashType::SHA256;
+      return HashTypeEnum::kSha256;
     case HmacParameters::HashType::kSha384:
-      return HashType::SHA384;
+      return HashTypeEnum::kSha384;
     case HmacParameters::HashType::kSha512:
-      return HashType::SHA512;
+      return HashTypeEnum::kSha512;
     default:
-      return absl::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine HmacParameters::HashType");
+      return absl::InvalidArgumentError(
+          "Could not determine HmacParameters::HashType");
   }
 }
 
-util::StatusOr<HmacParameters> ParseParameters(
+absl::StatusOr<HmacParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing HmacParameters.");
+  const KeyTemplateStruct key_template = serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing HmacParameters.");
   }
 
-  util::StatusOr<HmacKeyFormatStruct> proto_key_format =
-      HmacKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+  absl::StatusOr<HmacKeyFormatStruct> proto_key_format =
+      HmacKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }
@@ -218,11 +223,11 @@ util::StatusOr<HmacParameters> ParseParameters(
         "Parsing HmacParameters failed: only version 0 is accepted");
   }
 
-  util::StatusOr<HmacParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
+  absl::StatusOr<HmacParameters::Variant> variant =
+      ToVariant(key_template.output_prefix_type);
   if (!variant.ok()) return variant.status();
 
-  util::StatusOr<HmacParameters::HashType> hash_type =
+  absl::StatusOr<HmacParameters::HashType> hash_type =
       ToHashType(proto_key_format->params.hash);
   if (!hash_type.ok()) return hash_type.status();
 
@@ -231,12 +236,12 @@ util::StatusOr<HmacParameters> ParseParameters(
                                 *variant);
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const HmacParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
-  util::StatusOr<HashType> proto_hash_type =
+  absl::StatusOr<HashTypeEnum> proto_hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
@@ -246,7 +251,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   proto_key_format.key_size = parameters.KeySizeInBytes();
   proto_key_format.version = 0;
 
-  util::StatusOr<std::string> serialized_key_format =
+  absl::StatusOr<std::string> serialized_key_format =
       HmacKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
   if (!serialized_key_format.ok()) {
     return serialized_key_format.status();
@@ -256,35 +261,32 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
                                               *serialized_key_format);
 }
 
-util::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
+absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
                                  absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing HmacKey.");
+    return absl::InvalidArgumentError("Wrong type URL when parsing HmacKey.");
   }
   if (!token.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  util::StatusOr<HmacKeyStruct> proto_key = HmacKeyStruct::GetParser().Parse(
+  absl::StatusOr<HmacKeyStruct> proto_key = HmacKeyStruct::GetParser().Parse(
       serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
     return proto_key.status();
   }
   if (proto_key->version != 0) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<HmacParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+  absl::StatusOr<HmacParameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) return variant.status();
-  util::StatusOr<HmacParameters::HashType> hash_type =
+  absl::StatusOr<HmacParameters::HashType> hash_type =
       ToHashType(proto_key->params.hash);
   if (!hash_type.ok()) return hash_type.status();
 
-  util::StatusOr<HmacParameters> parameters =
+  absl::StatusOr<HmacParameters> parameters =
       HmacParameters::Create(proto_key->key_value.size(),
                              proto_key->params.tag_size, *hash_type, *variant);
   if (!parameters.ok()) return parameters.status();
@@ -294,16 +296,15 @@ util::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
                          serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeKey(
+absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const HmacKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!token.has_value()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
   if (!restricted_input.ok()) return restricted_input.status();
-  util::StatusOr<HashType> proto_hash_type =
+  absl::StatusOr<HashTypeEnum> proto_hash_type =
       ToProtoHashType(key.GetParameters().GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
@@ -313,11 +314,11 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.version = 0;
   proto_key.key_value = restricted_input->Get(*token);
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  util::StatusOr<SecretData> serialized_key =
+  absl::StatusOr<SecretData> serialized_key =
       HmacKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();
@@ -325,7 +326,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   RestrictedData restricted_output =
       RestrictedData(*std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

@@ -27,10 +27,9 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-crypto::tink::util::Status ValidateParams(
-    const google::crypto::tink::HpkeParams& params);
+absl::Status ValidateParams(const google::crypto::tink::HpkeParams& params);
 
-crypto::tink::util::Status ValidateKeyAndVersion(
+absl::Status ValidateKeyAndVersion(
     const google::crypto::tink::HpkePublicKey& key, uint32_t max_key_version);
 
 }  // namespace internal

@@ -31,9 +31,9 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddHybridKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddHybridKeyGenV0(KeyGenConfiguration& config) {
 #ifdef OPENSSL_IS_BORINGSSL
-  util::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+  absl::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<HpkePrivateKeyManager>(),
       absl::make_unique<HpkePublicKeyManager>(), config);
   if (!status.ok()) {

@@ -33,28 +33,28 @@ using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkeParams;
 using ::google::crypto::tink::HpkePublicKey;
 
-util::Status ValidateParams(const HpkeParams& params) {
+absl::Status ValidateParams(const HpkeParams& params) {
   if (params.kem() == HpkeKem::KEM_UNKNOWN) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid KEM param.");
   }
   if (params.kdf() == HpkeKdf::KDF_UNKNOWN) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid KDF param.");
   }
   if (params.aead() == HpkeAead::AEAD_UNKNOWN) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid AEAD param.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status ValidateKeyAndVersion(const HpkePublicKey& key,
+absl::Status ValidateKeyAndVersion(const HpkePublicKey& key,
                                    uint32_t max_key_version) {
-  util::Status status = ValidateVersion(key.version(), max_key_version);
+  absl::Status status = ValidateVersion(key.version(), max_key_version);
   if (!status.ok()) return status;
   if (!key.has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Missing HPKE key params.");
   }
   return ValidateParams(key.params());

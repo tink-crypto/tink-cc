@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended Hybrid Encryption primitive wrappers and key managers to
 // `config`, used to generate primitives.
-util::Status AddHybridV0(Configuration& config);
+absl::Status AddHybridV0(Configuration& config);
 
 }  // namespace internal
 }  // namespace tink

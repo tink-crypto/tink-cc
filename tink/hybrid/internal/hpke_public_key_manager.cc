@@ -25,7 +25,7 @@ namespace internal {
 
 using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 
-util::Status HpkePublicKeyManager::ValidateKey(
+absl::Status HpkePublicKeyManager::ValidateKey(
     const HpkePublicKeyProto& key) const {
   return ValidateKeyAndVersion(key, get_version());
 }

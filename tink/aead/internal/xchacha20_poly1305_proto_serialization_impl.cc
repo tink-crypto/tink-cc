@@ -16,16 +16,18 @@
 
 #include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -33,26 +35,22 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/tink.pb.h"
-#include "proto/xchacha20_poly1305.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::ProtoParser;
+using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretProto;
-using ::google::crypto::tink::OutputPrefixType;
-using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
 
 using XChaCha20Poly1305ProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -67,139 +65,175 @@ using XChaCha20Poly1305ProtoKeySerializerImpl =
     internal::KeySerializerImpl<XChaCha20Poly1305Key,
                                 internal::ProtoKeySerialization>;
 
+struct XChaCha20Poly1305KeyFormatStruct {
+  uint32_t version;
+
+  static const ProtoParser<XChaCha20Poly1305KeyFormatStruct>& GetParser() {
+    static const absl::NoDestructor<
+        ProtoParser<XChaCha20Poly1305KeyFormatStruct>>
+        parser(
+            ProtoParserBuilder<XChaCha20Poly1305KeyFormatStruct>()
+                .AddUint32Field(1, &XChaCha20Poly1305KeyFormatStruct::version)
+                .BuildOrDie());
+    return *parser;
+  }
+};
+
+struct XChaCha20Poly1305KeyStruct {
+  uint32_t version;
+  util::SecretData key_value;
+
+  static const ProtoParser<XChaCha20Poly1305KeyStruct>& GetParser() {
+    static const absl::NoDestructor<ProtoParser<XChaCha20Poly1305KeyStruct>>
+        parser(ProtoParserBuilder<XChaCha20Poly1305KeyStruct>()
+                   .AddUint32Field(1, &XChaCha20Poly1305KeyStruct::version)
+                   .AddBytesSecretDataField(
+                       3, &XChaCha20Poly1305KeyStruct::key_value)
+                   .BuildOrDie());
+    return *parser;
+  }
+};
+
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key";
 
-util::StatusOr<XChaCha20Poly1305Parameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<XChaCha20Poly1305Parameters::Variant> ToVariant(
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return XChaCha20Poly1305Parameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return XChaCha20Poly1305Parameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return XChaCha20Poly1305Parameters::Variant::kTink;
     default:
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
+      return absl::InvalidArgumentError(
           "Could not determine XChaCha20Poly1305Parameters::Variant");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     XChaCha20Poly1305Parameters::Variant variant) {
   switch (variant) {
     case XChaCha20Poly1305Parameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case XChaCha20Poly1305Parameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case XChaCha20Poly1305Parameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<XChaCha20Poly1305Parameters> ParseParameters(
+absl::StatusOr<XChaCha20Poly1305Parameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+  const KeyTemplateStruct& template_struct =
+      serialization.GetKeyTemplateStruct();
+  if (template_struct.type_url != kTypeUrl) {
+    return absl::InvalidArgumentError(
         "Wrong type URL when parsing XChaCha20Poly1305Parameters.");
   }
-
-  XChaCha20Poly1305KeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse XChaCha20Poly1305KeyFormat proto");
+  absl::StatusOr<XChaCha20Poly1305KeyFormatStruct> proto_key_format =
+      XChaCha20Poly1305KeyFormatStruct::GetParser().Parse(
+          template_struct.value);
+  if (!proto_key_format.ok()) {
+    return proto_key_format.status();
   }
-  if (proto_key_format.version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+  if (proto_key_format->version != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<XChaCha20Poly1305Parameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
+  absl::StatusOr<XChaCha20Poly1305Parameters::Variant> variant =
+      ToVariant(template_struct.output_prefix_type);
   if (!variant.ok()) return variant.status();
 
   return XChaCha20Poly1305Parameters::Create(*variant);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const XChaCha20Poly1305Parameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  XChaCha20Poly1305KeyFormat proto_key_format;
-  proto_key_format.set_version(0);
+  XChaCha20Poly1305KeyFormatStruct proto_key_format;
+  proto_key_format.version = 0;
+
+  absl::StatusOr<std::string> serialized_proto =
+      XChaCha20Poly1305KeyFormatStruct::GetParser().SerializeIntoString(
+          proto_key_format);
+  if (!serialized_proto.ok()) {
+    return serialized_proto.status();
+  }
 
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
+      kTypeUrl, *output_prefix_type, *serialized_proto);
 }
 
-util::StatusOr<XChaCha20Poly1305Key> ParseKey(
+absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing XChaCha20Poly1305Key.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing XChaCha20Poly1305Key.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
-  }
-  util::StatusOr<SecretProto<google::crypto::tink::XChaCha20Poly1305Key>>
-      proto_key = SecretProto<google::crypto::tink::XChaCha20Poly1305Key>::
-          ParseFromSecretData(serialization.SerializedKeyProto().Get(*token));
-  if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse XChaCha20Poly1305Key proto");
-  }
-  if ((*proto_key)->version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  util::StatusOr<XChaCha20Poly1305Parameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
-  if (!variant.ok()) return variant.status();
+  absl::StatusOr<XChaCha20Poly1305KeyStruct> key =
+      XChaCha20Poly1305KeyStruct::GetParser().Parse(
+          serialization.SerializedKeyProto().GetSecret(*token));
+  if (!key.ok()) {
+    return absl::InvalidArgumentError(
+        "Failed to parse XChaCha20Poly1305Key proto");
+  }
+  if (key->version != 0) {
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
+  }
 
-  util::StatusOr<XChaCha20Poly1305Parameters> parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  if (!variant.ok()) {
+    return variant.status();
+  }
+
+  absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
       XChaCha20Poly1305Parameters::Create(*variant);
   if (!parameters.ok()) return parameters.status();
 
   return XChaCha20Poly1305Key::Create(
-      parameters->GetVariant(),
-      RestrictedData((*proto_key)->key_value(), *token),
+      parameters->GetVariant(), RestrictedData(key->key_value, *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     const XChaCha20Poly1305Key& key,
     absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  SecretProto<google::crypto::tink::XChaCha20Poly1305Key> proto_key;
-  proto_key->set_version(0);
-  internal::CallWithCoreDumpProtection(
-      [&]() { proto_key->set_key_value(restricted_input->GetSecret(*token)); });
+  XChaCha20Poly1305KeyStruct proto_key;
+  proto_key.version = 0;
+  proto_key.key_value = restricted_input->Get(*token);
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
-  if (!output_prefix_type.ok()) return output_prefix_type.status();
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
 
-  util::StatusOr<SecretData> serialized_key = proto_key.SerializeAsSecretData();
+  absl::StatusOr<SecretData> serialized_key =
+      XChaCha20Poly1305KeyStruct::GetParser().SerializeIntoSecretData(
+          proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();
   }
@@ -207,7 +241,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
       RestrictedData(*std::move(serialized_key), *token);
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 
@@ -239,9 +273,9 @@ XChaCha20Poly1305ProtoKeySerializerImpl* XChaCha20Poly1305ProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterXChaCha20Poly1305ProtoSerializationWithMutableRegistry(
+absl::Status RegisterXChaCha20Poly1305ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status = registry.RegisterParametersParser(
+  absl::Status status = registry.RegisterParametersParser(
       XChaCha20Poly1305ProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -261,9 +295,9 @@ util::Status RegisterXChaCha20Poly1305ProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(XChaCha20Poly1305ProtoKeySerializer());
 }
 
-util::Status RegisterXChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
+absl::Status RegisterXChaCha20Poly1305ProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status = builder.RegisterParametersParser(
+  absl::Status status = builder.RegisterParametersParser(
       XChaCha20Poly1305ProtoParametersParser());
   if (!status.ok()) {
     return status;

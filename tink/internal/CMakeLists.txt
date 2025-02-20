@@ -1982,3 +1982,9 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME common_proto_enums
+  SRCS
+    common_proto_enums.h
+)

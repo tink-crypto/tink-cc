@@ -2057,3 +2057,9 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "common_proto_enums",
+    hdrs = ["common_proto_enums.h"],
+    include_prefix = "tink/internal",
+)

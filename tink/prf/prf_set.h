@@ -59,7 +59,7 @@ class Prf {
   // a probability less than 1:2^32. When in doubt, request a security review.
   // Returns a non ok status if the algorithm fails or if the output of
   // algorithm is less than outputLength.
-  virtual util::StatusOr<std::string> Compute(absl::string_view input,
+  virtual absl::StatusOr<std::string> Compute(absl::string_view input,
                                               size_t output_length) const = 0;
 };
 
@@ -77,7 +77,7 @@ class PrfSet {
   virtual const std::map<uint32_t, Prf*>& GetPrfs() const = 0;
   // Convenience method to compute the primary PRF on a given input.
   // See PRF.compute for details of the parameters.
-  util::StatusOr<std::string> ComputePrimary(absl::string_view input,
+  absl::StatusOr<std::string> ComputePrimary(absl::string_view input,
                                              size_t output_length) const;
 };
 

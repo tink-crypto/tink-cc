@@ -123,7 +123,7 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               PrfKeyTemplates::AesCmac());
@@ -134,7 +134,7 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoParamsSerializationRegistered) {
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<AesCmacPrfParameters> parameters =
+  absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
   ASSERT_THAT(parameters, IsOk());
 
@@ -162,7 +162,7 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::AesCmac(),
                                 KeyGenConfigPrfV0());
   ASSERT_THAT(before_handle, IsOk());
@@ -172,7 +172,7 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoKeySerializationRegistered) {
                   (*before_handle)->GetPrimary().GetKey().get()),
               NotNull());
 
-  util::StatusOr<AesCmacPrfKey> key =
+  absl::StatusOr<AesCmacPrfKey> key =
       AesCmacPrfKey::Create(RestrictedData(subtle::Random::GetRandomBytes(32),
                                            InsecureSecretKeyAccess::Get()),
                             GetPartialKeyAccess());
@@ -188,7 +188,7 @@ TEST_F(PrfConfigTest, AesCmacPrfProtoKeySerializationRegistered) {
 
   ASSERT_THAT(PrfConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::AesCmac(),
                                 KeyGenConfigPrfV0());
   ASSERT_THAT(after_handle, IsOk());
@@ -209,7 +209,7 @@ TEST_F(PrfConfigTest, HmacPrfProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               PrfKeyTemplates::HmacSha256());
@@ -220,7 +220,7 @@ TEST_F(PrfConfigTest, HmacPrfProtoParamsSerializationRegistered) {
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
@@ -248,7 +248,7 @@ TEST_F(PrfConfigTest, HmacPrfProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HmacSha256(),
                                 KeyGenConfigPrfV0());
   ASSERT_THAT(before_handle, IsOk());
@@ -258,10 +258,10 @@ TEST_F(PrfConfigTest, HmacPrfProtoKeySerializationRegistered) {
                   (*before_handle)->GetPrimary().GetKey().get()),
               NotNull());
 
-  util::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HmacPrfKey> key =
+  absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters,
                          RestrictedData(subtle::Random::GetRandomBytes(32),
                                         InsecureSecretKeyAccess::Get()),
@@ -278,7 +278,7 @@ TEST_F(PrfConfigTest, HmacPrfProtoKeySerializationRegistered) {
 
   ASSERT_THAT(PrfConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HmacSha256(),
                                 KeyGenConfigPrfV0());
   ASSERT_THAT(after_handle, IsOk());
@@ -299,7 +299,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoParamsSerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization>
+  absl::StatusOr<internal::ProtoParametersSerialization>
       proto_params_serialization =
           internal::ProtoParametersSerialization::Create(
               PrfKeyTemplates::HkdfSha256());
@@ -310,7 +310,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoParamsSerializationRegistered) {
                   .status(),
               StatusIs(absl::StatusCode::kNotFound));
 
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
@@ -339,7 +339,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> before_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HkdfSha256(),
                                 KeyGenConfigPrfV0());
   ASSERT_THAT(before_handle, IsOk());
@@ -349,11 +349,11 @@ TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
                   (*before_handle)->GetPrimary().GetKey().get()),
               NotNull());
 
-  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+  absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HkdfPrfKey> key =
+  absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters,
                          RestrictedData(subtle::Random::GetRandomBytes(32),
                                         InsecureSecretKeyAccess::Get()),
@@ -370,7 +370,7 @@ TEST_F(PrfConfigTest, HkdfPrfProtoKeySerializationRegistered) {
 
   ASSERT_THAT(PrfConfig::Register(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> after_handle =
       KeysetHandle::GenerateNew(PrfKeyTemplates::HkdfSha256(),
                                 KeyGenConfigPrfV0());
   ASSERT_THAT(after_handle, IsOk());

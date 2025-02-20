@@ -51,7 +51,7 @@ using ::testing::StrEq;
 using ::testing::UnorderedElementsAre;
 
 class DummyPrf : public Prf {
-  util::StatusOr<std::string> Compute(absl::string_view input,
+  absl::StatusOr<std::string> Compute(absl::string_view input,
                                       size_t output_length) const override {
     return std::string("DummyPRF");
   }

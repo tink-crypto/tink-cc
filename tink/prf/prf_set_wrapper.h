@@ -33,7 +33,7 @@ namespace tink {
 // the provided PRFs.
 class PrfSetWrapper : public PrimitiveWrapper<Prf, PrfSet> {
  public:
-  util::StatusOr<std::unique_ptr<PrfSet>> Wrap(
+  absl::StatusOr<std::unique_ptr<PrfSet>> Wrap(
       std::unique_ptr<PrimitiveSet<Prf>> prf_set) const override;
 };
 

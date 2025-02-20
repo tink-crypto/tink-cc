@@ -47,7 +47,7 @@ using ::crypto::tink::test::IsOkAndHolds;
 TEST(DeterministicAeadV0Test, PrimitiveWrapper) {
   Configuration config;
   ASSERT_THAT(AddDeterministicAeadV0(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore *> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -57,13 +57,13 @@ TEST(DeterministicAeadV0Test, PrimitiveWrapper) {
 TEST(DeterministicAeadV0Test, KeyManager) {
   Configuration config;
   ASSERT_THAT(AddDeterministicAeadV0(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore *> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddDeterministicAeadKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -78,17 +78,17 @@ TEST(DeterministicAeadV0Test, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddDeterministicAeadV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(DeterministicAeadKeyTemplates::Aes256Siv(),
                                 key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<DeterministicAead>> daead =
+  absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       (*handle)->GetPrimitive<DeterministicAead>(config);
   ASSERT_THAT(daead, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*daead)->EncryptDeterministically(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*daead)->DecryptDeterministically(*ciphertext, "ad"),

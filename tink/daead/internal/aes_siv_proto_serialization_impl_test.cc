@@ -113,13 +113,13 @@ TEST_P(AesSivProtoSerializationTest, ParseParametersWithMutableRegistry) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(test_case.key_size);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), test_case.id.has_value());
@@ -142,13 +142,13 @@ TEST_P(AesSivProtoSerializationTest, ParseParametersWithRegistryBuilder) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(test_case.key_size);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kTypeUrl, test_case.output_prefix_type,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   ASSERT_THAT(params, IsOk());
   EXPECT_THAT((*params)->HasIdRequirement(), test_case.id.has_value());
@@ -169,12 +169,12 @@ TEST_F(AesSivProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(64);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixType::RAW,
                                            "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -188,13 +188,13 @@ TEST_F(AesSivProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   key_format_proto.set_version(0);
   key_format_proto.set_key_size(64);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -208,13 +208,13 @@ TEST_F(AesSivProtoSerializationTest, ParseParametersWithInvalidVersion) {
   key_format_proto.set_version(1);
   key_format_proto.set_key_size(64);
 
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           kTypeUrl, OutputPrefixType::RAW,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -225,11 +225,11 @@ TEST_P(AesSivProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   ASSERT_THAT(RegisterAesSivProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<AesSivParameters> parameters =
+  absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
@@ -255,11 +255,11 @@ TEST_P(AesSivProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<AesSivParameters> parameters =
+  absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
@@ -291,24 +291,24 @@ TEST_P(AesSivProtoSerializationTest, ParseKeyWithMutableRegistry) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<AesSivParameters> expected_parameters =
+  absl::StatusOr<AesSivParameters> expected_parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<AesSivKey> expected_key = AesSivKey::Create(
+  absl::StatusOr<AesSivKey> expected_key = AesSivKey::Create(
       *expected_parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
@@ -331,24 +331,24 @@ TEST_P(AesSivProtoSerializationTest, ParseKeyWithRegistryBuilder) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT((*key)->GetIdRequirement(), Eq(test_case.id));
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id.has_value());
 
-  util::StatusOr<AesSivParameters> expected_parameters =
+  absl::StatusOr<AesSivParameters> expected_parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
-  util::StatusOr<AesSivKey> expected_key = AesSivKey::Create(
+  absl::StatusOr<AesSivKey> expected_key = AesSivKey::Create(
       *expected_parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
@@ -369,13 +369,13 @@ TEST_F(AesSivProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           kTypeUrl, serialized_key, KeyData::SYMMETRIC,
           OutputPrefixType::LEGACY, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(key, IsOk());
 
@@ -393,13 +393,13 @@ TEST_F(AesSivProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   RestrictedData serialized_key =
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -416,13 +416,13 @@ TEST_F(AesSivProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -439,13 +439,13 @@ TEST_F(AesSivProtoSerializationTest, ParseKeyWithInvalidVersion) {
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
                                     KeyData::SYMMETRIC, OutputPrefixType::TINK,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -456,18 +456,18 @@ TEST_P(AesSivProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   ASSERT_THAT(RegisterAesSivProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<AesSivParameters> parameters =
+  absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
-  util::StatusOr<AesSivKey> key = AesSivKey::Create(
+  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
           *key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization, IsOk());
@@ -497,18 +497,18 @@ TEST_P(AesSivProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
               IsOk());
   SerializationRegistry registry = std::move(builder).Build();
 
-  util::StatusOr<AesSivParameters> parameters =
+  absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(test_case.key_size, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(test_case.key_size);
-  util::StatusOr<AesSivKey> key = AesSivKey::Create(
+  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       test_case.id, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(
           *key, InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialization, IsOk());
@@ -536,18 +536,18 @@ TEST_F(AesSivProtoSerializationTest, SerializeKeyNoSecretKeyAccess) {
   ASSERT_THAT(RegisterAesSivProtoSerializationWithMutableRegistry(registry),
               IsOk());
 
-  util::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
+  absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
   std::string raw_key_bytes = Random::GetRandomBytes(64);
-  util::StatusOr<AesSivKey> key = AesSivKey::Create(
+  absl::StatusOr<AesSivKey> key = AesSivKey::Create(
       *parameters,
       RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeKey<ProtoKeySerialization>(*key, absl::nullopt);
   EXPECT_THAT(serialization.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));

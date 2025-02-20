@@ -30,13 +30,11 @@ namespace tink {
 class KeysetReader {
  public:
   // Reads and returns a (cleartext) Keyset object from the underlying source.
-  virtual crypto::tink::util::StatusOr<
-   std::unique_ptr<google::crypto::tink::Keyset>>
+  virtual absl::StatusOr<std::unique_ptr<google::crypto::tink::Keyset>>
   Read() = 0;
 
   // Reads and returns an EncryptedKeyset object from the underlying source.
-  virtual crypto::tink::util::StatusOr<
-    std::unique_ptr<google::crypto::tink::EncryptedKeyset>>
+  virtual absl::StatusOr<std::unique_ptr<google::crypto::tink::EncryptedKeyset>>
   ReadEncrypted() = 0;
 
   virtual ~KeysetReader() = default;

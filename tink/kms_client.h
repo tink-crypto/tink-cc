@@ -35,8 +35,8 @@ class KmsClient {
 
   // Returns an Aead-primitive backed by KMS key specified by 'key_uri',
   // provided that this KmsClient does support 'key_uri'.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<Aead>>
-  GetAead(absl::string_view key_uri) const = 0;
+  virtual absl::StatusOr<std::unique_ptr<Aead>> GetAead(
+      absl::string_view key_uri) const = 0;
 
   virtual ~KmsClient() = default;
 };

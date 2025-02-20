@@ -109,10 +109,9 @@ cc_library(
     deps = [
         ":common_enums",
         "//tink/internal:ec_util",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@boringssl//:crypto",
         "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status:statusor",
     ],
 )
 
@@ -732,7 +731,6 @@ cc_library(
         "//tink/internal:ssl_unique_ptr",
         "//tink/internal:util",
         "//tink/util:secret_data",
-        "//tink/util:status",
         "//tink/util:statusor",
         "@boringssl//:crypto",
         "@com_google_absl//absl/base:core_headers",

@@ -99,10 +99,9 @@ tink_cc_library(
   DEPS
     tink::subtle::common_enums
     absl::core_headers
+    absl::statusor
     crypto
     tink::internal::ec_util
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -698,7 +697,6 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 

@@ -33,7 +33,7 @@ namespace tink {
 
 namespace internal {
 template <class P>
-using KeyCreatorFn = absl::AnyInvocable<util::StatusOr<std::unique_ptr<Key>>(
+using KeyCreatorFn = absl::AnyInvocable<absl::StatusOr<std::unique_ptr<Key>>(
     const P&, absl::optional<int>) const>;
 using KeyCreatorFnMap =
     absl::flat_hash_map<std::type_index, KeyCreatorFn<Parameters>>;

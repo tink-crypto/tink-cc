@@ -232,7 +232,7 @@ TEST(JsonKeysetWriterTest, ReadValidEncryptedKeyset) {
   util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
       JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer, IsOk());
-  util::Status status = (*writer)->Write(encrypted_keyset);
+  absl::Status status = (*writer)->Write(encrypted_keyset);
   ASSERT_THAT(status, IsOk());
   std::string json_serialized_encrypted_keyset = buffer.str();
   util::StatusOr<std::unique_ptr<KeysetReader>> reader =
@@ -266,7 +266,7 @@ TEST(JsonKeysetWriterTest, ReadValidEncryptedKeysetWithoutKeysetInfo) {
   util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
       JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer, IsOk());
-  util::Status status = (*writer)->Write(encrypted_keyset);
+  absl::Status status = (*writer)->Write(encrypted_keyset);
   ASSERT_THAT(status, IsOk());
   std::string json_serialized_encrypted_keyset = buffer.str();
 
@@ -300,7 +300,7 @@ TEST(JsonKeysetWriterTest, WrongAeadCannotReadEncryptedKeyset) {
   util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
       JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer, IsOk());
-  util::Status status = (*writer)->Write(encrypted_keyset);
+  absl::Status status = (*writer)->Write(encrypted_keyset);
   ASSERT_THAT(status, IsOk());
   std::string json_serialized_encrypted_keyset = buffer.str();
 
@@ -326,7 +326,7 @@ TEST(JsonKeysetWriterTest, CiphertextDoesNotContainKeyset) {
   util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
       JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer, IsOk());
-  util::Status status = (*writer)->Write(encrypted_keyset);
+  absl::Status status = (*writer)->Write(encrypted_keyset);
   ASSERT_THAT(status, IsOk());
   std::string json_serialized_encrypted_keyset = buffer.str();
 
@@ -348,7 +348,7 @@ TEST(JsonKeysetWriterTest, InvalidCiphertextInEncryptedKeyset) {
   util::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
       JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer, IsOk());
-  util::Status status = (*writer)->Write(encrypted_keyset);
+  absl::Status status = (*writer)->Write(encrypted_keyset);
   ASSERT_THAT(status, IsOk());
   std::string json_serialized_encrypted_keyset = buffer.str();
 
@@ -417,7 +417,7 @@ TEST(JsonKeysetWriterTest, WriteEncryptedKeysetWithNullWriter) {
 
   DummyAead aead("dummy aead 42");
 
-  util::Status write_status = (*keyset_handle)->Write(nullptr, aead);
+  absl::Status write_status = (*keyset_handle)->Write(nullptr, aead);
   EXPECT_THAT(write_status, Not(IsOk()));
 }
 

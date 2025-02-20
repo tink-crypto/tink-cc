@@ -38,11 +38,11 @@ class JsonKeysetWriter : public KeysetWriter {
   static crypto::tink::util::StatusOr<std::unique_ptr<JsonKeysetWriter>> New(
       std::unique_ptr<std::ostream> destination_stream);
 
-  crypto::tink::util::Status
-  Write(const google::crypto::tink::Keyset& keyset) override;;
+  absl::Status Write(const google::crypto::tink::Keyset& keyset) override;
+  ;
 
-  crypto::tink::util::Status
-  Write(const google::crypto::tink::EncryptedKeyset& encrypted_keyset) override;
+  absl::Status Write(
+      const google::crypto::tink::EncryptedKeyset& encrypted_keyset) override;
 
  private:
   explicit JsonKeysetWriter(std::unique_ptr<std::ostream> destination_stream)

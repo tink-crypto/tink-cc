@@ -68,13 +68,13 @@ util::StatusOr<std::string> ToJsonString(const EncryptedKeyset& keyset) {
   return output;
 }
 
-util::Status WriteData(absl::string_view data, std::ostream* destination) {
+absl::Status WriteData(absl::string_view data, std::ostream* destination) {
   (*destination) << data;
   if (destination->fail()) {
-    return util::Status(absl::StatusCode::kUnknown,
-                            "Error writing to the destination stream.");
+    return absl::Status(absl::StatusCode::kUnknown,
+                        "Error writing to the destination stream.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // anonymous namespace
@@ -84,7 +84,7 @@ util::Status WriteData(absl::string_view data, std::ostream* destination) {
 util::StatusOr<std::unique_ptr<JsonKeysetWriter>> JsonKeysetWriter::New(
     std::unique_ptr<std::ostream> destination_stream) {
   if (destination_stream == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "destination_stream must be non-null.");
   }
   std::unique_ptr<JsonKeysetWriter> writer(
@@ -92,14 +92,13 @@ util::StatusOr<std::unique_ptr<JsonKeysetWriter>> JsonKeysetWriter::New(
   return std::move(writer);
 }
 
-util::Status JsonKeysetWriter::Write(const Keyset& keyset) {
+absl::Status JsonKeysetWriter::Write(const Keyset& keyset) {
   auto json_string_result = ToJsonString(keyset);
   if (!json_string_result.ok()) return json_string_result.status();
   return WriteData(json_string_result.value(), destination_stream_.get());
 }
 
-util::Status JsonKeysetWriter::Write(
-    const EncryptedKeyset& encrypted_keyset) {
+absl::Status JsonKeysetWriter::Write(const EncryptedKeyset& encrypted_keyset) {
   auto json_string_result = ToJsonString(encrypted_keyset);
   if (!json_string_result.ok()) return json_string_result.status();
   return WriteData(json_string_result.value(), destination_stream_.get());

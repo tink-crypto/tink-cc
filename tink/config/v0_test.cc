@@ -71,7 +71,7 @@ using ::testing::TestWithParam;
 using ::testing::Values;
 
 TEST(V0Test, PrimitiveWrappers) {
-  util::StatusOr<const internal::KeysetWrapperStore*> store =
+  absl::StatusOr<const internal::KeysetWrapperStore *> store =
       internal::ConfigurationImpl::GetKeysetWrapperStore(ConfigV0());
   ASSERT_THAT(store, IsOk());
 
@@ -88,7 +88,7 @@ TEST(V0Test, PrimitiveWrappers) {
 }
 
 using V0KeyTypesTest =
-    TestWithParam<util::StatusOr<const internal::KeyTypeInfoStore*>>;
+    TestWithParam<absl::StatusOr<const internal::KeyTypeInfoStore *>>;
 
 INSTANTIATE_TEST_SUITE_P(
     V0KeyTypesTestSuite, V0KeyTypesTest,
@@ -132,18 +132,18 @@ TEST_P(V0KeyTypesTest, KeyManagers) {
 }
 
 TEST(V0Test, GetPrimitive) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                 KeyGenConfigV0());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<Aead>(ConfigV0());
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";
   std::string ad = "ad";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, ad);
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, ad);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, ad), IsOkAndHolds(plaintext));
 }

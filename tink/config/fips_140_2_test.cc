@@ -64,7 +64,7 @@ TEST_F(Fips1402Test, PrimitiveWrappers) {
     GTEST_SKIP() << "Only test in FIPS mode";
   }
 
-  util::StatusOr<const internal::KeysetWrapperStore*> store =
+  absl::StatusOr<const internal::KeysetWrapperStore *> store =
       internal::ConfigurationImpl::GetKeysetWrapperStore(ConfigFips140_2());
   ASSERT_THAT(store, IsOk());
 
@@ -81,7 +81,7 @@ TEST_F(Fips1402Test, KeyManagers) {
     GTEST_SKIP() << "Only test in FIPS mode";
   }
 
-  util::StatusOr<const internal::KeyTypeInfoStore*> store =
+  absl::StatusOr<const internal::KeyTypeInfoStore *> store =
       internal::ConfigurationImpl::GetKeyTypeInfoStore(ConfigFips140_2());
   ASSERT_THAT(store, IsOk());
 
@@ -110,7 +110,7 @@ TEST_F(Fips1402Test, NonFipsTypeNotPresent) {
     GTEST_SKIP() << "Only test in FIPS mode";
   }
 
-  util::StatusOr<const internal::KeyTypeInfoStore*> store =
+  absl::StatusOr<const internal::KeyTypeInfoStore *> store =
       internal::ConfigurationImpl::GetKeyTypeInfoStore(ConfigFips140_2());
   ASSERT_THAT(store, IsOk());
   EXPECT_THAT((*store)->Get(AesCmacKeyManager().get_key_type()).status(),
@@ -122,18 +122,18 @@ TEST_F(Fips1402Test, GetPrimitive) {
     GTEST_SKIP() << "Only test in FIPS mode";
   }
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                 KeyGenConfigFips140_2());
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<Aead>(ConfigFips140_2());
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";
   std::string ad = "ad";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, ad);
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, ad);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, ad), IsOkAndHolds(plaintext));
 }

@@ -52,7 +52,7 @@ TEST_F(KeyGenFips1402Test, KeyManagers) {
     GTEST_SKIP() << "Only test in FIPS mode";
   }
 
-  util::StatusOr<const internal::KeyTypeInfoStore*> store =
+  absl::StatusOr<const internal::KeyTypeInfoStore *> store =
       internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(
           KeyGenConfigFips140_2());
   ASSERT_THAT(store, IsOk());
@@ -83,7 +83,7 @@ TEST_F(KeyGenFips1402Test, NonFipsTypeNotPresent) {
     GTEST_SKIP() << "Only test in FIPS mode";
   }
 
-  util::StatusOr<const internal::KeyTypeInfoStore*> store =
+  absl::StatusOr<const internal::KeyTypeInfoStore *> store =
       internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(
           KeyGenConfigFips140_2());
   ASSERT_THAT(store, IsOk());

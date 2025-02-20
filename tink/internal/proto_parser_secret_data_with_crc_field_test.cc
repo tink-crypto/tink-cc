@@ -40,8 +40,6 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretValue;
 using ::testing::Eq;
-using ::testing::IsFalse;
-using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Test;
 

@@ -23,7 +23,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for JWT ECDSA parameters and keys.
-crypto::tink::util::Status RegisterJwtEcdsaProtoSerialization();
+absl::Status RegisterJwtEcdsaProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers JwtMac primitive wrapper and key managers for all JwtMac key
 // types from the current Tink release.
-crypto::tink::util::Status JwtMacRegister();
+absl::Status JwtMacRegister();
 
 }  // namespace tink
 }  // namespace crypto

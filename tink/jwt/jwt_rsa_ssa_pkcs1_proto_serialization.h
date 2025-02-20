@@ -24,7 +24,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for JWT RSASSA-PKCS1 parameters and
 // keys.
-crypto::tink::util::Status RegisterJwtRsaSsaPkcs1ProtoSerialization();
+absl::Status RegisterJwtRsaSsaPkcs1ProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

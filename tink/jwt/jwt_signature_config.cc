@@ -38,7 +38,7 @@ namespace crypto {
 namespace tink {
 
 // static
-util::Status JwtSignatureRegister() {
+absl::Status JwtSignatureRegister() {
   // Register primitive wrappers.
   auto status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<jwt_internal::JwtPublicKeySignWrapper>());
@@ -92,12 +92,12 @@ util::Status JwtSignatureRegister() {
   }
 
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // There are currently no non-FIPS key managers.
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

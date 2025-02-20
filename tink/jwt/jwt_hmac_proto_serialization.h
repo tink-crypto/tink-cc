@@ -23,7 +23,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for JWT HMAC parameters and keys.
-crypto::tink::util::Status RegisterJwtHmacProtoSerialization();
+absl::Status RegisterJwtHmacProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

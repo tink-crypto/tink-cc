@@ -27,7 +27,7 @@ namespace tink {
 // Registers JwtPublicKeySign and JwtPublicKeyVerify primitive wrapper and key
 // managers for all JwtPublicKeySign and JwtPublicKeyVerify key types from the
 // current Tink release.
-crypto::tink::util::Status JwtSignatureRegister();
+absl::Status JwtSignatureRegister();
 
 }  // namespace tink
 }  // namespace crypto

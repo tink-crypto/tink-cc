@@ -67,7 +67,7 @@ StatusOr<HmacKeyProto> HmacKeyManager::CreateKey(
 
 StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
     const HmacKeyFormat& hmac_key_format, InputStream* input_stream) const {
-  crypto::tink::util::Status status =
+  absl::Status status =
       ValidateVersion(hmac_key_format.version(), get_version());
   if (!status.ok()) return status;
 
@@ -75,7 +75,7 @@ StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
       ReadBytesFromStream(hmac_key_format.key_size(), input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Could not get enough pseudorandomness from input stream");
     }
@@ -112,14 +112,14 @@ Status HmacKeyManager::ValidateParams(const HmacParams& params) const {
           params.tag_size(), Enums::HashName(params.hash()));
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 Status HmacKeyManager::ValidateKey(const HmacKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < kMinKeySizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid HmacKey: key_value is too short.");
   }
   return ValidateParams(key.params());
@@ -129,7 +129,7 @@ Status HmacKeyManager::ValidateKey(const HmacKeyProto& key) const {
 Status HmacKeyManager::ValidateKeyFormat(
     const HmacKeyFormat& key_format) const {
   if (key_format.key_size() < kMinKeySizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid HmacKeyFormat: key_size is too small.");
   }
   return ValidateParams(key_format.params());

@@ -37,10 +37,10 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::Status ValidateTagSizeBytes(int cryptographic_tag_size_in_bytes,
+absl::Status ValidateTagSizeBytes(int cryptographic_tag_size_in_bytes,
                                   HmacParameters::HashType hash_type) {
   if (cryptographic_tag_size_in_bytes < 10) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Tag size should be at least 10 bytes, got ",
                      cryptographic_tag_size_in_bytes, " bytes."));
@@ -52,18 +52,18 @@ util::Status ValidateTagSizeBytes(int cryptographic_tag_size_in_bytes,
       {HmacParameters::HashType::kSha384, 48},
       {HmacParameters::HashType::kSha512, 64}};
   if (max_tag_size.find(hash_type) == max_tag_size.end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Cannot create HMAC parameters with given hash type. ",
                      hash_type, " not supported."));
   }
   if (cryptographic_tag_size_in_bytes > max_tag_size[hash_type]) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Tag size is too big for given ", hash_type, " , got ",
                      cryptographic_tag_size_in_bytes, " bytes."));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -72,18 +72,18 @@ util::StatusOr<HmacParameters> HmacParameters::Create(
     int key_size_in_bytes, int cryptographic_tag_size_in_bytes,
     HashType hash_type, Variant variant) {
   if (key_size_in_bytes < 16) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Key size must be at least 16 bytes, got ",
                                      key_size_in_bytes, " bytes."));
   }
-  util::Status status =
+  absl::Status status =
       ValidateTagSizeBytes(cryptographic_tag_size_in_bytes, hash_type);
   if (!status.ok()) return status;
   static const std::set<Variant>* supported_variants =
       new std::set<Variant>({Variant::kTink, Variant::kCrunchy,
                              Variant::kLegacy, Variant::kNoPrefix});
   if (supported_variants->find(variant) == supported_variants->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create HMAC parameters with unknown variant.");
   }
   return HmacParameters(key_size_in_bytes, cryptographic_tag_size_in_bytes,

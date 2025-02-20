@@ -78,10 +78,10 @@ class HmacKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::HmacKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::HmacKeyFormat& key_format) const override;
 
   crypto::tink::util::StatusOr<google::crypto::tink::HmacKey> CreateKey(
@@ -96,7 +96,7 @@ class HmacKeyManager
   }
 
  private:
-  crypto::tink::util::Status ValidateParams(
+  absl::Status ValidateParams(
       const google::crypto::tink::HmacParams& params) const;
 
   const std::string key_type_ = absl::StrCat(

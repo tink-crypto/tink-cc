@@ -79,25 +79,22 @@ class AesCmacKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesCmacKey& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     if (key.key_value().size() != kKeySizeInBytes) {
-      return crypto::tink::util::Status(
-          absl::StatusCode::kInvalidArgument,
-          "Invalid AesCmacKey: key_value wrong length.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid AesCmacKey: key_value wrong length.");
     }
     return ValidateParams(key.params());
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::AesCmacKeyFormat& key_format) const override {
     if (key_format.key_size() != kKeySizeInBytes) {
-      return crypto::tink::util::Status(
-          absl::StatusCode::kInvalidArgument,
-          "Invalid AesCmacKeyFormat: invalid key_size.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid AesCmacKeyFormat: invalid key_size.");
     }
     return ValidateParams(key_format.params());
   }
@@ -113,19 +110,19 @@ class AesCmacKeyManager
   }
 
  private:
-  crypto::tink::util::Status ValidateParams(
+  absl::Status ValidateParams(
       const google::crypto::tink::AesCmacParams& params) const {
     if (params.tag_size() < kMinTagSizeInBytes) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Invalid AesCmacParams: tag_size ",
                                        params.tag_size(), " is too small."));
     }
     if (params.tag_size() > kMaxTagSizeInBytes) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Invalid AesCmacParams: tag_size ",
                                        params.tag_size(), " is too big."));
     }
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Due to https://www.math.uwaterloo.ca/~ajmeneze/publications/tightness.pdf,

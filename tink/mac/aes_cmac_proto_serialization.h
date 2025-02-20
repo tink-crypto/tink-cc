@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for AES-CMAC parameters and
 // keys into global serialization registry.
-inline crypto::tink::util::Status RegisterAesCmacProtoSerialization() {
+inline absl::Status RegisterAesCmacProtoSerialization() {
   return internal::RegisterAesCmacProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

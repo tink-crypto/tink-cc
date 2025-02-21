@@ -28,6 +28,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -50,25 +51,14 @@ namespace {
 
 using ::crypto::tink::util::SecretData;
 
-bool HashTypeValid(uint32_t c) { return 0 <= c && c <= 5; }
-
-// Enum representing the proto enum `google.crypto.tink.HashType`.
-enum class HashTypeEnum : uint32_t {
-  kUnknownHash = 0,
-  kSha1,
-  kSha384,
-  kSha256,
-  kSha512,
-  kSha224,
-};
-
 struct HmacParamsStruct {
-  HashTypeEnum hash;
+  internal::HashTypeEnum hash;
   uint32_t tag_size;
 
   static internal::ProtoParser<HmacParamsStruct> CreateParser() {
     return internal::ProtoParserBuilder<HmacParamsStruct>()
-        .AddEnumField(1, &HmacParamsStruct::hash, &HashTypeValid)
+        .AddEnumField(1, &HmacParamsStruct::hash,
+                      &internal::HashTypeEnumIsValid)
         .AddUint32Field(2, &HmacParamsStruct::tag_size)
         .BuildOrDie();
   }
@@ -77,7 +67,7 @@ struct HmacParamsStruct {
 struct AesCtrHmacStreamingParamsStruct {
   uint32_t ciphertext_segment_size;
   uint32_t derived_key_size;
-  HashTypeEnum hkdf_hash_type;
+  internal::HashTypeEnum hkdf_hash_type;
   HmacParamsStruct hmac_params;
 
   static internal::ProtoParser<AesCtrHmacStreamingParamsStruct> CreateParser() {
@@ -86,7 +76,7 @@ struct AesCtrHmacStreamingParamsStruct {
             1, &AesCtrHmacStreamingParamsStruct::ciphertext_segment_size)
         .AddUint32Field(2, &AesCtrHmacStreamingParamsStruct::derived_key_size)
         .AddEnumField(3, &AesCtrHmacStreamingParamsStruct::hkdf_hash_type,
-                      &HashTypeValid)
+                      &internal::HashTypeEnumIsValid)
         .AddMessageField(4, &AesCtrHmacStreamingParamsStruct::hmac_params,
                          HmacParamsStruct::CreateParser())
         .BuildOrDie();
@@ -156,28 +146,28 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCtrHmacStreamingKey";
 
 absl::StatusOr<AesCtrHmacStreamingParameters::HashType> FromProtoHashType(
-    HashTypeEnum hash_type) {
+    internal::HashTypeEnum hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha1:
+    case internal::HashTypeEnum::kSha1:
       return AesCtrHmacStreamingParameters::HashType::kSha1;
-    case HashTypeEnum::kSha256:
+    case internal::HashTypeEnum::kSha256:
       return AesCtrHmacStreamingParameters::HashType::kSha256;
-    case HashTypeEnum::kSha512:
+    case internal::HashTypeEnum::kSha512:
       return AesCtrHmacStreamingParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError("Unsupported proto hash type");
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<internal::HashTypeEnum> ToProtoHashType(
     AesCtrHmacStreamingParameters::HashType hash_type) {
   switch (hash_type) {
     case AesCtrHmacStreamingParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return internal::HashTypeEnum::kSha1;
     case AesCtrHmacStreamingParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return internal::HashTypeEnum::kSha256;
     case AesCtrHmacStreamingParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return internal::HashTypeEnum::kSha512;
     default:
       return absl::InvalidArgumentError(
           absl::StrCat("Unsupported hash type: ", hash_type));
@@ -209,12 +199,12 @@ absl::StatusOr<AesCtrHmacStreamingParameters> ToParameters(
 
 absl::StatusOr<AesCtrHmacStreamingParamsStruct> FromParameters(
     const AesCtrHmacStreamingParameters& parameters) {
-  absl::StatusOr<HashTypeEnum> hkdf_hash_type =
+  absl::StatusOr<internal::HashTypeEnum> hkdf_hash_type =
       ToProtoHashType(parameters.HkdfHashType());
   if (!hkdf_hash_type.ok()) {
     return hkdf_hash_type.status();
   }
-  absl::StatusOr<HashTypeEnum> hmac_hash_type =
+  absl::StatusOr<internal::HashTypeEnum> hmac_hash_type =
       ToProtoHashType(parameters.HmacHashType());
   if (!hmac_hash_type.ok()) {
     return hmac_hash_type.status();

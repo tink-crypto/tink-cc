@@ -935,6 +935,7 @@ tink_cc_library(
     tink::core::secret_key_access_token
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
+    tink::internal::common_proto_enums
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry

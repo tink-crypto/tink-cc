@@ -26,6 +26,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -48,22 +49,10 @@ namespace {
 
 using ::crypto::tink::util::SecretData;
 
-bool HashTypeValid(uint32_t c) { return 0 <= c && c <= 5; }
-
-// Enum representing the proto enum `google.crypto.tink.HashType`.
-enum class HashTypeEnum : uint32_t {
-  kUnknownHash = 0,
-  kSha1,
-  kSha384,
-  kSha256,
-  kSha512,
-  kSha224,
-};
-
 struct AesGcmHkdfStreamingParamsStruct {
   uint32_t ciphertext_segment_size;
   uint32_t derived_key_size;
-  HashTypeEnum hkdf_hash_type;
+  internal::HashTypeEnum hkdf_hash_type;
 
   static internal::ProtoParser<AesGcmHkdfStreamingParamsStruct> CreateParser() {
     return internal::ProtoParserBuilder<AesGcmHkdfStreamingParamsStruct>()
@@ -71,7 +60,7 @@ struct AesGcmHkdfStreamingParamsStruct {
             1, &AesGcmHkdfStreamingParamsStruct::ciphertext_segment_size)
         .AddUint32Field(2, &AesGcmHkdfStreamingParamsStruct::derived_key_size)
         .AddEnumField(3, &AesGcmHkdfStreamingParamsStruct::hkdf_hash_type,
-                      &HashTypeValid)
+                      &internal::HashTypeEnumIsValid)
         .BuildOrDie();
   }
 };
@@ -139,13 +128,13 @@ const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesGcmHkdfStreamingKey";
 
 absl::StatusOr<AesGcmHkdfStreamingParameters::HashType> FromProtoHashType(
-    HashTypeEnum hash_type) {
+    internal::HashTypeEnum hash_type) {
   switch (hash_type) {
-    case HashTypeEnum::kSha1:
+    case internal::HashTypeEnum::kSha1:
       return AesGcmHkdfStreamingParameters::HashType::kSha1;
-    case HashTypeEnum::kSha256:
+    case internal::HashTypeEnum::kSha256:
       return AesGcmHkdfStreamingParameters::HashType::kSha256;
-    case HashTypeEnum::kSha512:
+    case internal::HashTypeEnum::kSha512:
       return AesGcmHkdfStreamingParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError(
@@ -153,15 +142,15 @@ absl::StatusOr<AesGcmHkdfStreamingParameters::HashType> FromProtoHashType(
   }
 }
 
-absl::StatusOr<HashTypeEnum> ToProtoHashType(
+absl::StatusOr<internal::HashTypeEnum> ToProtoHashType(
     AesGcmHkdfStreamingParameters::HashType hash_type) {
   switch (hash_type) {
     case AesGcmHkdfStreamingParameters::HashType::kSha1:
-      return HashTypeEnum::kSha1;
+      return internal::HashTypeEnum::kSha1;
     case AesGcmHkdfStreamingParameters::HashType::kSha256:
-      return HashTypeEnum::kSha256;
+      return internal::HashTypeEnum::kSha256;
     case AesGcmHkdfStreamingParameters::HashType::kSha512:
-      return HashTypeEnum::kSha512;
+      return internal::HashTypeEnum::kSha512;
     default:
       return absl::InvalidArgumentError(
           absl::StrCat("Unsupported hash type: ", hash_type));
@@ -186,7 +175,7 @@ absl::StatusOr<AesGcmHkdfStreamingParameters> ToParameters(
 
 absl::StatusOr<AesGcmHkdfStreamingParamsStruct> FromParameters(
     const AesGcmHkdfStreamingParameters& parameters) {
-  absl::StatusOr<HashTypeEnum> hash_type =
+  absl::StatusOr<internal::HashTypeEnum> hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();

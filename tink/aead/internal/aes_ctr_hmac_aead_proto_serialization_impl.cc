@@ -29,6 +29,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -52,18 +53,6 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-
-bool HashTypeValid(uint32_t c) { return 0 <= c && c <= 5; }
-
-// Enum representing the proto enum `google.crypto.tink.HashType`.
-enum class HashTypeEnum : uint32_t {
-  kUnknownHash = 0,
-  kSha1,
-  kSha384,
-  kSha256,
-  kSha512,
-  kSha224,
-};
 
 struct AesCtrParamsStruct {
   uint32_t iv_size;
@@ -94,7 +83,7 @@ struct HmacParamsStruct {
 
   static ProtoParser<HmacParamsStruct> CreateParser() {
     return ProtoParserBuilder<HmacParamsStruct>()
-        .AddEnumField(1, &HmacParamsStruct::hash, &HashTypeValid)
+        .AddEnumField(1, &HmacParamsStruct::hash, &HashTypeEnumIsValid)
         .AddUint32Field(2, &HmacParamsStruct::tag_size)
         .BuildOrDie();
   }

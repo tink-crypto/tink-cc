@@ -283,6 +283,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::internal::common_proto_enums
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -345,6 +346,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::internal::common_proto_enums
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry

@@ -58,7 +58,7 @@ class Cecpq2AeadHkdfDemHelperImpl : public Cecpq2AeadHkdfDemHelper {
       std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
   GetAeadOrDaead(const util::SecretData& seed) const override {
     if (seed.size() < 32) {
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Seed length is smaller than 32 bytes "
                           "and thus not post-quantum secure.");
     }

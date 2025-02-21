@@ -29,7 +29,7 @@
 namespace crypto {
 namespace tink {
 
-util::Status Cecpq2HybridConfigRegister() {
+absl::Status Cecpq2HybridConfigRegister() {
   auto status = AeadConfig::Register();
   if (!status.ok()) return status;
 
@@ -45,7 +45,7 @@ util::Status Cecpq2HybridConfigRegister() {
   // FIPS-validated implementations, therefore none will be registered in
   // FIPS only mode
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Register non-FIPS hybrid-hybrid key managers
@@ -54,7 +54,7 @@ util::Status Cecpq2HybridConfigRegister() {
       absl::make_unique<Cecpq2AeadHkdfPublicKeyManager>(), true);
   if (!status.ok()) return status;
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

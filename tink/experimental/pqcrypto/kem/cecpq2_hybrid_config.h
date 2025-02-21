@@ -36,7 +36,7 @@ namespace tink {
 
 // Registers HybridEncrypt and HybridDecrypt primitive wrappers, and key
 // managers for all implementations of CECPQ2 HybridEncrypt and HybridDecrypt
-crypto::tink::util::Status Cecpq2HybridConfigRegister();
+absl::Status Cecpq2HybridConfigRegister();
 
 }  // namespace tink
 }  // namespace crypto

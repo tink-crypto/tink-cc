@@ -65,7 +65,7 @@ Status Cecpq2AeadHkdfPublicKeyManager::ValidateParams(
     return Status(absl::StatusCode::kInvalidArgument,
                   "Unknown EC point format.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 Status Cecpq2AeadHkdfPublicKeyManager::ValidateKey(

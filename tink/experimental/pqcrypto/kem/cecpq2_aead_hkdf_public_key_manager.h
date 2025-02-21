@@ -62,10 +62,10 @@ class Cecpq2AeadHkdfPublicKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::Cecpq2AeadHkdfPublicKey& key) const override;
 
-  crypto::tink::util::Status ValidateParams(
+  absl::Status ValidateParams(
       const google::crypto::tink::Cecpq2AeadHkdfParams& params) const;
 
  private:

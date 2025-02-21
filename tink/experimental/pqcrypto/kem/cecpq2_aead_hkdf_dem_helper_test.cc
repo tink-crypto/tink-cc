@@ -51,19 +51,19 @@ using ::crypto::tink::util::StatusOr;
 using ::testing::HasSubstr;
 
 // Checks whether Decrypt(Encrypt(message)) == message with the given dem.
-crypto::tink::util::Status EncryptThenDecrypt(
-    const AeadOrDaead& dem, absl::string_view message,
-    absl::string_view associated_data) {
+absl::Status EncryptThenDecrypt(const AeadOrDaead& dem,
+                                absl::string_view message,
+                                absl::string_view associated_data) {
   StatusOr<std::string> encryption_or = dem.Encrypt(message, associated_data);
   if (!encryption_or.status().ok()) return encryption_or.status();
   StatusOr<std::string> decryption_or =
       dem.Decrypt(encryption_or.value(), associated_data);
   if (!decryption_or.status().ok()) return decryption_or.status();
   if (decryption_or.value() != message) {
-    return crypto::tink::util::Status(absl::StatusCode::kInternal,
-                                      "Message/Decryption mismatch");
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Message/Decryption mismatch");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 TEST(Cecpq2AeadHkdfDemHelperTest, InvalidKey) {

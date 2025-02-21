@@ -189,8 +189,7 @@ TEST_F(EcdsaProtoSerializationTest,
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
                   .ParseParameters(*serialization)
                   .status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse EcdsaKeyFormat proto")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(EcdsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {

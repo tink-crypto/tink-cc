@@ -526,6 +526,7 @@ tink_cc_library(
   DEPS
     absl::no_destructor
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -540,14 +541,11 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
+    tink::internal::tink_proto_structs
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::slh_dsa_cc_proto
-    tink::proto::tink_cc_proto
   TAGS
     exclude_if_openssl
 )
@@ -560,6 +558,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     crypto
@@ -576,7 +575,6 @@ tink_cc_test(
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::slh_dsa_cc_proto
     tink::proto::tink_cc_proto
@@ -680,6 +678,7 @@ tink_cc_library(
   DEPS
     absl::no_destructor
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -695,14 +694,11 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::ed25519_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -813,6 +809,7 @@ tink_cc_library(
     tink::core::restricted_data
     tink::core::secret_key_access_token
     tink::internal::bn_encoding_util
+    tink::internal::common_proto_enums
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -822,15 +819,11 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::common_cc_proto
-    tink::proto::ecdsa_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -841,6 +834,7 @@ tink_cc_test(
     tink::signature::internal::ecdsa_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     crypto

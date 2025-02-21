@@ -22,6 +22,7 @@
 
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
@@ -34,6 +35,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -41,10 +43,6 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/ed25519.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -54,8 +52,6 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 
 struct Ed25519KeyFormatStruct {
   uint32_t version;
@@ -130,61 +126,60 @@ const absl::string_view kPublicTypeUrl =
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey";
 
-util::StatusOr<Ed25519Parameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<Ed25519Parameters::Variant> ToVariant(
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       return Ed25519Parameters::Variant::kLegacy;
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return Ed25519Parameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return Ed25519Parameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return Ed25519Parameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine Ed25519Parameters::Variant");
+      return absl::InvalidArgumentError(
+          "Could not determine Ed25519Parameters::Variant");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     Ed25519Parameters::Variant variant) {
   switch (variant) {
     case Ed25519Parameters::Variant::kLegacy:
-      return OutputPrefixType::LEGACY;
+      return OutputPrefixTypeEnum::kLegacy;
     case Ed25519Parameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case Ed25519Parameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case Ed25519Parameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<Ed25519Parameters> ParseParameters(
+absl::StatusOr<Ed25519Parameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing Ed25519Parameters.");
+  const KeyTemplateStruct key_template = serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kPrivateTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing Ed25519Parameters.");
   }
 
-  util::StatusOr<Ed25519KeyFormatStruct> proto_key_format =
-      Ed25519KeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+  absl::StatusOr<Ed25519KeyFormatStruct> proto_key_format =
+      Ed25519KeyFormatStruct::GetParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse Ed25519KeyFormat proto");
   }
   if (proto_key_format->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<Ed25519Parameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplate().output_prefix_type());
+  absl::StatusOr<Ed25519Parameters::Variant> variant =
+      ToVariant(key_template.output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
@@ -192,34 +187,32 @@ util::StatusOr<Ed25519Parameters> ParseParameters(
   return Ed25519Parameters::Create(*variant);
 }
 
-util::StatusOr<Ed25519PublicKey> ParsePublicKey(
+absl::StatusOr<Ed25519PublicKey> ParsePublicKey(
     const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing Ed25519PublicKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing Ed25519PublicKey.");
   }
 
-  util::StatusOr<Ed25519PublicKeyStruct> proto_key =
+  absl::StatusOr<Ed25519PublicKeyStruct> proto_key =
       Ed25519PublicKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(
               InsecureSecretKeyAccess::Get()));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse Ed25519PublicKey proto");
+    return absl::InvalidArgumentError("Failed to parse Ed25519PublicKey proto");
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<Ed25519Parameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+  absl::StatusOr<Ed25519Parameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(*variant);
   if (!parameters.ok()) {
     return parameters.status();
@@ -230,46 +223,44 @@ util::StatusOr<Ed25519PublicKey> ParsePublicKey(
                                   GetPartialKeyAccess());
 }
 
-util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
+absl::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
     const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing Ed25519PrivateKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing Ed25519PrivateKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  util::StatusOr<Ed25519PrivateKeyStruct> proto_key =
+  absl::StatusOr<Ed25519PrivateKeyStruct> proto_key =
       Ed25519PrivateKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse Ed25519PrivateKey proto");
+    return absl::InvalidArgumentError(
+        "Failed to parse Ed25519PrivateKey proto");
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
   if (proto_key->public_key.version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 public keys are accepted.");
+    return absl::InvalidArgumentError(
+        "Only version 0 public keys are accepted.");
   }
 
-  util::StatusOr<Ed25519Parameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+  absl::StatusOr<Ed25519Parameters::Variant> variant = ToVariant(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<Ed25519Parameters> parameters =
+  absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(*variant);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       *parameters, proto_key->public_key.key_value,
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
@@ -281,9 +272,9 @@ util::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
                                    GetPartialKeyAccess());
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const Ed25519Parameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -292,7 +283,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   Ed25519KeyFormatStruct proto_key_format;
   proto_key_format.version = 0;
 
-  util::StatusOr<std::string> serialized =
+  absl::StatusOr<std::string> serialized =
       Ed25519KeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
   if (!serialized.ok()) {
     return serialized.status();
@@ -302,19 +293,19 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
                                               *output_prefix_type, *serialized);
 }
 
-util::StatusOr<ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const Ed25519PublicKey& key, absl::optional<SecretKeyAccessToken> token) {
   Ed25519PublicKeyStruct proto_key;
   proto_key.version = 0;
   proto_key.key_value = key.GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<std::string> serialized =
+  absl::StatusOr<std::string> serialized =
       Ed25519PublicKeyStruct::GetParser().SerializeIntoString(proto_key);
   if (!serialized.ok()) {
     return serialized.status();
@@ -323,20 +314,19 @@ util::StatusOr<ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized, InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
+      kPublicTypeUrl, restricted_output, KeyMaterialTypeEnum::kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
-util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     const Ed25519PrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetPrivateKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
   Ed25519PrivateKeyStruct proto_private_key;
@@ -346,13 +336,13 @@ util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
   proto_private_key.key_value = restricted_input->Get(*token);
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<util::SecretData> proto_private_key_secret_data =
+  absl::StatusOr<util::SecretData> proto_private_key_secret_data =
       Ed25519PrivateKeyStruct::GetParser().SerializeIntoSecretData(
           proto_private_key);
   if (!proto_private_key_secret_data.ok()) {
@@ -361,7 +351,8 @@ util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl,
       RestrictedData(*std::move(proto_private_key_secret_data), *token),
-      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
+      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 Ed25519ProtoParametersParserImpl* Ed25519ProtoParametersParser() {
@@ -402,9 +393,9 @@ Ed25519ProtoPrivateKeySerializerImpl* Ed25519ProtoPrivateKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
+absl::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(Ed25519ProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -434,9 +425,9 @@ util::Status RegisterEd25519ProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(Ed25519ProtoPrivateKeySerializer());
 }
 
-util::Status RegisterEd25519ProtoSerializationWithRegistryBuilder(
+absl::Status RegisterEd25519ProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(Ed25519ProtoParametersParser());
   if (!status.ok()) {
     return status;

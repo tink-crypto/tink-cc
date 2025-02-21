@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -234,8 +235,7 @@ TEST_F(EcdsaProtoSerializationTest,
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(registry.ParseParameters(*serialization).status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse EcdsaKeyFormat proto")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(EcdsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
@@ -261,6 +261,32 @@ TEST_F(EcdsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Only version 0 keys are accepted")));
+}
+
+TEST_F(EcdsaProtoSerializationTest,
+       ParseParametersWithInvalidEncodingEnumFails) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterEcdsaProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  EcdsaKeyFormat key_format_proto;
+  key_format_proto.set_version(0);
+  EcdsaParams& params = *key_format_proto.mutable_params();
+  params.set_curve(EllipticCurveType::NIST_P256);
+  params.set_hash_type(HashType::SHA256);
+  params.set_encoding(static_cast<EcdsaSignatureEncoding>(3));
+
+  absl::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(
+          kPrivateTypeUrl, OutputPrefixType::RAW,
+          key_format_proto.SerializeAsString());
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+      registry.ParseParameters(*serialization);
+  EXPECT_THAT(parameters.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Invalid value for enum: 3")));
 }
 
 TEST_F(EcdsaProtoSerializationTest,

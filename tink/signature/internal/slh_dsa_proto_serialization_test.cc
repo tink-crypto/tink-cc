@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "openssl/slhdsa.h"
@@ -39,7 +40,6 @@
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/slh_dsa.pb.h"
 #include "proto/tink.pb.h"
@@ -218,53 +218,102 @@ TEST_F(SlhDsaProtoSerializationTest,
                HasSubstr("Could not determine SlhDsaParameters::Variant")));
 }
 
-TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithUnkownSigTypeFails) {
+TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidSigTypeFails) {
   ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
 
-  SlhDsaKeyFormat key_format_proto;
-  SlhDsaParams& params = *key_format_proto.mutable_params();
-  params.set_sig_type(SlhDsaSignatureType::SLH_DSA_SIGNATURE_TYPE_UNSPECIFIED);
-  params.set_hash_type(SlhDsaHashType::SHA2);
-  params.set_key_size(64);
+  {
+    // Unspecified signature type.
+    SlhDsaKeyFormat key_format_proto;
+    SlhDsaParams& params = *key_format_proto.mutable_params();
+    params.set_sig_type(
+        SlhDsaSignatureType::SLH_DSA_SIGNATURE_TYPE_UNSPECIFIED);
+    params.set_hash_type(SlhDsaHashType::SHA2);
+    params.set_key_size(64);
 
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
+    absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+        internal::ProtoParametersSerialization::Create(
+            kPrivateTypeUrl, OutputPrefixType::RAW,
+            key_format_proto.SerializeAsString());
+    ASSERT_THAT(serialization, IsOk());
 
-  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
-      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
-          *serialization);
-  EXPECT_THAT(
-      parameters.status(),
-      StatusIs(
-          absl::StatusCode::kInvalidArgument,
-          HasSubstr("Could not determine SlhDsaParameters::SignatureType")));
+    absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+        internal::MutableSerializationRegistry::GlobalInstance()
+            .ParseParameters(*serialization);
+    EXPECT_THAT(
+        parameters.status(),
+        StatusIs(
+            absl::StatusCode::kInvalidArgument,
+            HasSubstr("Could not determine SlhDsaParameters::SignatureType")));
+  }
+  {
+    // Out of range signature type.
+    SlhDsaKeyFormat key_format_proto;
+    SlhDsaParams& params = *key_format_proto.mutable_params();
+    params.set_sig_type(static_cast<SlhDsaSignatureType>(3));
+    params.set_hash_type(SlhDsaHashType::SHA2);
+    params.set_key_size(64);
+
+    absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+        internal::ProtoParametersSerialization::Create(
+            kPrivateTypeUrl, OutputPrefixType::RAW,
+            key_format_proto.SerializeAsString());
+    ASSERT_THAT(serialization, IsOk());
+
+    absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+        internal::MutableSerializationRegistry::GlobalInstance()
+            .ParseParameters(*serialization);
+    EXPECT_THAT(parameters.status(),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("Failed to parse SlhDsaKeyFormat proto")));
+  }
 }
 
-TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithUnkownHashTypeFails) {
+TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidHashTypeFails) {
   ASSERT_THAT(RegisterSlhDsaProtoSerialization(), IsOk());
 
-  SlhDsaKeyFormat key_format_proto;
-  SlhDsaParams& params = *key_format_proto.mutable_params();
-  params.set_sig_type(SlhDsaSignatureType::SMALL_SIGNATURE);
-  params.set_hash_type(SlhDsaHashType::SLH_DSA_HASH_TYPE_UNSPECIFIED);
-  params.set_key_size(64);
+  {
+    // Unspecified hash type.
+    SlhDsaKeyFormat key_format_proto;
+    SlhDsaParams& params = *key_format_proto.mutable_params();
+    params.set_sig_type(SlhDsaSignatureType::SMALL_SIGNATURE);
+    params.set_hash_type(SlhDsaHashType::SLH_DSA_HASH_TYPE_UNSPECIFIED);
+    params.set_key_size(64);
 
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
+    absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+        internal::ProtoParametersSerialization::Create(
+            kPrivateTypeUrl, OutputPrefixType::RAW,
+            key_format_proto.SerializeAsString());
+    ASSERT_THAT(serialization, IsOk());
 
-  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
-      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
-          *serialization);
-  EXPECT_THAT(
-      parameters.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Could not determine SlhDsaParameters::HashType")));
+    absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+        internal::MutableSerializationRegistry::GlobalInstance()
+            .ParseParameters(*serialization);
+    EXPECT_THAT(
+        parameters.status(),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("Could not determine SlhDsaParameters::HashType")));
+  }
+  {
+    // Out of range hash type.
+    SlhDsaKeyFormat key_format_proto;
+    SlhDsaParams& params = *key_format_proto.mutable_params();
+    params.set_sig_type(SlhDsaSignatureType::SMALL_SIGNATURE);
+    params.set_hash_type(static_cast<SlhDsaHashType>(3));
+    params.set_key_size(64);
+
+    absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+        internal::ProtoParametersSerialization::Create(
+            kPrivateTypeUrl, OutputPrefixType::RAW,
+            key_format_proto.SerializeAsString());
+    ASSERT_THAT(serialization, IsOk());
+
+    absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+        internal::MutableSerializationRegistry::GlobalInstance()
+            .ParseParameters(*serialization);
+    EXPECT_THAT(parameters.status(),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("Failed to parse SlhDsaKeyFormat proto")));
+  }
 }
 
 TEST_P(SlhDsaProtoSerializationTest,

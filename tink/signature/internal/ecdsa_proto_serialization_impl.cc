@@ -28,6 +28,7 @@
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/bn_encoding_util.h"
+#include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -37,6 +38,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
@@ -45,11 +47,6 @@
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/common.pb.h"
-#include "proto/ecdsa.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -60,31 +57,26 @@ using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
-using ::google::crypto::tink::EcdsaSignatureEncoding;
-using ::google::crypto::tink::EllipticCurveType;
-using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 
-bool HashTypeValid(int c) { return google::crypto::tink::HashType_IsValid(c); }
+bool EcdsaSignatureEncodingValid(uint32_t c) { return 0 <= c && c <= 2; }
 
-bool EllipticCurveTypeValid(int c) {
-  return google::crypto::tink::EllipticCurveType_IsValid(c);
-}
-
-bool EcdsaSignatureEncodingValid(int c) {
-  return google::crypto::tink::EcdsaSignatureEncoding_IsValid(c);
-}
+// Enum representing the proto enum `google.crypto.tink.EcdsaSignatureEncoding`.
+enum class EcdsaSignatureEncodingEnum : uint32_t {
+  kUnknownEncoding = 0,
+  kIeeeP1363,
+  kDer,
+};
 
 struct EcdsaParamsStruct {
-  HashType hash_type;
-  EllipticCurveType curve;
-  EcdsaSignatureEncoding encoding;
+  HashTypeEnum hash_type;
+  EllipticCurveTypeEnum curve;
+  EcdsaSignatureEncodingEnum encoding;
 
   static ProtoParser<EcdsaParamsStruct> CreateParser() {
     return ProtoParserBuilder<EcdsaParamsStruct>()
-        .AddEnumField(1, &EcdsaParamsStruct::hash_type, &HashTypeValid)
-        .AddEnumField(2, &EcdsaParamsStruct::curve, &EllipticCurveTypeValid)
+        .AddEnumField(1, &EcdsaParamsStruct::hash_type, &HashTypeEnumIsValid)
+        .AddEnumField(2, &EcdsaParamsStruct::curve,
+                      &EllipticCurveTypeEnumIsValid)
         .AddEnumField(3, &EcdsaParamsStruct::encoding,
                       &EcdsaSignatureEncodingValid)
         .BuildOrDie();
@@ -178,126 +170,125 @@ const absl::string_view kPublicTypeUrl =
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.EcdsaPrivateKey";
 
-util::StatusOr<EcdsaParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<EcdsaParameters::Variant> ToVariant(
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case OutputPrefixTypeEnum::kLegacy:
       return EcdsaParameters::Variant::kLegacy;
-    case OutputPrefixType::CRUNCHY:
+    case OutputPrefixTypeEnum::kCrunchy:
       return EcdsaParameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case OutputPrefixTypeEnum::kRaw:
       return EcdsaParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case OutputPrefixTypeEnum::kTink:
       return EcdsaParameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     EcdsaParameters::Variant variant) {
   switch (variant) {
     case EcdsaParameters::Variant::kLegacy:
-      return OutputPrefixType::LEGACY;
+      return OutputPrefixTypeEnum::kLegacy;
     case EcdsaParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return OutputPrefixTypeEnum::kCrunchy;
     case EcdsaParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return OutputPrefixTypeEnum::kRaw;
     case EcdsaParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine EcdsaParameters::Variant");
+      return absl::InvalidArgumentError(
+          "Could not determine EcdsaParameters::Variant");
   }
 }
 
-util::StatusOr<EcdsaParameters::HashType> ToHashType(HashType hash_type) {
+absl::StatusOr<EcdsaParameters::HashType> ToHashType(HashTypeEnum hash_type) {
   switch (hash_type) {
-    case HashType::SHA256:
+    case HashTypeEnum::kSha256:
       return EcdsaParameters::HashType::kSha256;
-    case HashType::SHA384:
+    case HashTypeEnum::kSha384:
       return EcdsaParameters::HashType::kSha384;
-    case HashType::SHA512:
+    case HashTypeEnum::kSha512:
       return EcdsaParameters::HashType::kSha512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine HashType");
+      return absl::InvalidArgumentError("Could not determine HashType");
   }
 }
 
-util::StatusOr<HashType> ToProtoHashType(EcdsaParameters::HashType hash_type) {
+absl::StatusOr<HashTypeEnum> ToProtoHashType(
+    EcdsaParameters::HashType hash_type) {
   switch (hash_type) {
     case EcdsaParameters::HashType::kSha256:
-      return HashType::SHA256;
+      return HashTypeEnum::kSha256;
     case EcdsaParameters::HashType::kSha384:
-      return HashType::SHA384;
+      return HashTypeEnum::kSha384;
     case EcdsaParameters::HashType::kSha512:
-      return HashType::SHA512;
+      return HashTypeEnum::kSha512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine EcdsaParameters::HashType");
+      return absl::InvalidArgumentError(
+          "Could not determine EcdsaParameters::HashType");
   }
 }
 
-util::StatusOr<EcdsaParameters::CurveType> ToCurveType(
-    EllipticCurveType curve_type) {
+absl::StatusOr<EcdsaParameters::CurveType> ToCurveType(
+    EllipticCurveTypeEnum curve_type) {
   switch (curve_type) {
-    case EllipticCurveType::NIST_P256:
+    case EllipticCurveTypeEnum::kNistP256:
       return EcdsaParameters::CurveType::kNistP256;
-    case EllipticCurveType::NIST_P384:
+    case EllipticCurveTypeEnum::kNistP384:
       return EcdsaParameters::CurveType::kNistP384;
-    case EllipticCurveType::NIST_P521:
+    case EllipticCurveTypeEnum::kNistP521:
       return EcdsaParameters::CurveType::kNistP521;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine EllipticCurveType");
+      return absl::InvalidArgumentError(
+          "Could not determine EllipticCurveType");
   }
 }
 
-util::StatusOr<EllipticCurveType> ToProtoCurveType(
+absl::StatusOr<EllipticCurveTypeEnum> ToProtoCurveType(
     EcdsaParameters::CurveType curve_type) {
   switch (curve_type) {
     case EcdsaParameters::CurveType::kNistP256:
-      return EllipticCurveType::NIST_P256;
+      return EllipticCurveTypeEnum::kNistP256;
     case EcdsaParameters::CurveType::kNistP384:
-      return EllipticCurveType::NIST_P384;
+      return EllipticCurveTypeEnum::kNistP384;
     case EcdsaParameters::CurveType::kNistP521:
-      return EllipticCurveType::NIST_P521;
+      return EllipticCurveTypeEnum::kNistP521;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine EcdsaParameters::CurveType");
+      return absl::InvalidArgumentError(
+          "Could not determine EcdsaParameters::CurveType");
   }
 }
 
-util::StatusOr<EcdsaParameters::SignatureEncoding> ToSignatureEncoding(
-    EcdsaSignatureEncoding signature_encoding) {
+absl::StatusOr<EcdsaParameters::SignatureEncoding> ToSignatureEncoding(
+    EcdsaSignatureEncodingEnum signature_encoding) {
   switch (signature_encoding) {
-    case EcdsaSignatureEncoding::DER:
+    case EcdsaSignatureEncodingEnum::kDer:
       return EcdsaParameters::SignatureEncoding::kDer;
-    case EcdsaSignatureEncoding::IEEE_P1363:
+    case EcdsaSignatureEncodingEnum::kIeeeP1363:
       return EcdsaParameters::SignatureEncoding::kIeeeP1363;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine EcdsaSignatureEncoding");
+      return absl::InvalidArgumentError(
+          "Could not determine EcdsaSignatureEncoding");
   }
 }
 
-util::StatusOr<EcdsaSignatureEncoding> ToProtoSignatureEncoding(
+absl::StatusOr<EcdsaSignatureEncodingEnum> ToProtoSignatureEncoding(
     EcdsaParameters::SignatureEncoding signature_encoding) {
   switch (signature_encoding) {
     case EcdsaParameters::SignatureEncoding::kDer:
-      return EcdsaSignatureEncoding::DER;
+      return EcdsaSignatureEncodingEnum::kDer;
     case EcdsaParameters::SignatureEncoding::kIeeeP1363:
-      return EcdsaSignatureEncoding::IEEE_P1363;
+      return EcdsaSignatureEncodingEnum::kIeeeP1363;
     default:
-      return util::Status(
-          absl::StatusCode::kInvalidArgument,
+      return absl::InvalidArgumentError(
           "Could not determine EcdsaParameters::SignatureEncoding");
   }
 }
 
-util::StatusOr<int> getEncodingLength(EcdsaParameters::CurveType curveType) {
+absl::StatusOr<int> getEncodingLength(EcdsaParameters::CurveType curveType) {
   // We currently encode with one extra 0 byte at the beginning, to make sure
   // that parsing is correct. See also b/264525021.
   switch (curveType) {
@@ -308,32 +299,31 @@ util::StatusOr<int> getEncodingLength(EcdsaParameters::CurveType curveType) {
     case EcdsaParameters::CurveType::kNistP521:
       return 67;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Unable to serialize CurveType");
+      return absl::InvalidArgumentError("Unable to serialize CurveType");
   }
 }
 
-util::StatusOr<EcdsaParameters> ToParameters(
-    OutputPrefixType output_prefix_type, const EcdsaParamsStruct& params) {
-  util::StatusOr<EcdsaParameters::Variant> variant =
+absl::StatusOr<EcdsaParameters> ToParameters(
+    OutputPrefixTypeEnum output_prefix_type, const EcdsaParamsStruct& params) {
+  absl::StatusOr<EcdsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<EcdsaParameters::HashType> hash_type =
+  absl::StatusOr<EcdsaParameters::HashType> hash_type =
       ToHashType(params.hash_type);
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
-  util::StatusOr<EcdsaParameters::CurveType> curve_type =
+  absl::StatusOr<EcdsaParameters::CurveType> curve_type =
       ToCurveType(params.curve);
   if (!curve_type.ok()) {
     return curve_type.status();
   }
 
-  util::StatusOr<EcdsaParameters::SignatureEncoding> encoding =
+  absl::StatusOr<EcdsaParameters::SignatureEncoding> encoding =
       ToSignatureEncoding(params.encoding);
   if (!encoding.ok()) {
     return encoding.status();
@@ -347,21 +337,21 @@ util::StatusOr<EcdsaParameters> ToParameters(
       .Build();
 }
 
-util::StatusOr<EcdsaParamsStruct> FromParameters(
+absl::StatusOr<EcdsaParamsStruct> FromParameters(
     const EcdsaParameters& parameters) {
-  util::StatusOr<EllipticCurveType> curve =
+  absl::StatusOr<EllipticCurveTypeEnum> curve =
       ToProtoCurveType(parameters.GetCurveType());
   if (!curve.ok()) {
     return curve.status();
   }
 
-  util::StatusOr<HashType> hash_type =
+  absl::StatusOr<HashTypeEnum> hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
-  util::StatusOr<EcdsaSignatureEncoding> encoding =
+  absl::StatusOr<EcdsaSignatureEncodingEnum> encoding =
       ToProtoSignatureEncoding(parameters.GetSignatureEncoding());
   if (!encoding.ok()) {
     return encoding.status();
@@ -375,52 +365,49 @@ util::StatusOr<EcdsaParamsStruct> FromParameters(
   return params;
 }
 
-util::StatusOr<EcdsaParameters> ParseParameters(
+absl::StatusOr<EcdsaParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing EcdsaParameters.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing EcdsaParameters.");
   }
 
-  util::StatusOr<EcdsaKeyFormatStruct> proto_key_format =
+  absl::StatusOr<EcdsaKeyFormatStruct> proto_key_format =
       EcdsaKeyFormatStruct::GetParser().Parse(
           serialization.GetKeyTemplate().value());
   if (!proto_key_format.ok()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse EcdsaKeyFormat proto");
+    return proto_key_format.status();
   }
   if (proto_key_format->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  return ToParameters(serialization.GetKeyTemplate().output_prefix_type(),
+  return ToParameters(serialization.GetKeyTemplateStruct().output_prefix_type,
                       proto_key_format->params);
 }
 
-util::StatusOr<EcdsaPublicKey> ParsePublicKey(
+absl::StatusOr<EcdsaPublicKey> ParsePublicKey(
     const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing EcdsaPublicKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing EcdsaPublicKey.");
   }
 
-  util::StatusOr<EcdsaPublicKeyStruct> proto_key =
+  absl::StatusOr<EcdsaPublicKeyStruct> proto_key =
       EcdsaPublicKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(
               InsecureSecretKeyAccess::Get()));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse EcdsaPublicKey proto");
+    return absl::InvalidArgumentError("Failed to parse EcdsaPublicKey proto");
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<EcdsaParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixType(), proto_key->params);
+  absl::StatusOr<EcdsaParameters> parameters = ToParameters(
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()),
+      proto_key->params);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -431,48 +418,48 @@ util::StatusOr<EcdsaPublicKey> ParsePublicKey(
                                 GetPartialKeyAccess());
 }
 
-util::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
+absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
     const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing EcdsaPrivateKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing EcdsaPrivateKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
   absl::StatusOr<EcdsaPrivateKeyStruct> proto_key =
       EcdsaPrivateKeyStruct::GetParser().Parse(SecretDataAsStringView(
           serialization.SerializedKeyProto().Get(*token)));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse EcdsaPrivateKey proto");
+    return absl::InvalidArgumentError("Failed to parse EcdsaPrivateKey proto");
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
   if (proto_key->public_key.version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 public keys are accepted.");
+    return absl::InvalidArgumentError(
+        "Only version 0 public keys are accepted.");
   }
 
-  util::StatusOr<EcdsaParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+  OutputPrefixTypeEnum output_prefix_type =
+      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType());
+
+  absl::StatusOr<EcdsaParameters::Variant> variant =
+      ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<EcdsaParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key->public_key.params);
+  absl::StatusOr<EcdsaParameters> parameters =
+      ToParameters(output_prefix_type, proto_key->public_key.params);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   EcPoint public_point(BigInteger(proto_key->public_key.x),
                        BigInteger(proto_key->public_key.y));
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, public_point, serialization.IdRequirement(),
       GetPartialKeyAccess());
 
@@ -482,15 +469,15 @@ util::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
                                  GetPartialKeyAccess());
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const EcdsaParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<EcdsaParamsStruct> params = FromParameters(parameters);
+  absl::StatusOr<EcdsaParamsStruct> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
@@ -499,7 +486,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   proto_key_format.params = *params;
   proto_key_format.version = 0;
 
-  util::StatusOr<std::string> serialized_proto =
+  absl::StatusOr<std::string> serialized_proto =
       EcdsaKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
@@ -509,28 +496,28 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
       kPrivateTypeUrl, *output_prefix_type, *serialized_proto);
 }
 
-util::StatusOr<ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const EcdsaPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<EcdsaParamsStruct> params =
+  absl::StatusOr<EcdsaParamsStruct> params =
       FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  util::StatusOr<int> enc_length =
+  absl::StatusOr<int> enc_length =
       getEncodingLength(key.GetParameters().GetCurveType());
   if (!enc_length.ok()) {
     return enc_length.status();
   }
 
-  util::StatusOr<std::string> x = GetValueOfFixedLength(
+  absl::StatusOr<std::string> x = GetValueOfFixedLength(
       key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue(),
       enc_length.value());
   if (!x.ok()) {
     return x.status();
   }
 
-  util::StatusOr<std::string> y = GetValueOfFixedLength(
+  absl::StatusOr<std::string> y = GetValueOfFixedLength(
       key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue(),
       enc_length.value());
   if (!y.ok()) {
@@ -543,13 +530,13 @@ util::StatusOr<ProtoKeySerialization> SerializePublicKey(
   proto_key.x = *x;
   proto_key.y = *y;
 
-  util::StatusOr<std::string> serialized_proto =
+  absl::StatusOr<std::string> serialized_proto =
       EcdsaPublicKeyStruct::GetParser().SerializeIntoString(proto_key);
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
   }
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -558,35 +545,34 @@ util::StatusOr<ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto, InsecureSecretKeyAccess::Get());
   return ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
+      kPublicTypeUrl, restricted_output, KeyMaterialTypeEnum::kAsymmetricPublic,
       *output_prefix_type, key.GetIdRequirement());
 }
 
-util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     const EcdsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RestrictedBigInteger> restricted_input =
+  absl::StatusOr<RestrictedBigInteger> restricted_input =
       key.GetPrivateKeyValue(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  util::StatusOr<EcdsaParamsStruct> params =
+  absl::StatusOr<EcdsaParamsStruct> params =
       FromParameters(key.GetPublicKey().GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  util::StatusOr<int> enc_length =
+  absl::StatusOr<int> enc_length =
       getEncodingLength(key.GetPublicKey().GetParameters().GetCurveType());
   if (!enc_length.ok()) {
     return enc_length.status();
   }
 
-  util::StatusOr<std::string> x =
+  absl::StatusOr<std::string> x =
       GetValueOfFixedLength(key.GetPublicKey()
                                 .GetPublicPoint(GetPartialKeyAccess())
                                 .GetX()
@@ -596,7 +582,7 @@ util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return x.status();
   }
 
-  util::StatusOr<std::string> y =
+  absl::StatusOr<std::string> y =
       GetValueOfFixedLength(key.GetPublicKey()
                                 .GetPublicPoint(GetPartialKeyAccess())
                                 .GetY()
@@ -612,20 +598,20 @@ util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   proto_private_key.public_key.params = *params;
   proto_private_key.public_key.x = *x;
   proto_private_key.public_key.y = *y;
-  util::StatusOr<util::SecretData> fixed_length_key =
+  absl::StatusOr<util::SecretData> fixed_length_key =
       GetSecretValueOfFixedLength(*restricted_input, *enc_length, *token);
   if (!fixed_length_key.ok()) {
     return fixed_length_key.status();
   }
   proto_private_key.key_value = *fixed_length_key;
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<util::SecretData> serialized_proto =
+  absl::StatusOr<util::SecretData> serialized_proto =
       EcdsaPrivateKeyStruct::GetParser().SerializeIntoSecretData(
           proto_private_key);
   if (!serialized_proto.ok()) {
@@ -633,7 +619,8 @@ util::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   }
   return ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
-      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
+      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 EcdsaProtoParametersParserImpl& EcdsaProtoParametersParser() {
@@ -673,9 +660,9 @@ EcdsaProtoPrivateKeySerializerImpl& EcdsaProtoPrivateKeySerializer() {
 }
 }  // namespace
 
-util::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
+absl::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(&EcdsaProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -705,9 +692,9 @@ util::Status RegisterEcdsaProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(&EcdsaProtoPrivateKeySerializer());
 }
 
-util::Status RegisterEcdsaProtoSerializationWithRegistryBuilder(
+absl::Status RegisterEcdsaProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(&EcdsaProtoParametersParser());
   if (!status.ok()) {
     return status;

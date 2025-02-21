@@ -101,7 +101,7 @@ util::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
   const AesCtrHmacAeadParameters* params =
       dynamic_cast<const AesCtrHmacAeadParameters*>(&generic_params);
   if (params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesCtrHmacAeadParameters.");
   }
   util::StatusOr<std::string> aes_key_bytes =
@@ -134,7 +134,7 @@ util::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
   const AesGcmParameters* params =
       dynamic_cast<const AesGcmParameters*>(&generic_params);
   if (params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesGcmParameters.");
   }
   util::StatusOr<std::string> randomness_str =
@@ -157,7 +157,7 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
   const XChaCha20Poly1305Parameters* params =
       dynamic_cast<const XChaCha20Poly1305Parameters*>(&generic_params);
   if (params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not XChaCha20Poly1305Parameters.");
   }
   util::StatusOr<std::string> randomness_str =
@@ -180,7 +180,7 @@ util::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
   const AesSivParameters* params =
       dynamic_cast<const AesSivParameters*>(&generic_params);
   if (params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesSivParameters.");
   }
   util::StatusOr<util::SecretData> randomness_str =
@@ -202,7 +202,7 @@ util::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
   const HmacParameters* params =
       dynamic_cast<const HmacParameters*>(&generic_params);
   if (params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not HmacParameters.");
   }
   util::StatusOr<std::string> randomness_str =
@@ -224,7 +224,7 @@ util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
   const EcdsaParameters* params =
       dynamic_cast<const EcdsaParameters*>(&generic_params);
   if (params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not EcdsaParameters.");
   }
 
@@ -244,7 +244,7 @@ util::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
       num_rand_bytes = 32;
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "ECDSA curve does not support key derivation.");
   }
   util::StatusOr<util::SecretData> secret_seed =
@@ -282,7 +282,7 @@ util::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
   const Ed25519Parameters* params =
       dynamic_cast<const Ed25519Parameters*>(&generic_params);
   if (params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not Ed25519Parameters.");
   }
 
@@ -355,7 +355,7 @@ util::StatusOr<std::unique_ptr<Key>> DeriveKey(const Parameters& params,
                                                InputStream* randomness) {
   auto it = ParametersToKeyDeriver().find(std::type_index(typeid(params)));
   if (it == ParametersToKeyDeriver().end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kUnimplemented,
         absl::StrCat("Key deriver not found for ", typeid(params).name()));
   }

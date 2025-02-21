@@ -130,9 +130,9 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeysetHandle(
   return *std::move(handle);
 }
 
-util::Status RegisterProtoSerializations() {
+absl::Status RegisterProtoSerializations() {
   // AEAD.
-  util::Status status = RegisterAesGcmProtoSerialization();
+  absl::Status status = RegisterAesGcmProtoSerialization();
   if (!status.ok()) {
     return status;
   }
@@ -169,8 +169,8 @@ util::StatusOr<std::unique_ptr<KeysetDeriver>> PrfBasedDeriver::New(
     return streaming_prf.status();
   }
 
-  static const util::Status* registration_status =
-      new util::Status(RegisterProtoSerializations());
+  static const absl::Status* registration_status =
+      new absl::Status(RegisterProtoSerializations());
   if (!registration_status->ok()) {
     return *registration_status;
   }

@@ -161,7 +161,7 @@ util::StatusOr<KeyTemplateStruct> ParametersToKeyTemplate(
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   if (proto_serialization == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize proto parameters.");
   }
 
@@ -206,7 +206,7 @@ util::StatusOr<KeyDataStruct> PrfKeyToKeyData(const PrfKey& prf_key,
   const ProtoKeySerialization* proto_serialization =
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   if (proto_serialization == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize proto key.");
   }
 
@@ -222,7 +222,7 @@ util::StatusOr<KeyDataStruct> PrfKeyToKeyData(const PrfKey& prf_key,
 util::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplateStruct().type_url != kTypeUrl) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Wrong type URL when parsing PrfBasedKeyDerivationParameters.");
   }
@@ -236,7 +236,7 @@ util::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
 
   if (serialization.GetKeyTemplateStruct().output_prefix_type !=
       proto_key_format->params.derived_key_template.output_prefix_type) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsed output prefix type must match derived key output prefix type.");
   }
@@ -301,12 +301,12 @@ util::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
     const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Wrong type URL when parsing PrfBasedKeyDerivationKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
+    return absl::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required.");
   }
 
@@ -317,13 +317,13 @@ util::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
     return proto_key.status();
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
   if (static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()) !=
       proto_key->params.derived_key_template.output_prefix_type) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsed output prefix type must match derived key output prefix type.");
   }
@@ -358,7 +358,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
     const PrfBasedKeyDerivationKey& key,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
+    return absl::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required.");
   }
 
@@ -419,9 +419,9 @@ PrfBasedKeyDerivationProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
+absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status = registry.RegisterParametersParser(
+  absl::Status status = registry.RegisterParametersParser(
       PrfBasedKeyDerivationProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -442,9 +442,9 @@ util::Status RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
       PrfBasedKeyDerivationProtoKeySerializer());
 }
 
-util::Status RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
+absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status = builder.RegisterParametersParser(
+  absl::Status status = builder.RegisterParametersParser(
       PrfBasedKeyDerivationProtoParametersParser());
   if (!status.ok()) {
     return status;

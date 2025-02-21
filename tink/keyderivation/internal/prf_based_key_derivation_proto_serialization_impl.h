@@ -27,15 +27,13 @@ namespace internal {
 
 // Registers proto parsers and serializers for PRF-based key derivation
 // parameters and keys into specified mutable serialization `registry`.
-crypto::tink::util::Status
-RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
+absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for PRF-based key derivation
 // parameters and keys into specified immutable serialization registry
 // `builder`.
-crypto::tink::util::Status
-RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
+absl::Status RegisterPrfBasedKeyDerivationProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

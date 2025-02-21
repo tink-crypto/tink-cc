@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended Streaming AEAD key managers to `config`, used to generate
 // keys.
-util::Status AddStreamingAeadKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddStreamingAeadKeyGenV0(KeyGenConfiguration& config);
 
 }  // namespace internal
 }  // namespace tink

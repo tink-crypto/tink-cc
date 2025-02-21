@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended Streaming AEAD primitive wrappers and key managers to
 // `config`, used to generate primitives.
-util::Status AddStreamingAeadV0(Configuration& config);
+absl::Status AddStreamingAeadV0(Configuration& config);
 
 }  // namespace internal
 }  // namespace tink

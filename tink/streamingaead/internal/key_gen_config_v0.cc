@@ -27,8 +27,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddStreamingAeadKeyGenV0(KeyGenConfiguration& config) {
-  util::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
+absl::Status AddStreamingAeadKeyGenV0(KeyGenConfiguration& config) {
+  absl::Status status = KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCtrHmacStreamingKeyManager>(), config);
   if (!status.ok()) {
     return status;

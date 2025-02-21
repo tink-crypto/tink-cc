@@ -66,13 +66,13 @@ class MlKemRawDecapsulateBoringSsl : public RawKemDecapsulate {
 
 util::StatusOr<std::unique_ptr<RawKemDecapsulate>>
 MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
-  util::Status status = CheckFipsCompatibility<MlKemRawDecapsulateBoringSsl>();
+  absl::Status status = CheckFipsCompatibility<MlKemRawDecapsulateBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
   if (recipient_key.GetPublicKey().GetParameters().GetKeySize() != 768) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only ML-KEM 768 is supported");
   }
 
@@ -86,7 +86,7 @@ MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
           boringssl_private_key.get(),
           reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
           private_seed_bytes.size())) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to expand ML-KEM private key from seed.");
   }
 
@@ -99,13 +99,13 @@ util::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
   size_t output_prefix_size = private_key_.GetOutputPrefix().size();
 
   if (ciphertext.size() != MLKEM768_CIPHERTEXT_BYTES + output_prefix_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Decapsulation failed: incorrect ciphertext size for ML-KEM");
   }
 
   if (!absl::StartsWith(ciphertext, private_key_.GetOutputPrefix())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Decapsulation failed: invalid output prefix");
   }
 

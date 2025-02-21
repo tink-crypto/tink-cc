@@ -69,13 +69,13 @@ class MlKemDecapsulateAes256Gcm : public KemDecapsulate {
 
 util::StatusOr<std::unique_ptr<KemDecapsulate>> MlKemDecapsulateAes256Gcm::New(
     MlKemPrivateKey recipient_key, AesGcmParameters aes_gcm_parameters) {
-  util::Status status = CheckFipsCompatibility<MlKemDecapsulateAes256Gcm>();
+  absl::Status status = CheckFipsCompatibility<MlKemDecapsulateAes256Gcm>();
   if (!status.ok()) {
     return status;
   }
 
   if (aes_gcm_parameters.KeySizeInBytes() != MLKEM_SHARED_SECRET_BYTES) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("AES-GCM parameters are not compatible with ML-KEM: the "
                      "ML-KEM shared secret is ",
@@ -85,7 +85,7 @@ util::StatusOr<std::unique_ptr<KemDecapsulate>> MlKemDecapsulateAes256Gcm::New(
   }
 
   if (aes_gcm_parameters.HasIdRequirement()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Keys derived from an ML-KEM shared secret must not "
                         "have an ID requirement");
   }

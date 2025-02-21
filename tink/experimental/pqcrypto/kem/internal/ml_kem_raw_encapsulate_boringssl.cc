@@ -66,13 +66,13 @@ class MlKemRawEncapsulateBoringSsl : public RawKemEncapsulate {
 
 util::StatusOr<std::unique_ptr<RawKemEncapsulate>>
 MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
-  util::Status status = CheckFipsCompatibility<MlKemRawEncapsulateBoringSsl>();
+  absl::Status status = CheckFipsCompatibility<MlKemRawEncapsulateBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
   if (recipient_key.GetParameters().GetKeySize() != 768) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only ML-KEM 768 is supported");
   }
 
@@ -84,7 +84,7 @@ MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
            public_key_bytes.size());
   auto public_key = std::make_unique<MLKEM768_public_key>();
   if (!MLKEM768_parse_public_key(public_key.get(), &cbs)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Invalid ML-KEM public key");
   }
 

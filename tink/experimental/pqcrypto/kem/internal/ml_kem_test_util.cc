@@ -44,7 +44,7 @@ namespace internal {
 util::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
     const MlKemParameters& key_parameters, absl::optional<int> id_requirement) {
   if (key_parameters.GetKeySize() != 768) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only ML-KEM 768 is supported");
   }
 

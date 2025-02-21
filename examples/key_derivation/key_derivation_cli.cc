@@ -81,7 +81,7 @@ Status VerifyDerivedAeadKeyset(const KeysetHandle& handle) {
         absl::StatusCode::kInternal,
         "AEAD obtained from derived keyset failed to decrypt correctly");
   }
-  return OkStatus();
+  return absl::OkStatus();
   // [END_EXCLUDE]
 }
 

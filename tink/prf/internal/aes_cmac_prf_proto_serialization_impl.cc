@@ -22,6 +22,7 @@
 
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_parser.h"
@@ -33,16 +34,13 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/aes_cmac_prf.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -52,7 +50,6 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::OutputPrefixType;
 
 struct AesCmacPrfKeyFormatStruct {
   uint32_t key_size;
@@ -104,40 +101,37 @@ using AesCmacPrfProtoKeySerializerImpl =
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesCmacPrfKey";
 
-util::StatusOr<AesCmacPrfParameters> ParseParameters(
+absl::StatusOr<AesCmacPrfParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing AesCmacPrfParameters.");
+  const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing AesCmacPrfParameters.");
   }
-  if (serialization.GetKeyTemplate().output_prefix_type() !=
-      OutputPrefixType::RAW) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+  if (key_template.output_prefix_type != OutputPrefixTypeEnum::kRaw) {
+    return absl::InvalidArgumentError(
         "Output prefix type must be RAW for AesCmacPrfParameters.");
   }
 
-  util::StatusOr<AesCmacPrfKeyFormatStruct> proto_key_format =
-      AesCmacPrfKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+  absl::StatusOr<AesCmacPrfKeyFormatStruct> proto_key_format =
+      AesCmacPrfKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }
   if (proto_key_format->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   return AesCmacPrfParameters::Create(proto_key_format->key_size);
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const AesCmacPrfParameters& parameters) {
   AesCmacPrfKeyFormatStruct proto_key_format;
   proto_key_format.key_size = parameters.KeySizeInBytes();
   proto_key_format.version = 0;
 
-  util::StatusOr<std::string> serialized_key_format =
+  absl::StatusOr<std::string> serialized_key_format =
       AesCmacPrfKeyFormatStruct::GetParser().SerializeIntoString(
           proto_key_format);
   if (!serialized_key_format.ok()) {
@@ -145,47 +139,45 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   }
 
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixType::RAW, *serialized_key_format);
+      kTypeUrl, OutputPrefixTypeEnum::kRaw, *serialized_key_format);
 }
 
-util::StatusOr<AesCmacPrfKey> ParseKey(
+absl::StatusOr<AesCmacPrfKey> ParseKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing AesCmacPrfKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing AesCmacPrfKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required.");
+    return absl::PermissionDeniedError("SecretKeyAccess is required.");
   }
-  if (serialization.GetOutputPrefixType() != OutputPrefixType::RAW) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Output prefix type must be RAW for AesCmacPrfKey.");
+  if (static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()) !=
+      OutputPrefixTypeEnum::kRaw) {
+    return absl::InvalidArgumentError(
+        "Output prefix type must be RAW for AesCmacPrfKey.");
   }
 
-  util::StatusOr<AesCmacPrfKeyStruct> proto_key =
+  absl::StatusOr<AesCmacPrfKeyStruct> proto_key =
       AesCmacPrfKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
     return proto_key.status();
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   return AesCmacPrfKey::Create(RestrictedData(proto_key->key_value, *token),
                                GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     const AesCmacPrfKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required.");
+    return absl::PermissionDeniedError("SecretKeyAccess is required.");
   }
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
@@ -195,7 +187,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
   proto_key.version = 0;
   proto_key.key_value = restricted_input->Get(*token);
 
-  util::StatusOr<SecretData> serialized_key =
+  absl::StatusOr<SecretData> serialized_key =
       AesCmacPrfKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();
@@ -204,8 +196,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(
       RestrictedData(*std::move(serialized_key), *token);
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, google::crypto::tink::KeyData::SYMMETRIC,
-      OutputPrefixType::RAW, key.GetIdRequirement());
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
+      OutputPrefixTypeEnum::kRaw, key.GetIdRequirement());
 }
 
 AesCmacPrfProtoParametersParserImpl* AesCmacPrfProtoParametersParser() {
@@ -232,9 +224,9 @@ AesCmacPrfProtoKeySerializerImpl* AesCmacPrfProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(AesCmacPrfProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -256,7 +248,7 @@ util::Status RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
 
 absl::Status RegisterAesCmacPrfProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(AesCmacPrfProtoParametersParser());
   if (!status.ok()) {
     return status;

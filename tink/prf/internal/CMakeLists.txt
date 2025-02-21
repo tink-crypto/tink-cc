@@ -39,37 +39,6 @@ tink_cc_library(
   DEPS
     absl::no_destructor
     absl::status
-    absl::string_view
-    absl::optional
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_key_access_token
-    tink::internal::key_parser
-    tink::internal::key_serializer
-    tink::internal::mutable_serialization_registry
-    tink::internal::parameters_parser
-    tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
-    tink::internal::serialization_registry
-    tink::prf::aes_cmac_prf_key
-    tink::prf::aes_cmac_prf_parameters
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::aes_cmac_prf_cc_proto
-    tink::proto::tink_cc_proto
-)
-
-tink_cc_library(
-  NAME hkdf_prf_proto_serialization_impl
-  SRCS
-    hkdf_prf_proto_serialization_impl.cc
-    hkdf_prf_proto_serialization_impl.h
-  DEPS
-    absl::no_destructor
-    absl::status
     absl::statusor
     absl::string_view
     absl::optional
@@ -86,12 +55,39 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::prf::aes_cmac_prf_key
+    tink::prf::aes_cmac_prf_parameters
+    tink::util::secret_data
+)
+
+tink_cc_library(
+  NAME hkdf_prf_proto_serialization_impl
+  SRCS
+    hkdf_prf_proto_serialization_impl.cc
+    hkdf_prf_proto_serialization_impl.h
+  DEPS
+    absl::no_destructor
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
+    tink::internal::common_proto_enums
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::common_cc_proto
 )
 
 tink_cc_library(
@@ -102,11 +98,13 @@ tink_cc_library(
   DEPS
     absl::no_destructor
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::internal::common_proto_enums
     tink::internal::key_parser
     tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
@@ -116,14 +114,10 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::prf::hmac_prf_key
     tink::prf::hmac_prf_parameters
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::common_cc_proto
-    tink::proto::hmac_prf_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 # tests

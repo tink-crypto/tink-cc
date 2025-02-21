@@ -43,30 +43,30 @@ using ::google::crypto::tink::OutputPrefixType;
 constexpr absl::string_view kPrimitive = "kem_encapsulate";
 constexpr absl::string_view kEncapsulateApi = "encapsulate";
 
-util::Status Validate(PrimitiveSet<KemEncapsulate>* kem_encapsulate_set) {
+absl::Status Validate(PrimitiveSet<KemEncapsulate>* kem_encapsulate_set) {
   if (kem_encapsulate_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "kem_encapsulate_set must be non-NULL");
   }
   if (kem_encapsulate_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "kem_encapsulate_set has no primary");
   }
 
   absl::flat_hash_set<uint32_t> key_ids;
   for (const auto& entry : kem_encapsulate_set->get_all()) {
     if (entry->get_output_prefix_type() != OutputPrefixType::TINK) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "kem_encapsulate_set contains non-Tink prefixed key");
     }
     if (!key_ids.insert(entry->get_key_id()).second) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "kem_encapsulate_set contains several keys with the same ID");
     }
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class KemEncapsulateSetWrapper : public KemEncapsulate {
@@ -108,7 +108,7 @@ util::StatusOr<KemEncapsulation> KemEncapsulateSetWrapper::Encapsulate() const {
 
 util::StatusOr<std::unique_ptr<KemEncapsulate>> KemEncapsulateWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<KemEncapsulate>> primitive_set) const {
-  util::Status status = Validate(primitive_set.get());
+  absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) {
     return status;
   }

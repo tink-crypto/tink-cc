@@ -46,30 +46,30 @@ using ::google::crypto::tink::OutputPrefixType;
 constexpr absl::string_view kPrimitive = "kem_decapsulate";
 constexpr absl::string_view kDecapsulateApi = "decapsulate";
 
-util::Status Validate(PrimitiveSet<KemDecapsulate>* kem_decapsulate_set) {
+absl::Status Validate(PrimitiveSet<KemDecapsulate>* kem_decapsulate_set) {
   if (kem_decapsulate_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "kem_decapsulate_set must be non-NULL");
   }
   if (kem_decapsulate_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "kem_decapsulate_set has no primary");
   }
 
   absl::flat_hash_set<uint32_t> key_ids;
   for (const auto& entry : kem_decapsulate_set->get_all()) {
     if (entry->get_output_prefix_type() != OutputPrefixType::TINK) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "kem_decapsulate_set contains non-Tink prefixed key");
     }
     if (!key_ids.insert(entry->get_key_id()).second) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "kem_decapsulate_set contains several keys with the same ID");
     }
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class KemDecapsulateSetWrapper : public KemDecapsulate {
@@ -99,7 +99,7 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
     if (monitoring_decapsulation_client_ != nullptr) {
       monitoring_decapsulation_client_->LogFailure();
     }
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat(
             "decapsulation failed: ciphertext too short; expected at least ",
@@ -115,7 +115,7 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
     if (monitoring_decapsulation_client_ != nullptr) {
       monitoring_decapsulation_client_->LogFailure();
     }
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "decapsulation failed: no key found for the given ID");
   }
 
@@ -123,7 +123,7 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
     if (monitoring_decapsulation_client_ != nullptr) {
       monitoring_decapsulation_client_->LogFailure();
     }
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("decapsulation failed: key set contains several keys (",
                      (*primitives)->size(), ") with the given ID"));
@@ -149,7 +149,7 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
 
 util::StatusOr<std::unique_ptr<KemDecapsulate>> KemDecapsulateWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<KemDecapsulate>> primitive_set) const {
-  util::Status status = Validate(primitive_set.get());
+  absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) {
     return status;
   }

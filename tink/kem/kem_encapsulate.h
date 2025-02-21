@@ -44,8 +44,7 @@ class KemEncapsulate {
  public:
   // Generates a new encapsulation, containing the ciphertext and a KeysetHandle
   // derived from the shared secret.
-  virtual crypto::tink::util::StatusOr<KemEncapsulation> Encapsulate()
-      const = 0;
+  virtual absl::StatusOr<KemEncapsulation> Encapsulate() const = 0;
 
   virtual ~KemEncapsulate() = default;
 };

@@ -32,7 +32,7 @@ class KemDecapsulate {
  public:
   // Decapsulates the ciphertext and returns a KeysetHandle derived from the
   // shared secret.
-  virtual crypto::tink::util::StatusOr<KeysetHandle> Decapsulate(
+  virtual absl::StatusOr<KeysetHandle> Decapsulate(
       absl::string_view ciphertext) const = 0;
 
   virtual ~KemDecapsulate() = default;

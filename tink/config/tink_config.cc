@@ -38,7 +38,7 @@ const RegistryConfig& TinkConfig::Latest() {
 }
 
 // static
-util::Status TinkConfig::Register() {
+absl::Status TinkConfig::Register() {
   auto status = HybridConfig::Register();  // includes Mac & Aead
   if (!status.ok()) return status;
   status = PrfConfig::Register();

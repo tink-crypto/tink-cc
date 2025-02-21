@@ -37,13 +37,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::Status AddMac(KeyGenConfiguration& config) {
+absl::Status AddMac(KeyGenConfiguration& config) {
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<HmacKeyManager>(), config);
 }
 
-util::Status AddAead(KeyGenConfiguration& config) {
-  util::Status status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
+absl::Status AddAead(KeyGenConfiguration& config) {
+  absl::Status status = internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesCtrHmacAeadKeyManager>(), config);
   if (!status.ok()) {
     return status;
@@ -52,13 +52,13 @@ util::Status AddAead(KeyGenConfiguration& config) {
       absl::make_unique<AesGcmKeyManager>(), config);
 }
 
-util::Status AddPrf(KeyGenConfiguration& config) {
+absl::Status AddPrf(KeyGenConfiguration& config) {
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<HmacPrfKeyManager>(), config);
 }
 
-util::Status AddSignature(KeyGenConfiguration& config) {
-  util::Status status =
+absl::Status AddSignature(KeyGenConfiguration& config) {
+  absl::Status status =
       internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
           absl::make_unique<EcdsaSignKeyManager>(),
           absl::make_unique<EcdsaVerifyKeyManager>(), config);

@@ -43,8 +43,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::Status AddMac(Configuration& config) {
-  util::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddMac(Configuration& config) {
+  absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<MacWrapper>(), config);
   if (!status.ok()) {
     return status;
@@ -59,8 +59,8 @@ util::Status AddMac(Configuration& config) {
       absl::make_unique<HmacKeyManager>(), config);
 }
 
-util::Status AddAead(Configuration& config) {
-  util::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddAead(Configuration& config) {
+  absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<AeadWrapper>(), config);
   if (!status.ok()) {
     return status;
@@ -75,8 +75,8 @@ util::Status AddAead(Configuration& config) {
       absl::make_unique<AesGcmKeyManager>(), config);
 }
 
-util::Status AddPrf(Configuration& config) {
-  util::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddPrf(Configuration& config) {
+  absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<PrfSetWrapper>(), config);
   if (!status.ok()) {
     return status;
@@ -86,8 +86,8 @@ util::Status AddPrf(Configuration& config) {
       absl::make_unique<HmacPrfKeyManager>(), config);
 }
 
-util::Status AddSignature(Configuration& config) {
-  util::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddSignature(Configuration& config) {
+  absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {
     return status;

@@ -42,7 +42,7 @@ class TinkConfig {
 
   // Registers all primitive wrappers and all key managers for all primitives
   // supported in the current Tink release.
-  static crypto::tink::util::Status Register();
+  static absl::Status Register();
 
  private:
   TinkConfig() {}

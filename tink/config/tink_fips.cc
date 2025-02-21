@@ -27,7 +27,7 @@ bool IsFipsModeEnabled() {
   return internal::IsFipsModeEnabled();
 }
 
-crypto::tink::util::Status RestrictToFips() {
+absl::Status RestrictToFips() {
   return internal::RegistryImpl::GlobalInstance().RestrictToFipsIfEmpty();
 }
 

@@ -31,7 +31,7 @@ bool IsFipsModeEnabled();
 // Enables the FIPS restrictions for the registry and subtle primitives. If Tink
 // has been built in FIPS this is redundant. This method must be called before
 // handling any key material or calling any of the functions in subtle.
-crypto::tink::util::Status RestrictToFips();
+absl::Status RestrictToFips();
 
 }  // namespace tink
 }  // namespace crypto

@@ -20,13 +20,13 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -35,6 +35,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
@@ -43,11 +44,6 @@
 #include "tink/signature/rsa_ssa_pss_private_key.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/secret_proto.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/common.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -58,14 +54,10 @@ using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
-using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::HashType_IsValid;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 
 struct RsaSsaPssParamsStruct {
-  HashType sig_hash;
-  HashType mgf1_hash;
+  internal::HashTypeEnum sig_hash;
+  internal::HashTypeEnum mgf1_hash;
   uint32_t salt_length;
 };
 
@@ -95,8 +87,10 @@ struct RsaSsaPssKeyFormatStruct {
 
 ProtoParser<RsaSsaPssParamsStruct> CreateParamParser() {
   return ProtoParserBuilder<RsaSsaPssParamsStruct>()
-      .AddEnumField(1, &RsaSsaPssParamsStruct::sig_hash, &HashType_IsValid)
-      .AddEnumField(2, &RsaSsaPssParamsStruct::mgf1_hash, &HashType_IsValid)
+      .AddEnumField(1, &RsaSsaPssParamsStruct::sig_hash,
+                    &internal::HashTypeEnumIsValid)
+      .AddEnumField(2, &RsaSsaPssParamsStruct::mgf1_hash,
+                    &internal::HashTypeEnumIsValid)
       .AddUint32Field(3, &RsaSsaPssParamsStruct::salt_length)
       .BuildOrDie();
 }
@@ -176,86 +170,86 @@ const absl::string_view kPrivateTypeUrl =
 const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.RsaSsaPssPublicKey";
 
-util::StatusOr<RsaSsaPssParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<RsaSsaPssParameters::Variant> ToVariant(
+    internal::OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case internal::OutputPrefixTypeEnum::kLegacy:
       return RsaSsaPssParameters::Variant::kLegacy;
-    case OutputPrefixType::CRUNCHY:
+    case internal::OutputPrefixTypeEnum::kCrunchy:
       return RsaSsaPssParameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case internal::OutputPrefixTypeEnum::kRaw:
       return RsaSsaPssParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case internal::OutputPrefixTypeEnum::kTink:
       return RsaSsaPssParameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine RsaSsaPssParameters::Variant");
+      return absl::InvalidArgumentError(
+          "Could not determine RsaSsaPssParameters::Variant");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<internal::OutputPrefixTypeEnum> ToOutputPrefixType(
     RsaSsaPssParameters::Variant variant) {
   switch (variant) {
     case RsaSsaPssParameters::Variant::kLegacy:
-      return OutputPrefixType::LEGACY;
+      return internal::OutputPrefixTypeEnum::kLegacy;
     case RsaSsaPssParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return internal::OutputPrefixTypeEnum::kCrunchy;
     case RsaSsaPssParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return internal::OutputPrefixTypeEnum::kRaw;
     case RsaSsaPssParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return internal::OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type.");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type.");
   }
 }
 
-util::StatusOr<RsaSsaPssParameters::HashType> ToEnumHashType(
-    HashType hash_type) {
+absl::StatusOr<RsaSsaPssParameters::HashType> ToEnumHashType(
+    internal::HashTypeEnum hash_type) {
   switch (hash_type) {
-    case HashType::SHA256:
+    case internal::HashTypeEnum::kSha256:
       return RsaSsaPssParameters::HashType::kSha256;
-    case HashType::SHA384:
+    case internal::HashTypeEnum::kSha384:
       return RsaSsaPssParameters::HashType::kSha384;
-    case HashType::SHA512:
+    case internal::HashTypeEnum::kSha512:
       return RsaSsaPssParameters::HashType::kSha512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine HashType");
+      return absl::InvalidArgumentError("Could not determine HashType");
   }
 }
 
-util::StatusOr<HashType> ToProtoHashType(
+absl::StatusOr<internal::HashTypeEnum> ToProtoHashType(
     RsaSsaPssParameters::HashType hash_type) {
   switch (hash_type) {
     case RsaSsaPssParameters::HashType::kSha256:
-      return HashType::SHA256;
+      return internal::HashTypeEnum::kSha256;
     case RsaSsaPssParameters::HashType::kSha384:
-      return HashType::SHA384;
+      return internal::HashTypeEnum::kSha384;
     case RsaSsaPssParameters::HashType::kSha512:
-      return HashType::SHA512;
+      return internal::HashTypeEnum::kSha512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine RsaSsaPssParameters::HashType");
+      return absl::InvalidArgumentError(
+          "Could not determine RsaSsaPssParameters::HashType");
   }
 }
 
-util::StatusOr<RsaSsaPssParameters> ToParameters(
-    OutputPrefixType output_prefix_type, const RsaSsaPssParamsStruct& params,
-    int modulus_size_in_bits, const BigInteger& public_exponent) {
-  util::StatusOr<RsaSsaPssParameters::Variant> variant =
+absl::StatusOr<RsaSsaPssParameters> ToParameters(
+    internal::OutputPrefixTypeEnum output_prefix_type,
+    const RsaSsaPssParamsStruct& params, int modulus_size_in_bits,
+    const BigInteger& public_exponent) {
+  absl::StatusOr<RsaSsaPssParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<RsaSsaPssParameters::HashType> sig_hash_type =
+  absl::StatusOr<RsaSsaPssParameters::HashType> sig_hash_type =
       ToEnumHashType(params.sig_hash);
   if (!sig_hash_type.ok()) {
     return sig_hash_type.status();
   }
 
-  util::StatusOr<RsaSsaPssParameters::HashType> mgf1_hash_type =
+  absl::StatusOr<RsaSsaPssParameters::HashType> mgf1_hash_type =
       ToEnumHashType(params.mgf1_hash);
   if (!mgf1_hash_type.ok()) {
     return mgf1_hash_type.status();
@@ -271,15 +265,15 @@ util::StatusOr<RsaSsaPssParameters> ToParameters(
       .Build();
 }
 
-util::StatusOr<RsaSsaPssParamsStruct> FromParameters(
+absl::StatusOr<RsaSsaPssParamsStruct> FromParameters(
     RsaSsaPssParameters parameters) {
-  util::StatusOr<HashType> sig_hash_type =
+  absl::StatusOr<internal::HashTypeEnum> sig_hash_type =
       ToProtoHashType(parameters.GetSigHashType());
   if (!sig_hash_type.ok()) {
     return sig_hash_type.status();
   }
 
-  util::StatusOr<HashType> mgf1_hash_type =
+  absl::StatusOr<internal::HashTypeEnum> mgf1_hash_type =
       ToProtoHashType(parameters.GetMgf1HashType());
   if (!mgf1_hash_type.ok()) {
     return mgf1_hash_type.status();
@@ -293,31 +287,32 @@ util::StatusOr<RsaSsaPssParamsStruct> FromParameters(
   return params;
 }
 
-util::StatusOr<RsaSsaPssParameters> ParseParameters(
+absl::StatusOr<RsaSsaPssParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing RsaSsaPssParameters.");
+  const internal::KeyTemplateStruct key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kPrivateTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing RsaSsaPssParameters.");
   }
 
   absl::StatusOr<RsaSsaPssKeyFormatStruct> proto_key_format =
-      GetKeyFormatParser().Parse(serialization.GetKeyTemplate().value());
+      GetKeyFormatParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }
 
-  return ToParameters(serialization.GetKeyTemplate().output_prefix_type(),
-                      proto_key_format->params,
+  return ToParameters(key_template.output_prefix_type, proto_key_format->params,
                       proto_key_format->modulus_size_in_bits,
                       BigInteger(proto_key_format->public_exponent));
 }
 
-util::StatusOr<RsaSsaPssPublicKey> ParsePublicKey(
+absl::StatusOr<RsaSsaPssPublicKey> ParsePublicKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing RsaSsaPssPublicKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing RsaSsaPssPublicKey.");
   }
 
   absl::StatusOr<RsaSsaPssPublicKeyStruct> proto_key =
@@ -327,14 +322,14 @@ util::StatusOr<RsaSsaPssPublicKey> ParsePublicKey(
     return proto_key.status();
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   int modulus_size_in_bits = proto_key->n.size() * 8;
-  util::StatusOr<RsaSsaPssParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixType(), proto_key->params,
-                   modulus_size_in_bits, BigInteger(proto_key->e));
+  absl::StatusOr<RsaSsaPssParameters> parameters = ToParameters(
+      static_cast<internal::OutputPrefixTypeEnum>(
+          serialization.GetOutputPrefixType()),
+      proto_key->params, modulus_size_in_bits, BigInteger(proto_key->e));
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -344,44 +339,44 @@ util::StatusOr<RsaSsaPssPublicKey> ParsePublicKey(
                                     GetPartialKeyAccess());
 }
 
-util::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
+absl::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing RsaSsaPssPrivateKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing RsaSsaPssPrivateKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
   absl::StatusOr<RsaSsaPssPrivateKeyStruct> proto_key =
       GetPrivateKeyParser().Parse(
           serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse RsaSsaPssPrivateKey proto");
+    return absl::InvalidArgumentError(
+        "Failed to parse RsaSsaPssPrivateKey proto");
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   if (proto_key->public_key.version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 public keys are accepted.");
+    return absl::InvalidArgumentError(
+        "Only version 0 public keys are accepted.");
   }
 
   int modulus_size_in_bits = proto_key->public_key.n.size() * 8;
 
-  util::StatusOr<RsaSsaPssParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key->public_key.params,
-      modulus_size_in_bits, BigInteger(proto_key->public_key.e));
+  absl::StatusOr<RsaSsaPssParameters> parameters =
+      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
+                       serialization.GetOutputPrefixType()),
+                   proto_key->public_key.params, modulus_size_in_bits,
+                   BigInteger(proto_key->public_key.e));
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, BigInteger(proto_key->public_key.n),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
@@ -405,15 +400,15 @@ util::StatusOr<RsaSsaPssPrivateKey> ParsePrivateKey(
       .Build(GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const RsaSsaPssParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<RsaSsaPssParamsStruct> params = FromParameters(parameters);
+  absl::StatusOr<RsaSsaPssParamsStruct> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
@@ -424,7 +419,7 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       std::string(parameters.GetPublicExponent().GetValue());
   proto_key_format.params = *params;
 
-  util::StatusOr<std::string> serialized =
+  absl::StatusOr<std::string> serialized =
       GetKeyFormatParser().SerializeIntoString(proto_key_format);
   if (!serialized.ok()) {
     return serialized.status();
@@ -433,9 +428,9 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       kPrivateTypeUrl, *output_prefix_type, *serialized);
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const RsaSsaPssPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RsaSsaPssParamsStruct> params =
+  absl::StatusOr<RsaSsaPssParamsStruct> params =
       FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
@@ -447,12 +442,12 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   proto_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
   proto_key.e = std::string(key.GetParameters().GetPublicExponent().GetValue());
 
-  util::StatusOr<std::string> serialized =
+  absl::StatusOr<std::string> serialized =
       GetPublicKeyParser().SerializeIntoString(proto_key);
   if (!serialized.ok()) {
     return serialized.status();
   }
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -460,19 +455,19 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized, InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
-      *output_prefix_type, key.GetIdRequirement());
+      kPublicTypeUrl, restricted_output,
+      internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     const RsaSsaPssPrivateKey& key,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  util::StatusOr<RsaSsaPssParamsStruct> params =
+  absl::StatusOr<RsaSsaPssParamsStruct> params =
       FromParameters(key.GetPublicKey().GetParameters());
   if (!params.ok()) {
     return params.status();
@@ -503,12 +498,12 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   proto_private_key.crt =
       SecretDataFromStringView(key.GetCrtCoefficient().GetSecret(*token));
 
-  util::StatusOr<SecretData> serialized =
+  absl::StatusOr<SecretData> serialized =
       GetPrivateKeyParser().SerializeIntoSecretData(proto_private_key);
   if (!serialized.ok()) {
     return serialized.status();
   }
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -516,8 +511,9 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
 
   RestrictedData restricted_output = RestrictedData(*serialized, *token);
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, restricted_output, KeyData::ASYMMETRIC_PRIVATE,
-      *output_prefix_type, key.GetIdRequirement());
+      kPrivateTypeUrl, restricted_output,
+      internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 RsaSsaPssProtoParametersParserImpl* RsaSsaPssProtoParametersParser() {
@@ -558,8 +554,8 @@ RsaSsaPssProtoPrivateKeySerializerImpl* RsaSsaPssProtoPrivateKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterRsaSsaPssProtoSerialization() {
-  util::Status status =
+absl::Status RegisterRsaSsaPssProtoSerialization() {
+  absl::Status status =
       internal::MutableSerializationRegistry::GlobalInstance()
           .RegisterParametersParser(RsaSsaPssProtoParametersParser());
   if (!status.ok()) {

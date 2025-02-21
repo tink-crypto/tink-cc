@@ -219,26 +219,67 @@ TEST_F(MlDsaProtoSerializationTest,
                HasSubstr("Could not determine MlDsaParameters::Variant")));
 }
 
-TEST_F(MlDsaProtoSerializationTest, ParseParametersWithUnkownInstanceFails) {
+TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
-  MlDsaKeyFormat key_format_proto;
-  MlDsaParams& params = *key_format_proto.mutable_params();
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_UNKNOWN_INSTANCE);
+  {
+    // Unknown instance.
+    MlDsaKeyFormat key_format_proto;
+    MlDsaParams& params = *key_format_proto.mutable_params();
+    params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_UNKNOWN_INSTANCE);
 
-  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
-          key_format_proto.SerializeAsString());
-  ASSERT_THAT(serialization, IsOk());
+    absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+        internal::ProtoParametersSerialization::Create(
+            kPrivateTypeUrl, OutputPrefixType::RAW,
+            key_format_proto.SerializeAsString());
+    ASSERT_THAT(serialization, IsOk());
 
-  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
-      internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
-          *serialization);
-  EXPECT_THAT(
-      parameters.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Could not determine MlDsaParameters::Instance")));
+    absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+        internal::MutableSerializationRegistry::GlobalInstance()
+            .ParseParameters(*serialization);
+    EXPECT_THAT(
+        parameters.status(),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("Could not determine MlDsaParameters::Instance")));
+  }
+  {
+    // Out of range instance - too large.
+    MlDsaKeyFormat key_format_proto;
+    MlDsaParams& params = *key_format_proto.mutable_params();
+    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(2));
+
+    absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+        internal::ProtoParametersSerialization::Create(
+            kPrivateTypeUrl, OutputPrefixType::RAW,
+            key_format_proto.SerializeAsString());
+    ASSERT_THAT(serialization, IsOk());
+
+    absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+        internal::MutableSerializationRegistry::GlobalInstance()
+            .ParseParameters(*serialization);
+    EXPECT_THAT(parameters.status(),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("Failed to parse MlDsaKeyFormat proto")));
+  }
+  {
+    // Out of range instance - too small.
+    MlDsaKeyFormat key_format_proto;
+    MlDsaParams& params = *key_format_proto.mutable_params();
+    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(-1));
+
+    absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+        internal::ProtoParametersSerialization::Create(
+            kPrivateTypeUrl, OutputPrefixType::RAW,
+            key_format_proto.SerializeAsString());
+    ASSERT_THAT(serialization, IsOk());
+
+    absl::StatusOr<std::unique_ptr<Parameters>> parameters =
+        internal::MutableSerializationRegistry::GlobalInstance()
+            .ParseParameters(*serialization);
+    EXPECT_THAT(parameters.status(),
+                StatusIs(absl::StatusCode::kInvalidArgument,
+                         HasSubstr("Failed to parse MlDsaKeyFormat proto")));
+  }
 }
 
 TEST_P(MlDsaProtoSerializationTest, SerializeMlDsa65SignatureParametersWorks) {

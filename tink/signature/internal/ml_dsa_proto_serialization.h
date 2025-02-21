@@ -17,7 +17,7 @@
 #ifndef TINK_SIGNATURE_INTERNAL_ML_DSA_PROTO_SERIALIZATION_H_
 #define TINK_SIGNATURE_INTERNAL_ML_DSA_PROTO_SERIALIZATION_H_
 
-#include "tink/util/status.h"
+#include "absl/status/status.h"
 
 namespace crypto {
 namespace tink {

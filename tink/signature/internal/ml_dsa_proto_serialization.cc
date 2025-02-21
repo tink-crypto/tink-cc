@@ -21,6 +21,7 @@
 
 #include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
@@ -32,6 +33,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -39,9 +41,6 @@
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/ml_dsa.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -50,20 +49,21 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::MlDsaInstance;
-using ::google::crypto::tink::OutputPrefixType;
 
-bool InstaceValid(int c) {
-  return google::crypto::tink::MlDsaInstance_IsValid(c);
-}
+bool MlDsaInstanceEnumValid(int c) { return c >= 0 && c <= 1; }
+
+enum class MlDsaInstanceEnum : uint32_t {
+  kUnknownInstance = 0,
+  kMlDsa65,
+};
 
 struct MlDsaParamsStruct {
-  MlDsaInstance ml_dsa_instance;
+  MlDsaInstanceEnum ml_dsa_instance;
 
   static ProtoParser<MlDsaParamsStruct> CreateParser() {
     return ProtoParserBuilder<MlDsaParamsStruct>()
-        .AddEnumField(1, &MlDsaParamsStruct::ml_dsa_instance, &InstaceValid)
+        .AddEnumField(1, &MlDsaParamsStruct::ml_dsa_instance,
+                      &MlDsaInstanceEnumValid)
         .BuildOrDie();
   }
 
@@ -157,36 +157,36 @@ const absl::string_view kPrivateTypeUrl =
 const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.MlDsaPublicKey";
 
-util::StatusOr<MlDsaParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+absl::StatusOr<MlDsaParameters::Variant> ToVariant(
+    internal::OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::RAW:
+    case internal::OutputPrefixTypeEnum::kRaw:
       return MlDsaParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case internal::OutputPrefixTypeEnum::kTink:
       return MlDsaParameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine MlDsaParameters::Variant");
+      return absl::InvalidArgumentError(
+          "Could not determine MlDsaParameters::Variant");
   }
 }
 
-util::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<internal::OutputPrefixTypeEnum> ToOutputPrefixType(
     MlDsaParameters::Variant variant) {
   switch (variant) {
     case MlDsaParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return internal::OutputPrefixTypeEnum::kRaw;
     case MlDsaParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return internal::OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
-util::StatusOr<MlDsaParameters::Instance> ToInstance(
-    MlDsaInstance proto_instance) {
+absl::StatusOr<MlDsaParameters::Instance> ToInstance(
+    MlDsaInstanceEnum proto_instance) {
   switch (proto_instance) {
-    case MlDsaInstance::ML_DSA_65:
+    case MlDsaInstanceEnum::kMlDsa65:
       return MlDsaParameters::Instance::kMlDsa65;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -194,26 +194,26 @@ util::StatusOr<MlDsaParameters::Instance> ToInstance(
   }
 }
 
-util::StatusOr<MlDsaInstance> ToProtoInstance(
+absl::StatusOr<MlDsaInstanceEnum> ToProtoInstance(
     MlDsaParameters::Instance instance) {
   switch (instance) {
     case MlDsaParameters::Instance::kMlDsa65:
-      return MlDsaInstance::ML_DSA_65;
+      return MlDsaInstanceEnum::kMlDsa65;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine MlDsaInstance");
+      return absl::InvalidArgumentError("Could not determine MlDsaInstance");
   }
 }
 
-util::StatusOr<MlDsaParameters> ToParameters(
-    OutputPrefixType output_prefix_type, const MlDsaParamsStruct& params) {
-  util::StatusOr<MlDsaParameters::Variant> variant =
+absl::StatusOr<MlDsaParameters> ToParameters(
+    internal::OutputPrefixTypeEnum output_prefix_type,
+    const MlDsaParamsStruct& params) {
+  absl::StatusOr<MlDsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<MlDsaParameters::Instance> instance =
+  absl::StatusOr<MlDsaParameters::Instance> instance =
       ToInstance(params.ml_dsa_instance);
   if (!instance.ok()) {
     return instance.status();
@@ -222,10 +222,10 @@ util::StatusOr<MlDsaParameters> ToParameters(
   return MlDsaParameters::Create(*instance, *variant);
 }
 
-util::StatusOr<MlDsaParamsStruct> FromParameters(
+absl::StatusOr<MlDsaParamsStruct> FromParameters(
     const MlDsaParameters& parameters) {
   /* Only ML-DSA-65  is currently supported*/
-  util::StatusOr<MlDsaInstance> instance =
+  absl::StatusOr<MlDsaInstanceEnum> instance =
       ToProtoInstance(parameters.GetInstance());
   if (!instance.ok()) {
     return instance.status();
@@ -237,52 +237,50 @@ util::StatusOr<MlDsaParamsStruct> FromParameters(
   return params;
 }
 
-util::StatusOr<MlDsaParameters> ParseParameters(
+absl::StatusOr<MlDsaParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing MlDsaParameters.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing MlDsaParameters.");
   }
 
-  util::StatusOr<MlDsaKeyFormatStruct> proto_key_format =
+  absl::StatusOr<MlDsaKeyFormatStruct> proto_key_format =
       MlDsaKeyFormatStruct::GetParser().Parse(
           serialization.GetKeyTemplate().value());
   if (!proto_key_format.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse MlDsaKeyFormat proto");
+    return absl::InvalidArgumentError("Failed to parse MlDsaKeyFormat proto");
   }
   if (proto_key_format->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  return ToParameters(serialization.GetKeyTemplate().output_prefix_type(),
+  return ToParameters(serialization.GetKeyTemplateStruct().output_prefix_type,
                       proto_key_format->params);
 }
 
-util::StatusOr<MlDsaPublicKey> ParsePublicKey(
+absl::StatusOr<MlDsaPublicKey> ParsePublicKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing MlDsaPublicKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing MlDsaPublicKey.");
   }
 
-  util::StatusOr<MlDsaPublicKeyStruct> proto_key =
+  absl::StatusOr<MlDsaPublicKeyStruct> proto_key =
       MlDsaPublicKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(
               InsecureSecretKeyAccess::Get()));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse MlDsaPublicKey proto");
+    return absl::InvalidArgumentError("Failed to parse MlDsaPublicKey proto");
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<MlDsaParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixType(), proto_key->params);
+  absl::StatusOr<MlDsaParameters> parameters =
+      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
+                       serialization.GetOutputPrefixType()),
+                   proto_key->params);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -292,36 +290,35 @@ util::StatusOr<MlDsaPublicKey> ParsePublicKey(
                                 GetPartialKeyAccess());
 }
 
-util::StatusOr<MlDsaPrivateKey> ParsePrivateKey(
+absl::StatusOr<MlDsaPrivateKey> ParsePrivateKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing MlDsaPrivateKey.");
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing MlDsaPrivateKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  util::StatusOr<MlDsaPrivateKeyStruct> proto_key =
+  absl::StatusOr<MlDsaPrivateKeyStruct> proto_key =
       MlDsaPrivateKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse MlDsaPrivateKey proto");
+    return absl::InvalidArgumentError("Failed to parse MlDsaPrivateKey proto");
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<MlDsaParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key->public_key.params);
+  absl::StatusOr<MlDsaParameters> parameters =
+      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
+                       serialization.GetOutputPrefixType()),
+                   proto_key->public_key.params);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  util::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
       *parameters, proto_key->public_key.key_value,
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
@@ -333,15 +330,15 @@ util::StatusOr<MlDsaPrivateKey> ParsePrivateKey(
                                  GetPartialKeyAccess());
 }
 
-util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const MlDsaParameters& parameters) {
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<MlDsaParamsStruct> params = FromParameters(parameters);
+  absl::StatusOr<MlDsaParamsStruct> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
@@ -349,7 +346,7 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   proto_key_format.params = *params;
   proto_key_format.version = 0;
 
-  util::StatusOr<std::string> serialized_proto =
+  absl::StatusOr<std::string> serialized_proto =
       MlDsaKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
@@ -359,9 +356,9 @@ util::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       kPrivateTypeUrl, *output_prefix_type, *serialized_proto);
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const MlDsaPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<MlDsaParamsStruct> params =
+  absl::StatusOr<MlDsaParamsStruct> params =
       FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
@@ -372,13 +369,13 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   proto_key.params = *params;
   proto_key.key_value = key.GetPublicKeyBytes(GetPartialKeyAccess());
 
-  util::StatusOr<std::string> serialized_proto =
+  absl::StatusOr<std::string> serialized_proto =
       MlDsaPublicKeyStruct::GetParser().SerializeIntoString(proto_key);
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
   }
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -387,23 +384,23 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto, InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
-      *output_prefix_type, key.GetIdRequirement());
+      kPublicTypeUrl, restricted_output,
+      internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
+absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
     const MlDsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
-                        "SecretKeyAccess is required");
+    return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetPrivateSeedBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) {
     return restricted_input.status();
   }
 
-  util::StatusOr<MlDsaParamsStruct> params =
+  absl::StatusOr<MlDsaParamsStruct> params =
       FromParameters(key.GetPublicKey().GetParameters());
   if (!params.ok()) {
     return params.status();
@@ -417,13 +414,13 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
   proto_private_key.key_value = restricted_input->Get(*token);
 
-  util::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  util::StatusOr<SecretData> serialized_proto =
+  absl::StatusOr<SecretData> serialized_proto =
       MlDsaPrivateKeyStruct::GetParser().SerializeIntoSecretData(
           proto_private_key);
   if (!serialized_proto.ok()) {
@@ -431,7 +428,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
   }
   return internal::ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
-      KeyData::ASYMMETRIC_PRIVATE, *output_prefix_type, key.GetIdRequirement());
+      internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 MlDsaProtoParametersParserImpl& MlDsaProtoParametersParser() {
@@ -472,8 +470,8 @@ MlDsaProtoPrivateKeySerializerImpl& MlDsaProtoPrivateKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterMlDsaProtoSerialization() {
-  util::Status status =
+absl::Status RegisterMlDsaProtoSerialization() {
+  absl::Status status =
       internal::MutableSerializationRegistry::GlobalInstance()
           .RegisterParametersParser(&MlDsaProtoParametersParser());
   if (!status.ok()) {

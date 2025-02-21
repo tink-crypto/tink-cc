@@ -460,6 +460,7 @@ tink_cc_library(
   DEPS
     absl::no_destructor
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -474,13 +475,11 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
+    tink::internal::tink_proto_structs
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::proto::ml_dsa_cc_proto
   TAGS
     exclude_if_openssl
 )

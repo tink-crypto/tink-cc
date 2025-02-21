@@ -58,7 +58,7 @@ using ::google::crypto::tink::KeyTemplate;
 TEST(StreamingAeadV0Test, PrimitiveWrappers) {
   Configuration config;
   ASSERT_THAT(AddStreamingAeadV0(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -68,13 +68,13 @@ TEST(StreamingAeadV0Test, PrimitiveWrappers) {
 TEST(StreamingAeadV0Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddStreamingAeadV0(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddStreamingAeadKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -93,11 +93,11 @@ TEST(StreamingAeadV0Test, GetPrimitive) {
   for (const KeyTemplate& temp :
        {StreamingAeadKeyTemplates::Aes128CtrHmacSha256Segment4KB(),
         StreamingAeadKeyTemplates::Aes128GcmHkdf4KB()}) {
-    util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+    absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
         KeysetHandle::GenerateNew(temp, key_gen_config);
     ASSERT_THAT(handle, IsOk());
 
-    util::StatusOr<std::unique_ptr<StreamingAead>> saead =
+    absl::StatusOr<std::unique_ptr<StreamingAead>> saead =
         (*handle)->GetPrimitive<StreamingAead>(config);
     ASSERT_THAT(saead, IsOk());
 
@@ -109,7 +109,7 @@ TEST(StreamingAeadV0Test, GetPrimitive) {
 
     auto ciphertext_out_stream =
         absl::make_unique<util::OstreamOutputStream>(std::move(ciphertext));
-    util::StatusOr<std::unique_ptr<OutputStream>> encrypt =
+    absl::StatusOr<std::unique_ptr<OutputStream>> encrypt =
         (*saead)->NewEncryptingStream(std::move(ciphertext_out_stream), ad);
     ASSERT_THAT(encrypt, IsOk());
     ASSERT_THAT(WriteToStream((*encrypt).get(), plaintext), IsOk());
@@ -118,7 +118,7 @@ TEST(StreamingAeadV0Test, GetPrimitive) {
         absl::make_unique<std::stringstream>(ciphertext_buf->str());
     auto ciphertext_in_stream =
         absl::make_unique<util::IstreamInputStream>(std::move(ciphertext_in));
-    util::StatusOr<std::unique_ptr<InputStream>> decrypt =
+    absl::StatusOr<std::unique_ptr<InputStream>> decrypt =
         (*saead)->NewDecryptingStream(std::move(ciphertext_in_stream), ad);
     ASSERT_THAT(decrypt, IsOk());
     std::string got;

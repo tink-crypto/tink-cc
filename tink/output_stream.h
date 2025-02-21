@@ -94,7 +94,7 @@ class OutputStream {
   // Postconditions:
   // * Writing to the stream is not possible any more, and all calls
   //   to non-const methods will fail.
-  virtual crypto::tink::util::Status Close() = 0;
+  virtual absl::Status Close() = 0;
 
   // Returns the total number of bytes written since this object was created.
   // Preconditions:

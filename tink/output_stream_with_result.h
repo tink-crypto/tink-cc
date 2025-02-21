@@ -42,8 +42,8 @@ auto ExtractStatus(const ResultType& result)
 // for when ResultType is Status
 template <class ResultType>
 auto ExtractStatus(ResultType result) ->
-    typename std::enable_if<std::is_same<ResultType, util::Status>::value,
-                            util::Status>::type {
+    typename std::enable_if<std::is_same<ResultType, absl::Status>::value,
+                            absl::Status>::type {
   return result;
 }
 }  // namespace internal
@@ -64,8 +64,8 @@ class OutputStreamWithResult : public OutputStream {
 
   // The return type is StatusOr<T> if T != Status, and Status otherwise.
   using ResultType =
-      typename std::conditional<std::is_same<T, util::Status>::value,
-                                util::Status, util::StatusOr<T>>::type;
+      typename std::conditional<std::is_same<T, absl::Status>::value,
+                                absl::Status, util::StatusOr<T>>::type;
 
   // Get the result associated with this OutputStream. Can only be called on
   // closed streams, and will otherwise fail with FAILED_PRECONDITION as error
@@ -75,7 +75,7 @@ class OutputStreamWithResult : public OutputStream {
   // The return type is StatusOr<T> if T != Status, and Status otherwise.
   ResultType GetResult() {
     if (!closed_) {
-      return util::Status(absl::StatusCode::kFailedPrecondition,
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "Stream is not closed");
     }
     return result_;
@@ -85,7 +85,7 @@ class OutputStreamWithResult : public OutputStream {
   // Close() and GetResult() if Close() returned an OK status.
   // The return type is StatusOr<T> if T != Status, and Status otherwise.
   ResultType CloseAndGetResult() {
-    util::Status closing_status = Close();
+    absl::Status closing_status = Close();
     if (!closing_status.ok()) {
       return closing_status;
     }
@@ -93,9 +93,9 @@ class OutputStreamWithResult : public OutputStream {
   }
 
   // Closes the OutputStream.
-  util::Status Close() final {
+  absl::Status Close() final {
     if (closed_) {
-      return util::Status(absl::StatusCode::kFailedPrecondition,
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "Stream closed");
     }
     result_ = CloseStreamAndComputeResult();
@@ -108,7 +108,7 @@ class OutputStreamWithResult : public OutputStream {
   // description.
   crypto::tink::util::StatusOr<int> Next(void** data) final {
     if (closed_) {
-      return util::Status(absl::StatusCode::kFailedPrecondition,
+      return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "Write on closed Stream");
     }
     return NextBuffer(data);

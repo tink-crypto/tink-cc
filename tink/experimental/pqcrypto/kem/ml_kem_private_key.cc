@@ -44,14 +44,14 @@ util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
     const MlKemPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
   if (private_seed_bytes.size() != MLKEM_SEED_BYTES) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid ML-KEM private seed. The seed must be ",
                      MLKEM_SEED_BYTES, " bytes."));
   }
 
   if (public_key.GetParameters().GetKeySize() != 768) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid ML-KEM key size. Only ML-KEM-768 is "
                         "currently supported.");
   }
@@ -64,7 +64,7 @@ util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
           bssl_private_key.get(),
           reinterpret_cast<const uint8_t*>(private_seed_view.data()),
           private_seed_view.size())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to create ML-KEM private key from seed.");
   }
 
@@ -81,7 +81,7 @@ util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
                       MLKEM768_PUBLIC_KEY_BYTES) ||
       !MLKEM768_marshal_public_key(&cbb, bssl_public_key.get()) ||
       !CBB_finish(&cbb, nullptr, &size) || size != MLKEM768_PUBLIC_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid ML-KEM public key.");
   }
 
@@ -91,7 +91,7 @@ util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
   if (CRYPTO_memcmp(expected_public_key_bytes.data(),
                     public_key_bytes_regen.data(),
                     MLKEM768_PUBLIC_KEY_BYTES) != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ML-KEM public key doesn't match the private key.");
   }
 

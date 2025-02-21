@@ -23,7 +23,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for ML-KEM parameters and keys.
-crypto::tink::util::Status RegisterMlKemProtoSerialization();
+absl::Status RegisterMlKemProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

@@ -79,10 +79,10 @@ util::StatusOr<MlKemParameters::Variant> ToVariant(
     case OutputPrefixType::TINK:
       return MlKemParameters::Variant::kTink;
     case OutputPrefixType::RAW:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid output prefix type RAW for MlKemParameters");
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine MlKemParameters::Variant");
   }
 }
@@ -93,7 +93,7 @@ util::StatusOr<OutputPrefixType> ToOutputPrefixType(
     case MlKemParameters::Variant::kTink:
       return OutputPrefixType::TINK;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
   }
 }
@@ -103,7 +103,7 @@ util::StatusOr<int> ToKeySize(MlKemKeySize key_size) {
     case MlKemKeySize::ML_KEM_768:
       return 768;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine MlKemParameters' key size");
   }
 }
@@ -113,7 +113,7 @@ util::StatusOr<MlKemKeySize> ToProtoKeySize(int key_size) {
     case 768:
       return MlKemKeySize::ML_KEM_768;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine MlKemKeySize");
   }
 }
@@ -149,23 +149,23 @@ util::StatusOr<MlKemParams> FromParameters(const MlKemParameters& parameters) {
 util::StatusOr<MlKemParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing MlKemParameters.");
   }
 
   MlKemKeyFormat proto_key_format;
   if (!proto_key_format.ParseFromString(
           serialization.GetKeyTemplate().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse MlKemKeyFormat proto");
   }
   if (proto_key_format.version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
   if (!proto_key_format.has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "MlKemKeyFormat proto is missing params field.");
   }
 
@@ -177,7 +177,7 @@ util::StatusOr<MlKemPublicKey> ParsePublicKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing MlKemPublicKey.");
   }
 
@@ -185,11 +185,11 @@ util::StatusOr<MlKemPublicKey> ParsePublicKey(
   const RestrictedData& restricted_data = serialization.SerializedKeyProto();
   if (!proto_key.ParseFromString(
           restricted_data.GetSecret(InsecureSecretKeyAccess::Get()))) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse MlKemPublicKey proto");
   }
   if (proto_key.version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
@@ -208,22 +208,22 @@ util::StatusOr<MlKemPrivateKey> ParsePrivateKey(
     const internal::ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing MlKemPrivateKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
+    return absl::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
   absl::StatusOr<SecretProto<google::crypto::tink::MlKemPrivateKey>> proto_key =
       SecretProto<google::crypto::tink::MlKemPrivateKey>::ParseFromSecretData(
           serialization.SerializedKeyProto().Get(*token));
   if (!proto_key.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse MlKemPrivateKey proto");
   }
   if ((*proto_key)->version() != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
@@ -294,7 +294,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
 util::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
     const MlKemPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kPermissionDenied,
+    return absl::Status(absl::StatusCode::kPermissionDenied,
                         "SecretKeyAccess is required");
   }
   util::StatusOr<RestrictedData> restricted_input =
@@ -371,8 +371,8 @@ MlKemProtoPrivateKeySerializerImpl& MlKemProtoPrivateKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterMlKemProtoSerialization() {
-  util::Status status =
+absl::Status RegisterMlKemProtoSerialization() {
+  absl::Status status =
       internal::MutableSerializationRegistry::GlobalInstance()
           .RegisterParametersParser(&MlKemProtoParametersParser());
   if (!status.ok()) {

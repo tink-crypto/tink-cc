@@ -39,7 +39,7 @@ class Aead {
   // and returns the resulting ciphertext.
   // The ciphertext allows for checking authenticity and integrity
   // of the associated data, but does not guarantee its secrecy.
-  virtual crypto::tink::util::StatusOr<std::string> Encrypt(
+  virtual absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext, absl::string_view associated_data) const = 0;
 
   // Decrypts 'ciphertext' with 'associated_data' as associated data,
@@ -47,7 +47,7 @@ class Aead {
   // The decryption verifies the authenticity and integrity
   // of the associated data, but there are no guarantees wrt. secrecy
   // of that data.
-  virtual crypto::tink::util::StatusOr<std::string> Decrypt(
+  virtual absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const = 0;
 

@@ -52,7 +52,7 @@ const char kEncryptedKeysetTypeUrl[] =
 util::StatusOr<std::unique_ptr<KeysetReader>> JsonKeysetReader::New(
     std::unique_ptr<std::istream> keyset_stream) {
   if (keyset_stream == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "keyset_stream must be non-null.");
   }
   return absl::WrapUnique(new JsonKeysetReader(std::move(keyset_stream)));

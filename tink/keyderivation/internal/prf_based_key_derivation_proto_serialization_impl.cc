@@ -63,7 +63,6 @@ using ::crypto::tink::internal::KeyTemplateStruct;
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-using ::google::crypto::tink::OutputPrefixType;
 
 struct PrfBasedDeriverParamsStruct {
   KeyTemplateStruct derived_key_template;

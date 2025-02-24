@@ -527,6 +527,7 @@ cc_library(
         "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink:secret_key_access_token",
+        "//tink/aead/internal:aes_gcm_proto_structs",
         "//tink/daead/internal:aes_siv_proto_structs",
         "//tink/internal:bn_encoding_util",
         "//tink/internal:key_parser",
@@ -544,6 +545,7 @@ cc_library(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
         "@com_google_absl//absl/types:optional",
     ],
 )

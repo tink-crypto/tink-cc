@@ -506,6 +506,7 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
+    absl::str_format
     absl::optional
     crypto
     tink::core::big_integer
@@ -515,6 +516,7 @@ tink_cc_library(
     tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::aead::internal::aes_gcm_proto_structs
     tink::daead::internal::aes_siv_proto_structs
     tink::internal::bn_encoding_util
     tink::internal::key_parser

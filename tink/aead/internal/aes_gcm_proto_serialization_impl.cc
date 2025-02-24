@@ -16,18 +16,17 @@
 
 #include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 
-#include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/internal/aes_gcm_proto_structs.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -35,7 +34,6 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -49,46 +47,6 @@ namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
-
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
-
-struct AesGcmKeyFormatStruct {
-  uint32_t key_size = 0;
-  uint32_t version = 0;
-
-  static ProtoParser<AesGcmKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<AesGcmKeyFormatStruct>()
-        .AddUint32Field(2, &AesGcmKeyFormatStruct::key_size)
-        .AddUint32Field(3, &AesGcmKeyFormatStruct::version)
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<AesGcmKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesGcmKeyFormatStruct>> parser{
-        CreateParser()};
-    return *parser;
-  }
-};
-
-struct AesGcmKeyStruct {
-  uint32_t version = 0;
-  SecretData key_value = {};
-
-  static ProtoParser<AesGcmKeyStruct> CreateParser() {
-    return ProtoParserBuilder<AesGcmKeyStruct>()
-        .AddUint32Field(1, &AesGcmKeyStruct::version)
-        .AddBytesSecretDataField(3, &AesGcmKeyStruct::key_value)
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<AesGcmKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesGcmKeyStruct>> parser{
-        CreateParser()};
-    return *parser;
-  }
-};
 
 using AesGcmProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesGcmParameters>;

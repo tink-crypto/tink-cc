@@ -100,22 +100,14 @@ class SecretDataInternalClass {
     }
   }
 
-  uint8_t& operator[](size_t pos) {
-    CHECK(pos < size_) << "SecretData::operator[] pos out of bounds";
-    return data_[pos];
-  }
-
   const uint8_t& operator[](size_t pos) const {
     CHECK(pos < size_) << "SecretData::operator[] pos out of bounds";
     return data_[pos];
   }
 
-  uint8_t* data() { return data_; }
   const uint8_t* data() const { return data_; }
 
-  iterator begin() { return data_; }
   const_iterator begin() const { return data_; }
-  iterator end() { return data_ + size_; }
   const_iterator end() const { return data_ + size_; }
 
   absl::string_view AsStringView() const {
@@ -177,18 +169,6 @@ class SecretDataInternalClass {
     return result;
   }
 
-  // rvalue overload for efficiency
-  SecretDataInternalClass substr(size_t pos, size_t count = kMaxCount) && {
-    count = std::min(count, size() - pos);
-    SecretDataInternalClass result;
-    result.swap(*this);
-    if (pos != 0) {
-      crypto::tink::internal::SafeMemMove(result.data(), result.data() + pos,
-                                          count);
-    }
-    result.resize(count);
-    return result;
-  }
   // Semantics of std::string::append
   SecretDataInternalClass& append(const SecretDataInternalClass& other) {
     CHECK(other.size_ <= max_size() - size_);

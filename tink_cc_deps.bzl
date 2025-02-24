@@ -18,17 +18,15 @@ def tink_cc_deps():
         ],
     )
 
-    # Same as the one loaded by @com_google_protobuf [1]. This is needed to call
-    # `py_repositories()` in tink_cc_deps_init, which avoids failures such as [2].
+    # This is needed to call `py_repositories()` in tink_cc_deps_init, which avoids failures such as [1].
     #
-    # [1] https://github.com/protocolbuffers/protobuf/blob/v26.1/protobuf_deps.bzl#L96
-    # [2] https://github.com/bazelbuild/rules_python/issues/1560
+    # [1] https://github.com/bazelbuild/rules_python/issues/1560
     maybe(
         http_archive,
         name = "rules_python",
-        sha256 = "9d04041ac92a0985e344235f5d946f71ac543f1b1565f2cdbc9a2aaee8adf55b",
-        strip_prefix = "rules_python-0.26.0",
-        url = "https://github.com/bazelbuild/rules_python/releases/download/0.26.0/rules_python-0.26.0.tar.gz",
+        sha256 = "9c6e26911a79fbf510a8f06d8eedb40f412023cf7fa6d1461def27116bff022c",
+        strip_prefix = "rules_python-1.1.0",
+        url = "https://github.com/bazelbuild/rules_python/releases/download/1.1.0/rules_python-1.1.0.tar.gz",
     )
 
     # -------------------------------------------------------------------------
@@ -40,13 +38,13 @@ def tink_cc_deps():
     #   * @com_google_protobuf//:cc_toolchain
     #   * @com_google_protobuf//:java_toolchain
     # This statement defines the @com_google_protobuf repo.
-    # Release X.27.4 from 2024-08-27.
+    # Release X.29.3 from 2025-01-08.
     maybe(
         http_archive,
         name = "com_google_protobuf",
-        sha256 = "023e2bb164b234af644c5049c6dac1d9c9f6dd2acb133b960d9009105b4226bd",
-        strip_prefix = "protobuf-27.4",
-        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v27.4/protobuf-27.4.tar.gz"],
+        sha256 = "e9b9ac1910b1041065839850603caf36e29d3d3d230ddf52bd13778dd31b9046",
+        strip_prefix = "protobuf-29.3",
+        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protobuf-29.3.zip"],
     )
 
     # -------------------------------------------------------------------------

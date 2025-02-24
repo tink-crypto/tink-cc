@@ -515,6 +515,7 @@ tink_cc_library(
     tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_key_access_token
+    tink::daead::internal::aes_siv_proto_structs
     tink::internal::bn_encoding_util
     tink::internal::key_parser
     tink::internal::key_serializer
@@ -525,13 +526,9 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::util::secret_data
-    tink::util::secret_proto
-    tink::util::status
-    tink::util::statusor
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto
-    tink::proto::aes_siv_cc_proto
     tink::proto::common_cc_proto
     tink::proto::ecies_aead_hkdf_cc_proto
     tink::proto::hmac_cc_proto

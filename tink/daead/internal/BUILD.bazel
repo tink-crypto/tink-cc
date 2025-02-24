@@ -37,6 +37,7 @@ cc_library(
     hdrs = ["aes_siv_proto_serialization_impl.h"],
     include_prefix = "tink/daead/internal",
     deps = [
+        ":aes_siv_proto_structs",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_key_access_token",
@@ -49,14 +50,12 @@ cc_library(
         "//tink/internal:parameters_serializer",
         "//tink/internal:proto_key_serialization",
         "//tink/internal:proto_parameters_serialization",
-        "//tink/internal:proto_parser",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
         "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
@@ -114,6 +113,30 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "aes_siv_proto_structs",
+    hdrs = ["aes_siv_proto_structs.h"],
+    include_prefix = "tink/daead/internal",
+    deps = [
+        "//tink/internal:proto_parser",
+        "//tink/util:secret_data",
+        "@com_google_absl//absl/base:no_destructor",
+    ],
+)
+
+cc_test(
+    name = "aes_siv_proto_structs_test",
+    srcs = ["aes_siv_proto_structs_test.cc"],
+    deps = [
+        ":aes_siv_proto_structs",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )

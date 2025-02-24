@@ -33,8 +33,8 @@ tink_cc_library(
     aes_siv_proto_serialization_impl.cc
     aes_siv_proto_serialization_impl.h
   DEPS
+    tink::daead::internal::aes_siv_proto_structs
     absl::core_headers
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -51,7 +51,6 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::secret_data
@@ -111,4 +110,27 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::aes_siv_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME aes_siv_proto_structs
+  SRCS
+    aes_siv_proto_structs.h
+  DEPS
+    absl::no_destructor
+    tink::internal::proto_parser
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME aes_siv_proto_structs_test
+  SRCS
+    aes_siv_proto_structs_test.cc
+  DEPS
+    tink::daead::internal::aes_siv_proto_structs
+    gmock
+    absl::statusor
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
 )

@@ -16,17 +16,16 @@
 
 #include "tink/daead/internal/aes_siv_proto_serialization_impl.h"
 
-#include <cstdint>
 #include <string>
 
 #include "absl/base/attributes.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_key.h"
 #include "tink/daead/aes_siv_parameters.h"
+#include "tink/daead/internal/aes_siv_proto_structs.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -34,7 +33,6 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -48,45 +46,6 @@ namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
-
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
-
-struct AesSivKeyFormatStruct {
-  uint32_t key_size;
-  uint32_t version;
-
-  static ProtoParser<AesSivKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<AesSivKeyFormatStruct>()
-        .AddUint32Field(1, &AesSivKeyFormatStruct::key_size)
-        .AddUint32Field(2, &AesSivKeyFormatStruct::version)
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<AesSivKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesSivKeyFormatStruct>> parser(
-        CreateParser());
-    return *parser;
-  }
-};
-
-struct AesSivKeyStruct {
-  uint32_t version;
-  util::SecretData key_value;
-
-  static ProtoParser<AesSivKeyStruct> CreateParser() {
-    return ProtoParserBuilder<AesSivKeyStruct>()
-        .AddUint32Field(1, &AesSivKeyStruct::version)
-        .AddBytesSecretDataField(2, &AesSivKeyStruct::key_value)
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<AesSivKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesSivKeyStruct>> parser(
-        CreateParser());
-    return *parser;
-  }
-};
 
 using AesSivProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesSivParameters>;

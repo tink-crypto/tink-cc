@@ -51,7 +51,7 @@ class ChunkedMacComputationSetWrapper : public ChunkedMacComputation {
 
   absl::Status Update(absl::string_view data) override;
 
-  util::StatusOr<std::string> ComputeMac() override;
+  absl::StatusOr<std::string> ComputeMac() override;
 
  private:
   const std::unique_ptr<ChunkedMacComputation> computation_;
@@ -63,12 +63,12 @@ absl::Status ChunkedMacComputationSetWrapper::Update(absl::string_view data) {
   return computation_->Update(data);
 }
 
-util::StatusOr<std::string> ChunkedMacComputationSetWrapper::ComputeMac() {
+absl::StatusOr<std::string> ChunkedMacComputationSetWrapper::ComputeMac() {
   if (output_prefix_type_ == OutputPrefixType::LEGACY) {
     absl::Status append_status = computation_->Update(std::string("\x00", 1));
     if (!append_status.ok()) return append_status;
   }
-  util::StatusOr<std::string> raw_tag = computation_->ComputeMac();
+  absl::StatusOr<std::string> raw_tag = computation_->ComputeMac();
   if (!raw_tag.ok()) return raw_tag.status();
   return absl::StrCat(tag_prefix_, *raw_tag);
 }
@@ -151,10 +151,10 @@ class ChunkedMacSetWrapper : public ChunkedMac {
       std::unique_ptr<PrimitiveSet<ChunkedMac>> mac_set)
       : mac_set_(std::move(mac_set)) {}
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> CreateComputation()
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> CreateComputation()
       const override;
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> CreateVerification(
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> CreateVerification(
       absl::string_view tag) const override;
 
   ~ChunkedMacSetWrapper() override = default;
@@ -175,11 +175,11 @@ absl::Status Validate(PrimitiveSet<ChunkedMac>* mac_set) {
   return absl::OkStatus();
 }
 
-util::StatusOr<std::unique_ptr<ChunkedMacComputation>>
+absl::StatusOr<std::unique_ptr<ChunkedMacComputation>>
 ChunkedMacSetWrapper::CreateComputation() const {
   const PrimitiveSet<ChunkedMac>::Entry<ChunkedMac>* primary =
       mac_set_->get_primary();
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       primary->get_primitive().CreateComputation();
   if (!computation.ok()) return computation.status();
   return {absl::make_unique<ChunkedMacComputationSetWrapper>(
@@ -187,7 +187,7 @@ ChunkedMacSetWrapper::CreateComputation() const {
       primary->get_output_prefix_type())};
 }
 
-util::StatusOr<std::unique_ptr<ChunkedMacVerification>>
+absl::StatusOr<std::unique_ptr<ChunkedMacVerification>>
 ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
   tag = internal::EnsureStringNonNull(tag);
 
@@ -202,7 +202,7 @@ ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
     if (primitives_result.ok()) {
       absl::string_view raw_tag = tag.substr(CryptoFormat::kNonRawPrefixSize);
       for (auto& mac_entry : *(primitives_result.value())) {
-        util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+        absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
             mac_entry->get_primitive().CreateVerification(raw_tag);
         if (verification.ok()) {
           auto verification_with_prefix =
@@ -219,7 +219,7 @@ ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
   auto raw_primitives_result = mac_set_->get_raw_primitives();
   if (raw_primitives_result.ok()) {
     for (auto& mac_entry : *(raw_primitives_result.value())) {
-      util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+      absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
           mac_entry->get_primitive().CreateVerification(tag);
       if (verification.ok()) {
         auto verification_with_prefix =
@@ -236,7 +236,7 @@ ChunkedMacSetWrapper::CreateVerification(absl::string_view tag) const {
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<ChunkedMac>> ChunkedMacWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<ChunkedMac>> ChunkedMacWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<ChunkedMac>> mac_set) const {
   absl::Status status = Validate(mac_set.get());
   if (!status.ok()) return status;

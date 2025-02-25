@@ -44,9 +44,9 @@ using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 
-util::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
+absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
     uint32_t tag_size, const util::SecretData& key_value) {
-  util::StatusOr<const EVP_CIPHER*> cipher =
+  absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesCbcCipherForKeySize(key_value.size());
   if (!cipher.ok()) {
     return cipher.status();
@@ -88,7 +88,7 @@ absl::Status StatefulCmacBoringSsl::Update(absl::string_view data) {
   return absl::OkStatus();
 }
 
-util::StatusOr<SecretData> StatefulCmacBoringSsl::FinalizeAsSecretData() {
+absl::StatusOr<SecretData> StatefulCmacBoringSsl::FinalizeAsSecretData() {
   SecretBuffer buf(EVP_MAX_MD_SIZE);
   size_t out_len;
 
@@ -105,7 +105,7 @@ StatefulCmacBoringSslFactory::StatefulCmacBoringSslFactory(
     uint32_t tag_size, const util::SecretData& key_value)
     : tag_size_(tag_size), key_value_(key_value) {}
 
-util::StatusOr<std::unique_ptr<StatefulMac>>
+absl::StatusOr<std::unique_ptr<StatefulMac>>
 StatefulCmacBoringSslFactory::Create() const {
   return StatefulCmacBoringSsl::New(tag_size_, key_value_);
 }

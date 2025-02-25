@@ -47,14 +47,14 @@ class StatefulMac {
 
   virtual absl::Status Update(absl::string_view data) = 0;
 
-  virtual util::StatusOr<util::SecretData> FinalizeAsSecretData() = 0;
+  virtual absl::StatusOr<util::SecretData> FinalizeAsSecretData() = 0;
 };
 
 class StatefulMacFactory {
  public:
   virtual ~StatefulMacFactory() = default;
 
-  virtual util::StatusOr<std::unique_ptr<StatefulMac>> Create() const = 0;
+  virtual absl::StatusOr<std::unique_ptr<StatefulMac>> Create() const = 0;
 };
 
 }  // namespace internal

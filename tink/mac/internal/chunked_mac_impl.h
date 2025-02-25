@@ -40,7 +40,7 @@ class ChunkedMacComputationImpl : public ChunkedMacComputation {
 
   absl::Status Update(absl::string_view data) override;
 
-  util::StatusOr<std::string> ComputeMac() override;
+  absl::StatusOr<std::string> ComputeMac() override;
 
  private:
   const std::unique_ptr<StatefulMac> stateful_mac_;
@@ -69,10 +69,10 @@ class ChunkedMacImpl : public ChunkedMac {
       std::unique_ptr<StatefulMacFactory> stateful_mac_factory)
       : stateful_mac_factory_(std::move(stateful_mac_factory)) {}
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> CreateComputation()
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> CreateComputation()
       const override;
 
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> CreateVerification(
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> CreateVerification(
       absl::string_view tag) const override;
 
  private:
@@ -80,11 +80,11 @@ class ChunkedMacImpl : public ChunkedMac {
 };
 
 // Create new Chunked CMAC instance from `key`.
-util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
+absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
     const google::crypto::tink::AesCmacKey& key);
 
 // Create new Chunked HMAC instance from `key`.
-util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
+absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
     const google::crypto::tink::HmacKey& key);
 
 }  // namespace internal

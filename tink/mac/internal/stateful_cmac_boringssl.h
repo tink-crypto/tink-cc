@@ -41,10 +41,10 @@ namespace internal {
 class StatefulCmacBoringSsl : public StatefulMac {
  public:
   // Key must be 16 or 32 bytes, all other sizes will be rejected.
-  static util::StatusOr<std::unique_ptr<StatefulMac>> New(
+  static absl::StatusOr<std::unique_ptr<StatefulMac>> New(
       uint32_t tag_size, const util::SecretData& key_value);
   absl::Status Update(absl::string_view data) override;
-  util::StatusOr<util::SecretData> FinalizeAsSecretData() override;
+  absl::StatusOr<util::SecretData> FinalizeAsSecretData() override;
 
  private:
   static constexpr size_t kSmallKeySize = 16;
@@ -62,7 +62,7 @@ class StatefulCmacBoringSslFactory : public StatefulMacFactory {
  public:
   StatefulCmacBoringSslFactory(uint32_t tag_size,
                                const util::SecretData& key_value);
-  util::StatusOr<std::unique_ptr<StatefulMac>> Create() const override;
+  absl::StatusOr<std::unique_ptr<StatefulMac>> Create() const override;
 
  private:
   const uint32_t tag_size_;

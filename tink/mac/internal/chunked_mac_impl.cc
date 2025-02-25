@@ -53,12 +53,11 @@ absl::Status ChunkedMacComputationImpl::Update(absl::string_view data) {
   return stateful_mac_->Update(data);
 }
 
-util::StatusOr<std::string> ChunkedMacComputationImpl::ComputeMac() {
+absl::StatusOr<std::string> ChunkedMacComputationImpl::ComputeMac() {
   if (!status_.ok()) return status_;
   status_ = absl::Status(absl::StatusCode::kFailedPrecondition,
                          "MAC computation already finalized.");
-  util::StatusOr<SecretData> result_tag =
-      stateful_mac_->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> result_tag = stateful_mac_->FinalizeAsSecretData();
   if (!result_tag.ok()) {
     return result_tag.status();
   }
@@ -77,7 +76,7 @@ absl::Status ChunkedMacVerificationImpl::VerifyMac() {
   if (!status_.ok()) return status_;
   status_ = absl::Status(absl::StatusCode::kFailedPrecondition,
                          "MAC verification already finalized.");
-  util::StatusOr<SecretData> computed_mac =
+  absl::StatusOr<SecretData> computed_mac =
       stateful_mac_->FinalizeAsSecretData();
   if (!computed_mac.ok()) {
     return computed_mac.status();
@@ -94,9 +93,9 @@ absl::Status ChunkedMacVerificationImpl::VerifyMac() {
   return absl::OkStatus();
 }
 
-util::StatusOr<std::unique_ptr<ChunkedMacComputation>>
+absl::StatusOr<std::unique_ptr<ChunkedMacComputation>>
 ChunkedMacImpl::CreateComputation() const {
-  util::StatusOr<std::unique_ptr<StatefulMac>> stateful_mac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> stateful_mac =
       stateful_mac_factory_->Create();
   if (!stateful_mac.ok()) return stateful_mac.status();
 
@@ -104,9 +103,9 @@ ChunkedMacImpl::CreateComputation() const {
       new ChunkedMacComputationImpl(*std::move(stateful_mac)));
 }
 
-util::StatusOr<std::unique_ptr<ChunkedMacVerification>>
+absl::StatusOr<std::unique_ptr<ChunkedMacVerification>>
 ChunkedMacImpl::CreateVerification(absl::string_view tag) const {
-  util::StatusOr<std::unique_ptr<StatefulMac>> stateful_mac =
+  absl::StatusOr<std::unique_ptr<StatefulMac>> stateful_mac =
       stateful_mac_factory_->Create();
   if (!stateful_mac.ok()) return stateful_mac.status();
 
@@ -114,7 +113,7 @@ ChunkedMacImpl::CreateVerification(absl::string_view tag) const {
       new ChunkedMacVerificationImpl(*std::move(stateful_mac), tag));
 }
 
-util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
+absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
     const AesCmacKeyProto& key) {
   if (!key.has_params()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -128,7 +127,7 @@ util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
       new ChunkedMacImpl(std::move(stateful_mac_factory)));
 }
 
-util::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
+absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
     const HmacKeyProto& key) {
   if (!key.has_params()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

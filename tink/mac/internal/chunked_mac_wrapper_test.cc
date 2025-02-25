@@ -61,7 +61,7 @@ class FakeStatefulMac : public StatefulMac {
     return absl::OkStatus();
   }
 
-  util::StatusOr<SecretData> FinalizeAsSecretData() override {
+  absl::StatusOr<SecretData> FinalizeAsSecretData() override {
     return SecretDataFromStringView(absl::StrCat(name_, buffer_));
   }
 
@@ -74,7 +74,7 @@ class FakeStatefulMacFactory : public StatefulMacFactory {
  public:
   explicit FakeStatefulMacFactory(absl::string_view name) : name_(name) {}
 
-  util::StatusOr<std::unique_ptr<StatefulMac>> Create() const override {
+  absl::StatusOr<std::unique_ptr<StatefulMac>> Create() const override {
     return std::unique_ptr<StatefulMac>(
         absl::make_unique<FakeStatefulMac>(name_));
   }
@@ -147,15 +147,15 @@ TEST(ChunkedMacWrapperTest, ComputeMac) {
       IsOk());
 
   // Wrap primitive set into a ChunkedMac.
-  util::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
       ChunkedMacWrapper().Wrap(std::move(mac_set));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> computation =
       (*chunked_mac)->CreateComputation();
   EXPECT_THAT(computation.status(), IsOk());
   EXPECT_THAT((*computation)->Update("inputdata"), IsOk());
-  util::StatusOr<std::string> tag = (*computation)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*computation)->ComputeMac();
   const std::string output_prefix = std::string("\x01\x00\x6e\x12\xaf", 5);
   const std::string raw_tag = "chunkedmac2:inputdata";
   EXPECT_THAT(tag, IsOkAndHolds(absl::StrCat(output_prefix, raw_tag)));
@@ -183,15 +183,14 @@ TEST(ChunkedMacWrapperTest, VerifyMacWithUniquePrefix) {
       IsOk());
 
   // Wrap primitive set into a ChunkedMac.
-  util::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>>
-      chunked_mac = ChunkedMacWrapper().Wrap(std::move(mac_set));
+  absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
+      ChunkedMacWrapper().Wrap(std::move(mac_set));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   const std::string output_prefix = std::string("\x01\x00\x6e\x12\xaf", 5);
   const std::string raw_tag = "chunkedmac2:inputdata";
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
-      (*chunked_mac)
-          ->CreateVerification(absl::StrCat(output_prefix, raw_tag));
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+      (*chunked_mac)->CreateVerification(absl::StrCat(output_prefix, raw_tag));
   EXPECT_THAT(verification.status(), IsOk());
   EXPECT_THAT((*verification)->Update("inputdata"), IsOk());
   EXPECT_THAT((*verification)->VerifyMac(), IsOk());
@@ -219,15 +218,14 @@ TEST(ChunkedMacWrapperTest, VerifyMacWithDuplicatePrefix) {
       IsOk());
 
   // Wrap primitive set into a ChunkedMac.
-  util::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>>
-      chunked_mac = ChunkedMacWrapper().Wrap(std::move(mac_set));
+  absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
+      ChunkedMacWrapper().Wrap(std::move(mac_set));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   const std::string output_prefix = std::string("\x01\x00\x6e\x12\xaf", 5);
   const std::string raw_tag = "chunkedmac1:inputdata";
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
-      (*chunked_mac)
-          ->CreateVerification(absl::StrCat(output_prefix, raw_tag));
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+      (*chunked_mac)->CreateVerification(absl::StrCat(output_prefix, raw_tag));
   EXPECT_THAT(verification.status(), IsOk());
   EXPECT_THAT((*verification)->Update("inputdata"), IsOk());
   EXPECT_THAT((*verification)->VerifyMac(), IsOk());
@@ -253,12 +251,12 @@ TEST(ChunkedMacWrapperTest, VerifyMacWithRawTagStartingWithKeyId) {
       IsOk());
 
   // Wrap primitive set into a ChunkedMac.
-  util::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>>
-      chunked_mac = ChunkedMacWrapper().Wrap(std::move(mac_set));
+  absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
+      ChunkedMacWrapper().Wrap(std::move(mac_set));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   const std::string raw_tag = absl::StrCat(key_id0, ":chunkedmac1:inputdata");
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> verification =
       (*chunked_mac)->CreateVerification(raw_tag);
   EXPECT_THAT(verification.status(), IsOk());
   EXPECT_THAT((*verification)->Update("inputdata"), IsOk());
@@ -287,20 +285,20 @@ TEST_P(ChunkedMacWrapperOutputPrefixTest, ComputeVerifyMac) {
       IsOk());
 
   // Wrap primitive set into a ChunkedMac.
-  util::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
+  absl::StatusOr<std::unique_ptr<crypto::tink::ChunkedMac>> chunked_mac =
       ChunkedMacWrapper().Wrap(std::move(mac_set));
   ASSERT_THAT(chunked_mac.status(), IsOk());
 
   // Compute MAC via wrapper.
-  util::StatusOr<std::unique_ptr<ChunkedMacComputation>> mac_computation =
+  absl::StatusOr<std::unique_ptr<ChunkedMacComputation>> mac_computation =
       (*chunked_mac)->CreateComputation();
   ASSERT_THAT(mac_computation.status(), IsOk());
   ASSERT_THAT((*mac_computation)->Update("inputdata"), IsOk());
-  util::StatusOr<std::string> tag = (*mac_computation)->ComputeMac();
+  absl::StatusOr<std::string> tag = (*mac_computation)->ComputeMac();
   ASSERT_THAT(tag.status(), IsOk());
 
   // Verify MAC via wrapper.
-  util::StatusOr<std::unique_ptr<ChunkedMacVerification>> mac_verification =
+  absl::StatusOr<std::unique_ptr<ChunkedMacVerification>> mac_verification =
       (*chunked_mac)->CreateVerification(*tag);
   ASSERT_THAT(mac_verification.status(), IsOk());
   ASSERT_THAT((*mac_verification)->Update("inputdata"), IsOk());

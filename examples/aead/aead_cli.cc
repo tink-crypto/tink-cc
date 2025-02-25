@@ -76,30 +76,30 @@ Status AeadCli(absl::string_view mode, const std::string& keyset_filename,
   if (!result.ok()) return result;
 
   // Read the keyset from file.
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
   if (!keyset_handle.ok()) return keyset_handle.status();
 
   // Get the primitive.
-  StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::Aead>(
               crypto::tink::ConfigGlobalRegistry());
   if (!aead.ok()) return aead.status();
 
   // Read the input.
-  StatusOr<std::string> input_file_content = ReadFile(input_filename);
+  absl::StatusOr<std::string> input_file_content = ReadFile(input_filename);
   if (!input_file_content.ok()) return input_file_content.status();
 
   // Compute the output.
   std::string output;
   if (mode == kEncrypt) {
-    StatusOr<std::string> encrypt_result =
+    absl::StatusOr<std::string> encrypt_result =
         (*aead)->Encrypt(*input_file_content, associated_data);
     if (!encrypt_result.ok()) return encrypt_result.status();
     output = encrypt_result.value();
   } else {  // operation == kDecrypt.
-    StatusOr<std::string> decrypt_result =
+    absl::StatusOr<std::string> decrypt_result =
         (*aead)->Decrypt(*input_file_content, associated_data);
     if (!decrypt_result.ok()) return decrypt_result.status();
     output = decrypt_result.value();

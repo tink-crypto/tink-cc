@@ -25,7 +25,7 @@ namespace tink {
 namespace jwt_internal {
 
 // Add recommended JWT MAC key managers to `config`, used to generate keys.
-util::Status AddJwtMacKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddJwtMacKeyGenV0(KeyGenConfiguration& config);
 
 }  // namespace jwt_internal
 }  // namespace tink

@@ -59,7 +59,7 @@ class JwtRsaSsaPssVerifyKeyManager
 
   const std::string& get_key_type() const override;
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::JwtRsaSsaPssPublicKey& key) const override;
 
   internal::FipsCompatibility FipsStatus() const override {

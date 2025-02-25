@@ -26,7 +26,7 @@ namespace jwt_internal {
 
 // Add recommended JWT Signature key managers to `config`, used to generate
 // keys.
-util::Status AddJwtSignatureKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddJwtSignatureKeyGenV0(KeyGenConfiguration& config);
 
 }  // namespace jwt_internal
 }  // namespace tink

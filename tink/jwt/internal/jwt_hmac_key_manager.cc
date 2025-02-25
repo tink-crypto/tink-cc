@@ -70,7 +70,7 @@ JwtHmacKeyManager::JwtMacFactory::Create(const JwtHmacKey& jwt_hmac_key) const {
       algorithm = "HS512";
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Unknown algorithm.");
   }
   util::StatusOr<std::unique_ptr<Mac>> mac = subtle::HmacBoringSsl::New(

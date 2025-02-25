@@ -68,27 +68,27 @@ class JwtPublicKeyVerifySetWrapper : public JwtPublicKeyVerify {
   std::unique_ptr<MonitoringClient> monitoring_verify_client_;
 };
 
-util::Status Validate(
+absl::Status Validate(
     PrimitiveSet<JwtPublicKeyVerifyInternal>* jwt_verify_set) {
   if (jwt_verify_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "jwt_verify_set must be non-NULL");
   }
   for (const auto* entry : jwt_verify_set->get_all()) {
     if ((entry->get_output_prefix_type() != OutputPrefixType::RAW) &&
         (entry->get_output_prefix_type() != OutputPrefixType::TINK)) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "all JWT keys must be either RAW or TINK");
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<crypto::tink::VerifiedJwt>
 JwtPublicKeyVerifySetWrapper::VerifyAndDecode(
     absl::string_view compact,
     const crypto::tink::JwtValidator& validator) const {
-  absl::optional<util::Status> interesting_status;
+  absl::optional<absl::Status> interesting_status;
   for (const auto* entry : jwt_verify_set_->get_all()) {
     JwtPublicKeyVerifyInternal& jwt_verify = entry->get_primitive();
     absl::optional<std::string> kid =
@@ -112,7 +112,7 @@ JwtPublicKeyVerifySetWrapper::VerifyAndDecode(
   if (interesting_status.has_value()) {
     return *std::move(interesting_status);
   }
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       "verification failed");
 }
 
@@ -122,7 +122,7 @@ util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>>
 JwtPublicKeyVerifyWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set)
     const {
-  util::Status status = Validate(jwt_verify_set.get());
+  absl::Status status = Validate(jwt_verify_set.get());
   if (!status.ok()) return status;
   MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();

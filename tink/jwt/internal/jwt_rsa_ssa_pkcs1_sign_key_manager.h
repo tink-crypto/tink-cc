@@ -62,10 +62,10 @@ class JwtRsaSsaPkcs1SignKeyManager
 
   const std::string& get_key_type() const override;
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::JwtRsaSsaPkcs1PrivateKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::JwtRsaSsaPkcs1KeyFormat& key_format)
       const override;
 

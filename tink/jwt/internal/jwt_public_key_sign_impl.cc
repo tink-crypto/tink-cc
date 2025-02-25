@@ -48,7 +48,7 @@ util::StatusOr<std::string> JwtPublicKeySignImpl::SignAndEncodeWithKid(
   }
 
   if (kid_.has_value() && kid != kid_) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("invalid kid provided; expected: %s, got: %s", *kid_,
                         kid.value_or("nullopt")));
@@ -56,7 +56,7 @@ util::StatusOr<std::string> JwtPublicKeySignImpl::SignAndEncodeWithKid(
 
   if (custom_kid_.has_value()) {
     if (kid.has_value()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "TINK keys are not allowed to have a custom kid value");
     }

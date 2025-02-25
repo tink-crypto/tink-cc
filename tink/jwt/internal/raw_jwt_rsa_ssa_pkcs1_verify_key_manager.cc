@@ -92,12 +92,12 @@ Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateAlgorithm(
     case JwtRsaSsaPkcs1Algorithm::RS256:
     case JwtRsaSsaPkcs1Algorithm::RS384:
     case JwtRsaSsaPkcs1Algorithm::RS512:
-      return util::OkStatus();
+      return absl::OkStatus();
     default:
       return Status(absl::StatusCode::kInvalidArgument,
                     "Unsupported RSA SSA PKCS1 Algorithm");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 StatusOr<HashType> RawJwtRsaSsaPkcs1VerifyKeyManager::HashForPkcs1Algorithm(

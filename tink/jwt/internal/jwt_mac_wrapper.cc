@@ -77,23 +77,23 @@ class JwtMacSetWrapper : public JwtMac {
   std::unique_ptr<MonitoringClient> monitoring_verify_client_;
 };
 
-util::Status Validate(PrimitiveSet<JwtMacInternal>* jwt_mac_set) {
+absl::Status Validate(PrimitiveSet<JwtMacInternal>* jwt_mac_set) {
   if (jwt_mac_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "jwt_mac_set must be non-NULL");
   }
   if (jwt_mac_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "jwt_mac_set has no primary");
   }
   for (const auto* entry : jwt_mac_set->get_all()) {
     if ((entry->get_output_prefix_type() != OutputPrefixType::RAW) &&
         (entry->get_output_prefix_type() != OutputPrefixType::TINK)) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "all JWT keys must be either RAW or TINK");
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<std::string> JwtMacSetWrapper::ComputeMacAndEncode(
@@ -119,7 +119,7 @@ util::StatusOr<std::string> JwtMacSetWrapper::ComputeMacAndEncode(
 util::StatusOr<crypto::tink::VerifiedJwt> JwtMacSetWrapper::VerifyMacAndDecode(
     absl::string_view compact,
     const crypto::tink::JwtValidator& validator) const {
-  absl::optional<util::Status> interesting_status;
+  absl::optional<absl::Status> interesting_status;
   for (const auto* mac_entry : jwt_mac_set_->get_all()) {
     JwtMacInternal& jwt_mac = mac_entry->get_primitive();
     absl::optional<std::string> kid =
@@ -144,7 +144,7 @@ util::StatusOr<crypto::tink::VerifiedJwt> JwtMacSetWrapper::VerifyMacAndDecode(
   if (interesting_status.has_value()) {
     return *interesting_status;
   }
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       "verification failed");
 }
 
@@ -152,7 +152,7 @@ util::StatusOr<crypto::tink::VerifiedJwt> JwtMacSetWrapper::VerifyMacAndDecode(
 
 util::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<JwtMacInternal>> jwt_mac_set) const {
-  util::Status status = Validate(jwt_mac_set.get());
+  absl::Status status = Validate(jwt_mac_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

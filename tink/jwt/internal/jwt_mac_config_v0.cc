@@ -59,7 +59,7 @@ util::StatusOr<HashAndTagSize> HashTypeAndTagSize(
     case JwtHmacParameters::Algorithm::kHs512:
       return {{subtle::HashType::SHA512, 64}};
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Unsupported algorithm");
   }
 }
@@ -73,7 +73,7 @@ util::StatusOr<std::string> AlgorithmName(
     case JwtHmacParameters::Algorithm::kHs512:
       return "HS512";
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Unsupported algorithm");
   }
 }
@@ -118,15 +118,15 @@ util::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwHmacInternal(
     }
     default:
       // Should never happen.
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
 }
 
 }  // namespace
 
-util::Status AddJwtMacV0(Configuration& config) {
-  util::Status status = RegisterJwtHmacProtoSerialization();
+absl::Status AddJwtMacV0(Configuration& config) {
+  absl::Status status = RegisterJwtHmacProtoSerialization();
   if (!status.ok()) {
     return status;
   }

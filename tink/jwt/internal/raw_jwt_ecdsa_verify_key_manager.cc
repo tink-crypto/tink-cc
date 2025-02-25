@@ -104,12 +104,12 @@ Status RawJwtEcdsaVerifyKeyManager::ValidateAlgorithm(
     case JwtEcdsaAlgorithm::ES256:
     case JwtEcdsaAlgorithm::ES384:
     case JwtEcdsaAlgorithm::ES512:
-      return util::OkStatus();
+      return absl::OkStatus();
     default:
       return Status(absl::StatusCode::kInvalidArgument,
                     "Unsupported Ecdsa Algorithm");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 Status RawJwtEcdsaVerifyKeyManager::ValidateKey(

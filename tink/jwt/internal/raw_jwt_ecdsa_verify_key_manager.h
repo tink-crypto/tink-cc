@@ -59,7 +59,7 @@ class RawJwtEcdsaVerifyKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::JwtEcdsaPublicKey& key) const override;
 
   internal::FipsCompatibility FipsStatus() const override {
@@ -67,7 +67,7 @@ class RawJwtEcdsaVerifyKeyManager
   }
 
  private:
-  static crypto::tink::util::Status ValidateAlgorithm(
+  static absl::Status ValidateAlgorithm(
       const google::crypto::tink::JwtEcdsaAlgorithm& algorithm);
 
   static crypto::tink::util::StatusOr<google::crypto::tink::EllipticCurveType>

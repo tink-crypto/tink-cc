@@ -68,7 +68,7 @@ class RawJwtHmacKeyManager
           tag_size = 64;
           break;
         default:
-          return util::Status(absl::StatusCode::kInvalidArgument,
+          return absl::Status(absl::StatusCode::kInvalidArgument,
                               "Unknown algorithm.");
       }
       return subtle::HmacBoringSsl::New(
@@ -88,10 +88,10 @@ class RawJwtHmacKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::JwtHmacKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::JwtHmacKeyFormat& key_format) const override;
 
   crypto::tink::util::StatusOr<google::crypto::tink::JwtHmacKey> CreateKey(

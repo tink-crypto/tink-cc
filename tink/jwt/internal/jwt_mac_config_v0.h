@@ -26,7 +26,7 @@ namespace jwt_internal {
 
 // Add recommended JWT MAC primitive wrappers and key managers to `config`, used
 // to generate primitives.
-util::Status AddJwtMacV0(Configuration& config);
+absl::Status AddJwtMacV0(Configuration& config);
 
 }  // namespace jwt_internal
 }  // namespace tink

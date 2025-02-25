@@ -26,7 +26,7 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-util::Status AddJwtMacKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddJwtMacKeyGenV0(KeyGenConfiguration& config) {
   return internal::KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<JwtHmacKeyManager>(), config);
 }

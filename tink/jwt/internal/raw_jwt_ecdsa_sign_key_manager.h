@@ -60,10 +60,10 @@ class RawJwtEcdsaSignKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::JwtEcdsaPrivateKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::JwtEcdsaKeyFormat& key_format) const override;
 
   crypto::tink::util::StatusOr<google::crypto::tink::JwtEcdsaPrivateKey>

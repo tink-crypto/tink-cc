@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/internal/aes_gcm_proto_structs.h"
+#include "tink/aead/internal/xchacha20_poly1305_proto_structs.h"
 #include "tink/big_integer.h"
 #include "tink/daead/internal/aes_siv_proto_structs.h"
 #include "tink/ec_point.h"
@@ -441,11 +442,12 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
       // TODO: b/330508549 - Remove type URL exception for an existing key.
       proto_dem_params.aead_dem.type_url ==
           "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305KeyFormat") {
-    XChaCha20Poly1305KeyFormat xchacha20_poly1305_key_format;
-    if (!xchacha20_poly1305_key_format.ParseFromString(
-            proto_dem_params.aead_dem.value)) {
-      return absl::InvalidArgumentError(
-          "Failed to parse XChaCha20-Poly1305 key format.");
+    absl::StatusOr<internal::XChaCha20Poly1305KeyFormatStruct>
+        xchacha20_key_format =
+            internal::XChaCha20Poly1305KeyFormatStruct::GetParser().Parse(
+                proto_dem_params.aead_dem.value);
+    if (!xchacha20_key_format.ok()) {
+      return xchacha20_key_format.status();
     }
     return EciesParameters::DemId::kXChaCha20Poly1305Raw;
   }
@@ -515,11 +517,17 @@ absl::StatusOr<EciesAeadDemParamsStruct> ToProtoDemParams(
         "type.googleapis.com/google.crypto.tink.AesSivKey", *serialized_proto);
   }
   if (dem_id == EciesParameters::DemId::kXChaCha20Poly1305Raw) {
-    XChaCha20Poly1305KeyFormat format;
-    format.set_version(0);
+    internal::XChaCha20Poly1305KeyFormatStruct format;
+    format.version = 0;
+    absl::StatusOr<std::string> serialized_proto =
+        internal::XChaCha20Poly1305KeyFormatStruct::GetParser()
+            .SerializeIntoString(format);
+    if (!serialized_proto.ok()) {
+      return serialized_proto.status();
+    }
     return CreateEciesAeadDemParamsStruct(
         "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key",
-        format.SerializeAsString());
+        *serialized_proto);
   }
   if (dem_id == EciesParameters::DemId::kAes128CtrHmacSha256Raw ||
       dem_id == EciesParameters::DemId::kAes256CtrHmacSha256Raw) {

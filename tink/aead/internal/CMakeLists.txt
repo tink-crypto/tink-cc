@@ -573,8 +573,8 @@ tink_cc_library(
     xchacha20_poly1305_proto_serialization_impl.cc
     xchacha20_poly1305_proto_serialization_impl.h
   DEPS
+    tink::aead::internal::xchacha20_poly1305_proto_structs
     absl::core_headers
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -591,7 +591,6 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::secret_data
@@ -1116,6 +1115,29 @@ tink_cc_test(
     aes_gcm_proto_structs_test.cc
   DEPS
     tink::aead::internal::aes_gcm_proto_structs
+    gmock
+    absl::statusor
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+)
+
+tink_cc_library(
+  NAME xchacha20_poly1305_proto_structs
+  SRCS
+    xchacha20_poly1305_proto_structs.h
+  DEPS
+    absl::no_destructor
+    tink::internal::proto_parser
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME xchacha20_poly1305_proto_structs_test
+  SRCS
+    xchacha20_poly1305_proto_structs_test.cc
+  DEPS
+    tink::aead::internal::xchacha20_poly1305_proto_structs
     gmock
     absl::statusor
     tink::util::secret_data

@@ -16,16 +16,15 @@
 
 #include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 
-#include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/aead/internal/xchacha20_poly1305_proto_structs.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/internal/key_parser.h"
@@ -35,7 +34,6 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -48,8 +46,6 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
 
 using XChaCha20Poly1305ProtoParametersParserImpl =
@@ -64,35 +60,6 @@ using XChaCha20Poly1305ProtoKeyParserImpl =
 using XChaCha20Poly1305ProtoKeySerializerImpl =
     internal::KeySerializerImpl<XChaCha20Poly1305Key,
                                 internal::ProtoKeySerialization>;
-
-struct XChaCha20Poly1305KeyFormatStruct {
-  uint32_t version;
-
-  static const ProtoParser<XChaCha20Poly1305KeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<
-        ProtoParser<XChaCha20Poly1305KeyFormatStruct>>
-        parser(
-            ProtoParserBuilder<XChaCha20Poly1305KeyFormatStruct>()
-                .AddUint32Field(1, &XChaCha20Poly1305KeyFormatStruct::version)
-                .BuildOrDie());
-    return *parser;
-  }
-};
-
-struct XChaCha20Poly1305KeyStruct {
-  uint32_t version;
-  util::SecretData key_value;
-
-  static const ProtoParser<XChaCha20Poly1305KeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<XChaCha20Poly1305KeyStruct>>
-        parser(ProtoParserBuilder<XChaCha20Poly1305KeyStruct>()
-                   .AddUint32Field(1, &XChaCha20Poly1305KeyStruct::version)
-                   .AddBytesSecretDataField(
-                       3, &XChaCha20Poly1305KeyStruct::key_value)
-                   .BuildOrDie());
-    return *parser;
-  }
-};
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key";

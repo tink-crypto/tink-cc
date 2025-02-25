@@ -76,35 +76,36 @@ Status DigitalSignatureCli(absl::string_view mode,
   if (!result.ok()) return result;
 
   // Read the keyset from file.
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
   if (!keyset_handle.ok()) return keyset_handle.status();
 
   // Read the input.
-  StatusOr<std::string> input_file_content = ReadFile(input_filename);
+  absl::StatusOr<std::string> input_file_content = ReadFile(input_filename);
   if (!input_file_content.ok()) return input_file_content.status();
 
   if (mode == kSign) {
-    StatusOr<std::unique_ptr<PublicKeySign>> public_key_sign =
+    absl::StatusOr<std::unique_ptr<PublicKeySign>> public_key_sign =
         (*keyset_handle)
             ->GetPrimitive<crypto::tink::PublicKeySign>(
                 crypto::tink::ConfigGlobalRegistry());
     if (!public_key_sign.ok()) return public_key_sign.status();
 
-    StatusOr<std::string> signature =
+    absl::StatusOr<std::string> signature =
         (*public_key_sign)->Sign(*input_file_content);
     if (!signature.ok()) return signature.status();
 
     return WriteToFile(*signature, signature_filename);
   } else {  // mode == kVerify
-    StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
         (*keyset_handle)
             ->GetPrimitive<crypto::tink::PublicKeyVerify>(
                 crypto::tink::ConfigGlobalRegistry());
     if (!public_key_verify.ok()) return public_key_verify.status();
 
     // Read the signature.
-    StatusOr<std::string> signature_file_content = ReadFile(signature_filename);
+    absl::StatusOr<std::string> signature_file_content =
+        ReadFile(signature_filename);
     if (!signature_file_content.ok()) return signature_file_content.status();
 
     return (*public_key_verify)

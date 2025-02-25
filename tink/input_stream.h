@@ -49,7 +49,7 @@ class InputStream {
   // * It is legal for the returned buffer to have zero size, as long as
   //   repeatedly calling Next() eventually yields a buffer with non-zero
   //   size or a non-OK status.
-  virtual crypto::tink::util::StatusOr<int> Next(const void** data) = 0;
+  virtual absl::StatusOr<int> Next(const void** data) = 0;
 
   // Backs up a number of bytes, so that the next call to Next() returns
   // data again that was already returned by the last call to Next().

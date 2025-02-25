@@ -58,7 +58,7 @@ namespace tink {
 class HybridEncrypt {
  public:
   // Encrypts 'plaintext' binding 'context_info' to the resulting ciphertext.
-  virtual crypto::tink::util::StatusOr<std::string> Encrypt(
+  virtual absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext, absl::string_view context_info) const = 0;
 
   virtual ~HybridEncrypt() = default;

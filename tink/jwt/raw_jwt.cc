@@ -59,14 +59,14 @@ bool IsRegisteredClaimName(absl::string_view name) {
          name == kJwtClaimJwtId;
 }
 
-util::Status ValidatePayloadName(absl::string_view name) {
+absl::Status ValidatePayloadName(absl::string_view name) {
   if (IsRegisteredClaimName(name)) {
     return absl::InvalidArgumentError(absl::Substitute(
         "claim '$0' is invalid because it's a registered name; "
         "use the corresponding getter or setter method.",
         name));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 bool HasClaimOfKind(const google::protobuf::Struct& json_proto,
@@ -135,31 +135,31 @@ absl::Time TimestampToTime(double timestamp) {
   return absl::FromUnixSeconds(timestamp);
 }
 
-util::Status ValidateAudienceClaim(const google::protobuf::Struct& json_proto) {
+absl::Status ValidateAudienceClaim(const google::protobuf::Struct& json_proto) {
   const auto& fields = json_proto.fields();
   auto it = fields.find(std::string(kJwtClaimAudience));
   if (it == fields.end()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   const Value& value = it->second;
   if (value.kind_case() == Value::kStringValue) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   if (value.kind_case() != Value::kListValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "aud claim is not a list");
   }
   if (value.list_value().values_size() < 1) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "aud claim is present but empty");
   }
   for (const Value& v : value.list_value().values()) {
     if (v.kind_case() != Value::kStringValue) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "aud claim is not a list of strings");
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -176,10 +176,10 @@ absl::StatusOr<RawJwt> RawJwt::FromJson(absl::optional<std::string> type_header,
       ClaimIsNotATimestamp(*proto, kJwtClaimExpiration) ||
       ClaimIsNotATimestamp(*proto, kJwtClaimNotBefore) ||
       ClaimIsNotATimestamp(*proto, kJwtClaimIssuedAt)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "contains an invalid registered claim");
   }
-  util::Status aud_status = ValidateAudienceClaim(*proto);
+  absl::Status aud_status = ValidateAudienceClaim(*proto);
   if (!aud_status.ok()) {
     return aud_status;
   }
@@ -203,7 +203,7 @@ bool RawJwt::HasTypeHeader() const { return type_header_.has_value(); }
 
 absl::StatusOr<std::string> RawJwt::GetTypeHeader() const {
   if (!type_header_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "No type header found");
   }
   return *type_header_;
@@ -217,11 +217,11 @@ absl::StatusOr<std::string> RawJwt::GetIssuer() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimIssuer));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "No Issuer found");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "No Issuer found");
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kStringValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Issuer is not a string");
   }
   return value.string_value();
@@ -235,11 +235,11 @@ absl::StatusOr<std::string> RawJwt::GetSubject() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimSubject));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "No Subject found");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "No Subject found");
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kStringValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Subject is not a string");
   }
   return value.string_value();
@@ -253,7 +253,7 @@ absl::StatusOr<std::vector<std::string>> RawJwt::GetAudiences() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimAudience));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound, "No Audiences found");
+    return absl::Status(absl::StatusCode::kNotFound, "No Audiences found");
   }
   Value list = it->second;
   if (list.kind_case() != Value::kListValue) {
@@ -262,13 +262,13 @@ absl::StatusOr<std::vector<std::string>> RawJwt::GetAudiences() const {
     return audiences;
   }
   if (list.kind_case() != Value::kListValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Audiences is not a list");
   }
   std::vector<std::string> audiences;
   for (const auto& value : list.list_value().values()) {
     if (value.kind_case() != Value::kStringValue) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Audiences is not a list of strings");
     }
     audiences.push_back(value.string_value());
@@ -284,11 +284,11 @@ absl::StatusOr<std::string> RawJwt::GetJwtId() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimJwtId));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound, "No JwtId found");
+    return absl::Status(absl::StatusCode::kNotFound, "No JwtId found");
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kStringValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "JwtId is not a string");
   }
   return value.string_value();
@@ -302,11 +302,11 @@ absl::StatusOr<absl::Time> RawJwt::GetExpiration() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimExpiration));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound, "No Expiration found");
+    return absl::Status(absl::StatusCode::kNotFound, "No Expiration found");
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kNumberValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Expiration is not a number");
   }
   return TimestampToTime(value.number_value());
@@ -320,11 +320,11 @@ absl::StatusOr<absl::Time> RawJwt::GetNotBefore() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimNotBefore));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound, "No NotBefore found");
+    return absl::Status(absl::StatusCode::kNotFound, "No NotBefore found");
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kNumberValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "NotBefore is not a number");
   }
   return TimestampToTime(value.number_value());
@@ -338,11 +338,11 @@ absl::StatusOr<absl::Time> RawJwt::GetIssuedAt() const {
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(kJwtClaimIssuedAt));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound, "No IssuedAt found");
+    return absl::Status(absl::StatusCode::kNotFound, "No IssuedAt found");
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kNumberValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "IssuedAt is not a number");
   }
   return TimestampToTime(value.number_value());
@@ -357,19 +357,19 @@ bool RawJwt::HasBooleanClaim(absl::string_view name) const {
 }
 
 absl::StatusOr<bool> RawJwt::GetBooleanClaim(absl::string_view name) const {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     return status;
   }
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(name));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound,
+    return absl::Status(absl::StatusCode::kNotFound,
                         absl::Substitute("claim '$0' not found", name));
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kBoolValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::Substitute("claim '$0' is not a bool", name));
   }
   return value.bool_value();
@@ -381,19 +381,19 @@ bool RawJwt::HasStringClaim(absl::string_view name) const {
 
 absl::StatusOr<std::string> RawJwt::GetStringClaim(
     absl::string_view name) const {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     return status;
   }
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(name));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound,
+    return absl::Status(absl::StatusCode::kNotFound,
                         absl::Substitute("claim '$0' not found", name));
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kStringValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::Substitute("claim '$0' is not a string", name));
   }
   return value.string_value();
@@ -404,19 +404,19 @@ bool RawJwt::HasNumberClaim(absl::string_view name) const {
 }
 
 absl::StatusOr<double> RawJwt::GetNumberClaim(absl::string_view name) const {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     return status;
   }
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(name));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound,
+    return absl::Status(absl::StatusCode::kNotFound,
                         absl::Substitute("claim '$0' not found", name));
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kNumberValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::Substitute("claim '$0' is not a number", name));
   }
   return value.number_value();
@@ -428,19 +428,19 @@ bool RawJwt::HasJsonObjectClaim(absl::string_view name) const {
 
 absl::StatusOr<std::string> RawJwt::GetJsonObjectClaim(
     absl::string_view name) const {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     return status;
   }
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(name));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound,
+    return absl::Status(absl::StatusCode::kNotFound,
                         absl::Substitute("claim '$0' not found", name));
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kStructValue) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::Substitute("claim '$0' is not a JSON object", name));
   }
@@ -453,19 +453,19 @@ bool RawJwt::HasJsonArrayClaim(absl::string_view name) const {
 
 absl::StatusOr<std::string> RawJwt::GetJsonArrayClaim(
     absl::string_view name) const {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     return status;
   }
   const auto& fields = json_proto_.fields();
   auto it = fields.find(std::string(name));
   if (it == fields.end()) {
-    return util::Status(absl::StatusCode::kNotFound,
+    return absl::Status(absl::StatusCode::kNotFound,
                         absl::Substitute("claim '$0' not found", name));
   }
   const Value& value = it->second;
   if (value.kind_case() != Value::kListValue) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::Substitute("claim '$0' is not a JSON array", name));
   }
@@ -510,7 +510,7 @@ RawJwtBuilder& RawJwtBuilder::SetAudience(absl::string_view audience) {
   // Make sure that "aud" is not already a list by a call to SetAudiences or
   // AddAudience.
   if (ClaimIsNotAString(json_proto_, kJwtClaimAudience)) {
-    error_ = util::Status(absl::StatusCode::kInvalidArgument,
+    error_ = absl::Status(absl::StatusCode::kInvalidArgument,
                           "SetAudience() must not be called together with "
                           "SetAudiences() or AddAudience");
     return *this;
@@ -525,7 +525,7 @@ RawJwtBuilder& RawJwtBuilder::SetAudience(absl::string_view audience) {
 RawJwtBuilder& RawJwtBuilder::SetAudiences(std::vector<std::string> audiences) {
   // Make sure that "aud" is not already a string by a call to SetAudience.
   if (ClaimIsNotAList(json_proto_, kJwtClaimAudience)) {
-    error_ = util::Status(
+    error_ = absl::Status(
         absl::StatusCode::kInvalidArgument,
         "SetAudiences() and SetAudience() must not be called together");
     return *this;
@@ -542,7 +542,7 @@ RawJwtBuilder& RawJwtBuilder::SetAudiences(std::vector<std::string> audiences) {
 RawJwtBuilder& RawJwtBuilder::AddAudience(absl::string_view audience) {
   // Make sure that "aud" is not already a string by a call to SetAudience.
   if (ClaimIsNotAList(json_proto_, kJwtClaimAudience)) {
-    error_ = util::Status(
+    error_ = absl::Status(
         absl::StatusCode::kInvalidArgument,
         "AddAudience() and SetAudience() must not be called together");
     return *this;
@@ -573,7 +573,7 @@ RawJwtBuilder& RawJwtBuilder::SetExpiration(absl::Time expiration) {
   int64_t exp_timestamp = TimeToTimestamp(expiration);
   if ((exp_timestamp > kJwtTimestampMax) || (exp_timestamp < 0)) {
     if (!error_.has_value()) {
-      error_ = util::Status(absl::StatusCode::kInvalidArgument,
+      error_ = absl::Status(absl::StatusCode::kInvalidArgument,
                             "invalid expiration timestamp");
     }
     return *this;
@@ -589,7 +589,7 @@ RawJwtBuilder& RawJwtBuilder::SetNotBefore(absl::Time not_before) {
   int64_t nbf_timestamp = TimeToTimestamp(not_before);
   if ((nbf_timestamp > kJwtTimestampMax) || (nbf_timestamp < 0)) {
     if (!error_.has_value()) {
-      error_ = util::Status(absl::StatusCode::kInvalidArgument,
+      error_ = absl::Status(absl::StatusCode::kInvalidArgument,
                             "invalid not_before timestamp");
     }
     return *this;
@@ -605,7 +605,7 @@ RawJwtBuilder& RawJwtBuilder::SetIssuedAt(absl::Time issued_at) {
   int64_t iat_timestamp = TimeToTimestamp(issued_at);
   if ((iat_timestamp > kJwtTimestampMax) || (iat_timestamp < 0)) {
     if (!error_.has_value()) {
-      error_ = util::Status(absl::StatusCode::kInvalidArgument,
+      error_ = absl::Status(absl::StatusCode::kInvalidArgument,
                             "invalid issued_at timestamp");
     }
     return *this;
@@ -618,7 +618,7 @@ RawJwtBuilder& RawJwtBuilder::SetIssuedAt(absl::Time issued_at) {
 }
 
 RawJwtBuilder& RawJwtBuilder::AddNullClaim(absl::string_view name) {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     if (!error_.has_value()) {
       error_ = status;
@@ -634,7 +634,7 @@ RawJwtBuilder& RawJwtBuilder::AddNullClaim(absl::string_view name) {
 
 RawJwtBuilder& RawJwtBuilder::AddBooleanClaim(absl::string_view name,
                                               bool bool_value) {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     if (!error_.has_value()) {
       error_ = status;
@@ -650,7 +650,7 @@ RawJwtBuilder& RawJwtBuilder::AddBooleanClaim(absl::string_view name,
 
 RawJwtBuilder& RawJwtBuilder::AddStringClaim(absl::string_view name,
                                              absl::string_view string_value) {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     if (!error_.has_value()) {
       error_ = status;
@@ -666,7 +666,7 @@ RawJwtBuilder& RawJwtBuilder::AddStringClaim(absl::string_view name,
 
 RawJwtBuilder& RawJwtBuilder::AddNumberClaim(absl::string_view name,
                                              double double_value) {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     if (!error_.has_value()) {
       error_ = status;
@@ -682,7 +682,7 @@ RawJwtBuilder& RawJwtBuilder::AddNumberClaim(absl::string_view name,
 
 RawJwtBuilder& RawJwtBuilder::AddJsonObjectClaim(
     absl::string_view name, absl::string_view object_value) {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     if (!error_.has_value()) {
       error_ = status;
@@ -706,7 +706,7 @@ RawJwtBuilder& RawJwtBuilder::AddJsonObjectClaim(
 
 RawJwtBuilder& RawJwtBuilder::AddJsonArrayClaim(absl::string_view name,
                                                 absl::string_view array_value) {
-  util::Status status = ValidatePayloadName(name);
+  absl::Status status = ValidatePayloadName(name);
   if (!status.ok()) {
     if (!error_.has_value()) {
       error_ = status;
@@ -734,13 +734,13 @@ absl::StatusOr<RawJwt> RawJwtBuilder::Build() {
   }
   if (!json_proto_.fields().contains(std::string(kJwtClaimExpiration)) &&
       !without_expiration_) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "neither SetExpiration() nor WithoutExpiration() was called");
   }
   if (json_proto_.fields().contains(std::string(kJwtClaimExpiration)) &&
       without_expiration_) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "SetExpiration() and WithoutExpiration() must not be called together");
   }

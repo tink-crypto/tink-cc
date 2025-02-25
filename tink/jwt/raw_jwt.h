@@ -132,7 +132,7 @@ class RawJwtBuilder {
   RawJwtBuilder& operator=(RawJwtBuilder&& other) = default;
 
  private:
-  absl::optional<util::Status> error_;
+  absl::optional<absl::Status> error_;
   absl::optional<std::string> type_header_;
   bool without_expiration_;
   google::protobuf::Struct json_proto_;

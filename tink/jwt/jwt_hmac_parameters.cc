@@ -30,7 +30,7 @@ namespace tink {
 absl::StatusOr<JwtHmacParameters> JwtHmacParameters::Create(
     int key_size_in_bytes, KidStrategy kid_strategy, Algorithm algorithm) {
   if (key_size_in_bytes < 16) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Key size should be at least 16 bytes, got ",
                      key_size_in_bytes, " bytes."));
@@ -40,7 +40,7 @@ absl::StatusOr<JwtHmacParameters> JwtHmacParameters::Create(
                                  KidStrategy::kIgnored, KidStrategy::kCustom});
   if (kSupportedKidStrategies->find(kid_strategy) ==
       kSupportedKidStrategies->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create JWT HMAC parameters with unknown kid strategy.");
   }
@@ -48,7 +48,7 @@ absl::StatusOr<JwtHmacParameters> JwtHmacParameters::Create(
       new std::set<Algorithm>(
           {Algorithm::kHs256, Algorithm::kHs384, Algorithm::kHs512});
   if (kSupportedAlgorithms->find(algorithm) == kSupportedAlgorithms->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create JWT HMAC parameters with unknown algorithm.");
   }

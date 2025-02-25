@@ -72,23 +72,23 @@ JwtRsaSsaPkcs1Parameters::Builder::SetPublicExponent(
 absl::StatusOr<JwtRsaSsaPkcs1Parameters>
 JwtRsaSsaPkcs1Parameters::Builder::Build() {
   if (!algorithm_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Algorithm is not set.");
   }
 
   if (!kid_strategy_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Kid strategy is not set.");
   }
 
   if (!modulus_size_in_bits_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size is not set.");
   }
 
   // Validate modulus size.
   if (*modulus_size_in_bits_ < 2048) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid key size: must be at least 2048 bits, got ",
                      *modulus_size_in_bits_, " bits."));
@@ -96,7 +96,7 @@ JwtRsaSsaPkcs1Parameters::Builder::Build() {
 
   // Validate the public exponent: public exponent needs to be odd, greater than
   // 65536 and (for consistency with BoringSSL), smaller that 32 bits.
-  util::Status exponent_status =
+  absl::Status exponent_status =
       internal::ValidateRsaPublicExponent(public_exponent_.GetValue());
   if (!exponent_status.ok()) {
     return exponent_status;
@@ -106,7 +106,7 @@ JwtRsaSsaPkcs1Parameters::Builder::Build() {
   static const auto kSupportedAlgorithms = new absl::flat_hash_set<Algorithm>(
       {Algorithm::kRs256, Algorithm::kRs384, Algorithm::kRs512});
   if (!kSupportedAlgorithms->contains(*algorithm_)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create JWT RSASSA-PKCS1 parameters with unknown algorithm.");
   }
@@ -117,7 +117,7 @@ JwtRsaSsaPkcs1Parameters::Builder::Build() {
                                             KidStrategy::kIgnored,
                                             KidStrategy::kCustom});
   if (!kSupportedKidStrategies->contains(*kid_strategy_)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create JWT RSASSA-PKCS1 parameters with unknown kid strategy.");
   }

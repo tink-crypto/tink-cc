@@ -65,7 +65,7 @@ JwtRsaSsaPssPublicKey::Builder::ComputeKid() {
   if (parameters_->GetKidStrategy() ==
       JwtRsaSsaPssParameters::KidStrategy::kBase64EncodedKeyId) {
     if (custom_kid_.has_value()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Custom kid must not be set for KidStrategy::kBase64EncodedKeyId.");
     }
@@ -78,7 +78,7 @@ JwtRsaSsaPssPublicKey::Builder::ComputeKid() {
   if (parameters_->GetKidStrategy() ==
       JwtRsaSsaPssParameters::KidStrategy::kCustom) {
     if (!custom_kid_.has_value()) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Custom kid must be set for KidStrategy::kCustom.");
     }
     return custom_kid_;
@@ -86,42 +86,42 @@ JwtRsaSsaPssPublicKey::Builder::ComputeKid() {
   if (parameters_->GetKidStrategy() ==
       JwtRsaSsaPssParameters::KidStrategy::kIgnored) {
     if (custom_kid_.has_value()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Custom kid must not be set for KidStrategy::kIgnored.");
     }
     return absl::nullopt;
   }
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       "Unknown kid strategy.");
 }
 
 absl::StatusOr<JwtRsaSsaPssPublicKey> JwtRsaSsaPssPublicKey::Builder::Build(
     PartialKeyAccessToken token) {
   if (!parameters_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "JWT RSA-SSA-PSS parameters must be specified.");
   }
   if (!modulus_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "JWT RSA-SSA-PSS modulus must be specified.");
   }
 
   if (parameters_->HasIdRequirement() && !id_requirement_.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key without ID requirement with parameters with ID "
         "requirement");
   }
   if (!parameters_->HasIdRequirement() && id_requirement_.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
   // Check if the modulus length matches the modulus_size_in_bits parameter.
   if (modulus_->SizeInBytes() * 8 != parameters_->GetModulusSizeInBits()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid modulus length (expected %d, got %d)",
                         parameters_->GetModulusSizeInBits(),

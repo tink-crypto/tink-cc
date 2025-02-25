@@ -56,12 +56,12 @@ absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
     case JwtEcdsaParameters::Algorithm::kEs512:
       return subtle::EllipticCurveType::NIST_P521;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unknown curve type: ", algorithm));
   }
 }
 
-util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
+absl::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
                              const RestrictedBigInteger& private_key_value,
                              PartialKeyAccessToken token) {
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
@@ -87,7 +87,7 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
     return public_point.status();
   }
   if (!EC_KEY_set_public_key(key.get(), public_point->get())) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
@@ -102,7 +102,7 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
         return EC_KEY_set_private_key(key.get(), priv_big_num->get());
       });
       !set_private_key_res) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
   }
@@ -110,11 +110,11 @@ util::Status ValidateKeyPair(const JwtEcdsaPublicKey& public_key,
   if (int validate_key_res = internal::CallWithCoreDumpProtection(
           [&]() { return EC_KEY_check_key(key.get()); });
       !validate_key_res) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid EC key pair: ", internal::GetSslErrors()));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -124,7 +124,7 @@ absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaPrivateKey::Create(
     const RestrictedBigInteger& private_key_value,
     PartialKeyAccessToken token) {
   // Validate that the public and private key match.
-  util::Status key_pair_validation =
+  absl::Status key_pair_validation =
       ValidateKeyPair(public_key, private_key_value, token);
   if (!key_pair_validation.ok()) {
     return key_pair_validation;

@@ -39,7 +39,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::Status ValidateKeyPair(
+absl::Status ValidateKeyPair(
     const BigInteger& public_exponent, const BigInteger& modulus,
     const RestrictedBigInteger& p, const RestrictedBigInteger& q,
     const RestrictedBigInteger& d, const RestrictedBigInteger& dp,
@@ -109,32 +109,32 @@ JwtRsaSsaPssPrivateKey::Builder::SetCrtCoefficient(
 absl::StatusOr<JwtRsaSsaPssPrivateKey> JwtRsaSsaPssPrivateKey::Builder::Build(
     PartialKeyAccessToken token) {
   if (!public_key_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting the public key");
   }
 
   if (!p_.has_value() || !q_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting both prime factors");
   }
 
   if (!dp_.has_value() || !dq_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting both prime exponents");
   }
 
   if (!d_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting the private exponent");
   }
 
   if (!q_inv_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot build without setting the CRT coefficient");
   }
 
   // Validate key pair.
-  util::Status key_pair_validation = ValidateKeyPair(
+  absl::Status key_pair_validation = ValidateKeyPair(
       public_key_->GetParameters().GetPublicExponent(),
       public_key_->GetModulus(token), *p_, *q_, *d_, *dp_, *dq_, *q_inv_);
   if (!key_pair_validation.ok()) {

@@ -78,32 +78,32 @@ Status MacCli(absl::string_view mode, const std::string keyset_filename,
   if (!result.ok()) return result;
 
   // Read the keyset from file.
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
   if (!keyset_handle.ok()) return keyset_handle.status();
 
   // Get the primitive.
-  StatusOr<std::unique_ptr<Mac>> mac_primitive =
+  absl::StatusOr<std::unique_ptr<Mac>> mac_primitive =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::Mac>(
               crypto::tink::ConfigGlobalRegistry());
   if (!mac_primitive.ok()) return mac_primitive.status();
 
   // Read the input.
-  StatusOr<std::string> data_file_content = ReadFile(data_filename);
+  absl::StatusOr<std::string> data_file_content = ReadFile(data_filename);
   if (!data_file_content.ok()) return data_file_content.status();
 
   std::string output;
   if (mode == kCompute) {
     // Compute authentication tag.
-    StatusOr<std::string> compute_result =
+    absl::StatusOr<std::string> compute_result =
         (*mac_primitive)->ComputeMac(*data_file_content);
     if (!compute_result.ok()) return compute_result.status();
     // Write out the authentication tag to tag file.
     return WriteToFile(*compute_result, tag_filename);
   } else {  // operation == kVerify.
     // Read the authentication tag from tag file.
-    StatusOr<std::string> tag_result = ReadFile(tag_filename);
+    absl::StatusOr<std::string> tag_result = ReadFile(tag_filename);
     if (!tag_result.ok()) {
       std::cerr << tag_result.status().message() << '\n';
       exit(1);

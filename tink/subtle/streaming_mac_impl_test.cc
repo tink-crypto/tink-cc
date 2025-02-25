@@ -61,7 +61,7 @@ class DummyStatefulMac : public internal::StatefulMac {
     absl::StrAppend(&buffer_, data);
     return absl::OkStatus();
   }
-  util::StatusOr<SecretData> FinalizeAsSecretData() override {
+  absl::StatusOr<SecretData> FinalizeAsSecretData() override {
     return SecretDataFromStringView(absl::StrCat(
         mac_name_.size(), ":", buffer_.size(), ":", mac_name_, buffer_));
   }
@@ -78,7 +78,7 @@ class DummyStatefulMacFactory : public internal::StatefulMacFactory {
 
   // Constructs a StatefulMac using the DummyStatefulMac, which creates
   // returns a MAC of the header concatenated with the plaintext.
-  util::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
+  absl::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
       const override {
     return std::unique_ptr<internal::StatefulMac>(
         absl::make_unique<DummyStatefulMac>("streaming mac:"));
@@ -93,7 +93,7 @@ GetComputeMacOutputStream() {
       absl::make_unique<DummyStatefulMacFactory>());
   auto streaming_mac =
       absl::make_unique<StreamingMacImpl>(std::move(mac_factory));
-  util::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<std::string>>>
       stream_status = streaming_mac->NewComputeMacOutputStream();
   EXPECT_THAT(stream_status, IsOk());
   return std::move(*stream_status);
@@ -107,7 +107,7 @@ std::unique_ptr<OutputStreamWithResult<absl::Status>> GetVerifyMacOutputStream(
       absl::make_unique<DummyStatefulMacFactory>());
   auto streaming_mac =
       absl::make_unique<StreamingMacImpl>(std::move(mac_factory));
-  util::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
       stream_status = streaming_mac->NewVerifyMacOutputStream(expected_mac);
   EXPECT_THAT(stream_status, IsOk());
   return std::move(*stream_status);
@@ -167,7 +167,7 @@ TEST(StreamingMacImplTest, ComputeCheckStreamPosition) {
 
   // Check position in first buffer returned by Next();
   void* buffer;
-  util::StatusOr<int> next_result = output_stream->Next(&buffer);
+  absl::StatusOr<int> next_result = output_stream->Next(&buffer);
   EXPECT_THAT(next_result, IsOk());
   int buffer_size = *next_result;
   EXPECT_EQ(buffer_size, output_stream->Position());
@@ -267,7 +267,7 @@ TEST(StreamingMacImplTest, VerifyCheckStreamPosition) {
 
   // Check position in first buffer returned by Next();
   void* buffer;
-  util::StatusOr<int> next_result = output_stream->Next(&buffer);
+  absl::StatusOr<int> next_result = output_stream->Next(&buffer);
   EXPECT_THAT(next_result, IsOk());
   int buffer_size = *next_result;
   EXPECT_EQ(buffer_size, output_stream->Position());

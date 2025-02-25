@@ -106,7 +106,7 @@ absl::Status SslRsaSsaPssVerify(RSA* rsa_public_key,
   return absl::OkStatus();
 }
 
-util::StatusOr<subtle::HashType> ToSubtle(
+absl::StatusOr<subtle::HashType> ToSubtle(
     crypto::tink::RsaSsaPssParameters::HashType hash_type) {
   switch (hash_type) {
     case crypto::tink::RsaSsaPssParameters::HashType::kSha256:
@@ -123,20 +123,20 @@ util::StatusOr<subtle::HashType> ToSubtle(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> RsaSsaPssVerifyBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> RsaSsaPssVerifyBoringSsl::New(
     const RsaSsaPssPublicKey& key) {
   internal::RsaPublicKey public_key;
   public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
   public_key.e =
       std::string(key.GetParameters().GetPublicExponent().GetValue());
   internal::RsaSsaPssParams params;
-  util::StatusOr<subtle::HashType> mgf1_hash =
+  absl::StatusOr<subtle::HashType> mgf1_hash =
       ToSubtle(key.GetParameters().GetMgf1HashType());
   if (!mgf1_hash.ok()) {
     return mgf1_hash.status();
   }
   params.mgf1_hash = *mgf1_hash;
-  util::StatusOr<subtle::HashType> sig_hash =
+  absl::StatusOr<subtle::HashType> sig_hash =
       ToSubtle(key.GetParameters().GetSigHashType());
   if (!sig_hash.ok()) {
     return sig_hash.status();
@@ -150,13 +150,13 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> RsaSsaPssVerifyBoringSsl::New(
           : "");
 }
 
-util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>>
+absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>>
 RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                               const internal::RsaSsaPssParams& params) {
   return New(pub_key, params, "", "");
 }
 
-util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>>
+absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>>
 RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                               const internal::RsaSsaPssParams& params,
                               absl::string_view output_prefix,
@@ -172,14 +172,14 @@ RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
   if (!is_safe.ok()) {
     return is_safe;
   }
-  util::StatusOr<const EVP_MD*> sig_hash =
+  absl::StatusOr<const EVP_MD*> sig_hash =
       internal::EvpHashFromHashType(params.sig_hash);
   if (!sig_hash.ok()) {
     return sig_hash.status();
   }
 
   // TODO(quannguyen): check mgf1_hash function and salt length.
-  util::StatusOr<const EVP_MD*> mgf1_hash =
+  absl::StatusOr<const EVP_MD*> mgf1_hash =
       internal::EvpHashFromHashType(params.mgf1_hash);
   if (!mgf1_hash.ok()) {
     return mgf1_hash.status();
@@ -187,7 +187,7 @@ RsaSsaPssVerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
 
   // The RSA modulus and exponent are checked as part of the conversion to
   // internal::SslUniquePtr<RSA>.
-  util::StatusOr<internal::SslUniquePtr<RSA>> rsa =
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
       internal::RsaPublicKeyToRsa(pub_key);
   if (!rsa.ok()) {
     return rsa.status();
@@ -203,7 +203,7 @@ absl::Status RsaSsaPssVerifyBoringSsl::VerifyWithoutPrefix(
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
-  util::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
+  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
   if (!digest.ok()) {
     return digest.status();
   }

@@ -70,7 +70,7 @@ using ::crypto::tink::util::SecretDataFromStringView;
 // [1]https://github.com/google/boringssl/blob/master/crypto/fipsmodule/rsa/rsa.c#L557
 // [2]https://github.com/google/boringssl/blob/master/crypto/fipsmodule/rsa/rsa.c#L315
 // [3]https://github.com/openssl/openssl/blob/master/crypto/rsa/rsa_pmeth.c#L181
-util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
+absl::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
                                              absl::string_view digest,
                                              const EVP_MD* sig_md,
                                              const EVP_MD* mgf1_md,
@@ -117,7 +117,7 @@ util::StatusOr<std::string> SslRsaSsaPssSign(RSA* rsa_private_key,
   return signature;
 }
 
-util::StatusOr<subtle::HashType> ToSubtle(
+absl::StatusOr<subtle::HashType> ToSubtle(
     crypto::tink::RsaSsaPssParameters::HashType hash_type) {
   switch (hash_type) {
     case crypto::tink::RsaSsaPssParameters::HashType::kSha256:
@@ -134,7 +134,7 @@ util::StatusOr<subtle::HashType> ToSubtle(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
     const RsaSsaPssPrivateKey& key) {
   internal::RsaPrivateKey private_key;
   private_key.n = std::string(
@@ -156,13 +156,13 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
   private_key.crt = SecretDataFromStringView(
       key.GetCrtCoefficient().GetSecret(InsecureSecretKeyAccess::Get()));
   internal::RsaSsaPssParams params;
-  util::StatusOr<subtle::HashType> mgf1_hash =
+  absl::StatusOr<subtle::HashType> mgf1_hash =
       ToSubtle(key.GetParameters().GetMgf1HashType());
   if (!mgf1_hash.ok()) {
     return mgf1_hash.status();
   }
   params.mgf1_hash = *mgf1_hash;
-  util::StatusOr<subtle::HashType> sig_hash =
+  absl::StatusOr<subtle::HashType> sig_hash =
       ToSubtle(key.GetParameters().GetSigHashType());
   if (!sig_hash.ok()) {
     return sig_hash.status();
@@ -176,7 +176,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
           : "");
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
     const internal::RsaSsaPssParams& params, absl::string_view output_prefix,
     absl::string_view message_suffix) {
@@ -192,13 +192,13 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
     return is_safe;
   }
 
-  util::StatusOr<const EVP_MD*> sig_hash =
+  absl::StatusOr<const EVP_MD*> sig_hash =
       internal::EvpHashFromHashType(params.sig_hash);
   if (!sig_hash.ok()) {
     return sig_hash.status();
   }
 
-  util::StatusOr<const EVP_MD*> mgf1_hash =
+  absl::StatusOr<const EVP_MD*> mgf1_hash =
       internal::EvpHashFromHashType(params.mgf1_hash);
   if (!mgf1_hash.ok()) {
     return mgf1_hash.status();
@@ -206,7 +206,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
 
   // The RSA modulus and exponent are checked as part of the conversion to
   // internal::SslUniquePtr<RSA>.
-  util::StatusOr<internal::SslUniquePtr<RSA>> rsa =
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
       internal::RsaPrivateKeyToRsa(private_key);
   if (!rsa.ok()) {
     return rsa.status();
@@ -217,15 +217,15 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPssSignBoringSsl::New(
       message_suffix))};
 }
 
-util::StatusOr<std::string> RsaSsaPssSignBoringSsl::SignWithoutPrefix(
+absl::StatusOr<std::string> RsaSsaPssSignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
-  util::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
+  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
   if (!digest.ok()) {
     return digest.status();
   }
 
-  util::StatusOr<std::string> signature =
+  absl::StatusOr<std::string> signature =
       internal::CallWithCoreDumpProtection([&]() {
         return SslRsaSsaPssSign(private_key_.get(), *digest, sig_hash_,
                                 mgf1_hash_, salt_length_);
@@ -236,9 +236,9 @@ util::StatusOr<std::string> RsaSsaPssSignBoringSsl::SignWithoutPrefix(
   return signature;
 }
 
-util::StatusOr<std::string> RsaSsaPssSignBoringSsl::Sign(
+absl::StatusOr<std::string> RsaSsaPssSignBoringSsl::Sign(
     absl::string_view data) const {
-  util::StatusOr<std::string> signature_without_prefix_;
+  absl::StatusOr<std::string> signature_without_prefix_;
   if (message_suffix_.empty()) {
     signature_without_prefix_ = SignWithoutPrefix(data);
   } else {

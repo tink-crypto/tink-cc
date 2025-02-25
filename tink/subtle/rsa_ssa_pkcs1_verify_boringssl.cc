@@ -47,7 +47,7 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
   internal::RsaPublicKey public_key;
   public_key.n = std::string(key.GetModulus(GetPartialKeyAccess()).GetValue());
@@ -76,13 +76,13 @@ RsaSsaPkcs1VerifyBoringSsl::New(const RsaSsaPkcs1PublicKey& key) {
                  : "");
 }
 
-util::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
+absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
 RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                                 const internal::RsaSsaPkcs1Params& params) {
   return New(pub_key, params, "", "");
 }
 
-util::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
+absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
 RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
                                 const internal::RsaSsaPkcs1Params& params,
                                 absl::string_view output_prefix,
@@ -99,7 +99,7 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
     return is_safe;
   }
 
-  util::StatusOr<const EVP_MD*> sig_hash =
+  absl::StatusOr<const EVP_MD*> sig_hash =
       internal::EvpHashFromHashType(params.hash_type);
   if (!sig_hash.ok()) {
     return sig_hash.status();
@@ -107,7 +107,7 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
 
   // The RSA modulus and exponent are checked as part of the conversion to
   // internal::SslUniquePtr<RSA>.
-  util::StatusOr<internal::SslUniquePtr<RSA>> rsa =
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
       internal::RsaPublicKeyToRsa(pub_key);
   if (!rsa.ok()) {
     return rsa.status();
@@ -125,7 +125,7 @@ absl::Status RsaSsaPkcs1VerifyBoringSsl::VerifyWithoutPrefix(
   // regardless of whether the size is 0.
   data = internal::EnsureStringNonNull(data);
 
-  util::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
+  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
   if (!digest.ok()) {
     return digest.status();
   }

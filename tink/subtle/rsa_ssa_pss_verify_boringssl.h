@@ -42,11 +42,11 @@ namespace subtle {
 // https://tools.ietf.org/html/rfc8017#section-8.1).
 class RsaSsaPssVerifyBoringSsl : public PublicKeyVerify {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>>
-  New(const internal::RsaPublicKey& pub_key,
+  static absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> New(
+      const internal::RsaPublicKey& pub_key,
       const internal::RsaSsaPssParams& params);
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       const RsaSsaPssPublicKey& pub_key);
 
   ~RsaSsaPssVerifyBoringSsl() override = default;
@@ -58,8 +58,8 @@ class RsaSsaPssVerifyBoringSsl : public PublicKeyVerify {
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
  private:
-  static crypto::tink::util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>>
-  New(const internal::RsaPublicKey& pub_key,
+  static absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> New(
+      const internal::RsaPublicKey& pub_key,
       const internal::RsaSsaPssParams& params, absl::string_view output_prefix,
       absl::string_view message_suffix);
 

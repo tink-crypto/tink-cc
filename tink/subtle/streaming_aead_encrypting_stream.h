@@ -37,14 +37,13 @@ class StreamingAeadEncryptingStream : public OutputStream {
   // such that any bytes written via the wrapper are AEAD-encrypted
   // by 'segment_encrypter' using 'associated_data' as associated
   // authenticated data.
-  static
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
-      New(std::unique_ptr<StreamSegmentEncrypter> segment_encrypter,
-          std::unique_ptr<crypto::tink::OutputStream> ciphertext_destination);
+  static absl::StatusOr<std::unique_ptr<crypto::tink::OutputStream>> New(
+      std::unique_ptr<StreamSegmentEncrypter> segment_encrypter,
+      std::unique_ptr<crypto::tink::OutputStream> ciphertext_destination);
 
   // -----------------------
   // Methods of OutputStream-interface implemented by this class.
-  crypto::tink::util::StatusOr<int> Next(void** data) override;
+  absl::StatusOr<int> Next(void** data) override;
   void BackUp(int count) override;
   absl::Status Close() override;
   int64_t Position() const override;

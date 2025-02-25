@@ -67,21 +67,21 @@ class SubtleUtilBoringSSL {
   // Returns BoringSSL's BIGNUM constructed from bigendian string
   // representation.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline util::StatusOr<internal::SslUniquePtr<BIGNUM>> str2bn(
+  static inline absl::StatusOr<internal::SslUniquePtr<BIGNUM>> str2bn(
       absl::string_view s) {
     return internal::StringToBignum(s);
   }
 
   // Returns a SecretData of size 'len' that holds BIGNUM 'bn'.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline util::StatusOr<std::string> bn2str(const BIGNUM *bn,
+  static inline absl::StatusOr<std::string> bn2str(const BIGNUM *bn,
                                                    size_t len) {
     return internal::BignumToString(bn, len);
   }
 
   // Returns a string of size 'len' that holds BIGNUM 'bn'.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline util::StatusOr<util::SecretData> BignumToSecretData(
+  static inline absl::StatusOr<util::SecretData> BignumToSecretData(
       const BIGNUM *bn, size_t len) {
     return internal::BignumToSecretData(bn, len);
   }
@@ -93,9 +93,9 @@ class SubtleUtilBoringSSL {
 
   // Returns BoringSSL's EC_GROUP constructed from the curve type.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<EC_GROUP *> GetEcGroup(
+  static inline absl::StatusOr<EC_GROUP *> GetEcGroup(
       EllipticCurveType curve_type) {
-    util::StatusOr<internal::SslUniquePtr<EC_GROUP>> ec_group =
+    absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> ec_group =
         internal::EcGroupFromCurveType(curve_type);
     if (!ec_group.ok()) {
       return ec_group.status();
@@ -105,7 +105,7 @@ class SubtleUtilBoringSSL {
 
   // Returns the curve type associated with the EC_GROUP
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<EllipticCurveType> GetCurve(
+  static inline absl::StatusOr<EllipticCurveType> GetCurve(
       const EC_GROUP *group) {
     return internal::CurveTypeFromEcGroup(group);
   }
@@ -113,9 +113,10 @@ class SubtleUtilBoringSSL {
   // Returns BoringSSL's EC_POINT constructed from the curve type, big-endian
   // representation of public key's x-coordinate and y-coordinate.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<EC_POINT *> GetEcPoint(
-      EllipticCurveType curve, absl::string_view pubx, absl::string_view puby) {
-    util::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
+  static inline absl::StatusOr<EC_POINT *> GetEcPoint(EllipticCurveType curve,
+                                                      absl::string_view pubx,
+                                                      absl::string_view puby) {
+    absl::StatusOr<internal::SslUniquePtr<EC_POINT>> ec_point =
         internal::GetEcPoint(curve, pubx, puby);
     if (!ec_point.ok()) {
       return ec_point.status();
@@ -125,14 +126,14 @@ class SubtleUtilBoringSSL {
 
   // Returns a new EC key for the specified curve.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<EcKey> GetNewEcKey(
+  static inline absl::StatusOr<EcKey> GetNewEcKey(
       EllipticCurveType curve_type) {
     return internal::NewEcKey(curve_type);
   }
 
   // Returns a new EC key for the specified curve derived from a seed.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<EcKey> GetNewEcKeyFromSeed(
+  static inline absl::StatusOr<EcKey> GetNewEcKeyFromSeed(
       EllipticCurveType curve_type, const util::SecretData &secret_seed) {
     return internal::NewEcKey(curve_type, secret_seed);
   }
@@ -140,7 +141,7 @@ class SubtleUtilBoringSSL {
   // Returns a new ED25519 key.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline std::unique_ptr<Ed25519Key> GetNewEd25519Key() {
-    util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
+    absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
         internal::NewEd25519Key();
     if (!key.ok()) {
       return nullptr;
@@ -156,7 +157,7 @@ class SubtleUtilBoringSSL {
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline std::unique_ptr<Ed25519Key> GetNewEd25519KeyFromSeed(
       const util::SecretData &secret_seed) {
-    util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
+    absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
         internal::NewEd25519Key(secret_seed);
     if (!key.ok()) {
       return nullptr;
@@ -175,9 +176,9 @@ class SubtleUtilBoringSSL {
   // curve_size_in_bytes big-endian byte array and if the least significant bit
   // of y is 1, the 1st byte is 0x03, otherwise it's 0x02.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<internal::SslUniquePtr<EC_POINT>>
-  EcPointDecode(EllipticCurveType curve, EcPointFormat format,
-                absl::string_view encoded) {
+  static inline absl::StatusOr<internal::SslUniquePtr<EC_POINT>> EcPointDecode(
+      EllipticCurveType curve, EcPointFormat format,
+      absl::string_view encoded) {
     return internal::EcPointDecode(curve, format, encoded);
   }
 
@@ -188,7 +189,7 @@ class SubtleUtilBoringSSL {
   // curve_size_in_bytes big-endian byte array and if the least significant bit
   // of y is 1, the 1st byte is 0x03, otherwise it's 0x02.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<std::string> EcPointEncode(
+  static inline absl::StatusOr<std::string> EcPointEncode(
       EllipticCurveType curve, EcPointFormat format, const EC_POINT *point) {
     return internal::EcPointEncode(curve, format, point);
   }
@@ -196,9 +197,9 @@ class SubtleUtilBoringSSL {
   // Returns the ECDH's shared secret based on our private key and peer's public
   // key. Returns error if the public key is not on private key's curve.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<util::SecretData>
-  ComputeEcdhSharedSecret(EllipticCurveType curve, const BIGNUM *priv_key,
-                          const EC_POINT *pub_key) {
+  static inline absl::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
+      EllipticCurveType curve, const BIGNUM *priv_key,
+      const EC_POINT *pub_key) {
     return internal::ComputeEcdhSharedSecret(curve, priv_key, pub_key);
   }
 
@@ -214,7 +215,7 @@ class SubtleUtilBoringSSL {
   // In particular, the encoding is:
   //   0x30 || totalLength || 0x02 || r's length || r || 0x02 || s's length || s
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<std::string> EcSignatureIeeeToDer(
+  static inline absl::StatusOr<std::string> EcSignatureIeeeToDer(
       const EC_GROUP *group, absl::string_view ieee_sig) {
     return internal::EcSignatureIeeeToDer(group, ieee_sig);
   }
@@ -222,8 +223,7 @@ class SubtleUtilBoringSSL {
   // Returns an EVP structure for a hash function.
   // The EVP_MD instances are sigletons owned by BoringSSL.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline crypto::tink::util::StatusOr<const EVP_MD *> EvpHash(
-      HashType hash_type) {
+  static inline absl::StatusOr<const EVP_MD *> EvpHash(HashType hash_type) {
     return internal::EvpHashFromHashType(hash_type);
   }
 
@@ -280,14 +280,14 @@ class SubtleUtilBoringSSL {
 
   // Creates a BoringSSL RSA key from an RsaPrivateKey.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline util::StatusOr<internal::SslUniquePtr<RSA>>
+  static inline absl::StatusOr<internal::SslUniquePtr<RSA>>
   BoringSslRsaFromRsaPrivateKey(const RsaPrivateKey &key) {
     return internal::RsaPrivateKeyToRsa(key);
   }
 
   // Creates a BoringSSL RSA key from an RsaPublicKey.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline util::StatusOr<internal::SslUniquePtr<RSA>>
+  static inline absl::StatusOr<internal::SslUniquePtr<RSA>>
   BoringSslRsaFromRsaPublicKey(const RsaPublicKey &key) {
     return internal::RsaPublicKeyToRsa(key);
   }
@@ -296,7 +296,7 @@ class SubtleUtilBoringSSL {
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline const EVP_CIPHER *GetAesCtrCipherForKeySize(
       uint32_t size_in_bytes) {
-    util::StatusOr<const EVP_CIPHER *> res =
+    absl::StatusOr<const EVP_CIPHER *> res =
         internal::GetAesCtrCipherForKeySize(size_in_bytes);
     if (!res.ok()) {
       return nullptr;
@@ -308,7 +308,7 @@ class SubtleUtilBoringSSL {
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline const EVP_CIPHER *GetAesGcmCipherForKeySize(
       uint32_t size_in_bytes) {
-    util::StatusOr<const EVP_CIPHER *> res =
+    absl::StatusOr<const EVP_CIPHER *> res =
         internal::GetAesGcmCipherForKeySize(size_in_bytes);
     if (!res.ok()) {
       return nullptr;
@@ -321,7 +321,7 @@ class SubtleUtilBoringSSL {
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline const EVP_AEAD *GetAesGcmAeadForKeySize(
       uint32_t size_in_bytes) {
-    util::StatusOr<const EVP_AEAD *> res =
+    absl::StatusOr<const EVP_AEAD *> res =
         internal::GetAesGcmAeadForKeySize(size_in_bytes);
     if (!res.ok()) {
       return nullptr;
@@ -335,9 +335,9 @@ namespace boringssl {
 
 // Computes hash of 'input' using the hash function 'hasher'.
 ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-inline util::StatusOr<std::vector<uint8_t>> ComputeHash(absl::string_view input,
+inline absl::StatusOr<std::vector<uint8_t>> ComputeHash(absl::string_view input,
                                                         const EVP_MD &hasher) {
-  util::StatusOr<std::string> res = internal::ComputeHash(input, hasher);
+  absl::StatusOr<std::string> res = internal::ComputeHash(input, hasher);
   if (!res.ok()) {
     return res.status();
   }

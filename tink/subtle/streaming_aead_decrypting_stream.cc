@@ -81,7 +81,7 @@ absl::Status ReadFromStream(InputStream* input_stream, int count,
 }  // anonymous namespace
 
 // static
-StatusOr<std::unique_ptr<InputStream>> StreamingAeadDecryptingStream::New(
+absl::StatusOr<std::unique_ptr<InputStream>> StreamingAeadDecryptingStream::New(
     std::unique_ptr<StreamSegmentDecrypter> segment_decrypter,
     std::unique_ptr<InputStream> ciphertext_source) {
   if (segment_decrypter == nullptr) {
@@ -115,7 +115,7 @@ StatusOr<std::unique_ptr<InputStream>> StreamingAeadDecryptingStream::New(
   return {std::move(dec_stream)};
 }
 
-StatusOr<int> StreamingAeadDecryptingStream::Next(const void** data) {
+absl::StatusOr<int> StreamingAeadDecryptingStream::Next(const void** data) {
   if (!status_.ok()) return status_;
 
   // The first call to Next().

@@ -44,12 +44,11 @@ namespace subtle {
 // BoringSSL for the underlying cryptographic operations.
 class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
  public:
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
-  New(const internal::RsaPublicKey& pub_key,
+  static absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> New(
+      const internal::RsaPublicKey& pub_key,
       const internal::RsaSsaPkcs1Params& params);
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       const RsaSsaPkcs1PublicKey& key);
 
   // Verifies that 'signature' is a digital signature for 'data'.
@@ -68,9 +67,8 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
   // https://www.keylength.com/en/4/).
   static constexpr size_t kMinModulusSizeInBits = 2048;
 
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>>
-  New(const internal::RsaPublicKey& pub_key,
+  static absl::StatusOr<std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl>> New(
+      const internal::RsaPublicKey& pub_key,
       const internal::RsaSsaPkcs1Params& params,
       absl::string_view output_prefix, absl::string_view message_suffix);
 

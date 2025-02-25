@@ -69,7 +69,8 @@ absl::Status WriteToStream(const std::vector<uint8_t>& contents,
 }  // anonymous namespace
 
 // static
-StatusOr<std::unique_ptr<OutputStream>> StreamingAeadEncryptingStream::New(
+absl::StatusOr<std::unique_ptr<OutputStream>>
+StreamingAeadEncryptingStream::New(
     std::unique_ptr<StreamSegmentEncrypter> segment_encrypter,
     std::unique_ptr<OutputStream> ciphertext_destination) {
   if (segment_encrypter == nullptr) {
@@ -103,7 +104,7 @@ StatusOr<std::unique_ptr<OutputStream>> StreamingAeadEncryptingStream::New(
   return {std::move(enc_stream)};
 }
 
-StatusOr<int> StreamingAeadEncryptingStream::Next(void** data) {
+absl::StatusOr<int> StreamingAeadEncryptingStream::Next(void** data) {
   if (!status_.ok()) return status_;
 
   // The first call to Next().

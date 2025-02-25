@@ -120,7 +120,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, BasicVerify) {
       kNistTestVector.salt_length,
   };
 
-  util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
+  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
       RsaSsaPssVerifyBoringSsl::New(pub_key, params);
   ASSERT_THAT(verifier, IsOk());
   absl::Status status =
@@ -174,7 +174,7 @@ TEST(RsaSsaPssVerifyBoringSslTest, Modification) {
       kNistTestVector.salt_length,
   };
 
-  util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
+  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
       RsaSsaPssVerifyBoringSsl::New(pub_key, params);
   ASSERT_THAT(verifier, IsOk());
   // Modify the message.
@@ -221,7 +221,7 @@ struct RsaSsaPssWycheproofTestVector {
 std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
     absl::string_view file_name) {
   std::vector<RsaSsaPssWycheproofTestVector> test_vectors;
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(std::string(file_name));
   CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
@@ -258,7 +258,7 @@ std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
 }
 
 // Creates a verifier using the parameters in `test_vector`.
-util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> GetVerifier(
+absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> GetVerifier(
     const RsaSsaPssWycheproofTestVector& test_vector) {
   internal::RsaPublicKey key = test_vector.key;
   internal::RsaSsaPssParams params = {
@@ -278,7 +278,7 @@ TEST_P(RsaSsaPssWycheproofTest, SignatureVerify) {
     GTEST_SKIP() << "Test not run in FIPS-only mode";
   }
   RsaSsaPssWycheproofTestVector params = GetParam();
-  util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
+  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verifier =
       GetVerifier(params);
   ASSERT_THAT(verifier, IsOk());
   absl::Status result = (*verifier)->Verify(params.sig, params.msg);
@@ -413,7 +413,7 @@ TEST_P(RsaSsaPssVerifyBoringSslTestVectorTest, VerifySignatureInTestVector) {
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RsaSsaPssVerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT((*verifier)->Verify(param.signature, param.message), IsOk());
@@ -439,7 +439,7 @@ TEST_P(RsaSsaPssVerifyBoringSslTestVectorTest, DifferentMessageDoesNotVerify) {
                 Not(IsOk()));
     return;
   }
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RsaSsaPssVerifyBoringSsl::New(typed_key->GetPublicKey());
   ASSERT_THAT(verifier, IsOk());
   EXPECT_THAT(

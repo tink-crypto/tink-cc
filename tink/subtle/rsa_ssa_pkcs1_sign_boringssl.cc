@@ -54,7 +54,7 @@ namespace subtle {
 
 using ::crypto::tink::util::SecretDataFromStringView;
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const RsaSsaPkcs1PrivateKey& key) {
   internal::RsaPrivateKey private_key;
   private_key.n = std::string(
@@ -98,13 +98,13 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
                  : "");
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
     const internal::RsaSsaPkcs1Params& params) {
   return New(private_key, params, "", "");
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     const internal::RsaPrivateKey& private_key,
     const internal::RsaSsaPkcs1Params& params, absl::string_view output_prefix,
     absl::string_view message_suffix) {
@@ -120,14 +120,14 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
     return is_safe;
   }
 
-  util::StatusOr<const EVP_MD*> sig_hash =
+  absl::StatusOr<const EVP_MD*> sig_hash =
       internal::EvpHashFromHashType(params.hash_type);
   if (!sig_hash.ok()) {
     return sig_hash.status();
   }
 
   // Check RSA's modulus.
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(private_key.n);
   if (!n.ok()) {
     return n.status();
@@ -139,7 +139,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
 
   // The RSA modulus and exponent are checked as part of the conversion to
   // internal::SslUniquePtr<RSA>.
-  util::StatusOr<internal::SslUniquePtr<RSA>> rsa =
+  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
       internal::RsaPrivateKeyToRsa(private_key);
   if (!rsa.ok()) {
     return rsa.status();
@@ -149,10 +149,10 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> RsaSsaPkcs1SignBoringSsl::New(
       *std::move(rsa), *sig_hash, output_prefix, message_suffix))};
 }
 
-util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
+absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
-  util::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
+  absl::StatusOr<std::string> digest = internal::ComputeHash(data, *sig_hash_);
   if (!digest.ok()) {
     return digest.status();
   }
@@ -186,9 +186,9 @@ util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::SignWithoutPrefix(
   return signature;
 }
 
-util::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::Sign(
+absl::StatusOr<std::string> RsaSsaPkcs1SignBoringSsl::Sign(
     absl::string_view data) const {
-  util::StatusOr<std::string> signature_without_prefix_;
+  absl::StatusOr<std::string> signature_without_prefix_;
   if (message_suffix_.empty()) {
     signature_without_prefix_ = SignWithoutPrefix(data);
   } else {

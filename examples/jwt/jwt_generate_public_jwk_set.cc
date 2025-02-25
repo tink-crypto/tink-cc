@@ -59,11 +59,11 @@ Status JwtGeneratePublicJwkSet(const std::string& public_keyset_filename,
   Status result = crypto::tink::JwtSignatureRegister();
   if (!result.ok()) return result;
 
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(public_keyset_filename);
   if (!keyset_handle.ok()) return keyset_handle.status();
 
-  StatusOr<std::string> public_jwk_set =
+  absl::StatusOr<std::string> public_jwk_set =
       JwkSetFromPublicKeysetHandle(**keyset_handle);
   if (!public_jwk_set.ok()) return keyset_handle.status();
 

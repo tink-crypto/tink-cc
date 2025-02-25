@@ -70,22 +70,22 @@ Status JwtSign(const std::string& keyset_filename, absl::string_view audience,
   if (!result.ok()) return result;
 
   // Read the keyset from file.
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
   if (!keyset_handle.ok()) return keyset_handle.status();
-  StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder()
           .AddAudience(audience)
           .SetExpiration(absl::Now() + absl::Seconds(100))
           .Build();
   if (!raw_jwt.ok()) return raw_jwt.status();
-  StatusOr<std::unique_ptr<JwtPublicKeySign>> jwt_signer =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> jwt_signer =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeySign>(
               crypto::tink::ConfigGlobalRegistry());
   if (!jwt_signer.ok()) return jwt_signer.status();
 
-  StatusOr<std::string> token = (*jwt_signer)->SignAndEncode(*raw_jwt);
+  absl::StatusOr<std::string> token = (*jwt_signer)->SignAndEncode(*raw_jwt);
   if (!token.ok()) return token.status();
 
   return WriteToFile(*token, token_filename);

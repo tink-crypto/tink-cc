@@ -70,20 +70,20 @@ Status JwtVerify(const std::string& jwk_set_filename,
   if (!result.ok()) return result;
 
   // Read the JWK set from file and convert it.
-  StatusOr<std::string> jwk_set = ReadFile(jwk_set_filename);
+  absl::StatusOr<std::string> jwk_set = ReadFile(jwk_set_filename);
   if (!jwk_set.ok()) return jwk_set.status();
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       JwkSetToPublicKeysetHandle(*jwk_set);
 
   // Read the token.
-  StatusOr<std::string> token = ReadFile(token_filename);
+  absl::StatusOr<std::string> token = ReadFile(token_filename);
   if (!token.ok()) return token.status();
 
-  StatusOr<JwtValidator> validator =
+  absl::StatusOr<JwtValidator> validator =
       crypto::tink::JwtValidatorBuilder().ExpectAudience(audience).Build();
   if (!validator.ok()) return validator.status();
 
-  StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verifier =
+  absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> jwt_verifier =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::JwtPublicKeyVerify>(
               crypto::tink::ConfigGlobalRegistry());

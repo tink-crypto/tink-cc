@@ -94,7 +94,7 @@ RestrictedBigInteger P521SecretValue() {
 }
 
 HybridTestVector CreateTestVector0() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -104,12 +104,12 @@ HybridTestVector CreateTestVector0() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -124,7 +124,7 @@ HybridTestVector CreateTestVector0() {
 
 /* Compressed point */
 HybridTestVector CreateTestVector1() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -134,12 +134,12 @@ HybridTestVector CreateTestVector1() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -152,7 +152,7 @@ HybridTestVector CreateTestVector1() {
 }
 
 HybridTestVector CreateTestVector2() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -162,12 +162,12 @@ HybridTestVector CreateTestVector2() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -181,7 +181,7 @@ HybridTestVector CreateTestVector2() {
 
 // kAes128CtrHmacSha256Raw
 HybridTestVector CreateTestVector3() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -191,12 +191,12 @@ HybridTestVector CreateTestVector3() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -210,7 +210,7 @@ HybridTestVector CreateTestVector3() {
 
 // kAes256CtrHmacSha256Raw
 HybridTestVector CreateTestVector4() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -220,12 +220,12 @@ HybridTestVector CreateTestVector4() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -242,7 +242,7 @@ HybridTestVector CreateTestVector4() {
 
 // AES256_SIV_RAW
 HybridTestVector CreateTestVector5() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -252,12 +252,12 @@ HybridTestVector CreateTestVector5() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -271,7 +271,7 @@ HybridTestVector CreateTestVector5() {
 
 // TINK
 HybridTestVector CreateTestVector6() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -281,12 +281,12 @@ HybridTestVector CreateTestVector6() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ 0x88668866,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -302,7 +302,7 @@ HybridTestVector CreateTestVector6() {
 
 // Crunchy
 HybridTestVector CreateTestVector7() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -312,12 +312,12 @@ HybridTestVector CreateTestVector7() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ 0x88668866,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -333,7 +333,7 @@ HybridTestVector CreateTestVector7() {
 
 // SHA384
 HybridTestVector CreateTestVector8() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha384)
@@ -343,12 +343,12 @@ HybridTestVector CreateTestVector8() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -363,7 +363,7 @@ HybridTestVector CreateTestVector8() {
 
 // SHA512
 HybridTestVector CreateTestVector9() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha512)
@@ -373,12 +373,12 @@ HybridTestVector CreateTestVector9() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -393,7 +393,7 @@ HybridTestVector CreateTestVector9() {
 
 // Empty Message
 HybridTestVector CreateTestVector10() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -403,12 +403,12 @@ HybridTestVector CreateTestVector10() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -423,7 +423,7 @@ HybridTestVector CreateTestVector10() {
 
 // Empty Context info
 HybridTestVector CreateTestVector11() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -433,12 +433,12 @@ HybridTestVector CreateTestVector11() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -453,7 +453,7 @@ HybridTestVector CreateTestVector11() {
 
 // NIST_P384
 HybridTestVector CreateTestVector12() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP384)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -463,12 +463,12 @@ HybridTestVector CreateTestVector12() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P384Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P384SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -484,7 +484,7 @@ HybridTestVector CreateTestVector12() {
 
 // NIST_P521
 HybridTestVector CreateTestVector13() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP521)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -494,12 +494,12 @@ HybridTestVector CreateTestVector13() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P521Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
   CHECK_OK(public_key);
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P521SecretValue(),
                                           GetPartialKeyAccess());
   CHECK_OK(private_key);
@@ -517,7 +517,7 @@ HybridTestVector CreateTestVector13() {
 // X25519
 // Test vector created with the implementation here.
 HybridTestVector CreateTestVector14() {
-  util::StatusOr<EciesParameters> params =
+  absl::StatusOr<EciesParameters> params =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kX25519)
           .SetHashType(EciesParameters::HashType::kSha256)
@@ -526,7 +526,7 @@ HybridTestVector CreateTestVector14() {
           .Build();
   CHECK_OK(params);
 
-  util::StatusOr<EciesPublicKey> public_key =
+  absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(
           *params,
           HexDecodeOrDie("90c5b6d9b337cc6c9c2e8ac44f1c0e7c41f23bdf7a04df3b9c808"
@@ -537,9 +537,9 @@ HybridTestVector CreateTestVector14() {
       HexDecodeOrDie(
           "97d2e385c9968fbe2dc0b85a182199ed7e0b5b4bb6060f76583c0893241f698d"),
       InsecureSecretKeyAccess::Get());
-  util::StatusOr<EciesPrivateKey> private_key =
+  absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForCurveX25519(*public_key, private_key_material,
-                                          GetPartialKeyAccess());
+                                            GetPartialKeyAccess());
   CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),

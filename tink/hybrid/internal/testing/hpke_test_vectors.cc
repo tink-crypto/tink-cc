@@ -60,7 +60,7 @@ RestrictedData P256SecretValue() {
 }
 
 HybridTestVector CreateTestVector0() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -68,11 +68,11 @@ HybridTestVector CreateTestVector0() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -85,7 +85,7 @@ HybridTestVector CreateTestVector0() {
 }
 
 HybridTestVector CreateTestVector1() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemX25519HkdfSha256)
@@ -93,13 +93,13 @@ HybridTestVector CreateTestVector1() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters,
       HexDecodeOrDie(
           "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431"),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key,
       RestrictedData(HexDecodeOrDie("52c4a758a802cd8b936eceea314432798d5baf2d7e"
                                     "9235dc084ab1b9cfa2f736"),
@@ -116,7 +116,7 @@ HybridTestVector CreateTestVector1() {
 
 // AES_256_GCM
 HybridTestVector CreateTestVector2() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -124,11 +124,11 @@ HybridTestVector CreateTestVector2() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -142,7 +142,7 @@ HybridTestVector CreateTestVector2() {
 
 // CHACHA20_POLY1305
 HybridTestVector CreateTestVector3() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -150,11 +150,11 @@ HybridTestVector CreateTestVector3() {
           .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -168,7 +168,7 @@ HybridTestVector CreateTestVector3() {
 
 // TINK
 HybridTestVector CreateTestVector4() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kTink)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -176,11 +176,11 @@ HybridTestVector CreateTestVector4() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x886688aa,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 
@@ -195,7 +195,7 @@ HybridTestVector CreateTestVector4() {
 
 // CRUNCHY
 HybridTestVector CreateTestVector5() {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kCrunchy)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -203,11 +203,11 @@ HybridTestVector CreateTestVector5() {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x886688aa,
       GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
 

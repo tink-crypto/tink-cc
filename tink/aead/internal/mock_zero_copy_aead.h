@@ -35,7 +35,7 @@ class MockZeroCopyAead : public ZeroCopyAead {
   MOCK_METHOD(int64_t, MaxEncryptionSize, (int64_t plaintext_size),
               (const, override));
 
-  MOCK_METHOD(crypto::tink::util::StatusOr<int64_t>, Encrypt,
+  MOCK_METHOD(absl::StatusOr<int64_t>, Encrypt,
               (absl::string_view plaintext, absl::string_view associated_data,
                absl::Span<char> buffer),
               (const, override));
@@ -43,7 +43,7 @@ class MockZeroCopyAead : public ZeroCopyAead {
   MOCK_METHOD(int64_t, MaxDecryptionSize, (int64_t ciphertext_size),
               (const, override));
 
-  MOCK_METHOD(crypto::tink::util::StatusOr<int64_t>, Decrypt,
+  MOCK_METHOD(absl::StatusOr<int64_t>, Decrypt,
               (absl::string_view ciphertext, absl::string_view associated_data,
                absl::Span<char> buffer),
               (const, override));

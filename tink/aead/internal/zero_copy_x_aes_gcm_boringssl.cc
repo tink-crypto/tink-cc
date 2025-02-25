@@ -52,9 +52,9 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
     return base_x_aes_gcm_.min_ct_size() + plaintext_size;
   }
 
-  util::StatusOr<int64_t> Encrypt(
-      absl::string_view plaintext, absl::string_view associated_data,
-      absl::Span<char> buffer) const override {
+  absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
+                                  absl::string_view associated_data,
+                                  absl::Span<char> buffer) const override {
     if (buffer.size() < MaxEncryptionSize(plaintext.size())) {
       return util::Status(
           absl::StatusCode::kInvalidArgument,
@@ -73,14 +73,15 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
     if (!derived_key.ok()) {
       return derived_key.status();
     }
-    util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+    absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
         ZeroCopyAesGcmBoringSsl::New(*derived_key);
     if (!zero_copy_aead.ok()) {
       return zero_copy_aead.status();
     }
-    util::StatusOr<int64_t> written_bytes = (*zero_copy_aead)
-        ->Encrypt(plaintext, associated_data,
-                  buffer.subspan(base_x_aes_gcm_.salt_size()));
+    absl::StatusOr<int64_t> written_bytes =
+        (*zero_copy_aead)
+            ->Encrypt(plaintext, associated_data,
+                      buffer.subspan(base_x_aes_gcm_.salt_size()));
     if (!written_bytes.ok()) {
       return written_bytes.status();
     }
@@ -95,9 +96,9 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
     return size;
   }
 
-  crypto::tink::util::StatusOr<int64_t> Decrypt(
-      absl::string_view ciphertext, absl::string_view associated_data,
-      absl::Span<char> buffer) const override {
+  absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
+                                  absl::string_view associated_data,
+                                  absl::Span<char> buffer) const override {
     if (ciphertext.size() < base_x_aes_gcm_.min_ct_size()) {
       return util::Status(
           absl::StatusCode::kInvalidArgument,
@@ -118,7 +119,7 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
     if (!derived_key.ok()) {
       return derived_key.status();
     }
-    util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+    absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
         ZeroCopyAesGcmBoringSsl::New(*derived_key);
     if (!zero_copy_aead.ok()) {
       return zero_copy_aead.status();
@@ -134,7 +135,7 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<ZeroCopyAead>> NewZeroCopyXAesGcmBoringSsl(
+absl::StatusOr<std::unique_ptr<ZeroCopyAead>> NewZeroCopyXAesGcmBoringSsl(
     const XAesGcmKey& key) {
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm = BaseXAesGcm::New(key);
   if (!base_x_aes_gcm.ok()) {

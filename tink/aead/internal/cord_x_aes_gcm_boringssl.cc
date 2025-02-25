@@ -49,7 +49,7 @@ class CordXAesGcmBoringSsl : public CordAead {
   explicit CordXAesGcmBoringSsl(BaseXAesGcm base_x_aes_gcm)
       : base_x_aes_gcm_(std::move(base_x_aes_gcm)) {}
 
-  crypto::tink::util::StatusOr<absl::Cord> Encrypt(
+  absl::StatusOr<absl::Cord> Encrypt(
       absl::Cord plaintext, absl::Cord associated_data) const override {
     // TODO(b/354285352): Consider using RAND_BYTES once for salt + IV.
     std::string salt = Random::GetRandomBytes(base_x_aes_gcm_.salt_size());
@@ -59,18 +59,18 @@ class CordXAesGcmBoringSsl : public CordAead {
     if (!derived_key.ok()) {
       return derived_key.status();
     }
-    util::StatusOr<std::unique_ptr<CordAead>> aead =
+    absl::StatusOr<std::unique_ptr<CordAead>> aead =
         CordAesGcmBoringSsl::New(*derived_key);
     if (!aead.ok()) {
       return aead.status();
     }
-    util::StatusOr<absl::Cord> ciphertext =
+    absl::StatusOr<absl::Cord> ciphertext =
         (*aead)->Encrypt(plaintext, associated_data);
     (*ciphertext).Prepend(std::move(salt));
     return *ciphertext;
   }
 
-  crypto::tink::util::StatusOr<absl::Cord> Decrypt(
+  absl::StatusOr<absl::Cord> Decrypt(
       absl::Cord ciphertext, absl::Cord associated_data) const override {
     if (ciphertext.size() < base_x_aes_gcm_.min_ct_size()) {
       return absl::InvalidArgumentError(
@@ -87,7 +87,7 @@ class CordXAesGcmBoringSsl : public CordAead {
     if (!derived_key.ok()) {
       return derived_key.status();
     }
-    util::StatusOr<std::unique_ptr<CordAead>> aead =
+    absl::StatusOr<std::unique_ptr<CordAead>> aead =
         CordAesGcmBoringSsl::New(*derived_key);
     return (*aead)->Decrypt(std::move(ciphertext), associated_data);
   }
@@ -98,7 +98,7 @@ class CordXAesGcmBoringSsl : public CordAead {
 
 }  // namespace
 
-crypto::tink::util::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
+absl::StatusOr<std::unique_ptr<CordAead>> NewCordXAesGcmBoringSsl(
     const XAesGcmKey& key) {
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm = BaseXAesGcm::New(key);
   if (!base_x_aes_gcm.ok()) {

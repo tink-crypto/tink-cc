@@ -80,7 +80,7 @@ struct SslOneShotAeadTestParams {
 };
 
 // Returns a SslOneShotAead from `cipher_name` and `key`.
-util::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
+absl::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
     CipherType cipher, const util::SecretData& key) {
   switch (cipher) {
     case CipherType::kAesGcm: {
@@ -99,9 +99,9 @@ using SslOneShotAeadTest = TestWithParam<SslOneShotAeadTestParams>;
 
 TEST_P(SslOneShotAeadTest, CiphertextPlaintextSize) {
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   EXPECT_EQ((*aead)->CiphertextSize(kMessage.size()),
@@ -120,7 +120,7 @@ void DoTestEncrypt(SslOneShotAead* aead, absl::string_view message,
                    absl::string_view associated_data, size_t tag_size,
                    absl::string_view iv, absl::Span<char> ciphertext_buffer) {
   ASSERT_GE(ciphertext_buffer.size(), message.size() + tag_size);
-  util::StatusOr<int64_t> res = aead->Encrypt(
+  absl::StatusOr<int64_t> res = aead->Encrypt(
       message, associated_data, iv, absl::MakeSpan(ciphertext_buffer));
   ASSERT_THAT(res, IsOk());
   EXPECT_EQ(*res, message.size() + tag_size);
@@ -133,7 +133,7 @@ void DoTestDecrypt(SslOneShotAead* aead, absl::string_view message,
                    absl::string_view ciphertext_buffer) {
   std::string plaintext_buff;
   subtle::ResizeStringUninitialized(&plaintext_buff, message.size());
-  util::StatusOr<int64_t> written_bytes = aead->Decrypt(
+  absl::StatusOr<int64_t> written_bytes = aead->Decrypt(
       ciphertext_buffer, associated_data, iv, absl::MakeSpan(plaintext_buff));
   ASSERT_THAT(written_bytes, IsOk());
   EXPECT_EQ(*written_bytes, message.size());
@@ -142,9 +142,9 @@ void DoTestDecrypt(SslOneShotAead* aead, absl::string_view message,
 
 TEST_P(SslOneShotAeadTest, EncryptDecrypt) {
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
@@ -173,7 +173,7 @@ void DoTestEncryptDecryptWithModifiedCiphertext(SslOneShotAead* aead,
   subtle::ResizeStringUninitialized(&ciphertext_buffer,
                                     kMessage.size() + tag_size);
 
-  util::StatusOr<int64_t> written_bytes = aead->Encrypt(
+  absl::StatusOr<int64_t> written_bytes = aead->Encrypt(
       kMessage, kAssociatedData, iv, absl::MakeSpan(ciphertext_buffer));
   ASSERT_THAT(written_bytes, IsOk());
   EXPECT_EQ(*written_bytes, kMessage.size() + tag_size);
@@ -215,9 +215,9 @@ TEST_P(SslOneShotAeadTest, TestModification) {
   }
 
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   DoTestEncryptDecryptWithModifiedCiphertext(
@@ -233,9 +233,9 @@ TEST_P(SslOneShotAeadTest, TestBufferClearsIfDecryptionFails) {
   }
 
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   const int64_t kCiphertextSize = kMessage.size() + test_param.tag_size;
@@ -243,7 +243,7 @@ TEST_P(SslOneShotAeadTest, TestBufferClearsIfDecryptionFails) {
   // Length of the message + tag.
   subtle::ResizeStringUninitialized(&ciphertext_buffer, kCiphertextSize);
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
-  util::StatusOr<int64_t> written_bytes = (*aead)->Encrypt(
+  absl::StatusOr<int64_t> written_bytes = (*aead)->Encrypt(
       kMessage, kAssociatedData, iv, absl::MakeSpan(ciphertext_buffer));
   ASSERT_THAT(written_bytes, IsOk());
   EXPECT_EQ(*written_bytes, kCiphertextSize);
@@ -300,9 +300,9 @@ TEST_P(SslOneShotAeadTest, EmptyAssociatedData) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
   DoTestWithEmptyAssociatedData(aead->get(),
                                 test::HexDecodeOrDie(test_param.iv_hex),
@@ -339,9 +339,9 @@ TEST_P(SslOneShotAeadTest, EmptyMessage) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
   DoTestEmptyMessageEncryptDecrypt(aead->get(), iv, test_param.tag_size);
@@ -352,9 +352,9 @@ TEST_P(SslOneShotAeadTest, EmptyMessageAndAssociatedData) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
   const absl::string_view default_associated_data;
@@ -369,9 +369,9 @@ TEST_P(SslOneShotAeadTest, EmptyMessageAndAssociatedData) {
 
 TEST_P(SslOneShotAeadTest, BufferOverlapEncryptFails) {
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   std::string ciphertext_buffer(kMessage.data(), kMessage.size());
@@ -390,9 +390,9 @@ TEST_P(SslOneShotAeadTest, BufferOverlapEncryptFails) {
 
 TEST_P(SslOneShotAeadTest, BufferOverlapDecryptFails) {
   SslOneShotAeadTestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
-      test_param.cipher, util::SecretDataFromStringView(
-                             test::HexDecodeOrDie(test_param.key_hex)));
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+      test_param.cipher,
+      util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
 
   std::string iv = test::HexDecodeOrDie(test_param.iv_hex);
@@ -456,7 +456,7 @@ TEST(SslOneShotAeadTest, AesGcmTestInvalidKeySizes) {
 
   for (int keysize = 0; keysize < 65; keysize++) {
     util::SecretData key(keysize, 'x');
-    util::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+    absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
         CreateAesGcmOneShotCrypter(key);
     if (keysize == 16 || keysize == 32) {
       EXPECT_THAT(aead, IsOk()) << "with key size " << keysize;
@@ -476,7 +476,7 @@ TEST(SslOneShotAeadTest, AesGcmSivTestInvalidKeySizes) {
 
   for (int keysize = 0; keysize < 65; keysize++) {
     util::SecretData key(keysize, 'x');
-    util::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+    absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
         CreateAesGcmSivOneShotCrypter(key);
     if (keysize == 16 || keysize == 32) {
       EXPECT_THAT(aead, IsOk()) << "with key size " << keysize;
@@ -496,7 +496,7 @@ TEST(SslOneShotAeadTest, Xchacha20Poly1305TestInvalidKeySizes) {
 
   for (int keysize = 0; keysize < 65; keysize++) {
     util::SecretData key(keysize, 'x');
-    util::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+    absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
         CreateXchacha20Poly1305OneShotCrypter(key);
     if (keysize == 32) {
       EXPECT_THAT(aead, IsOk()) << "with key size " << keysize;
@@ -514,7 +514,7 @@ TEST(SslOneShotAeadTest, Xchacha20Poly1305TestFipsOnly) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CreateXchacha20Poly1305OneShotCrypter(
           util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key)));
   EXPECT_THAT(aead.status(), StatusIs(absl::StatusCode::kInternal));
@@ -603,7 +603,7 @@ TEST_P(SslOneShotAeadWycheproofTest, Encrypt) {
   SslOneShotAeadWycheproofTestParams params = GetParam();
   const WycheproofTestVector& test_vector = params.test_vector;
   util::SecretData key = util::SecretDataFromStringView(test_vector.key);
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CipherFromName(params.cipher, key);
   ASSERT_THAT(aead, IsOk());
   std::string ciphertext_and_tag =
@@ -611,7 +611,7 @@ TEST_P(SslOneShotAeadWycheproofTest, Encrypt) {
   std::string ciphertext_buffer;
   subtle::ResizeStringUninitialized(
       &ciphertext_buffer, (*aead)->CiphertextSize(test_vector.msg.size()));
-  util::StatusOr<int64_t> written_bytes =
+  absl::StatusOr<int64_t> written_bytes =
       (*aead)->Encrypt(test_vector.msg, test_vector.aad, test_vector.nonce,
                        absl::MakeSpan(ciphertext_buffer));
 
@@ -638,7 +638,7 @@ TEST_P(SslOneShotAeadWycheproofTest, Decrypt) {
   SslOneShotAeadWycheproofTestParams params = GetParam();
   const WycheproofTestVector& test_vector = params.test_vector;
   util::SecretData key = util::SecretDataFromStringView(test_vector.key);
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CipherFromName(params.cipher, key);
   ASSERT_THAT(aead, IsOk());
   std::string ciphertext_and_tag =
@@ -646,7 +646,7 @@ TEST_P(SslOneShotAeadWycheproofTest, Decrypt) {
   std::string plaintext_buffer;
   subtle::ResizeStringUninitialized(
       &plaintext_buffer, (*aead)->PlaintextSize(ciphertext_and_tag.size()));
-  util::StatusOr<int64_t> written_bytes = (*aead)->Decrypt(
+  absl::StatusOr<int64_t> written_bytes = (*aead)->Decrypt(
       absl::StrCat(test_vector.ct, test_vector.tag), test_vector.aad,
       test_vector.nonce, absl::MakeSpan(plaintext_buffer));
 

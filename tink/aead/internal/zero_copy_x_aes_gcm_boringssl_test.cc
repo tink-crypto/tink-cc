@@ -56,8 +56,8 @@ using ::testing::TestWithParam;
 constexpr int kDefaultSaltSize = 12;
 constexpr int kKeySize = 32;
 
-util::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
-  util::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
+absl::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
+  absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kNoPrefix, salt_size);
   if (!parameters.ok()) {
     return parameters.status();
@@ -68,14 +68,14 @@ util::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
                             absl::nullopt, GetPartialKeyAccess());
 }
 
-util::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
+absl::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
   return CreateKey(Random::GetRandomBytes(kKeySize), salt_size);
 }
 
 TEST(XAesGcmBoringSslZeroCopyAead, EncryptDecrypt) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
-  util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
       NewZeroCopyXAesGcmBoringSsl(*key);
   ASSERT_THAT(zero_copy_aead, IsOk());
 
@@ -84,7 +84,7 @@ TEST(XAesGcmBoringSslZeroCopyAead, EncryptDecrypt) {
   int ct_size = (*zero_copy_aead)->MaxEncryptionSize(pt.size());
   std::string ct(ct_size, 0);
 
-  util::StatusOr<int64_t> n =
+  absl::StatusOr<int64_t> n =
       (*zero_copy_aead)->Encrypt(pt, aad, absl::MakeSpan(ct));
   ASSERT_THAT(n, IsOk());
   ASSERT_THAT(*n, Eq(ct.size()));
@@ -97,9 +97,9 @@ TEST(XAesGcmBoringSslZeroCopyAead, EncryptDecrypt) {
 }
 
 TEST(XAesGcmBoringSslZeroCopyAead, EncryptWithInsufficientBufferSizeFails) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
-  util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
       NewZeroCopyXAesGcmBoringSsl(*key);
   ASSERT_THAT(zero_copy_aead, IsOk());
 
@@ -107,40 +107,40 @@ TEST(XAesGcmBoringSslZeroCopyAead, EncryptWithInsufficientBufferSizeFails) {
   std::string pt = Random::GetRandomBytes(1024);
   std::string ct((*zero_copy_aead)->MaxEncryptionSize(pt.size()) - 1, 0);
 
-  util::StatusOr<int64_t> n =
+  absl::StatusOr<int64_t> n =
       (*zero_copy_aead)->Encrypt(pt, aad, absl::MakeSpan(ct));
   EXPECT_THAT(n, StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(XAesGcmBoringSslZeroCopyAead, DecryptWithSmallCiphertextFails) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
-  util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
       NewZeroCopyXAesGcmBoringSsl(*key);
   ASSERT_THAT(zero_copy_aead, IsOk());
 
   std::string ct(2, 0);
   std::string aad = "aad";
   std::string recovered((*zero_copy_aead)->MaxDecryptionSize(ct.size()), 0);
-  util::StatusOr<int64_t> n =
+  absl::StatusOr<int64_t> n =
       (*zero_copy_aead)->Decrypt(ct, aad, absl::MakeSpan(recovered));
   EXPECT_THAT(n, StatusIs(absl::StatusCode::kInvalidArgument,
                           HasSubstr("Ciphertext too short")));
 }
 
 TEST(XAesGcmBoringSslZeroCopyAead, MaxDecryptionSizeIsZeroOrPossitive) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
-  util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
       NewZeroCopyXAesGcmBoringSsl(*key);
   ASSERT_THAT(zero_copy_aead, IsOk());
   EXPECT_THAT((*zero_copy_aead)->MaxDecryptionSize(1), Eq(0));
 }
 
 TEST(XAesGcmBoringSslZeroCopyAead, DecryptWithInsufficientBufferSizeFails) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
-  util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
       NewZeroCopyXAesGcmBoringSsl(*key);
   ASSERT_THAT(zero_copy_aead, IsOk());
 
@@ -149,7 +149,7 @@ TEST(XAesGcmBoringSslZeroCopyAead, DecryptWithInsufficientBufferSizeFails) {
   int ct_size = (*zero_copy_aead)->MaxEncryptionSize(pt.size());
   std::string ct(ct_size, 0);
 
-  util::StatusOr<int64_t> n =
+  absl::StatusOr<int64_t> n =
       (*zero_copy_aead)->Encrypt(pt, aad, absl::MakeSpan(ct));
   ASSERT_THAT(n, IsOk());
   ASSERT_THAT(*n, Eq(ct.size()));
@@ -202,10 +202,10 @@ std::vector<XAesGcmTestVector> GetTestVectors() {
 
 TEST_P(XAesGcmTestVectors, DecryptKnownTestVectors) {
   const XAesGcmTestVector& test_case = GetParam();
-  util::StatusOr<XAesGcmKey> key =
+  absl::StatusOr<XAesGcmKey> key =
       CreateKey(test::HexDecodeOrDie(test_case.hex_key), kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
-  util::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> zero_copy_aead =
       NewZeroCopyXAesGcmBoringSsl(*key);
   ASSERT_THAT(zero_copy_aead, IsOk());
 
@@ -213,7 +213,7 @@ TEST_P(XAesGcmTestVectors, DecryptKnownTestVectors) {
                                 test::HexDecodeOrDie(test_case.hex_ciphertext));
 
   std::string recovered((*zero_copy_aead)->MaxDecryptionSize(ct.size()), 0);
-  util::StatusOr<int64_t> n =
+  absl::StatusOr<int64_t> n =
       (*zero_copy_aead)->Decrypt(ct, test_case.aad, absl::MakeSpan(recovered));
   ASSERT_THAT(n, IsOk());
   ASSERT_THAT(*n, Eq(test_case.plaintext.size()));

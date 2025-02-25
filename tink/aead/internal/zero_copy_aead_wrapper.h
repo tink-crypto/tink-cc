@@ -40,7 +40,7 @@ class ZeroCopyAeadWrapper : public PrimitiveWrapper<ZeroCopyAead, Aead> {
  public:
   // Returns an Aead-primitive that uses ZeroCopyAead-instances provided in
   // 'aead_set', which must be non-NULL and must contain a primary instance.
-  util::StatusOr<std::unique_ptr<Aead>> Wrap(
+  absl::StatusOr<std::unique_ptr<Aead>> Wrap(
       std::unique_ptr<PrimitiveSet<ZeroCopyAead>> aead_set) const override;
 };
 

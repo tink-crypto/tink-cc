@@ -34,7 +34,7 @@ using ::testing::Not;
 
 TEST(AeadUtilTest, GetAesGcmCipherForKeySize) {
   for (int i = 0; i < 64; i++) {
-    util::StatusOr<const EVP_CIPHER*> cipher = GetAesGcmCipherForKeySize(i);
+    absl::StatusOr<const EVP_CIPHER *> cipher = GetAesGcmCipherForKeySize(i);
     if (i == 16) {
       EXPECT_THAT(cipher, IsOkAndHolds(EVP_aes_128_gcm()));
     } else if (i == 32) {
@@ -58,7 +58,7 @@ TEST(AeadUtilTest, SupportedKmsEnvelopeAeadDekKeyTypes) {
 
 TEST(AeadUtilTest, GetAesAeadForKeySize) {
   for (int i = 0; i < 64; i++) {
-    util::StatusOr<const EVP_AEAD*> cipher = GetAesGcmAeadForKeySize(i);
+    absl::StatusOr<const EVP_AEAD *> cipher = GetAesGcmAeadForKeySize(i);
     if (i == 16) {
       EXPECT_THAT(cipher, IsOkAndHolds(EVP_aead_aes_128_gcm()));
     } else if (i == 32) {
@@ -71,7 +71,7 @@ TEST(AeadUtilTest, GetAesAeadForKeySize) {
 
 TEST(AeadUtilTest, GetAesGcmSivAeadCipherForKeySize) {
   for (int i = 0; i < 64; i++) {
-    util::StatusOr<const EVP_AEAD*> cipher =
+    absl::StatusOr<const EVP_AEAD *> cipher =
         GetAesGcmSivAeadCipherForKeySize(i);
     if (i == 16) {
       EXPECT_THAT(cipher, IsOkAndHolds(EVP_aead_aes_128_gcm_siv()));

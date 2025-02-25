@@ -66,14 +66,14 @@ using ZeroCopyAeadEntry =
 
 TEST(ZeroCopyAeadWrapperEmptyTest, Nullptr) {
   ZeroCopyAeadWrapper wrapper;
-  StatusOr<std::unique_ptr<Aead>> aead_set = wrapper.Wrap(nullptr);
+  absl::StatusOr<std::unique_ptr<Aead>> aead_set = wrapper.Wrap(nullptr);
   EXPECT_THAT(aead_set.status(),
               StatusIs(absl::StatusCode::kInternal, HasSubstr("non-NULL")));
 }
 
 TEST(ZeroCopyAeadWrapperEmptyTest, Empty) {
   ZeroCopyAeadWrapper wrapper;
-  StatusOr<std::unique_ptr<Aead>> aead_set =
+  absl::StatusOr<std::unique_ptr<Aead>> aead_set =
       wrapper.Wrap(absl::make_unique<PrimitiveSet<ZeroCopyAead>>());
   EXPECT_THAT(aead_set.status(), StatusIs(absl::StatusCode::kInvalidArgument,
                                           HasSubstr("no primary")));
@@ -127,12 +127,15 @@ class ZeroCopyAeadWrapperTest : public testing::Test {
 
 TEST_F(ZeroCopyAeadWrapperTest, EncryptDecrypt) {
   ZeroCopyAeadWrapper wrapper;
-  StatusOr<std::unique_ptr<Aead>> aead_set = wrapper.Wrap(std::move(aead_set_));
+  absl::StatusOr<std::unique_ptr<Aead>> aead_set =
+      wrapper.Wrap(std::move(aead_set_));
   ASSERT_THAT(aead_set, IsOk());
 
-  StatusOr<std::string> ciphertext = (*aead_set)->Encrypt(kPlaintext, kAad);
+  absl::StatusOr<std::string> ciphertext =
+      (*aead_set)->Encrypt(kPlaintext, kAad);
   ASSERT_THAT(ciphertext, IsOk());
-  StatusOr<std::string> plaintext = (*aead_set)->Decrypt(*ciphertext, kAad);
+  absl::StatusOr<std::string> plaintext =
+      (*aead_set)->Decrypt(*ciphertext, kAad);
   ASSERT_THAT(plaintext, IsOk());
   EXPECT_EQ(*plaintext, kPlaintext);
 }
@@ -144,7 +147,7 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptMultipleKeys) {
   subtle::ResizeStringUninitialized(
       &ciphertext, CryptoFormat::kNonRawPrefixSize +
                        aead.MaxEncryptionSize(kPlaintext.size()));
-  StatusOr<int64_t> ciphertext_size = aead.Encrypt(
+  absl::StatusOr<int64_t> ciphertext_size = aead.Encrypt(
       kPlaintext, kAad,
       absl::MakeSpan(ciphertext)
           .subspan(CryptoFormat::kNonRawPrefixSize, ciphertext.size()));
@@ -162,12 +165,13 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptMultipleKeys) {
   ASSERT_THAT(aead_set_->AddPrimitive(std::move(aead1), key_info).status(),
               IsOk());
   ZeroCopyAeadWrapper wrapper;
-  StatusOr<std::unique_ptr<Aead>> aead_set = wrapper.Wrap(std::move(aead_set_));
+  absl::StatusOr<std::unique_ptr<Aead>> aead_set =
+      wrapper.Wrap(std::move(aead_set_));
   ASSERT_THAT(aead_set, IsOk());
 
   // Encrypt with the wrapped AEAD and check that the result is equal to
   // encrypting directly with the primary key.
-  StatusOr<std::string> wrap_ciphertext =
+  absl::StatusOr<std::string> wrap_ciphertext =
       (*aead_set)->Encrypt(kPlaintext, kAad);
   ASSERT_THAT(wrap_ciphertext, IsOk());
   EXPECT_EQ(*wrap_ciphertext, ciphertext);
@@ -184,7 +188,7 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
   ASSERT_THAT(aead_set_->set_primary(*entry), IsOk());
 
   // Manually encrypt with the raw key.
-  util::StatusOr<const std::vector<std::unique_ptr<ZeroCopyAeadEntry>>*>
+  absl::StatusOr<const std::vector<std::unique_ptr<ZeroCopyAeadEntry>>*>
       raw_primitives = aead_set_->get_raw_primitives();
   ASSERT_THAT(raw_primitives, IsOk());
   EXPECT_EQ((*raw_primitives)->size(), 1);
@@ -192,7 +196,7 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
   std::string ciphertext;
   subtle::ResizeStringUninitialized(&ciphertext,
                                     aead.MaxEncryptionSize(kPlaintext.size()));
-  util::StatusOr<int64_t> ciphertext_size =
+  absl::StatusOr<int64_t> ciphertext_size =
       aead.Encrypt(kPlaintext, kAad, absl::MakeSpan(ciphertext));
   ASSERT_THAT(ciphertext_size, IsOk());
   ciphertext.resize(*ciphertext_size);
@@ -200,9 +204,10 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
   // Encrypt with the wrapped AEAD and check that the result is equal to
   // encrypting directly with the raw key.
   ZeroCopyAeadWrapper wrapper;
-  StatusOr<std::unique_ptr<Aead>> aead_set = wrapper.Wrap(std::move(aead_set_));
+  absl::StatusOr<std::unique_ptr<Aead>> aead_set =
+      wrapper.Wrap(std::move(aead_set_));
   ASSERT_THAT(aead_set, IsOk());
-  StatusOr<std::string> wrap_ciphertext =
+  absl::StatusOr<std::string> wrap_ciphertext =
       (*aead_set)->Encrypt(kPlaintext, kAad);
   ASSERT_THAT(wrap_ciphertext, IsOk());
   EXPECT_EQ(*wrap_ciphertext, ciphertext);
@@ -211,24 +216,26 @@ TEST_F(ZeroCopyAeadWrapperTest, EncryptDecryptRawKey) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(&plaintext,
                                     aead.MaxDecryptionSize(ciphertext.size()));
-  util::StatusOr<int64_t> plaintext_size =
+  absl::StatusOr<int64_t> plaintext_size =
       aead.Decrypt(ciphertext, kAad, absl::MakeSpan(plaintext));
   ASSERT_THAT(plaintext_size, IsOk());
   plaintext.resize(*plaintext_size);
   EXPECT_EQ(plaintext, kPlaintext);
 
   // Decrypt with the wrapped AEAD.
-  StatusOr<std::string> wrap_plaintext = (*aead_set)->Decrypt(ciphertext, kAad);
+  absl::StatusOr<std::string> wrap_plaintext =
+      (*aead_set)->Decrypt(ciphertext, kAad);
   ASSERT_THAT(wrap_plaintext, IsOk());
   EXPECT_EQ(*wrap_plaintext, kPlaintext);
 }
 
 TEST_F(ZeroCopyAeadWrapperTest, EncryptBadDecrypt) {
   ZeroCopyAeadWrapper wrapper;
-  StatusOr<std::unique_ptr<Aead>> aead_set = wrapper.Wrap(std::move(aead_set_));
+  absl::StatusOr<std::unique_ptr<Aead>> aead_set =
+      wrapper.Wrap(std::move(aead_set_));
   ASSERT_THAT(aead_set, IsOk());
 
-  StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*aead_set)->Decrypt("some bad ciphertext", kAad);
   EXPECT_EQ(plaintext.status().code(), absl::StatusCode::kInvalidArgument);
 }

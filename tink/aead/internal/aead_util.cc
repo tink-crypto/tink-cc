@@ -41,7 +41,7 @@ bool IsSupportedKmsEnvelopeAeadDekKeyType(absl::string_view key_type) {
   return kSupportedDekKeyTypes->contains(key_type);
 }
 
-util::StatusOr<const EVP_CIPHER *> GetAesGcmCipherForKeySize(
+absl::StatusOr<const EVP_CIPHER *> GetAesGcmCipherForKeySize(
     uint32_t key_size_in_bytes) {
   switch (key_size_in_bytes) {
     case 16:
@@ -55,7 +55,7 @@ util::StatusOr<const EVP_CIPHER *> GetAesGcmCipherForKeySize(
 }
 
 #ifdef OPENSSL_IS_BORINGSSL
-util::StatusOr<const EVP_AEAD *> GetAesGcmAeadForKeySize(
+absl::StatusOr<const EVP_AEAD *> GetAesGcmAeadForKeySize(
     uint32_t key_size_in_bytes) {
   switch (key_size_in_bytes) {
     case 16:
@@ -68,7 +68,7 @@ util::StatusOr<const EVP_AEAD *> GetAesGcmAeadForKeySize(
   }
 }
 
-util::StatusOr<const EVP_AEAD *> GetAesGcmSivAeadCipherForKeySize(
+absl::StatusOr<const EVP_AEAD *> GetAesGcmSivAeadCipherForKeySize(
     int key_size_in_bytes) {
   switch (key_size_in_bytes) {
     case 16:

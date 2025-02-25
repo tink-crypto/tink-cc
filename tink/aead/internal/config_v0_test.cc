@@ -59,7 +59,7 @@ using ::testing::Values;
 TEST(AeadV0Test, PrimitiveWrappers) {
   Configuration config;
   ASSERT_THAT(AddAeadV0(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore *> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -70,13 +70,13 @@ TEST(AeadV0Test, PrimitiveWrappers) {
 TEST(AeadV0Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddAeadV0(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore *> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddAeadKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const KeyTypeInfoStore *> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -115,16 +115,16 @@ TEST_P(AeadV0KeyTypesTest, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddAeadV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<Aead>(config);
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }
@@ -135,7 +135,7 @@ TEST_P(AeadV0BoringSslKeyTypesTest, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddAeadV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
@@ -145,12 +145,12 @@ TEST_P(AeadV0BoringSslKeyTypesTest, GetPrimitive) {
     return;
   }
 
-  util::StatusOr<std::unique_ptr<Aead>> aead =
+  absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*handle)->GetPrimitive<Aead>(config);
   ASSERT_THAT(aead, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
+  absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }
@@ -161,17 +161,17 @@ TEST_P(CordAeadV0KeyTypesTest, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddAeadV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<CordAead>> aead =
+  absl::StatusOr<std::unique_ptr<CordAead>> aead =
       (*handle)->GetPrimitive<CordAead>(config);
   ASSERT_THAT(aead, IsOk());
 
   absl::Cord plaintext("plaintext");
   absl::Cord aad("ad");
-  util::StatusOr<absl::Cord> ciphertext = (*aead)->Encrypt(plaintext, aad);
+  absl::StatusOr<absl::Cord> ciphertext = (*aead)->Encrypt(plaintext, aad);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*aead)->Decrypt(*ciphertext, aad), IsOkAndHolds(plaintext));
 }

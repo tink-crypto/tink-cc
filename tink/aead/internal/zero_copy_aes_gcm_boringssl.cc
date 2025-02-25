@@ -43,9 +43,9 @@ namespace internal {
 constexpr int kIvSizeInBytes = 12;
 constexpr int kTagSizeInBytes = 16;
 
-util::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
+absl::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
     const util::SecretData &key) {
-  util::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
+  absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
       internal::CreateAesGcmOneShotCrypter(key);
   if (!aead.ok()) {
     return aead.status();
@@ -58,7 +58,7 @@ int64_t ZeroCopyAesGcmBoringSsl::MaxEncryptionSize(
   return kIvSizeInBytes + aead_->CiphertextSize(plaintext_size);
 }
 
-util::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Encrypt(
+absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data,
     absl::Span<char> buffer) const {
   const int64_t max_encryption_size = MaxEncryptionSize(plaintext.size());
@@ -83,7 +83,7 @@ util::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Encrypt(
   absl::string_view iv = buffer_string.substr(0, kIvSizeInBytes);
   absl::Span<char> raw_cipher_and_tag_buffer = buffer.subspan(kIvSizeInBytes);
 
-  util::StatusOr<int64_t> written_bytes =
+  absl::StatusOr<int64_t> written_bytes =
       aead_->Encrypt(plaintext, associated_data, iv, raw_cipher_and_tag_buffer);
   if (!written_bytes.ok()) {
     return written_bytes.status();
@@ -100,7 +100,7 @@ int64_t ZeroCopyAesGcmBoringSsl::MaxDecryptionSize(
   return size;
 }
 
-util::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
+absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data,
     absl::Span<char> buffer) const {
   const size_t min_ciphertext_size = kIvSizeInBytes + kTagSizeInBytes;

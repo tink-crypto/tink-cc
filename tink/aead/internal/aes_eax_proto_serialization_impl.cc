@@ -109,7 +109,7 @@ struct AesEaxKeyStruct {
   }
 };
 
-util::StatusOr<AesEaxParameters::Variant> ToVariant(
+absl::StatusOr<AesEaxParameters::Variant> ToVariant(
     OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
     case OutputPrefixTypeEnum::kLegacy:
@@ -126,7 +126,7 @@ util::StatusOr<AesEaxParameters::Variant> ToVariant(
   }
 }
 
-util::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     AesEaxParameters::Variant variant) {
   switch (variant) {
     case AesEaxParameters::Variant::kCrunchy:
@@ -141,7 +141,7 @@ util::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
   }
 }
 
-util::StatusOr<AesEaxParamsStruct> GetProtoParams(
+absl::StatusOr<AesEaxParamsStruct> GetProtoParams(
     const AesEaxParameters& parameters) {
   // Legacy Tink AES-EAX key proto format assumes 16-byte tags.
   if (parameters.GetTagSizeInBytes() != 16) {
@@ -156,7 +156,7 @@ util::StatusOr<AesEaxParamsStruct> GetProtoParams(
   return params;
 }
 
-util::StatusOr<AesEaxParameters> ParseParameters(
+absl::StatusOr<AesEaxParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return util::Status(
@@ -172,7 +172,7 @@ util::StatusOr<AesEaxParameters> ParseParameters(
     return absl::InvalidArgumentError("Failed to parse AesEaxKeyFormat proto");
   }
 
-  util::StatusOr<AesEaxParameters::Variant> variant =
+  absl::StatusOr<AesEaxParameters::Variant> variant =
       ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
@@ -187,14 +187,14 @@ util::StatusOr<AesEaxParameters> ParseParameters(
       .Build();
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesEaxParameters& parameters) {
   absl::StatusOr<AesEaxParamsStruct> params = GetProtoParams(parameters);
   if (!params.ok()) {
     return params.status();
   }
 
-  util::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -213,7 +213,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
                                               *serialized_proto);
 }
 
-util::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
+absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
                                    absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -234,13 +234,13 @@ util::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<AesEaxParameters::Variant> variant = ToVariant(
+  absl::StatusOr<AesEaxParameters::Variant> variant = ToVariant(
       static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) {
     return variant.status();
   }
 
-  util::StatusOr<AesEaxParameters> parameters =
+  absl::StatusOr<AesEaxParameters> parameters =
       AesEaxParameters::Builder()
           .SetVariant(*variant)
           .SetKeySizeInBytes(key_struct->key_value.size())
@@ -255,7 +255,7 @@ util::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeKey(
+absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesEaxKey& key, absl::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<AesEaxParamsStruct> params =
       GetProtoParams(key.GetParameters());
@@ -263,7 +263,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
     return params.status();
   }
 
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {

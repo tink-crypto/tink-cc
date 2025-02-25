@@ -65,7 +65,7 @@ struct TestParams {
 };
 
 // Returns a SslOneShotAead from `cipher_name` and `key`.
-util::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
+absl::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
     absl::string_view cipher, const util::SecretData& key) {
   if (cipher == "aes_gcm") {
     return CreateAesGcmOneShotCrypter(key);
@@ -92,7 +92,7 @@ TEST_P(SslOneShotAeadLargeInputsTest, EncryptDecryptLargeInput) {
   std::string large_input(buff_size, '0');
 
   TestParams test_param = GetParam();
-  util::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
+  absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead = CipherFromName(
       test_param.cipher,
       util::SecretDataFromStringView(test::HexDecodeOrDie(test_param.key_hex)));
   ASSERT_THAT(aead, IsOk());
@@ -105,7 +105,7 @@ TEST_P(SslOneShotAeadLargeInputsTest, EncryptDecryptLargeInput) {
 
   // Encrypt.
   ASSERT_GE(ciphertext_buffer.size(), large_input.size() + test_param.tag_size);
-  util::StatusOr<int64_t> res = (*aead)->Encrypt(
+  absl::StatusOr<int64_t> res = (*aead)->Encrypt(
       large_input, kAad, iv, absl::MakeSpan(ciphertext_buffer));
   ASSERT_THAT(res, IsOk());
   EXPECT_EQ(*res, large_input.size() + test_param.tag_size);
@@ -113,7 +113,7 @@ TEST_P(SslOneShotAeadLargeInputsTest, EncryptDecryptLargeInput) {
   // Decrypt.
   std::string plaintext_buff;
   subtle::ResizeStringUninitialized(&plaintext_buff, large_input.size());
-  util::StatusOr<int64_t> written_bytes = (*aead)->Decrypt(
+  absl::StatusOr<int64_t> written_bytes = (*aead)->Decrypt(
       ciphertext_buffer, kAad, iv, absl::MakeSpan(plaintext_buff));
   ASSERT_THAT(written_bytes, IsOk());
   EXPECT_EQ(*written_bytes, large_input.size());

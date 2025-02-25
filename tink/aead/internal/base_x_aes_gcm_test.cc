@@ -53,8 +53,8 @@ using ::testing::TestWithParam;
 constexpr int kDefaultSaltSize = 12;
 constexpr int kKeySize = 32;
 
-util::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
-  util::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
+absl::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
+  absl::StatusOr<XAesGcmParameters> params = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kNoPrefix, salt_size);
   if (!params.ok()) {
     return params.status();
@@ -65,18 +65,18 @@ util::StatusOr<XAesGcmKey> CreateKey(absl::string_view key, int salt_size) {
                             absl::nullopt, GetPartialKeyAccess());
 }
 
-util::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
+absl::StatusOr<XAesGcmKey> CreateKey(int salt_size) {
   return CreateKey(Random::GetRandomBytes(kKeySize), salt_size);
 }
 
 TEST(BaseXAesGcmTest, CreationSucceeds) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
   EXPECT_THAT(BaseXAesGcm::New(std::move(*key)), IsOk());
 }
 
 TEST(BaseXAesGcmTest, MinCtSize) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm =
       BaseXAesGcm::New(std::move(*key));
@@ -85,7 +85,7 @@ TEST(BaseXAesGcmTest, MinCtSize) {
 }
 
 TEST(BaseXAesGcmTest, DeriveWithInvalidSaltSizeFails) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm =
       BaseXAesGcm::New(std::move(*key));
@@ -99,7 +99,7 @@ TEST(BaseXAesGcmTest, DeriveWithInvalidSaltSizeFails) {
 }
 
 TEST(BaseXAesGcmTest, DeriveWithValidSaltSize) {
-  util::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
+  absl::StatusOr<XAesGcmKey> key = CreateKey(kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm =
       BaseXAesGcm::New(std::move(*key));
@@ -123,7 +123,7 @@ using BaseXAesGcmTest = TestWithParam<XAesGcmKeyDerivationTestVector>;
 
 TEST_P(BaseXAesGcmTest, DeriveWithKnownTestVectors) {
   const XAesGcmKeyDerivationTestVector& test_case = GetParam();
-  util::StatusOr<XAesGcmKey> key =
+  absl::StatusOr<XAesGcmKey> key =
       CreateKey(test::HexDecodeOrDie(test_case.base_hex_key), kDefaultSaltSize);
   ASSERT_THAT(key, IsOk());
   absl::StatusOr<BaseXAesGcm> base_x_aes_gcm =

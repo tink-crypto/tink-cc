@@ -60,7 +60,7 @@ using AesGcmProtoKeySerializerImpl =
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesGcmKey";
 
-util::StatusOr<AesGcmParameters::Variant> ToVariant(
+absl::StatusOr<AesGcmParameters::Variant> ToVariant(
     OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
     case OutputPrefixTypeEnum::kLegacy:
@@ -77,7 +77,7 @@ util::StatusOr<AesGcmParameters::Variant> ToVariant(
   }
 }
 
-util::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     AesGcmParameters::Variant variant) {
   switch (variant) {
     case AesGcmParameters::Variant::kCrunchy:
@@ -108,14 +108,14 @@ util::Status ValidateParamsForProto(const AesGcmParameters& params) {
   return util::OkStatus();
 }
 
-util::StatusOr<AesGcmParameters> ParseParameters(
+absl::StatusOr<AesGcmParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesGcmParameters.");
   }
 
-  util::StatusOr<AesGcmKeyFormatStruct> proto_key_format =
+  absl::StatusOr<AesGcmKeyFormatStruct> proto_key_format =
       AesGcmKeyFormatStruct::GetParser().Parse(
           serialization.GetKeyTemplate().value());
   if (!proto_key_format.ok()) {
@@ -142,7 +142,7 @@ util::StatusOr<AesGcmParameters> ParseParameters(
       .Build();
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesGcmParameters& parameters) {
   util::Status valid_params = ValidateParamsForProto(parameters);
   if (!valid_params.ok()) return valid_params;
@@ -156,7 +156,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   AesGcmKeyFormatStruct proto_key_format;
   proto_key_format.key_size = parameters.KeySizeInBytes();
   proto_key_format.version = 0;
-  util::StatusOr<std::string> serialized_proto =
+  absl::StatusOr<std::string> serialized_proto =
       AesGcmKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
   if (!serialized_proto.ok()) {
     return serialized_proto.status();
@@ -166,7 +166,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
                                               *serialized_proto);
 }
 
-util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
+absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
                                    absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -177,7 +177,7 @@ util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
                         "SecretKeyAccess is required");
   }
 
-  util::StatusOr<AesGcmKeyStruct> proto_key =
+  absl::StatusOr<AesGcmKeyStruct> proto_key =
       AesGcmKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
@@ -196,7 +196,7 @@ util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
 
   // Legacy AES-GCM key proto format assumes 12-byte random IVs and 16-byte
   // tags.
-  util::StatusOr<AesGcmParameters> parameters =
+  absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetVariant(*variant)
           .SetKeySizeInBytes(proto_key->key_value.size())
@@ -210,12 +210,12 @@ util::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeKey(
+absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesGcmKey& key, absl::optional<SecretKeyAccessToken> token) {
   util::Status valid_params = ValidateParamsForProto(key.GetParameters());
   if (!valid_params.ok()) return valid_params;
 
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {
@@ -227,11 +227,11 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.version = 0;
   proto_key.key_value = restricted_input->Get(*token);
 
-  util::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  util::StatusOr<SecretData> serialized_key =
+  absl::StatusOr<SecretData> serialized_key =
       AesGcmKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();

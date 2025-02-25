@@ -35,20 +35,20 @@ namespace internal {
 
 class ZeroCopyAesGcmBoringSsl : public ZeroCopyAead {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<ZeroCopyAead>> New(
+  static absl::StatusOr<std::unique_ptr<ZeroCopyAead>> New(
       const util::SecretData &key);
 
   int64_t MaxEncryptionSize(int64_t plaintext_size) const override;
 
-  crypto::tink::util::StatusOr<int64_t> Encrypt(
-      absl::string_view plaintext, absl::string_view associated_data,
-      absl::Span<char> buffer) const override;
+  absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
+                                  absl::string_view associated_data,
+                                  absl::Span<char> buffer) const override;
 
   int64_t MaxDecryptionSize(int64_t ciphertext_size) const override;
 
-  crypto::tink::util::StatusOr<int64_t> Decrypt(
-      absl::string_view ciphertext, absl::string_view associated_data,
-      absl::Span<char> buffer) const override;
+  absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
+                                  absl::string_view associated_data,
+                                  absl::Span<char> buffer) const override;
 
  private:
   explicit ZeroCopyAesGcmBoringSsl(std::unique_ptr<SslOneShotAead> aead)

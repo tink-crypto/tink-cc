@@ -76,7 +76,7 @@ class ZeroCopyAesGcmBoringSslTest : public testing::Test {
   void SetUp() override {
     util::SecretData key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128Hex));
-    util::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+    absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
         ZeroCopyAesGcmBoringSsl::New(key);
     ASSERT_THAT(cipher, IsOk());
     cipher_ = std::move(*cipher);
@@ -96,7 +96,7 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, EncryptDecrypt) {
   std::string ciphertext;
   subtle::ResizeStringUninitialized(
       &ciphertext, cipher_->MaxEncryptionSize(kMessage.size()));
-  util::StatusOr<int64_t> ciphertext_size =
+  absl::StatusOr<int64_t> ciphertext_size =
       cipher_->Encrypt(kMessage, kAssociatedData, absl::MakeSpan(ciphertext));
   ASSERT_THAT(ciphertext_size, IsOk());
   EXPECT_EQ(*ciphertext_size,
@@ -104,7 +104,7 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, EncryptDecrypt) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(
       &plaintext, cipher_->MaxDecryptionSize(ciphertext.size()));
-  util::StatusOr<int64_t> plaintext_size =
+  absl::StatusOr<int64_t> plaintext_size =
       cipher_->Decrypt(ciphertext, kAssociatedData, absl::MakeSpan(plaintext));
 
   ASSERT_THAT(plaintext_size, IsOk());
@@ -114,7 +114,7 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, EncryptDecrypt) {
 TEST_F(ZeroCopyAesGcmBoringSslTest, DecryptEncodedCiphertext) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(&plaintext, kMaxDecryptionSize);
-  util::StatusOr<int64_t> plaintext_size =
+  absl::StatusOr<int64_t> plaintext_size =
       cipher_->Decrypt(test::HexDecodeOrDie(kEncodedCiphertext),
                        kAssociatedData, absl::MakeSpan(plaintext));
   ASSERT_THAT(plaintext_size, IsOk());
@@ -191,7 +191,7 @@ class ZeroCopyAesGcmBoringSslWycheproofTest
 TEST_P(ZeroCopyAesGcmBoringSslWycheproofTest, Decrypt) {
   WycheproofTestVector test_vector = GetParam();
   util::SecretData key = util::SecretDataFromStringView(test_vector.key);
-  util::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
+  absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
       ZeroCopyAesGcmBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());
   std::string ciphertext =
@@ -199,7 +199,7 @@ TEST_P(ZeroCopyAesGcmBoringSslWycheproofTest, Decrypt) {
   std::string plaintext;
   subtle::ResizeStringUninitialized(
       &plaintext, (*cipher)->MaxDecryptionSize(ciphertext.size()));
-  util::StatusOr<int64_t> written_bytes = (*cipher)->Decrypt(
+  absl::StatusOr<int64_t> written_bytes = (*cipher)->Decrypt(
       ciphertext, test_vector.aad, absl::MakeSpan(plaintext));
   if (written_bytes.ok()) {
     EXPECT_NE(test_vector.expected, "invalid");

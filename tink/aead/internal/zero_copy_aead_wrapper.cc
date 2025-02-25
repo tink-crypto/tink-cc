@@ -61,11 +61,11 @@ class ZeroCopyAeadSetWrapper : public Aead {
       std::unique_ptr<PrimitiveSet<ZeroCopyAead>> aead_set)
       : aead_set_(std::move(aead_set)) {}
 
-  util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 
@@ -75,7 +75,7 @@ class ZeroCopyAeadSetWrapper : public Aead {
   std::unique_ptr<PrimitiveSet<ZeroCopyAead>> aead_set_;
 };
 
-util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Encrypt(
+absl::StatusOr<std::string> ZeroCopyAeadSetWrapper::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data) const {
   std::string ciphertext = aead_set_->get_primary()->get_identifier();
   int64_t key_id_size = ciphertext.size();
@@ -84,7 +84,7 @@ util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Encrypt(
       &ciphertext, key_id_size + aead.MaxEncryptionSize(plaintext.size()));
 
   // Write ciphertext at position ciphertext + CryptoFormat::kNonRawPrefixSize.
-  util::StatusOr<int64_t> ciphertext_size =
+  absl::StatusOr<int64_t> ciphertext_size =
       aead.Encrypt(plaintext, associated_data,
                    absl::MakeSpan(ciphertext).subspan(key_id_size));
   if (!ciphertext_size.ok()) return ciphertext_size.status();
@@ -93,12 +93,12 @@ util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Encrypt(
   return ciphertext;
 }
 
-util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Decrypt(
+absl::StatusOr<std::string> ZeroCopyAeadSetWrapper::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   if (ciphertext.size() > CryptoFormat::kNonRawPrefixSize) {
     std::string key_id =
         std::string(ciphertext.substr(0, CryptoFormat::kNonRawPrefixSize));
-    util::StatusOr<const std::vector<std::unique_ptr<ZeroCopyAeadEntry>>*>
+    absl::StatusOr<const std::vector<std::unique_ptr<ZeroCopyAeadEntry>>*>
         primitives = aead_set_->get_primitives(key_id);
 
     if (primitives.ok() && *primitives != nullptr) {
@@ -110,7 +110,7 @@ util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Decrypt(
         std::string plaintext;
         subtle::ResizeStringUninitialized(
             &plaintext, aead.MaxDecryptionSize(raw_ciphertext.size()));
-        util::StatusOr<int64_t> plaintext_size = entry->get_primitive().Decrypt(
+        absl::StatusOr<int64_t> plaintext_size = entry->get_primitive().Decrypt(
             raw_ciphertext, associated_data, absl::MakeSpan(plaintext));
         if (plaintext_size.ok()) {
           plaintext.resize(*plaintext_size);
@@ -121,7 +121,7 @@ util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Decrypt(
   }
 
   // Try raw keys because matching keys failed to decrypt.
-  util::StatusOr<const std::vector<std::unique_ptr<ZeroCopyAeadEntry>>*>
+  absl::StatusOr<const std::vector<std::unique_ptr<ZeroCopyAeadEntry>>*>
       raw_primitives = aead_set_->get_raw_primitives();
   if (raw_primitives.ok() && *raw_primitives != nullptr) {
     for (const std::unique_ptr<ZeroCopyAeadEntry>& entry : **raw_primitives) {
@@ -129,7 +129,7 @@ util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Decrypt(
       std::string plaintext;
       subtle::ResizeStringUninitialized(
           &plaintext, aead.MaxDecryptionSize(ciphertext.size()));
-      util::StatusOr<int64_t> plaintext_size =
+      absl::StatusOr<int64_t> plaintext_size =
           aead.Decrypt(ciphertext, associated_data, absl::MakeSpan(plaintext));
       if (plaintext_size.ok()) {
         plaintext.resize(*plaintext_size);
@@ -143,7 +143,7 @@ util::StatusOr<std::string> ZeroCopyAeadSetWrapper::Decrypt(
 
 }  // anonymous namespace
 
-util::StatusOr<std::unique_ptr<Aead>> ZeroCopyAeadWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<Aead>> ZeroCopyAeadWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<ZeroCopyAead>> aead_set) const {
   util::Status status = Validate(aead_set.get());
   if (!status.ok()) return status;

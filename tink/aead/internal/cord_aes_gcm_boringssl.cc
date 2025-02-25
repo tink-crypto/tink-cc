@@ -83,7 +83,7 @@ util::Status SetIvAndDirection(EVP_CIPHER_CTX* context, absl::string_view iv,
 // Returns a new EVP_CIPHER_CTX for encryption (`encryption` == true) or
 // decryption (`encryption` == false). It tries to skip part of the
 // initialization copying `partial_context`.
-util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContextFromPartial(
+absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContextFromPartial(
     EVP_CIPHER_CTX* partial_context, absl::string_view iv, bool encryption) {
   internal::SslUniquePtr<EVP_CIPHER_CTX> context(EVP_CIPHER_CTX_new());
   if (context == nullptr) {
@@ -186,9 +186,9 @@ bool DoCryptAndConsume(absl::Cord& input, size_t bytes_to_crypt,
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
+absl::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
     const util::SecretData& key_value) {
-  util::StatusOr<const EVP_CIPHER*> cipher =
+  absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesGcmCipherForKeySize(key_value.size());
   if (!cipher.ok()) {
     return cipher.status();
@@ -215,12 +215,12 @@ util::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
   return std::move(aead);
 }
 
-util::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
+absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
     absl::Cord plaintext, absl::Cord associated_data) const {
   std::string iv = subtle::Random::GetRandomBytes(kIvSizeInBytes);
 
 #if defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_NUMBER < 0x30000000L
-  util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
+  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
       NewContextFromPartial(partial_context_.get(), iv, /*encryption=*/true);
 #else
   util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
@@ -259,7 +259,7 @@ util::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
   return std::move(writer).data();
 }
 
-util::StatusOr<absl::Cord> CordAesGcmBoringSsl::Decrypt(
+absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Decrypt(
     absl::Cord ciphertext, absl::Cord associated_data) const {
   if (ciphertext.size() < kIvSizeInBytes + kTagSizeInBytes) {
     return util::Status(absl::StatusCode::kInternal, "Ciphertext too short");
@@ -270,7 +270,7 @@ util::StatusOr<absl::Cord> CordAesGcmBoringSsl::Decrypt(
   ciphertext.RemovePrefix(kIvSizeInBytes);
   absl::string_view iv_view(iv, kIvSizeInBytes);
 #if defined(OPENSSL_IS_BORINGSSL) || OPENSSL_VERSION_NUMBER < 0x30000000L
-  util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
+  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
       NewContextFromPartial(partial_context_.get(), iv_view,
                             /*encryption=*/false);
 #else

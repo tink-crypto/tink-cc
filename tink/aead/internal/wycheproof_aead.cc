@@ -33,7 +33,7 @@ using ::crypto::tink::internal::wycheproof_testing::ReadTestVectors;
 
 std::vector<WycheproofTestVector> ReadWycheproofTestVectors(
     absl::string_view file_name) {
-  util::StatusOr<google::protobuf::Struct> parsed_input =
+  absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(std::string(file_name));
   CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =

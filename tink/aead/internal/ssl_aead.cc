@@ -55,7 +55,7 @@ namespace {
 // Encrypts/Decrypts `data` and writes the result into `out`. The direction
 // (encrypt/decrypt) is given by `context`. `out` is assumed to be large enough
 // to hold the encrypted/decrypted content.
-util::StatusOr<int64_t> UpdateCipher(EVP_CIPHER_CTX *context,
+absl::StatusOr<int64_t> UpdateCipher(EVP_CIPHER_CTX *context,
                                      absl::string_view data,
                                      absl::Span<char> out) {
   // We encrypt/decrypt in chunks of at most MAX int.
@@ -90,7 +90,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
                                   const EVP_CIPHER *cipher, size_t tag_size)
       : key_(key), cipher_(cipher), tag_size_(tag_size) {}
 
-  util::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
+  absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
                                   absl::string_view associated_data,
                                   absl::string_view iv,
                                   absl::Span<char> out) const override {
@@ -122,7 +122,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
         [&]() { return EncryptSensitive(plaintext_data, ad, iv, out); });
   }
 
-  util::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
+  absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
                                   absl::string_view associated_data,
                                   absl::string_view iv,
                                   absl::Span<char> out) const override {
@@ -172,11 +172,11 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
   }
 
  private:
-  util::StatusOr<uint64_t> EncryptSensitive(absl::string_view plaintext_data,
+  absl::StatusOr<uint64_t> EncryptSensitive(absl::string_view plaintext_data,
                                             absl::string_view ad,
                                             absl::string_view iv,
                                             absl::Span<char> out) const {
-    util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
+    absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
         GetContext(iv, /*encryption=*/true);
     if (!context.ok()) {
       return context.status();
@@ -191,7 +191,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
                           "Failed to set associated data");
     }
 
-    util::StatusOr<int64_t> raw_ciphertext_bytes =
+    absl::StatusOr<int64_t> raw_ciphertext_bytes =
         UpdateCipher(context->get(), plaintext_data, out);
     if (!raw_ciphertext_bytes.ok()) {
       return raw_ciphertext_bytes.status();
@@ -210,11 +210,11 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
     return *raw_ciphertext_bytes + tag_size_;
   }
 
-  util::StatusOr<uint64_t> DecryptSensitive(absl::string_view ciphertext,
+  absl::StatusOr<uint64_t> DecryptSensitive(absl::string_view ciphertext,
                                             absl::string_view ad,
                                             absl::string_view iv,
                                             absl::Span<char> out) const {
-    util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
+    absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
         GetContext(iv, /*encryption=*/false);
     if (!context.ok()) {
       return context.status();
@@ -260,7 +260,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
     auto output_eraser =
         absl::MakeCleanup([out] { OPENSSL_cleanse(out.data(), out.size()); });
 
-    util::StatusOr<int64_t> written_bytes =
+    absl::StatusOr<int64_t> written_bytes =
         UpdateCipher(context->get(), raw_ciphertext, out_buffer);
     if (!written_bytes.ok()) {
       return written_bytes.status();
@@ -277,7 +277,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
 
   // Returns a new EVP_CIPHER_CTX for encryption (`ecryption` == true) or
   // decryption (`encryption` == false).
-  util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> GetContext(
+  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> GetContext(
       absl::string_view iv, bool encryption) const {
     internal::SslUniquePtr<EVP_CIPHER_CTX> context(EVP_CIPHER_CTX_new());
     if (context == nullptr) {
@@ -329,7 +329,7 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
       internal::SslUniquePtr<EVP_AEAD_CTX> context, size_t tag_size)
       : context_(std::move(context)), tag_size_(tag_size) {}
 
-  util::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
+  absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
                                   absl::string_view associated_data,
                                   absl::string_view iv,
                                   absl::Span<char> out) const override {
@@ -367,7 +367,7 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
     return result;
   }
 
-  util::StatusOr<int64_t> EncryptSensitive(absl::string_view plaintext,
+  absl::StatusOr<int64_t> EncryptSensitive(absl::string_view plaintext,
                                            absl::string_view associated_data,
                                            absl::string_view iv,
                                            absl::Span<char> out) const {
@@ -388,7 +388,7 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
     return out_len;
   }
 
-  util::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
+  absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
                                   absl::string_view associated_data,
                                   absl::string_view iv,
                                   absl::Span<char> out) const override {
@@ -443,7 +443,7 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
     return result;
   }
 
-  util::StatusOr<int64_t> DecryptSensitive(absl::string_view ciphertext,
+  absl::StatusOr<int64_t> DecryptSensitive(absl::string_view ciphertext,
                                            absl::string_view associated_data,
                                            absl::string_view iv,
                                            absl::Span<char> out) const {
@@ -493,10 +493,10 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
+absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
     const util::SecretData &key) {
 #ifdef OPENSSL_IS_BORINGSSL
-  util::StatusOr<const EVP_AEAD *> aead_cipher =
+  absl::StatusOr<const EVP_AEAD *> aead_cipher =
       GetAesGcmAeadForKeySize(key.size());
   if (!aead_cipher.ok()) {
     return aead_cipher.status();
@@ -526,10 +526,10 @@ util::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
 #endif
 }
 
-util::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
+absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
     const util::SecretData &key) {
 #ifdef OPENSSL_IS_BORINGSSL
-  util::StatusOr<const EVP_AEAD *> aead_cipher =
+  absl::StatusOr<const EVP_AEAD *> aead_cipher =
       GetAesGcmSivAeadCipherForKeySize(key.size());
   if (!aead_cipher.ok()) {
     return aead_cipher.status();
@@ -552,7 +552,7 @@ util::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
 #endif
 }
 
-util::StatusOr<std::unique_ptr<SslOneShotAead>>
+absl::StatusOr<std::unique_ptr<SslOneShotAead>>
 CreateXchacha20Poly1305OneShotCrypter(const util::SecretData &key) {
 #ifdef OPENSSL_IS_BORINGSSL
   if (key.size() != 32) {

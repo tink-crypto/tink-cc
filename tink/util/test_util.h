@@ -74,7 +74,7 @@ std::string ReadTestFile(absl::string_view filename);
 // Converts a hexadecimal string into a string of bytes.
 // Returns a status if the size of the input is odd or if the input contains
 // characters that are not hexadecimal.
-crypto::tink::util::StatusOr<std::string> HexDecode(absl::string_view hex);
+absl::StatusOr<std::string> HexDecode(absl::string_view hex);
 
 // Converts a hexadecimal string into a string of bytes.
 // Dies if the input is not a valid hexadecimal string.
@@ -228,14 +228,14 @@ class DummyAead : public Aead {
 
   // Computes a dummy ciphertext, which is concatenation of provided 'plaintext'
   // with the name of this DummyAead.
-  crypto::tink::util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view associated_data) const override {
     return absl::StrCat(aead_name_.size(), ":", associated_data.size(), ":",
                         aead_name_, associated_data, plaintext);
   }
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override {
     std::string prefix =
@@ -262,7 +262,7 @@ class DummyCordAead : public CordAead {
 
   // Computes a dummy ciphertext, which is concatenation of provided 'plaintext'
   // with the name of this DummyCordAead.
-  crypto::tink::util::StatusOr<absl::Cord> Encrypt(
+  absl::StatusOr<absl::Cord> Encrypt(
       absl::Cord plaintext, absl::Cord associated_data) const override {
     auto ciphertext =
         aead_.Encrypt(plaintext.Flatten(), associated_data.Flatten());
@@ -274,7 +274,7 @@ class DummyCordAead : public CordAead {
     return ciphertext_cord;
   }
 
-  crypto::tink::util::StatusOr<absl::Cord> Decrypt(
+  absl::StatusOr<absl::Cord> Decrypt(
       absl::Cord ciphertext, absl::Cord associated_data) const override {
     auto plaintext =
         aead_.Decrypt(ciphertext.Flatten(), associated_data.Flatten());
@@ -299,13 +299,13 @@ class DummyDeterministicAead : public DeterministicAead {
   explicit DummyDeterministicAead(absl::string_view daead_name)
       : aead_(daead_name) {}
 
-  crypto::tink::util::StatusOr<std::string> EncryptDeterministically(
+  absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
       absl::string_view associated_data) const override {
     return aead_.Encrypt(plaintext, associated_data);
   }
 
-  crypto::tink::util::StatusOr<std::string> DecryptDeterministically(
+  absl::StatusOr<std::string> DecryptDeterministically(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override {
     return aead_.Decrypt(ciphertext, associated_data);
@@ -325,7 +325,7 @@ class DummyStreamingAead : public StreamingAead {
   explicit DummyStreamingAead(absl::string_view streaming_aead_name)
       : streaming_aead_name_(streaming_aead_name) {}
 
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
   NewEncryptingStream(
       std::unique_ptr<crypto::tink::OutputStream> ciphertext_destination,
       absl::string_view associated_data) const override {
@@ -334,7 +334,7 @@ class DummyStreamingAead : public StreamingAead {
         absl::StrCat(streaming_aead_name_, associated_data))};
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::InputStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::InputStream>>
   NewDecryptingStream(
       std::unique_ptr<crypto::tink::InputStream> ciphertext_source,
       absl::string_view associated_data) const override {
@@ -343,8 +343,7 @@ class DummyStreamingAead : public StreamingAead {
         absl::StrCat(streaming_aead_name_, associated_data))};
   }
 
-  crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::RandomAccessStream>>
   NewDecryptingRandomAccessStream(
       std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
       absl::string_view associated_data) const override {
@@ -365,7 +364,7 @@ class DummyStreamingAead : public StreamingAead {
           after_init_(false),
           status_(util::OkStatus()) {}
 
-    crypto::tink::util::StatusOr<int> Next(void** data) override {
+    absl::StatusOr<int> Next(void** data) override {
       if (!after_init_) {  // Try to initialize.
         after_init_ = true;
         auto next_result = ct_dest_->Next(data);
@@ -432,7 +431,7 @@ class DummyStreamingAead : public StreamingAead {
           after_init_(false),
           status_(util::OkStatus()) {}
 
-    crypto::tink::util::StatusOr<int> Next(const void** data) override {
+    absl::StatusOr<int> Next(const void** data) override {
       if (!after_init_) {  // Try to initialize.
         after_init_ = true;
         auto next_result = ct_source_->Next(data);
@@ -506,7 +505,7 @@ class DummyStreamingAead : public StreamingAead {
                                dest_buffer);
     }
 
-    util::StatusOr<int64_t> size() override {
+    absl::StatusOr<int64_t> size() override {
       util::Status status = CheckHeader();
       if (!status.ok()) {
         return status;
@@ -567,7 +566,7 @@ class DummyHybridEncrypt : public HybridEncrypt {
 
   // Computes a dummy ciphertext, which is concatenation of provided 'plaintext'
   // with the name of this DummyHybridEncrypt.
-  crypto::tink::util::StatusOr<std::string> Encrypt(
+  absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,
       absl::string_view context_info) const override {
     return dummy_aead_.Encrypt(plaintext, context_info);
@@ -587,7 +586,7 @@ class DummyHybridDecrypt : public HybridDecrypt {
 
   // Decrypts a dummy ciphertext, which should be a concatenation
   // of a plaintext with the name of this DummyHybridDecrypt.
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view context_info) const override {
     return dummy_aead_.Decrypt(ciphertext, context_info);
@@ -607,8 +606,7 @@ class DummyPublicKeySign : public PublicKeySign {
 
   // Computes a dummy signature, which is a concatenation of 'data'
   // with the name of this DummyPublicKeySign.
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override {
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override {
     return dummy_aead_.Encrypt("", data);
   }
 
@@ -645,7 +643,7 @@ class DummyMac : public Mac {
 
   // Computes a dummy MAC, which is concatenation of provided 'data'
   // with the name of this DummyMac.
-  crypto::tink::util::StatusOr<std::string> ComputeMac(
+  absl::StatusOr<std::string> ComputeMac(
       absl::string_view data) const override {
     return dummy_aead_.Encrypt("", data);
   }
@@ -662,7 +660,7 @@ class DummyMac : public Mac {
 // A dummy implementation of KeysetWriter-interface.
 class DummyKeysetWriter : public KeysetWriter {
  public:
-  static util::StatusOr<std::unique_ptr<DummyKeysetWriter>> New(
+  static absl::StatusOr<std::unique_ptr<DummyKeysetWriter>> New(
       std::unique_ptr<std::ostream> destination_stream) {
     return absl::WrapUnique(
         new DummyKeysetWriter(std::move(destination_stream)));
@@ -696,7 +694,7 @@ class DummyKmsClient : public KmsClient {
     return key_uri == key_uri_;
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<Aead>> GetAead(
+  absl::StatusOr<std::unique_ptr<Aead>> GetAead(
       absl::string_view key_uri) const override {
     if (!DoesSupport(key_uri))
       return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
@@ -714,7 +712,7 @@ class DummyKmsClient : public KmsClient {
 class FakeKeysetDeriver : public KeysetDeriver {
  public:
   explicit FakeKeysetDeriver(absl::string_view name) : name_(name) {}
-  util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeyset(
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeyset(
       absl::string_view salt) const override {
     google::crypto::tink::Keyset::Key key;
     key.mutable_key_data()->set_type_url(

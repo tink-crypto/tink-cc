@@ -87,7 +87,7 @@ std::string ReadTestFile(absl::string_view filename) {
   return buffer.str();
 }
 
-util::StatusOr<std::string> HexDecode(absl::string_view hex) {
+absl::StatusOr<std::string> HexDecode(absl::string_view hex) {
   std::string decoded;
   const bool result = absl::HexStringToBytes(hex, &decoded);
   if (!result) {

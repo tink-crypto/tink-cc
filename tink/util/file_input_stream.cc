@@ -62,7 +62,7 @@ FileInputStream::FileInputStream(int file_descriptor, int buffer_size)
       fd_(file_descriptor),
       buffer_(buffer_size > 0 ? buffer_size : kDefaultBufferSize) {}
 
-util::StatusOr<int> FileInputStream::Next(const void** data) {
+absl::StatusOr<int> FileInputStream::Next(const void** data) {
   if (data == nullptr) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Data pointer must not be nullptr");

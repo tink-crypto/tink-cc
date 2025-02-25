@@ -104,7 +104,7 @@ class NonOwningBuffer : public Buffer {
 }  // namespace
 
 // static
-StatusOr<std::unique_ptr<Buffer>> Buffer::New(int allocated_size) {
+absl::StatusOr<std::unique_ptr<Buffer>> Buffer::New(int allocated_size) {
   if (allocated_size <= 0) {
     return Status(absl::StatusCode::kInvalidArgument,
                   "allocated_size must be positive");
@@ -113,7 +113,7 @@ StatusOr<std::unique_ptr<Buffer>> Buffer::New(int allocated_size) {
 }
 
 // static
-StatusOr<std::unique_ptr<Buffer>> Buffer::NewNonOwning(
+absl::StatusOr<std::unique_ptr<Buffer>> Buffer::NewNonOwning(
     char* mem_block, int allocated_size) {
   if (allocated_size <= 0) {
     return Status(absl::StatusCode::kInvalidArgument,
@@ -125,7 +125,6 @@ StatusOr<std::unique_ptr<Buffer>> Buffer::NewNonOwning(
   }
   return {absl::make_unique<NonOwningBuffer>(mem_block, allocated_size)};
 }
-
 
 }  // namespace util
 }  // namespace tink

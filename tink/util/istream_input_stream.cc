@@ -47,7 +47,7 @@ IstreamInputStream::IstreamInputStream(std::unique_ptr<std::istream> input,
   status_ = util::OkStatus();
 }
 
-crypto::tink::util::StatusOr<int> IstreamInputStream::Next(const void** data) {
+absl::StatusOr<int> IstreamInputStream::Next(const void** data) {
   if (!status_.ok()) return status_;
   if (count_backedup_ > 0) {  // Return the backed-up bytes.
     buffer_offset_ = buffer_offset_ + (count_in_buffer_ - count_backedup_);

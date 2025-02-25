@@ -69,7 +69,7 @@ std::string GetEncodedKeyset(absl::string_view key_uri) {
 
 
 // static
-StatusOr<std::unique_ptr<FakeKmsClient>> FakeKmsClient::New(
+absl::StatusOr<std::unique_ptr<FakeKmsClient>> FakeKmsClient::New(
     absl::string_view key_uri, absl::string_view credentials_path) {
   std::unique_ptr<FakeKmsClient> client(new FakeKmsClient());
 
@@ -90,7 +90,7 @@ bool FakeKmsClient::DoesSupport(absl::string_view key_uri) const {
   return !GetEncodedKeyset(key_uri).empty();
 }
 
-StatusOr<std::unique_ptr<Aead>> FakeKmsClient::GetAead(
+absl::StatusOr<std::unique_ptr<Aead>> FakeKmsClient::GetAead(
     absl::string_view key_uri) const {
   if (!DoesSupport(key_uri)) {
     if (!encoded_keyset_.empty()) {
@@ -130,7 +130,7 @@ Status FakeKmsClient::RegisterNewClient(absl::string_view key_uri,
   return KmsClients::Add(std::move(client_result.value()));
 }
 
-StatusOr<std::string> FakeKmsClient::CreateFakeKeyUri() {
+absl::StatusOr<std::string> FakeKmsClient::CreateFakeKeyUri() {
   // The key_uri contains an encoded keyset with a new Aes128Gcm key.
   const KeyTemplate& key_template = AeadKeyTemplates::Aes128Gcm();
   auto handle_result =

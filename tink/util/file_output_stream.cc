@@ -71,7 +71,7 @@ FileOutputStream::FileOutputStream(int file_descriptor, int buffer_size) :
   status_ = OkStatus();
 }
 
-crypto::tink::util::StatusOr<int> FileOutputStream::Next(void** data) {
+absl::StatusOr<int> FileOutputStream::Next(void** data) {
   if (!status_.ok()) return status_;
 
   if (buffer_ == nullptr) {  // possible only at the first call to Next()

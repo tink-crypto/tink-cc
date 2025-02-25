@@ -32,14 +32,14 @@ class Buffer {
   // Creates a new Buffer which allocates a new memory block
   // of size 'allocated_size' and uses it for the actual data.
   // The allocated memory block is owned by this Buffer.
-  static util::StatusOr<std::unique_ptr<Buffer>> New(int allocated_size);
+  static absl::StatusOr<std::unique_ptr<Buffer>> New(int allocated_size);
 
   // Creates a new Buffer which uses the given 'mem_block' as a buffer
   // for the actual data.
   // Does NOT take the ownership of 'mem_block' which must be non-null,
   // must allocate at least 'allocated_size' bytes, and must remain alive
   // as long as the returned Buffer is in use.
-  static util::StatusOr<std::unique_ptr<Buffer>> NewNonOwning(
+  static absl::StatusOr<std::unique_ptr<Buffer>> NewNonOwning(
       char* mem_block, int allocated_size);
 
   // Returns the internal memory block of this Buffer,

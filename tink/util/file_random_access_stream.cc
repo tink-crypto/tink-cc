@@ -93,7 +93,7 @@ FileRandomAccessStream::~FileRandomAccessStream() {
   close_ignoring_eintr(fd_);
 }
 
-StatusOr<int64_t> FileRandomAccessStream::size() {
+absl::StatusOr<int64_t> FileRandomAccessStream::size() {
   struct stat s;
   if (fstat(fd_, &s) == -1) {
     return Status(absl::StatusCode::kUnavailable, "size unavailable");

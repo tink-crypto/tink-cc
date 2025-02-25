@@ -40,7 +40,7 @@ class OstreamOutputStream : public crypto::tink::OutputStream {
 
   ~OstreamOutputStream() override;
 
-  crypto::tink::util::StatusOr<int> Next(void** data) override;
+  absl::StatusOr<int> Next(void** data) override;
 
   void BackUp(int count) override;
 

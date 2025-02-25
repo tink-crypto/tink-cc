@@ -49,7 +49,7 @@ class FakeKmsClient : public crypto::tink::KmsClient {
   // Either of arguments can be empty.
   // If 'key_uri' is empty, then the client is not bound to any particular key.
   // credentials_path is ignored at the moment.
-  static crypto::tink::util::StatusOr<std::unique_ptr<FakeKmsClient>> New(
+  static absl::StatusOr<std::unique_ptr<FakeKmsClient>> New(
       absl::string_view key_uri, absl::string_view credentials_path);
 
   // Creates a new client and registers it in KMSClients.
@@ -57,15 +57,15 @@ class FakeKmsClient : public crypto::tink::KmsClient {
       absl::string_view key_uri, absl::string_view credentials_path);
 
   // Returns a new, random fake key_uri.
-  static crypto::tink::util::StatusOr<std::string> CreateFakeKeyUri();
+  static absl::StatusOr<std::string> CreateFakeKeyUri();
 
   // Returns true iff this client does support KMS key specified by 'key_uri'.
   bool DoesSupport(absl::string_view key_uri) const override;
 
   // Returns an Aead-primitive backed by KMS key specified by 'key_uri',
   // provided that this KmsClient does support 'key_uri'.
-  crypto::tink::util::StatusOr<std::unique_ptr<Aead>>
-  GetAead(absl::string_view key_uri) const override;
+  absl::StatusOr<std::unique_ptr<Aead>> GetAead(
+      absl::string_view key_uri) const override;
 
  private:
   FakeKmsClient() {}

@@ -137,7 +137,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadAllAtOnceSucceeds) {
       std::make_unique<util::OstreamOutputStream>(std::move(ostream));
 
   DummyStreamingAead streaming_aead("Some AEAD");
-  util::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
+  absl::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
       streaming_aead.NewEncryptingStream(std::move(output_stream), "Some AAD");
   ASSERT_THAT(encrypting_output_stream.status(), IsOk());
   ASSERT_THAT(subtle::test::WriteToStream(
@@ -147,7 +147,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadAllAtOnceSucceeds) {
   std::string ciphertext = string_stream_buffer->str();
   auto test_random_access_stream =
       std::make_unique<TestRandomAccessStream>(ciphertext);
-  util::StatusOr<std::unique_ptr<RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<RandomAccessStream>>
       decrypting_random_access_stream =
           streaming_aead.NewDecryptingRandomAccessStream(
               std::move(test_random_access_stream), "Some AAD");
@@ -171,7 +171,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadInChunksSucceeds) {
       std::make_unique<util::OstreamOutputStream>(std::move(ostream));
 
   DummyStreamingAead streaming_aead("Some AEAD");
-  util::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
+  absl::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
       streaming_aead.NewEncryptingStream(std::move(output_stream), "Some AAD");
   ASSERT_THAT(encrypting_output_stream.status(), IsOk());
   ASSERT_THAT(subtle::test::WriteToStream(
@@ -181,7 +181,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadInChunksSucceeds) {
   std::string ciphertext = string_stream_buffer->str();
   auto test_random_access_stream =
       std::make_unique<TestRandomAccessStream>(ciphertext);
-  util::StatusOr<std::unique_ptr<RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<RandomAccessStream>>
       decrypting_random_access_stream =
           streaming_aead.NewDecryptingRandomAccessStream(
               std::move(test_random_access_stream), "Some AAD");
@@ -216,7 +216,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadWithSmallerHeaderFails) {
   constexpr absl::string_view kStreamingAeadAad = "Some associated data";
 
   DummyStreamingAead streaming_aead(kStreamingAeadName);
-  util::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
+  absl::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
       streaming_aead.NewEncryptingStream(std::move(output_stream),
                                          kStreamingAeadAad);
   ASSERT_THAT(encrypting_output_stream.status(), IsOk());
@@ -228,7 +228,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadWithSmallerHeaderFails) {
   std::string ciphertext = "Invalid header";
   auto test_random_access_stream =
       std::make_unique<TestRandomAccessStream>(ciphertext);
-  util::StatusOr<std::unique_ptr<RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<RandomAccessStream>>
       decrypting_random_access_stream =
           streaming_aead.NewDecryptingRandomAccessStream(
               std::move(test_random_access_stream), kStreamingAeadAad);
@@ -262,7 +262,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadWithCorruptedAadFails) {
   constexpr absl::string_view kStreamingAeadAad = "Some associated data";
 
   DummyStreamingAead streaming_aead(kStreamingAeadName);
-  util::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
+  absl::StatusOr<std::unique_ptr<OutputStream>> encrypting_output_stream =
       streaming_aead.NewEncryptingStream(std::move(output_stream),
                                          kStreamingAeadAad);
   ASSERT_THAT(encrypting_output_stream.status(), IsOk());
@@ -273,7 +273,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadWithCorruptedAadFails) {
   std::string ciphertext = string_stream_buffer->str();
   auto test_random_access_stream =
       std::make_unique<TestRandomAccessStream>(ciphertext);
-  util::StatusOr<std::unique_ptr<RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<RandomAccessStream>>
       decrypting_random_access_stream =
           streaming_aead.NewDecryptingRandomAccessStream(
               std::move(test_random_access_stream), "Some wrong AAD");
@@ -293,7 +293,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadWithCorruptedAadFails) {
 
 TEST(FakeKeysetDeriver, DeriveKeyset) {
   FakeKeysetDeriver deriver("hello");
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       deriver.DeriveKeyset("salty");
   EXPECT_THAT(handle, IsOk());
   EXPECT_THAT((*handle)->GetKeysetInfo().primary_key_id(), Eq(119));

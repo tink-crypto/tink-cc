@@ -41,7 +41,7 @@ class IstreamInputStream : public crypto::tink::InputStream {
 
   ~IstreamInputStream() override;
 
-  crypto::tink::util::StatusOr<int> Next(const void** data) override;
+  absl::StatusOr<int> Next(const void** data) override;
 
   void BackUp(int count) override;
 

@@ -45,7 +45,7 @@ class FileRandomAccessStream : public crypto::tink::RandomAccessStream {
                                    int count,
                                    Buffer* dest_buffer) override;
 
-  crypto::tink::util::StatusOr<int64_t> size() override;
+  absl::StatusOr<int64_t> size() override;
 
  private:
   int fd_;

@@ -187,7 +187,7 @@ const char* Enums::HashName(pb::HashType hash_type) {
 }
 
 // static
-util::StatusOr<int> Enums::HashLength(pb::HashType hash_type) {
+absl::StatusOr<int> Enums::HashLength(pb::HashType hash_type) {
   switch (hash_type) {
     case pb::HashType::SHA224:
       return 28;

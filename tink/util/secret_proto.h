@@ -99,7 +99,7 @@ class SecretProto {
   inline T& operator*() { return *value_; }
   inline const T& operator*() const { return *value_; }
 
-  StatusOr<SecretData> SerializeAsSecretData() const {
+  absl::StatusOr<SecretData> SerializeAsSecretData() const {
     crypto::tink::internal::SecretBuffer buffer(value_->ByteSizeLong());
     bool serialized = crypto::tink::internal::CallWithCoreDumpProtection(
         [&] { return value_->SerializeToArray(buffer.data(), buffer.size()); });

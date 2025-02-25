@@ -47,7 +47,7 @@ OstreamOutputStream::OstreamOutputStream(std::unique_ptr<std::ostream> output,
   status_ = OkStatus();
 }
 
-crypto::tink::util::StatusOr<int> OstreamOutputStream::Next(void** data) {
+absl::StatusOr<int> OstreamOutputStream::Next(void** data) {
   if (!status_.ok()) return status_;
 
   if (buffer_ == nullptr) {  // possible only at the first call to Next()

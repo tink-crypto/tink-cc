@@ -44,10 +44,10 @@ using ::crypto::tink::util::StatusOr;
 crypto::tink::util::Status EncryptThenDecrypt(
     const AeadOrDaead& aead_or_daead, absl::string_view message,
     absl::string_view associated_data) {
-  StatusOr<std::string> encryption_or =
+  absl::StatusOr<std::string> encryption_or =
       aead_or_daead.Encrypt(message, associated_data);
   if (!encryption_or.status().ok()) return encryption_or.status();
-  StatusOr<std::string> decryption_or =
+  absl::StatusOr<std::string> decryption_or =
       aead_or_daead.Decrypt(encryption_or.value(), associated_data);
   if (!decryption_or.status().ok()) return decryption_or.status();
   if (decryption_or.value() != message) {

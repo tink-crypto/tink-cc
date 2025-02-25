@@ -113,10 +113,9 @@ class Cecpq2AeadHkdfHybridDecryptTest : public ::testing::Test {
           return decrypt_result.status();
         }
         if (plaintext != decrypt_result.value())
-          return crypto::tink::util::Status(
-              absl::StatusCode::kInternal,
-              "Regular Encryption-Decryption failed:"
-              "ciphertext differs from plaintext");
+          return absl::Status(absl::StatusCode::kInternal,
+                              "Regular Encryption-Decryption failed:"
+                              "ciphertext differs from plaintext");
       }
       {  // Encryption and decryption with empty context info
         const absl::string_view empty_context_info;
@@ -129,10 +128,9 @@ class Cecpq2AeadHkdfHybridDecryptTest : public ::testing::Test {
           return decrypt_result.status();
         }
         if (plaintext != decrypt_result.value())
-          return crypto::tink::util::Status(
-              absl::StatusCode::kInternal,
-              "Empty Context Info Encryption-Decryption failed:"
-              "ciphertext differs from plaintext");
+          return absl::Status(absl::StatusCode::kInternal,
+                              "Empty Context Info Encryption-Decryption failed:"
+                              "ciphertext differs from plaintext");
       }
       {  // Encryption and decryption w/ empty msg & context info
         const absl::string_view empty_plaintext;
@@ -146,7 +144,7 @@ class Cecpq2AeadHkdfHybridDecryptTest : public ::testing::Test {
           return decrypt_result.status();
         }
         if (empty_plaintext != decrypt_result.value())
-          return crypto::tink::util::Status(
+          return absl::Status(
               absl::StatusCode::kInternal,
               "Empty Context Info and Message Encryption-Decryption failed:"
               "ciphertext differs from plaintext");
@@ -165,21 +163,20 @@ class Cecpq2AeadHkdfHybridDecryptTest : public ::testing::Test {
         auto decrypt_result =
             hybrid_decrypt->Decrypt(Random::GetRandomBytes(1198), context_info);
         if (decrypt_result.ok()) {
-          return crypto::tink::util::Status(absl::StatusCode::kInternal,
-                                            "Decrypted random ciphertext");
+          return absl::Status(absl::StatusCode::kInternal,
+                              "Decrypted random ciphertext");
         }
       }
       {  // Bad context info
         auto decrypt_result =
             hybrid_decrypt->Decrypt(ciphertext, Random::GetRandomBytes(14));
         if (decrypt_result.ok()) {
-          return crypto::tink::util::Status(
-              absl::StatusCode::kInternal,
-              "Decrypted ciphertext with random context info");
+          return absl::Status(absl::StatusCode::kInternal,
+                              "Decrypted ciphertext with random context info");
         }
       }
     }
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 };
 

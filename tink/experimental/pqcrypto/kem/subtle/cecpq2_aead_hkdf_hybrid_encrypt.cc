@@ -40,11 +40,11 @@ namespace tink {
 
 namespace {
 
-util::Status Validate(
+absl::Status Validate(
     const google::crypto::tink::Cecpq2AeadHkdfPublicKey& key) {
   if (key.x25519_public_key_x().empty() ||
       key.hrss_public_key_marshalled().empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid Cecpq2AeadHkdfPublicKeyInternal: missing KEM "
                         "required fields.");
   }
@@ -52,12 +52,12 @@ util::Status Validate(
   if (key.params().kem_params().curve_type() ==
           google::crypto::tink::EllipticCurveType::CURVE25519 &&
       !key.x25519_public_key_y().empty()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Invalid Cecpq2AeadHkdfPublicKeyInternal: has KEM unexpected field.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace

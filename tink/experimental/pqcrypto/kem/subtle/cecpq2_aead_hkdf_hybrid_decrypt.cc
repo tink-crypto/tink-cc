@@ -41,7 +41,7 @@ namespace crypto {
 namespace tink {
 
 namespace {
-util::Status Validate(
+absl::Status Validate(
     const google::crypto::tink::Cecpq2AeadHkdfPrivateKey& key) {
   if (key.hrss_private_key_seed().empty() || key.x25519_private_key().empty() ||
       key.public_key().hrss_public_key_marshalled().empty() ||
@@ -54,27 +54,27 @@ util::Status Validate(
   if (key.public_key().params().kem_params().curve_type() ==
       google::crypto::tink::EllipticCurveType::CURVE25519) {
     if (!key.public_key().x25519_public_key_y().empty()) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid Cecpq2AeadHkdfPrivateKeyInternal: has KEM "
                           "unexpected field.");
     }
 
     if (key.public_key().params().kem_params().ec_point_format() !=
         google::crypto::tink::EcPointFormat::COMPRESSED) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "X25519 only supports compressed elliptic curve points.");
     }
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 }  // namespace
 
 // static
 util::StatusOr<std::unique_ptr<HybridDecrypt>> Cecpq2AeadHkdfHybridDecrypt::New(
     const google::crypto::tink::Cecpq2AeadHkdfPrivateKey& private_key) {
-  util::Status status = Validate(private_key);
+  absl::Status status = Validate(private_key);
   if (!status.ok()) return status;
 
   util::StatusOr<std::unique_ptr<subtle::Cecpq2HkdfRecipientKemBoringSsl>>
@@ -109,7 +109,7 @@ util::StatusOr<std::string> Cecpq2AeadHkdfHybridDecrypt::Decrypt(
   int32_t cecpq2_header_size =
       *cecpq2_header_point_encoding_size + HRSS_CIPHERTEXT_BYTES;
   if (ciphertext.size() < cecpq2_header_size) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
 

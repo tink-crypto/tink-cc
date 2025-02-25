@@ -56,7 +56,7 @@ Cecpq2HkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
       return Cecpq2HkdfX25519RecipientKemBoringSsl::New(
           curve, std::move(ec_private_key), std::move(hrss_private_key_seed));
     default:
-      return util::Status(absl::StatusCode::kUnimplemented,
+      return absl::Status(absl::StatusCode::kUnimplemented,
                           "Unsupported elliptic curve");
   }
 }
@@ -72,11 +72,11 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::New(
 
   // Basic input checking
   if (curve != CURVE25519) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "curve is not CURVE25519");
   }
   if (ec_private_key.size() != X25519_PRIVATE_KEY_LEN) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "priv has unexpected length");
   }
   // If all input parameters are ok, create a CECPQ2 Recipient KEM instance
@@ -91,7 +91,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
     EcPointFormat point_format) const {
   // Basic input checking
   if (point_format != EcPointFormat::COMPRESSED) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "X25519 only supports compressed elliptic curve points");
   }
@@ -100,7 +100,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
                         "kem_bytes has unexpected size");
   }
   if (key_size_in_bytes < 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key size length is smaller than 32 bytes "
                         "and thus not post-quantum secure.");
   }

@@ -84,19 +84,19 @@ Status HybridCli(absl::string_view mode, const std::string& keyset_filename,
 #endif
 
   // Read the keyset from file.
-  StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
   if (!keyset_handle.ok()) return keyset_handle.status();
 
   // Read the input.
-  StatusOr<std::string> input_file_content = ReadFile(input_filename);
+  absl::StatusOr<std::string> input_file_content = ReadFile(input_filename);
   if (!input_file_content.ok()) return input_file_content.status();
 
   // Compute the output.
   std::string output;
   if (mode == kEncrypt) {
     // Get the hybrid encryption primitive.
-    StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt_primitive =
+    absl::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt_primitive =
         (*keyset_handle)
             ->GetPrimitive<crypto::tink::HybridEncrypt>(
                 crypto::tink::ConfigGlobalRegistry());
@@ -104,13 +104,13 @@ Status HybridCli(absl::string_view mode, const std::string& keyset_filename,
       return hybrid_encrypt_primitive.status();
     }
     // Generate the ciphertext.
-    StatusOr<std::string> encrypt_result =
+    absl::StatusOr<std::string> encrypt_result =
         (*hybrid_encrypt_primitive)->Encrypt(*input_file_content, context_info);
     if (!encrypt_result.ok()) return encrypt_result.status();
     output = encrypt_result.value();
   } else {  // operation == kDecrypt.
     // Get the hybrid decryption primitive.
-    StatusOr<std::unique_ptr<HybridDecrypt>> hybrid_decrypt_primitive =
+    absl::StatusOr<std::unique_ptr<HybridDecrypt>> hybrid_decrypt_primitive =
         (*keyset_handle)
             ->GetPrimitive<crypto::tink::HybridDecrypt>(
                 crypto::tink::ConfigGlobalRegistry());
@@ -118,7 +118,7 @@ Status HybridCli(absl::string_view mode, const std::string& keyset_filename,
       return hybrid_decrypt_primitive.status();
     }
     // Recover the plaintext.
-    StatusOr<std::string> decrypt_result =
+    absl::StatusOr<std::string> decrypt_result =
         (*hybrid_decrypt_primitive)->Decrypt(*input_file_content, context_info);
     if (!decrypt_result.ok()) return decrypt_result.status();
     output = decrypt_result.value();

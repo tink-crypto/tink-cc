@@ -103,11 +103,11 @@ class RegistryImpl {
       const google::crypto::tink::KeyData& key_data) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
-  crypto::tink::util::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
-  NewKeyData(const google::crypto::tink::KeyTemplate& key_template) const
+  absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>> NewKeyData(
+      const google::crypto::tink::KeyTemplate& key_template) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
-  crypto::tink::util::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
+  absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
   GetPublicKeyData(absl::string_view type_url,
                    absl::string_view serialized_private_key) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
@@ -124,7 +124,7 @@ class RegistryImpl {
       const absl::flat_hash_map<std::string, std::string>& annotations) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
-  crypto::tink::util::StatusOr<google::crypto::tink::KeyData> DeriveKey(
+  absl::StatusOr<google::crypto::tink::KeyData> DeriveKey(
       const google::crypto::tink::KeyTemplate& key_template,
       InputStream* randomness) const ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
@@ -148,7 +148,7 @@ class RegistryImpl {
   // Returns the key type info for a given type URL. Since we never replace
   // key type infos, the pointers will stay valid for the lifetime of the
   // binary.
-  crypto::tink::util::StatusOr<const KeyTypeInfoStore::Info*> get_key_type_info(
+  absl::StatusOr<const KeyTypeInfoStore::Info*> get_key_type_info(
       absl::string_view type_url) const ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   mutable absl::Mutex maps_mutex_;
@@ -255,9 +255,8 @@ absl::Status RegistryImpl::RegisterPrimitiveWrapper(
 template <class P>
 crypto::tink::util::StatusOr<const KeyManager<P>*>
 RegistryImpl::get_key_manager(absl::string_view type_url) const {
-  crypto::tink::util::StatusOr<
-      const crypto::tink::internal::KeyTypeInfoStore::Info*>
-      info = get_key_type_info(type_url);
+  absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*> info =
+      get_key_type_info(type_url);
   if (!info.ok()) {
     return info.status();
   }
@@ -267,9 +266,8 @@ RegistryImpl::get_key_manager(absl::string_view type_url) const {
 template <class P>
 crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::GetPrimitive(
     const google::crypto::tink::KeyData& key_data) const {
-  crypto::tink::util::StatusOr<
-      const crypto::tink::internal::KeyTypeInfoStore::Info*>
-      info = get_key_type_info(key_data.type_url());
+  absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*> info =
+      get_key_type_info(key_data.type_url());
   if (!info.ok()) {
     return info.status();
   }

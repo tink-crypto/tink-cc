@@ -98,7 +98,7 @@ class KeyGenConfigurationImpl {
     KeyCreatorFn<Parameters> wrapped_fn =
         [key_creator_fn = std::move(key_creator_fn)](
             const Parameters& params, absl::optional<int> key_template_index)
-        -> util::StatusOr<std::unique_ptr<Key>> {
+        -> absl::StatusOr<std::unique_ptr<Key>> {
       const P* p = dynamic_cast<const P*>(&params);
       if (p) {
         return key_creator_fn(*p, key_template_index);
@@ -113,8 +113,7 @@ class KeyGenConfigurationImpl {
     return absl::OkStatus();
   }
 
-  static crypto::tink::util::StatusOr<
-      const crypto::tink::internal::KeyTypeInfoStore*>
+  static absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore*>
   GetKeyTypeInfoStore(const crypto::tink::KeyGenConfiguration& config) {
     if (config.global_registry_mode_) {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
@@ -125,10 +124,10 @@ class KeyGenConfigurationImpl {
 
   // Creates a new key from `parameters` using `config`'s `key_creator_fn_map_`.
   // Only works for key types added to `config` via `AddKeyCreator`.
-  static crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::Key>>
-  CreateKey(const crypto::tink::Parameters& parameters,
-            absl::optional<int> id_requirement,
-            const crypto::tink::KeyGenConfiguration& config) {
+  static absl::StatusOr<std::unique_ptr<crypto::tink::Key>> CreateKey(
+      const crypto::tink::Parameters& parameters,
+      absl::optional<int> id_requirement,
+      const crypto::tink::KeyGenConfiguration& config) {
     auto it =
         config.key_creator_fn_map_.find(std::type_index(typeid(parameters)));
     if (it == config.key_creator_fn_map_.end()) {

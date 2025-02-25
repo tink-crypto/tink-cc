@@ -58,7 +58,7 @@ absl::Status BignumToBinaryPadded(absl::Span<char> buffer,
   return absl::OkStatus();
 }
 
-util::StatusOr<std::string> BignumToString(const BIGNUM *bn, size_t len) {
+absl::StatusOr<std::string> BignumToString(const BIGNUM *bn, size_t len) {
   if (bn == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "BIGNUM is NULL");
   }
@@ -71,7 +71,7 @@ util::StatusOr<std::string> BignumToString(const BIGNUM *bn, size_t len) {
   return buffer;
 }
 
-util::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
+absl::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
                                                     size_t len) {
   if (bn == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "BIGNUM is NULL");
@@ -89,7 +89,7 @@ util::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
   return util::internal::AsSecretData(std::move(secret_data));
 }
 
-util::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
+absl::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
     const util::SecretData &bigendian_bn_str) {
   internal::SslUniquePtr<BIGNUM> bn(internal::CallWithCoreDumpProtection([&] {
     return BN_bin2bn(
@@ -103,7 +103,7 @@ util::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
   return std::move(bn);
 }
 
-util::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(
+absl::StatusOr<internal::SslUniquePtr<BIGNUM>> StringToBignum(
     absl::string_view bigendian_bn_str) {
   internal::SslUniquePtr<BIGNUM> bn(internal::CallWithCoreDumpProtection([&] {
     return BN_bin2bn(

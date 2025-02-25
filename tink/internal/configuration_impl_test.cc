@@ -95,7 +95,7 @@ class FakeKeyTypeManager
  public:
   class FakePrimitiveFactory : public PrimitiveFactory<FakePrimitive> {
    public:
-    util::StatusOr<std::unique_ptr<FakePrimitive>> Create(
+    absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const google::crypto::tink::AesGcmKey& key) const override {
       return absl::make_unique<FakePrimitive>(key.key_value());
     }
@@ -122,12 +122,12 @@ class FakeKeyTypeManager
     return absl::OkStatus();
   }
 
-  util::StatusOr<google::crypto::tink::AesGcmKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::AesGcmKey> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
     return google::crypto::tink::AesGcmKey();
   }
 
-  util::StatusOr<google::crypto::tink::AesGcmKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::AesGcmKey> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
     return google::crypto::tink::AesGcmKey();
@@ -142,7 +142,7 @@ class FakeKeyTypeManager
 class FakePrimitiveWrapper
     : public PrimitiveWrapper<FakePrimitive, FakePrimitive> {
  public:
-  util::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
     return absl::make_unique<FakePrimitive>(
@@ -154,7 +154,7 @@ class FakePrimitiveWrapper
 class FakePrimitiveWrapper2
     : public PrimitiveWrapper<FakePrimitive2, FakePrimitive> {
  public:
-  util::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive2>> primitive_set)
       const override {
     return absl::make_unique<FakePrimitive>(
@@ -163,7 +163,7 @@ class FakePrimitiveWrapper2
 };
 
 std::function<
-    util::StatusOr<std::unique_ptr<FakePrimitive>>(const AesGcmKey& key)>
+    absl::StatusOr<std::unique_ptr<FakePrimitive>>(const AesGcmKey& key)>
 FakePrimitiveGetterFromKey() {
   return [](const AesGcmKey& key) {
     return absl::make_unique<FakePrimitive>("primitive from key");
@@ -238,14 +238,14 @@ TEST(ConfigurationImplTest, GetKeyTypeManager) {
                   absl::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
   std::string type_url = FakeKeyTypeManager().get_key_type();
-  util::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
+  absl::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
   ASSERT_THAT(info, IsOk());
 
-  util::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
+  absl::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
       (*info)->get_key_manager<FakePrimitive>(type_url);
   ASSERT_THAT(key_manager, IsOk());
   EXPECT_EQ((*key_manager)->get_key_type(), type_url);
@@ -258,14 +258,14 @@ TEST(ConfigurationImplTest, GetLegacyKeyManager) {
                   MakeKeyManager<FakePrimitive>(&manager), config),
               IsOk());
 
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
   std::string type_url = FakeKeyTypeManager().get_key_type();
-  util::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
+  absl::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
   ASSERT_THAT(info, IsOk());
 
-  util::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
+  absl::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
       (*info)->get_key_manager<FakePrimitive>(type_url);
   ASSERT_THAT(key_manager, IsOk());
   EXPECT_EQ((*key_manager)->get_key_type(), type_url);
@@ -273,7 +273,7 @@ TEST(ConfigurationImplTest, GetLegacyKeyManager) {
 
 TEST(ConfigurationImplTest, GetMissingKeyManagerFails) {
   Configuration config;
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
   EXPECT_THAT((*store)->Get("i.do.not.exist").status(),
@@ -289,10 +289,10 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrap) {
                   absl::make_unique<FakeKeyTypeManager>(), config),
               IsOk());
 
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
-  util::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
+  absl::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
       (*store)->Get<FakePrimitive>();
   ASSERT_THAT(wrapper, IsOk());
 
@@ -301,7 +301,7 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrap) {
       keyset, /*key_id=*/13, OutputPrefixType::TINK, KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
-  util::StatusOr<std::unique_ptr<FakePrimitive>> aead =
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> aead =
       (*wrapper)->Wrap(keyset, /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
   EXPECT_EQ((*aead)->get(), raw_key);
@@ -318,10 +318,10 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
                   FakePrimitiveGetterFromKey(), config)),
               IsOk());
 
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
-  util::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
+  absl::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
       (*store)->Get<FakePrimitive>();
   ASSERT_THAT(wrapper, IsOk());
 
@@ -330,7 +330,7 @@ TEST(ConfigurationImplTest, GetKeysetWrapperStoreAndWrapFromKey) {
       keyset, /*key_id=*/13, OutputPrefixType::TINK, KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
-  util::StatusOr<std::unique_ptr<FakePrimitive>> aead =
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> aead =
       (*wrapper)->Wrap(keyset, /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
   EXPECT_EQ((*aead)->get(), "primitive from key");
@@ -342,10 +342,10 @@ TEST(ConfigurationImplTest, KeysetWrapperWrapMissingKeyTypeInfoFails) {
                   absl::make_unique<FakePrimitiveWrapper>(), config),
               IsOk());
 
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
-  util::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
+  absl::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
       (*store)->Get<FakePrimitive>();
   ASSERT_THAT(wrapper, IsOk());
 
@@ -372,10 +372,10 @@ TEST(ConfigurationImplTest, KeysetWrapperWrapMissingKeyManagerFails) {
   // AesGcmKey KeyData -> FakePrimitive2 -> FakePrimitive is the success path,
   // but the AesGcmKey KeyData -> FakePrimitive2 transformation is not
   // registered.
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
-  util::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
+  absl::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
       (*store)->Get<FakePrimitive>();
   ASSERT_THAT(wrapper, IsOk());
 
@@ -395,7 +395,7 @@ class FakeSignKeyManager
  public:
   class PublicKeySignFactory : public PrimitiveFactory<PublicKeySign> {
    public:
-    util::StatusOr<std::unique_ptr<PublicKeySign>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const RsaSsaPssPrivateKey& key) const override {
       return {absl::make_unique<test::DummyPublicKeySign>("a public key sign")};
     }
@@ -421,18 +421,18 @@ class FakeSignKeyManager
     return absl::OkStatus();
   }
 
-  util::StatusOr<RsaSsaPssPrivateKey> CreateKey(
+  absl::StatusOr<RsaSsaPssPrivateKey> CreateKey(
       const RsaSsaPssKeyFormat& key_format) const override {
     return RsaSsaPssPrivateKey();
   }
 
-  util::StatusOr<RsaSsaPssPrivateKey> DeriveKey(
+  absl::StatusOr<RsaSsaPssPrivateKey> DeriveKey(
       const RsaSsaPssKeyFormat& key_format,
       InputStream* input_stream) const override {
     return RsaSsaPssPrivateKey();
   }
 
-  util::StatusOr<RsaSsaPssPublicKey> GetPublicKey(
+  absl::StatusOr<RsaSsaPssPublicKey> GetPublicKey(
       const RsaSsaPssPrivateKey& private_key) const override {
     return private_key.public_key();
   }
@@ -446,7 +446,7 @@ class FakeVerifyKeyManager
  public:
   class PublicKeyVerifyFactory : public PrimitiveFactory<PublicKeyVerify> {
    public:
-    util::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
         const RsaSsaPssPublicKey& key) const override {
       return {
           absl::make_unique<test::DummyPublicKeyVerify>("a public key verify")};
@@ -493,28 +493,28 @@ TEST(ConfigurationImplTest, GetAsymmetricKeyManagers) {
 
   {
     std::string type_url = FakeSignKeyManager().get_key_type();
-    util::StatusOr<const KeyTypeInfoStore*> store =
+    absl::StatusOr<const KeyTypeInfoStore*> store =
         ConfigurationImpl::GetKeyTypeInfoStore(config);
     ASSERT_THAT(store, IsOk());
-    util::StatusOr<const KeyTypeInfoStore::Info*> info =
+    absl::StatusOr<const KeyTypeInfoStore::Info*> info =
         (*store)->Get(type_url);
     ASSERT_THAT(info, IsOk());
 
-    util::StatusOr<const KeyManager<PublicKeySign>*> key_manager =
+    absl::StatusOr<const KeyManager<PublicKeySign>*> key_manager =
         (*info)->get_key_manager<PublicKeySign>(type_url);
     ASSERT_THAT(key_manager, IsOk());
     EXPECT_EQ((*key_manager)->get_key_type(), type_url);
   }
   {
     std::string type_url = FakeVerifyKeyManager().get_key_type();
-    util::StatusOr<const KeyTypeInfoStore*> store =
+    absl::StatusOr<const KeyTypeInfoStore*> store =
         ConfigurationImpl::GetKeyTypeInfoStore(config);
     ASSERT_THAT(store, IsOk());
-    util::StatusOr<const KeyTypeInfoStore::Info*> info =
+    absl::StatusOr<const KeyTypeInfoStore::Info*> info =
         (*store)->Get(type_url);
     ASSERT_THAT(info, IsOk());
 
-    util::StatusOr<const KeyManager<PublicKeyVerify>*> key_manager =
+    absl::StatusOr<const KeyManager<PublicKeyVerify>*> key_manager =
         (*info)->get_key_manager<PublicKeyVerify>(type_url);
     ASSERT_THAT(key_manager, IsOk());
     EXPECT_EQ((*key_manager)->get_key_type(), type_url);

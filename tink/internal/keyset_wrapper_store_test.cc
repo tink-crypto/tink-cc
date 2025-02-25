@@ -76,7 +76,7 @@ class FakeKeyTypeManager
  public:
   class FakePrimitiveFactory : public PrimitiveFactory<FakePrimitive> {
    public:
-    util::StatusOr<std::unique_ptr<FakePrimitive>> Create(
+    absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const AesGcmKeyProto& key) const override {
       return absl::make_unique<FakePrimitive>(key.key_value());
     }
@@ -102,12 +102,12 @@ class FakeKeyTypeManager
     return absl::OkStatus();
   }
 
-  util::StatusOr<AesGcmKeyProto> CreateKey(
+  absl::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
     return AesGcmKeyProto();
   }
 
-  util::StatusOr<AesGcmKeyProto> DeriveKey(
+  absl::StatusOr<AesGcmKeyProto> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
     return AesGcmKeyProto();
@@ -121,7 +121,7 @@ class FakeKeyTypeManager
 class FakePrimitiveWrapper
     : public PrimitiveWrapper<FakePrimitive, FakePrimitive> {
  public:
-  util::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
     return absl::make_unique<FakePrimitive>(
@@ -132,7 +132,7 @@ class FakePrimitiveWrapper
 class FakePrimitiveWrapper2
     : public PrimitiveWrapper<FakePrimitive, FakePrimitive> {
  public:
-  util::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
     return absl::make_unique<FakePrimitive>(
@@ -140,14 +140,14 @@ class FakePrimitiveWrapper2
   }
 };
 
-std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(const Key& key)>
+std::function<absl::StatusOr<std::unique_ptr<FakePrimitive>>(const Key& key)>
 FakePrimitiveGetterFromKey() {
   return [](const Key& key) {
     return absl::make_unique<FakePrimitive>("fake key material");
   };
 }
 
-std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(const Key& key)>
+std::function<absl::StatusOr<std::unique_ptr<FakePrimitive>>(const Key& key)>
 FailingFakePrimitiveGetterFromKey() {
   return [](const Key& key) {
     return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented.");
@@ -170,8 +170,8 @@ std::string AddAesGcmKeyToKeyset(Keyset& keyset, uint32_t key_id,
 
 // Returns the function that relies on `registry` to transform `key_data` into
 // FakePrimitive.
-util::StatusOr<std::function<
-    util::StatusOr<std::unique_ptr<FakePrimitive>>(const KeyData& key_data)>>
+absl::StatusOr<std::function<
+    util::StatusOr<std::unique_ptr<FakePrimitive>>(const KeyData&)>>
 PrimitiveGetter(RegistryImpl& registry) {
   absl::Status status =
       registry.RegisterKeyTypeManager<AesGcmKeyProto, AesGcmKeyFormat,
@@ -188,8 +188,8 @@ PrimitiveGetter(RegistryImpl& registry) {
 
 TEST(KeysetWrapperStoreTest, Add) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -202,8 +202,8 @@ TEST(KeysetWrapperStoreTest, Add) {
 
 TEST(KeysetWrapperStoreTest, AddNull) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -216,8 +216,8 @@ TEST(KeysetWrapperStoreTest, AddNull) {
 
 TEST(KeysetWrapperStoreTest, AddWrappersForDifferentPrimitivesSucceeds) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -227,11 +227,11 @@ TEST(KeysetWrapperStoreTest, AddWrappersForDifferentPrimitivesSucceeds) {
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
-  std::function<util::StatusOr<std::unique_ptr<Mac>>(const KeyData& key_data)>
+  std::function<absl::StatusOr<std::unique_ptr<Mac>>(const KeyData& key_data)>
       primitive_getter_mac = [&registry](const KeyData& key_data) {
         return registry.GetPrimitive<Mac>(key_data);
       };
-  std::function<util::StatusOr<std::unique_ptr<Mac>>(const Key& key)>
+  std::function<absl::StatusOr<std::unique_ptr<Mac>>(const Key& key)>
       primitive_getter_mac_from_key = [](const Key& key) {
         return absl::Status(absl::StatusCode::kUnimplemented,
                             "Not implemented.");
@@ -244,8 +244,8 @@ TEST(KeysetWrapperStoreTest, AddWrappersForDifferentPrimitivesSucceeds) {
 
 TEST(KeysetWrapperStoreTest, AddSameWrapperTwiceSucceeds) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -262,8 +262,8 @@ TEST(KeysetWrapperStoreTest, AddSameWrapperTwiceSucceeds) {
 
 TEST(KeysetWrapperStoreTest, AddDifferentWrappersForSamePrimitiveFails) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -280,8 +280,8 @@ TEST(KeysetWrapperStoreTest, AddDifferentWrappersForSamePrimitiveFails) {
 
 TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -291,7 +291,7 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
-  util::StatusOr<const PrimitiveWrapper<FakePrimitive, FakePrimitive>*>
+  absl::StatusOr<const PrimitiveWrapper<FakePrimitive, FakePrimitive>*>
       legacy_wrapper = store.GetPrimitiveWrapper<FakePrimitive>();
   ASSERT_THAT(legacy_wrapper, IsOk());
 
@@ -312,7 +312,7 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
   ASSERT_THAT(entry, IsOk());
   ASSERT_THAT(primitive_set->set_primary(*entry), IsOk());
 
-  util::StatusOr<std::unique_ptr<FakePrimitive>> legacy_aead =
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> legacy_aead =
       (*legacy_wrapper)->Wrap(std::move(primitive_set));
   ASSERT_THAT(legacy_aead, IsOk());
   EXPECT_THAT((*legacy_aead)->get(), Eq(raw_key));
@@ -320,8 +320,8 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
 
 TEST(KeysetWrapperStoreTest, GetPrimitiveWrapperNonexistentWrapperFails) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -337,8 +337,8 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapperNonexistentWrapperFails) {
 
 TEST(KeysetWrapperStoreTest, Get) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -348,7 +348,7 @@ TEST(KeysetWrapperStoreTest, Get) {
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
-  util::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
+  absl::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
       store.Get<FakePrimitive>();
   ASSERT_THAT(wrapper, IsOk());
 
@@ -357,7 +357,7 @@ TEST(KeysetWrapperStoreTest, Get) {
                                              KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
-  util::StatusOr<std::unique_ptr<FakePrimitive>> aead =
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> aead =
       (*wrapper)->Wrap(keyset, /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
   EXPECT_THAT((*aead)->get(), Eq(raw_key));
@@ -366,8 +366,8 @@ TEST(KeysetWrapperStoreTest, Get) {
 TEST(KeysetWrapperStoreTest,
      GetFailingPrimitiveGetterFromKeyFallsBackToKeyData) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -377,7 +377,7 @@ TEST(KeysetWrapperStoreTest,
                   FailingFakePrimitiveGetterFromKey())),
               IsOk());
 
-  util::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
+  absl::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
       store.Get<FakePrimitive>();
   ASSERT_THAT(wrapper, IsOk());
 
@@ -386,7 +386,7 @@ TEST(KeysetWrapperStoreTest,
                                              KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
-  util::StatusOr<std::unique_ptr<FakePrimitive>> aead =
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> aead =
       (*wrapper)->Wrap(keyset, /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
   EXPECT_THAT((*aead)->get(), Eq(raw_key));
@@ -394,8 +394,8 @@ TEST(KeysetWrapperStoreTest,
 
 TEST(KeysetWrapperStoreTest, GetNonexistentWrapperFails) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -413,8 +413,8 @@ TEST(KeysetWrapperStoreTest, IsEmpty) {
   EXPECT_EQ(store.IsEmpty(), true);
 
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
   ASSERT_THAT((store.Add<FakePrimitive, FakePrimitive>(
@@ -426,8 +426,8 @@ TEST(KeysetWrapperStoreTest, IsEmpty) {
 
 TEST(KeysetWrapperStoreTest, Move) {
   RegistryImpl registry;
-  util::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
-      const KeyData& key_data)>>
+  absl::StatusOr<std::function<util::StatusOr<std::unique_ptr<FakePrimitive>>(
+      const KeyData&)>>
       primitive_getter = PrimitiveGetter(registry);
   ASSERT_THAT(primitive_getter, IsOk());
 
@@ -437,7 +437,7 @@ TEST(KeysetWrapperStoreTest, Move) {
                   FakePrimitiveGetterFromKey())),
               IsOk());
 
-  util::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
+  absl::StatusOr<const KeysetWrapper<FakePrimitive>*> wrapper =
       store.Get<FakePrimitive>();
   ASSERT_THAT(wrapper, IsOk());
 
@@ -450,7 +450,7 @@ TEST(KeysetWrapperStoreTest, Move) {
                                              KeyStatusType::ENABLED);
   keyset.set_primary_key_id(13);
 
-  util::StatusOr<std::unique_ptr<FakePrimitive>> aead =
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> aead =
       (*wrapper)->Wrap(keyset, /*annotations=*/{});
   ASSERT_THAT(aead, IsOk());
   EXPECT_THAT((*aead)->get(), Eq(raw_key));

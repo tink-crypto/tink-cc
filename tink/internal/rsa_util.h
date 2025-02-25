@@ -127,11 +127,11 @@ absl::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa);
 absl::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa);
 
 // Creates a OpenSSL/BoringSSL RSA key from `private_key`.
-crypto::tink::util::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
+absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
     const RsaPrivateKey &private_key);
 
 // Creates a OpenSSL/BoringSSL RSA key from an `public_key`.
-crypto::tink::util::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
+absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
     const RsaPublicKey &public_key);
 
 // Performs some basic checks on the given RSA public key `key` as in [1] when

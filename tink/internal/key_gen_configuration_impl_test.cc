@@ -84,7 +84,7 @@ class FakeKeyTypeManager
  public:
   class FakePrimitiveFactory : public PrimitiveFactory<FakePrimitive> {
    public:
-    util::StatusOr<std::unique_ptr<FakePrimitive>> Create(
+    absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const AesGcmKeyProto& key) const override {
       return absl::make_unique<FakePrimitive>(key.key_value());
     }
@@ -110,12 +110,12 @@ class FakeKeyTypeManager
     return absl::OkStatus();
   }
 
-  util::StatusOr<AesGcmKeyProto> CreateKey(
+  absl::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
     return AesGcmKeyProto();
   }
 
-  util::StatusOr<AesGcmKeyProto> DeriveKey(
+  absl::StatusOr<AesGcmKeyProto> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
     return AesGcmKeyProto();
@@ -126,11 +126,10 @@ class FakeKeyTypeManager
       "type.googleapis.com/google.crypto.tink.AesGcmKey";
 };
 
-crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::AesGcmKey>>
-CreateAesGcmKey(const AesGcmParameters& params,
-                absl::optional<int> id_requirement) {
+absl::StatusOr<std::unique_ptr<crypto::tink::AesGcmKey>> CreateAesGcmKey(
+    const AesGcmParameters& params, absl::optional<int> id_requirement) {
   RestrictedData secret = RestrictedData(params.KeySizeInBytes());
-  util::StatusOr<crypto::tink::AesGcmKey> key = crypto::tink::AesGcmKey::Create(
+  absl::StatusOr<crypto::tink::AesGcmKey> key = crypto::tink::AesGcmKey::Create(
       params, secret, id_requirement, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
@@ -176,13 +175,13 @@ TEST(KeyGenConfigurationImplTest, GetKeyTypeManager) {
               IsOk());
 
   std::string type_url = FakeKeyTypeManager().get_key_type();
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
-  util::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
+  absl::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
   ASSERT_THAT(info, IsOk());
 
-  util::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
+  absl::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
       (*info)->get_key_manager<FakePrimitive>(type_url);
   ASSERT_THAT(key_manager, IsOk());
   EXPECT_EQ((*key_manager)->get_key_type(), type_url);
@@ -195,14 +194,14 @@ TEST(KeyGenConfigurationImplTest, GetLegacyKeyManager) {
                   MakeKeyManager<FakePrimitive>(&manager), config),
               IsOk());
 
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
   std::string type_url = FakeKeyTypeManager().get_key_type();
-  util::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
+  absl::StatusOr<const KeyTypeInfoStore::Info*> info = (*store)->Get(type_url);
   ASSERT_THAT(info, IsOk());
 
-  util::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
+  absl::StatusOr<const KeyManager<FakePrimitive>*> key_manager =
       (*info)->get_key_manager<FakePrimitive>(type_url);
   ASSERT_THAT(key_manager, IsOk());
   EXPECT_EQ((*key_manager)->get_key_type(), type_url);
@@ -214,7 +213,7 @@ TEST(KeyGenConfigurationImplTest, CreateKey) {
                   CreateAesGcmKey, config),
               IsOk());
 
-  util::StatusOr<AesGcmParameters> aes_gcm_params =
+  absl::StatusOr<AesGcmParameters> aes_gcm_params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -223,7 +222,7 @@ TEST(KeyGenConfigurationImplTest, CreateKey) {
           .Build();
   ASSERT_THAT(aes_gcm_params, IsOk());
 
-  util::StatusOr<std::unique_ptr<Key>> generic_key =
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
       KeyGenConfigurationImpl::CreateKey(*aes_gcm_params,
                                          /*id_requirement=*/0x02030400, config);
   ASSERT_THAT(generic_key, IsOk());
@@ -241,7 +240,7 @@ TEST(KeyGenConfigurationImplTest, CreateKey) {
 TEST(KeyGenConfigurationImplTest, CreateKeyWithMissingKeyCreatorFails) {
   KeyGenConfiguration config;
 
-  util::StatusOr<AesGcmParameters> aes_gcm_params =
+  absl::StatusOr<AesGcmParameters> aes_gcm_params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
           .SetIvSizeInBytes(16)
@@ -259,7 +258,7 @@ TEST(KeyGenConfigurationImplTest, CreateKeyWithMissingKeyCreatorFails) {
 
 TEST(KeyGenConfigurationImplTest, GetMissingKeyManagerFails) {
   KeyGenConfiguration config;
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
   EXPECT_THAT((*store)->Get("i.do.not.exist").status(),
@@ -273,7 +272,7 @@ class FakeSignKeyManager
  public:
   class PublicKeySignFactory : public PrimitiveFactory<PublicKeySign> {
    public:
-    util::StatusOr<std::unique_ptr<PublicKeySign>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const RsaSsaPssPrivateKeyProto& key) const override {
       return {absl::make_unique<test::DummyPublicKeySign>("a public key sign")};
     }
@@ -299,18 +298,18 @@ class FakeSignKeyManager
     return absl::OkStatus();
   }
 
-  util::StatusOr<RsaSsaPssPrivateKeyProto> CreateKey(
+  absl::StatusOr<RsaSsaPssPrivateKeyProto> CreateKey(
       const RsaSsaPssKeyFormat& key_format) const override {
     return RsaSsaPssPrivateKeyProto();
   }
 
-  util::StatusOr<RsaSsaPssPrivateKeyProto> DeriveKey(
+  absl::StatusOr<RsaSsaPssPrivateKeyProto> DeriveKey(
       const RsaSsaPssKeyFormat& key_format,
       InputStream* input_stream) const override {
     return RsaSsaPssPrivateKeyProto();
   }
 
-  util::StatusOr<RsaSsaPssPublicKeyProto> GetPublicKey(
+  absl::StatusOr<RsaSsaPssPublicKeyProto> GetPublicKey(
       const RsaSsaPssPrivateKeyProto& private_key) const override {
     return private_key.public_key();
   }
@@ -325,7 +324,7 @@ class FakeVerifyKeyManager
  public:
   class PublicKeyVerifyFactory : public PrimitiveFactory<PublicKeyVerify> {
    public:
-    util::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
         const RsaSsaPssPublicKeyProto& key) const override {
       return {
           absl::make_unique<test::DummyPublicKeyVerify>("a public key verify")};
@@ -372,28 +371,28 @@ TEST(KeyGenConfigurationImplTest, GetAsymmetricKeyManagers) {
 
   {
     std::string type_url = FakeSignKeyManager().get_key_type();
-    util::StatusOr<const KeyTypeInfoStore*> store =
+    absl::StatusOr<const KeyTypeInfoStore*> store =
         KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
     ASSERT_THAT(store, IsOk());
-    util::StatusOr<const KeyTypeInfoStore::Info*> info =
+    absl::StatusOr<const KeyTypeInfoStore::Info*> info =
         (*store)->Get(type_url);
     ASSERT_THAT(info, IsOk());
 
-    util::StatusOr<const KeyManager<PublicKeySign>*> key_manager =
+    absl::StatusOr<const KeyManager<PublicKeySign>*> key_manager =
         (*info)->get_key_manager<PublicKeySign>(type_url);
     ASSERT_THAT(key_manager, IsOk());
     EXPECT_EQ((*key_manager)->get_key_type(), type_url);
   }
   {
     std::string type_url = FakeVerifyKeyManager().get_key_type();
-    util::StatusOr<const KeyTypeInfoStore*> store =
+    absl::StatusOr<const KeyTypeInfoStore*> store =
         KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
     ASSERT_THAT(store, IsOk());
-    util::StatusOr<const KeyTypeInfoStore::Info*> info =
+    absl::StatusOr<const KeyTypeInfoStore::Info*> info =
         (*store)->Get(type_url);
     ASSERT_THAT(info, IsOk());
 
-    util::StatusOr<const KeyManager<PublicKeyVerify>*> key_manager =
+    absl::StatusOr<const KeyManager<PublicKeyVerify>*> key_manager =
         (*info)->get_key_manager<PublicKeyVerify>(type_url);
     ASSERT_THAT(key_manager, IsOk());
     EXPECT_EQ((*key_manager)->get_key_type(), type_url);

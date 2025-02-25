@@ -113,7 +113,7 @@ SerializationRegistry SerializationRegistry::Builder::Build() && {
       std::move(key_parsers_), std::move(key_serializers_));
 }
 
-util::StatusOr<std::unique_ptr<Parameters>>
+absl::StatusOr<std::unique_ptr<Parameters>>
 SerializationRegistry::ParseParameters(
     const Serialization& serialization) const {
   ParserIndex index = ParserIndex::Create(serialization);
@@ -128,10 +128,10 @@ SerializationRegistry::ParseParameters(
   return parameters_parsers_.at(index)->ParseParameters(serialization);
 }
 
-util::StatusOr<std::unique_ptr<Parameters>>
+absl::StatusOr<std::unique_ptr<Parameters>>
 SerializationRegistry::ParseParametersWithLegacyFallback(
     const Serialization& serialization) const {
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       ParseParameters(serialization);
   if (parameters.status().code() == absl::StatusCode::kNotFound) {
     const ProtoParametersSerialization* proto_serialization =
@@ -149,7 +149,7 @@ SerializationRegistry::ParseParametersWithLegacyFallback(
   return parameters;
 }
 
-util::StatusOr<std::unique_ptr<Key>> SerializationRegistry::ParseKey(
+absl::StatusOr<std::unique_ptr<Key>> SerializationRegistry::ParseKey(
     const Serialization& serialization,
     absl::optional<SecretKeyAccessToken> token) const {
   ParserIndex index = ParserIndex::Create(serialization);
@@ -164,10 +164,10 @@ util::StatusOr<std::unique_ptr<Key>> SerializationRegistry::ParseKey(
   return key_parsers_.at(index)->ParseKey(serialization, token);
 }
 
-util::StatusOr<std::unique_ptr<Key>>
+absl::StatusOr<std::unique_ptr<Key>>
 SerializationRegistry::ParseKeyWithLegacyFallback(
     const Serialization& serialization, SecretKeyAccessToken token) const {
-  util::StatusOr<std::unique_ptr<Key>> key = ParseKey(serialization, token);
+  absl::StatusOr<std::unique_ptr<Key>> key = ParseKey(serialization, token);
   if (key.status().code() == absl::StatusCode::kNotFound) {
     const ProtoKeySerialization* proto_serialization =
         dynamic_cast<const ProtoKeySerialization*>(&serialization);
@@ -176,8 +176,8 @@ SerializationRegistry::ParseKeyWithLegacyFallback(
           absl::StatusCode::kInternal,
           "Failed to convert serialization to ProtoKeySerialization.");
     }
-    util::StatusOr<LegacyProtoKey> proto_key = internal::LegacyProtoKey::Create(
-        *proto_serialization, token);
+    absl::StatusOr<LegacyProtoKey> proto_key =
+        internal::LegacyProtoKey::Create(*proto_serialization, token);
     if (!proto_key.ok()) {
       return proto_key.status();
     }

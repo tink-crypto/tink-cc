@@ -105,7 +105,7 @@ absl::Status ValidateRsaPublicExponent(const BIGNUM *exponent) {
 }
 
 absl::Status ValidateRsaPublicExponent(absl::string_view exponent) {
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(exponent);
   if (!e.ok()) {
     return e.status();
@@ -142,17 +142,17 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   RSA_get0_key(rsa.get(), &n_bn, &e_bn, &d_bn);
 
   // Save exponents.
-  util::StatusOr<std::string> n_str =
+  absl::StatusOr<std::string> n_str =
       internal::BignumToString(n_bn, BN_num_bytes(n_bn));
   if (!n_str.ok()) {
     return n_str.status();
   }
-  util::StatusOr<std::string> e_str =
+  absl::StatusOr<std::string> e_str =
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
   if (!e_str.ok()) {
     return e_str.status();
   }
-  util::StatusOr<util::SecretData> d_str =
+  absl::StatusOr<util::SecretData> d_str =
       internal::BignumToSecretData(d_bn, BN_num_bytes(d_bn));
   if (!d_str.ok()) {
     return d_str.status();
@@ -166,12 +166,12 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   // Save factors.
   const BIGNUM *p_bn, *q_bn;
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
-  util::StatusOr<util::SecretData> p_str =
+  absl::StatusOr<util::SecretData> p_str =
       internal::BignumToSecretData(p_bn, BN_num_bytes(p_bn));
   if (!p_str.ok()) {
     return p_str.status();
   }
-  util::StatusOr<util::SecretData> q_str =
+  absl::StatusOr<util::SecretData> q_str =
       internal::BignumToSecretData(q_bn, BN_num_bytes(q_bn));
   if (!q_str.ok()) {
     return q_str.status();
@@ -182,17 +182,17 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   // Save CRT parameters.
   const BIGNUM *dp_bn, *dq_bn, *crt_bn;
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &crt_bn);
-  util::StatusOr<util::SecretData> dp_str =
+  absl::StatusOr<util::SecretData> dp_str =
       internal::BignumToSecretData(dp_bn, BN_num_bytes(dp_bn));
   if (!dp_str.ok()) {
     return dp_str.status();
   }
-  util::StatusOr<util::SecretData> dq_str =
+  absl::StatusOr<util::SecretData> dq_str =
       internal::BignumToSecretData(dq_bn, BN_num_bytes(dq_bn));
   if (!dq_str.ok()) {
     return dq_str.status();
   }
-  util::StatusOr<util::SecretData> crt_str =
+  absl::StatusOr<util::SecretData> crt_str =
       internal::BignumToSecretData(crt_bn, BN_num_bytes(crt_bn));
   if (!crt_str.ok()) {
     return crt_str.status();
@@ -205,11 +205,11 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
 }
 
 absl::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa) {
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(key.e);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> d =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> d =
       internal::SecretDataToBignum(key.d);
   if (!n.ok()) {
     return n.status();
@@ -235,9 +235,9 @@ absl::Status GetRsaModAndExponents(const RsaPrivateKey &key, RSA *rsa) {
 }
 
 absl::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa) {
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> p =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> p =
       internal::SecretDataToBignum(key.p);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> q =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> q =
       internal::SecretDataToBignum(key.q);
   if (!p.ok()) {
     return p.status();
@@ -256,11 +256,11 @@ absl::Status GetRsaPrimeFactors(const RsaPrivateKey &key, RSA *rsa) {
 }
 
 absl::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa) {
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> dp =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dp =
       internal::SecretDataToBignum(key.dp);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> dq =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dq =
       internal::SecretDataToBignum(key.dq);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> crt =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> crt =
       internal::SecretDataToBignum(key.crt);
   if (!dp.ok()) {
     return dp.status();
@@ -282,7 +282,7 @@ absl::Status GetRsaCrtParams(const RsaPrivateKey &key, RSA *rsa) {
   return absl::OkStatus();
 }
 
-util::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
+absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
     const RsaPrivateKey &private_key) {
   auto n = internal::StringToBignum(private_key.n);
   if (!n.ok()) {
@@ -298,7 +298,7 @@ util::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
     return exponent_status;
   }
   return CallWithCoreDumpProtection(
-      [&]() -> util::StatusOr<internal::SslUniquePtr<RSA>> {
+      [&]() -> absl::StatusOr<internal::SslUniquePtr<RSA>> {
         internal::SslUniquePtr<RSA> rsa(RSA_new());
         if (rsa.get() == nullptr) {
           return absl::Status(absl::StatusCode::kInternal,
@@ -333,7 +333,7 @@ util::StatusOr<internal::SslUniquePtr<RSA>> RsaPrivateKeyToRsa(
       });
 }
 
-util::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
+absl::StatusOr<internal::SslUniquePtr<RSA>> RsaPublicKeyToRsa(
     const RsaPublicKey &public_key) {
   auto n = internal::StringToBignum(public_key.n);
   if (!n.ok()) {

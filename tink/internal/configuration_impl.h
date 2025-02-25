@@ -63,8 +63,7 @@ class ConfigurationImpl {
             [&config](const google::crypto::tink::KeyData& key_data)
         -> crypto::tink::util::StatusOr<
             std::unique_ptr<typename PW::InputPrimitive>> {
-      crypto::tink::util::StatusOr<
-          const crypto::tink::internal::KeyTypeInfoStore::Info*>
+      absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*>
           info = config.key_type_info_store_.Get(key_data.type_url());
       if (!info.ok()) {
         return info.status();
@@ -169,8 +168,7 @@ class ConfigurationImpl {
                                                      /*new_key_allowed=*/true);
   }
 
-  static crypto::tink::util::StatusOr<
-      const crypto::tink::internal::KeyTypeInfoStore*>
+  static absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore*>
   GetKeyTypeInfoStore(const crypto::tink::Configuration& config) {
     if (config.global_registry_mode_) {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
@@ -179,8 +177,7 @@ class ConfigurationImpl {
     return &config.key_type_info_store_;
   }
 
-  static crypto::tink::util::StatusOr<
-      const crypto::tink::internal::KeysetWrapperStore*>
+  static absl::StatusOr<const crypto::tink::internal::KeysetWrapperStore*>
   GetKeysetWrapperStore(const crypto::tink::Configuration& config) {
     if (config.global_registry_mode_) {
       return absl::Status(absl::StatusCode::kFailedPrecondition,

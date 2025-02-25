@@ -190,8 +190,8 @@ class KeyTypeInfoStore {
 
     const KeyFactory& key_factory() const { return *key_factory_; }
 
-    const std::function<crypto::tink::util::StatusOr<
-        google::crypto::tink::KeyData>(absl::string_view, InputStream*)>&
+    const std::function<absl::StatusOr<google::crypto::tink::KeyData>(
+        absl::string_view, InputStream*)>&
     key_deriver() const {
       return key_deriver_;
     }
@@ -223,7 +223,7 @@ class KeyTypeInfoStore {
     // Derives a key if Info was constructed from a KeyTypeManager with a
     // non-void KeyFormat type. Else, this function is empty and casting to a
     // bool returns false.
-    std::function<crypto::tink::util::StatusOr<google::crypto::tink::KeyData>(
+    std::function<absl::StatusOr<google::crypto::tink::KeyData>(
         absl::string_view, InputStream*)>
         key_deriver_;
   };
@@ -252,7 +252,7 @@ class KeyTypeInfoStore {
 
   // Gets Info associated with `type_url`, returning either a valid, non-null
   // Info or an error.
-  crypto::tink::util::StatusOr<Info*> Get(absl::string_view type_url) const;
+  absl::StatusOr<Info*> Get(absl::string_view type_url) const;
 
   bool IsEmpty() const { return type_url_to_info_.empty(); }
 
@@ -371,8 +371,8 @@ absl::Status KeyTypeInfoStore::AddAsymmetricKeyTypeManagers(
     return public_status;
   }
 
-  util::StatusOr<KeyTypeInfoStore::Info*> private_found = Get(private_type_url);
-  util::StatusOr<const KeyTypeInfoStore::Info*> public_found =
+  absl::StatusOr<KeyTypeInfoStore::Info*> private_found = Get(private_type_url);
+  absl::StatusOr<const KeyTypeInfoStore::Info*> public_found =
       Get(public_type_url);
 
   // Only one of the private and public key type managers is found.

@@ -55,7 +55,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
     return entries.status();
   }
   if (entries->size() != (*keyset_result)->key_size()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
   std::unique_ptr<KeysetHandle> handle(
@@ -65,10 +65,10 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
 }
 
 // static
-crypto::tink::util::Status CleartextKeysetHandle::Write(
-    KeysetWriter* writer, const KeysetHandle& keyset_handle) {
+absl::Status CleartextKeysetHandle::Write(KeysetWriter* writer,
+                                          const KeysetHandle& keyset_handle) {
   if (!writer) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Error KeysetWriter cannot be null");
   }
   return writer->Write(keyset_handle.get_keyset());

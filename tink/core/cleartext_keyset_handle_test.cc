@@ -92,11 +92,11 @@ TEST_F(CleartextKeysetHandleTest, testWrite) {
 
   // Write a valid keyset.
   EXPECT_EQ(CleartextKeysetHandle::Write(writer.get(), *(handle.get())),
-            util::OkStatus());
+            absl::OkStatus());
 
   // Null writer.
   EXPECT_NE(CleartextKeysetHandle::Write(nullptr, *(handle.get())),
-            util::OkStatus());
+            absl::OkStatus());
 }
 
 }  // namespace

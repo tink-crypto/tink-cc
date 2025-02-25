@@ -77,7 +77,7 @@ crypto::tink::util::StatusOr<std::string> CryptoFormat::GetOutputPrefix(
     case OutputPrefixType::RAW:
       return std::string(kRawPrefix);
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "The given key has invalid OutputPrefixType.");
   }
 }

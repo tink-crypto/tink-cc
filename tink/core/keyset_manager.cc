@@ -97,7 +97,7 @@ Status KeysetManager::Enable(uint32_t key_id) {
                          key_id, Enums::KeyStatusName(key.status()));
       }
       key.set_status(KeyStatusType::ENABLED);
-      return util::OkStatus();
+      return absl::OkStatus();
     }
   }
   return ToStatusF(absl::StatusCode::kNotFound,
@@ -119,7 +119,7 @@ Status KeysetManager::Disable(uint32_t key_id) {
                          key_id, Enums::KeyStatusName(key.status()));
       }
       key.set_status(KeyStatusType::DISABLED);
-      return util::OkStatus();
+      return absl::OkStatus();
     }
   }
   return ToStatusF(absl::StatusCode::kNotFound,
@@ -138,7 +138,7 @@ Status KeysetManager::Delete(uint32_t key_id) {
     auto key = *key_iter;
     if (key.key_id() == key_id) {
       keyset_->mutable_key()->erase(key_iter);
-      return util::OkStatus();
+      return absl::OkStatus();
     }
   }
   return ToStatusF(absl::StatusCode::kNotFound,
@@ -162,7 +162,7 @@ Status KeysetManager::Destroy(uint32_t key_id) {
       }
       key.clear_key_data();
       key.set_status(KeyStatusType::DESTROYED);
-      return util::OkStatus();
+      return absl::OkStatus();
     }
   }
   return ToStatusF(absl::StatusCode::kNotFound,
@@ -180,7 +180,7 @@ Status KeysetManager::SetPrimary(uint32_t key_id) {
                          key_id);
       }
       keyset_->set_primary_key_id(key_id);
-      return util::OkStatus();
+      return absl::OkStatus();
     }
   }
   return ToStatusF(absl::StatusCode::kNotFound,

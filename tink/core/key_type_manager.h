@@ -51,7 +51,7 @@ class InternalKeyFactory {
   // Validates a key format proto.  KeyFormatProtos
   // on which this function returns a non-ok status will not be passed to
   // CreateKey or DeriveKey.
-  virtual crypto::tink::util::Status ValidateKeyFormat(
+  virtual absl::Status ValidateKeyFormat(
       const KeyFormatProto& key_format) const = 0;
   // Creates a new key. This is expected to be randomized.
   virtual crypto::tink::util::StatusOr<KeyProto> CreateKey(
@@ -62,9 +62,8 @@ class InternalKeyFactory {
   // versioned.
   virtual crypto::tink::util::StatusOr<KeyProto> DeriveKey(
       const KeyFormatProto& key_format, InputStream* input_stream) const {
-    return crypto::tink::util::Status(
-        absl::StatusCode::kUnimplemented,
-        "Deriving key not implemented for this key type.");
+    return absl::Status(absl::StatusCode::kUnimplemented,
+                        "Deriving key not implemented for this key type.");
   }
 };
 
@@ -138,7 +137,7 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
 
   // Validates the key. Returns util::OkStatus() if the key is valid,
   // and an invalid argument error otherwise.
-  virtual util::Status ValidateKey(const KeyProto& key) const = 0;
+  virtual absl::Status ValidateKey(const KeyProto& key) const = 0;
 
   // Creates a new primitive using one of the primitive factories passed in at
   // construction time.
@@ -160,7 +159,7 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
       !internal::OccursInTuple<Primitive, std::tuple<Primitives...>>::value,
       util::StatusOr<std::unique_ptr<Primitive>>>::type
   GetPrimitiveImpl(const KeyProto& key) const {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("No PrimitiveFactory was registered for type ",
                      typeid(Primitive).name()));

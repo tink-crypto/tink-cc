@@ -54,7 +54,7 @@ util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
   bool parsed = internal::CallWithCoreDumpProtection(
       [&]() { return keyset_proto->ParseFromString(serialized_keyset); });
   if (!parsed) {
-    return util::Status(absl::StatusCode::kInternal, "Failed to parse keyset");
+    return absl::Status(absl::StatusCode::kInternal, "Failed to parse keyset");
   }
   util::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
       entries = KeysetHandle::GetEntriesFromKeyset(*keyset_proto);
@@ -62,7 +62,7 @@ util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     return entries.status();
   }
   if (entries->size() != keyset_proto->key_size()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Error converting keyset proto into key entries.");
   }
   return KeysetHandle(std::move(keyset_proto), *std::move(entries));
@@ -76,7 +76,7 @@ util::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
   bool serialized = internal::CallWithCoreDumpProtection(
       [&]() { return keyset.SerializeToArray(result.data(), result.size()); });
   if (!serialized) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize keyset");
   }
   return util::internal::AsSecretData(std::move(result));
@@ -101,7 +101,7 @@ util::StatusOr<std::string> SerializeKeysetWithoutSecretToProtoKeysetFormat(
   if (!keyset_writer.ok()) {
     return keyset_writer.status();
   }
-  util::Status status = keyset_handle.WriteNoSecret(keyset_writer->get());
+  absl::Status status = keyset_handle.WriteNoSecret(keyset_writer->get());
   if (!status.ok()) {
     return status;
   }
@@ -135,7 +135,7 @@ util::StatusOr<std::string> SerializeKeysetToEncryptedKeysetFormat(
   if (!writer.ok()) {
     return writer.status();
   }
-  util::Status status = keyset_handle.WriteWithAssociatedData(
+  absl::Status status = keyset_handle.WriteWithAssociatedData(
       writer->get(), keyset_encryption_aead, associated_data);
   if (!status.ok()) {
     return status;

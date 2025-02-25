@@ -33,7 +33,7 @@ using ::crypto::tink::test::StatusIs;
 
 TEST(AlwaysFailingFactoryTest, NewKeyFromProtoLite) {
   std::unique_ptr<KeyFactory> factory = KeyFactory::AlwaysFailingFactory(
-      util::Status(absl::StatusCode::kAlreadyExists, ""));
+      absl::Status(absl::StatusCode::kAlreadyExists, ""));
   google::crypto::tink::Empty empty_proto;
   EXPECT_THAT(factory->NewKey(empty_proto).status(),
               StatusIs(absl::StatusCode::kAlreadyExists));
@@ -41,14 +41,14 @@ TEST(AlwaysFailingFactoryTest, NewKeyFromProtoLite) {
 
 TEST(AlwaysFailingFactoryTest, NewKeyFromStringView) {
   std::unique_ptr<KeyFactory> factory = KeyFactory::AlwaysFailingFactory(
-      util::Status(absl::StatusCode::kAlreadyExists, ""));
+      absl::Status(absl::StatusCode::kAlreadyExists, ""));
   EXPECT_THAT(factory->NewKey("").status(),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }
 
 TEST(AlwaysFailingFactoryTest, NewKeyData) {
   std::unique_ptr<KeyFactory> factory = KeyFactory::AlwaysFailingFactory(
-      util::Status(absl::StatusCode::kAlreadyExists, ""));
+      absl::Status(absl::StatusCode::kAlreadyExists, ""));
   EXPECT_THAT(factory->NewKeyData("").status(),
               StatusIs(absl::StatusCode::kAlreadyExists));
 }

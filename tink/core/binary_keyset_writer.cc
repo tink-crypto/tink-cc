@@ -36,17 +36,17 @@ namespace tink {
 
 namespace {
 
-util::Status WriteProto(const portable_proto::MessageLite& proto,
+absl::Status WriteProto(const portable_proto::MessageLite& proto,
                         std::ostream* destination) {
   if (!proto.SerializeToOstream(destination)) {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "Error serializing to the destination stream.");
   }
   if (destination->fail()) {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "Error writing to the destination stream.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // anonymous namespace
@@ -56,18 +56,18 @@ util::Status WriteProto(const portable_proto::MessageLite& proto,
 util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> BinaryKeysetWriter::New(
     std::unique_ptr<std::ostream> destination_stream) {
   if (destination_stream == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "destination_stream must be non-null.");
   }
   return absl::WrapUnique(
       new BinaryKeysetWriter(std::move(destination_stream)));
 }
 
-util::Status BinaryKeysetWriter::Write(const Keyset& keyset) {
+absl::Status BinaryKeysetWriter::Write(const Keyset& keyset) {
   return WriteProto(keyset, destination_stream_.get());
 }
 
-util::Status BinaryKeysetWriter::Write(
+absl::Status BinaryKeysetWriter::Write(
     const EncryptedKeyset& encrypted_keyset) {
   return WriteProto(encrypted_keyset, destination_stream_.get());
 }

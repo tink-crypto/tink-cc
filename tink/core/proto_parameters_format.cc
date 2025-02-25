@@ -56,7 +56,7 @@ util::StatusOr<std::string> SerializeParametersToProtoFormat(
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   if (proto_serialization == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize proto parameters.");
   }
 
@@ -67,7 +67,7 @@ util::StatusOr<std::unique_ptr<Parameters>> ParseParametersFromProtoFormat(
     absl::string_view serialized_parameters) {
   KeyTemplate key_template;
   if (!key_template.ParseFromString(serialized_parameters)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse proto parameters into key template.");
   }
 

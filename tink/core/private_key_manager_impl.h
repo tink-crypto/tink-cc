@@ -83,7 +83,7 @@ class PrivateKeyFactoryImpl : public PrivateKeyFactory {
     bool parsed = internal::CallWithCoreDumpProtection(
         [&] { return private_key->ParseFromString(serialized_private_key); });
     if (!parsed) {
-      return crypto::tink::util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Could not parse the passed string as proto '",
                        PrivateKeyProto().GetTypeName(), "'."));

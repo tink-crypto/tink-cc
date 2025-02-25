@@ -156,14 +156,13 @@ class FakeAeadKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
-      const AesGcmKeyProto& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const AesGcmKeyProto& key) const override {
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const AesGcmKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   crypto::tink::util::StatusOr<AesGcmKeyProto> CreateKey(
@@ -798,7 +797,7 @@ util::StatusOr<const Keyset> CreateEcdsaMultiKeyset() {
   EcdsaKeyFormat key_format;
 
   if (!key_format.ParseFromString(SignatureKeyTemplates::EcdsaP256().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse EcdsaP256 key template");
   }
   AddTinkKey(EcdsaSignKeyManager().get_key_type(),
@@ -807,7 +806,7 @@ util::StatusOr<const Keyset> CreateEcdsaMultiKeyset() {
 
   if (!key_format.ParseFromString(
           SignatureKeyTemplates::EcdsaP384Sha384().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse EcdsaP384Sha384 key template");
   }
   AddLegacyKey(EcdsaSignKeyManager().get_key_type(),
@@ -816,7 +815,7 @@ util::StatusOr<const Keyset> CreateEcdsaMultiKeyset() {
 
   if (!key_format.ParseFromString(
           SignatureKeyTemplates::EcdsaP384Sha512().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse EcdsaP384Sha512 key template");
   }
   AddRawKey(EcdsaSignKeyManager().get_key_type(),

@@ -41,7 +41,7 @@ class DeterministicAead {
   // deterministically, and returns the resulting ciphertext.
   // The ciphertext allows for checking authenticity and integrity
   // of the associated data, but does not guarantee its secrecy.
-  virtual crypto::tink::util::StatusOr<std::string> EncryptDeterministically(
+  virtual absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext, absl::string_view associated_data) const = 0;
 
   // Decrypts 'ciphertext' with 'associated_data' as associated data,
@@ -49,7 +49,7 @@ class DeterministicAead {
   // The decryption verifies the authenticity and integrity
   // of the associated data, but there are no guarantees wrt. secrecy
   // of that data.
-  virtual crypto::tink::util::StatusOr<std::string> DecryptDeterministically(
+  virtual absl::StatusOr<std::string> DecryptDeterministically(
       absl::string_view ciphertext,
       absl::string_view associated_data) const = 0;
 

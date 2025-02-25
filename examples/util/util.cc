@@ -46,14 +46,14 @@ using ::crypto::tink::util::StatusOr;
 
 // Creates a KeysetReader that reads a JSON-formatted keyset
 // from the given file.
-StatusOr<std::unique_ptr<KeysetReader>> GetJsonKeysetReader(
+absl::StatusOr<std::unique_ptr<KeysetReader>> GetJsonKeysetReader(
     const std::string& filename) {
   auto input_stream = absl::make_unique<std::ifstream>();
   input_stream->open(filename, std::ifstream::in);
   return JsonKeysetReader::New(std::move(input_stream));
 }
 
-StatusOr<std::unique_ptr<JsonKeysetWriter>> GetJsonKeysetWriter(
+absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> GetJsonKeysetWriter(
     const std::string& filename) {
   auto output_stream = absl::make_unique<std::ofstream>();
   output_stream->open(filename, std::ofstream::out);
@@ -62,9 +62,9 @@ StatusOr<std::unique_ptr<JsonKeysetWriter>> GetJsonKeysetWriter(
 
 }  // namespace
 
-StatusOr<std::unique_ptr<KeysetHandle>> ReadJsonCleartextKeyset(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> ReadJsonCleartextKeyset(
     const std::string& filename) {
-  StatusOr<std::unique_ptr<KeysetReader>> keyset_reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> keyset_reader =
       GetJsonKeysetReader(filename);
   if (!keyset_reader.ok()) return keyset_reader.status();
   return crypto::tink::CleartextKeysetHandle::Read(*std::move(keyset_reader));
@@ -72,14 +72,14 @@ StatusOr<std::unique_ptr<KeysetHandle>> ReadJsonCleartextKeyset(
 
 Status WriteJsonCleartextKeyset(const std::string& filename,
                                 const KeysetHandle& keyset_handle) {
-  StatusOr<std::unique_ptr<JsonKeysetWriter>> keyset_writer =
+  absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> keyset_writer =
       GetJsonKeysetWriter(filename);
   if (!keyset_writer.ok()) return keyset_writer.status();
   return crypto::tink::CleartextKeysetHandle::Write(keyset_writer->get(),
                                                     keyset_handle);
 }
 
-StatusOr<std::string> ReadFile(const std::string& filename) {
+absl::StatusOr<std::string> ReadFile(const std::string& filename) {
   std::ifstream input_stream;
   input_stream.open(filename, std::ifstream::in);
   if (!input_stream.is_open()) {

@@ -27,7 +27,7 @@ namespace tink_cc_examples {
 
 // Reads a keyset from the given file `filename` which is expected to contain a
 // JSON-formatted keyset.
-crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>>
+absl::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>>
 ReadJsonCleartextKeyset(const std::string& filename);
 
 // Writes `keyset_handle` to the file `filename` formatted with JSON in
@@ -38,7 +38,7 @@ absl::Status WriteJsonCleartextKeyset(
 
 // Reads `filename` and returns the read content as a string, or an error status
 // if the file does not exist.
-crypto::tink::util::StatusOr<std::string> ReadFile(const std::string& filename);
+absl::StatusOr<std::string> ReadFile(const std::string& filename);
 
 // Writes the given `data_to_write` to the specified file `filename`.
 absl::Status WriteToFile(const std::string& data_to_write,

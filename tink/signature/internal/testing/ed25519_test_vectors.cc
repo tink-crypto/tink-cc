@@ -63,7 +63,7 @@ std::string Ed25519PublicKeyBytes() {
 }
 
 SignatureTestVector CreateTestVector0() {
-  util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix).value(),
       Ed25519PublicKeyBytes(), absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -77,7 +77,7 @@ SignatureTestVector CreateTestVector0() {
 
 // TINK
 SignatureTestVector CreateTestVector1() {
-  util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink).value(),
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -92,7 +92,7 @@ SignatureTestVector CreateTestVector1() {
 
 // Crunchy
 SignatureTestVector CreateTestVector2() {
-  util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kCrunchy).value(),
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
@@ -108,7 +108,7 @@ SignatureTestVector CreateTestVector2() {
 // NOTE: This test vector has been generated adding a `0x00` suffix to the
 // message.
 SignatureTestVector CreateTestVector3() {
-  util::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
+  absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kLegacy).value(),
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
   CHECK_OK(public_key.status());

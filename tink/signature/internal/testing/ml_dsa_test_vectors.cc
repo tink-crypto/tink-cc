@@ -107,10 +107,10 @@ MlDsaPrivateKey PrivateKeyForMlDsa65Parameters(
       "7C9935A0B07694AA0C6D10E4DB6B1ADD2FD81A25CCB148032DCD739936737F2D",
       &private_key_seed_bytes));
 
-  util::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
+  absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
       parameters, public_key_bytes, id_requirement, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key,
       RestrictedData(private_key_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
@@ -120,7 +120,7 @@ MlDsaPrivateKey PrivateKeyForMlDsa65Parameters(
 
 // NO_PREFIX
 SignatureTestVector CreateTestVector0() {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   CHECK_OK(parameters.status());
   return SignatureTestVector(
@@ -232,7 +232,7 @@ SignatureTestVector CreateTestVector0() {
 
 // TINK PREFIX
 SignatureTestVector CreateTestVector1() {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   CHECK_OK(parameters.status());
   return SignatureTestVector(

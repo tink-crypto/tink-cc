@@ -98,7 +98,7 @@ RestrictedBigInteger P521SecretValue() {
 }
 
 SignatureTestVector CreateTestVector0() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -106,10 +106,10 @@ SignatureTestVector CreateTestVector0() {
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -122,7 +122,7 @@ SignatureTestVector CreateTestVector0() {
 
 // Signature encoding: DER
 SignatureTestVector CreateTestVector1() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -130,10 +130,10 @@ SignatureTestVector CreateTestVector1() {
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -147,7 +147,7 @@ SignatureTestVector CreateTestVector1() {
 
 // Variant: TINK
 SignatureTestVector CreateTestVector2() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -155,10 +155,10 @@ SignatureTestVector CreateTestVector2() {
           .SetVariant(EcdsaParameters::Variant::kTink)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -172,7 +172,7 @@ SignatureTestVector CreateTestVector2() {
 
 // Variant: CRUNCHY
 SignatureTestVector CreateTestVector3() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -180,10 +180,10 @@ SignatureTestVector CreateTestVector3() {
           .SetVariant(EcdsaParameters::Variant::kCrunchy)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -197,7 +197,7 @@ SignatureTestVector CreateTestVector3() {
 
 // Variant: CRUNCHY
 SignatureTestVector CreateTestVector4() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -205,10 +205,10 @@ SignatureTestVector CreateTestVector4() {
           .SetVariant(EcdsaParameters::Variant::kLegacy)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -221,7 +221,7 @@ SignatureTestVector CreateTestVector4() {
 
 // Non-empty message
 SignatureTestVector CreateTestVector5() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP256)
           .SetHashType(EcdsaParameters::HashType::kSha256)
@@ -229,10 +229,10 @@ SignatureTestVector CreateTestVector5() {
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -245,7 +245,7 @@ SignatureTestVector CreateTestVector5() {
 
 // NIST_P384, SHA384
 SignatureTestVector CreateTestVector6() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP384)
           .SetHashType(EcdsaParameters::HashType::kSha384)
@@ -253,10 +253,10 @@ SignatureTestVector CreateTestVector6() {
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P384Point(), absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -270,7 +270,7 @@ SignatureTestVector CreateTestVector6() {
 
 // NIST_P384, SHA384
 SignatureTestVector CreateTestVector7() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP384)
           .SetHashType(EcdsaParameters::HashType::kSha512)
@@ -278,10 +278,10 @@ SignatureTestVector CreateTestVector7() {
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P384Point(), absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(
@@ -295,7 +295,7 @@ SignatureTestVector CreateTestVector7() {
 
 // NIST_P384, SHA384
 SignatureTestVector CreateTestVector8() {
-  util::StatusOr<EcdsaParameters> parameters =
+  absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
           .SetCurveType(EcdsaParameters::CurveType::kNistP521)
           .SetHashType(EcdsaParameters::HashType::kSha512)
@@ -303,10 +303,10 @@ SignatureTestVector CreateTestVector8() {
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
   CHECK_OK(parameters.status());
-  util::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P521Point(), absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
+  absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P521SecretValue(), GetPartialKeyAccess());
   CHECK_OK(private_key.status());
   return SignatureTestVector(

@@ -91,11 +91,11 @@ RsaSsaPssPrivateKey PrivateKeyFor2048BitParameters(
       "-2lNx_76aBZoOUu9HCJ-UsfSOI8",
       &q_inverse));
 
-  util::StatusOr<RsaSsaPssPublicKey> public_key =
+  absl::StatusOr<RsaSsaPssPublicKey> public_key =
       RsaSsaPssPublicKey::Create(parameters, BigInteger(public_modulus),
-                                   id_requirement, GetPartialKeyAccess());
+                                 id_requirement, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(RestrictedBigInteger(p, InsecureSecretKeyAccess::Get()))
@@ -183,11 +183,11 @@ RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
       "HuTRdOdEh4P-ZvzQqawSLF5HTk82_-F-yiTPhtlcqCNFbCs0pKGeZIFZQ9ZfK5kn8",
       &q_inverse));
 
-  util::StatusOr<RsaSsaPssPublicKey> public_key =
+  absl::StatusOr<RsaSsaPssPublicKey> public_key =
       RsaSsaPssPublicKey::Create(parameters, BigInteger(public_modulus),
-                                   id_requirement, GetPartialKeyAccess());
+                                 id_requirement, GetPartialKeyAccess());
   CHECK_OK(public_key.status());
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(RestrictedBigInteger(p, InsecureSecretKeyAccess::Get()))
@@ -207,7 +207,7 @@ RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
 
 // SHA256
 SignatureTestVector CreateTestVector0() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
@@ -233,7 +233,7 @@ SignatureTestVector CreateTestVector0() {
 
 // SHA512
 SignatureTestVector CreateTestVector1() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
@@ -259,7 +259,7 @@ SignatureTestVector CreateTestVector1() {
 
 // Variant: TINK
 SignatureTestVector CreateTestVector2() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
@@ -286,7 +286,7 @@ SignatureTestVector CreateTestVector2() {
 
 // Variant: CRUNCHY
 SignatureTestVector CreateTestVector3() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha512)
@@ -313,7 +313,7 @@ SignatureTestVector CreateTestVector3() {
 
 // Variant: LEGACY
 SignatureTestVector CreateTestVector4() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
@@ -340,7 +340,7 @@ SignatureTestVector CreateTestVector4() {
 
 // SaltLengthBytes: 64
 SignatureTestVector CreateTestVector5() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
@@ -366,7 +366,7 @@ SignatureTestVector CreateTestVector5() {
 
 // ModulusSize: 4096 bits
 SignatureTestVector CreateTestVector6() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(4096)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)
@@ -400,7 +400,7 @@ SignatureTestVector CreateTestVector6() {
 
 // Sha384
 SignatureTestVector CreateTestVector7() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha384)
@@ -426,7 +426,7 @@ SignatureTestVector CreateTestVector7() {
 
 // SaltLength: 0
 SignatureTestVector CreateTestVector8() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetMgf1HashType(RsaSsaPssParameters::HashType::kSha256)

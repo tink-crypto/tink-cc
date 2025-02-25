@@ -42,8 +42,8 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> FalconVerify::New(
-    const FalconPublicKeyPqclean& public_key) {
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> FalconVerify::New(
+    const FalconPublicKeyPqclean &public_key) {
   auto status = internal::CheckFipsCompatibility<FalconVerify>();
   if (!status.ok()) return status;
 

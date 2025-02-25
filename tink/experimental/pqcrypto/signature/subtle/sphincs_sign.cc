@@ -39,7 +39,7 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<PublicKeySign>> SphincsSign::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> SphincsSign::New(
     SphincsPrivateKeyPqclean key) {
   auto status = internal::CheckFipsCompatibility<SphincsSign>();
   if (!status.ok()) return status;
@@ -57,8 +57,8 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> SphincsSign::New(
   return {absl::WrapUnique(new SphincsSign(std::move(key)))};
 }
 
-util::StatusOr<std::string> SphincsSign::Sign(absl::string_view data) const {
-  util::StatusOr<int32_t> key_size_index =
+absl::StatusOr<std::string> SphincsSign::Sign(absl::string_view data) const {
+  absl::StatusOr<int32_t> key_size_index =
       SphincsKeySizeToIndex(key_.GetKey().size());
   if (!key_size_index.ok()) {
     return key_size_index.status();

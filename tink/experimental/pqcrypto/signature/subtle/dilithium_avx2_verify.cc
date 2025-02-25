@@ -48,7 +48,7 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> DilithiumAvx2Verify::New(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> DilithiumAvx2Verify::New(
     DilithiumPublicKeyPqclean public_key) {
   auto status = internal::CheckFipsCompatibility<DilithiumAvx2Verify>();
   if (!status.ok()) return status;

@@ -32,7 +32,7 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-crypto::tink::util::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
+absl::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
     SphincsParamsPqclean params) {
   // Check if parameters are valid.
   util::Status valid_parameters = ValidateParams(params);
@@ -40,7 +40,7 @@ crypto::tink::util::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
     return valid_parameters;
   }
 
-  util::StatusOr<int32_t> key_size_index =
+  absl::StatusOr<int32_t> key_size_index =
       SphincsKeySizeToIndex(params.private_key_size);
   if (!key_size_index.ok()) {
     return key_size_index.status();
@@ -102,7 +102,7 @@ crypto::tink::util::Status ValidatePublicKeySize(int32_t key_size) {
   }
 }
 
-crypto::tink::util::StatusOr<int32_t> SphincsKeySizeToIndex(int32_t key_size) {
+absl::StatusOr<int32_t> SphincsKeySizeToIndex(int32_t key_size) {
   switch (key_size) {
     case kSphincsPrivateKeySize64:
       return 0;

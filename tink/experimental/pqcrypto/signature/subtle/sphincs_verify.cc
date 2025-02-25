@@ -38,7 +38,7 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> SphincsVerify::New(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> SphincsVerify::New(
     SphincsPublicKeyPqclean public_key) {
   auto status = internal::CheckFipsCompatibility<SphincsVerify>();
   if (!status.ok()) return status;
@@ -60,7 +60,7 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> SphincsVerify::New(
 util::Status SphincsVerify::Verify(absl::string_view signature,
                                    absl::string_view data) const {
   SphincsParamsPqclean params = key_.GetParams();
-  util::StatusOr<int32_t> key_size_index =
+  absl::StatusOr<int32_t> key_size_index =
       SphincsKeySizeToIndex(params.private_key_size);
   if (!key_size_index.ok()) {
     return key_size_index.status();

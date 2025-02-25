@@ -48,7 +48,7 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<PublicKeySign>> DilithiumAvx2Sign::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> DilithiumAvx2Sign::New(
     DilithiumPrivateKeyPqclean private_key) {
   auto status = internal::CheckFipsCompatibility<DilithiumAvx2Sign>();
   if (!status.ok()) return status;
@@ -71,7 +71,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> DilithiumAvx2Sign::New(
   return {absl::WrapUnique(new DilithiumAvx2Sign(std::move(private_key)))};
 }
 
-util::StatusOr<std::string> DilithiumAvx2Sign::Sign(
+absl::StatusOr<std::string> DilithiumAvx2Sign::Sign(
     absl::string_view data) const {
   size_t sig_length;
   int32_t key_size = private_key_.GetKeyData().size();

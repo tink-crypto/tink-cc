@@ -42,14 +42,14 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<DilithiumPrivateKeyPqclean>
+absl::StatusOr<DilithiumPrivateKeyPqclean>
 DilithiumPrivateKeyPqclean::NewPrivateKey(
     util::SecretData key_data, DilithiumSeedExpansion seed_expansion) {
   return DilithiumPrivateKeyPqclean(key_data, seed_expansion);
 }
 
 // static
-util::StatusOr<std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
+absl::StatusOr<std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
 DilithiumPrivateKeyPqclean::GenerateKeyPair(
     int32_t private_key_size, DilithiumSeedExpansion seed_expansion) {
   std::string public_key;
@@ -146,10 +146,10 @@ DilithiumPrivateKeyPqclean::GenerateKeyPair(
   util::SecretData private_key_data =
       util::SecretDataFromStringView(private_key);
 
-  util::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
+  absl::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
       DilithiumPrivateKeyPqclean::NewPrivateKey(std::move(private_key_data),
                                                 seed_expansion);
-  util::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
+  absl::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
       DilithiumPublicKeyPqclean::NewPublicKey(public_key, seed_expansion);
 
   return std::make_pair(*dilithium_private_key, *dilithium_public_key);
@@ -165,7 +165,7 @@ const DilithiumSeedExpansion& DilithiumPrivateKeyPqclean::GetSeedExpansion()
 }
 
 // static
-util::StatusOr<DilithiumPublicKeyPqclean>
+absl::StatusOr<DilithiumPublicKeyPqclean>
 DilithiumPublicKeyPqclean::NewPublicKey(absl::string_view key_data,
                                         DilithiumSeedExpansion seed_expansion) {
   return DilithiumPublicKeyPqclean(key_data, seed_expansion);

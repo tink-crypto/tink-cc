@@ -46,7 +46,7 @@ using ::google::protobuf::util::JsonParseOptions;
 using ::google::protobuf::util::JsonStringToMessage;
 
 // TODO(tholenst): factor these helpers out to an "util"-class.
-util::StatusOr<std::string> HexDecode(absl::string_view hex) {
+absl::StatusOr<std::string> HexDecode(absl::string_view hex) {
   if (hex.size() % 2 != 0) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Input has odd size.");
@@ -84,7 +84,7 @@ std::string GetBytesFromHexValue(const google::protobuf::Value &val) {
   return HexDecodeOrDie(s);
 }
 
-util::StatusOr<google::protobuf::Struct> ReadTestVectors(
+absl::StatusOr<google::protobuf::Struct> ReadTestVectors(
     const std::string &filename) {
   std::string test_vectors_path = crypto::tink::internal::RunfilesPath(
       absl::StrCat("testvectors/", filename));

@@ -57,7 +57,7 @@ std::string GetSerializedKeyData(std::string_view type_url,
 }
 
 TEST(TinkProtoStructsTest, ParseKeyTemplateStruct) {
-  util::StatusOr<KeyTemplateStruct> key_template_struct =
+  absl::StatusOr<KeyTemplateStruct> key_template_struct =
       KeyTemplateStruct::GetParser().Parse(GetSerializedKeyTemplate(
           "type_url", "value", OutputPrefixType::TINK));
   ASSERT_THAT(key_template_struct, IsOk());
@@ -73,7 +73,7 @@ TEST(TinkProtoStructsTest, SerializeKeyTemplateStruct) {
   key_template_struct.type_url = "type_url",
   key_template_struct.value = "value",
   key_template_struct.output_prefix_type = OutputPrefixTypeEnum::kTink;
-  util::StatusOr<std::string> serialized_key_template =
+  absl::StatusOr<std::string> serialized_key_template =
       KeyTemplateStruct::GetParser().SerializeIntoString(key_template_struct);
   ASSERT_THAT(serialized_key_template, IsOk());
 
@@ -85,7 +85,7 @@ TEST(TinkProtoStructsTest, SerializeKeyTemplateStruct) {
 }
 
 TEST(TinkProtoStructsTest, ParseKeyDataStruct) {
-  util::StatusOr<KeyDataStruct> key_data_struct =
+  absl::StatusOr<KeyDataStruct> key_data_struct =
       KeyDataStruct::GetParser().Parse(
           GetSerializedKeyData("type_url", "value", KeyData::SYMMETRIC));
   ASSERT_THAT(key_data_struct, IsOk());
@@ -102,7 +102,7 @@ TEST(TinkProtoStructsTest, SerializeKeyDataStruct) {
   key_data_struct.type_url = "type_url";
   key_data_struct.value = util::SecretDataFromStringView("value");
   key_data_struct.key_material_type = KeyMaterialTypeEnum::kSymmetric;
-  util::StatusOr<util::SecretData> serialized_key_data =
+  absl::StatusOr<util::SecretData> serialized_key_data =
       KeyDataStruct::GetParser().SerializeIntoSecretData(key_data_struct);
   ASSERT_THAT(serialized_key_data, IsOk());
 

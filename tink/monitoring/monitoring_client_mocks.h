@@ -29,7 +29,7 @@ namespace tink {
 // Mock MonitoringClientFactory class.
 class MockMonitoringClientFactory : public MonitoringClientFactory {
  public:
-  MOCK_METHOD(util::StatusOr<std::unique_ptr<MonitoringClient>>, New,
+  MOCK_METHOD(absl::StatusOr<std::unique_ptr<MonitoringClient>>, New,
               (const MonitoringContext& context), (override));
 };
 

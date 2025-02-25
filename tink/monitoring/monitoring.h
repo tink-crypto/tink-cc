@@ -146,7 +146,7 @@ class MonitoringClientFactory {
   virtual ~MonitoringClientFactory() = default;
   // Create a new monitoring client that logs events related to the given
   // `context`.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<MonitoringClient>> New(
+  virtual absl::StatusOr<std::unique_ptr<MonitoringClient>> New(
       const MonitoringContext& context) = 0;
 };
 

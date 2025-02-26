@@ -54,11 +54,11 @@ struct HpkeParams {
 };
 
 // Converts a google::crypto::tink::HpkeParams proto to an HpkeParams struct.
-util::StatusOr<HpkeParams> HpkeParamsProtoToStruct(
+absl::StatusOr<HpkeParams> HpkeParamsProtoToStruct(
     google::crypto::tink::HpkeParams params);
 
 // Returns the encapsulated key length (in bytes) for the specified `kem`.
-util::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
+absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
     google::crypto::tink::HpkeKem kem);
 
 }  // namespace internal

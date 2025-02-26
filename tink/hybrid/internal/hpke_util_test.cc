@@ -85,7 +85,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HpkeParamsConversionTest, HpkeParamsProtoToStruct) {
   HpkeParamsConversionTestCase test_case = GetParam();
-  util::StatusOr<HpkeParams> params = HpkeParamsProtoToStruct(test_case.input);
+  absl::StatusOr<HpkeParams> params = HpkeParamsProtoToStruct(test_case.input);
   ASSERT_THAT(params, IsOk());
 
   EXPECT_THAT(params->kem, Eq(test_case.expected.kem));

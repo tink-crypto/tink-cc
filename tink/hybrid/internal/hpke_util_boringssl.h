@@ -26,22 +26,22 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<const EVP_HPKE_KEM*> KemParam(
+absl::StatusOr<const EVP_HPKE_KEM*> KemParam(
     const google::crypto::tink::HpkeKem& kem);
 
-util::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params);
+absl::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params);
 
-util::StatusOr<const EVP_HPKE_KEM*> KemParam(
+absl::StatusOr<const EVP_HPKE_KEM*> KemParam(
     const google::crypto::tink::HpkeParams& params);
 
-util::StatusOr<const EVP_HPKE_KDF*> KdfParam(const HpkeParams& params);
+absl::StatusOr<const EVP_HPKE_KDF*> KdfParam(const HpkeParams& params);
 
-util::StatusOr<const EVP_HPKE_KDF*> KdfParam(
+absl::StatusOr<const EVP_HPKE_KDF*> KdfParam(
     const google::crypto::tink::HpkeParams& params);
 
-util::StatusOr<const EVP_HPKE_AEAD*> AeadParam(const HpkeParams& params);
+absl::StatusOr<const EVP_HPKE_AEAD*> AeadParam(const HpkeParams& params);
 
-util::StatusOr<const EVP_HPKE_AEAD*> AeadParam(
+absl::StatusOr<const EVP_HPKE_AEAD*> AeadParam(
     const google::crypto::tink::HpkeParams& params);
 
 }  // namespace internal

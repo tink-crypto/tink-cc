@@ -56,46 +56,46 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HpkeContextBoringSslTest, Seal) {
   HpkeParams hpke_params = GetParam();
-  util::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
+  absl::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<SenderHpkeContextBoringSsl> hpke_context =
+  absl::StatusOr<SenderHpkeContextBoringSsl> hpke_context =
       TestHpkeContextBoringSsl::SetupSender(
           hpke_params, params->recipient_public_key, params->application_info,
           params->seed_for_testing);
   ASSERT_THAT(hpke_context, IsOk());
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       hpke_context->context->Seal(params->plaintext, params->associated_data);
   ASSERT_THAT(ciphertext, IsOkAndHolds(params->ciphertext));
 }
 
 TEST_P(HpkeContextBoringSslTest, Open) {
   HpkeParams hpke_params = GetParam();
-  util::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
+  absl::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
   ASSERT_THAT(params, IsOk());
-  util::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> hpke_context =
+  absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> hpke_context =
       HpkeContextBoringSsl::SetupRecipient(
           hpke_params,
           util::SecretDataFromStringView(params->recipient_private_key),
           params->encapsulated_key, params->application_info);
   ASSERT_THAT(hpke_context, IsOk());
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*hpke_context)->Open(params->ciphertext, params->associated_data);
   ASSERT_THAT(plaintext, IsOkAndHolds(params->plaintext));
 }
 
 TEST_P(HpkeContextBoringSslTest, SenderExport) {
   HpkeParams hpke_params = GetParam();
-  util::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
+  absl::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<SenderHpkeContextBoringSsl> sender_hpke_context =
+  absl::StatusOr<SenderHpkeContextBoringSsl> sender_hpke_context =
       TestHpkeContextBoringSsl::SetupSender(
           hpke_params, params->recipient_public_key, params->application_info,
           params->seed_for_testing);
   ASSERT_THAT(sender_hpke_context, IsOk());
 
   for (int i = 0; i < params->exported_contexts.size(); ++i) {
-    util::StatusOr<util::SecretData> sender_secret =
+    absl::StatusOr<util::SecretData> sender_secret =
         sender_hpke_context->context->Export(params->exported_contexts[i], 32);
     ASSERT_THAT(sender_secret,
                 IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
@@ -105,10 +105,10 @@ TEST_P(HpkeContextBoringSslTest, SenderExport) {
 
 TEST_P(HpkeContextBoringSslTest, RecipientExport) {
   HpkeParams hpke_params = GetParam();
-  util::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
+  absl::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> recipient_hpke_context =
+  absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> recipient_hpke_context =
       HpkeContextBoringSsl::SetupRecipient(
           hpke_params,
           util::SecretDataFromStringView(params->recipient_private_key),
@@ -116,7 +116,7 @@ TEST_P(HpkeContextBoringSslTest, RecipientExport) {
   ASSERT_THAT(recipient_hpke_context, IsOk());
 
   for (int i = 0; i < params->exported_contexts.size(); ++i) {
-    util::StatusOr<util::SecretData> recipient_secret =
+    absl::StatusOr<util::SecretData> recipient_secret =
         (*recipient_hpke_context)->Export(params->exported_contexts[i], 32);
     ASSERT_THAT(recipient_secret,
                 IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
@@ -140,7 +140,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(HpkeContextBoringSslWithBadParamTest, BadSenderParamsFail) {
   HpkeParams hpke_params = GetParam();
   HpkeTestParams params = DefaultHpkeTestParams();
-  util::StatusOr<SenderHpkeContextBoringSsl> result =
+  absl::StatusOr<SenderHpkeContextBoringSsl> result =
       TestHpkeContextBoringSsl::SetupSender(
           hpke_params, params.recipient_public_key, params.application_info,
           params.seed_for_testing);
@@ -150,7 +150,7 @@ TEST_P(HpkeContextBoringSslWithBadParamTest, BadSenderParamsFail) {
 TEST_P(HpkeContextBoringSslWithBadParamTest, BadRecipientParamsFail) {
   HpkeParams hpke_params = GetParam();
   HpkeTestParams params = DefaultHpkeTestParams();
-  util::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> hpke_context =
+  absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> hpke_context =
       HpkeContextBoringSsl::SetupRecipient(
           hpke_params,
           util::SecretDataFromStringView(params.recipient_private_key),
@@ -163,7 +163,7 @@ TEST(HpkeContextBoringSslWithMissingPublicKeyTest, ZeroLengthPublicKeyFails) {
   HpkeParams hpke_params = {HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
                             HpkeAead::kAes128Gcm};
   HpkeTestParams params = DefaultHpkeTestParams();
-  util::StatusOr<SenderHpkeContextBoringSsl> result =
+  absl::StatusOr<SenderHpkeContextBoringSsl> result =
       TestHpkeContextBoringSsl::SetupSender(
           hpke_params, /*recipient_public_key=*/"", params.application_info,
           params.seed_for_testing);
@@ -174,7 +174,7 @@ TEST(HpkeContextBoringSslWithMissingPrivateKeyTest, ZeroLengthPrivateKeyFails) {
   HpkeParams hpke_params = {HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
                             HpkeAead::kAes128Gcm};
   HpkeTestParams params = DefaultHpkeTestParams();
-  util::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> hpke_context =
+  absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> hpke_context =
       HpkeContextBoringSsl::SetupRecipient(
           hpke_params, util::SecretDataFromStringView(/*secret=*/""),
           params.encapsulated_key, params.application_info);

@@ -62,20 +62,20 @@ TEST_P(HpkeUtilBoringSslTest, ValidParamsFromProto) {
       test_case.kem_proto, google::crypto::tink::HpkeKdf::HKDF_SHA256,
       google::crypto::tink::HpkeAead::AES_256_GCM);
 
-  util::StatusOr<const EVP_HPKE_KEM *> kem_from_enum =
+  absl::StatusOr<const EVP_HPKE_KEM *> kem_from_enum =
       KemParam(test_case.kem_proto);
   ASSERT_THAT(kem_from_enum, IsOk());
   EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_enum), Eq(test_case.kem_id));
 
-  util::StatusOr<const EVP_HPKE_KEM *> kem_from_proto = KemParam(params);
+  absl::StatusOr<const EVP_HPKE_KEM *> kem_from_proto = KemParam(params);
   ASSERT_THAT(kem_from_proto, IsOk());
   EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_proto), Eq(test_case.kem_id));
 
-  util::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
+  absl::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
   ASSERT_THAT(kdf, IsOk());
   EXPECT_THAT(EVP_HPKE_KDF_id(*kdf), Eq(EVP_HPKE_HKDF_SHA256));
 
-  util::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
+  absl::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
   ASSERT_THAT(aead, IsOk());
   EXPECT_THAT(EVP_HPKE_AEAD_id(*aead), Eq(EVP_HPKE_AES_256_GCM));
 }
@@ -85,15 +85,15 @@ TEST_P(HpkeUtilBoringSslTest, ValidParamsFromStruct) {
   HpkeParams params = {test_case.kem_struct, HpkeKdf::kHkdfSha256,
                        HpkeAead::kAes256Gcm};
 
-  util::StatusOr<const EVP_HPKE_KEM *> kem_from_proto = KemParam(params);
+  absl::StatusOr<const EVP_HPKE_KEM *> kem_from_proto = KemParam(params);
   ASSERT_THAT(kem_from_proto, IsOk());
   EXPECT_THAT(EVP_HPKE_KEM_id(*kem_from_proto), Eq(test_case.kem_id));
 
-  util::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
+  absl::StatusOr<const EVP_HPKE_KDF *> kdf = KdfParam(params);
   ASSERT_THAT(kdf, IsOk());
   EXPECT_THAT(EVP_HPKE_KDF_id(*kdf), Eq(EVP_HPKE_HKDF_SHA256));
 
-  util::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
+  absl::StatusOr<const EVP_HPKE_AEAD *> aead = AeadParam(params);
   ASSERT_THAT(aead, IsOk());
   EXPECT_THAT(EVP_HPKE_AEAD_id(*aead), Eq(EVP_HPKE_AES_256_GCM));
 }

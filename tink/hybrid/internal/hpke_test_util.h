@@ -64,12 +64,11 @@ struct HpkeTestParams {
 HpkeTestParams DefaultHpkeTestParams();
 
 // Creates an HpkeTestParams struct for the specified HpkeParams protobuf.
-util::StatusOr<HpkeTestParams> CreateHpkeTestParams(
+absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(
     const google::crypto::tink::HpkeParams& params);
 
 // Creates an HpkeTestParams struct for the specified HpkeParams struct.
-util::StatusOr<HpkeTestParams> CreateHpkeTestParams(
-    const HpkeParams& params);
+absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params);
 
 // Creates an HpkeParams protobuf from `kem`, `kdf`, and `aead`.
 google::crypto::tink::HpkeParams CreateHpkeParams(

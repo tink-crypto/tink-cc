@@ -46,9 +46,9 @@ class HpkeContextBoringSsl {
   //   `params`: HPKE parameters (KEM, KDF, and AEAD).
   //   `recipient_public_key`: KEM-encoding of recipient public key.
   //   `info`: Application-specific context for key derivation.
-  static crypto::tink::util::StatusOr<SenderHpkeContextBoringSsl>
-  SetupSender(const HpkeParams& params, absl::string_view recipient_public_key,
-              absl::string_view info);
+  static absl::StatusOr<SenderHpkeContextBoringSsl> SetupSender(
+      const HpkeParams& params, absl::string_view recipient_public_key,
+      absl::string_view info);
 
   // Sets up an HPKE recipient context.  Returns an error if initialization
   // fails.  Otherwise, returns a unique pointer to the recipient context.
@@ -57,26 +57,25 @@ class HpkeContextBoringSsl {
   //   `recipient_private_key`: Recipient private key.
   //   `encapsulated_key`: Encapsulated key.
   //   `info`: Application-specific context for key derivation.
-  static crypto::tink::util::StatusOr<std::unique_ptr<HpkeContextBoringSsl>>
-  SetupRecipient(const HpkeParams& params,
-                 const util::SecretData& recipient_private_key,
-                 absl::string_view encapsulated_key, absl::string_view info);
+  static absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> SetupRecipient(
+      const HpkeParams& params, const util::SecretData& recipient_private_key,
+      absl::string_view encapsulated_key, absl::string_view info);
 
   // Performs an AEAD encryption of `plaintext` with `associated_data`. Returns
   // an error if encryption fails.  Otherwise, returns the ciphertext.
-  crypto::tink::util::StatusOr<std::string> Seal(
-      absl::string_view plaintext, absl::string_view associated_data);
+  absl::StatusOr<std::string> Seal(absl::string_view plaintext,
+                                   absl::string_view associated_data);
 
   // Performs an AEAD decryption of `ciphertext` with `associated_data`. Returns
   // an error if decryption fails.  Otherwise, returns the plaintext.
-  crypto::tink::util::StatusOr<std::string> Open(
-      absl::string_view ciphertext, absl::string_view associated_data);
+  absl::StatusOr<std::string> Open(absl::string_view ciphertext,
+                                   absl::string_view associated_data);
 
   // Exports `secret_length` bytes of secret material using `exporter_context`
   // for the input context.  Returns an error if export fails.  Otherwise,
   // returns a secret of the requested length.
-  crypto::tink::util::StatusOr<util::SecretData> Export(
-      absl::string_view exporter_context, int64_t secret_length);
+  absl::StatusOr<util::SecretData> Export(absl::string_view exporter_context,
+                                          int64_t secret_length);
 
  protected:
   explicit HpkeContextBoringSsl(SslUniquePtr<EVP_HPKE_CTX> context)

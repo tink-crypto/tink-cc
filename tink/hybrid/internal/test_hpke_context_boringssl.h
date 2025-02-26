@@ -44,7 +44,7 @@ class TestHpkeContextBoringSsl : public HpkeContextBoringSsl {
   //   `recipient_public_key`: KEM-encoding of recipient public key.
   //   `info`: Application-specific context for key derivation.
   //   `seed_for_testing`: Seed used to match test vector values.
-  static crypto::tink::util::StatusOr<SenderHpkeContextBoringSsl> SetupSender(
+  static absl::StatusOr<SenderHpkeContextBoringSsl> SetupSender(
       const HpkeParams& params, absl::string_view recipient_public_key,
       absl::string_view info, absl::string_view seed_for_testing);
 

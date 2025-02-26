@@ -59,7 +59,7 @@ using ::testing::Eq;
 TEST(HybridV0Test, PrimitiveWrappers) {
   Configuration config;
   ASSERT_THAT(AddHybridV0(config), IsOk());
-  util::StatusOr<const KeysetWrapperStore*> store =
+  absl::StatusOr<const KeysetWrapperStore*> store =
       ConfigurationImpl::GetKeysetWrapperStore(config);
   ASSERT_THAT(store, IsOk());
 
@@ -70,13 +70,13 @@ TEST(HybridV0Test, PrimitiveWrappers) {
 TEST(HybridV0Test, KeyManagers) {
   Configuration config;
   ASSERT_THAT(AddHybridV0(config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(config);
   ASSERT_THAT(store, IsOk());
 
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddHybridKeyGenV0(key_gen_config), IsOk());
-  util::StatusOr<const KeyTypeInfoStore*> key_gen_store =
+  absl::StatusOr<const KeyTypeInfoStore*> key_gen_store =
       KeyGenConfigurationImpl::GetKeyTypeInfoStore(key_gen_config);
   ASSERT_THAT(key_gen_store, IsOk());
 
@@ -109,22 +109,22 @@ TEST_P(HybridV0KeyTypesTest, GetPrimitive) {
   Configuration config;
   ASSERT_THAT(AddHybridV0(config), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(GetParam(), key_gen_config);
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       (*handle)->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
       (*public_handle)->GetPrimitive<HybridEncrypt>(config);
   ASSERT_THAT(encrypt, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
       (*handle)->GetPrimitive<HybridDecrypt>(config);
   ASSERT_THAT(decrypt, IsOk());
 
   std::string plaintext = "plaintext";
-  util::StatusOr<std::string> ciphertext = (*encrypt)->Encrypt(plaintext, "ad");
+  absl::StatusOr<std::string> ciphertext = (*encrypt)->Encrypt(plaintext, "ad");
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*decrypt)->Decrypt(*ciphertext, "ad"), IsOkAndHolds(plaintext));
 }
@@ -141,7 +141,7 @@ TEST_P(HybridTestVectorTest, DecryptWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddHybridKeyGenV0(key_gen_config), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
@@ -149,7 +149,7 @@ TEST_P(HybridTestVectorTest, DecryptWorks) {
           .Build();
   ASSERT_THAT(handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(config);
   ASSERT_THAT(decrypter, IsOk());
   EXPECT_THAT((*decrypter)->Decrypt(param.ciphertext, param.context_info),
@@ -163,24 +163,24 @@ TEST_P(HybridTestVectorTest, EncryptWorks) {
   KeyGenConfiguration key_gen_config;
   ASSERT_THAT(AddHybridKeyGenV0(key_gen_config), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(key_gen_config);
   ASSERT_THAT(public_handle, IsOk());
 
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(config);
   ASSERT_THAT(decrypter, IsOk());
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
       (*public_handle)->GetPrimitive<HybridEncrypt>(config);
 
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*encrypter)->Encrypt(param.plaintext, param.context_info);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*decrypter)->Decrypt(*ciphertext, param.context_info),

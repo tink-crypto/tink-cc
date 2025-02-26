@@ -37,9 +37,8 @@ namespace internal {
 class EciesAeadHkdfDemHelper {
  public:
   // Constructs a new helper for the specified DEM key template.
-  static
-  crypto::tink::util::StatusOr<std::unique_ptr<const EciesAeadHkdfDemHelper>>
-      New(const google::crypto::tink::KeyTemplate& dem_key_template);
+  static absl::StatusOr<std::unique_ptr<const EciesAeadHkdfDemHelper>> New(
+      const google::crypto::tink::KeyTemplate& dem_key_template);
 
   virtual ~EciesAeadHkdfDemHelper() = default;
 
@@ -51,8 +50,7 @@ class EciesAeadHkdfDemHelper {
   // Creates and returns a new AeadOrDaead object that uses
   // the key material given in 'symmetric_key', which must
   // be of length dem_key_size_in_bytes().
-  virtual crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
+  virtual absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
   GetAeadOrDaead(const util::SecretData& symmetric_key_value) const;
 
  protected:
@@ -76,7 +74,7 @@ class EciesAeadHkdfDemHelper {
                          DemKeyParams key_params)
       : key_template_(key_template), key_params_(key_params) {}
 
-  static util::StatusOr<DemKeyParams> GetKeyParams(
+  static absl::StatusOr<DemKeyParams> GetKeyParams(
       const ::google::crypto::tink::KeyTemplate& key_template);
 
   const google::crypto::tink::KeyTemplate key_template_;

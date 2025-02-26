@@ -53,8 +53,8 @@ std::string ConcatenatePayload(absl::string_view encapsulated_key,
 // used to determine how to split the payload.
 //
 // WARNING: The string pointed to by `payload` must outlive the returned object.
-crypto::tink::util::StatusOr<HpkePayloadView> SplitPayload(
-    const HpkeKem& kem, absl::string_view payload);
+absl::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
+                                             absl::string_view payload);
 
 // Represents an HPKE context for either a sender or a recipient.
 class HpkeContext {
@@ -65,7 +65,7 @@ class HpkeContext {
   //   `params`: HPKE parameters (KEM, KDF, and AEAD).
   //   `recipient_public_key`: KEM-encoding of recipient public key.
   //   `info`: Application-specific context for key derivation.
-  static crypto::tink::util::StatusOr<std::unique_ptr<HpkeContext>> SetupSender(
+  static absl::StatusOr<std::unique_ptr<HpkeContext>> SetupSender(
       const HpkeParams& params, absl::string_view recipient_public_key,
       absl::string_view info);
 
@@ -76,10 +76,9 @@ class HpkeContext {
   //   `recipient_private_key`: Recipient private key.
   //   `encapsulated_key`: Encapsulated key.
   //   `info`: Application-specific context for key derivation.
-  static crypto::tink::util::StatusOr<std::unique_ptr<HpkeContext>>
-  SetupRecipient(const HpkeParams& params,
-                 const util::SecretData& recipient_private_key,
-                 absl::string_view encapsulated_key, absl::string_view info);
+  static absl::StatusOr<std::unique_ptr<HpkeContext>> SetupRecipient(
+      const HpkeParams& params, const util::SecretData& recipient_private_key,
+      absl::string_view encapsulated_key, absl::string_view info);
 
   absl::string_view EncapsulatedKey() const {
     return encapsulated_key_;
@@ -87,23 +86,23 @@ class HpkeContext {
 
   // Performs an AEAD encryption of `plaintext` with `associated_data`. Returns
   // an error if encryption fails.  Otherwise, returns the ciphertext.
-  crypto::tink::util::StatusOr<std::string> Seal(
-      absl::string_view plaintext, absl::string_view associated_data) {
+  absl::StatusOr<std::string> Seal(absl::string_view plaintext,
+                                   absl::string_view associated_data) {
     return context_->Seal(plaintext, associated_data);
   }
 
   // Performs an AEAD decryption of `ciphertext` with `associated_data`. Returns
   // an error if decryption fails.  Otherwise, returns the plaintext.
-  crypto::tink::util::StatusOr<std::string> Open(
-      absl::string_view ciphertext, absl::string_view associated_data) {
+  absl::StatusOr<std::string> Open(absl::string_view ciphertext,
+                                   absl::string_view associated_data) {
     return context_->Open(ciphertext, associated_data);
   }
 
   // Exports `secret_length` bytes of secret material using `exporter_context`
   // for the input context.  Returns an error if export fails.  Otherwise,
   // returns a secret of the requested length.
-  crypto::tink::util::StatusOr<util::SecretData> Export(
-      absl::string_view exporter_context, size_t secret_length) {
+  absl::StatusOr<util::SecretData> Export(absl::string_view exporter_context,
+                                          size_t secret_length) {
     return context_->Export(exporter_context, secret_length);
   }
 

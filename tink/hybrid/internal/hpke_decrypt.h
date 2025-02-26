@@ -40,13 +40,13 @@ class HpkeDecrypt : public HybridDecrypt {
   HpkeDecrypt(HpkeDecrypt&& other) = default;
   HpkeDecrypt& operator=(HpkeDecrypt&& other) = default;
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<HybridDecrypt>> New(
+  static absl::StatusOr<std::unique_ptr<HybridDecrypt>> New(
       const google::crypto::tink::HpkePrivateKey& recipient_private_key);
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<HybridDecrypt>> New(
+  static absl::StatusOr<std::unique_ptr<HybridDecrypt>> New(
       const crypto::tink::HpkePrivateKey& recipient_private_key);
 
-  crypto::tink::util::StatusOr<std::string> Decrypt(
+  absl::StatusOr<std::string> Decrypt(
       absl::string_view ciphertext,
       absl::string_view context_info) const override;
 
@@ -58,14 +58,13 @@ class HpkeDecrypt : public HybridDecrypt {
         recipient_private_key_(recipient_private_key),
         output_prefix_(output_prefix) {}
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<HybridDecrypt>> New(
+  static absl::StatusOr<std::unique_ptr<HybridDecrypt>> New(
       const google::crypto::tink::HpkeParams& hpke_params,
       const util::SecretData& recipient_private_key,
       absl::string_view output_prefix);
 
-  crypto::tink::util::StatusOr<std::string> DecryptNoPrefix(
-      absl::string_view ciphertext,
-      absl::string_view context_info) const;
+  absl::StatusOr<std::string> DecryptNoPrefix(
+      absl::string_view ciphertext, absl::string_view context_info) const;
 
   google::crypto::tink::HpkeParams hpke_params_;
   util::SecretData recipient_private_key_;

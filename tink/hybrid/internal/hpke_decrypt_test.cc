@@ -72,13 +72,13 @@ using ::testing::Values;
 using HpkePrivateKeyProto = ::google::crypto::tink::HpkePrivateKey;
 using HpkePublicKeyProto = ::google::crypto::tink::HpkePublicKey;
 
-util::StatusOr<std::string> Encrypt(HpkeParams params,
+absl::StatusOr<std::string> Encrypt(HpkeParams params,
                                     absl::string_view recipient_public_key,
                                     absl::string_view plaintext,
                                     absl::string_view context_info) {
   HpkePublicKeyProto recipient_key =
       CreateHpkePublicKey(params, std::string(recipient_public_key));
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> hpke_encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> hpke_encrypt =
       HpkeEncrypt::New(recipient_key);
   if (!hpke_encrypt.ok()) {
     return hpke_encrypt.status();
@@ -102,11 +102,11 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(HpkeDecryptTest, SetupRecipientContextAndDecrypt) {
   HpkeParams hpke_params = GetParam();
-  util::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
+  absl::StatusOr<HpkeTestParams> params = CreateHpkeTestParams(hpke_params);
   ASSERT_THAT(params, IsOk());
   HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params->recipient_private_key);
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
   ASSERT_THAT(hpke_decrypt, IsOk());
 
@@ -116,10 +116,10 @@ TEST_P(HpkeDecryptTest, SetupRecipientContextAndDecrypt) {
     for (const std::string& context_info : context_infos) {
       SCOPED_TRACE(absl::StrCat("input: '", input, "', context_info: '",
                                 context_info, "'"));
-      util::StatusOr<std::string> ciphertext = Encrypt(
+      absl::StatusOr<std::string> ciphertext = Encrypt(
           hpke_params, params->recipient_public_key, input, context_info);
       ASSERT_THAT(ciphertext, IsOk());
-      util::StatusOr<std::string> plaintext =
+      absl::StatusOr<std::string> plaintext =
           (*hpke_decrypt)->Decrypt(*ciphertext, context_info);
       EXPECT_THAT(plaintext, IsOkAndHolds(input));
     }
@@ -147,7 +147,7 @@ TEST_P(HpkeDecryptWithBadParamTest, BadParamsFails) {
   HpkeTestParams params = DefaultHpkeTestParams();
   HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(bad_params, params.recipient_private_key);
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
   ASSERT_THAT(hpke_decrypt.status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -160,11 +160,11 @@ TEST(HpkeDecryptWithShortCiphertextTest, ShortCiphertextFails) {
   HpkeTestParams params = DefaultHpkeTestParams();
   HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
   ASSERT_THAT(hpke_decrypt, IsOk());
 
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*hpke_decrypt)->Decrypt("short ciphertext", "associated data");
 
   EXPECT_THAT(plaintext.status(), StatusIs(absl::StatusCode::kInvalidArgument));
@@ -177,15 +177,15 @@ TEST(HpkeDecryptWithBadCiphertextTest, BadCiphertextFails) {
   HpkeTestParams params = DefaultHpkeTestParams();
   HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
   ASSERT_THAT(hpke_decrypt, IsOk());
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       Encrypt(hpke_params, params.recipient_public_key, params.plaintext,
               params.application_info);
   ASSERT_THAT(ciphertext, IsOk());
 
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*hpke_decrypt)
           ->Decrypt(absl::StrCat(*ciphertext, "modified ciphertext"),
                     params.application_info);
@@ -200,15 +200,15 @@ TEST(HpkeDecryptWithBadAssociatedDataTest, BadAssociatedDataFails) {
   HpkeTestParams params = DefaultHpkeTestParams();
   HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
   ASSERT_THAT(hpke_decrypt, IsOk());
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       Encrypt(hpke_params, params.recipient_public_key, params.plaintext,
               params.application_info);
   ASSERT_THAT(ciphertext, IsOk());
 
-  util::StatusOr<std::string> plaintext =
+  absl::StatusOr<std::string> plaintext =
       (*hpke_decrypt)
           ->Decrypt(*ciphertext,
                     absl::StrCat(params.application_info, "modified aad"));
@@ -225,7 +225,7 @@ TEST(HpkeDecryptWithMissingPublicKeyTest, MissingPublicKeyFails) {
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
   recipient_key.clear_public_key();
 
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
 
   EXPECT_THAT(hpke_decrypt.status(),
@@ -241,7 +241,7 @@ TEST(HpkeDecryptWithMissingHpkeParamsTest, MissingHpkeParamsFails) {
       CreateHpkePrivateKey(hpke_params, params.recipient_private_key);
   recipient_key.mutable_public_key()->clear_params();
 
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
 
   EXPECT_THAT(hpke_decrypt.status(),
@@ -256,7 +256,7 @@ TEST(HpkeDecryptWithZeroLengthPrivateKeyTest, ZeroLengthPrivateKeyFails) {
   HpkePrivateKeyProto recipient_key =
       CreateHpkePrivateKey(hpke_params, /*raw_key_bytes=*/"");
 
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> hpke_decrypt =
       HpkeDecrypt::New(recipient_key);
 
   EXPECT_THAT(hpke_decrypt.status(),
@@ -271,7 +271,7 @@ TEST_P(HpkeDecryptTestVectorTest, DecryptWorks) {
   const HpkePrivateKey* hpke_key =
       dynamic_cast<HpkePrivateKey*>(param.hybrid_private_key.get());
   ASSERT_THAT(hpke_key, NotNull());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       HpkeDecrypt::New(*hpke_key);
   ASSERT_THAT(decrypter, IsOk());
   EXPECT_THAT((*decrypter)->Decrypt(param.ciphertext, param.context_info),
@@ -283,7 +283,7 @@ TEST_P(HpkeDecryptTestVectorTest, DecryptDifferentContextInfoFails) {
   const HpkePrivateKey* hpke_key =
       dynamic_cast<HpkePrivateKey*>(param.hybrid_private_key.get());
   ASSERT_THAT(hpke_key, NotNull());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       HpkeDecrypt::New(*hpke_key);
   ASSERT_THAT(decrypter, IsOk());
   EXPECT_THAT(
@@ -314,7 +314,7 @@ RestrictedData P384SecretValue() {
 }
 
 TEST(HpkeDecryptNewFromKeyObject, P384DoesNotWork) {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP384HkdfSha384)
@@ -322,11 +322,11 @@ TEST(HpkeDecryptNewFromKeyObject, P384DoesNotWork) {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P384PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -354,7 +354,7 @@ RestrictedData P521SecretValue() {
 
 
 TEST(HpkeDecryptNewFromKeyObject, P521DoesNotWork) {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP521HkdfSha512)
@@ -362,11 +362,11 @@ TEST(HpkeDecryptNewFromKeyObject, P521DoesNotWork) {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P521PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P521SecretValue(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -391,7 +391,7 @@ RestrictedData P256SecretValue() {
 
 
 TEST(HpkeDecryptNewFromKeyObject, SHA384DoesNotWork) {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -399,18 +399,18 @@ TEST(HpkeDecryptNewFromKeyObject, SHA384DoesNotWork) {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT(HpkeDecrypt::New(*private_key), Not(IsOk()));
 }
 
 TEST(HpkeDecryptNewFromKeyObject, SHA512DoesNotWork) {
-  util::StatusOr<HpkeParameters> parameters =
+  absl::StatusOr<HpkeParameters> parameters =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
           .SetKemId(HpkeParameters::KemId::kDhkemP256HkdfSha256)
@@ -418,11 +418,11 @@ TEST(HpkeDecryptNewFromKeyObject, SHA512DoesNotWork) {
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
   ASSERT_THAT(parameters, IsOk());
-  util::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
   EXPECT_THAT(HpkeDecrypt::New(*private_key), Not(IsOk()));

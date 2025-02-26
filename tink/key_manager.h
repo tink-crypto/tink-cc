@@ -44,19 +44,16 @@ class KeyFactory {
       const absl::Status& status);
 
   // Generates a new random key, based on the specified 'key_format'.
-  virtual crypto::tink::util::StatusOr<
-      std::unique_ptr<portable_proto::MessageLite>>
-  NewKey(const portable_proto::MessageLite& key_format) const = 0;
+  virtual absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+      const portable_proto::MessageLite& key_format) const = 0;
 
   // Generates a new random key, based on the specified 'serialized_key_format'.
-  virtual crypto::tink::util::StatusOr<
-      std::unique_ptr<portable_proto::MessageLite>>
-  NewKey(absl::string_view serialized_key_format) const = 0;
+  virtual absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+      absl::string_view serialized_key_format) const = 0;
 
   // Generates a new random key, based on the specified 'serialized_key_format',
   // and wraps it in a KeyData-proto.
-  virtual crypto::tink::util::StatusOr<
-      std::unique_ptr<google::crypto::tink::KeyData>>
+  virtual absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
   NewKeyData(absl::string_view serialized_key_format) const = 0;
 
   virtual ~KeyFactory() = default;
@@ -65,8 +62,7 @@ class KeyFactory {
 class PrivateKeyFactory : public virtual KeyFactory {
  public:
   // Returns public key data extracted from the given serialized_private_key.
-  virtual crypto::tink::util::StatusOr<
-      std::unique_ptr<google::crypto::tink::KeyData>>
+  virtual absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
   GetPublicKeyData(absl::string_view serialized_private_key) const = 0;
 
   ~PrivateKeyFactory() override = default;

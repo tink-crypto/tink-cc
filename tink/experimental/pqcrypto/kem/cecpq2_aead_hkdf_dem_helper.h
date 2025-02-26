@@ -34,20 +34,18 @@ namespace tink {
 class Cecpq2AeadHkdfDemHelper {
  public:
   // Constructs a new helper for the specified DEM key template.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<const Cecpq2AeadHkdfDemHelper>>
-  New(const google::crypto::tink::KeyTemplate& dem_key_template);
+  static absl::StatusOr<std::unique_ptr<const Cecpq2AeadHkdfDemHelper>> New(
+      const google::crypto::tink::KeyTemplate& dem_key_template);
 
   virtual ~Cecpq2AeadHkdfDemHelper() = default;
 
   // Creates and returns a new AeadOrDaead object that uses
   // a 32-bytes or greater high-entropy seed to generate a key.
-  virtual crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
+  virtual absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
   GetAeadOrDaead(const util::SecretData& seed) const = 0;
 
   // Return the key material size.
-  virtual crypto::tink::util::StatusOr<uint32_t> GetKeyMaterialSize() const = 0;
+  virtual absl::StatusOr<uint32_t> GetKeyMaterialSize() const = 0;
 };
 
 }  // namespace tink

@@ -55,7 +55,8 @@ Status Cecpq2AeadHkdfPrivateKeyManager::ValidateKeyFormat(
   return Cecpq2AeadHkdfPublicKeyManager().ValidateParams(key_format.params());
 }
 
-StatusOr<Cecpq2AeadHkdfPrivateKey> Cecpq2AeadHkdfPrivateKeyManager::CreateKey(
+absl::StatusOr<Cecpq2AeadHkdfPrivateKey>
+Cecpq2AeadHkdfPrivateKeyManager::CreateKey(
     const Cecpq2AeadHkdfKeyFormat& cecpq2_key_format) const {
   // Generate CECPQ2 key pair
   auto cecpq2_key_pair_or =
@@ -85,7 +86,8 @@ StatusOr<Cecpq2AeadHkdfPrivateKey> Cecpq2AeadHkdfPrivateKeyManager::CreateKey(
   return cecpq2_private_key;
 }
 
-StatusOr<Cecpq2AeadHkdfPublicKey> Cecpq2AeadHkdfPrivateKeyManager::GetPublicKey(
+absl::StatusOr<Cecpq2AeadHkdfPublicKey>
+Cecpq2AeadHkdfPrivateKeyManager::GetPublicKey(
     const Cecpq2AeadHkdfPrivateKey& private_key) const {
   return private_key.public_key();
 }

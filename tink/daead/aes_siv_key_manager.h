@@ -49,7 +49,7 @@ class AesSivKeyManager
                             List<DeterministicAead>> {
  public:
   class DeterministicAeadFactory : public PrimitiveFactory<DeterministicAead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<DeterministicAead>> Create(
+    absl::StatusOr<std::unique_ptr<DeterministicAead>> Create(
         const google::crypto::tink::AesSivKey& key) const override {
       return subtle::AesSivBoringSsl::New(
           util::SecretDataFromStringView(key.key_value()));
@@ -80,7 +80,7 @@ class AesSivKeyManager
     return ValidateKeySize(key_format.key_size());
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesSivKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::AesSivKey> CreateKey(
       const google::crypto::tink::AesSivKeyFormat& key_format) const override {
     google::crypto::tink::AesSivKey key;
     key.set_version(get_version());
@@ -88,13 +88,13 @@ class AesSivKeyManager
     return key;
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesSivKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::AesSivKey> DeriveKey(
       const google::crypto::tink::AesSivKeyFormat& key_format,
       InputStream* input_stream) const override {
     absl::Status status = ValidateVersion(key_format.version(), get_version());
     if (!status.ok()) return status;
 
-    crypto::tink::util::StatusOr<std::string> randomness =
+    absl::StatusOr<std::string> randomness =
         ReadBytesFromStream(key_format.key_size(), input_stream);
 
     if (!randomness.ok()) {

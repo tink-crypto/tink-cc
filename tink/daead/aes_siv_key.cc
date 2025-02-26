@@ -34,7 +34,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const AesSivParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case AesSivParameters::Variant::kNoPrefix:
@@ -61,7 +61,7 @@ util::StatusOr<std::string> ComputeOutputPrefix(
 
 }  // namespace
 
-util::StatusOr<AesSivKey> AesSivKey::Create(const AesSivParameters& parameters,
+absl::StatusOr<AesSivKey> AesSivKey::Create(const AesSivParameters& parameters,
                                             const RestrictedData& key_bytes,
                                             absl::optional<int> id_requirement,
                                             PartialKeyAccessToken token) {
@@ -81,7 +81,7 @@ util::StatusOr<AesSivKey> AesSivKey::Create(const AesSivParameters& parameters,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();

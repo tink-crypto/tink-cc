@@ -65,11 +65,11 @@ class  DeterministicAeadSetWrapper : public DeterministicAead {
         monitoring_decryption_client_(std::move(monitoring_decryption_client))
         {}
 
-  crypto::tink::util::StatusOr<std::string> EncryptDeterministically(
+  absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::string> DecryptDeterministically(
+  absl::StatusOr<std::string> DecryptDeterministically(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 
@@ -81,7 +81,7 @@ class  DeterministicAeadSetWrapper : public DeterministicAead {
   std::unique_ptr<MonitoringClient> monitoring_decryption_client_;
 };
 
-util::StatusOr<std::string>
+absl::StatusOr<std::string>
 DeterministicAeadSetWrapper::EncryptDeterministically(
     absl::string_view plaintext, absl::string_view associated_data) const {
   // BoringSSL expects a non-null pointer for plaintext and associated_data,
@@ -106,7 +106,7 @@ DeterministicAeadSetWrapper::EncryptDeterministically(
   return key_id + encrypt_result.value();
 }
 
-util::StatusOr<std::string>
+absl::StatusOr<std::string>
 DeterministicAeadSetWrapper::DecryptDeterministically(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   // BoringSSL expects a non-null pointer for plaintext and associated_data,
@@ -161,7 +161,7 @@ DeterministicAeadSetWrapper::DecryptDeterministically(
 
 }  // anonymous namespace
 
-util::StatusOr<std::unique_ptr<DeterministicAead>>
+absl::StatusOr<std::unique_ptr<DeterministicAead>>
 DeterministicAeadWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<DeterministicAead>> primitive_set) const {
   absl::Status status = Validate(primitive_set.get());
@@ -176,20 +176,20 @@ DeterministicAeadWrapper::Wrap(
         std::move(primitive_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<MonitoringClient>>
       monitoring_encryption_client = monitoring_factory->New(
           MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
   if (!monitoring_encryption_client.ok()) {
     return monitoring_encryption_client.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<MonitoringClient>>
       monitoring_decryption_client = monitoring_factory->New(
           MonitoringContext(kPrimitive, kDecryptApi, *keyset_info));
   if (!monitoring_decryption_client.ok()) {

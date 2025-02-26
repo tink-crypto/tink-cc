@@ -27,7 +27,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<AesSivParameters> AesSivParameters::Create(int key_size_in_bytes,
+absl::StatusOr<AesSivParameters> AesSivParameters::Create(int key_size_in_bytes,
                                                           Variant variant) {
   if (key_size_in_bytes != 32 && key_size_in_bytes != 48 &&
       key_size_in_bytes != 64) {

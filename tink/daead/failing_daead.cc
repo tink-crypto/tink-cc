@@ -37,7 +37,7 @@ class AlwaysFailDeterministicAead : public DeterministicAead {
   explicit AlwaysFailDeterministicAead(std::string message)
       : message_(std::move(message)) {}
 
-  util::StatusOr<std::string> EncryptDeterministically(
+  absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
       absl::string_view associated_data) const override {
     return absl::Status(
@@ -47,7 +47,7 @@ class AlwaysFailDeterministicAead : public DeterministicAead {
             message_, ")"));
   }
 
-  util::StatusOr<std::string> DecryptDeterministically(
+  absl::StatusOr<std::string> DecryptDeterministically(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override {
     return absl::Status(

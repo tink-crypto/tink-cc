@@ -29,6 +29,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
@@ -275,14 +276,14 @@ TEST_P(AesGcmHkdfStreamingProtoSerializationTest, SerializeParameters) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(OutputPrefixType::RAW));
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(internal::OutputPrefixTypeEnum::kRaw));
 
   AesGcmHkdfStreamingKeyFormat format;
-  ASSERT_THAT(
-      format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(format.version(), Eq(0));
   EXPECT_THAT(format.key_size(), Eq(test_case.key_size));
 

@@ -56,9 +56,9 @@ using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithGlobalRegistry(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithGlobalRegistry(
     const KeyTemplate& key_template, InputStream& randomness) {
-  util::StatusOr<KeyData> key_data =
+  absl::StatusOr<KeyData> key_data =
       RegistryImpl::GlobalInstance().DeriveKey(key_template, &randomness);
   if (!key_data.ok()) {
     return key_data.status();
@@ -83,7 +83,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithGlobalRegistry(
   return CleartextKeysetHandle::GetKeysetHandle(keyset);
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
     const KeyTemplate& key_template, InputStream& randomness) {
   // Fill placeholders OutputPrefixType::RAW and KeyStatus::kEnabled.
   // Tink users interact with this keyset only after it has been processed by
@@ -91,20 +91,20 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
   // google::crypto::tink::KeyData's value field (the serialized *Key proto) and
   // nothing else.
   // http://google3/third_party/tink/cc/keyderivation/keyset_deriver_wrapper.cc;l=88-91;rcl=592310815
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           key_template.type_url(), OutputPrefixType::RAW, key_template.value());
   if (!serialization.ok()) {
     return serialization.status();
   }
-  util::StatusOr<std::unique_ptr<Parameters>> params =
+  absl::StatusOr<std::unique_ptr<Parameters>> params =
       MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   if (!params.ok()) {
     return params.status();
   }
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       DeriveKey(**std::move(params), &randomness);
   if (!key.ok()) {
     return key.status();
@@ -112,7 +112,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
 
   KeysetHandleBuilder::Entry entry = KeysetHandleBuilder::Entry::CreateFromKey(
       *std::move(key), KeyStatus::kEnabled, /*is_primary=*/true);
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   if (!handle.ok()) {
     return handle.status();
@@ -120,9 +120,9 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
   return absl::make_unique<KeysetHandle>(*handle);
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeysetHandle(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveKeysetHandle(
     const KeyTemplate& key_template, InputStream& randomness) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       DeriveWithGlobalRegistry(key_template, randomness);
   if (!handle.ok()) {
     return DeriveWithParametersMap(key_template, randomness);
@@ -143,14 +143,14 @@ absl::Status RegisterProtoSerializations() {
   return RegisterAesCtrHmacAeadProtoSerialization();
 }
 
-util::StatusOr<std::unique_ptr<StreamingPrf>> GetUnwrappedStreamingPrf(
+absl::StatusOr<std::unique_ptr<StreamingPrf>> GetUnwrappedStreamingPrf(
     const KeyData& prf_key) {
-  util::StatusOr<const KeyTypeInfoStore*> store =
+  absl::StatusOr<const KeyTypeInfoStore*> store =
       ConfigurationImpl::GetKeyTypeInfoStore(ConfigPrfForDeriver());
   if (!store.ok()) {
     return store.status();
   }
-  util::StatusOr<const KeyTypeInfoStore::Info*> info =
+  absl::StatusOr<const KeyTypeInfoStore::Info*> info =
       (*store)->Get(prf_key.type_url());
   if (!info.ok()) {
     return info.status();
@@ -160,10 +160,10 @@ util::StatusOr<std::unique_ptr<StreamingPrf>> GetUnwrappedStreamingPrf(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<KeysetDeriver>> PrfBasedDeriver::New(
+absl::StatusOr<std::unique_ptr<KeysetDeriver>> PrfBasedDeriver::New(
     const KeyData& prf_key, const KeyTemplate& key_template) {
   // Create unwrapped StreamingPrf primitive from `prf_key`.
-  util::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
+  absl::StatusOr<std::unique_ptr<StreamingPrf>> streaming_prf =
       GetUnwrappedStreamingPrf(prf_key);
   if (!streaming_prf.ok()) {
     return streaming_prf.status();
@@ -177,7 +177,7 @@ util::StatusOr<std::unique_ptr<KeysetDeriver>> PrfBasedDeriver::New(
 
   // Validate `key_template`.
   std::unique_ptr<InputStream> randomness = (*streaming_prf)->ComputePrf("s");
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       DeriveKeysetHandle(key_template, *randomness);
   if (!handle.ok()) {
     return handle.status();
@@ -187,7 +187,7 @@ util::StatusOr<std::unique_ptr<KeysetDeriver>> PrfBasedDeriver::New(
       new PrfBasedDeriver(*std::move(streaming_prf), key_template))};
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> PrfBasedDeriver::DeriveKeyset(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> PrfBasedDeriver::DeriveKeyset(
     absl::string_view salt) const {
   std::unique_ptr<InputStream> randomness = streaming_prf_->ComputePrf(salt);
   return DeriveKeysetHandle(key_template_, *randomness);

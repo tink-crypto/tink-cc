@@ -47,7 +47,7 @@ class PrfBasedDeriverKeyManager
                             List<KeysetDeriver>> {
  public:
   class KeysetDeriverFactory : public PrimitiveFactory<KeysetDeriver> {
-    crypto::tink::util::StatusOr<std::unique_ptr<KeysetDeriver>> Create(
+    absl::StatusOr<std::unique_ptr<KeysetDeriver>> Create(
         const google::crypto::tink::PrfBasedDeriverKey& key) const override {
       return internal::PrfBasedDeriver::New(
           key.prf_key(), key.params().derived_key_template());
@@ -98,11 +98,11 @@ class PrfBasedDeriverKeyManager
     return absl::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::PrfBasedDeriverKey>
-  CreateKey(const google::crypto::tink::PrfBasedDeriverKeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::PrfBasedDeriverKey> CreateKey(
+      const google::crypto::tink::PrfBasedDeriverKeyFormat& key_format)
       const override {
-    crypto::tink::util::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
-        prf_key = CreateKeyData(key_format.prf_key_template());
+    absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>> prf_key =
+        CreateKeyData(key_format.prf_key_template());
     if (!prf_key.ok()) return prf_key.status();
 
     // Java and Go implementations perform additional verification by getting a
@@ -119,8 +119,7 @@ class PrfBasedDeriverKeyManager
   }
 
  protected:
-  virtual crypto::tink::util::StatusOr<
-      std::unique_ptr<google::crypto::tink::KeyData>>
+  virtual absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
   CreateKeyData(const google::crypto::tink::KeyTemplate& key_template) const {
     return Registry::NewKeyData(key_template);
   }

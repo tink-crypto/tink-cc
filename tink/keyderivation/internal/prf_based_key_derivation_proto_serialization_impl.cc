@@ -137,9 +137,9 @@ using PrfBasedKeyDerivationProtoKeySerializerImpl =
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey";
 
-util::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
+absl::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
     const KeyTemplateStruct& key_template) {
-  util::StatusOr<ProtoParametersSerialization> proto_params_serialization =
+  absl::StatusOr<ProtoParametersSerialization> proto_params_serialization =
       ProtoParametersSerialization::Create(key_template);
   if (!proto_params_serialization.ok()) {
     return proto_params_serialization.status();
@@ -148,9 +148,9 @@ util::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
       *proto_params_serialization);
 }
 
-util::StatusOr<KeyTemplateStruct> ParametersToKeyTemplate(
+absl::StatusOr<KeyTemplateStruct> ParametersToKeyTemplate(
     const Parameters& parameters) {
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(parameters);
   if (!serialization.ok()) {
@@ -167,9 +167,9 @@ util::StatusOr<KeyTemplateStruct> ParametersToKeyTemplate(
   return proto_serialization->GetKeyTemplateStruct();
 }
 
-util::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
+absl::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
     const KeyDataStruct& key_data, SecretKeyAccessToken token) {
-  util::StatusOr<ProtoKeySerialization> proto_key_serialization =
+  absl::StatusOr<ProtoKeySerialization> proto_key_serialization =
       ProtoKeySerialization::Create(
           key_data.type_url, RestrictedData(key_data.value, token),
           key_data.key_material_type, OutputPrefixTypeEnum::kRaw,
@@ -178,7 +178,7 @@ util::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
     return proto_key_serialization.status();
   }
 
-  util::StatusOr<std::unique_ptr<Key>> key =
+  absl::StatusOr<std::unique_ptr<Key>> key =
       GlobalSerializationRegistry().ParseKey(*proto_key_serialization, token);
   if (!key.ok()) {
     return key.status();
@@ -193,9 +193,9 @@ util::StatusOr<std::unique_ptr<const PrfKey>> PrfKeyFromKeyData(
   return absl::WrapUnique(dynamic_cast<const PrfKey*>(key->release()));
 }
 
-util::StatusOr<KeyDataStruct> PrfKeyToKeyData(const PrfKey& prf_key,
+absl::StatusOr<KeyDataStruct> PrfKeyToKeyData(const PrfKey& prf_key,
                                               SecretKeyAccessToken token) {
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       GlobalSerializationRegistry().SerializeKey<ProtoKeySerialization>(prf_key,
                                                                         token);
   if (!serialization.ok()) {
@@ -218,7 +218,7 @@ util::StatusOr<KeyDataStruct> PrfKeyToKeyData(const PrfKey& prf_key,
   return key_data;
 }
 
-util::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
+absl::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplateStruct().type_url != kTypeUrl) {
     return absl::Status(
@@ -226,7 +226,7 @@ util::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
         "Wrong type URL when parsing PrfBasedKeyDerivationParameters.");
   }
 
-  util::StatusOr<PrfBasedDeriverKeyFormatStruct> proto_key_format =
+  absl::StatusOr<PrfBasedDeriverKeyFormatStruct> proto_key_format =
       PrfBasedDeriverKeyFormatStruct::GetParser().Parse(
           serialization.GetKeyTemplateStruct().value);
   if (!proto_key_format.ok()) {
@@ -240,13 +240,13 @@ util::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
         "Parsed output prefix type must match derived key output prefix type.");
   }
 
-  util::StatusOr<std::unique_ptr<Parameters>> derived_key_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> derived_key_parameters =
       ParametersFromKeyTemplate(proto_key_format->params.derived_key_template);
   if (!derived_key_parameters.ok()) {
     return derived_key_parameters.status();
   }
 
-  util::StatusOr<std::unique_ptr<Parameters>> parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       ParametersFromKeyTemplate(proto_key_format->prf_key_template);
   if (!parameters.ok()) {
     return parameters.status();
@@ -266,15 +266,15 @@ util::StatusOr<PrfBasedKeyDerivationParameters> ParseParameters(
       .Build();
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const PrfBasedKeyDerivationParameters& parameters) {
-  util::StatusOr<KeyTemplateStruct> prf_key_template =
+  absl::StatusOr<KeyTemplateStruct> prf_key_template =
       ParametersToKeyTemplate(parameters.GetPrfParameters());
   if (!prf_key_template.ok()) {
     return prf_key_template.status();
   }
 
-  util::StatusOr<KeyTemplateStruct> derived_key_template =
+  absl::StatusOr<KeyTemplateStruct> derived_key_template =
       ParametersToKeyTemplate(parameters.GetDerivedKeyParameters());
   if (!derived_key_template.ok()) {
     return derived_key_template.status();
@@ -284,7 +284,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   proto_key_format.prf_key_template = *prf_key_template;
   proto_key_format.params.derived_key_template = *derived_key_template;
 
-  util::StatusOr<std::string> proto_params_serialization =
+  absl::StatusOr<std::string> proto_params_serialization =
       PrfBasedDeriverKeyFormatStruct::GetParser().SerializeIntoString(
           proto_key_format);
   if (!proto_params_serialization.ok()) {
@@ -296,7 +296,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
       *proto_params_serialization);
 }
 
-util::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
+absl::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
     const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
@@ -309,7 +309,7 @@ util::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
                         "SecretKeyAccess is required.");
   }
 
-  util::StatusOr<PrfBasedDeriverKeyStruct> proto_key =
+  absl::StatusOr<PrfBasedDeriverKeyStruct> proto_key =
       PrfBasedDeriverKeyStruct::GetParser().Parse(
           serialization.SerializedKeyProto().GetSecret(*token));
   if (!proto_key.ok()) {
@@ -327,19 +327,19 @@ util::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
         "Parsed output prefix type must match derived key output prefix type.");
   }
 
-  util::StatusOr<std::unique_ptr<Parameters>> derived_key_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> derived_key_parameters =
       ParametersFromKeyTemplate(proto_key->params.derived_key_template);
   if (!derived_key_parameters.ok()) {
     return derived_key_parameters.status();
   }
 
-  util::StatusOr<std::unique_ptr<const PrfKey>> prf_key =
+  absl::StatusOr<std::unique_ptr<const PrfKey>> prf_key =
       PrfKeyFromKeyData(proto_key->prf_key, *token);
   if (!prf_key.ok()) {
     return prf_key.status();
   }
 
-  util::StatusOr<PrfBasedKeyDerivationParameters> parameters =
+  absl::StatusOr<PrfBasedKeyDerivationParameters> parameters =
       PrfBasedKeyDerivationParameters::Builder()
           .SetPrfParameters((*prf_key)->GetParameters())
           .SetDerivedKeyParameters(**derived_key_parameters)
@@ -353,7 +353,7 @@ util::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
                                           GetPartialKeyAccess());
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeKey(
+absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const PrfBasedKeyDerivationKey& key,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
@@ -361,7 +361,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required.");
   }
 
-  util::StatusOr<KeyTemplateStruct> derived_key_template =
+  absl::StatusOr<KeyTemplateStruct> derived_key_template =
       ParametersToKeyTemplate(key.GetParameters().GetDerivedKeyParameters());
   if (!derived_key_template.ok()) {
     return derived_key_template.status();
@@ -369,7 +369,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
 
   PrfBasedDeriverKeyStruct proto_key;
   proto_key.version = 0;
-  util::StatusOr<KeyDataStruct> prf_key_data =
+  absl::StatusOr<KeyDataStruct> prf_key_data =
       PrfKeyToKeyData(key.GetPrfKey(), *token);
   if (!prf_key_data.ok()) {
     return prf_key_data.status();
@@ -377,7 +377,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
   proto_key.prf_key = *prf_key_data;
   proto_key.params.derived_key_template = *derived_key_template;
 
-  util::StatusOr<SecretData> serialized_key =
+  absl::StatusOr<SecretData> serialized_key =
       PrfBasedDeriverKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();

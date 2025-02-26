@@ -41,7 +41,7 @@ class StreamingMac {
 
   // Returns an VerifyMacOutputStream which verifies if 'mac' is a correct
   // message authentication code (MAC) for the data written to it.
-  virtual absl::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
+  virtual absl::StatusOr<std::unique_ptr<OutputStreamWithResult<absl::Status>>>
   NewVerifyMacOutputStream(const std::string& mac_value) const = 0;
 
   virtual ~StreamingMac() = default;

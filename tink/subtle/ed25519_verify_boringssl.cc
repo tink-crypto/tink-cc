@@ -64,7 +64,7 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
   if (!status.ok()) return status;
 
   if (public_key.length() != internal::Ed25519KeyPubKeySize()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid ED25519 public key size (%d). "
                         "The only valid size is %d.",
@@ -77,7 +77,7 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
       reinterpret_cast<const uint8_t *>(public_key.data()),
       internal::Ed25519KeyPrivKeySize()));
   if (ssl_pub_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_new_raw_public_key failed");
   }
 
@@ -85,13 +85,13 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
       std::move(ssl_pub_key), output_prefix, message_suffix))};
 }
 
-util::Status Ed25519VerifyBoringSsl::VerifyWithoutPrefix(
+absl::Status Ed25519VerifyBoringSsl::VerifyWithoutPrefix(
     absl::string_view signature, absl::string_view data) const {
   signature = internal::EnsureStringNonNull(signature);
   data = internal::EnsureStringNonNull(data);
 
   if (signature.size() != kEd25519SignatureLenInBytes) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid ED25519 signature size (%d). "
                         "The signature must be %d bytes long.",
@@ -102,7 +102,7 @@ util::Status Ed25519VerifyBoringSsl::VerifyWithoutPrefix(
   // `type` must be set to nullptr with Ed25519.
   if (EVP_DigestVerifyInit(md_ctx.get(), /*pctx=*/nullptr, /*type=*/nullptr,
                            /*e=*/nullptr, public_key_.get()) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_DigestVerifyInit failed.");
   }
 
@@ -115,16 +115,16 @@ util::Status Ed25519VerifyBoringSsl::VerifyWithoutPrefix(
     return absl::Status(absl::StatusCode::kInternal, "Signature is not valid.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status Ed25519VerifyBoringSsl::Verify(absl::string_view signature,
+absl::Status Ed25519VerifyBoringSsl::Verify(absl::string_view signature,
                                             absl::string_view data) const {
   if (output_prefix_.empty() && message_suffix_.empty()) {
     return VerifyWithoutPrefix(signature, data);
   }
   if (!absl::StartsWith(signature, output_prefix_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
   // Stores a copy of the data in case message_suffix_ is not empty.

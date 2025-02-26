@@ -57,7 +57,7 @@ util::StatusOr<std::unique_ptr<IndCpaCipher>> AesCtrBoringSsl::New(
   }
 
   if (iv_size < kMinIvSizeInBytes || iv_size > kBlockSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid iv size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid iv size");
   }
   return {
       absl::WrapUnique(new AesCtrBoringSsl(std::move(key), iv_size, *cipher))};
@@ -71,7 +71,7 @@ util::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
 
   internal::SslUniquePtr<EVP_CIPHER_CTX> ctx(EVP_CIPHER_CTX_new());
   if (ctx.get() == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "could not initialize EVP_CIPHER_CTX");
   }
   std::string ciphertext = Random::GetRandomBytes(iv_size_);
@@ -87,13 +87,13 @@ util::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
   ScopedAssumeRegionCoreDumpSafe scope_object(&ciphertext[iv_size_],
                                               plaintext.size());
 
-  util::Status encrypt_result =
-      internal::CallWithCoreDumpProtection([&]() -> util::Status {
+  absl::Status encrypt_result =
+      internal::CallWithCoreDumpProtection([&]() -> absl::Status {
         int ret = EVP_EncryptInit_ex(
             ctx.get(), cipher_, nullptr /* engine */, key_.data(),
             reinterpret_cast<const uint8_t*>(&iv_block[0]));
         if (ret != 1) {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "could not initialize ctx");
         }
         int len;
@@ -102,13 +102,13 @@ util::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
             reinterpret_cast<const uint8_t*>(plaintext.data()),
             plaintext.size());
         if (ret != 1) {
-          return util::Status(absl::StatusCode::kInternal, "encryption failed");
+          return absl::Status(absl::StatusCode::kInternal, "encryption failed");
         }
         if (len != plaintext.size()) {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "incorrect ciphertext size");
         }
-        return util::OkStatus();
+        return absl::OkStatus();
       });
   if (!encrypt_result.ok()) {
     return encrypt_result;
@@ -123,7 +123,7 @@ util::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
 util::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
     absl::string_view ciphertext) const {
   if (ciphertext.size() < iv_size_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
 
@@ -155,14 +155,14 @@ util::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
   // sufficiently safe at the moment.
   ScopedAssumeRegionCoreDumpSafe scope_object(plaintext.data(),
                                               plaintext.size());
-  util::Status result =
-      internal::CallWithCoreDumpProtection([&]() -> util::Status {
+  absl::Status result =
+      internal::CallWithCoreDumpProtection([&]() -> absl::Status {
         int ret =
             EVP_DecryptInit_ex(ctx.get(), cipher_, nullptr /* engine */,
                                reinterpret_cast<const uint8_t*>(key_.data()),
                                reinterpret_cast<const uint8_t*>(&iv_block[0]));
         if (ret != 1) {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "could not initialize key or iv");
         }
 
@@ -173,14 +173,14 @@ util::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
             reinterpret_cast<const uint8_t*>(&ciphertext.data()[read]),
             plaintext_size);
         if (ret != 1) {
-          return util::Status(absl::StatusCode::kInternal, "decryption failed");
+          return absl::Status(absl::StatusCode::kInternal, "decryption failed");
         }
 
         if (len != plaintext_size) {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "incorrect plaintext size");
         }
-        return util::OkStatus();
+        return absl::OkStatus();
       });
   if (!result.ok()) {
     return result;

@@ -61,15 +61,15 @@ void BigEndianStore32(uint8_t dst[4], uint32_t val) {
 
 absl::Status Validate(const AesGcmHkdfStreamSegmentEncrypter::Params& params) {
   if (params.key.size() != 16 && params.key.size() != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key must have 16 or 32 bytes");
   }
   if (params.key.size() != params.salt.size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "salt must have same size as the key");
   }
   if (params.ciphertext_offset < 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext_offset must be non-negative");
   }
   int header_size = 1 + params.salt.size() +
@@ -77,10 +77,10 @@ absl::Status Validate(const AesGcmHkdfStreamSegmentEncrypter::Params& params) {
   if (params.ciphertext_segment_size <=
       params.ciphertext_offset + header_size +
           AesGcmHkdfStreamSegmentEncrypter::kTagSizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext_segment_size too small");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 std::vector<uint8_t> CreateHeader(absl::string_view salt,
@@ -127,7 +127,7 @@ AesGcmHkdfStreamSegmentEncrypter::AesGcmHkdfStreamSegmentEncrypter(
 
 util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
 AesGcmHkdfStreamSegmentEncrypter::New(Params params) {
-  util::Status status = Validate(params);
+  absl::Status status = Validate(params);
   if (!status.ok()) {
     return status;
   }
@@ -140,21 +140,21 @@ AesGcmHkdfStreamSegmentEncrypter::New(Params params) {
       new AesGcmHkdfStreamSegmentEncrypter(*std::move(aead), params))};
 }
 
-util::Status AesGcmHkdfStreamSegmentEncrypter::EncryptSegment(
+absl::Status AesGcmHkdfStreamSegmentEncrypter::EncryptSegment(
     const std::vector<uint8_t>& plaintext, bool is_last_segment,
     std::vector<uint8_t>* ciphertext_buffer) {
   if (plaintext.size() > get_plaintext_segment_size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "plaintext too long");
   }
   if (ciphertext_buffer == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext_buffer must be non-null");
   }
   if (get_segment_number() > std::numeric_limits<uint32_t>::max() ||
       (get_segment_number() == std::numeric_limits<uint32_t>::max() &&
        !is_last_segment)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "too many segments");
   }
 
@@ -178,7 +178,7 @@ util::Status AesGcmHkdfStreamSegmentEncrypter::EncryptSegment(
   }
 
   IncSegmentNumber();
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace subtle

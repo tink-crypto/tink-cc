@@ -65,7 +65,7 @@ StatusOr<std::unique_ptr<RandomAccessStream>> DecryptingRandomAccessStream::New(
   dec_stream->ct_source_ = std::move(ciphertext_source);
 
   if (dec_stream->segment_decrypter_->get_ciphertext_offset() < 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "The ciphertext offset must be non-negative");
   }
   int first_segment_size =
@@ -82,7 +82,7 @@ StatusOr<std::unique_ptr<RandomAccessStream>> DecryptingRandomAccessStream::New(
   return {std::move(dec_stream)};
 }
 
-util::Status DecryptingRandomAccessStream::PRead(int64_t position, int count,
+absl::Status DecryptingRandomAccessStream::PRead(int64_t position, int count,
                                                  Buffer* dest_buffer) {
   if (dest_buffer == nullptr) {
     return Status(absl::StatusCode::kInvalidArgument,
@@ -206,7 +206,7 @@ int64_t DecryptingRandomAccessStream::GetSegmentNr(int64_t pt_position) {
   return (pt_position + ct_offset_ + header_size_) / pt_segment_size_;
 }
 
-util::Status DecryptingRandomAccessStream::ReadAndDecryptSegment(
+absl::Status DecryptingRandomAccessStream::ReadAndDecryptSegment(
     int64_t segment_nr, Buffer* ct_buffer, std::vector<uint8_t>* pt_segment) {
   int64_t ct_position = segment_nr * ct_segment_size_;
   if (ct_position / ct_segment_size_ != segment_nr /* overflow occured! */) {
@@ -241,7 +241,7 @@ util::Status DecryptingRandomAccessStream::ReadAndDecryptSegment(
   return pread_status;
 }
 
-util::Status DecryptingRandomAccessStream::PReadAndDecrypt(
+absl::Status DecryptingRandomAccessStream::PReadAndDecrypt(
     int64_t position, int count, Buffer* dest_buffer) {
   if (position < 0 || count < 0 || dest_buffer == nullptr
       || count > dest_buffer->allocated_size() || dest_buffer->size() != 0) {
@@ -296,7 +296,7 @@ util::Status DecryptingRandomAccessStream::PReadAndDecrypt(
       return status;
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 StatusOr<int64_t> DecryptingRandomAccessStream::size() {

@@ -58,10 +58,10 @@ util::StatusOr<std::unique_ptr<Mac>> HmacBoringSsl::New(HashType hash_type,
     // The key manager is responsible to security policies.
     // The checks here just ensure the preconditions of the primitive.
     // If this fails then something is wrong with the key manager.
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid tag size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid tag size");
   }
   if (key.size() < kMinKeySize) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid key size");
   }
   return {absl::WrapUnique(new HmacBoringSsl(*md, tag_size, std::move(key)))};
 }
@@ -95,7 +95,7 @@ util::StatusOr<std::string> HmacBoringSsl::ComputeMac(
     // TODO(bleichen): We expect that BoringSSL supports the
     //   hashes that we use. Maybe we should have a status that indicates
     //   such mismatches between expected and actual behaviour.
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "BoringSSL failed to compute HMAC");
   }
   return std::string(reinterpret_cast<char*>(buf), tag_size_);
@@ -108,7 +108,7 @@ absl::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
   data = internal::EnsureStringNonNull(data);
 
   if (mac.size() != tag_size_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "incorrect tag size");
   }
   internal::SecretBuffer buf(EVP_MAX_MD_SIZE);
@@ -119,14 +119,14 @@ absl::Status HmacBoringSsl::VerifyMac(absl::string_view mac,
                 buf.data(), &out_len);
   });
   if (res == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "BoringSSL failed to compute HMAC");
   }
   if (!internal::SafeCryptoMemEquals(buf.data(), mac.data(), tag_size_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "verification failed");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace subtle

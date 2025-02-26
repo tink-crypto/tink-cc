@@ -96,7 +96,7 @@ crypto::tink::util::StatusOr<util::SecretUniquePtr<AES_KEY>> InitAesKey(
   int status = AES_set_encrypt_key(key.data(), key.size() * 8, aeskey.get());
   // status != 0 happens if key_value is invalid.
   if (status != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid key value");
   }
   return std::move(aeskey);
@@ -158,10 +158,10 @@ crypto::tink::util::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
   if (!status.ok()) return status;
 
   if (!IsValidKeySize(key.size())) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "Invalid key size");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Invalid key size");
   }
   if (!IsValidNonceSize(nonce_size_in_bytes)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid nonce size");
   }
   return internal::CallWithCoreDumpProtection(
@@ -231,7 +231,7 @@ AesEaxBoringSsl::Block AesEaxBoringSsl::Omac(absl::Span<const uint8_t> data,
   return mac;
 }
 
-util::Status AesEaxBoringSsl::CtrCrypt(const Block& N, absl::string_view in,
+absl::Status AesEaxBoringSsl::CtrCrypt(const Block& N, absl::string_view in,
                                        absl::Span<char> out) const {
   // Make a copy of N, since BoringSsl changes ctr.
   uint8_t ctr[kBlockSize];
@@ -260,7 +260,7 @@ crypto::tink::util::StatusOr<std::string> AesEaxBoringSsl::Encrypt(
         const Block H = Omac(associated_data, 1);
         uint8_t* ct_start =
             reinterpret_cast<uint8_t*>(&ciphertext[nonce_size_]);
-        util::Status res = CtrCrypt(
+        absl::Status res = CtrCrypt(
             N, plaintext, absl::MakeSpan(ciphertext).subspan(nonce_size_));
         if (!res.ok()) {
           return res;
@@ -303,7 +303,7 @@ crypto::tink::util::StatusOr<std::string> AesEaxBoringSsl::Decrypt(
         XorBlock(H.data(), &mac);
         const uint8_t* sig = reinterpret_cast<const uint8_t*>(tag.data());
         if (!EqualBlocks(mac.data(), sig)) {
-          return util::Status(absl::StatusCode::kInvalidArgument,
+          return absl::Status(absl::StatusCode::kInvalidArgument,
                               "Tag mismatch");
         }
         std::string plaintext;
@@ -322,7 +322,7 @@ crypto::tink::util::StatusOr<std::string> AesEaxBoringSsl::Decrypt(
         char* plaintext_start = &plaintext[0];
         crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe scope_object(
             plaintext_start, out_size);
-        util::Status res = CtrCrypt(N, encrypted, absl::MakeSpan(plaintext));
+        absl::Status res = CtrCrypt(N, encrypted, absl::MakeSpan(plaintext));
         if (!res.ok()) {
           return res;
         }

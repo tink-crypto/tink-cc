@@ -58,7 +58,7 @@ crypto::tink::util::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
         return AES_set_encrypt_key(reinterpret_cast<const uint8_t*>(key.data()),
                                    8 * key.size(), aes_key.get());
       }) != 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "could not initialize aes key");
   }
   return std::move(aes_key);
@@ -207,7 +207,7 @@ void AesSivBoringSsl::S2v(absl::Span<const uint8_t> aad,
   }
 }
 
-util::Status AesSivBoringSsl::AesCtrCrypt(absl::string_view in,
+absl::Status AesSivBoringSsl::AesCtrCrypt(absl::string_view in,
                                           const uint8_t siv[kBlockSize],
                                           const AES_KEY* key,
                                           absl::Span<char> out) const {
@@ -236,7 +236,7 @@ util::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
                        plaintext.size()),
         siv_ptr);
   });
-  util::Status res = CallWithCoreDumpProtection([&]() {
+  absl::Status res = CallWithCoreDumpProtection([&]() {
     return AesCtrCrypt(plaintext, siv_ptr, k2_.get(),
                        absl::MakeSpan(ciphertext).subspan(kBlockSize));
   });
@@ -252,7 +252,7 @@ util::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
 util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   if (ciphertext.size() < kBlockSize) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
   size_t plaintext_size = ciphertext.size() - kBlockSize;
@@ -270,7 +270,7 @@ util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
   // useful). Hence, we declare this to be sufficiently safe at the moment.
   internal::ScopedAssumeRegionCoreDumpSafe scope(&plaintext[0], plaintext_size);
   const uint8_t* siv = reinterpret_cast<const uint8_t*>(&ciphertext[0]);
-  util::Status res = CallWithCoreDumpProtection([&]() {
+  absl::Status res = CallWithCoreDumpProtection([&]() {
     return AesCtrCrypt(ciphertext.substr(kBlockSize), siv, k2_.get(),
                        absl::MakeSpan(plaintext));
   });
@@ -291,7 +291,7 @@ util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
   });
 
   if (!SafeCryptoMemEquals(siv, s2v.data(), kBlockSize)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "invalid ciphertext");
   }
   // Declassify the plaintext: this is now safe to give to the adversary

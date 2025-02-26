@@ -63,7 +63,7 @@ util::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
     case EcdsaParameters::CurveType::kNistP521:
       return NIST_P521;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid curve in EcdsaVerifyBoringSsl::New: ",
                        curve_type));
@@ -81,7 +81,7 @@ util::StatusOr<HashType> ConvertHashType(
     case EcdsaParameters::HashType::kSha512:
       return SHA512;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid hash type in EcdsaVerifyBoringSsl::New: ",
                        hash_type));
@@ -96,7 +96,7 @@ util::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
     case EcdsaParameters::SignatureEncoding::kDer:
       return DER;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat(
               "Invalid signature encoding in EcdsaVerifyBoringSsl::New: ",
@@ -159,7 +159,7 @@ util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
   if (!ec_point_result.ok()) return ec_point_result.status();
   internal::SslUniquePtr<EC_POINT> pub_key = std::move(ec_point_result.value());
   if (!EC_KEY_set_public_key(key.get(), pub_key.get())) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
@@ -178,7 +178,7 @@ util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
   }
 
   // Check if the hash type is safe to use.
-  util::Status is_safe = internal::IsHashTypeSafeForSignature(hash_type);
+  absl::Status is_safe = internal::IsHashTypeSafeForSignature(hash_type);
   if (!is_safe.ok()) {
     return is_safe;
   }
@@ -191,7 +191,7 @@ util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
   return std::move(verify);
 }
 
-util::Status EcdsaVerifyBoringSsl::VerifyWithoutPrefix(
+absl::Status EcdsaVerifyBoringSsl::VerifyWithoutPrefix(
     absl::string_view signature, absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -202,7 +202,7 @@ util::Status EcdsaVerifyBoringSsl::VerifyWithoutPrefix(
   uint8_t digest[EVP_MAX_MD_SIZE];
   if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, hash_,
                       nullptr)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Could not compute digest.");
   }
 
@@ -222,20 +222,20 @@ util::Status EcdsaVerifyBoringSsl::VerifyWithoutPrefix(
                         reinterpret_cast<const uint8_t*>(derSig.data()),
                         derSig.size(), key_.get())) {
     // signature is invalid
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid.");
   }
   // signature is valid
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status EcdsaVerifyBoringSsl::Verify(absl::string_view signature,
-                                              absl::string_view data) const {
+absl::Status EcdsaVerifyBoringSsl::Verify(absl::string_view signature,
+                                          absl::string_view data) const {
   if (output_prefix_.empty() && message_suffix_.empty()) {
     return VerifyWithoutPrefix(signature, data);
   }
   if (!absl::StartsWith(signature, output_prefix_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
   // Creates a copy of the data with the message_suffix_ appended if not empty.

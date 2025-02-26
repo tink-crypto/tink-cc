@@ -86,7 +86,7 @@ EciesHkdfNistPCurveSendKemBoringSsl::GenerateKey(
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
     subtle::EcPointFormat point_format) const {
   if (peer_pub_key_.get() == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "peer_pub_key_ wasn't initialized");
   }
 
@@ -98,10 +98,10 @@ EciesHkdfNistPCurveSendKemBoringSsl::GenerateKey(
       std::move(status_or_ec_group.value());
   internal::SslUniquePtr<EC_KEY> ephemeral_key(EC_KEY_new());
   if (1 != EC_KEY_set_group(ephemeral_key.get(), group.get())) {
-    return util::Status(absl::StatusCode::kInternal, "EC_KEY_set_group failed");
+    return absl::Status(absl::StatusCode::kInternal, "EC_KEY_set_group failed");
   }
   if (1 != EC_KEY_generate_key(ephemeral_key.get())) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EC_KEY_generate_key failed");
   }
   const BIGNUM* ephemeral_priv = EC_KEY_get0_private_key(ephemeral_key.get());
@@ -142,15 +142,15 @@ EciesHkdfX25519SendKemBoringSsl::New(subtle::EllipticCurveType curve,
   if (!status.ok()) return status;
 
   if (curve != CURVE25519) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "curve is not CURVE25519");
   }
   if (pubx.size() != internal::X25519KeyPubKeySize()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "pubx has unexpected length");
   }
   if (!puby.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "puby is not empty");
   }
 
@@ -159,7 +159,7 @@ EciesHkdfX25519SendKemBoringSsl::New(subtle::EllipticCurveType curve,
       /*in=*/reinterpret_cast<const uint8_t*>(pubx.data()),
       /*len=*/internal::Ed25519KeyPubKeySize()));
   if (peer_public_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_new_raw_public_key failed");
   }
   return absl::WrapUnique(
@@ -172,7 +172,7 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
     subtle::EcPointFormat point_format) const {
   if (point_format != EcPointFormat::COMPRESSED) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "X25519 only supports compressed elliptic curve points");
   }
@@ -186,7 +186,7 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
       /*in=*/(*ephemeral_key)->private_key.data(),
       /*len=*/internal::Ed25519KeyPrivKeySize()));
   if (ssl_priv_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_new_raw_private_key failed");
   }
 

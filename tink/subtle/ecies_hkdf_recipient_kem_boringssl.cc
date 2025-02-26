@@ -55,7 +55,7 @@ EciesHkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
       return EciesHkdfX25519RecipientKemBoringSsl::New(curve,
                                                        std::move(priv_key));
     default:
-      return util::Status(absl::StatusCode::kUnimplemented,
+      return absl::Status(absl::StatusCode::kUnimplemented,
                           "Unsupported elliptic curve");
   }
 }
@@ -69,7 +69,7 @@ EciesHkdfNistPCurveRecipientKemBoringSsl::New(EllipticCurveType curve,
   if (!status.ok()) return status;
 
   if (priv_key.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "empty priv_key");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "empty priv_key");
   }
   auto status_or_ec_group = internal::EcGroupFromCurveType(curve);
   if (!status_or_ec_group.ok()) return status_or_ec_group.status();
@@ -129,11 +129,11 @@ EciesHkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
   if (!status.ok()) return status;
 
   if (curve != CURVE25519) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "curve is not CURVE25519");
   }
   if (priv_key.size() != internal::X25519KeyPubKeySize()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "pubx has unexpected length");
   }
 
@@ -159,13 +159,13 @@ EciesHkdfX25519RecipientKemBoringSsl::GenerateKey(
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
     EcPointFormat point_format) const {
   if (point_format != EcPointFormat::COMPRESSED) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "X25519 only supports compressed elliptic curve points");
   }
 
   if (kem_bytes.size() != internal::X25519KeyPubKeySize()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "kem_bytes has unexpected size");
   }
 
@@ -174,7 +174,7 @@ EciesHkdfX25519RecipientKemBoringSsl::GenerateKey(
       /*in=*/reinterpret_cast<const uint8_t*>(kem_bytes.data()),
       /*len=*/internal::Ed25519KeyPubKeySize()));
   if (peer_key == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_new_raw_public_key failed");
   }
 

@@ -33,7 +33,7 @@ namespace tink {
 class Mac {
  public:
   // Computes and returns the message authentication code (MAC) for 'data'.
-  virtual crypto::tink::util::StatusOr<std::string> ComputeMac(
+  virtual absl::StatusOr<std::string> ComputeMac(
       absl::string_view data) const = 0;
 
   // Verifies if 'mac' is a correct authentication code (MAC) for 'data'.

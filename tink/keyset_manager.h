@@ -42,18 +42,18 @@ class KeysetManager {
 
   // Creates a new KeysetManager that contains a Keyset with a single key
   // generated freshly according the specification in 'key_template'.
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetManager>> New(
+  static absl::StatusOr<std::unique_ptr<KeysetManager>> New(
       const google::crypto::tink::KeyTemplate& key_template);
 
   // Creates a new KeysetManager that contains a Keyset cloned from
   // the given 'keyset_handle'.
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetManager>> New(
+  static absl::StatusOr<std::unique_ptr<KeysetManager>> New(
       const KeysetHandle& keyset_handle);
 
   // Adds to the managed keyset a fresh key generated according to
   // 'keyset_template' and returns the key_id of the added key.
   // The added key has status 'ENABLED'.
-  crypto::tink::util::StatusOr<uint32_t> Add(
+  absl::StatusOr<uint32_t> Add(
       const google::crypto::tink::KeyTemplate& key_template)
       ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
@@ -61,7 +61,7 @@ class KeysetManager {
   // 'keyset_template', sets the new key as the primary,
   // and returns the key_id of the added key.
   // The key that was primary prior to rotation remains 'ENABLED'.
-  crypto::tink::util::StatusOr<uint32_t> Rotate(
+  absl::StatusOr<uint32_t> Rotate(
       const google::crypto::tink::KeyTemplate& key_template)
       ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
@@ -99,7 +99,7 @@ class KeysetManager {
       ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 
  private:
-  crypto::tink::util::StatusOr<uint32_t> Add(
+  absl::StatusOr<uint32_t> Add(
       const google::crypto::tink::KeyTemplate& key_template, bool as_primary)
       ABSL_LOCKS_EXCLUDED(keyset_mutex_);
 

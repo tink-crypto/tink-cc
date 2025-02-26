@@ -54,8 +54,7 @@ class KmsClients {
   // Returns the first KmsClient that was added previously via Add(),
   // and that does support 'key_uri', which must be non-empty.
   // Retains the ownership of the returned KmsClient.
-  static crypto::tink::util::StatusOr<const KmsClient*>
-      Get(absl::string_view key_uri) {
+  static absl::StatusOr<const KmsClient *> Get(absl::string_view key_uri) {
     return GlobalInstance().LocalGet(key_uri);
   }
 
@@ -64,8 +63,7 @@ class KmsClients {
 
   // Per-instance API, to be used by GlobalInstance();
   absl::Status LocalAdd(std::unique_ptr<KmsClient> kms_client);
-  crypto::tink::util::StatusOr<const KmsClient*>
-      LocalGet(absl::string_view key_uri);
+  absl::StatusOr<const KmsClient *> LocalGet(absl::string_view key_uri);
   absl::Mutex clients_mutex_;
   std::vector<std::unique_ptr<KmsClient>> clients_
       ABSL_GUARDED_BY(clients_mutex_);

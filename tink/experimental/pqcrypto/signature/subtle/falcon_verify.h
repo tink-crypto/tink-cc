@@ -38,7 +38,7 @@ class FalconVerify : public PublicKeyVerify {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       const FalconPublicKeyPqclean& public_key);
 
   // Verifies that 'signature' is a digital signature for 'data'.

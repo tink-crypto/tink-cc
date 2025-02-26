@@ -47,7 +47,7 @@ const int kFalcon1024PublicKeySize = 1793;
 class FalconPrivateKeyPqclean {
  public:
   // Creates a new FalconPrivateKeyPqclean from key_data.
-  static util::StatusOr<FalconPrivateKeyPqclean> NewPrivateKey(
+  static absl::StatusOr<FalconPrivateKeyPqclean> NewPrivateKey(
       const util::SecretData& key_data);
 
   FalconPrivateKeyPqclean(const FalconPrivateKeyPqclean& other) = default;
@@ -67,7 +67,7 @@ class FalconPrivateKeyPqclean {
 class FalconPublicKeyPqclean {
  public:
   // Creates a new FalconPublicKeyPqclean from key_data.
-  static util::StatusOr<FalconPublicKeyPqclean> NewPublicKey(
+  static absl::StatusOr<FalconPublicKeyPqclean> NewPublicKey(
       absl::string_view key_data);
 
   FalconPublicKeyPqclean(const FalconPublicKeyPqclean& other) = default;
@@ -103,8 +103,7 @@ class FalconKeyPair {
 
 // This is an utility function that generates a new Falcon key pair.
 // This function is expected to be called from a key manager class.
-crypto::tink::util::StatusOr<FalconKeyPair> GenerateFalconKeyPair(
-    int32_t private_key_size);
+absl::StatusOr<FalconKeyPair> GenerateFalconKeyPair(int32_t private_key_size);
 
 // Validates whether the private key size is safe to use for falcon signature.
 absl::Status ValidateFalconPrivateKeySize(int32_t key_size);

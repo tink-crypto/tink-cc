@@ -33,7 +33,7 @@ namespace subtle {
 
 class DilithiumAvx2Verify : public PublicKeyVerify {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       DilithiumPublicKeyPqclean public_key);
 
   // Verifies that 'signature' is a digital signature for 'data'.

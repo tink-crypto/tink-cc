@@ -43,15 +43,15 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<PublicKeySign>> FalconSign::New(
-    const FalconPrivateKeyPqclean& key) {
+absl::StatusOr<std::unique_ptr<PublicKeySign>> FalconSign::New(
+    const FalconPrivateKeyPqclean &key) {
   auto status = internal::CheckFipsCompatibility<FalconSign>();
   if (!status.ok()) return status;
 
   return {absl::WrapUnique(new FalconSign(key))};
 }
 
-util::StatusOr<std::string> FalconSign::Sign(absl::string_view data) const {
+absl::StatusOr<std::string> FalconSign::Sign(absl::string_view data) const {
   size_t sig_length;
   int32_t key_size = private_key_.GetKey().size();
   std::string signature;

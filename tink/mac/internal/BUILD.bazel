@@ -342,6 +342,7 @@ cc_library(
     hdrs = ["hmac_proto_serialization_impl.h"],
     include_prefix = "tink/mac/internal",
     deps = [
+        ":hmac_proto_structs",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_key_access_token",
@@ -392,6 +393,30 @@ cc_test(
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "hmac_proto_structs",
+    hdrs = ["hmac_proto_structs.h"],
+    include_prefix = "tink/mac/internal",
+    deps = [
+        "//tink/internal:common_proto_enums",
+        "//tink/internal:proto_parser",
+        "@com_google_absl//absl/base:no_destructor",
+    ],
+)
+
+cc_test(
+    name = "hmac_proto_structs_test",
+    srcs = ["hmac_proto_structs_test.cc"],
+    deps = [
+        ":hmac_proto_structs",
+        "//tink/internal:common_proto_enums",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )

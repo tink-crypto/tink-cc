@@ -21,16 +21,20 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/aead/internal/aes_ctr_hmac_proto_structs.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_private_key.h"
 #include "tink/hybrid/ecies_public_key.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/common_proto_enums.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
@@ -44,7 +48,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
@@ -62,7 +65,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::google::crypto::tink::AesSivKeyFormat;
 using ::google::crypto::tink::EciesAeadDemParams;
@@ -176,35 +178,28 @@ EciesAeadDemParams CreateXChaCha20Poly1305DemParams() {
 EciesAeadDemParams CreateAesCtrHmacDemParams(
     absl::optional<int> aes_key_size, absl::optional<int> iv_size,
     absl::optional<int> version, absl::optional<int> hmac_key_size,
-    absl::optional<int> tag_size, absl::optional<HashType> hash_type) {
-  AesCtrHmacAeadKeyFormat format;
-  if (aes_key_size.has_value()) {
-    format.mutable_aes_ctr_key_format()->set_key_size(aes_key_size.value());
-  }
-  if (iv_size.has_value()) {
-    format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(
-        iv_size.value());
-  }
-  if (version.has_value()) {
-    format.mutable_hmac_key_format()->set_version(version.value());
-  }
-  if (hmac_key_size.has_value()) {
-    format.mutable_hmac_key_format()->set_key_size(hmac_key_size.value());
-  }
-  if (tag_size.has_value()) {
-    format.mutable_hmac_key_format()->mutable_params()->set_tag_size(
-        tag_size.value());
-  }
-  if (hash_type.has_value()) {
-    format.mutable_hmac_key_format()->mutable_params()->set_hash(
-        hash_type.value());
-  }
+    absl::optional<int> tag_size,
+    absl::optional<internal::HashTypeEnum> hash_type) {
+  internal::AesCtrHmacAeadKeyFormatStruct format;
+  format.aes_ctr_key_format.key_size = aes_key_size.value_or(0);
+  format.aes_ctr_key_format.params.iv_size = iv_size.value_or(0);
+
+  format.hmac_key_format.version = version.value_or(0);
+  format.hmac_key_format.key_size = hmac_key_size.value_or(0);
+  format.hmac_key_format.params.tag_size = tag_size.value_or(0);
+  format.hmac_key_format.params.hash =
+      hash_type.value_or(internal::HashTypeEnum::kUnknownHash);
+
+  absl::StatusOr<std::string> serialized_format =
+      internal::AesCtrHmacAeadKeyFormatStruct::GetParser().SerializeIntoString(
+          format);
+  CHECK_OK(serialized_format);
 
   KeyTemplate key_template;
   key_template.set_type_url(
       "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey");
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
-  format.SerializeToString(key_template.mutable_value());
+  *key_template.mutable_value() = *serialized_format;
 
   EciesAeadDemParams dem_params;
   *dem_params.mutable_aead_dem() = key_template;
@@ -213,10 +208,11 @@ EciesAeadDemParams CreateAesCtrHmacDemParams(
 
 EciesAeadDemParams CreateAesCtrHmacDemParams(int key_size) {
   // Key and tag sizes match for allowed AES-CTR-HMAC DEMs.
-  return CreateAesCtrHmacDemParams(/*aes_key_size=*/key_size, /*iv_size=*/16,
-                                   /*version=*/0, /*hmac_key_size=*/32,
-                                   /*tag_size=*/key_size,
-                                   /*hash_type=*/HashType::SHA256);
+  return CreateAesCtrHmacDemParams(
+      /*aes_key_size=*/key_size, /*iv_size=*/16,
+      /*version=*/0, /*hmac_key_size=*/32,
+      /*tag_size=*/key_size,
+      /*hash_type=*/internal::HashTypeEnum::kSha256);
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -434,10 +430,8 @@ TEST_F(EciesProtoSerializationTest, ParseParametersWithMissingDemFails) {
   absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
-  EXPECT_THAT(
-      parameters.status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("proto DEM params")));
+  EXPECT_THAT(parameters.status(), StatusIs(absl::StatusCode::kInvalidArgument,
+                                            HasSubstr("proto DEM params")));
 }
 
 TEST_F(EciesProtoSerializationTest,
@@ -627,7 +621,7 @@ TEST_F(EciesProtoSerializationTest,
   *params.mutable_dem_params() = CreateAesCtrHmacDemParams(
       /*aes_key_size=*/absl::nullopt, /*iv_size=*/absl::nullopt,
       /*version=*/0, /*hmac_key_size=*/32, /*tag_size=*/16,
-      /*hash_type=*/HashType::SHA256);
+      /*hash_type=*/internal::HashTypeEnum::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -642,8 +636,7 @@ TEST_F(EciesProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing aes_ctr_key_format")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(EciesProtoSerializationTest,
@@ -657,7 +650,7 @@ TEST_F(EciesProtoSerializationTest,
       CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/absl::nullopt,
                                 /*version=*/0, /*hmac_key_size=*/32,
                                 /*tag_size=*/16,
-                                /*hash_type=*/HashType::SHA256);
+                                /*hash_type=*/internal::HashTypeEnum::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -672,8 +665,7 @@ TEST_F(EciesProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing aes_ctr_key_format.params")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidIv) {
@@ -686,7 +678,7 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidIv) {
       CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/14,
                                 /*version=*/0, /*hmac_key_size=*/32,
                                 /*tag_size=*/16,
-                                /*hash_type=*/HashType::SHA256);
+                                /*hash_type=*/internal::HashTypeEnum::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -702,7 +694,7 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidIv) {
           *serialization);
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("IV size must by 16 bytes")));
+                       HasSubstr("IV size must be 16 bytes")));
 }
 
 TEST_F(EciesProtoSerializationTest,
@@ -730,8 +722,7 @@ TEST_F(EciesProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing hmac_key_format")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(EciesProtoSerializationTest,
@@ -745,7 +736,7 @@ TEST_F(EciesProtoSerializationTest,
       CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
                                 /*version=*/0, /*hmac_key_size=*/30,
                                 /*tag_size=*/16,
-                                /*hash_type=*/HashType::SHA256);
+                                /*hash_type=*/internal::HashTypeEnum::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -788,8 +779,7 @@ TEST_F(EciesProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Missing hmac_key_format.params")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidHashType) {
@@ -802,7 +792,7 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidHashType) {
       CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
                                 /*version=*/0, /*hmac_key_size=*/32,
                                 /*tag_size=*/16,
-                                /*hash_type=*/HashType::SHA1);
+                                /*hash_type=*/internal::HashTypeEnum::kSha1);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -831,7 +821,7 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithInvalidVersion) {
       CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
                                 /*version=*/1, /*hmac_key_size=*/32,
                                 /*tag_size=*/16,
-                                /*hash_type=*/HashType::SHA256);
+                                /*hash_type=*/internal::HashTypeEnum::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;
@@ -861,7 +851,7 @@ TEST_F(EciesProtoSerializationTest, ParseAesCtrHmacParamsWithMismatchedSizes) {
       CreateAesCtrHmacDemParams(/*aes_key_size=*/16, /*iv_size=*/16,
                                 /*version=*/0, /*hmac_key_size=*/32,
                                 /*tag_size=*/32,
-                                /*hash_type=*/HashType::SHA256);
+                                /*hash_type=*/internal::HashTypeEnum::kSha256);
   params.set_ec_point_format(EcPointFormat::COMPRESSED);
   EciesAeadHkdfKeyFormat key_format_proto;
   *key_format_proto.mutable_params() = params;

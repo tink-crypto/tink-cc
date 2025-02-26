@@ -331,6 +331,7 @@ tink_cc_library(
     hmac_proto_serialization_impl.cc
     hmac_proto_serialization_impl.h
   DEPS
+    tink::mac::internal::hmac_proto_structs
     absl::no_destructor
     absl::status
     absl::statusor
@@ -382,4 +383,27 @@ tink_cc_test(
     tink::proto::common_cc_proto
     tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME hmac_proto_structs
+  SRCS
+    hmac_proto_structs.h
+  DEPS
+    absl::no_destructor
+    tink::internal::common_proto_enums
+    tink::internal::proto_parser
+)
+
+tink_cc_test(
+  NAME hmac_proto_structs_test
+  SRCS
+    hmac_proto_structs_test.cc
+  DEPS
+    tink::mac::internal::hmac_proto_structs
+    gmock
+    absl::statusor
+    tink::internal::common_proto_enums
+    tink::util::test_matchers
+    tink::util::test_util
 )

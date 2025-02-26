@@ -38,6 +38,7 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_parameters.h"
+#include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -51,24 +52,6 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-
-struct HmacParamsStruct {
-  HashTypeEnum hash;
-  uint32_t tag_size;
-
-  static ProtoParser<HmacParamsStruct> CreateParser() {
-    return ProtoParserBuilder<HmacParamsStruct>()
-        .AddEnumField(1, &HmacParamsStruct::hash, HashTypeEnumIsValid)
-        .AddUint32Field(2, &HmacParamsStruct::tag_size)
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<HmacParamsStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<HmacParamsStruct>> parser(
-        CreateParser());
-    return *parser;
-  }
-};
 
 struct HmacKeyStruct {
   uint32_t version;
@@ -86,27 +69,6 @@ struct HmacKeyStruct {
 
   static const ProtoParser<HmacKeyStruct>& GetParser() {
     static const absl::NoDestructor<ProtoParser<HmacKeyStruct>> parser(
-        CreateParser());
-    return *parser;
-  }
-};
-
-struct HmacKeyFormatStruct {
-  HmacParamsStruct params;
-  uint32_t key_size;
-  uint32_t version;
-
-  static ProtoParser<HmacKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<HmacKeyFormatStruct>()
-        .AddMessageField(1, &HmacKeyFormatStruct::params,
-                         HmacParamsStruct::CreateParser())
-        .AddUint32Field(2, &HmacKeyFormatStruct::key_size)
-        .AddUint32Field(3, &HmacKeyFormatStruct::version)
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<HmacKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<HmacKeyFormatStruct>> parser(
         CreateParser());
     return *parser;
   }

@@ -21,7 +21,6 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -29,6 +28,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
+#include "tink/aead/internal/aes_ctr_hmac_proto_structs.h"
 #include "tink/internal/common_proto_enums.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
@@ -37,7 +37,6 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -50,125 +49,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
-
-struct AesCtrParamsStruct {
-  uint32_t iv_size;
-
-  static ProtoParser<AesCtrParamsStruct> CreateParser() {
-    return ProtoParserBuilder<AesCtrParamsStruct>()
-        .AddUint32Field(1, &AesCtrParamsStruct::iv_size)
-        .BuildOrDie();
-  }
-};
-
-struct AesCtrKeyFormatStruct {
-  AesCtrParamsStruct params;
-  uint32_t key_size;
-
-  static ProtoParser<AesCtrKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<AesCtrKeyFormatStruct>()
-        .AddMessageField(1, &AesCtrKeyFormatStruct::params,
-                         AesCtrParamsStruct::CreateParser())
-        .AddUint32Field(2, &AesCtrKeyFormatStruct::key_size)
-        .BuildOrDie();
-  }
-};
-
-struct HmacParamsStruct {
-  HashTypeEnum hash;
-  uint32_t tag_size;
-
-  static ProtoParser<HmacParamsStruct> CreateParser() {
-    return ProtoParserBuilder<HmacParamsStruct>()
-        .AddEnumField(1, &HmacParamsStruct::hash, &HashTypeEnumIsValid)
-        .AddUint32Field(2, &HmacParamsStruct::tag_size)
-        .BuildOrDie();
-  }
-};
-
-struct HmacKeyFormatStruct {
-  HmacParamsStruct params;
-  uint32_t key_size;
-  uint32_t version;
-
-  static ProtoParser<HmacKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<HmacKeyFormatStruct>()
-        .AddMessageField(1, &HmacKeyFormatStruct::params,
-                         HmacParamsStruct::CreateParser())
-        .AddUint32Field(2, &HmacKeyFormatStruct::key_size)
-        .AddUint32Field(3, &HmacKeyFormatStruct::version)
-        .BuildOrDie();
-  }
-};
-
-struct AesCtrHmacAeadKeyFormatStruct {
-  AesCtrKeyFormatStruct aes_ctr_key_format;
-  HmacKeyFormatStruct hmac_key_format;
-
-  static const ProtoParser<AesCtrHmacAeadKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesCtrHmacAeadKeyFormatStruct>>
-        parser{ProtoParserBuilder<AesCtrHmacAeadKeyFormatStruct>()
-                   .AddMessageField(
-                       1, &AesCtrHmacAeadKeyFormatStruct::aes_ctr_key_format,
-                       AesCtrKeyFormatStruct::CreateParser())
-                   .AddMessageField(
-                       2, &AesCtrHmacAeadKeyFormatStruct::hmac_key_format,
-                       HmacKeyFormatStruct::CreateParser())
-                   .BuildOrDie()};
-    return *parser;
-  }
-};
-
-struct AesCtrKeyStruct {
-  uint32_t version;
-  AesCtrParamsStruct params;
-  SecretData key_value;
-
-  static ProtoParser<AesCtrKeyStruct> CreateParser() {
-    return ProtoParserBuilder<AesCtrKeyStruct>()
-        .AddUint32Field(1, &AesCtrKeyStruct::version)
-        .AddMessageField(2, &AesCtrKeyStruct::params,
-                         AesCtrParamsStruct::CreateParser())
-        .AddBytesSecretDataField(3, &AesCtrKeyStruct::key_value)
-        .BuildOrDie();
-  }
-};
-
-struct HmacKeyStruct {
-  uint32_t version;
-  HmacParamsStruct params;
-  SecretData key_value;
-
-  static ProtoParser<HmacKeyStruct> CreateParser() {
-    return ProtoParserBuilder<HmacKeyStruct>()
-        .AddUint32Field(1, &HmacKeyStruct::version)
-        .AddMessageField(2, &HmacKeyStruct::params,
-                         HmacParamsStruct::CreateParser())
-        .AddBytesSecretDataField(3, &HmacKeyStruct::key_value)
-        .BuildOrDie();
-  }
-};
-
-struct AesCtrHmacAeadKeyStruct {
-  uint32_t version;
-  AesCtrKeyStruct aes_ctr_key;
-  HmacKeyStruct hmac_key;
-
-  static const ProtoParser<AesCtrHmacAeadKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesCtrHmacAeadKeyStruct>>
-        parser{ProtoParserBuilder<AesCtrHmacAeadKeyStruct>()
-                   .AddUint32Field(1, &AesCtrHmacAeadKeyStruct::version)
-                   .AddMessageField(2, &AesCtrHmacAeadKeyStruct::aes_ctr_key,
-                                    AesCtrKeyStruct::CreateParser())
-                   .AddMessageField(3, &AesCtrHmacAeadKeyStruct::hmac_key,
-                                    HmacKeyStruct::CreateParser())
-                   .BuildOrDie()};
-    return *parser;
-  }
-};
 
 using AesCtrHmacAeadProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization,

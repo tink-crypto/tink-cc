@@ -114,7 +114,7 @@ class KeysetHandle {
   int size() const { return keyset_->key_size(); }
   // Validates single `KeysetHandle::Entry` at `index` by making sure that the
   // key entry's type URL is printable and that it has a valid key status.
-  crypto::tink::util::Status ValidateAt(int index) const;
+  absl::Status ValidateAt(int index) const;
   // Validates each individual `KeysetHandle::Entry` in keyset handle by calling
   // `ValidateAt()`.  Also, checks that there is a single enabled primary key.
   absl::Status Validate() const;
@@ -213,15 +213,14 @@ class KeysetHandle {
   // Encrypts the underlying keyset with the provided `master_key_aead`
   // and writes the resulting EncryptedKeyset to the given `writer`,
   // which must be non-null.
-  crypto::tink::util::Status Write(KeysetWriter* writer,
-                                   const Aead& master_key_aead) const;
+  absl::Status Write(KeysetWriter* writer, const Aead& master_key_aead) const;
 
   // Encrypts the underlying keyset with the provided `master_key_aead`, using
   // `associated_data`. and writes the resulting EncryptedKeyset to the given
   // `writer`, which must be non-null.
-  crypto::tink::util::Status WriteWithAssociatedData(
-      KeysetWriter* writer, const Aead& master_key_aead,
-      absl::string_view associated_data) const;
+  absl::Status WriteWithAssociatedData(KeysetWriter* writer,
+                                       const Aead& master_key_aead,
+                                       absl::string_view associated_data) const;
 
   // Returns KeysetInfo, a "safe" Keyset that doesn't contain any actual
   // key material, thus can be used for logging or monitoring.
@@ -232,7 +231,7 @@ class KeysetHandle {
   // This can be used to persist public keysets or envelope encryption keysets.
   // Users that need to persist cleartext keysets can use
   // `CleartextKeysetHandle`.
-  crypto::tink::util::Status WriteNoSecret(KeysetWriter* writer) const;
+  absl::Status WriteNoSecret(KeysetWriter* writer) const;
 
   // Returns a new KeysetHandle containing public keys corresponding to the
   // private keys in this handle. Relies on key type managers stored in `config`
@@ -512,7 +511,7 @@ class KeysetHandleBuilder {
   void ClearPrimary();
 
   // Verify that entries with fixed IDs do not follow entries with random IDs.
-  crypto::tink::util::Status CheckIdAssignments();
+  absl::Status CheckIdAssignments();
 
   std::vector<KeysetHandleBuilder::Entry> entries_;
   absl::flat_hash_map<std::string, std::string> monitoring_annotations_;

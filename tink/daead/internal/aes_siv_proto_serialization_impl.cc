@@ -71,7 +71,7 @@ util::StatusOr<AesSivParameters::Variant> ToVariant(
     case OutputPrefixTypeEnum::kTink:
       return AesSivParameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine AesSivParameters::Variant");
   }
 }
@@ -86,7 +86,7 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     case AesSivParameters::Variant::kTink:
       return OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
   }
 }
@@ -94,7 +94,7 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 util::StatusOr<AesSivParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplateStruct().type_url != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesSivParameters.");
   }
 
@@ -105,7 +105,7 @@ util::StatusOr<AesSivParameters> ParseParameters(
     return proto_key_format.status();
   }
   if (proto_key_format->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only version 0 keys are accepted.");
   }
 
@@ -139,11 +139,11 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
 util::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
                                    absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesSivKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
   absl::StatusOr<AesSivKeyStruct> proto_key =
@@ -176,7 +176,7 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
 
@@ -223,9 +223,9 @@ AesSivProtoKeySerializerImpl* AesSivProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesSivProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesSivProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(AesSivProtoParametersParser());
   if (!status.ok()) {
     return status;
@@ -245,9 +245,9 @@ util::Status RegisterAesSivProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(AesSivProtoKeySerializer());
 }
 
-util::Status RegisterAesSivProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesSivProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(AesSivProtoParametersParser());
   if (!status.ok()) {
     return status;

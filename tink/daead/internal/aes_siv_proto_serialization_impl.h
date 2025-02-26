@@ -27,12 +27,12 @@ namespace internal {
 
 // Registers proto parsers and serializers for AES-SIV parameters and keys into
 // specified mutable serialization `registry`.
-crypto::tink::util::Status RegisterAesSivProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesSivProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry);
 
 // Registers proto parsers and serializers for AES-SIV parameters and keys into
 // specified immutable serialization registry `builder`.
-crypto::tink::util::Status RegisterAesSivProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesSivProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder);
 
 }  // namespace internal

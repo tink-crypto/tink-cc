@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended Deterministic AEAD key managers to `config`, used to generate
 // keys.
-util::Status AddDeterministicAeadKeyGenV0(KeyGenConfiguration& config);
+absl::Status AddDeterministicAeadKeyGenV0(KeyGenConfiguration& config);
 
 }  // namespace internal
 }  // namespace tink

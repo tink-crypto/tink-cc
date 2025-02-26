@@ -27,8 +27,8 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddDeterministicAeadV0(Configuration& config) {
-  util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddDeterministicAeadV0(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<DeterministicAeadWrapper>(), config);
   if (!status.ok()) {
     return status;

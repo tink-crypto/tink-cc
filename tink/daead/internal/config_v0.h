@@ -26,7 +26,7 @@ namespace internal {
 
 // Add recommended Deterministic AEAD primitive wrappers and key managers to
 // `config`, used to generate primitives.
-util::Status AddDeterministicAeadV0(Configuration& config);
+absl::Status AddDeterministicAeadV0(Configuration& config);
 
 }  // namespace internal
 }  // namespace tink

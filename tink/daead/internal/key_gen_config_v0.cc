@@ -26,7 +26,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::Status AddDeterministicAeadKeyGenV0(KeyGenConfiguration& config) {
+absl::Status AddDeterministicAeadKeyGenV0(KeyGenConfiguration& config) {
   return KeyGenConfigurationImpl::AddKeyTypeManager(
       absl::make_unique<AesSivKeyManager>(), config);
 }

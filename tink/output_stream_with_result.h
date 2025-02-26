@@ -106,7 +106,7 @@ class OutputStreamWithResult : public OutputStream {
 
   // Getting the next OutputStream buffer. See OutputStream for detailed
   // description.
-  crypto::tink::util::StatusOr<int> Next(void** data) final {
+  absl::StatusOr<int> Next(void** data) final {
     if (closed_) {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "Write on closed Stream");
@@ -121,7 +121,7 @@ class OutputStreamWithResult : public OutputStream {
   virtual ResultType CloseStreamAndComputeResult() = 0;
   // Getting the next OutputStream buffer. See OutputStream for detailed
   // description.
-  virtual util::StatusOr<int> NextBuffer(void** data) = 0;
+  virtual absl::StatusOr<int> NextBuffer(void** data) = 0;
 
  private:
   bool closed_;

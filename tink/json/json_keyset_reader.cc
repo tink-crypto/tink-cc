@@ -49,7 +49,7 @@ const char kEncryptedKeysetTypeUrl[] =
 }  // namespace
 
 //  static
-util::StatusOr<std::unique_ptr<KeysetReader>> JsonKeysetReader::New(
+absl::StatusOr<std::unique_ptr<KeysetReader>> JsonKeysetReader::New(
     std::unique_ptr<std::istream> keyset_stream) {
   if (keyset_stream == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -59,12 +59,12 @@ util::StatusOr<std::unique_ptr<KeysetReader>> JsonKeysetReader::New(
 }
 
 //  static
-util::StatusOr<std::unique_ptr<KeysetReader>> JsonKeysetReader::New(
+absl::StatusOr<std::unique_ptr<KeysetReader>> JsonKeysetReader::New(
     absl::string_view serialized_keyset) {
   return absl::WrapUnique(new JsonKeysetReader(serialized_keyset));
 }
 
-util::StatusOr<std::unique_ptr<Keyset>> JsonKeysetReader::Read() {
+absl::StatusOr<std::unique_ptr<Keyset>> JsonKeysetReader::Read() {
   std::string serialized_keyset_from_stream;
   std::string* serialized_keyset;
   if (keyset_stream_ == nullptr) {
@@ -92,7 +92,7 @@ util::StatusOr<std::unique_ptr<Keyset>> JsonKeysetReader::Read() {
   return std::move(keyset);
 }
 
-util::StatusOr<std::unique_ptr<EncryptedKeyset>>
+absl::StatusOr<std::unique_ptr<EncryptedKeyset>>
 JsonKeysetReader::ReadEncrypted() {
   std::string serialized_keyset_from_stream;
   std::string* serialized_keyset;

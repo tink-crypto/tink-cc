@@ -39,6 +39,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
+#include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -153,15 +154,16 @@ absl::StatusOr<HmacParamsStruct> GetHmacProtoParams(
 
 absl::StatusOr<AesCtrHmacAeadParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
     return absl::InvalidArgumentError(
         absl::StrCat("Wrong type URL when parsing AesCtrHmacAeadParameters: ",
-                     serialization.GetKeyTemplate().type_url()));
+                     key_template.type_url));
   }
 
   absl::StatusOr<AesCtrHmacAeadKeyFormatStruct> key_format_struct =
-      AesCtrHmacAeadKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      AesCtrHmacAeadKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!key_format_struct.ok()) {
     return key_format_struct.status();
   }

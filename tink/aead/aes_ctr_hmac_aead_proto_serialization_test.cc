@@ -31,6 +31,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
@@ -215,11 +216,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
           kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
-  EXPECT_THAT(
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .ParseParameters(*serialization)
-          .status(),
-      StatusIs(absl::StatusCode::kInvalidArgument));
+  EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
+                  .ParseParameters(*serialization)
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(AesCtrHmacAeadProtoSerializationTest,
@@ -316,13 +316,15 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeParameters) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(test_case.output_prefix_type));
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
 
   AesCtrHmacAeadKeyFormat aes_ctr_hmac_aead_key_format;
-  ASSERT_THAT(aes_ctr_hmac_aead_key_format.ParseFromString(
-                  proto_serialization->GetKeyTemplate().value()),
+  ASSERT_THAT(aes_ctr_hmac_aead_key_format.ParseFromString(key_template.value),
               IsTrue());
   ASSERT_THAT(aes_ctr_hmac_aead_key_format.aes_ctr_key_format().key_size(),
               Eq(test_case.aes_key_size));

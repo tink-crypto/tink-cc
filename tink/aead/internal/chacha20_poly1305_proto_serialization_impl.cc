@@ -128,14 +128,15 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 
 absl::StatusOr<ChaCha20Poly1305Parameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing ChaCha20Poly1305Parameters.");
   }
 
   absl::StatusOr<ChaCha20Poly1305KeyFormatStruct> proto_key_format =
-      ChaCha20Poly1305KeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      ChaCha20Poly1305KeyFormatStruct::GetParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return absl::InvalidArgumentError(
         "Failed to parse ChaCha20Poly1305KeyFormat proto");

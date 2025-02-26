@@ -40,8 +40,6 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -72,8 +70,8 @@ absl::StatusOr<AesGcmParameters::Variant> ToVariant(
     case OutputPrefixTypeEnum::kTink:
       return AesGcmParameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine AesGcmParameters::Variant");
+      return absl::InvalidArgumentError(
+          "Could not determine AesGcmParameters::Variant");
   }
 }
 
@@ -87,43 +85,41 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     case AesGcmParameters::Variant::kTink:
       return OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
-                          "Could not determine output prefix type");
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
   }
 }
 
 // Legacy Tink AES-GCM key proto format assumes 12-byte random IVs and 16-byte
 // tags.
-util::Status ValidateParamsForProto(const AesGcmParameters& params) {
+absl::Status ValidateParamsForProto(const AesGcmParameters& params) {
   if (params.IvSizeInBytes() != 12) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Tink currently restricts AES-GCM IV size to 12 bytes.");
   }
   if (params.TagSizeInBytes() != 16) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Tink currently restricts AES-GCM tag size to 16 bytes.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 absl::StatusOr<AesGcmParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing AesGcmParameters.");
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing AesGcmParameters.");
   }
 
   absl::StatusOr<AesGcmKeyFormatStruct> proto_key_format =
-      AesGcmKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      AesGcmKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }
   if (proto_key_format->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<AesGcmParameters::Variant> variant =
@@ -144,7 +140,7 @@ absl::StatusOr<AesGcmParameters> ParseParameters(
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesGcmParameters& parameters) {
-  util::Status valid_params = ValidateParamsForProto(parameters);
+  absl::Status valid_params = ValidateParamsForProto(parameters);
   if (!valid_params.ok()) return valid_params;
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
@@ -169,12 +165,10 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
                                    absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Wrong type URL when parsing AesGcmKey.");
+    return absl::InvalidArgumentError("Wrong type URL when parsing AesGcmKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
   absl::StatusOr<AesGcmKeyStruct> proto_key =
@@ -184,8 +178,7 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
     return proto_key.status();
   }
   if (proto_key->version != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "Only version 0 keys are accepted.");
+    return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<AesGcmParameters::Variant> variant = ToVariant(
@@ -212,15 +205,14 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesGcmKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::Status valid_params = ValidateParamsForProto(key.GetParameters());
+  absl::Status valid_params = ValidateParamsForProto(key.GetParameters());
   if (!valid_params.ok()) return valid_params;
 
   absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
-                        "SecretKeyAccess is required");
+    return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
   AesGcmKeyStruct proto_key;
@@ -266,9 +258,9 @@ AesGcmProtoKeySerializerImpl* AesGcmProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesGcmProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesGcmProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(AesGcmProtoParametersParser());
   if (!status.ok()) return status;
 
@@ -282,9 +274,9 @@ util::Status RegisterAesGcmProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(AesGcmProtoKeySerializer());
 }
 
-util::Status RegisterAesGcmProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesGcmProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(AesGcmProtoParametersParser());
   if (!status.ok()) return status;
 

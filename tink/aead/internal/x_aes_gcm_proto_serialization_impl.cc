@@ -140,13 +140,15 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 
 absl::StatusOr<XAesGcmParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing XAesGcmParameters.");
   }
 
   absl::StatusOr<XAesGcmKeyFormatStruct> proto_key_format =
-      GetKeyFormatParser().Parse(serialization.GetKeyTemplate().value());
+      GetKeyFormatParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }

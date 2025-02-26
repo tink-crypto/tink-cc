@@ -604,6 +604,7 @@ tink_cc_test(
     tink::aead::internal::xchacha20_poly1305_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -618,6 +619,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
@@ -677,6 +679,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
@@ -734,6 +737,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
@@ -791,6 +795,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::kms_aead_cc_proto
@@ -825,7 +830,6 @@ tink_cc_library(
     tink::internal::tink_proto_structs
     tink::util::secret_data
     tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(
@@ -836,6 +840,7 @@ tink_cc_test(
     tink::aead::internal::aes_gcm_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
@@ -849,6 +854,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
@@ -909,6 +915,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::aes_gcm_siv_cc_proto
@@ -943,6 +950,7 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::mac::internal::hmac_proto_structs
     tink::util::secret_data
 )
 
@@ -969,6 +977,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
@@ -1020,6 +1029,7 @@ tink_cc_test(
     tink::aead::internal::aes_eax_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -1034,6 +1044,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
@@ -1082,6 +1093,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_cc_proto

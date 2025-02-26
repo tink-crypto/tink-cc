@@ -126,14 +126,15 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 
 absl::StatusOr<AesGcmSivParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesGcmSivParameters.");
   }
 
   absl::StatusOr<AesGcmSivKeyFormatStruct> key_format =
-      AesGcmSivKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      AesGcmSivKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!key_format.ok()) {
     return absl::InvalidArgumentError(
         "Failed to parse AesGcmSivKeyFormat proto");

@@ -145,8 +145,7 @@ absl::StatusOr<AesEaxParamsStruct> GetProtoParams(
     const AesEaxParameters& parameters) {
   // Legacy Tink AES-EAX key proto format assumes 16-byte tags.
   if (parameters.GetTagSizeInBytes() != 16) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Tink currently restricts AES-EAX tag size to 16 bytes.");
   }
 
@@ -158,16 +157,16 @@ absl::StatusOr<AesEaxParamsStruct> GetProtoParams(
 
 absl::StatusOr<AesEaxParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
-    return util::Status(
-        absl::StatusCode::kInvalidArgument,
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
+    return absl::InvalidArgumentError(
         absl::StrCat("Wrong type URL when parsing AesEaxParameters: ",
-                     serialization.GetKeyTemplate().type_url()));
+                     key_template.type_url));
   }
 
   absl::StatusOr<AesEaxKeyFormatStruct> key_format_struct =
-      AesEaxKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      AesEaxKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!key_format_struct.ok()) {
     return absl::InvalidArgumentError("Failed to parse AesEaxKeyFormat proto");
   }

@@ -30,6 +30,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/keyderivation/prf_based_key_derivation_key.h"
 #include "tink/keyderivation/prf_based_key_derivation_parameters.h"
@@ -192,14 +193,13 @@ TEST_F(PrfBasedKeyDerivationProtoSerializationTest, SerializeParameters) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(OutputPrefixType::TINK));
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type, Eq(OutputPrefixTypeEnum::kTink));
 
   PrfBasedDeriverKeyFormat key_format;
-  ASSERT_THAT(
-      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(key_format.prf_key_template().type_url(), Eq(kPrfKeyTypeUrl));
   EXPECT_THAT(key_format.params().derived_key_template().type_url(),
               Eq(kDerivedKeyTypeUrl));

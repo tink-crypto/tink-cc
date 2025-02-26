@@ -342,6 +342,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::aes_cmac_prf_key

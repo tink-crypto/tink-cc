@@ -49,6 +49,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
 #include "tink/keyderivation/keyset_deriver_wrapper.h"
@@ -422,14 +423,22 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Serialization is not ProtoParametersSerialization");
     }
-    KeyTemplate derived_key_template = proto_serialization->GetKeyTemplate();
+    internal::KeyTemplateStruct derived_key_template =
+        proto_serialization->GetKeyTemplateStruct();
 
     // Create PrfBasedDeriverKey.
     google::crypto::tink::PrfBasedDeriverKey deriver_key;
     deriver_key.set_version(0);
     *deriver_key.mutable_prf_key() = PrfKeyFromRfc();
+
+    KeyTemplate proto_derived_key_template;
+    proto_derived_key_template.set_type_url(derived_key_template.type_url);
+    proto_derived_key_template.set_value(derived_key_template.value);
+    proto_derived_key_template.set_output_prefix_type(
+        static_cast<google::crypto::tink::OutputPrefixType>(
+            derived_key_template.output_prefix_type));
     *deriver_key.mutable_params()->mutable_derived_key_template() =
-        derived_key_template;
+        proto_derived_key_template;
 
     // Add PrfBasedDeriverKey to Keyset.
     Keyset::Key* keyset_key = keyset.add_key();
@@ -437,7 +446,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
         test::AsKeyData(deriver_key, KeyData::SYMMETRIC);
     keyset_key->set_status(KeyStatusType::ENABLED);
     keyset_key->set_output_prefix_type(
-        derived_key_template.output_prefix_type());
+        proto_derived_key_template.output_prefix_type());
     keyset_key->set_key_id(derived_key->GetIdRequirement().value_or(0));
   }
 

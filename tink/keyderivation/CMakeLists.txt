@@ -239,6 +239,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_util
+    tink::internal::tink_proto_structs
     tink::keyderivation::internal::prf_based_deriver_key_manager
     tink::mac::hmac_key
     tink::mac::hmac_parameters
@@ -323,6 +324,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
     tink::util::statusor

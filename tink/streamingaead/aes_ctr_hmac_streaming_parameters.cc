@@ -66,7 +66,7 @@ AesCtrHmacStreamingParameters::Builder::SetCiphertextSegmentSizeInBytes(
   return *this;
 }
 
-util::StatusOr<AesCtrHmacStreamingParameters>
+absl::StatusOr<AesCtrHmacStreamingParameters>
 AesCtrHmacStreamingParameters::Builder::Build() {
   if (!key_size_in_bytes_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,

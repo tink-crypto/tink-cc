@@ -54,7 +54,7 @@ AesGcmHkdfStreamingParameters::Builder::SetCiphertextSegmentSizeInBytes(
   return *this;
 }
 
-util::StatusOr<AesGcmHkdfStreamingParameters>
+absl::StatusOr<AesGcmHkdfStreamingParameters>
 AesGcmHkdfStreamingParameters::Builder::Build() {
   if (!key_size_in_bytes_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,

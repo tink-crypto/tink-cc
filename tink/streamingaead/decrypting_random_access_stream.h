@@ -48,16 +48,16 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
   // and will use (one of) provided 'primitives' to decrypt the contents
   // of 'random_access_stream', using 'associated_data' as authenticated
   // associated data of the decryption process.
-  static util::StatusOr<std::unique_ptr<RandomAccessStream>> New(
-      std::shared_ptr<
-          crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>> primitives,
+  static absl::StatusOr<std::unique_ptr<RandomAccessStream>> New(
+      std::shared_ptr<crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>>
+          primitives,
       std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
       absl::string_view associated_data);
 
   ~DecryptingRandomAccessStream() override = default;
   crypto::tink::util::Status PRead(int64_t position, int count,
       crypto::tink::util::Buffer* dest_buffer) override;
-  crypto::tink::util::StatusOr<int64_t> size() override;
+  absl::StatusOr<int64_t> size() override;
 
  private:
   DecryptingRandomAccessStream(
@@ -71,8 +71,7 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
         attempted_matching_(false),
         matching_stream_(nullptr) {}
 
-  crypto::tink::util::StatusOr<crypto::tink::RandomAccessStream*>
-  GetMatchedStream() const;
+  absl::StatusOr<crypto::tink::RandomAccessStream*> GetMatchedStream() const;
 
   std::shared_ptr<
       crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>> primitives_;

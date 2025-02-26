@@ -27,7 +27,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<AesCtrHmacStreamingKey> AesCtrHmacStreamingKey::Create(
+absl::StatusOr<AesCtrHmacStreamingKey> AesCtrHmacStreamingKey::Create(
     const AesCtrHmacStreamingParameters& parameters,
     const RestrictedData& initial_key_material, PartialKeyAccessToken token) {
   if (parameters.KeySizeInBytes() != initial_key_material.size()) {

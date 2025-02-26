@@ -83,7 +83,7 @@ Status ValidateParams(const AesCtrHmacStreamingParams& params) {
 
 }  // namespace
 
-crypto::tink::util::StatusOr<google::crypto::tink::AesCtrHmacStreamingKey>
+absl::StatusOr<google::crypto::tink::AesCtrHmacStreamingKey>
 AesCtrHmacStreamingKeyManager::CreateKey(
     const google::crypto::tink::AesCtrHmacStreamingKeyFormat& key_format)
     const {
@@ -94,7 +94,7 @@ AesCtrHmacStreamingKeyManager::CreateKey(
   return key;
 };
 
-crypto::tink::util::StatusOr<google::crypto::tink::AesCtrHmacStreamingKey>
+absl::StatusOr<google::crypto::tink::AesCtrHmacStreamingKey>
 AesCtrHmacStreamingKeyManager::DeriveKey(
     const google::crypto::tink::AesCtrHmacStreamingKeyFormat& key_format,
     InputStream* input_stream) const {
@@ -102,7 +102,7 @@ AesCtrHmacStreamingKeyManager::DeriveKey(
       ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
 
-  crypto::tink::util::StatusOr<std::string> randomness_or =
+  absl::StatusOr<std::string> randomness_or =
       ReadBytesFromStream(key_format.key_size(), input_stream);
   if (!randomness_or.ok()) {
     return randomness_or.status();

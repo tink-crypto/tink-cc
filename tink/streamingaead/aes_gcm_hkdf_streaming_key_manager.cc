@@ -60,7 +60,7 @@ Status ValidateParams(const AesGcmHkdfStreamingParams& params) {
 
 }  // namespace
 
-crypto::tink::util::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey>
+absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey>
 AesGcmHkdfStreamingKeyManager::CreateKey(
     const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format)
     const {
@@ -71,7 +71,7 @@ AesGcmHkdfStreamingKeyManager::CreateKey(
   return key;
 };
 
-crypto::tink::util::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey>
+absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey>
 AesGcmHkdfStreamingKeyManager::DeriveKey(
     const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format,
     InputStream* input_stream) const {
@@ -79,7 +79,7 @@ AesGcmHkdfStreamingKeyManager::DeriveKey(
       ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
 
-  crypto::tink::util::StatusOr<std::string> randomness_or =
+  absl::StatusOr<std::string> randomness_or =
       ReadBytesFromStream(key_format.key_size(), input_stream);
   if (!randomness_or.ok()) {
     return randomness_or.status();

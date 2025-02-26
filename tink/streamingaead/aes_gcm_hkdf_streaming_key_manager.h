@@ -49,7 +49,7 @@ class AesGcmHkdfStreamingKeyManager
  public:
   class AesGcmHkdfStreamingKeyManagerFactory
       : public PrimitiveFactory<StreamingAead> {
-    crypto::tink::util::StatusOr<std::unique_ptr<StreamingAead>> Create(
+    absl::StatusOr<std::unique_ptr<StreamingAead>> Create(
         const google::crypto::tink::AesGcmHkdfStreamingKey& key)
         const override {
       subtle::AesGcmHkdfStreaming::Params params;
@@ -88,12 +88,11 @@ class AesGcmHkdfStreamingKeyManager
       const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey>
-  CreateKey(const google::crypto::tink::AesGcmHkdfStreamingKeyFormat&
-                key_format) const override;
+  absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey> CreateKey(
+      const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format)
+      const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey>
-  DeriveKey(
+  absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey> DeriveKey(
       const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format,
       InputStream* input_stream) const override;
 

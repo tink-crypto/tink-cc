@@ -51,7 +51,7 @@ BufferedInputStream::BufferedInputStream(
   status_ = util::OkStatus();
 }
 
-crypto::tink::util::StatusOr<int> BufferedInputStream::Next(const void** data) {
+absl::StatusOr<int> BufferedInputStream::Next(const void** data) {
   if (direct_access_) return input_stream_->Next(data);
   if (!status_.ok()) return status_;
 

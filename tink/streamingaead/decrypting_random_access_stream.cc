@@ -46,7 +46,8 @@ using util::StatusOr;
 using StreamingAeadEntry = PrimitiveSet<StreamingAead>::Entry<StreamingAead>;
 
 // static
-StatusOr<std::unique_ptr<RandomAccessStream>> DecryptingRandomAccessStream::New(
+absl::StatusOr<std::unique_ptr<RandomAccessStream>>
+DecryptingRandomAccessStream::New(
     std::shared_ptr<PrimitiveSet<StreamingAead>> primitives,
     std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
     absl::string_view associated_data) {
@@ -79,15 +80,15 @@ util::Status DecryptingRandomAccessStream::PRead(
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "position cannot be negative");
   }
-  crypto::tink::util::StatusOr<crypto::tink::RandomAccessStream*>
-      matched_stream = GetMatchedStream();
+  absl::StatusOr<crypto::tink::RandomAccessStream*> matched_stream =
+      GetMatchedStream();
   if (!matched_stream.ok()) {
     return matched_stream.status();
   }
   return (*matched_stream)->PRead(position, count, dest_buffer);
 }
 
-crypto::tink::util::StatusOr<crypto::tink::RandomAccessStream*>
+absl::StatusOr<crypto::tink::RandomAccessStream*>
 DecryptingRandomAccessStream::GetMatchedStream() const {
   {
     absl::ReaderMutexLock lock(&matching_mutex_);
@@ -113,7 +114,7 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
 
   attempted_matching_ = true;
   std::vector<StreamingAeadEntry*> all_primitives = primitives_->get_all();
-  util::StatusOr<std::unique_ptr<crypto::tink::util::Buffer>> buffer =
+  absl::StatusOr<std::unique_ptr<crypto::tink::util::Buffer>> buffer =
       crypto::tink::util::Buffer::New(1);
   if (!buffer.ok()) {
     return buffer.status();
@@ -140,9 +141,9 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
                 "Could not find a decrypter matching the ciphertext stream.");
 }
 
-StatusOr<int64_t> DecryptingRandomAccessStream::size() {
-  crypto::tink::util::StatusOr<crypto::tink::RandomAccessStream*>
-      matched_stream = GetMatchedStream();
+absl::StatusOr<int64_t> DecryptingRandomAccessStream::size() {
+  absl::StatusOr<crypto::tink::RandomAccessStream*> matched_stream =
+      GetMatchedStream();
   if (!matched_stream.ok()) {
     return matched_stream.status();
   }

@@ -60,18 +60,17 @@ class StreamingAeadSetWrapper: public StreamingAead {
       std::unique_ptr<PrimitiveSet<StreamingAead>> primitives)
       : primitives_(std::move(primitives)) {}
 
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::OutputStream>>
   NewEncryptingStream(
       std::unique_ptr<crypto::tink::OutputStream> ciphertext_destination,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::unique_ptr<crypto::tink::InputStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::InputStream>>
   NewDecryptingStream(
       std::unique_ptr<crypto::tink::InputStream> ciphertext_source,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::RandomAccessStream>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::RandomAccessStream>>
   NewDecryptingRandomAccessStream(
       std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
       absl::string_view associated_data) const override;
@@ -87,7 +86,7 @@ class StreamingAeadSetWrapper: public StreamingAead {
   std::shared_ptr<PrimitiveSet<StreamingAead>> primitives_;
 };  // class StreamingAeadSetWrapper
 
-StatusOr<std::unique_ptr<OutputStream>>
+absl::StatusOr<std::unique_ptr<OutputStream>>
 StreamingAeadSetWrapper::NewEncryptingStream(
     std::unique_ptr<OutputStream> ciphertext_destination,
     absl::string_view associated_data) const {
@@ -95,7 +94,7 @@ StreamingAeadSetWrapper::NewEncryptingStream(
           std::move(ciphertext_destination), associated_data);
 }
 
-StatusOr<std::unique_ptr<InputStream>>
+absl::StatusOr<std::unique_ptr<InputStream>>
 StreamingAeadSetWrapper::NewDecryptingStream(
     std::unique_ptr<InputStream> ciphertext_source,
     absl::string_view associated_data) const {
@@ -103,7 +102,7 @@ StreamingAeadSetWrapper::NewDecryptingStream(
       primitives_, std::move(ciphertext_source), associated_data)};
 }
 
-StatusOr<std::unique_ptr<RandomAccessStream>>
+absl::StatusOr<std::unique_ptr<RandomAccessStream>>
 StreamingAeadSetWrapper::NewDecryptingRandomAccessStream(
     std::unique_ptr<RandomAccessStream> ciphertext_source,
     absl::string_view associated_data) const {
@@ -113,7 +112,7 @@ StreamingAeadSetWrapper::NewDecryptingRandomAccessStream(
 
 }  // anonymous namespace
 
-StatusOr<std::unique_ptr<StreamingAead>> StreamingAeadWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<StreamingAead>> StreamingAeadWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<StreamingAead>> streaming_aead_set) const {
   auto status = Validate(streaming_aead_set.get());
   if (!status.ok()) return status;

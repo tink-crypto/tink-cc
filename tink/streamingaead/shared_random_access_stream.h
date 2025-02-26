@@ -47,7 +47,7 @@ class SharedRandomAccessStream : public crypto::tink::RandomAccessStream {
     return random_access_stream_->PRead(position, count, dest_buffer);
   }
 
-  crypto::tink::util::StatusOr<int64_t> size() override {
+  absl::StatusOr<int64_t> size() override {
     return random_access_stream_->size();
   }
 

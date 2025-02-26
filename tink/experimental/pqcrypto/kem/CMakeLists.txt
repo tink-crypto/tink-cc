@@ -343,6 +343,7 @@ tink_cc_library(
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::experimental::pqcrypto::kem::ml_kem_public_key
+    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -358,11 +359,10 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::util::secret_proto
+    tink::internal::proto_parser
+    tink::internal::tink_proto_structs
+    tink::util::secret_data
     tink::util::status
-    tink::util::statusor
-    tink::proto::tink_cc_proto
-    tink::proto::ml_kem_cc_proto
 )
 
 tink_cc_test(

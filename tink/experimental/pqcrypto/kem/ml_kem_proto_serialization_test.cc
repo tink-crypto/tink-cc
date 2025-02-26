@@ -128,8 +128,7 @@ TEST_F(MlKemProtoSerializationTest,
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
                   .ParseParameters(*serialization)
                   .status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse MlKemKeyFormat proto")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(MlKemProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
@@ -169,8 +168,7 @@ TEST_F(MlKemProtoSerializationTest,
       internal::MutableSerializationRegistry::GlobalInstance().ParseParameters(
           *serialization);
   EXPECT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("MlKemKeyFormat proto is missing params")));
+              StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(MlKemProtoSerializationTest,
@@ -336,9 +334,7 @@ TEST_F(MlKemProtoSerializationTest,
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse MlKemPublicKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(MlKemProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
@@ -529,9 +525,7 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
   absl::StatusOr<std::unique_ptr<Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
           *serialization, InsecureSecretKeyAccess::Get());
-  EXPECT_THAT(key.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Failed to parse MlKemPrivateKey proto")));
+  EXPECT_THAT(key.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {

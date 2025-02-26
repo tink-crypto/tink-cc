@@ -46,15 +46,13 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "proto/common.pb.h"
-#include "proto/ecies_aead_hkdf.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -65,64 +63,30 @@ using ::crypto::tink::internal::ProtoParserBuilder;
 using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
-using ::google::crypto::tink::EcPointFormat;
-using ::google::crypto::tink::EllipticCurveType;
-using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
-
-bool EllipticCurveTypeValid(int c) {
-  return google::crypto::tink::EllipticCurveType_IsValid(c);
-}
-
-bool HashTypeValid(int c) { return google::crypto::tink::HashType_IsValid(c); }
-
-bool EcPointFormatValid(int c) {
-  return google::crypto::tink::EcPointFormat_IsValid(c);
-}
-
-bool OutputPrefixTypeValid(int c) {
-  return google::crypto::tink::OutputPrefixType_IsValid(c);
-}
 
 struct EciesHkdfKemParamsStruct {
-  EllipticCurveType curve_type;
-  HashType hkdf_hash_type;
+  internal::EllipticCurveTypeEnum curve_type;
+  internal::HashTypeEnum hkdf_hash_type;
   std::string hkdf_salt;
 
   static ProtoParser<EciesHkdfKemParamsStruct> CreateParser() {
     return ProtoParserBuilder<EciesHkdfKemParamsStruct>()
         .AddEnumField(1, &EciesHkdfKemParamsStruct::curve_type,
-                      &EllipticCurveTypeValid)
+                      &internal::EllipticCurveTypeEnumIsValid)
         .AddEnumField(2, &EciesHkdfKemParamsStruct::hkdf_hash_type,
-                      &HashTypeValid)
+                      &internal::HashTypeEnumIsValid)
         .AddBytesStringField(11, &EciesHkdfKemParamsStruct::hkdf_salt)
         .BuildOrDie();
   }
 };
 
-struct KeyTemplateStruct {
-  std::string type_url;
-  std::string value;
-  OutputPrefixType output_prefix_type;
-
-  static ProtoParser<KeyTemplateStruct> CreateParser() {
-    return ProtoParserBuilder<KeyTemplateStruct>()
-        .AddBytesStringField(1, &KeyTemplateStruct::type_url)
-        .AddBytesStringField(2, &KeyTemplateStruct::value)
-        .AddEnumField(3, &KeyTemplateStruct::output_prefix_type,
-                      &OutputPrefixTypeValid)
-        .BuildOrDie();
-  }
-};
-
 struct EciesAeadDemParamsStruct {
-  KeyTemplateStruct aead_dem;
+  internal::KeyTemplateStruct aead_dem;
 
   static ProtoParser<EciesAeadDemParamsStruct> CreateParser() {
     return ProtoParserBuilder<EciesAeadDemParamsStruct>()
         .AddMessageField(2, &EciesAeadDemParamsStruct::aead_dem,
-                         KeyTemplateStruct::CreateParser())
+                         internal::KeyTemplateStruct::CreateParser())
         .BuildOrDie();
   }
 };
@@ -130,7 +94,7 @@ struct EciesAeadDemParamsStruct {
 struct EciesAeadHkdfParamsStruct {
   EciesHkdfKemParamsStruct kem_params;
   EciesAeadDemParamsStruct dem_params;
-  EcPointFormat ec_point_format;
+  internal::EcPointFormatEnum ec_point_format;
 
   static ProtoParser<EciesAeadHkdfParamsStruct> CreateParser() {
     return ProtoParserBuilder<EciesAeadHkdfParamsStruct>()
@@ -139,7 +103,7 @@ struct EciesAeadHkdfParamsStruct {
         .AddMessageField(2, &EciesAeadHkdfParamsStruct::dem_params,
                          EciesAeadDemParamsStruct::CreateParser())
         .AddEnumField(3, &EciesAeadHkdfParamsStruct::ec_point_format,
-                      &EcPointFormatValid)
+                      &internal::EcPointFormatEnumIsValid)
         .BuildOrDie();
   }
 };
@@ -228,15 +192,15 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPrivateKey";
 
 absl::StatusOr<EciesParameters::Variant> ToVariant(
-    OutputPrefixType output_prefix_type) {
+    internal::OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case OutputPrefixType::LEGACY:
+    case internal::OutputPrefixTypeEnum::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;  // Parse LEGACY output prefix as CRUNCHY.
-    case OutputPrefixType::CRUNCHY:
+    case internal::OutputPrefixTypeEnum::kCrunchy:
       return EciesParameters::Variant::kCrunchy;
-    case OutputPrefixType::RAW:
+    case internal::OutputPrefixTypeEnum::kRaw:
       return EciesParameters::Variant::kNoPrefix;
-    case OutputPrefixType::TINK:
+    case internal::OutputPrefixTypeEnum::kTink:
       return EciesParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -244,15 +208,15 @@ absl::StatusOr<EciesParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<OutputPrefixType> ToOutputPrefixType(
+absl::StatusOr<internal::OutputPrefixTypeEnum> ToOutputPrefixType(
     EciesParameters::Variant variant) {
   switch (variant) {
     case EciesParameters::Variant::kCrunchy:
-      return OutputPrefixType::CRUNCHY;
+      return internal::OutputPrefixTypeEnum::kCrunchy;
     case EciesParameters::Variant::kNoPrefix:
-      return OutputPrefixType::RAW;
+      return internal::OutputPrefixTypeEnum::kRaw;
     case EciesParameters::Variant::kTink:
-      return OutputPrefixType::TINK;
+      return internal::OutputPrefixTypeEnum::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type.");
@@ -266,15 +230,15 @@ bool IsNistCurve(EciesParameters::CurveType curve) {
 }
 
 absl::StatusOr<EciesParameters::CurveType> FromProtoCurveType(
-    EllipticCurveType curve) {
+    internal::EllipticCurveTypeEnum curve) {
   switch (curve) {
-    case EllipticCurveType::NIST_P256:
+    case internal::EllipticCurveTypeEnum::kNistP256:
       return EciesParameters::CurveType::kNistP256;
-    case EllipticCurveType::NIST_P384:
+    case internal::EllipticCurveTypeEnum::kNistP384:
       return EciesParameters::CurveType::kNistP384;
-    case EllipticCurveType::NIST_P521:
+    case internal::EllipticCurveTypeEnum::kNistP521:
       return EciesParameters::CurveType::kNistP521;
-    case EllipticCurveType::CURVE25519:
+    case internal::EllipticCurveTypeEnum::kCurve25519:
       return EciesParameters::CurveType::kX25519;
     default:
       return absl::InvalidArgumentError(
@@ -282,33 +246,34 @@ absl::StatusOr<EciesParameters::CurveType> FromProtoCurveType(
   }
 }
 
-absl::StatusOr<EllipticCurveType> ToProtoCurveType(
+absl::StatusOr<internal::EllipticCurveTypeEnum> ToProtoCurveType(
     EciesParameters::CurveType curve) {
   switch (curve) {
     case EciesParameters::CurveType::kNistP256:
-      return EllipticCurveType::NIST_P256;
+      return internal::EllipticCurveTypeEnum::kNistP256;
     case EciesParameters::CurveType::kNistP384:
-      return EllipticCurveType::NIST_P384;
+      return internal::EllipticCurveTypeEnum::kNistP384;
     case EciesParameters::CurveType::kNistP521:
-      return EllipticCurveType::NIST_P521;
+      return internal::EllipticCurveTypeEnum::kNistP521;
     case EciesParameters::CurveType::kX25519:
-      return EllipticCurveType::CURVE25519;
+      return internal::EllipticCurveTypeEnum::kCurve25519;
     default:
       return absl::InvalidArgumentError("Could not determine curve type.");
   }
 }
 
-absl::StatusOr<EciesParameters::HashType> FromProtoHashType(HashType hash) {
+absl::StatusOr<EciesParameters::HashType> FromProtoHashType(
+    internal::HashTypeEnum hash) {
   switch (hash) {
-    case HashType::SHA1:
+    case internal::HashTypeEnum::kSha1:
       return EciesParameters::HashType::kSha1;
-    case HashType::SHA224:
+    case internal::HashTypeEnum::kSha224:
       return EciesParameters::HashType::kSha224;
-    case HashType::SHA256:
+    case internal::HashTypeEnum::kSha256:
       return EciesParameters::HashType::kSha256;
-    case HashType::SHA384:
+    case internal::HashTypeEnum::kSha384:
       return EciesParameters::HashType::kSha384;
-    case HashType::SHA512:
+    case internal::HashTypeEnum::kSha512:
       return EciesParameters::HashType::kSha512;
     default:
       return absl::InvalidArgumentError(
@@ -316,31 +281,32 @@ absl::StatusOr<EciesParameters::HashType> FromProtoHashType(HashType hash) {
   }
 }
 
-absl::StatusOr<HashType> ToProtoHashType(EciesParameters::HashType hash) {
+absl::StatusOr<internal::HashTypeEnum> ToProtoHashType(
+    EciesParameters::HashType hash) {
   switch (hash) {
     case EciesParameters::HashType::kSha1:
-      return HashType::SHA1;
+      return internal::HashTypeEnum::kSha1;
     case EciesParameters::HashType::kSha224:
-      return HashType::SHA224;
+      return internal::HashTypeEnum::kSha224;
     case EciesParameters::HashType::kSha256:
-      return HashType::SHA256;
+      return internal::HashTypeEnum::kSha256;
     case EciesParameters::HashType::kSha384:
-      return HashType::SHA384;
+      return internal::HashTypeEnum::kSha384;
     case EciesParameters::HashType::kSha512:
-      return HashType::SHA512;
+      return internal::HashTypeEnum::kSha512;
     default:
       return absl::InvalidArgumentError("Could not determine hash type.");
   }
 }
 
 absl::StatusOr<EciesParameters::PointFormat> FromProtoPointFormat(
-    EcPointFormat format) {
+    internal::EcPointFormatEnum format) {
   switch (format) {
-    case EcPointFormat::COMPRESSED:
+    case internal::EcPointFormatEnum::kCompressed:
       return EciesParameters::PointFormat::kCompressed;
-    case EcPointFormat::UNCOMPRESSED:
+    case internal::EcPointFormatEnum::kUncompressed:
       return EciesParameters::PointFormat::kUncompressed;
-    case EcPointFormat::DO_NOT_USE_CRUNCHY_UNCOMPRESSED:
+    case internal::EcPointFormatEnum::kDoNotUseCrunchyUncompressed:
       return EciesParameters::PointFormat::kLegacyUncompressed;
     default:
       return absl::InvalidArgumentError(
@@ -348,15 +314,15 @@ absl::StatusOr<EciesParameters::PointFormat> FromProtoPointFormat(
   }
 }
 
-absl::StatusOr<EcPointFormat> ToProtoPointFormat(
+absl::StatusOr<internal::EcPointFormatEnum> ToProtoPointFormat(
     EciesParameters::PointFormat format) {
   switch (format) {
     case EciesParameters::PointFormat::kCompressed:
-      return EcPointFormat::COMPRESSED;
+      return internal::EcPointFormatEnum::kCompressed;
     case EciesParameters::PointFormat::kUncompressed:
-      return EcPointFormat::UNCOMPRESSED;
+      return internal::EcPointFormatEnum::kUncompressed;
     case EciesParameters::PointFormat::kLegacyUncompressed:
-      return EcPointFormat::DO_NOT_USE_CRUNCHY_UNCOMPRESSED;
+      return internal::EcPointFormatEnum::kDoNotUseCrunchyUncompressed;
     default:
       return absl::InvalidArgumentError("Could not determine point format.");
   }
@@ -462,7 +428,8 @@ EciesAeadDemParamsStruct CreateEciesAeadDemParamsStruct(
     absl::string_view type_url, const std::string& serialized_key_format) {
   EciesAeadDemParamsStruct dem_params;
   dem_params.aead_dem.type_url = std::string(type_url);
-  dem_params.aead_dem.output_prefix_type = OutputPrefixType::TINK;
+  dem_params.aead_dem.output_prefix_type =
+      internal::OutputPrefixTypeEnum::kTink;
   dem_params.aead_dem.value = serialized_key_format;
   return dem_params;
 }
@@ -547,7 +514,7 @@ absl::StatusOr<EciesAeadDemParamsStruct> ToProtoDemParams(
 }
 
 absl::StatusOr<EciesParameters> ToParameters(
-    OutputPrefixType output_prefix_type,
+    internal::OutputPrefixTypeEnum output_prefix_type,
     const EciesAeadHkdfParamsStruct& params) {
   absl::StatusOr<EciesParameters::Variant> variant =
       ToVariant(output_prefix_type);
@@ -597,13 +564,13 @@ absl::StatusOr<EciesParameters> ToParameters(
 
 absl::StatusOr<EciesAeadHkdfParamsStruct> FromParameters(
     const EciesParameters& parameters) {
-  absl::StatusOr<EllipticCurveType> curve_type =
+  absl::StatusOr<internal::EllipticCurveTypeEnum> curve_type =
       ToProtoCurveType(parameters.GetCurveType());
   if (!curve_type.ok()) {
     return curve_type.status();
   }
 
-  absl::StatusOr<HashType> hash_type =
+  absl::StatusOr<internal::HashTypeEnum> hash_type =
       ToProtoHashType(parameters.GetHashType());
   if (!hash_type.ok()) {
     return hash_type.status();
@@ -623,7 +590,7 @@ absl::StatusOr<EciesAeadHkdfParamsStruct> FromParameters(
     params.kem_params.hkdf_salt = std::string(*parameters.GetSalt());
   }
   if (parameters.GetNistCurvePointFormat().has_value()) {
-    absl::StatusOr<EcPointFormat> ec_point_format =
+    absl::StatusOr<internal::EcPointFormatEnum> ec_point_format =
         ToProtoPointFormat(*parameters.GetNistCurvePointFormat());
     if (!ec_point_format.ok()) {
       return ec_point_format.status();
@@ -631,7 +598,7 @@ absl::StatusOr<EciesAeadHkdfParamsStruct> FromParameters(
     params.ec_point_format = *ec_point_format;
   } else {
     // Must be X25519, so set to the compressed format.
-    params.ec_point_format = EcPointFormat::COMPRESSED;
+    params.ec_point_format = internal::EcPointFormatEnum::kCompressed;
   }
 
   return params;
@@ -705,19 +672,21 @@ absl::StatusOr<EciesAeadHkdfPublicKeyStruct> FromPublicKey(
 
 absl::StatusOr<EciesParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
+  const internal::KeyTemplateStruct key_template_struct =
+      serialization.GetKeyTemplateStruct();
+  if (key_template_struct.type_url != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EciesParameters.");
   }
 
   absl::StatusOr<EciesAeadHkdfKeyFormatStruct> proto_key_format =
       EciesAeadHkdfKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+          key_template_struct.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }
 
-  return ToParameters(serialization.GetKeyTemplate().output_prefix_type(),
+  return ToParameters(key_template_struct.output_prefix_type,
                       proto_key_format->params);
 }
 
@@ -742,7 +711,9 @@ absl::StatusOr<EciesPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<EciesParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixType(), proto_key->params);
+      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
+                       serialization.GetOutputPrefixType()),
+                   proto_key->params);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -777,14 +748,18 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
         "EciesAeadHkdfPrivateKey proto.");
   }
 
+  const internal::OutputPrefixTypeEnum output_prefix_type =
+      static_cast<internal::OutputPrefixTypeEnum>(
+          serialization.GetOutputPrefixType());
+
   absl::StatusOr<EciesParameters::Variant> variant =
-      ToVariant(serialization.GetOutputPrefixType());
+      ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  absl::StatusOr<EciesParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixType(), proto_key->public_key.params);
+  absl::StatusOr<EciesParameters> parameters =
+      ToParameters(output_prefix_type, proto_key->public_key.params);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -808,7 +783,7 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const EciesParameters& parameters) {
-  absl::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -850,7 +825,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   if (!serialized_proto_key.ok()) {
     return serialized_proto_key.status();
   }
-  absl::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -859,8 +834,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto_key, InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output, KeyData::ASYMMETRIC_PUBLIC,
-      *output_prefix_type, key.GetIdRequirement());
+      kPublicTypeUrl, restricted_output,
+      internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
@@ -914,7 +890,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
         secret->GetSecret(InsecureSecretKeyAccess::Get()));
   }
 
-  absl::StatusOr<OutputPrefixType> output_prefix_type =
+  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -929,8 +905,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   RestrictedData restricted_output =
       RestrictedData(*serialized_proto_private_key, *token);
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, restricted_output, KeyData::ASYMMETRIC_PRIVATE,
-      *output_prefix_type, key.GetIdRequirement());
+      kPrivateTypeUrl, restricted_output,
+      internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      key.GetIdRequirement());
 }
 
 EciesProtoParametersParserImpl* EciesProtoParametersParser() {

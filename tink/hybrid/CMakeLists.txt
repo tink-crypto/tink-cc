@@ -530,11 +530,9 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
+    tink::internal::tink_proto_structs
     tink::mac::internal::hmac_proto_structs
     tink::util::secret_data
-    tink::proto::common_cc_proto
-    tink::proto::ecies_aead_hkdf_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 # tests

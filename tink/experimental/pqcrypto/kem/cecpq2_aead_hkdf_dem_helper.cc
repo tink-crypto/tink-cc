@@ -54,8 +54,7 @@ class Cecpq2AeadHkdfDemHelperImpl : public Cecpq2AeadHkdfDemHelper {
       const google::crypto::tink::KeyTemplate& key_template)
       : key_template_(key_template) {}
 
-  crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
   GetAeadOrDaead(const util::SecretData& seed) const override {
     if (seed.size() < 32) {
       return absl::Status(absl::StatusCode::kInternal,
@@ -75,7 +74,7 @@ class Cecpq2AeadHkdfDemHelperImpl : public Cecpq2AeadHkdfDemHelper {
     return absl::make_unique<AeadOrDaead>(std::move(primitive_or.value()));
   }
 
-  crypto::tink::util::StatusOr<uint32_t> GetKeyMaterialSize() const override {
+  absl::StatusOr<uint32_t> GetKeyMaterialSize() const override {
     absl::string_view dem_type_url = key_template_.type_url();
     // For AES-SIV, two keys of 32 bytes each are needed
     if (dem_type_url == "type.googleapis.com/google.crypto.tink.AesSivKey") {
@@ -97,7 +96,7 @@ class Cecpq2AeadHkdfDemHelperImpl : public Cecpq2AeadHkdfDemHelper {
 }  // namespace
 
 // static
-util::StatusOr<std::unique_ptr<const Cecpq2AeadHkdfDemHelper>>
+absl::StatusOr<std::unique_ptr<const Cecpq2AeadHkdfDemHelper>>
 Cecpq2AeadHkdfDemHelper::New(const KeyTemplate& dem_key_template) {
   const std::string& dem_type_url = dem_key_template.type_url();
   if (dem_type_url == "type.googleapis.com/google.crypto.tink.AesGcmKey" ||

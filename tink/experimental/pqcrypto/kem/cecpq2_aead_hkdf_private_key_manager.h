@@ -45,7 +45,7 @@ class Cecpq2AeadHkdfPrivateKeyManager
           google::crypto::tink::Cecpq2AeadHkdfPublicKey, List<HybridDecrypt>> {
  public:
   class HybridDecryptFactory : public PrimitiveFactory<HybridDecrypt> {
-    crypto::tink::util::StatusOr<std::unique_ptr<HybridDecrypt>> Create(
+    absl::StatusOr<std::unique_ptr<HybridDecrypt>> Create(
         const google::crypto::tink::Cecpq2AeadHkdfPrivateKey&
             cecpq2_private_key) const override {
       return Cecpq2AeadHkdfHybridDecrypt::New(cecpq2_private_key);
@@ -71,13 +71,13 @@ class Cecpq2AeadHkdfPrivateKeyManager
       const google::crypto::tink::Cecpq2AeadHkdfKeyFormat& cecpq2_key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::Cecpq2AeadHkdfPrivateKey>
-  CreateKey(const google::crypto::tink::Cecpq2AeadHkdfKeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::Cecpq2AeadHkdfPrivateKey> CreateKey(
+      const google::crypto::tink::Cecpq2AeadHkdfKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::Cecpq2AeadHkdfPublicKey>
-  GetPublicKey(const google::crypto::tink::Cecpq2AeadHkdfPrivateKey&
-                   private_key) const override;
+  absl::StatusOr<google::crypto::tink::Cecpq2AeadHkdfPublicKey> GetPublicKey(
+      const google::crypto::tink::Cecpq2AeadHkdfPrivateKey& private_key)
+      const override;
 
  private:
   const std::string key_type_ = absl::StrCat(

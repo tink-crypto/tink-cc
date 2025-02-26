@@ -60,13 +60,13 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(SlhDsaPublicKeyTest, CreatePublicKeyWorks) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*params, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -79,7 +79,7 @@ TEST_P(SlhDsaPublicKeyTest, CreatePublicKeyWorks) {
 }
 
 TEST(SlhDsaPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
-  util::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
@@ -96,7 +96,7 @@ TEST(SlhDsaPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
 }
 
 TEST(SlhDsaPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
-  util::StatusOr<SlhDsaParameters> tink_params = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> tink_params = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
@@ -114,7 +114,7 @@ TEST(SlhDsaPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
 }
 
 TEST(SlhDsaPublicKeyTest, CreateKeyWithIdRequirementWithNoPrefixParamsFails) {
-  util::StatusOr<SlhDsaParameters> no_prefix_params =
+  absl::StatusOr<SlhDsaParameters> no_prefix_params =
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
@@ -135,19 +135,19 @@ TEST(SlhDsaPublicKeyTest, CreateKeyWithIdRequirementWithNoPrefixParamsFails) {
 TEST_P(SlhDsaPublicKeyTest, PublicKeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> params = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(params, IsOk());
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*params, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> other_public_key =
+  absl::StatusOr<SlhDsaPublicKey> other_public_key =
       SlhDsaPublicKey::Create(*params, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -159,7 +159,7 @@ TEST_P(SlhDsaPublicKeyTest, PublicKeyEquals) {
 }
 
 TEST(SlhDsaPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
-  util::StatusOr<SlhDsaParameters> params =
+  absl::StatusOr<SlhDsaParameters> params =
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
@@ -168,12 +168,12 @@ TEST(SlhDsaPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
   std::string public_key_bytes1 = subtle::Random::GetRandomBytes(32);
   std::string public_key_bytes2 = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
       *params, public_key_bytes1, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
+  absl::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
       *params, public_key_bytes2, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -185,7 +185,7 @@ TEST(SlhDsaPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
 }
 
 TEST(SlhDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<SlhDsaParameters> params =
+  absl::StatusOr<SlhDsaParameters> params =
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
@@ -193,12 +193,12 @@ TEST(SlhDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
       *params, public_key_bytes, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
+  absl::StatusOr<SlhDsaPublicKey> other_public_key = SlhDsaPublicKey::Create(
       *params, public_key_bytes, /*id_requirement=*/0x02030405,
       GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -210,7 +210,7 @@ TEST(SlhDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(SlhDsaPublicKeyTest, Clone) {
-  util::StatusOr<SlhDsaParameters> params =
+  absl::StatusOr<SlhDsaParameters> params =
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
@@ -218,7 +218,7 @@ TEST(SlhDsaPublicKeyTest, Clone) {
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
 
-  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
       *params, public_key_bytes, /*id_requirement=*/0x01020304,
       GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());

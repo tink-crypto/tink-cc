@@ -24,7 +24,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<SlhDsaParameters> SlhDsaParameters::Create(
+absl::StatusOr<SlhDsaParameters> SlhDsaParameters::Create(
     HashType hash_type, int private_key_size_in_bytes,
     SignatureType signature_type, Variant variant) {
   // Validate HashType - only SHA2 is currently supported.

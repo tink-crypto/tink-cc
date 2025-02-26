@@ -68,7 +68,7 @@ class SlhDsaParameters : public SignatureParameters {
   SlhDsaParameters& operator=(SlhDsaParameters&& other) = default;
 
   // Creates SLH-DSA parameters instances.
-  static util::StatusOr<SlhDsaParameters> Create(HashType hash_type,
+  static absl::StatusOr<SlhDsaParameters> Create(HashType hash_type,
                                                  int private_key_size_in_bytes,
                                                  SignatureType signature_type,
                                                  Variant variant);

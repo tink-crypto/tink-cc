@@ -46,7 +46,7 @@ class SlhDsaPublicKey : public SignaturePublicKey {
   // Creates a new SLH-DSA public key from `public_key_bytes`. If the
   // `parameters` specify a variant that uses a prefix, then `id_requirement` is
   // used to compute this prefix.
-  static util::StatusOr<SlhDsaPublicKey> Create(
+  static absl::StatusOr<SlhDsaPublicKey> Create(
       const SlhDsaParameters& parameters, absl::string_view public_key_bytes,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 

@@ -40,7 +40,7 @@ class SlhDsaPrivateKey : public SignaturePrivateKey {
   // Creates a new SLH-DSA private key from `private_key_bytes`. Returns an
   // error if `public_key` does not belong to the same key pair as
   // `private_key_bytes`.
-  static util::StatusOr<SlhDsaPrivateKey> Create(
+  static absl::StatusOr<SlhDsaPrivateKey> Create(
       const SlhDsaPublicKey& public_key,
       const RestrictedData& private_key_bytes, PartialKeyAccessToken token);
 

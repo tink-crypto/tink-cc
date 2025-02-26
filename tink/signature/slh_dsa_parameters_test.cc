@@ -53,7 +53,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(SlhDsaParametersTest, CreateSlhDsa128Sha2SmallSignatureWorks) {
   VariantTestCase test_case = GetParam();
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
@@ -140,7 +140,7 @@ TEST(SlhDsaParametersTest, CreateWithUnsupportedKeySizeFails) {
 }
 
 TEST(SlhDsaParametersTest, CopyConstructor) {
-  util::StatusOr<SlhDsaParameters> parameters =
+  absl::StatusOr<SlhDsaParameters> parameters =
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
@@ -158,7 +158,7 @@ TEST(SlhDsaParametersTest, CopyConstructor) {
 }
 
 TEST(SlhDsaParametersTest, CopyAssignment) {
-  util::StatusOr<SlhDsaParameters> parameters =
+  absl::StatusOr<SlhDsaParameters> parameters =
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
@@ -177,12 +177,12 @@ TEST(SlhDsaParametersTest, CopyAssignment) {
 TEST_P(SlhDsaParametersTest, ParametersEquals) {
   VariantTestCase test_case = GetParam();
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<SlhDsaParameters> other_parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> other_parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
   ASSERT_THAT(other_parameters, IsOk());
@@ -194,12 +194,12 @@ TEST_P(SlhDsaParametersTest, ParametersEquals) {
 }
 
 TEST(SlhDsaParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kNoPrefix);
 
-  util::StatusOr<SlhDsaParameters> other_parameters =
+  absl::StatusOr<SlhDsaParameters> other_parameters =
       SlhDsaParameters::Create(SlhDsaParameters::HashType::kSha2,
                                /*private_key_size_in_bytes=*/64,
                                SlhDsaParameters::SignatureType::kSmallSignature,
@@ -210,7 +210,7 @@ TEST(SlhDsaParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(SlhDsaParametersTest, Clone) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kNoPrefix);

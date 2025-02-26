@@ -33,7 +33,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const SlhDsaParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case SlhDsaParameters::Variant::kNoPrefix:
@@ -53,7 +53,7 @@ util::StatusOr<std::string> ComputeOutputPrefix(
 
 }  // namespace
 
-util::StatusOr<SlhDsaPublicKey> SlhDsaPublicKey::Create(
+absl::StatusOr<SlhDsaPublicKey> SlhDsaPublicKey::Create(
     const SlhDsaParameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
@@ -74,7 +74,7 @@ util::StatusOr<SlhDsaPublicKey> SlhDsaPublicKey::Create(
                         "Invalid public key size. Only 32-byte keys are "
                         "currently supported.");
   }
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();

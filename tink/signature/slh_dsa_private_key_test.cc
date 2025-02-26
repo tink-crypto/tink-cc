@@ -65,7 +65,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
@@ -80,14 +80,14 @@ TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
       reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   RestrictedData restricted_private_key_bytes =
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
-  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
       *public_key, restricted_private_key_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -100,14 +100,14 @@ TEST_P(SlhDsaPrivateKeyTest, CreateSucceeds) {
 }
 
 TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
       SlhDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
+  absl::StatusOr<SlhDsaPublicKey> public_key = SlhDsaPublicKey::Create(
       *parameters,
       subtle::Random::GetRandomBytes(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES),
       /*id_requirement=*/123, GetPartialKeyAccess());
@@ -125,7 +125,7 @@ TEST(SlhDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
 }
 
 TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
@@ -141,7 +141,7 @@ TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
       reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -163,7 +163,7 @@ TEST(SlhDsaPrivateKeyTest, CreateWithMismatchedPairFails) {
 }
 
 TEST(SlhDsaPrivateKeyTest, CreateWithModifiedPrivateKeyFails) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
@@ -179,7 +179,7 @@ TEST(SlhDsaPrivateKeyTest, CreateWithModifiedPrivateKeyFails) {
       reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -201,7 +201,7 @@ TEST(SlhDsaPrivateKeyTest, CreateWithModifiedPrivateKeyFails) {
 TEST_P(SlhDsaPrivateKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature, test_case.variant);
@@ -216,18 +216,18 @@ TEST_P(SlhDsaPrivateKeyTest, KeyEquals) {
       reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   RestrictedData restricted_private_key_bytes =
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
-  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
       *public_key, restricted_private_key_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<SlhDsaPrivateKey> other_private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> other_private_key = SlhDsaPrivateKey::Create(
       *public_key, restricted_private_key_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
@@ -238,7 +238,7 @@ TEST_P(SlhDsaPrivateKeyTest, KeyEquals) {
 }
 
 TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
@@ -254,12 +254,12 @@ TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
       reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaPublicKey> public_key123 =
+  absl::StatusOr<SlhDsaPublicKey> public_key123 =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key123, IsOk());
 
-  util::StatusOr<SlhDsaPublicKey> public_key456 =
+  absl::StatusOr<SlhDsaPublicKey> public_key456 =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               /*id_requirement=*/456, GetPartialKeyAccess());
   ASSERT_THAT(public_key456, IsOk());
@@ -267,11 +267,11 @@ TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
   RestrictedData restricted_private_key_bytes =
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
       *public_key123, restricted_private_key_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<SlhDsaPrivateKey> other_private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> other_private_key = SlhDsaPrivateKey::Create(
       *public_key456, restricted_private_key_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
@@ -282,7 +282,7 @@ TEST(SlhDsaPrivateKeyTest, DifferentPublicKeyNotEqual) {
 }
 
 TEST(SlhDsaPrivateKeyTest, Clone) {
-  util::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
+  absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2,
       /*private_key_size_in_bytes=*/SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES,
       SlhDsaParameters::SignatureType::kSmallSignature,
@@ -298,7 +298,7 @@ TEST(SlhDsaPrivateKeyTest, Clone) {
       reinterpret_cast<uint8_t *>(&public_key_bytes[0]),
       reinterpret_cast<uint8_t *>(&private_key_bytes[0]));
 
-  util::StatusOr<SlhDsaPublicKey> public_key =
+  absl::StatusOr<SlhDsaPublicKey> public_key =
       SlhDsaPublicKey::Create(*parameters, public_key_bytes,
                               /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -306,7 +306,7 @@ TEST(SlhDsaPrivateKeyTest, Clone) {
   RestrictedData restricted_private_key_bytes =
       RestrictedData(private_key_bytes, InsecureSecretKeyAccess::Get());
 
-  util::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
+  absl::StatusOr<SlhDsaPrivateKey> private_key = SlhDsaPrivateKey::Create(
       *public_key, restricted_private_key_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

@@ -34,7 +34,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
+absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     const SlhDsaPublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
   // Only 64-byte private keys are currently supported.

@@ -55,22 +55,22 @@ using ::testing::StrEq;
 
 class MockPrf : public Prf {
  public:
-  MOCK_METHOD(util::StatusOr<std::string>, Compute,
+  MOCK_METHOD(absl::StatusOr<std::string>, Compute,
               (absl::string_view input, size_t output_length), (const));
 };
 
 class MockStatefulMac : public internal::StatefulMac {
  public:
   MOCK_METHOD(absl::Status, Update, (absl::string_view data), (override));
-  MOCK_METHOD(util::StatusOr<SecretData>, FinalizeAsSecretData, (), (override));
+  MOCK_METHOD(absl::StatusOr<SecretData>, FinalizeAsSecretData, (), (override));
 };
 
 class FakeStatefulMacFactory : public internal::StatefulMacFactory {
  public:
   FakeStatefulMacFactory(absl::Status update_status,
-                         util::StatusOr<SecretData> finalize_result)
+                         absl::StatusOr<SecretData> finalize_result)
       : update_status_(update_status), finalize_result_(finalize_result) {}
-  util::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
+  absl::StatusOr<std::unique_ptr<internal::StatefulMac>> Create()
       const override {
     auto mac_mock = absl::make_unique<NiceMock<MockStatefulMac>>();
     ON_CALL(*mac_mock, Update(_)).WillByDefault(Return(update_status_));
@@ -82,7 +82,7 @@ class FakeStatefulMacFactory : public internal::StatefulMacFactory {
 
  private:
   absl::Status update_status_;
-  util::StatusOr<SecretData> finalize_result_;
+  absl::StatusOr<SecretData> finalize_result_;
 };
 
 class MockStreamingPrf : public StreamingPrf {
@@ -99,12 +99,12 @@ std::unique_ptr<InputStream> GetInputStreamForString(const std::string& input) {
 class PrfFromStatefulMacFactoryTest : public ::testing::Test {
  protected:
   void SetUpWithResult(absl::Status update_status,
-                       util::StatusOr<std::string> finalize_result) {
-    util::StatusOr<SecretData> finalize_result_secret_data =
+                       absl::StatusOr<std::string> finalize_result) {
+    absl::StatusOr<SecretData> finalize_result_secret_data =
         finalize_result.ok()
-            ? static_cast<util::StatusOr<SecretData>>(
+            ? static_cast<absl::StatusOr<SecretData>>(
                   util::SecretDataFromStringView(*finalize_result))
-            : static_cast<util::StatusOr<SecretData>>(finalize_result.status());
+            : static_cast<absl::StatusOr<SecretData>>(finalize_result.status());
     prf_ = CreatePrfFromStatefulMacFactory(
         absl::make_unique<FakeStatefulMacFactory>(update_status,
                                                   finalize_result_secret_data));

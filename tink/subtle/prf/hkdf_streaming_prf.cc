@@ -58,7 +58,7 @@ class HkdfInputStream : public InputStream {
     stream_status_ = Init(digest, secret, salt);
   }
 
-  crypto::tink::util::StatusOr<int> Next(const void **data) override {
+  absl::StatusOr<int> Next(const void **data) override {
     if (!stream_status_.ok()) {
       return stream_status_;
     }
@@ -196,9 +196,8 @@ std::unique_ptr<InputStream> HkdfStreamingPrf::ComputePrf(
 }
 
 // static
-crypto::tink::util::StatusOr<std::unique_ptr<StreamingPrf>>
-HkdfStreamingPrf::New(HashType hash, util::SecretData secret,
-                      absl::string_view salt) {
+absl::StatusOr<std::unique_ptr<StreamingPrf>> HkdfStreamingPrf::New(
+    HashType hash, util::SecretData secret, absl::string_view salt) {
   auto status = internal::CheckFipsCompatibility<HkdfStreamingPrf>();
   if (!status.ok()) return status;
 
@@ -212,7 +211,7 @@ HkdfStreamingPrf::New(HashType hash, util::SecretData secret,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Too short secret for HkdfStreamingPrf");
   }
-  util::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
+  absl::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
   if (!evp_md.ok()) {
     return absl::Status(absl::StatusCode::kUnimplemented, "Unsupported hash");
   }

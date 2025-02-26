@@ -50,9 +50,8 @@ class StreamingPrfSetWrapper : public StreamingPrf {
   std::unique_ptr<PrimitiveSet<StreamingPrf>> streaming_prf_set_;
 };
 
-::crypto::tink::util::StatusOr<std::unique_ptr<StreamingPrf>>
-StreamingPrfWrapper::Wrap(std::unique_ptr<PrimitiveSet<StreamingPrf>>
-                              streaming_prf_set) const  {
+absl::StatusOr<std::unique_ptr<StreamingPrf>> StreamingPrfWrapper::Wrap(
+    std::unique_ptr<PrimitiveSet<StreamingPrf>> streaming_prf_set) const {
   if (!streaming_prf_set) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Passed in streaming_prf_set must be non-NULL");

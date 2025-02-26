@@ -42,7 +42,7 @@ class PrfFromStreamingPrf : public Prf {
  public:
   explicit PrfFromStreamingPrf(std::unique_ptr<StreamingPrf> streaming_prf)
       : streaming_prf_(std::move(streaming_prf)) {}
-  util::StatusOr<std::string> Compute(absl::string_view input,
+  absl::StatusOr<std::string> Compute(absl::string_view input,
                                       size_t output_length) const override {
     auto inputstream = streaming_prf_->ComputePrf(input);
     auto output_result = ReadBytesFromStream(output_length, inputstream.get());
@@ -62,7 +62,7 @@ class PrfFromStatefulMacFactory : public Prf {
   explicit PrfFromStatefulMacFactory(
       std::unique_ptr<internal::StatefulMacFactory> stateful_mac_factory)
       : stateful_mac_factory_(std::move(stateful_mac_factory)) {}
-  util::StatusOr<std::string> Compute(absl::string_view input,
+  absl::StatusOr<std::string> Compute(absl::string_view input,
                                       size_t output_length) const override {
     auto stateful_mac_result = stateful_mac_factory_->Create();
     if (!stateful_mac_result.ok()) {
@@ -73,7 +73,7 @@ class PrfFromStatefulMacFactory : public Prf {
     if (!status.ok()) {
       return status;
     }
-    util::StatusOr<util::SecretData> output =
+    absl::StatusOr<util::SecretData> output =
         stateful_mac->FinalizeAsSecretData();
     if (!output.ok()) {
       return output.status();

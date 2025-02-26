@@ -239,14 +239,15 @@ absl::StatusOr<MlDsaParamsStruct> FromParameters(
 
 absl::StatusOr<MlDsaParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing MlDsaParameters.");
   }
 
   absl::StatusOr<MlDsaKeyFormatStruct> proto_key_format =
-      MlDsaKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      MlDsaKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return absl::InvalidArgumentError("Failed to parse MlDsaKeyFormat proto");
   }

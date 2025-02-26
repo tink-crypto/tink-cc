@@ -1380,6 +1380,8 @@ tink_cc_test(
     tink::signature::ed25519_public_key
     gmock
     absl::status
+    absl::statusor
+    absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1391,6 +1393,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::secret_data
     tink::util::statusor
@@ -1533,6 +1536,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
+    tink::internal::tink_proto_structs
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     tink::util::test_matchers
@@ -1636,6 +1640,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
+    tink::internal::tink_proto_structs
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     tink::util::test_matchers
@@ -1732,6 +1737,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::subtle::common_enums
     tink::util::secret_data
     tink::util::statusor

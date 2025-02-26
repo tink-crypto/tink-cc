@@ -367,14 +367,15 @@ absl::StatusOr<EcdsaParamsStruct> FromParameters(
 
 absl::StatusOr<EcdsaParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EcdsaParameters.");
   }
 
   absl::StatusOr<EcdsaKeyFormatStruct> proto_key_format =
-      EcdsaKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      EcdsaKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }

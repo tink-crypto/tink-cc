@@ -23,6 +23,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
@@ -31,6 +33,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
@@ -61,6 +64,9 @@ using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
+
+constexpr absl::string_view kPrivateKeyTypeUrl =
+    "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey";
 
 struct TestCase {
   Ed25519Parameters::Variant variant;
@@ -115,8 +121,8 @@ TEST_P(Ed25519ProtoSerializationTest, ParseParametersWithMutableRegistry) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          test_case.output_prefix_type, key_format_proto.SerializeAsString());
+          kPrivateKeyTypeUrl, test_case.output_prefix_type,
+          key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -142,8 +148,8 @@ TEST_P(Ed25519ProtoSerializationTest, ParseParametersWithRegistryBuilder) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          test_case.output_prefix_type, key_format_proto.SerializeAsString());
+          kPrivateKeyTypeUrl, test_case.output_prefix_type,
+          key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -164,8 +170,7 @@ TEST_F(Ed25519ProtoSerializationTest, ParseParametersWithInvalidSerialization) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          OutputPrefixType::RAW, "invalid_serialization");
+          kPrivateKeyTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -183,8 +188,7 @@ TEST_F(Ed25519ProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          OutputPrefixType::UNKNOWN_PREFIX,
+          kPrivateKeyTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -203,8 +207,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParseParametersWithInvalidVersion) {
 
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          OutputPrefixType::RAW, key_format_proto.SerializeAsString());
+          kPrivateKeyTypeUrl, OutputPrefixType::RAW,
+          key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -231,15 +235,15 @@ TEST_P(Ed25519ProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(),
-              Eq("type.googleapis.com/google.crypto.tink.Ed25519PrivateKey"));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(test_case.output_prefix_type));
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kPrivateKeyTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
 
   Ed25519KeyFormat key_format;
-  ASSERT_THAT(
-      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(key_format.version(), Eq(0));
 }
 
@@ -257,21 +261,21 @@ TEST_P(Ed25519ProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
   ASSERT_THAT(serialization, IsOk());
-  EXPECT_THAT((*serialization)->ObjectIdentifier(),
-              Eq("type.googleapis.com/google.crypto.tink.Ed25519PrivateKey"));
+  constexpr absl::string_view kPrivateKeyTypeUrl =
+      "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey";
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateKeyTypeUrl));
 
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(),
-              Eq("type.googleapis.com/google.crypto.tink.Ed25519PrivateKey"));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(test_case.output_prefix_type));
-
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kPrivateKeyTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
   Ed25519KeyFormat key_format;
-  ASSERT_THAT(
-      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(key_format.version(), Eq(0));
 }
 
@@ -504,10 +508,9 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          test_case.output_prefix_type, test_case.id);
+      ProtoKeySerialization::Create(kPrivateKeyTypeUrl, serialized_key,
+                                    KeyData::ASYMMETRIC_PRIVATE,
+                                    test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -560,10 +563,9 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          test_case.output_prefix_type, test_case.id);
+      ProtoKeySerialization::Create(kPrivateKeyTypeUrl, serialized_key,
+                                    KeyData::ASYMMETRIC_PRIVATE,
+                                    test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -601,10 +603,10 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          serialized_key, KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(kPrivateKeyTypeUrl, serialized_key,
+                                    KeyData::ASYMMETRIC_PRIVATE,
+                                    OutputPrefixType::TINK,
+                                    /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -629,10 +631,10 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          serialized_key, KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(kPrivateKeyTypeUrl, serialized_key,
+                                    KeyData::ASYMMETRIC_PRIVATE,
+                                    OutputPrefixType::TINK,
+                                    /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -662,10 +664,10 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          serialized_key, KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(kPrivateKeyTypeUrl, serialized_key,
+                                    KeyData::ASYMMETRIC_PRIVATE,
+                                    OutputPrefixType::TINK,
+                                    /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -698,10 +700,10 @@ TEST_F(Ed25519ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          serialized_key, KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(kPrivateKeyTypeUrl, serialized_key,
+                                    KeyData::ASYMMETRIC_PRIVATE,
+                                    OutputPrefixType::TINK,
+                                    /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -734,10 +736,10 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<ProtoKeySerialization> serialization =
-      ProtoKeySerialization::Create(
-          "type.googleapis.com/google.crypto.tink.Ed25519PrivateKey",
-          serialized_key, KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      ProtoKeySerialization::Create(kPrivateKeyTypeUrl, serialized_key,
+                                    KeyData::ASYMMETRIC_PRIVATE,
+                                    OutputPrefixType::TINK,
+                                    /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =

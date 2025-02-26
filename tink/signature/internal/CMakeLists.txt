@@ -505,6 +505,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
@@ -570,6 +571,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
@@ -708,6 +710,8 @@ tink_cc_test(
     tink::signature::internal::ed25519_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
+    absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly
     tink::core::key
@@ -720,6 +724,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
@@ -851,6 +856,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key

@@ -54,13 +54,13 @@ class ProtoParametersFormatTest : public ::testing::Test {
 };
 
 TEST_F(ProtoParametersFormatTest, SerializeAesCmacParameters) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::string> serialized_parameters =
+  absl::StatusOr<std::string> serialized_parameters =
       SerializeParametersToProtoFormat(*parameters);
   ASSERT_THAT(serialized_parameters, IsOk());
 
@@ -85,12 +85,12 @@ TEST_F(ProtoParametersFormatTest, SerializeLegacyProtoParameters) {
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
   key_template.set_type_url("invalid_url");
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(key_template);
   ASSERT_THAT(serialization, IsOk());
 
   internal::LegacyProtoParameters legacy_proto_parameters(*serialization);
-  util::StatusOr<std::string> serialized_parameters =
+  absl::StatusOr<std::string> serialized_parameters =
       SerializeParametersToProtoFormat(legacy_proto_parameters);
   ASSERT_THAT(serialized_parameters, IsOk());
 
@@ -115,11 +115,11 @@ TEST_F(ProtoParametersFormatTest, ParseAesCmacKeyFormat) {
       "type.googleapis.com/google.crypto.tink.AesCmacKey");
   key_template.set_value(key_format.SerializeAsString());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(parsed_parameters, IsOk());
 
-  util::StatusOr<AesCmacParameters> expected_parameters =
+  absl::StatusOr<AesCmacParameters> expected_parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
@@ -134,11 +134,11 @@ TEST_F(ProtoParametersFormatTest, ParseLegacyProtoParameters) {
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
   key_template.set_type_url("invalid_url");  // Should parse into legacy proto.
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(parsed_parameters, IsOk());
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(key_template);
   ASSERT_THAT(serialization, IsOk());
 
@@ -165,23 +165,23 @@ TEST_F(ProtoParametersFormatTest, ParseInvalidAesCmacKeyFormatFails) {
       "type.googleapis.com/google.crypto.tink.AesCmacKey");
   key_template.set_value(key_format.SerializeAsString());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(key_template.SerializeAsString());
   ASSERT_THAT(parsed_parameters.status(), Not(IsOk()));
 }
 
 TEST_F(ProtoParametersFormatTest, SerializeAndParse) {
-  util::StatusOr<AesCmacParameters> parameters =
+  absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(/*key_size_in_bytes=*/32,
                                 /*cryptographic_tag_size_in_bytes=*/16,
                                 AesCmacParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<std::string> serialized_parameters =
+  absl::StatusOr<std::string> serialized_parameters =
       SerializeParametersToProtoFormat(*parameters);
   ASSERT_THAT(serialized_parameters, IsOk());
 
-  util::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
+  absl::StatusOr<std::unique_ptr<Parameters>> parsed_parameters =
       ParseParametersFromProtoFormat(*serialized_parameters);
   ASSERT_THAT(parsed_parameters, IsOk());
 

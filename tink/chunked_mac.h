@@ -45,7 +45,7 @@ class ChunkedMacComputation {
   // Finalizes the MAC computation and returns the authentication tag.
   // After this method has been called, this object can no longer be used.
   // Requires exclusive access.
-  virtual util::StatusOr<std::string> ComputeMac() = 0;
+  virtual absl::StatusOr<std::string> ComputeMac() = 0;
 
   virtual ~ChunkedMacComputation() = default;
 };
@@ -81,13 +81,13 @@ class ChunkedMac {
   // Creates an instance of a single Chunked MAC computation.  Note that a
   // `ChunkedMac` object does not need to outlive the `ChunkedMacComputation`
   // objects that it creates.
-  virtual util::StatusOr<std::unique_ptr<ChunkedMacComputation>>
+  virtual absl::StatusOr<std::unique_ptr<ChunkedMacComputation>>
   CreateComputation() const = 0;
 
   // Creates an instance of a single Chunked MAC verification.  Note that a
   // `ChunkedMac` object does not need to outlive the `ChunkedMacVerification`
   // objects that it creates.
-  virtual util::StatusOr<std::unique_ptr<ChunkedMacVerification>>
+  virtual absl::StatusOr<std::unique_ptr<ChunkedMacVerification>>
   CreateVerification(absl::string_view tag) const = 0;
 
   virtual ~ChunkedMac() = default;

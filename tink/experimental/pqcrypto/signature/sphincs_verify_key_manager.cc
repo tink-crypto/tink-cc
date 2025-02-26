@@ -73,7 +73,7 @@ Status SphincsVerifyKeyManager::ValidateKey(const SphincsPublicKey& key) const {
     return status;
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 Status SphincsVerifyKeyManager::ValidateParams(
@@ -89,7 +89,7 @@ Status SphincsVerifyKeyManager::ValidateParams(
     return status;
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

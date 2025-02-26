@@ -75,7 +75,7 @@ Status DilithiumVerifyKeyManager::ValidateKey(
     return Status(absl::StatusCode::kInvalidArgument,
                   "Invalid dilithium public key size.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 Status DilithiumVerifyKeyManager::ValidateParams(
@@ -102,7 +102,7 @@ Status DilithiumVerifyKeyManager::ValidateParams(
     }
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

@@ -62,12 +62,11 @@ class SphincsSignKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::SphincsPrivateKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
-      const google::crypto::tink::SphincsKeyFormat& key_format)
-      const override;
+  absl::Status ValidateKeyFormat(
+      const google::crypto::tink::SphincsKeyFormat& key_format) const override;
 
   crypto::tink::util::StatusOr<google::crypto::tink::SphincsPrivateKey>
   CreateKey(const google::crypto::tink::SphincsKeyFormat& key_format)

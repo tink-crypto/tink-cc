@@ -35,7 +35,7 @@ namespace tink {
 // Registers PublicKeySign and PublicKeyVerify primitive wrappers, and key
 // managers for all experimental implementations of PublicKeySign and
 // PublicKeyVerify from the current Tink release.
-crypto::tink::util::Status PqSignatureConfigRegister();
+absl::Status PqSignatureConfigRegister();
 
 }  // namespace tink
 }  // namespace crypto

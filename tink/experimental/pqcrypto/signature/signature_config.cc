@@ -34,7 +34,7 @@
 namespace crypto {
 namespace tink {
 
-util::Status PqSignatureConfigRegister() {
+absl::Status PqSignatureConfigRegister() {
   // Register primitive wrappers.
   auto status = Registry::RegisterPrimitiveWrapper(
       absl::make_unique<PublicKeySignWrapper>());
@@ -44,7 +44,7 @@ util::Status PqSignatureConfigRegister() {
   if (!status.ok()) return status;
 
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // Dilithium

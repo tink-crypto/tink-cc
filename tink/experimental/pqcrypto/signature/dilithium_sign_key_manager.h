@@ -62,12 +62,11 @@ class DilithiumSignKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::DilithiumPrivateKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
-      const google::crypto::tink::DilithiumKeyFormat& key_format)
-      const override;
+  absl::Status ValidateKeyFormat(const google::crypto::tink::DilithiumKeyFormat&
+                                     key_format) const override;
 
   crypto::tink::util::StatusOr<google::crypto::tink::DilithiumPrivateKey>
   CreateKey(const google::crypto::tink::DilithiumKeyFormat& key_format)

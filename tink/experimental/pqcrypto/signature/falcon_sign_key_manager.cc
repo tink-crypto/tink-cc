@@ -102,7 +102,7 @@ Status FalconSignKeyManager::ValidateKeyFormat(
     return status;
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

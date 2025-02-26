@@ -64,7 +64,7 @@ Status FalconVerifyKeyManager::ValidateKey(const FalconPublicKey& key) const {
     return status;
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

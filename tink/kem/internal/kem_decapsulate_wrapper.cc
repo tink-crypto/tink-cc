@@ -82,7 +82,7 @@ class KemDecapsulateSetWrapper : public KemDecapsulate {
         monitoring_decapsulation_client_(
             std::move(monitoring_decapsulation_client)) {}
 
-  util::StatusOr<KeysetHandle> Decapsulate(
+  absl::StatusOr<KeysetHandle> Decapsulate(
       absl::string_view ciphertext) const override;
 
   ~KemDecapsulateSetWrapper() override = default;
@@ -92,7 +92,7 @@ class KemDecapsulateSetWrapper : public KemDecapsulate {
   std::unique_ptr<MonitoringClient> monitoring_decapsulation_client_;
 };
 
-util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
+absl::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
     absl::string_view ciphertext) const {
   // A key ID prefix is currently mandatory, to avoid ambiguity.
   if (ciphertext.length() < CryptoFormat::kNonRawPrefixSize) {
@@ -109,7 +109,7 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
 
   absl::string_view prefix =
       ciphertext.substr(0, CryptoFormat::kNonRawPrefixSize);
-  util::StatusOr<const PrimitiveSet<KemDecapsulate>::Primitives*> primitives =
+  absl::StatusOr<const PrimitiveSet<KemDecapsulate>::Primitives*> primitives =
       kem_decapsulate_set_->get_primitives(prefix);
   if (!primitives.ok() || (*primitives)->empty()) {
     if (monitoring_decapsulation_client_ != nullptr) {
@@ -147,7 +147,7 @@ util::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
 
 }  // anonymous namespace
 
-util::StatusOr<std::unique_ptr<KemDecapsulate>> KemDecapsulateWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<KemDecapsulate>> KemDecapsulateWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<KemDecapsulate>> primitive_set) const {
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) {
@@ -163,13 +163,13 @@ util::StatusOr<std::unique_ptr<KemDecapsulate>> KemDecapsulateWrapper::Wrap(
         absl::make_unique<KemDecapsulateSetWrapper>(std::move(primitive_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<MonitoringClient>>
       monitoring_decapsulation_client = monitoring_factory->New(
           MonitoringContext(kPrimitive, kDecapsulateApi, *keyset_info));
   if (!monitoring_decapsulation_client.ok()) {

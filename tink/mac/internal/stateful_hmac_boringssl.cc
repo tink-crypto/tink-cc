@@ -41,8 +41,6 @@ namespace tink {
 namespace internal {
 
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::SecretDataAsStringView;
-using ::crypto::tink::util::SecretDataFromStringView;
 
 absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
     subtle::HashType hash_type, uint32_t tag_size,

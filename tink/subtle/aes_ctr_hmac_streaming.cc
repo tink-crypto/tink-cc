@@ -64,7 +64,7 @@ static std::string NonceForSegment(absl::string_view nonce_prefix,
       std::string(4, '\x00'));
 }
 
-static util::Status DeriveKeys(const util::SecretData& ikm, HashType hkdf_algo,
+static absl::Status DeriveKeys(const util::SecretData& ikm, HashType hkdf_algo,
                                absl::string_view salt,
                                absl::string_view associated_data, int key_size,
                                util::SecretData* key_value,
@@ -81,50 +81,50 @@ static util::Status DeriveKeys(const util::SecretData& ikm, HashType hkdf_algo,
       util::SecretDataFromStringView(key_material_view.substr(key_size));
   *key_value =
       util::SecretDataFromStringView(key_material_view.substr(0, key_size));
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-static util::Status Validate(const AesCtrHmacStreaming::Params& params) {
+static absl::Status Validate(const AesCtrHmacStreaming::Params& params) {
   if (params.ikm.size() < std::max(16, params.key_size)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "input key material too small");
   }
   if (!(params.hkdf_algo == SHA1 || params.hkdf_algo == SHA256 ||
         params.hkdf_algo == SHA512)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "unsupported hkdf_algo");
   }
   if (params.key_size != 16 && params.key_size != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key_size must be 16 or 32");
   }
   int header_size =
       1 + params.key_size + AesCtrHmacStreaming::kNoncePrefixSizeInBytes;
   if (params.ciphertext_segment_size <=
       params.ciphertext_offset + header_size + params.tag_size) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext_segment_size too small");
   }
   if (params.ciphertext_offset < 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext_offset must be non-negative");
   }
   if (params.tag_size < 10) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "tag_size too small");
   }
   if (!(params.tag_algo == SHA1 || params.tag_algo == SHA256 ||
         params.tag_algo == SHA512)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "unsupported tag_algo");
   }
   if ((params.tag_algo == SHA1 && params.tag_size > 20) ||
       (params.tag_algo == SHA256 && params.tag_size > 32) ||
       (params.tag_algo == SHA512 && params.tag_size > 64)) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "tag_size too big");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "tag_size too big");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // AesCtrHmacStreaming
@@ -198,19 +198,19 @@ AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
 
 namespace {
 
-util::Status EncryptSensitive(const util::SecretData& key,
+absl::Status EncryptSensitive(const util::SecretData& key,
                               const EVP_CIPHER& cipher, absl::string_view nonce,
                               absl::string_view plaintext,
                               absl::Span<char> ciphertext) {
   internal::SslUniquePtr<EVP_CIPHER_CTX> ctx(EVP_CIPHER_CTX_new());
   if (ctx == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "could not initialize EVP_CIPHER_CTX");
   }
   if (EVP_EncryptInit_ex(ctx.get(), &cipher, nullptr /* engine */,
                          reinterpret_cast<const uint8_t*>(key.data()),
                          reinterpret_cast<const uint8_t*>(nonce.data())) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "could not initialize ctx");
   }
 
@@ -220,24 +220,24 @@ util::Status EncryptSensitive(const util::SecretData& key,
   uint8_t* ciphertext_data = reinterpret_cast<uint8_t*>(ciphertext.data());
   if (EVP_EncryptUpdate(ctx.get(), ciphertext_data, &out_len, plaintext_data,
                         plaintext.size()) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "encryption failed");
+    return absl::Status(absl::StatusCode::kInternal, "encryption failed");
   }
   if (out_len != plaintext.size()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "incorrect ciphertext size");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status Encrypt(const util::SecretData& key, const EVP_CIPHER& cipher,
+absl::Status Encrypt(const util::SecretData& key, const EVP_CIPHER& cipher,
                      absl::string_view nonce, absl::string_view plaintext,
                      absl::Span<char> ciphertext) {
   // The ciphertext will be fine to leak. This assumes that BoringSSL does not
   // use the memory as scratch pad and writes sensitive data into it.
   ScopedAssumeRegionCoreDumpSafe scope_object(ciphertext.data(),
                                               ciphertext.size());
-  util::Status status = CallWithCoreDumpProtection([&]() {
+  absl::Status status = CallWithCoreDumpProtection([&]() {
     return EncryptSensitive(
         key, cipher, nonce,
         absl::string_view(reinterpret_cast<const char*>(plaintext.data()),
@@ -251,26 +251,26 @@ util::Status Encrypt(const util::SecretData& key, const EVP_CIPHER& cipher,
   // Declassify the ciphertext: it can depend on the key, but that's
   // intentional.
   DfsanClearLabel(ciphertext.data(), ciphertext.size());
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
 
-util::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
+absl::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
     const std::vector<uint8_t>& plaintext, bool is_last_segment,
     std::vector<uint8_t>* ciphertext_buffer) {
   if (plaintext.size() > get_plaintext_segment_size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "plaintext too long");
   }
   if (ciphertext_buffer == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext_buffer must be non-null");
   }
   if (get_segment_number() > std::numeric_limits<uint32_t>::max() ||
       (get_segment_number() == std::numeric_limits<uint32_t>::max() &&
        !is_last_segment)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "too many segments");
   }
 
@@ -281,7 +281,7 @@ util::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
       NonceForSegment(nonce_prefix_, segment_number_, is_last_segment);
 
   // Encrypt.
-  if (util::Status res = Encrypt(
+  if (absl::Status res = Encrypt(
           key_value_, *cipher_, nonce,
           absl::string_view(reinterpret_cast<const char*>(plaintext.data()),
                             plaintext.size()),
@@ -302,7 +302,7 @@ util::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
          reinterpret_cast<const uint8_t*>(tag.data()), tag_size_);
 
   IncSegmentNumber();
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // AesCtrHmacStreamSegmentDecrypter
@@ -319,19 +319,19 @@ AesCtrHmacStreamSegmentDecrypter::New(const AesCtrHmacStreaming::Params& params,
       params.tag_size))};
 }
 
-util::Status AesCtrHmacStreamSegmentDecrypter::Init(
+absl::Status AesCtrHmacStreamSegmentDecrypter::Init(
     const std::vector<uint8_t>& header) {
   if (is_initialized_) {
-    return util::Status(absl::StatusCode::kFailedPrecondition,
+    return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "decrypter alreday initialized");
   }
   if (header.size() != get_header_size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("wrong header size, expected ",
                                      get_header_size(), " bytes"));
   }
   if (header[0] != header.size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "corrupted header");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "corrupted header");
   }
 
   // Extract salt and nonce prefix.
@@ -359,25 +359,25 @@ util::Status AesCtrHmacStreamSegmentDecrypter::Init(
   mac_ = std::move(hmac_result.value());
 
   is_initialized_ = true;
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 namespace {
 
-util::Status DecryptSensitive(const util::SecretData& key,
+absl::Status DecryptSensitive(const util::SecretData& key,
                               const EVP_CIPHER& cipher, absl::string_view nonce,
                               absl::string_view ciphertext,
                               absl::Span<char> plaintext) {
   // Decrypt.
   internal::SslUniquePtr<EVP_CIPHER_CTX> ctx(EVP_CIPHER_CTX_new());
   if (ctx.get() == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "could not initialize EVP_CIPHER_CTX");
   }
   if (EVP_DecryptInit_ex(ctx.get(), &cipher, nullptr /* engine */,
                          reinterpret_cast<const uint8_t*>(key.data()),
                          reinterpret_cast<const uint8_t*>(nonce.data())) != 1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "could not initialize ctx");
   }
   int out_len;
@@ -386,40 +386,40 @@ util::Status DecryptSensitive(const util::SecretData& key,
   uint8_t* plaintext_data = reinterpret_cast<uint8_t*>(plaintext.data());
   if (EVP_DecryptUpdate(ctx.get(), plaintext_data, &out_len, ciphertext_data,
                         ciphertext.size()) != 1) {
-    return util::Status(absl::StatusCode::kInternal, "decryption failed");
+    return absl::Status(absl::StatusCode::kInternal, "decryption failed");
   }
   if (out_len != plaintext.size()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "incorrect plaintext size");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
 
-util::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
+absl::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
     const std::vector<uint8_t>& ciphertext, int64_t segment_number,
     bool is_last_segment, std::vector<uint8_t>* plaintext_buffer) {
   if (!is_initialized_) {
-    return util::Status(absl::StatusCode::kFailedPrecondition,
+    return absl::Status(absl::StatusCode::kFailedPrecondition,
                         "decrypter not initialized");
   }
   if (ciphertext.size() > get_ciphertext_segment_size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too long");
   }
   if (ciphertext.size() < tag_size_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
   if (plaintext_buffer == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "plaintext_buffer must be non-null");
   }
   if (segment_number > std::numeric_limits<uint32_t>::max() ||
       (segment_number == std::numeric_limits<uint32_t>::max() &&
        !is_last_segment)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "too many segments");
   }
 
@@ -434,7 +434,7 @@ util::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
       reinterpret_cast<const char*>(ciphertext.data()), ciphertext.size());
   absl::string_view tag = ciphertext_view.substr(pt_size);
   absl::string_view ciphertext_string = ciphertext_view.substr(0, pt_size);
-  util::Status status =
+  absl::Status status =
       mac_->VerifyMac(tag, absl::StrCat(nonce, ciphertext_string));
   if (!status.ok()) {
     return status;
@@ -444,7 +444,7 @@ util::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
   // dumps.
   ScopedAssumeRegionCoreDumpSafe scope_object(plaintext_buffer->data(),
                                               plaintext_buffer->size());
-  if (util::Status status = CallWithCoreDumpProtection([&]() {
+  if (absl::Status status = CallWithCoreDumpProtection([&]() {
         return DecryptSensitive(
             key_value_, *cipher_, nonce,
             absl::string_view(reinterpret_cast<const char*>(ciphertext.data()),
@@ -458,7 +458,7 @@ util::Status AesCtrHmacStreamSegmentDecrypter::DecryptSegment(
   // Declassify the plaintext: it can depend on the key, but that's
   // intentional.
   DfsanClearLabel(plaintext_buffer->data(), plaintext_buffer->size());
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace subtle

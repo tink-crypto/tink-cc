@@ -71,7 +71,7 @@ struct KeyPair {
   RestrictedData private_seed_bytes;
 };
 
-util::StatusOr<KeyPair> GenerateKeyPair() {
+absl::StatusOr<KeyPair> GenerateKeyPair() {
   std::string public_key_bytes;
   public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
   internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
@@ -92,19 +92,19 @@ util::StatusOr<KeyPair> GenerateKeyPair() {
 TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -119,14 +119,14 @@ TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
 TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -162,16 +162,16 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
 TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
   ASSERT_THAT(key_pair1, IsOk());
-  util::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
   ASSERT_THAT(key_pair2, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key1 =
+  absl::StatusOr<MlDsaPublicKey> public_key1 =
       MlDsaPublicKey::Create(*parameters, key_pair1->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
@@ -187,23 +187,23 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
 TEST_P(MlDsaPrivateKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
@@ -216,31 +216,31 @@ TEST_P(MlDsaPrivateKeyTest, KeyEquals) {
 TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
   ASSERT_THAT(key_pair1, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key1 =
+  absl::StatusOr<MlDsaPublicKey> public_key1 =
       MlDsaPublicKey::Create(*parameters, key_pair1->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key1 = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key1 = MlDsaPrivateKey::Create(
       *public_key1, key_pair1->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key1, IsOk());
 
-  util::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
   ASSERT_THAT(key_pair2, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key2 =
+  absl::StatusOr<MlDsaPublicKey> public_key2 =
       MlDsaPublicKey::Create(*parameters, key_pair2->public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key2, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key2 = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key2 = MlDsaPrivateKey::Create(
       *public_key2, key_pair2->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key2, IsOk());
 
@@ -251,28 +251,28 @@ TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
 }
 
 TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key123 =
+  absl::StatusOr<MlDsaPublicKey> public_key123 =
       MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key123, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key456 =
+  absl::StatusOr<MlDsaPublicKey> public_key456 =
       MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              /*id_requirement=*/456, GetPartialKeyAccess());
   ASSERT_THAT(public_key456, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key123, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> other_private_key = MlDsaPrivateKey::Create(
       *public_key456, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(other_private_key, IsOk());
 
@@ -283,19 +283,19 @@ TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST_P(MlDsaPrivateKeyTest, Clone) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
   ASSERT_THAT(key_pair, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, key_pair->public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
+  absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key, key_pair->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

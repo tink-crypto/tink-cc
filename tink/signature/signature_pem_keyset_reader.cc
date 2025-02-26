@@ -183,7 +183,7 @@ Keyset::Key NewKeysetKey(uint32_t key_id, absl::string_view key_type,
 // Construct a new ECDSA key proto from a subtle ECDSA private key
 // `private_key_subtle`. The key is assigned version `key_version` and
 // key parameters `parameters`.
-util::StatusOr<EcdsaPrivateKeyProto> NewEcdsaPrivateKey(
+absl::StatusOr<EcdsaPrivateKeyProto> NewEcdsaPrivateKey(
     const internal::EcKey& private_key_subtle, uint32_t key_version,
     const PemKeyParams& parameters) {
   EcdsaPrivateKeyProto private_key_proto;
@@ -212,7 +212,7 @@ util::StatusOr<EcdsaPrivateKeyProto> NewEcdsaPrivateKey(
 // Construct a new RSASSA-PSS key proto from a subtle RSA private key
 // `private_key_subtle`; the key is assigned version `key_version` and
 // key paramters `parameters`.
-util::StatusOr<RsaSsaPssPrivateKeyProto> NewRsaSsaPrivateKey(
+absl::StatusOr<RsaSsaPssPrivateKeyProto> NewRsaSsaPrivateKey(
     const internal::RsaPrivateKey& private_key_subtle, uint32_t key_version,
     const PemKeyParams& parameters) {
   RsaSsaPssPrivateKeyProto private_key_proto;
@@ -287,12 +287,12 @@ RsaSsaPkcs1PrivateKeyProto NewRsaSsaPkcs1PrivateKey(
 
 // Adds the PEM-encoded ECDSA private key `pem_key` to `keyset`.
 util::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
-  util::StatusOr<std::unique_ptr<internal::EcKey>> private_key_subtle =
+  absl::StatusOr<std::unique_ptr<internal::EcKey>> private_key_subtle =
       subtle::PemParser::ParseEcPrivateKey(pem_key.serialized_key);
   if (!private_key_subtle.ok()) return private_key_subtle.status();
 
   EcdsaSignKeyManager key_manager;
-  util::StatusOr<EcdsaPrivateKeyProto> private_key_proto = NewEcdsaPrivateKey(
+  absl::StatusOr<EcdsaPrivateKeyProto> private_key_proto = NewEcdsaPrivateKey(
       **private_key_subtle, key_manager.get_version(), pem_key.parameters);
   if (!private_key_proto.ok()) return private_key_proto.status();
 
@@ -413,7 +413,7 @@ util::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
                         absl::StrCat("Invalid ed25519 key size: ",
                                      pem_key.parameters.key_size_in_bits));
   }
-  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> ecc_public_key =
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> ecc_public_key =
       subtle::PemParser::ParseEd25519PublicKey(pem_key.serialized_key);
   if (!ecc_public_key.ok()) {
     return ecc_public_key.status();
@@ -515,7 +515,7 @@ void SignaturePemKeysetReaderBuilder::Add(const PemKey& pem_serialized_key) {
   pem_serialized_keys_.push_back(pem_serialized_key);
 }
 
-util::StatusOr<std::unique_ptr<KeysetReader>>
+absl::StatusOr<std::unique_ptr<KeysetReader>>
 SignaturePemKeysetReaderBuilder::Build() {
   if (pem_serialized_keys_.empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -536,7 +536,7 @@ SignaturePemKeysetReaderBuilder::Build() {
                       "Unknown pem_reader_type_");
 }
 
-util::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
+absl::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
   if (pem_serialized_keys_.empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Empty array of PEM-encoded keys");
@@ -565,7 +565,7 @@ util::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
   return std::move(keyset);
 }
 
-util::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
+absl::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
   if (pem_serialized_keys_.empty()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Empty array of PEM-encoded keys");
@@ -607,7 +607,7 @@ util::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
   return std::move(keyset);
 }
 
-util::StatusOr<std::unique_ptr<EncryptedKeyset>>
+absl::StatusOr<std::unique_ptr<EncryptedKeyset>>
 SignaturePemKeysetReader::ReadEncrypted() {
   return util::Status(absl::StatusCode::kUnimplemented,
                       "Reading Encrypted PEM is not supported");

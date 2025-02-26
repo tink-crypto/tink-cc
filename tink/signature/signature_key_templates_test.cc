@@ -340,7 +340,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPkcs13072Sha256F4) {
   EXPECT_GE(key_format.modulus_size_in_bits(), 3072);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), RSA_F4);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
       internal::StringToBignum(key_format.public_exponent());
   ASSERT_THAT(resulting_bn, IsOk());
   EXPECT_EQ(BN_cmp(resulting_bn->get(), e.get()), 0);
@@ -370,7 +370,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPkcs14096Sha512F4) {
   EXPECT_GE(key_format.modulus_size_in_bits(), 4096);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), RSA_F4);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
       internal::StringToBignum(key_format.public_exponent());
   ASSERT_THAT(resulting_bn, IsOk());
   EXPECT_EQ(BN_cmp(resulting_bn->get(), e.get()), 0);
@@ -402,7 +402,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss3072Sha256Sha256F4) {
   EXPECT_GE(key_format.modulus_size_in_bits(), 3072);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), RSA_F4);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
       internal::StringToBignum(key_format.public_exponent());
   ASSERT_THAT(resulting_bn, IsOk());
   EXPECT_EQ(BN_cmp(resulting_bn->get(), e.get()), 0);
@@ -435,7 +435,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss4096Sha384Sha384F4) {
   EXPECT_GE(key_format.modulus_size_in_bits(), 4096);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), RSA_F4);
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
       internal::StringToBignum(key_format.public_exponent());
   ASSERT_THAT(resulting_bn, IsOk());
   EXPECT_EQ(BN_cmp(resulting_bn->get(), e.get()), 0);
@@ -469,7 +469,7 @@ TEST(SignatureKeyTemplatesTest, KeyTemplatesWithRsaSsaPss4096Sha512Sha512F4) {
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), RSA_F4);
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> resulting_bn =
       internal::StringToBignum(key_format.public_exponent());
   ASSERT_THAT(resulting_bn, IsOk());
   EXPECT_EQ(BN_cmp(resulting_bn->get(), e.get()), 0);

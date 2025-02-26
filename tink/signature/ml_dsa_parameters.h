@@ -56,7 +56,7 @@ class MlDsaParameters : public SignatureParameters {
   MlDsaParameters& operator=(MlDsaParameters&& other) = default;
 
   // Creates ML-DSA parameters instances.
-  static util::StatusOr<MlDsaParameters> Create(Instance instance,
+  static absl::StatusOr<MlDsaParameters> Create(Instance instance,
                                                 Variant variant);
 
   // Returns the ML-DSA key instance (44, 65 or 87). Only 65 is supported at

@@ -74,7 +74,7 @@ class RsaSsaPssParameters : public SignatureParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates RsaSsaPss parameters object from this builder.
-    util::StatusOr<RsaSsaPssParameters> Build();
+    absl::StatusOr<RsaSsaPssParameters> Build();
 
    private:
     static BigInteger CreateDefaultPublicExponent();

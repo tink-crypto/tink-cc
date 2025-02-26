@@ -73,7 +73,7 @@ class RsaSsaPkcs1Parameters : public SignatureParameters {
     Builder& SetVariant(Variant variant);
 
     // Creates RsaSsaPkcs1 parameters object from this builder.
-    util::StatusOr<RsaSsaPkcs1Parameters> Build();
+    absl::StatusOr<RsaSsaPkcs1Parameters> Build();
 
    private:
     static BigInteger CreateDefaultPublicExponent();

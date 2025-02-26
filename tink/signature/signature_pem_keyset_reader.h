@@ -68,7 +68,7 @@ struct PemKey {
 // See RFC 4055 Section 1.2 and Section 5 for a discussion of these OIDs.
 class SignaturePemKeysetReader : public KeysetReader {
  public:
-  util::StatusOr<std::unique_ptr<::google::crypto::tink::EncryptedKeyset>>
+  absl::StatusOr<std::unique_ptr<::google::crypto::tink::EncryptedKeyset>>
   ReadEncrypted() override;
 
  protected:
@@ -117,7 +117,7 @@ class SignaturePemKeysetReaderBuilder {
 
   // Creates an instance of keyset reader based on `pem_reader_type_`, to parse
   // the PEM-encoded keys in `pem_serialized_keys_`.
-  util::StatusOr<std::unique_ptr<KeysetReader>> Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> Build();
 
  private:
   // List of keys as PEM serialized items.
@@ -129,7 +129,7 @@ class SignaturePemKeysetReaderBuilder {
 // Keyset reader for PEM keys that support the PublicKeySign principal.
 class PublicKeySignPemKeysetReader : public SignaturePemKeysetReader {
  public:
-  util::StatusOr<std::unique_ptr<::google::crypto::tink::Keyset>> Read()
+  absl::StatusOr<std::unique_ptr<::google::crypto::tink::Keyset>> Read()
       override;
 
  private:
@@ -144,7 +144,7 @@ class PublicKeySignPemKeysetReader : public SignaturePemKeysetReader {
 // Keyset reader for PEM keys that support the PublicKeyVerify principal.
 class PublicKeyVerifyPemKeysetReader : public SignaturePemKeysetReader {
  public:
-  util::StatusOr<std::unique_ptr<::google::crypto::tink::Keyset>> Read()
+  absl::StatusOr<std::unique_ptr<::google::crypto::tink::Keyset>> Read()
       override;
 
  private:

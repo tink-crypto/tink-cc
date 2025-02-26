@@ -40,7 +40,7 @@ class PublicKeyVerifyWrapper
   // Returns an PublicKeyVerify-primitive that uses the primary
   // PublicKeyVerify-instance provided in 'public_key_verify_set',
   // which must be non-NULL (and must contain a primary instance).
-  crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> Wrap(
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Wrap(
       std::unique_ptr<PrimitiveSet<PublicKeyVerify>> public_key_verify_set)
       const override;
 };

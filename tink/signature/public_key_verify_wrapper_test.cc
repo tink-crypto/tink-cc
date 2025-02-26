@@ -197,7 +197,7 @@ class PublicKeyVerifySetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(verify_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -237,7 +237,7 @@ TEST_F(PublicKeyVerifySetWrapperWithMonitoringTest,
           .status(),
       IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>*> last =
+  absl::StatusOr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>*> last =
       public_key_verify_primitive_set->AddPrimitive(
           absl::make_unique<DummyPublicKeyVerify>("sign2"),
           keyset_info.key_info(2));
@@ -247,7 +247,7 @@ TEST_F(PublicKeyVerifySetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a PublicKeyVerify primitive to verify a signature.
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
       PublicKeyVerifyWrapper().Wrap(std::move(public_key_verify_primitive_set));
   ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
 
@@ -281,14 +281,14 @@ TEST_F(PublicKeyVerifySetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>*> last =
+  absl::StatusOr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>*> last =
       public_key_verify_primitive_set->AddPrimitive(
           CreateAlwaysFailingPublicKeyVerify("sign2"), keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
   ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
 
   // Create a PublicKeySign and sign some data we can verify.
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
       PublicKeyVerifyWrapper().Wrap(std::move(public_key_verify_primitive_set));
   ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
 

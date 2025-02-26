@@ -46,7 +46,7 @@ class RsaSsaPssPublicKey : public SignaturePublicKey {
   // Creates a new RsaSsaPss public key from `modulus`. If
   // `parameters` specify a variant that uses a prefix, then `id_requirement` is
   // used to compute this prefix.
-  static util::StatusOr<RsaSsaPssPublicKey> Create(
+  static absl::StatusOr<RsaSsaPssPublicKey> Create(
       const RsaSsaPssParameters& parameters, const BigInteger& modulus,
       absl::optional<int> id_requirement, PartialKeyAccessToken token);
 

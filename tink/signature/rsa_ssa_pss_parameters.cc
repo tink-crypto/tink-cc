@@ -79,7 +79,7 @@ RsaSsaPssParameters::Builder& RsaSsaPssParameters::Builder::SetVariant(
   return *this;
 }
 
-util::StatusOr<RsaSsaPssParameters> RsaSsaPssParameters::Builder::Build() {
+absl::StatusOr<RsaSsaPssParameters> RsaSsaPssParameters::Builder::Build() {
   if (!modulus_size_in_bits_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,
                         "Key size is not set.");

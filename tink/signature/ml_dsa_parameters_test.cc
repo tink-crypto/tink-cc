@@ -54,7 +54,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(MlDsaParametersTest, CreateMlDsa65Works) {
   VariantTestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -85,7 +85,7 @@ TEST(MlDsaParametersTest, CreateWithInvalidInstanceFails) {
 TEST_P(MlDsaParametersTest, CopyConstructor) {
   VariantTestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -99,7 +99,7 @@ TEST_P(MlDsaParametersTest, CopyConstructor) {
 TEST_P(MlDsaParametersTest, CopyAssignment) {
   VariantTestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -113,11 +113,11 @@ TEST_P(MlDsaParametersTest, CopyAssignment) {
 TEST_P(MlDsaParametersTest, ParametersEquals) {
   VariantTestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(other_parameters, IsOk());
 
@@ -128,10 +128,10 @@ TEST_P(MlDsaParametersTest, ParametersEquals) {
 }
 
 TEST(MlDsaParametersTest, DifferentVariantNotEqual) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
 
-  util::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
 
   EXPECT_TRUE(*parameters != *other_parameters);
@@ -139,7 +139,7 @@ TEST(MlDsaParametersTest, DifferentVariantNotEqual) {
 }
 
 TEST(MlDsaParametersTest, Clone) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();

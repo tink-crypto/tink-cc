@@ -138,7 +138,7 @@ util::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
 
 }  // anonymous namespace
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<PublicKeyVerify>> public_key_verify_set)
     const {
   util::Status status = Validate(public_key_verify_set.get());
@@ -153,13 +153,13 @@ util::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
         std::move(public_key_verify_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*public_key_verify_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
   if (!monitoring_verify_client.ok()) {

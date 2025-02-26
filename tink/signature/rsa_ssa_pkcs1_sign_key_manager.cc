@@ -84,9 +84,9 @@ internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
 
 }  // namespace
 
-StatusOr<RsaSsaPkcs1PrivateKeyProto> RsaSsaPkcs1SignKeyManager::CreateKey(
+absl::StatusOr<RsaSsaPkcs1PrivateKeyProto> RsaSsaPkcs1SignKeyManager::CreateKey(
     const RsaSsaPkcs1KeyFormat& rsa_ssa_pkcs1_key_format) const {
-  StatusOr<internal::SslUniquePtr<BIGNUM>> e =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(rsa_ssa_pkcs1_key_format.public_exponent());
   if (!e.ok()) {
     return e.status();
@@ -109,7 +109,7 @@ StatusOr<RsaSsaPkcs1PrivateKeyProto> RsaSsaPkcs1SignKeyManager::CreateKey(
   return key_proto;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 RsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
     const RsaSsaPkcs1PrivateKeyProto& private_key) const {
   auto key = RsaPrivateKeyProtoToSubtle(private_key);

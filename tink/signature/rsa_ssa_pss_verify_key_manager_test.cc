@@ -151,7 +151,7 @@ TEST(RsaSsaPssVerifyKeyManagerTest, NegativeSaltLengthFails) {
 TEST(RsaSsaPssSignKeyManagerTest, Create) {
   RsaSsaPssKeyFormat key_format =
       CreateKeyFormat(HashType::SHA256, HashType::SHA256, 32, 3072, RSA_F4);
-  StatusOr<RsaSsaPssPrivateKeyProto> private_key_or =
+  absl::StatusOr<RsaSsaPssPrivateKeyProto> private_key_or =
       RsaSsaPssSignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key_or, IsOk());
   RsaSsaPssPrivateKeyProto private_key = private_key_or.value();

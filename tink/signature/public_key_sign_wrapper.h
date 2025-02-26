@@ -39,7 +39,7 @@ class PublicKeySignWrapper
   // Returns an PublicKeySign-primitive that uses the primary
   // PublicKeySign-instance provided in 'public_key_sign_set',
   // which must be non-NULL (and must contain a primary instance).
-  crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> Wrap(
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> Wrap(
       std::unique_ptr<PrimitiveSet<PublicKeySign>> primitive_set)
       const override;
 };

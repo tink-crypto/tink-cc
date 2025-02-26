@@ -36,7 +36,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const RsaSsaPssParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case RsaSsaPssParameters::Variant::kNoPrefix:
@@ -65,7 +65,7 @@ util::StatusOr<std::string> ComputeOutputPrefix(
 
 }  // namespace
 
-util::StatusOr<RsaSsaPssPublicKey> RsaSsaPssPublicKey::Create(
+absl::StatusOr<RsaSsaPssPublicKey> RsaSsaPssPublicKey::Create(
     const RsaSsaPssParameters& parameters, const BigInteger& modulus,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
@@ -90,7 +90,7 @@ util::StatusOr<RsaSsaPssPublicKey> RsaSsaPssPublicKey::Create(
                         modulus.SizeInBytes() * 8));
   }
 
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();

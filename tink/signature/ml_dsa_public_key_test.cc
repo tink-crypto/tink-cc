@@ -80,12 +80,12 @@ std::string GeneratePublicKey() {
 TEST_P(MlDsaPublicKeyTest, CreatePublicKeyWorks) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
@@ -100,7 +100,7 @@ TEST_P(MlDsaPublicKeyTest, CreatePublicKeyWorks) {
 TEST_P(MlDsaPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
@@ -127,7 +127,7 @@ TEST_P(MlDsaPublicKeyTest, CreateWithInvalidPublicKeyLengthFails) {
 }
 
 TEST(MlDsaPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
@@ -142,7 +142,7 @@ TEST(MlDsaPublicKeyTest, CreateKeyWithNoIdRequirementWithTinkParamsFails) {
 }
 
 TEST(MlDsaPublicKeyTest, CreateKeyWithIdRequirementWithNoPrefixParamsFails) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(parameters, IsOk());
 
@@ -159,18 +159,18 @@ TEST(MlDsaPublicKeyTest, CreateKeyWithIdRequirementWithNoPrefixParamsFails) {
 TEST_P(MlDsaPublicKeyTest, PublicKeyEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> other_public_key =
+  absl::StatusOr<MlDsaPublicKey> other_public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -184,19 +184,19 @@ TEST_P(MlDsaPublicKeyTest, PublicKeyEquals) {
 TEST_P(MlDsaPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes1 = GeneratePublicKey();
   std::string public_key_bytes2 = GeneratePublicKey();
 
-  util::StatusOr<MlDsaPublicKey> public_key1 =
+  absl::StatusOr<MlDsaPublicKey> public_key1 =
       MlDsaPublicKey::Create(*parameters, public_key_bytes1,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> public_key2 =
+  absl::StatusOr<MlDsaPublicKey> public_key2 =
       MlDsaPublicKey::Create(*parameters, public_key_bytes2,
                              test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key2, IsOk());
@@ -208,18 +208,18 @@ TEST_P(MlDsaPublicKeyTest, DifferentPublicKeyBytesNotEqual) {
 }
 
 TEST(MlDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<MlDsaPublicKey> other_public_key =
+  absl::StatusOr<MlDsaPublicKey> other_public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              /*id_requirement=*/456, GetPartialKeyAccess());
   ASSERT_THAT(other_public_key, IsOk());
@@ -231,13 +231,13 @@ TEST(MlDsaPublicKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST(MlDsaPublicKeyTest, Clone) {
-  util::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
+  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
   std::string public_key_bytes = GeneratePublicKey();
 
-  util::StatusOr<MlDsaPublicKey> public_key =
+  absl::StatusOr<MlDsaPublicKey> public_key =
       MlDsaPublicKey::Create(*parameters, public_key_bytes,
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());

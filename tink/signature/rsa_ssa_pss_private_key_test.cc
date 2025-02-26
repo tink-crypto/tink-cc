@@ -148,7 +148,7 @@ PrivateValues GetValidPrivateValues() {
 }
 
 RsaSsaPssPublicKey GetValidPublicKey() {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(kF4)
@@ -160,7 +160,7 @@ RsaSsaPssPublicKey GetValidPublicKey() {
   CHECK_OK(parameters.status()) << "Failed to create parameters.";
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   CHECK_OK(public_key.status()) << "Failed to create public key.";
@@ -201,7 +201,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(kF4)
@@ -213,12 +213,12 @@ TEST_P(RsaSsaPssPrivateKeyTest, BuildPrivateKeySucceeds) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus, test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(private_values.p)
@@ -261,32 +261,32 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
 
-  util::StatusOr<std::string> n_str =
+  absl::StatusOr<std::string> n_str =
       internal::BignumToString(n_bn, BN_num_bytes(n_bn));
   ASSERT_THAT(n_str, IsOk());
-  util::StatusOr<std::string> e_str =
+  absl::StatusOr<std::string> e_str =
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
   ASSERT_THAT(e_str, IsOk());
-  util::StatusOr<std::string> d_str =
+  absl::StatusOr<std::string> d_str =
       internal::BignumToString(d_bn, BN_num_bytes(d_bn));
   ASSERT_THAT(d_str, IsOk());
-  util::StatusOr<std::string> p_str =
+  absl::StatusOr<std::string> p_str =
       internal::BignumToString(p_bn, BN_num_bytes(p_bn));
   ASSERT_THAT(p_str, IsOk());
-  util::StatusOr<std::string> q_str =
+  absl::StatusOr<std::string> q_str =
       internal::BignumToString(q_bn, BN_num_bytes(q_bn));
   ASSERT_THAT(q_str, IsOk());
-  util::StatusOr<std::string> dp_str =
+  absl::StatusOr<std::string> dp_str =
       internal::BignumToString(dp_bn, BN_num_bytes(dp_bn));
   ASSERT_THAT(dp_str, IsOk());
-  util::StatusOr<std::string> dq_str =
+  absl::StatusOr<std::string> dq_str =
       internal::BignumToString(dq_bn, BN_num_bytes(dq_bn));
   ASSERT_THAT(dq_str, IsOk());
-  util::StatusOr<std::string> q_inv_str =
+  absl::StatusOr<std::string> q_inv_str =
       internal::BignumToString(q_inv_bn, BN_num_bytes(q_inv_bn));
   ASSERT_THAT(q_inv_str, IsOk());
 
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(BigInteger(*e_str))
@@ -297,12 +297,12 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyFromBoringSsl) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, /*modulus=*/BigInteger(*n_str),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(
@@ -348,14 +348,14 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesModulus) {
   RsaSsaPssPublicKey public_key = GetValidPublicKey();
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPublicKey> public_key_modified_modulus =
+  absl::StatusOr<RsaSsaPssPublicKey> public_key_modified_modulus =
       RsaSsaPssPublicKey::Create(
           public_key.GetParameters(),
           BigInteger(FlipFirstByte(Base64WebSafeDecode(k2048BitRsaModulus))),
           /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key_modified_modulus, IsOk());
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_modified_modulus =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_modulus =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key_modified_modulus)
           .SetPrimeP(private_values.p)
@@ -374,7 +374,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeP) {
   RsaSsaPssPublicKey public_key = GetValidPublicKey();
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_p =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_p =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(public_key)
           .SetPrimeP(
@@ -395,7 +395,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeQ) {
   RsaSsaPssPublicKey public_key = GetValidPublicKey();
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_q =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_q =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(public_key)
           .SetPrimeP(private_values.p)
@@ -416,7 +416,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentP) {
   RsaSsaPssPublicKey public_key = GetValidPublicKey();
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_exponent_p =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_exponent_p =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(public_key)
           .SetPrimeP(private_values.p)
@@ -437,7 +437,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrimeExponentQ) {
   RsaSsaPssPublicKey public_key = GetValidPublicKey();
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_exponent_q =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_prime_exponent_q =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(public_key)
           .SetPrimeP(private_values.p)
@@ -458,7 +458,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesPrivateExponent) {
   RsaSsaPssPublicKey public_key = GetValidPublicKey();
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_modified_private_exponent =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_private_exponent =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(public_key)
           .SetPrimeP(private_values.p)
@@ -479,7 +479,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesCrtCoefficient) {
   RsaSsaPssPublicKey public_key = GetValidPublicKey();
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_modified_crt_coefficient =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_modified_crt_coefficient =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(public_key)
           .SetPrimeP(private_values.p)
@@ -499,7 +499,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateKeyValidatesCrtCoefficient) {
 TEST(RsaSsaPssPrivateKeyTest, BuildPublicKeyNotSetFails) {
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_no_public_key_set =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_no_public_key_set =
       RsaSsaPssPrivateKey::Builder()
           .SetPrimeP(private_values.p)
           .SetPrimeQ(private_values.q)
@@ -516,7 +516,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPublicKeyNotSetFails) {
 TEST(RsaSsaPssPrivateKeyTest, BuildPrimePNotSetFails) {
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_p_set =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_p_set =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(GetValidPublicKey())
           .SetPrimeQ(private_values.q)
@@ -533,7 +533,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrimePNotSetFails) {
 TEST(RsaSsaPssPrivateKeyTest, BuildPrimeQNotSetFails) {
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_q_set =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_q_set =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(GetValidPublicKey())
           .SetPrimeP(private_values.p)
@@ -550,7 +550,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrimeQNotSetFails) {
 TEST(RsaSsaPssPrivateKeyTest, BuildPrimeExponentPNotSetFails) {
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_exponent_p_set =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_exponent_p_set =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(GetValidPublicKey())
           .SetPrimeP(private_values.p)
@@ -567,7 +567,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrimeExponentPNotSetFails) {
 TEST(RsaSsaPssPrivateKeyTest, BuildPrimeExponentQNotSetFails) {
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_exponent_q_set =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_no_prime_exponent_q_set =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(GetValidPublicKey())
           .SetPrimeP(private_values.p)
@@ -584,7 +584,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrimeExponentQNotSetFails) {
 TEST(RsaSsaPssPrivateKeyTest, BuildPrivateExponentNotSetFails) {
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_no_private_exponent_set =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_no_private_exponent_set =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(GetValidPublicKey())
           .SetPrimeP(private_values.p)
@@ -601,7 +601,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildPrivateExponentNotSetFails) {
 TEST(RsaSsaPssPrivateKeyTest, BuildCrtCoefficientNotSetFails) {
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key_no_crt_coefficient_set =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key_no_crt_coefficient_set =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(GetValidPublicKey())
           .SetPrimeP(private_values.p)
@@ -616,7 +616,7 @@ TEST(RsaSsaPssPrivateKeyTest, BuildCrtCoefficientNotSetFails) {
 }
 
 TEST(RsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -638,14 +638,14 @@ TEST(RsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
       "3e09ada0f1126422f590975a1969816f48698bcbba1b4d9cae79d460d8f9f85e7975005d"
       "9bc22c4e5ac0f7c1a45d12569a62807d3b9a02e5a530e773066f453d1f5b4c2e9cf78202"
       "83f742b9d5"));
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, mismatched_modulus,
       /*id_requirement=*/0x02030400, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(private_values.p)
@@ -662,7 +662,7 @@ TEST(RsaSsaPssPrivateKeyTest, CreateMismatchedKeyPairFails) {
 
 TEST_P(RsaSsaPssPrivateKeyTest, PrivateKeyEquals) {
   TestCase test_case = GetParam();
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(kModulusSizeInBits)
           .SetPublicExponent(kF4)
@@ -674,14 +674,14 @@ TEST_P(RsaSsaPssPrivateKeyTest, PrivateKeyEquals) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(private_values.p)
@@ -694,7 +694,7 @@ TEST_P(RsaSsaPssPrivateKeyTest, PrivateKeyEquals) {
 
   ASSERT_THAT(private_key, IsOk());
 
-  util::StatusOr<RsaSsaPssPrivateKey> same_private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> same_private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(private_values.p)
@@ -714,7 +714,7 @@ TEST_P(RsaSsaPssPrivateKeyTest, PrivateKeyEquals) {
 }
 
 TEST(RsaSsaPssPrivateKeyTest, DifferentPublicKeyNotEqual) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -726,19 +726,19 @@ TEST(RsaSsaPssPrivateKeyTest, DifferentPublicKeyNotEqual) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<RsaSsaPssPublicKey> public_key1 = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key1 = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/0x02030400, GetPartialKeyAccess());
   ASSERT_THAT(public_key1, IsOk());
 
-  util::StatusOr<RsaSsaPssPublicKey> public_key2 = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key2 = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/0x01030005, GetPartialKeyAccess());
   ASSERT_THAT(public_key2, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key1 =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key1 =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key1)
           .SetPrimeP(private_values.p)
@@ -751,7 +751,7 @@ TEST(RsaSsaPssPrivateKeyTest, DifferentPublicKeyNotEqual) {
 
   ASSERT_THAT(private_key1, IsOk());
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key2 =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key2 =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key2)
           .SetPrimeP(private_values.p)
@@ -771,7 +771,7 @@ TEST(RsaSsaPssPrivateKeyTest, DifferentPublicKeyNotEqual) {
 }
 
 TEST(RsaSsaPssPrivateKeyTest, DifferentKeyTypesNotEqual) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -783,14 +783,14 @@ TEST(RsaSsaPssPrivateKeyTest, DifferentKeyTypesNotEqual) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(private_values.p)
@@ -810,7 +810,7 @@ TEST(RsaSsaPssPrivateKeyTest, DifferentKeyTypesNotEqual) {
 }
 
 TEST(RsaSsaPssPrivateKeyTest, Clone) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -822,14 +822,14 @@ TEST(RsaSsaPssPrivateKeyTest, Clone) {
   ASSERT_THAT(parameters, IsOk());
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
-  util::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
+  absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
   PrivateValues private_values = GetValidPrivateValues();
 
-  util::StatusOr<RsaSsaPssPrivateKey> private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
           .SetPrimeP(private_values.p)

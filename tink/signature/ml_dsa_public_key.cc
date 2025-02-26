@@ -32,7 +32,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const MlDsaParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case MlDsaParameters::Variant::kNoPrefix:
@@ -52,7 +52,7 @@ util::StatusOr<std::string> ComputeOutputPrefix(
 
 }  // namespace
 
-util::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
+absl::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
     const MlDsaParameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
@@ -81,7 +81,7 @@ util::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
                                      "-byte keys are currently supported."));
   }
 
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();

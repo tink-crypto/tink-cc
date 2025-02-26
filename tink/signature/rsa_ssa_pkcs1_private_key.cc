@@ -48,13 +48,13 @@ util::Status ValidateKeyPair(
                         "Internal RSA allocation error");
   }
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(modulus.GetValue());
   if (!n.ok()) {
     return n.status();
   }
 
-  util::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(public_exponent.GetValue());
   if (!e.ok()) {
     return e.status();
@@ -62,39 +62,39 @@ util::Status ValidateKeyPair(
 
   return internal::CallWithCoreDumpProtection(
       [&]() -> absl::Status {
-        util::StatusOr<internal::SslUniquePtr<BIGNUM>> d_bn =
+        absl::StatusOr<internal::SslUniquePtr<BIGNUM>> d_bn =
             internal::StringToBignum(
                 d.GetSecret(InsecureSecretKeyAccess::Get()));
         if (!d_bn.ok()) {
           return d_bn.status();
         }
 
-        util::StatusOr<internal::SslUniquePtr<BIGNUM>> p_bn =
+        absl::StatusOr<internal::SslUniquePtr<BIGNUM>> p_bn =
             internal::StringToBignum(
                 p.GetSecret(InsecureSecretKeyAccess::Get()));
         if (!p_bn.ok()) {
           return p_bn.status();
         }
-        util::StatusOr<internal::SslUniquePtr<BIGNUM>> q_bn =
+        absl::StatusOr<internal::SslUniquePtr<BIGNUM>> q_bn =
             internal::StringToBignum(
                 q.GetSecret(InsecureSecretKeyAccess::Get()));
         if (!q_bn.ok()) {
           return q_bn.status();
         }
 
-        util::StatusOr<internal::SslUniquePtr<BIGNUM>> dp_bn =
+        absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dp_bn =
             internal::StringToBignum(
                 dp.GetSecret(InsecureSecretKeyAccess::Get()));
         if (!dp_bn.ok()) {
           return dp_bn.status();
         }
-        util::StatusOr<internal::SslUniquePtr<BIGNUM>> dq_bn =
+        absl::StatusOr<internal::SslUniquePtr<BIGNUM>> dq_bn =
             internal::StringToBignum(
                 dq.GetSecret(InsecureSecretKeyAccess::Get()));
         if (!dq_bn.ok()) {
           return dq_bn.status();
         }
-        util::StatusOr<internal::SslUniquePtr<BIGNUM>> q_inv_bn =
+        absl::StatusOr<internal::SslUniquePtr<BIGNUM>> q_inv_bn =
             internal::StringToBignum(
                 q_inv.GetSecret(InsecureSecretKeyAccess::Get()));
         if (!q_inv_bn.ok()) {
@@ -184,7 +184,7 @@ RsaSsaPkcs1PrivateKey::Builder::SetCrtCoefficient(
   return *this;
 }
 
-util::StatusOr<RsaSsaPkcs1PrivateKey> RsaSsaPkcs1PrivateKey::Builder::Build(
+absl::StatusOr<RsaSsaPkcs1PrivateKey> RsaSsaPkcs1PrivateKey::Builder::Build(
     PartialKeyAccessToken token) {
   if (!public_key_.has_value()) {
     return util::Status(absl::StatusCode::kInvalidArgument,

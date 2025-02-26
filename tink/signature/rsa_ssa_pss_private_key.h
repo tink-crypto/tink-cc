@@ -61,7 +61,7 @@ class RsaSsaPssPrivateKey : public SignaturePrivateKey {
     Builder& SetCrtCoefficient(const RestrictedBigInteger& q_inv);
 
     // Creates RsaSsaPss private key object from this builder.
-    util::StatusOr<RsaSsaPssPrivateKey> Build(PartialKeyAccessToken token);
+    absl::StatusOr<RsaSsaPssPrivateKey> Build(PartialKeyAccessToken token);
 
    private:
     absl::optional<RsaSsaPssPublicKey> public_key_;

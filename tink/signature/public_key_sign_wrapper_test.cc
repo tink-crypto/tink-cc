@@ -233,7 +233,7 @@ class PublicKeySignSetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(sign_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -271,7 +271,7 @@ TEST_F(PublicKeySignSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<PublicKeySign>::Entry<PublicKeySign>*> last =
+  absl::StatusOr<PrimitiveSet<PublicKeySign>::Entry<PublicKeySign>*> last =
       public_key_sign_primitive_set->AddPrimitive(
           absl::make_unique<DummyPublicKeySign>("sign2"),
           keyset_info.key_info(2));
@@ -281,7 +281,7 @@ TEST_F(PublicKeySignSetWrapperWithMonitoringTest,
   const uint32_t kPrimaryKeyId = keyset_info.key_info(2).key_id();
 
   // Create a PublicKeySign primitive and sign some data.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> public_key_sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> public_key_sign =
       PublicKeySignWrapper().Wrap(std::move(public_key_sign_primitive_set));
   ASSERT_THAT(public_key_sign, IsOkAndHolds(NotNull()));
 
@@ -311,14 +311,14 @@ TEST_F(PublicKeySignSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<PublicKeySign>::Entry<PublicKeySign>*> last =
+  absl::StatusOr<PrimitiveSet<PublicKeySign>::Entry<PublicKeySign>*> last =
       public_key_sign_primitive_set->AddPrimitive(
           CreateAlwaysFailingPublicKeySign("sign2"), keyset_info.key_info(2));
   ASSERT_THAT(last, IsOk());
   ASSERT_THAT(public_key_sign_primitive_set->set_primary(*last), IsOk());
 
   // Create a PublicKeySign and sign some data.
-  util::StatusOr<std::unique_ptr<PublicKeySign>> public_key_sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> public_key_sign =
       PublicKeySignWrapper().Wrap(std::move(public_key_sign_primitive_set));
   ASSERT_THAT(public_key_sign, IsOkAndHolds(NotNull()));
 

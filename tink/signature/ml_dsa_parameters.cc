@@ -24,7 +24,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<MlDsaParameters> MlDsaParameters::Create(Instance instance,
+absl::StatusOr<MlDsaParameters> MlDsaParameters::Create(Instance instance,
                                                         Variant variant) {
   if (instance != Instance::kMlDsa65) {
     return util::Status(absl::StatusCode::kInvalidArgument,

@@ -88,7 +88,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(RsaSsaPssParametersTest, Build) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(test_case.modulus_size_in_bits)
           .SetPublicExponent(kF4)
@@ -109,7 +109,7 @@ TEST_P(RsaSsaPssParametersTest, Build) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithInvalidVariantFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -124,7 +124,7 @@ TEST(RsaSsaPssParametersTest, BuildWithInvalidVariantFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithoutVariantFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -137,7 +137,7 @@ TEST(RsaSsaPssParametersTest, BuildWithoutVariantFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithInvalidSigHashTypeFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -153,7 +153,7 @@ TEST(RsaSsaPssParametersTest, BuildWithInvalidSigHashTypeFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithInvalidMgf1gHashTypeFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -169,7 +169,7 @@ TEST(RsaSsaPssParametersTest, BuildWithInvalidMgf1gHashTypeFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithDifferentSigAndMgf1HashTypesFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -183,7 +183,7 @@ TEST(RsaSsaPssParametersTest, BuildWithDifferentSigAndMgf1HashTypesFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithoutSigHashTypeFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -196,7 +196,7 @@ TEST(RsaSsaPssParametersTest, BuildWithoutSigHashTypeFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithoutMgf1HashTypeFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -209,7 +209,7 @@ TEST(RsaSsaPssParametersTest, BuildWithoutMgf1HashTypeFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithLargeModulusSizeWorks) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(16789)
           .SetPublicExponent(kF4)
@@ -223,7 +223,7 @@ TEST(RsaSsaPssParametersTest, BuildWithLargeModulusSizeWorks) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithTooSmallModulusSizeFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2047)
           .SetPublicExponent(kF4)
@@ -237,7 +237,7 @@ TEST(RsaSsaPssParametersTest, BuildWithTooSmallModulusSizeFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithoutModulusSizeFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetPublicExponent(kF4)
           .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
@@ -250,7 +250,7 @@ TEST(RsaSsaPssParametersTest, BuildWithoutModulusSizeFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithoutSaltLengthFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -263,7 +263,7 @@ TEST(RsaSsaPssParametersTest, BuildWithoutSaltLengthFails) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithNegativeSaltLengthFails) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -279,7 +279,7 @@ TEST(RsaSsaPssParametersTest, BuildWithNegativeSaltLengthFails) {
 TEST(RsaSsaPssParametersTest, BuildWithValidNonF4PublicExponent) {
   BigInteger nonF4_public_exponent =
       BigInteger(PublicExponentToString(1234567));
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(nonF4_public_exponent)
@@ -293,7 +293,7 @@ TEST(RsaSsaPssParametersTest, BuildWithValidNonF4PublicExponent) {
 }
 
 TEST(RsaSsaPssParametersTest, BuildWithoutPublicExponentDefaultsToF4) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetSigHashType(RsaSsaPssParameters::HashType::kSha256)
@@ -307,7 +307,7 @@ TEST(RsaSsaPssParametersTest, BuildWithoutPublicExponentDefaultsToF4) {
 
 TEST(RsaSsaPssParametersTest, BuildWithSmallPublicExponentFails) {
   BigInteger small_public_exponent = BigInteger(PublicExponentToString(3));
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(small_public_exponent)
@@ -322,7 +322,7 @@ TEST(RsaSsaPssParametersTest, BuildWithSmallPublicExponentFails) {
 
 TEST(RsaSsaPssParametersTest, BuildWithEvenPublicExponentFails) {
   BigInteger even_public_exponent = BigInteger(PublicExponentToString(123456));
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(even_public_exponent)
@@ -338,7 +338,7 @@ TEST(RsaSsaPssParametersTest, BuildWithEvenPublicExponentFails) {
 TEST(RsaSsaPssParametersTest, BuildWithLargePublicExponent) {
   BigInteger large_public_exponent =
       BigInteger(PublicExponentToString(100000001L));
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(large_public_exponent)
@@ -355,7 +355,7 @@ TEST(RsaSsaPssParametersTest, BuildWithTooLargePublicExponent) {
   // Public exponent must be smaller than 32 bits.
   BigInteger too_large_public_exponent =
       BigInteger(PublicExponentToString(4294967297L));
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(too_large_public_exponent)
@@ -369,7 +369,7 @@ TEST(RsaSsaPssParametersTest, BuildWithTooLargePublicExponent) {
 }
 
 TEST(RsaSsaPssParametersTest, CopyConstructor) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -394,7 +394,7 @@ TEST(RsaSsaPssParametersTest, CopyConstructor) {
 }
 
 TEST(RsaSsaPssParametersTest, CopyAssignment) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -421,7 +421,7 @@ TEST(RsaSsaPssParametersTest, CopyAssignment) {
 TEST_P(RsaSsaPssParametersTest, ParametersEquals) {
   TestCase test_case = GetParam();
 
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(test_case.modulus_size_in_bits)
           .SetPublicExponent(kF4)
@@ -432,7 +432,7 @@ TEST_P(RsaSsaPssParametersTest, ParametersEquals) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<RsaSsaPssParameters> other_parameters =
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(test_case.modulus_size_in_bits)
           .SetPublicExponent(kF4)
@@ -450,7 +450,7 @@ TEST_P(RsaSsaPssParametersTest, ParametersEquals) {
 }
 
 TEST(RsaSsaPssParametersTest, VariantNotEqual) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -461,7 +461,7 @@ TEST(RsaSsaPssParametersTest, VariantNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<RsaSsaPssParameters> other_parameters =
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -477,7 +477,7 @@ TEST(RsaSsaPssParametersTest, VariantNotEqual) {
 }
 
 TEST(RsaSsaPssParametersTest, HashTypeNotEqual) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -488,7 +488,7 @@ TEST(RsaSsaPssParametersTest, HashTypeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<RsaSsaPssParameters> other_parameters =
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -504,7 +504,7 @@ TEST(RsaSsaPssParametersTest, HashTypeNotEqual) {
 }
 
 TEST(RsaSsaPssParametersTest, SaltLengthNotEqual) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -515,7 +515,7 @@ TEST(RsaSsaPssParametersTest, SaltLengthNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<RsaSsaPssParameters> other_parameters =
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -531,7 +531,7 @@ TEST(RsaSsaPssParametersTest, SaltLengthNotEqual) {
 }
 
 TEST(RsaSsaPssParametersTest, ModulusSizeNotEqual) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(2048)
           .SetPublicExponent(kF4)
@@ -542,7 +542,7 @@ TEST(RsaSsaPssParametersTest, ModulusSizeNotEqual) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  util::StatusOr<RsaSsaPssParameters> other_parameters =
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
       RsaSsaPssParameters::Builder()
           .SetModulusSizeInBits(3072)
           .SetPublicExponent(kF4)
@@ -558,7 +558,7 @@ TEST(RsaSsaPssParametersTest, ModulusSizeNotEqual) {
 }
 
 TEST(RsaSsaPssParametersTest, PublicExponentNotEqual) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .SetModulusSizeInBits(2048)
@@ -571,7 +571,7 @@ TEST(RsaSsaPssParametersTest, PublicExponentNotEqual) {
 
   BigInteger nonF4_public_exponent =
       BigInteger(PublicExponentToString(1234567));
-  util::StatusOr<RsaSsaPssParameters> other_parameters =
+  absl::StatusOr<RsaSsaPssParameters> other_parameters =
       RsaSsaPssParameters::Builder()
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .SetModulusSizeInBits(2048)
@@ -587,7 +587,7 @@ TEST(RsaSsaPssParametersTest, PublicExponentNotEqual) {
 }
 
 TEST(RsaSsaPssParametersTest, Clone) {
-  util::StatusOr<RsaSsaPssParameters> parameters =
+  absl::StatusOr<RsaSsaPssParameters> parameters =
       RsaSsaPssParameters::Builder()
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .SetModulusSizeInBits(2048)

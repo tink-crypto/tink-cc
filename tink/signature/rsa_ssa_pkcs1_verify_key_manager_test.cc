@@ -130,7 +130,7 @@ TEST(RsaSsaPkcs1VerifyKeyManagerTest, ValidateKeyFormatSmallModulusDisallowed) {
 TEST(RsaSsaPkcs1SignKeyManagerTest, Create) {
   RsaSsaPkcs1KeyFormat key_format =
       CreateKeyFormat(HashType::SHA256, 3072, RSA_F4);
-  StatusOr<RsaSsaPkcs1PrivateKeyProto> private_key_or =
+  absl::StatusOr<RsaSsaPkcs1PrivateKeyProto> private_key_or =
       RsaSsaPkcs1SignKeyManager().CreateKey(key_format);
   ASSERT_THAT(private_key_or, IsOk());
   RsaSsaPkcs1PrivateKeyProto private_key = private_key_or.value();

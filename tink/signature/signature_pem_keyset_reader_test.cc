@@ -274,7 +274,7 @@ constexpr absl::string_view kRsaPrivateKey2048 =
 
 // Helper function that creates an EcdsaPublicKey from the given PEM encoded
 // key `pem_encoded_key`, Hash type `hash_type` and key version `key_version`.
-util::StatusOr<EcdsaPublicKeyProto> GetExpectedEcdsaPublicKeyProto(
+absl::StatusOr<EcdsaPublicKeyProto> GetExpectedEcdsaPublicKeyProto(
     EllipticCurveType curve, EcdsaSignatureEncoding encoding) {
   EcdsaPublicKeyProto public_key_proto;
   public_key_proto.set_version(0);
@@ -310,9 +310,9 @@ util::StatusOr<EcdsaPublicKeyProto> GetExpectedEcdsaPublicKeyProto(
   return public_key_proto;
 }
 
-util::StatusOr<EcdsaPrivateKeyProto> GetExpectedEcdsaPrivateKeyProto(
+absl::StatusOr<EcdsaPrivateKeyProto> GetExpectedEcdsaPrivateKeyProto(
     EllipticCurveType curve, EcdsaSignatureEncoding encoding) {
-  util::StatusOr<EcdsaPublicKeyProto> public_key;
+  absl::StatusOr<EcdsaPublicKeyProto> public_key;
   EcdsaPrivateKeyProto private_key_proto;
   private_key_proto.set_version(0);
 
@@ -348,10 +348,10 @@ util::StatusOr<EcdsaPrivateKeyProto> GetExpectedEcdsaPrivateKeyProto(
 
 // Helper function that creates an RsaSsaPssPublicKey from the given PEM encoded
 // key `pem_encoded_key`, Hash type `hash_type` and key version `key_version`.
-util::StatusOr<RsaSsaPssPublicKeyProto> GetRsaSsaPssPublicKeyProto(
+absl::StatusOr<RsaSsaPssPublicKeyProto> GetRsaSsaPssPublicKeyProto(
     absl::string_view pem_encoded_key, HashType hash_type,
     uint32_t key_version) {
-  util::StatusOr<std::unique_ptr<internal::RsaPublicKey>> public_key =
+  absl::StatusOr<std::unique_ptr<internal::RsaPublicKey>> public_key =
       subtle::PemParser::ParseRsaPublicKey(pem_encoded_key);
   if (!public_key.ok()) {
     return public_key.status();
@@ -373,12 +373,12 @@ util::StatusOr<RsaSsaPssPublicKeyProto> GetRsaSsaPssPublicKeyProto(
 // Helper function that creates an RsaSsaPssPrivateKey from the given PEM
 // encoded key `pem_encoded_key`, Hash type `hash_type` and key version
 // `key_version`.
-util::StatusOr<RsaSsaPssPrivateKeyProto> GetRsaSsaPssPrivateKeyProto(
+absl::StatusOr<RsaSsaPssPrivateKeyProto> GetRsaSsaPssPrivateKeyProto(
     absl::string_view pem_encoded_key, HashType hash_type,
     uint32_t key_version) {
   // Parse the key with subtle::PemParser to make sure the proto key fields are
   // correct.
-  util::StatusOr<std::unique_ptr<internal::RsaPrivateKey>> private_key =
+  absl::StatusOr<std::unique_ptr<internal::RsaPrivateKey>> private_key =
       subtle::PemParser::ParseRsaPrivateKey(pem_encoded_key);
   if (!private_key.ok()) {
     return private_key.status();
@@ -440,9 +440,9 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
                            PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
                            HashType::SHA384));
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  absl::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
   ASSERT_THAT(keyset, IsOk());
 
   EXPECT_THAT((*keyset)->key(), SizeIs(2));
@@ -464,7 +464,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   expected_keydata1->set_type_url(ecdsa_sign_key_manager.get_key_type());
   expected_keydata1->set_key_material_type(
       ecdsa_sign_key_manager.key_material_type());
-  util::StatusOr<EcdsaPrivateKeyProto> ecdsa_private_key1 =
+  absl::StatusOr<EcdsaPrivateKeyProto> ecdsa_private_key1 =
       GetExpectedEcdsaPrivateKeyProto(EllipticCurveType::NIST_P256,
                                       EcdsaSignatureEncoding::IEEE_P1363);
   ASSERT_THAT(ecdsa_private_key1, IsOk());
@@ -482,7 +482,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPrivateKeyWithMultipleKeyTypes) {
   expected_keydata2->set_type_url(rsa_sign_key_manager.get_key_type());
   expected_keydata2->set_key_material_type(
       rsa_sign_key_manager.key_material_type());
-  util::StatusOr<RsaSsaPssPrivateKeyProto> rsa_pss_private_key2 =
+  absl::StatusOr<RsaSsaPssPrivateKeyProto> rsa_pss_private_key2 =
       GetRsaSsaPssPrivateKeyProto(kRsaPrivateKey2048, HashType::SHA384,
                                   rsa_sign_key_manager.get_version());
   ASSERT_THAT(rsa_pss_private_key2, IsOk());
@@ -501,9 +501,9 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPublicKeyWithMultipleKeyTypes) {
                            PemAlgorithm::ECDSA_DER, /*key_size_in_bits=*/256,
                            HashType::SHA256));
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  absl::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
   ASSERT_THAT(keyset, IsOk());
 
   EXPECT_THAT((*keyset)->key(), SizeIs(2));
@@ -526,7 +526,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPublicKeyWithMultipleKeyTypes) {
   expected_keydata1->set_key_material_type(
       verify_key_manager.key_material_type());
 
-  util::StatusOr<RsaSsaPssPublicKeyProto> rsa_ssa_pss_pub_key =
+  absl::StatusOr<RsaSsaPssPublicKeyProto> rsa_ssa_pss_pub_key =
       GetRsaSsaPssPublicKeyProto(kRsaPublicKey2048, HashType::SHA384,
                                  verify_key_manager.get_version());
   ASSERT_THAT(rsa_ssa_pss_pub_key, IsOk());
@@ -545,7 +545,7 @@ TEST(SignaturePemKeysetReaderTest, ReadCorrectPublicKeyWithMultipleKeyTypes) {
   expected_secondary_data->set_type_url(key_manager.get_key_type());
   expected_secondary_data->set_key_material_type(
       key_manager.key_material_type());
-  util::StatusOr<EcdsaPublicKeyProto> pub_key = GetExpectedEcdsaPublicKeyProto(
+  absl::StatusOr<EcdsaPublicKeyProto> pub_key = GetExpectedEcdsaPublicKeyProto(
       EllipticCurveType::NIST_P256, EcdsaSignatureEncoding::DER);
   ASSERT_THAT(pub_key, IsOk());
   expected_secondary_data->set_value(pub_key->SerializeAsString());
@@ -613,7 +613,7 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPublicKey) {
   expected_keydata1->set_key_material_type(
       verify_key_manager.key_material_type());
 
-  util::StatusOr<RsaSsaPssPublicKeyProto> rsa_ssa_pss_pub_key =
+  absl::StatusOr<RsaSsaPssPublicKeyProto> rsa_ssa_pss_pub_key =
       GetRsaSsaPssPublicKeyProto(kRsaPublicKey2048, HashType::SHA384,
                                  verify_key_manager.get_version());
   ASSERT_THAT(rsa_ssa_pss_pub_key, IsOk());
@@ -645,7 +645,7 @@ TEST(SignaturePemKeysetReaderTest, ParseRsaSha256PublicKeyFails) {
                            PemAlgorithm::RSASSA_PKCS1,
                            /*key_size_in_bits=*/2048, HashType::SHA256));
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
 
   EXPECT_THAT((*reader)->Read(), Not(IsOk()));
@@ -674,7 +674,7 @@ TEST(SignaturePemKeysetReaderTest, ParseRsaPssPublicKeyFails) {
                            PemAlgorithm::RSASSA_PSS, /*key_size_in_bits=*/2048,
                            HashType::SHA256));
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
 
   EXPECT_THAT((*reader)->Read(), Not(IsOk()));
@@ -714,7 +714,7 @@ TEST(SignaturePemKeysetReaderTest, ReadRsaCorrectPrivateKey) {
   expected_keydata1->set_type_url(sign_key_manager.get_key_type());
   expected_keydata1->set_key_material_type(
       sign_key_manager.key_material_type());
-  util::StatusOr<RsaSsaPssPrivateKeyProto> rsa_pss_private_key1 =
+  absl::StatusOr<RsaSsaPssPrivateKeyProto> rsa_pss_private_key1 =
       GetRsaSsaPssPrivateKeyProto(kRsaPrivateKey2048, HashType::SHA256,
                                   sign_key_manager.get_version());
   ASSERT_THAT(rsa_pss_private_key1, IsOk());
@@ -732,10 +732,10 @@ TEST(SignaturePemKeysetReaderTest, ReadAndUseRsaPemKeys) {
       private_keyset_reader_builder.Add(
           CreatePemKey(kRsaPrivateKey2048, PemKeyType::PEM_RSA, pem_algorithm,
                        /*key_size_in_bits=*/2048, hash_type));
-      util::StatusOr<std::unique_ptr<KeysetReader>> private_keyset_reader =
+      absl::StatusOr<std::unique_ptr<KeysetReader>> private_keyset_reader =
           private_keyset_reader_builder.Build();
       ASSERT_THAT(private_keyset_reader, IsOk());
-      util::StatusOr<std::unique_ptr<KeysetHandle>> private_keyset_handle =
+      absl::StatusOr<std::unique_ptr<KeysetHandle>> private_keyset_handle =
           CleartextKeysetHandle::Read(std::move(*private_keyset_reader));
 
       auto public_keyset_reader_builder = SignaturePemKeysetReaderBuilder(
@@ -743,23 +743,23 @@ TEST(SignaturePemKeysetReaderTest, ReadAndUseRsaPemKeys) {
       public_keyset_reader_builder.Add(
           CreatePemKey(kRsaPublicKey2048, PemKeyType::PEM_RSA, pem_algorithm,
                        /*key_size_in_bits=*/2048, hash_type));
-      util::StatusOr<std::unique_ptr<KeysetReader>> public_keyset_reader =
+      absl::StatusOr<std::unique_ptr<KeysetReader>> public_keyset_reader =
           public_keyset_reader_builder.Build();
       ASSERT_THAT(public_keyset_reader, IsOk());
-      util::StatusOr<std::unique_ptr<KeysetHandle>> public_keyset_handle =
+      absl::StatusOr<std::unique_ptr<KeysetHandle>> public_keyset_handle =
           CleartextKeysetHandle::Read(std::move(*public_keyset_reader));
 
-      util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+      absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
           (*private_keyset_handle)
               ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
       ASSERT_THAT(sign, IsOk());
-      util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+      absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
           (*public_keyset_handle)
               ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
       ASSERT_THAT(verify, IsOk());
 
       std::string data = "data";
-      util::StatusOr<std::string> signature = (*sign)->Sign(data);
+      absl::StatusOr<std::string> signature = (*sign)->Sign(data);
       ASSERT_THAT(signature, IsOk());
       EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
     }
@@ -984,7 +984,7 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaCorrectPublicKey) {
   KeyData* expected_primary_data = expected_primary.mutable_key_data();
   expected_primary_data->set_type_url(key_manager.get_key_type());
   expected_primary_data->set_key_material_type(key_manager.key_material_type());
-  util::StatusOr<EcdsaPublicKeyProto> pub_key =
+  absl::StatusOr<EcdsaPublicKeyProto> pub_key =
       GetExpectedEcdsaPublicKeyProto(test_case.ec_curve, test_case.encoding);
   ASSERT_THAT(pub_key, IsOk());
   expected_primary_data->set_value(pub_key->SerializeAsString());
@@ -997,9 +997,9 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
   builder.Add(test_case.private_pem_key);
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  absl::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
   ASSERT_THAT(keyset, IsOk());
 
   EXPECT_THAT((*keyset)->key(), SizeIs(1));
@@ -1019,7 +1019,7 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {
   expected_keydata1->set_type_url(ecdsa_sign_key_manager.get_key_type());
   expected_keydata1->set_key_material_type(
       ecdsa_sign_key_manager.key_material_type());
-  util::StatusOr<EcdsaPrivateKeyProto> ecdsa_private_key1 =
+  absl::StatusOr<EcdsaPrivateKeyProto> ecdsa_private_key1 =
       GetExpectedEcdsaPrivateKeyProto(test_case.ec_curve, test_case.encoding);
   ASSERT_THAT(ecdsa_private_key1, IsOk());
   expected_keydata1->set_value(ecdsa_private_key1->SerializeAsString());
@@ -1031,32 +1031,32 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadAndUseEcdsaPemKeys) {
   auto private_keyset_reader_builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
   private_keyset_reader_builder.Add(test_case.private_pem_key);
-  util::StatusOr<std::unique_ptr<KeysetReader>> private_keyset_reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> private_keyset_reader =
       private_keyset_reader_builder.Build();
   ASSERT_THAT(private_keyset_reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> private_keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> private_keyset_handle =
       CleartextKeysetHandle::Read(std::move(*private_keyset_reader));
 
   auto public_keyset_reader_builder = SignaturePemKeysetReaderBuilder(
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
   public_keyset_reader_builder.Add(test_case.public_pem_key);
-  util::StatusOr<std::unique_ptr<KeysetReader>> public_keyset_reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> public_keyset_reader =
       public_keyset_reader_builder.Build();
   ASSERT_THAT(public_keyset_reader, IsOk());
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_keyset_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_keyset_handle =
       CleartextKeysetHandle::Read(std::move(*public_keyset_reader));
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> sign =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> sign =
       (*private_keyset_handle)
           ->GetPrimitive<PublicKeySign>(ConfigSignatureV0());
   ASSERT_THAT(sign, IsOk());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*public_keyset_handle)
           ->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
   ASSERT_THAT(verify, IsOk());
 
   std::string data = "data";
-  util::StatusOr<std::string> signature = (*sign)->Sign(data);
+  absl::StatusOr<std::string> signature = (*sign)->Sign(data);
   ASSERT_THAT(signature, IsOk());
   EXPECT_THAT((*verify)->Verify(*signature, data), IsOk());
 }
@@ -1068,7 +1068,7 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaPrivateKeyKeyTypeMismatch) {
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_SIGN);
   builder.Add(GetParam().public_pem_key);
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> keyset_reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> keyset_reader = builder.Build();
   ASSERT_THAT(keyset_reader, IsOk());
 
   EXPECT_THAT((*keyset_reader)->Read().status(),
@@ -1082,7 +1082,7 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaPublicKeyKeyTypeMismatch) {
       SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
   builder.Add(GetParam().private_pem_key);
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> keyset_reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> keyset_reader = builder.Build();
   ASSERT_THAT(keyset_reader, IsOk());
 
   EXPECT_THAT((*keyset_reader)->Read().status(),
@@ -1172,9 +1172,9 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519) {
   builder.Add(CreatePemKey(kEd25519PublicKey, PemKeyType::PEM_EC,
                            PemAlgorithm::ED25519, /*key_size_in_bits=*/253,
                            HashType::SHA512));
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
-  util::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
+  absl::StatusOr<std::unique_ptr<Keyset>> keyset = (*reader)->Read();
   ASSERT_THAT(keyset, IsOk());
 
   Keyset::Key expected_key;
@@ -1192,9 +1192,9 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519) {
       expected_pub_key.SerializeAsString());
   EXPECT_THAT((*keyset)->key(0), EqualsKey(expected_key));
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::ReadNoSecret((*keyset)->SerializeAsString());
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verify =
       (*handle)->GetPrimitive<PublicKeyVerify>(ConfigSignatureV0());
   ASSERT_THAT(verify, IsOk());
 }
@@ -1211,7 +1211,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WrongAlgorithmFails) {
       builder.Add(CreatePemKey(kEd25519PublicKey, PemKeyType::PEM_EC, algorithm,
                                /*key_size_in_bits=*/253, hash_type));
 
-      util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+      absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
       ASSERT_THAT(reader, IsOk());
       ASSERT_THAT(reader->get()->Read().status(),
                   StatusIs(absl::StatusCode::kInvalidArgument));
@@ -1229,7 +1229,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WInvalidHashFails) {
                              PemAlgorithm::ED25519,
                              /*key_size_in_bits=*/253, hash_type));
 
-    util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+    absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
     ASSERT_THAT(reader, IsOk());
     ASSERT_THAT(reader->get()->Read().status(),
                 StatusIs(absl::StatusCode::kInvalidArgument));
@@ -1244,7 +1244,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WInvalidKeyTypeFails) {
                            PemAlgorithm::ED25519,
                            /*key_size_in_bits=*/253, HashType::SHA512));
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
   ASSERT_THAT(reader->get()->Read().status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
@@ -1258,7 +1258,7 @@ TEST(SignaturePemKeysetReaderTest, ReadEd25519WInvalidKeySizeFails) {
                            PemAlgorithm::ED25519,
                            /*key_size_in_bits=*/300, HashType::SHA512));
 
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
   ASSERT_THAT(reader->get()->Read().status(),
               StatusIs(absl::StatusCode::kInvalidArgument));

@@ -46,7 +46,7 @@ using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::RsaSsaPssParams;
 using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const RsaSsaPssPublicKeyProto& rsa_ssa_pss_public_key) const {
   internal::RsaPublicKey rsa_pub_key;
@@ -69,7 +69,7 @@ Status RsaSsaPssVerifyKeyManager::ValidateKey(
     const RsaSsaPssPublicKeyProto& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
-  StatusOr<internal::SslUniquePtr<BIGNUM>> n =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n());
   if (!n.ok()) {
     return n.status();

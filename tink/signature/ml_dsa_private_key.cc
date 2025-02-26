@@ -41,7 +41,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
+absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {

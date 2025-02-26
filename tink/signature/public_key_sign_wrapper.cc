@@ -64,8 +64,7 @@ class PublicKeySignSetWrapper : public PublicKeySign {
       : public_key_sign_set_(std::move(public_key_sign_set)),
         monitoring_sign_client_(std::move(monitoring_sign_client)) {}
 
-  crypto::tink::util::StatusOr<std::string> Sign(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> Sign(absl::string_view data) const override;
 
   ~PublicKeySignSetWrapper() override = default;
 
@@ -74,7 +73,7 @@ class PublicKeySignSetWrapper : public PublicKeySign {
   std::unique_ptr<MonitoringClient> monitoring_sign_client_;
 };
 
-util::StatusOr<std::string> PublicKeySignSetWrapper::Sign(
+absl::StatusOr<std::string> PublicKeySignSetWrapper::Sign(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -104,7 +103,7 @@ util::StatusOr<std::string> PublicKeySignSetWrapper::Sign(
 
 }  // anonymous namespace
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<PublicKeySign>> primitive_set) const {
   util::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
@@ -118,13 +117,13 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
         absl::make_unique<PublicKeySignSetWrapper>(std::move(primitive_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_sign_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_sign_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kSignApi, *keyset_info));
   if (!monitoring_sign_client.ok()) {

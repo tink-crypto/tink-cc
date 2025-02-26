@@ -24,7 +24,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for AES-CTR-HMAC Streaming parameters
 // and keys.
-crypto::tink::util::Status RegisterAesCtrHmacStreamingProtoSerialization();
+absl::Status RegisterAesCtrHmacStreamingProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

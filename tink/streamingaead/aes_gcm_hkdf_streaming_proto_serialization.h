@@ -24,7 +24,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for AES-GCM-HKDF Streaming parameters
 // and keys.
-crypto::tink::util::Status RegisterAesGcmHkdfStreamingProtoSerialization();
+absl::Status RegisterAesGcmHkdfStreamingProtoSerialization();
 
 }  // namespace tink
 }  // namespace crypto

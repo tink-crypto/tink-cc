@@ -50,16 +50,16 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
   ~SlhDsaVerifyBoringSsl() override = default;
 
   // Verifies that 'signature' is a digital signature for 'data'.
-  crypto::tink::util::Status Verify(absl::string_view signature,
-                                    absl::string_view data) const override {
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override {
     if (signature.size() < SLHDSA_SHA2_128S_SIGNATURE_BYTES +
                                public_key_.GetOutputPrefix().size()) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Verification failed: invalid signature length");
     }
 
     if (!absl::StartsWith(signature, public_key_.GetOutputPrefix())) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Verification failed: invalid output prefix");
     }
 
@@ -72,11 +72,11 @@ class SlhDsaVerifyBoringSsl : public PublicKeyVerify {
                 public_key_.GetPublicKeyBytes(GetPartialKeyAccess()).data()),
             reinterpret_cast<const uint8_t *>(data.data()), data.size(),
             /* context = */ nullptr, /* context_len = */ 0)) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Signature is not valid");
     }
 
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
  private:

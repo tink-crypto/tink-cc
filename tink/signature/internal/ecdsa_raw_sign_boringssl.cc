@@ -72,7 +72,7 @@ absl::StatusOr<std::string> DerToIeee(absl::string_view der,
       d2i_ECDSA_SIG(nullptr, &der_ptr, der.size()));
   if (ecdsa == nullptr ||
       der_ptr != reinterpret_cast<const uint8_t*>(der.data() + der.size())) {
-    return util::Status(absl::StatusCode::kInternal, "d2i_ECDSA_SIG failed");
+    return absl::Status(absl::StatusCode::kInternal, "d2i_ECDSA_SIG failed");
   }
 
   const BIGNUM* r_bn;
@@ -101,7 +101,7 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
   if (!status.ok()) return status;
 
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
-  util::Status result = CallWithCoreDumpProtection([&]() -> util::Status {
+  absl::Status result = CallWithCoreDumpProtection([&]() -> absl::Status {
     // Check curve.
     absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
         internal::EcGroupFromCurveType(ec_key.curve);
@@ -118,7 +118,7 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
     }
 
     if (!EC_KEY_set_public_key(key.get(), pub_key->get())) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
     }
@@ -126,11 +126,11 @@ EcdsaRawSignBoringSsl::New(const subtle::SubtleUtilBoringSSL::EcKey& ec_key,
     internal::SslUniquePtr<BIGNUM> priv_key(
         BN_bin2bn(ec_key.priv.data(), ec_key.priv.size(), nullptr));
     if (!EC_KEY_set_private_key(key.get(), priv_key.get())) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
     }
-    return util::OkStatus();
+    return absl::OkStatus();
   });
   if (!result.ok()) {
     return result;
@@ -158,7 +158,7 @@ absl::StatusOr<std::string> EcdsaRawSignBoringSsl::Sign(
                           reinterpret_cast<const uint8_t*>(data.data()),
                           data.size(), buffer.data(), &sig_length, key_.get());
         if (result != 1) {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "BoringSSL signing failed");
         }
         // We clear the label from the signature length -- the signature is

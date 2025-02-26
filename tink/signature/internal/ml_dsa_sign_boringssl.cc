@@ -71,7 +71,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsaSignBoringSsl::New(
 
   if (private_key.GetPublicKey().GetParameters().GetInstance() !=
       MlDsaParameters::Instance::kMlDsa65) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only ML-DSA-65 is supported");
   }
 
@@ -84,7 +84,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsaSignBoringSsl::New(
           boringssl_private_key.get(),
           reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
           private_seed_bytes.size())) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to expand ML-DSA private key from seed.");
   }
 
@@ -105,7 +105,7 @@ absl::StatusOr<std::string> MlDsaSignBoringSsl::Sign(
           boringssl_private_key_.get(),
           reinterpret_cast<const uint8_t*>(data.data()), data.size(),
           /* context = */ nullptr, /* context_len = */ 0)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to generate ML-DSA signature.");
   }
 

@@ -47,7 +47,7 @@ class MlDsaVerifyBoringSsl : public PublicKeyVerify {
   static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       MlDsaPublicKey public_key);
 
-  util::Status Verify(absl::string_view signature,
+  absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override;
 
   explicit MlDsaVerifyBoringSsl(
@@ -69,7 +69,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
 
   if (public_key.GetParameters().GetInstance() !=
       MlDsaParameters::Instance::kMlDsa65) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only ML-DSA-65 is supported");
   }
 
@@ -81,7 +81,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
            public_key_bytes.size());
   auto boringssl_public_key = std::make_unique<MLDSA65_public_key>();
   if (!MLDSA65_parse_public_key(boringssl_public_key.get(), &cbs)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Invalid ML-DSA public key");
   }
 
@@ -89,18 +89,18 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
       std::move(public_key), std::move(boringssl_public_key));
 }
 
-util::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
+absl::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
                                           absl::string_view data) const {
   size_t output_prefix_size = public_key_.GetOutputPrefix().size();
 
   if (signature.size() != MLDSA65_SIGNATURE_BYTES + output_prefix_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Verification failed: incorrect signature length for ML-DSA");
   }
 
   if (!absl::StartsWith(signature, public_key_.GetOutputPrefix())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Verification failed: invalid output prefix");
   }
 
@@ -111,11 +111,11 @@ util::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
                           reinterpret_cast<const uint8_t *>(data.data()),
                           data.size(), /* context = */ nullptr,
                           /* context_len = */ 0)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace

@@ -116,8 +116,8 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewEd25519VerifyBoringSsl(
 
 }  // namespace
 
-util::Status AddSignatureV0(Configuration& config) {
-  util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddSignatureV0(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<PublicKeySignWrapper>(), config);
   if (!status.ok()) {
     return status;
@@ -261,7 +261,7 @@ util::Status AddSignatureV0(Configuration& config) {
     return status;
   }
 #endif
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace internal

@@ -59,7 +59,7 @@ absl::StatusOr<std::string> ComputeDigest(subtle::HashType hash_type,
   uint8_t digest[EVP_MAX_MD_SIZE];
   if (1 != EVP_Digest(data.data(), data.size(), digest, &digest_size, *hash,
                       nullptr)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Could not compute digest.");
   }
 

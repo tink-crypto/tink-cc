@@ -64,7 +64,7 @@ absl::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
     case EcdsaParameters::CurveType::kNistP521:
       return subtle::EllipticCurveType::NIST_P521;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid ECDSA curve type.");
   }
 }
@@ -74,7 +74,7 @@ absl::StatusOr<subtle::EllipticCurveType> ToSubtleEllipticCurve(
 absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
     const MlDsaParameters& params, absl::optional<int> id_requirement) {
   if (params.GetInstance() != MlDsaParameters::Instance::kMlDsa65) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Only ML-DSA-65 is supported");
   }
 
@@ -83,7 +83,7 @@ absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> CreateMlDsaKey(
   auto private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
   if (!MLDSA65_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
                             private_seed_bytes.data(), private_key.get())) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to generate ML-DSA-65 key");
   }
 

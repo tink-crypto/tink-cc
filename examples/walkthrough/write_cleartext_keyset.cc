@@ -42,9 +42,8 @@ using ::crypto::tink::util::StatusOr;
 //
 // Prerequisites for this example:
 //  - Create a keyset and obtain a KeysetHandle to it.
-crypto::tink::util::Status WriteKeyset(
-    const crypto::tink::KeysetHandle& keyset,
-    std::unique_ptr<std::ostream> output_stream) {
+absl::Status WriteKeyset(const crypto::tink::KeysetHandle& keyset,
+                         std::unique_ptr<std::ostream> output_stream) {
   StatusOr<std::unique_ptr<JsonKeysetWriter>> keyset_writer =
       JsonKeysetWriter::New(std::move(output_stream));
   if (!keyset_writer.ok()) return keyset_writer.status();

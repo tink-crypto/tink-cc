@@ -29,9 +29,8 @@ namespace tink_walkthrough {
 // Warning: Storing keys in cleartext is not recommended. We recommend using a
 // Key Management Service to protect your keys. See
 // https://developers.google.com/tink/key-management-overview.
-crypto::tink::util::Status WriteKeyset(
-    const crypto::tink::KeysetHandle& keyset,
-    std::unique_ptr<std::ostream> output_stream);
+absl::Status WriteKeyset(const crypto::tink::KeysetHandle& keyset,
+                         std::unique_ptr<std::ostream> output_stream);
 
 }  // namespace tink_walkthrough
 

@@ -27,7 +27,7 @@ namespace tink_walkthrough {
 
 // Writes a `keyset` to `output_stream` in JSON format; the keyset is encrypted
 // with `keyset_encryption_aead`.
-crypto::tink::util::Status WriteEncryptedKeyset(
+absl::Status WriteEncryptedKeyset(
     const crypto::tink::KeysetHandle& keyset,
     std::unique_ptr<std::ostream> output_stream,
     const crypto::tink::Aead& keyset_encryption_aead);

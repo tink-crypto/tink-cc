@@ -38,7 +38,7 @@ using ::crypto::tink::util::StatusOr;
 //  - Register AEAD implementations of Tink.
 //  - Get the keyset encryption AEAD for a key URI with KmsClient::GetAead.
 //  - Create a keyset and obtain a KeysetHandle to it.
-crypto::tink::util::Status WriteEncryptedKeyset(
+absl::Status WriteEncryptedKeyset(
     const crypto::tink::KeysetHandle& keyset,
     std::unique_ptr<std::ostream> output_stream,
     const crypto::tink::Aead& keyset_encryption_aead) {

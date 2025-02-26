@@ -27,7 +27,7 @@ namespace {
 TEST(ErrorsTest, ToStatusFAbslStatusCodeTest) {
   const char* const msg = "test message %s 2 %d";
   const char* expected_msg = "test message asdf 2 42";
-  util::Status status = ToStatusF(absl::StatusCode::kUnknown, msg, "asdf", 42);
+  absl::Status status = ToStatusF(absl::StatusCode::kUnknown, msg, "asdf", 42);
   EXPECT_FALSE(status.ok());
   EXPECT_EQ(expected_msg, status.message());
   EXPECT_EQ(absl::StatusCode::kUnknown, status.code());

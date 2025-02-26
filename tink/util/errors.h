@@ -26,10 +26,10 @@ namespace tink {
 
 // Constructs a Status with formatted error message using absl::StatusCode.
 template <typename... Args>
-util::Status ToStatusF(absl::StatusCode code,
+absl::Status ToStatusF(absl::StatusCode code,
                        const absl::FormatSpec<Args...>& format,
                        const Args&... args) {
-  return util::Status(code, absl::StrFormat(format, args...));
+  return absl::Status(code, absl::StrFormat(format, args...));
 }
 
 }  // namespace tink

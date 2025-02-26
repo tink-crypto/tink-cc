@@ -27,16 +27,13 @@ namespace tink {
 
 // Various validation helpers.
 
-crypto::tink::util::Status ValidateAesKeySize(uint32_t key_size);
+absl::Status ValidateAesKeySize(uint32_t key_size);
 
-crypto::tink::util::Status ValidateKey(
-    const google::crypto::tink::Keyset::Key& key);
+absl::Status ValidateKey(const google::crypto::tink::Keyset::Key& key);
 
-crypto::tink::util::Status ValidateKeyset(
-    const google::crypto::tink::Keyset& keyset);
+absl::Status ValidateKeyset(const google::crypto::tink::Keyset& keyset);
 
-crypto::tink::util::Status ValidateVersion(
-    uint32_t candidate, uint32_t max_expected);
+absl::Status ValidateVersion(uint32_t candidate, uint32_t max_expected);
 
 }  // namespace tink
 }  // namespace crypto

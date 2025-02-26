@@ -68,7 +68,7 @@ std::unique_ptr<std::istream> GetTestIstream(absl::string_view filename,
 // Reads the specified 'input_stream' until no more bytes can be read,
 // and puts the read bytes into 'contents'.
 // Returns the status of the last input_stream->Next()-operation.
-util::Status ReadTillEnd(util::IstreamInputStream* input_stream,
+absl::Status ReadTillEnd(util::IstreamInputStream* input_stream,
                          std::string* contents) {
   contents->clear();
   const void* buffer;

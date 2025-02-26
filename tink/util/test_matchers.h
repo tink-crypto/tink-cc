@@ -106,11 +106,11 @@ class IsOkAndHoldsMatcher {
 };
 
 template <typename T>
-inline const util::Status& GetStatus(const util::StatusOr<T>& s) {
+inline const absl::Status& GetStatus(const util::StatusOr<T>& s) {
   return s.status();
 }
 
-inline const util::Status& GetStatus(const util::Status& s) { return s; }
+inline const absl::Status& GetStatus(const absl::Status& s) { return s; }
 
 }  // namespace internal
 
@@ -119,7 +119,7 @@ inline const util::Status& GetStatus(const util::Status& s) { return s; }
 // because the error message is a part of the failure message.
 MATCHER(IsOk,
         absl::StrCat(negation ? "isn't" : "is", " a Status with an OK value")) {
-  const util::Status& status = internal::GetStatus(arg);
+  const absl::Status& status = internal::GetStatus(arg);
   if (status.ok()) {
     return true;
   }
@@ -140,7 +140,7 @@ IsOkAndHolds(InnerMatcher&& inner_matcher) {
 // specified `code` as code().
 MATCHER_P(StatusIs, code,
           "is a Status with a " + absl::StatusCodeToString(code) + " code") {
-  const util::Status& status = internal::GetStatus(arg);
+  const absl::Status& status = internal::GetStatus(arg);
   if (status.code() == code) {
     return true;
   }
@@ -151,7 +151,7 @@ MATCHER_P(StatusIs, code,
 // Matches Status, StatusOr<>, or a reference to either of them, whose code()
 // equals `code`, and whose message() matches `message_macher`.
 MATCHER_P2(StatusIs, code, message_matcher, "") {
-  const util::Status& status = internal::GetStatus(arg);
+  const absl::Status& status = internal::GetStatus(arg);
   return (status.code() == code) &&
          testing::Matches(message_matcher)(std::string(status.message()));
 }

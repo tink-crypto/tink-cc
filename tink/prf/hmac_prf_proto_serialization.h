@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for HMAC-PRF parameters and
 // keys into global serialization registry.
-inline crypto::tink::util::Status RegisterHmacPrfProtoSerialization() {
+inline absl::Status RegisterHmacPrfProtoSerialization() {
   return internal::RegisterHmacPrfProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

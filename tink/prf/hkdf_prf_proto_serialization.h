@@ -26,7 +26,7 @@ namespace tink {
 
 // Registers proto parsers and serializers for HKDF-PRF parameters and keys into
 // global serialization registry.
-inline crypto::tink::util::Status RegisterHkdfPrfProtoSerialization() {
+inline absl::Status RegisterHkdfPrfProtoSerialization() {
   return internal::RegisterHkdfPrfProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

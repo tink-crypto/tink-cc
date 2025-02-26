@@ -63,7 +63,7 @@ class HmacPrfKeyManager
           util::Enums::ProtoToSubtle(key.params().hash());
       absl::optional<uint64_t> max_output_length = MaxOutputLength(hash);
       if (!max_output_length.has_value()) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             absl::StrCat("Unknown hash when constructing HMAC PRF ",
                          HashType_Name(key.params().hash())));
@@ -87,10 +87,10 @@ class HmacPrfKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::HmacPrfKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::HmacPrfKeyFormat& key_format) const override;
 
   crypto::tink::util::StatusOr<google::crypto::tink::HmacPrfKey> CreateKey(
@@ -107,7 +107,7 @@ class HmacPrfKeyManager
  private:
   static absl::optional<uint64_t> MaxOutputLength(subtle::HashType hash_type);
 
-  util::Status ValidateParams(
+  absl::Status ValidateParams(
       const google::crypto::tink::HmacPrfParams& params) const;
 
   const std::string key_type_ = absl::StrCat(

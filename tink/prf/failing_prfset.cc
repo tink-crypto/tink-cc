@@ -41,7 +41,7 @@ class AlwaysFailPrf : public Prf {
 
   util::StatusOr<std::string> Compute(absl::string_view /*input*/,
                                       size_t /*output_length*/) const override {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat(
             "AlwaysFailPrf will always fail on Compute (msg=", message_, ")"));
@@ -71,7 +71,7 @@ class AlwaysFailPrfSet : public PrfSet {
 
   util::StatusOr<std::string> ComputePrimary(absl::string_view /*input*/,
                                              size_t /*output_length*/) const {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat(
             "AlwaysFailPrfSet will always fail on ComputePrimary (msg=",

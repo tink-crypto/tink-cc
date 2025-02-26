@@ -25,7 +25,7 @@ namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for AES-CMAC-PRF parameters and keys.
-inline crypto::tink::util::Status RegisterAesCmacPrfProtoSerialization() {
+inline absl::Status RegisterAesCmacPrfProtoSerialization() {
   return internal::RegisterAesCmacPrfProtoSerializationWithMutableRegistry(
       internal::MutableSerializationRegistry::GlobalInstance());
 }

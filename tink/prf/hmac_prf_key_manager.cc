@@ -47,22 +47,22 @@ using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HmacPrfKeyFormat;
 using ::google::crypto::tink::HmacPrfParams;
 
-util::Status HmacPrfKeyManager::ValidateKey(const HmacPrfKeyProto& key) const {
-  util::Status status = ValidateVersion(key.version(), get_version());
+absl::Status HmacPrfKeyManager::ValidateKey(const HmacPrfKeyProto& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < kMinKeySizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid HmacPrfKey: key_value wrong length.");
   }
   return ValidateParams(key.params());
 }
 
-util::Status HmacPrfKeyManager::ValidateKeyFormat(
+absl::Status HmacPrfKeyManager::ValidateKeyFormat(
     const HmacPrfKeyFormat& key_format) const {
-  util::Status status = ValidateVersion(key_format.version(), get_version());
+  absl::Status status = ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
   if (key_format.key_size() < kMinKeySizeInBytes) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid HmacPrfKeyFormat: invalid key_size.");
   }
   return ValidateParams(key_format.params());
@@ -80,7 +80,7 @@ crypto::tink::util::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::CreateKey(
 StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::DeriveKey(
     const HmacPrfKeyFormat& hmac_prf_key_format,
     InputStream* input_stream) const {
-  crypto::tink::util::Status status = ValidateKeyFormat(hmac_prf_key_format);
+  absl::Status status = ValidateKeyFormat(hmac_prf_key_format);
   if (!status.ok()) return status;
 
   crypto::tink::util::StatusOr<std::string> randomness =
@@ -107,7 +107,7 @@ Status HmacPrfKeyManager::ValidateParams(const HmacPrfParams& params) const {
                      "Invalid HmacParams: HashType '%s' not supported.",
                      Enums::HashName(params.hash()));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 absl::optional<uint64_t> HmacPrfKeyManager::MaxOutputLength(

@@ -87,20 +87,18 @@ class HkdfPrfKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::HkdfPrfKey& key) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key.version(), get_version());
+    absl::Status status = ValidateVersion(key.version(), get_version());
     if (!status.ok()) return status;
     status = ValidateKeySize(key.key_value().size());
     if (!status.ok()) return status;
     return ValidateParams(key.params());
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::HkdfPrfKeyFormat& key_format) const override {
-    crypto::tink::util::Status status =
-        ValidateVersion(key_format.version(), get_version());
+    absl::Status status = ValidateVersion(key_format.version(), get_version());
     if (!status.ok()) return status;
     status = ValidateKeySize(key_format.key_size());
     if (!status.ok()) return status;
@@ -137,25 +135,23 @@ class HkdfPrfKeyManager
   }
 
  private:
-  crypto::tink::util::Status ValidateKeySize(int key_size) const {
+  absl::Status ValidateKeySize(int key_size) const {
     if (key_size < kMinKeySizeBytes) {
-      return crypto::tink::util::Status(
-          absl::StatusCode::kInvalidArgument,
-          "Invalid HkdfPrfKey: key_value is too short.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid HkdfPrfKey: key_value is too short.");
     }
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::Status ValidateParams(
+  absl::Status ValidateParams(
       const google::crypto::tink::HkdfPrfParams& params) const {
     // Omitting SHA1 for the moment; there seems to be no reason to allow it.
     if (params.hash() != google::crypto::tink::HashType::SHA256 &&
         params.hash() != google::crypto::tink::HashType::SHA512) {
-      return crypto::tink::util::Status(
-          absl::StatusCode::kInvalidArgument,
-          "Invalid HkdfPrfKey: unsupported hash.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid HkdfPrfKey: unsupported hash.");
     }
-    return crypto::tink::util::OkStatus();
+    return absl::OkStatus();
   }
 
   // We use a somewhat larger minimum key size than usual, because PRFs might be

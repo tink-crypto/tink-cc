@@ -34,7 +34,7 @@ util::StatusOr<HkdfPrfParameters> HkdfPrfParameters::Create(
     int key_size_in_bytes, HashType hash_type,
     absl::optional<absl::string_view> salt) {
   if (key_size_in_bytes < 16) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Key size must be at least 16 bytes, got ",
                                      key_size_in_bytes, " bytes."));
   }
@@ -43,7 +43,7 @@ util::StatusOr<HkdfPrfParameters> HkdfPrfParameters::Create(
       {HashType::kSha1, HashType::kSha224, HashType::kSha256, HashType::kSha384,
        HashType::kSha512});
   if (supported_hashes->find(hash_type) == supported_hashes->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create HkdfPrf parameters with unknown HashType.");
   }

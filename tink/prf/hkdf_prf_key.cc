@@ -31,7 +31,7 @@ util::StatusOr<HkdfPrfKey> HkdfPrfKey::Create(
     const HkdfPrfParameters& parameters, const RestrictedData& key_bytes,
     PartialKeyAccessToken token) {
   if (parameters.KeySizeInBytes() != key_bytes.size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size does not match HKDF-PRF parameters");
   }
 

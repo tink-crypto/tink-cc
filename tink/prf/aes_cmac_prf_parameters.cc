@@ -27,7 +27,7 @@ namespace tink {
 util::StatusOr<AesCmacPrfParameters> AesCmacPrfParameters::Create(
     int key_size_in_bytes) {
   if (key_size_in_bytes != 16 && key_size_in_bytes != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size must be either 16 or 32 bytes.");
   }
   return AesCmacPrfParameters(key_size_in_bytes);

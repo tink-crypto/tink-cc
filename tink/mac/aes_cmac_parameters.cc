@@ -34,7 +34,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<AesCmacParameters> AesCmacParameters::Create(
+absl::StatusOr<AesCmacParameters> AesCmacParameters::Create(
     int key_size_in_bytes, int cryptographic_tag_size_in_bytes,
     Variant variant) {
   if (key_size_in_bytes != 16 && key_size_in_bytes != 32) {

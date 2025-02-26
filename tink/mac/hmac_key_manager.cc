@@ -55,7 +55,7 @@ constexpr int kMinTagSizeInBytes = 10;
 
 }  // namespace
 
-StatusOr<HmacKeyProto> HmacKeyManager::CreateKey(
+absl::StatusOr<HmacKeyProto> HmacKeyManager::CreateKey(
     const HmacKeyFormat& hmac_key_format) const {
   HmacKeyProto hmac_key;
   hmac_key.set_version(get_version());
@@ -65,13 +65,13 @@ StatusOr<HmacKeyProto> HmacKeyManager::CreateKey(
   return hmac_key;
 }
 
-StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
+absl::StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
     const HmacKeyFormat& hmac_key_format, InputStream* input_stream) const {
   absl::Status status =
       ValidateVersion(hmac_key_format.version(), get_version());
   if (!status.ok()) return status;
 
-  crypto::tink::util::StatusOr<std::string> randomness =
+  absl::StatusOr<std::string> randomness =
       ReadBytesFromStream(hmac_key_format.key_size(), input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {

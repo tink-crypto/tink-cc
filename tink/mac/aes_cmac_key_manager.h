@@ -50,7 +50,7 @@ class AesCmacKeyManager
                             List<Mac, ChunkedMac>> {
  public:
   class MacFactory : public PrimitiveFactory<Mac> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Mac>> Create(
+    absl::StatusOr<std::unique_ptr<Mac>> Create(
         const google::crypto::tink::AesCmacKey& key) const override {
       return subtle::AesCmacBoringSsl::New(
           util::SecretDataFromStringView(key.key_value()),
@@ -59,7 +59,7 @@ class AesCmacKeyManager
   };
 
   class ChunkedMacFactory : public PrimitiveFactory<ChunkedMac> {
-    crypto::tink::util::StatusOr<std::unique_ptr<ChunkedMac>> Create(
+    absl::StatusOr<std::unique_ptr<ChunkedMac>> Create(
         const google::crypto::tink::AesCmacKey& key) const override {
       return internal::NewChunkedCmac(key);
     }
@@ -99,7 +99,7 @@ class AesCmacKeyManager
     return ValidateParams(key_format.params());
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesCmacKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::AesCmacKey> CreateKey(
       const google::crypto::tink::AesCmacKeyFormat& key_format) const override {
     google::crypto::tink::AesCmacKey key;
     key.set_version(get_version());

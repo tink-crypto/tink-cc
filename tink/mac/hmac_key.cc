@@ -34,7 +34,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<HmacKey> HmacKey::Create(const HmacParameters& parameters,
+absl::StatusOr<HmacKey> HmacKey::Create(const HmacParameters& parameters,
                                         const RestrictedData& key_bytes,
                                         absl::optional<int> id_requirement,
                                         PartialKeyAccessToken token) {
@@ -54,7 +54,7 @@ util::StatusOr<HmacKey> HmacKey::Create(const HmacParameters& parameters,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();
@@ -63,7 +63,7 @@ util::StatusOr<HmacKey> HmacKey::Create(const HmacParameters& parameters,
                  *std::move(output_prefix));
 }
 
-util::StatusOr<std::string> HmacKey::ComputeOutputPrefix(
+absl::StatusOr<std::string> HmacKey::ComputeOutputPrefix(
     const HmacParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case HmacParameters::Variant::kNoPrefix:

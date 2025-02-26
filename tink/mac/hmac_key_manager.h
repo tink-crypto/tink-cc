@@ -49,7 +49,7 @@ class HmacKeyManager
                             List<Mac, ChunkedMac>> {
  public:
   class MacFactory : public PrimitiveFactory<Mac> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Mac>> Create(
+    absl::StatusOr<std::unique_ptr<Mac>> Create(
         const google::crypto::tink::HmacKey& hmac_key) const override {
       return subtle::HmacBoringSsl::New(
           util::Enums::ProtoToSubtle(hmac_key.params().hash()),
@@ -59,7 +59,7 @@ class HmacKeyManager
   };
 
   class ChunkedMacFactory : public PrimitiveFactory<ChunkedMac> {
-    crypto::tink::util::StatusOr<std::unique_ptr<ChunkedMac>> Create(
+    absl::StatusOr<std::unique_ptr<ChunkedMac>> Create(
         const google::crypto::tink::HmacKey& hmac_key) const override {
       return internal::NewChunkedHmac(hmac_key);
     }
@@ -84,10 +84,10 @@ class HmacKeyManager
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::HmacKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::HmacKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::HmacKey> CreateKey(
       const google::crypto::tink::HmacKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::HmacKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::HmacKey> DeriveKey(
       const google::crypto::tink::HmacKeyFormat& key_format,
       InputStream* input_stream) const override;
 

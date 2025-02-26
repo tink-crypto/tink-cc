@@ -68,7 +68,7 @@ absl::Status ValidateTagSizeBytes(int cryptographic_tag_size_in_bytes,
 
 }  // namespace
 
-util::StatusOr<HmacParameters> HmacParameters::Create(
+absl::StatusOr<HmacParameters> HmacParameters::Create(
     int key_size_in_bytes, int cryptographic_tag_size_in_bytes,
     HashType hash_type, Variant variant) {
   if (key_size_in_bytes < 16) {

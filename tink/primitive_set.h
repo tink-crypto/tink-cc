@@ -72,7 +72,7 @@ class PrimitiveSet {
         return absl::Status(absl::StatusCode::kInvalidArgument,
                             "The key must be ENABLED.");
       }
-      util::StatusOr<std::string> identifier =
+      absl::StatusOr<std::string> identifier =
           key_info.output_prefix_type() ==
                   google::crypto::tink::OutputPrefixType::WITH_ID_REQUIREMENT
               ? ""  // No associated prefix, so set to empty.

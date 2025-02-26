@@ -59,7 +59,7 @@ class RandomAccessStream {
   // a sequence of bytes), stating how many bytes are there in the sequence.
   // For a successful PRead-operation the starting position should be
   // in the range 0..size()-1 (otherwise PRead may return a non-Ok status).
-  virtual crypto::tink::util::StatusOr<int64_t> size() = 0;
+  virtual absl::StatusOr<int64_t> size() = 0;
 };
 
 }  // namespace tink

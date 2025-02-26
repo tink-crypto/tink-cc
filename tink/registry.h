@@ -115,8 +115,7 @@ class Registry {
   // It looks up a KeyManager identified by key_template.type_url,
   // and calls KeyManager::NewKeyData.
   // This method should be used solely for key management.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<google::crypto::tink::KeyData>>
+  static absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
   NewKeyData(const google::crypto::tink::KeyTemplate& key_template) {
     return internal::RegistryImpl::GlobalInstance().NewKeyData(key_template);
   }
@@ -125,8 +124,7 @@ class Registry {
   // private key given in serialized_private_key.
   // It looks up a KeyManager identified by type_url, whose KeyFactory must be
   // a PrivateKeyFactory, and calls PrivateKeyFactory::GetPublicKeyData.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<google::crypto::tink::KeyData>>
+  static absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
   GetPublicKeyData(absl::string_view type_url,
                    absl::string_view serialized_private_key) {
     return internal::RegistryImpl::GlobalInstance().GetPublicKeyData(

@@ -33,7 +33,7 @@ namespace crypto {
 namespace tink {
 
 // static
-util::Status MacConfig::Register() {
+absl::Status MacConfig::Register() {
   // Register primitive wrappers.
   auto status =
       Registry::RegisterPrimitiveWrapper(absl::make_unique<MacWrapper>());
@@ -53,7 +53,7 @@ util::Status MacConfig::Register() {
   if (!status.ok()) return status;
 
   if (IsFipsModeEnabled()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   // CMac in BoringSSL is not FIPS validated.
@@ -64,7 +64,7 @@ util::Status MacConfig::Register() {
   status = RegisterAesCmacProtoSerialization();
   if (!status.ok()) return status;
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

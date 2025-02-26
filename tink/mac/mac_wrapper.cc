@@ -59,8 +59,8 @@ class MacSetWrapper : public Mac {
   crypto::tink::util::StatusOr<std::string> ComputeMac(
       absl::string_view data) const override;
 
-  crypto::tink::util::Status VerifyMac(absl::string_view mac_value,
-                                       absl::string_view data) const override;
+  absl::Status VerifyMac(absl::string_view mac_value,
+                         absl::string_view data) const override;
 
   ~MacSetWrapper() override = default;
 
@@ -70,16 +70,16 @@ class MacSetWrapper : public Mac {
   std::unique_ptr<MonitoringClient> monitoring_verify_client_;
 };
 
-util::Status Validate(PrimitiveSet<Mac>* mac_set) {
+absl::Status Validate(PrimitiveSet<Mac>* mac_set) {
   if (mac_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "mac_set must be non-NULL");
   }
   if (mac_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "mac_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 util::StatusOr<std::string> MacSetWrapper::ComputeMac(
@@ -110,9 +110,8 @@ util::StatusOr<std::string> MacSetWrapper::ComputeMac(
   return key_id + compute_mac_result.value();
 }
 
-util::Status MacSetWrapper::VerifyMac(
-    absl::string_view mac_value,
-    absl::string_view data) const {
+absl::Status MacSetWrapper::VerifyMac(absl::string_view mac_value,
+                                      absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
   mac_value = internal::EnsureStringNonNull(mac_value);
 
@@ -131,7 +130,7 @@ util::Status MacSetWrapper::VerifyMac(
           view_on_data_or_legacy_data = legacy_data;
         }
         Mac& mac = mac_entry->get_primitive();
-        util::Status status =
+        absl::Status status =
             mac.VerifyMac(raw_mac_value, view_on_data_or_legacy_data);
         if (status.ok()) {
           if (monitoring_verify_client_ != nullptr) {
@@ -149,7 +148,7 @@ util::Status MacSetWrapper::VerifyMac(
   if (raw_primitives_result.ok()) {
     for (auto& mac_entry : *(raw_primitives_result.value())) {
       Mac& mac = mac_entry->get_primitive();
-      util::Status status = mac.VerifyMac(mac_value, data);
+      absl::Status status = mac.VerifyMac(mac_value, data);
       if (status.ok()) {
         if (monitoring_verify_client_ != nullptr) {
           monitoring_verify_client_->Log(mac_entry->get_key_id(), data.size());
@@ -162,7 +161,7 @@ util::Status MacSetWrapper::VerifyMac(
     monitoring_verify_client_->LogFailure();
   }
 
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       "verification failed");
 }
 
@@ -170,7 +169,7 @@ util::Status MacSetWrapper::VerifyMac(
 
 util::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<Mac>> mac_set) const {
-  util::Status status = Validate(mac_set.get());
+  absl::Status status = Validate(mac_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

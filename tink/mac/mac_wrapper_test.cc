@@ -128,7 +128,7 @@ TEST(MacWrapperTest, Basic) {
   std::string mac_value = compute_mac_result.value();
   EXPECT_PRED_FORMAT2(testing::IsSubstring, mac_name_2, mac_value);
 
-  util::Status status = mac->VerifyMac(mac_value, data);
+  absl::Status status = mac->VerifyMac(mac_value, data);
   EXPECT_TRUE(status.ok()) << status;
 
   status = mac->VerifyMac("some bad mac", data);
@@ -189,12 +189,12 @@ class TryBreakLegacyMac : public Mac {
     return absl::StrCat(std::string("\x00", 1), "\xff\xff\xff\xff", data);
   }
 
-  crypto::tink::util::Status VerifyMac(absl::string_view mac,
-                                       absl::string_view data) const override {
+  absl::Status VerifyMac(absl::string_view mac,
+                         absl::string_view data) const override {
     if (mac != ComputeMac(data).value()) {
       return absl::InvalidArgumentError("Wrong mac");
     }
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 };
 

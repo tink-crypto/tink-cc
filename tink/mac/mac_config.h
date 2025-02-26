@@ -36,7 +36,7 @@ class MacConfig {
  public:
   // Registers Mac primitive wrapper and key managers for all Mac key types
   // from the current Tink release.
-  static crypto::tink::util::Status Register();
+  static absl::Status Register();
 
  private:
   MacConfig() {}

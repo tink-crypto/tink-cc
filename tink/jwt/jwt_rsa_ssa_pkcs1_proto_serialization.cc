@@ -263,14 +263,15 @@ absl::StatusOr<JwtRsaSsaPkcs1Parameters> ToParameters(
 
 absl::StatusOr<JwtRsaSsaPkcs1Parameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtRsaSsaPkcs1Parameters.");
   }
 
   absl::StatusOr<JwtRsaSsaPkcs1KeyFormatStruct> key_format_struct =
-      JwtRsaSsaPkcs1KeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      JwtRsaSsaPkcs1KeyFormatStruct::GetParser().Parse(key_template.value);
   if (!key_format_struct.ok()) {
     return key_format_struct.status();
   }

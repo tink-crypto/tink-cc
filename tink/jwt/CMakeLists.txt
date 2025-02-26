@@ -877,6 +877,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::statusor
     tink::util::test_matchers
@@ -971,6 +972,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::subtle::common_enums
     tink::util::secret_data
     tink::util::statusor
@@ -1073,6 +1075,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
+    tink::internal::tink_proto_structs
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
@@ -1173,6 +1176,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
+    tink::internal::tink_proto_structs
     tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto

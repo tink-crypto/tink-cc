@@ -33,6 +33,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
@@ -245,15 +246,14 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializeParameters) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(),
-              Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(test_case.output_prefix_type));
-
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
   JwtEcdsaKeyFormat format;
-  ASSERT_THAT(
-      format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(format.version(), Eq(0));
   EXPECT_THAT(format.algorithm(), Eq(test_case.proto_algorithm));
 }

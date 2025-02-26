@@ -199,13 +199,14 @@ absl::StatusOr<JwtHmacParameters> ToParameters(
 
 absl::StatusOr<JwtHmacParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtHmacParameters.");
   }
   absl::StatusOr<JwtHmacKeyFormatStruct> key_format_struct =
-      JwtHmacKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      JwtHmacKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!key_format_struct.ok()) {
     return key_format_struct.status();
   }

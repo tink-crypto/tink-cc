@@ -308,14 +308,15 @@ absl::StatusOr<JwtEcdsaPublicKeyStruct> ToProtoPublicKey(
 
 absl::StatusOr<JwtEcdsaParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplate().type_url() != kPrivateTypeUrl) {
+  const internal::KeyTemplateStruct& key_template =
+      serialization.GetKeyTemplateStruct();
+  if (key_template.type_url != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtEcdsaParameters.");
   }
 
   absl::StatusOr<JwtEcdsaKeyFormatStruct> key_format_struct =
-      JwtEcdsaKeyFormatStruct::GetParser().Parse(
-          serialization.GetKeyTemplate().value());
+      JwtEcdsaKeyFormatStruct::GetParser().Parse(key_template.value);
   if (!key_format_struct.ok()) {
     return key_format_struct.status();
   }

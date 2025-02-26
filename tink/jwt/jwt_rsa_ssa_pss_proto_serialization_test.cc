@@ -24,6 +24,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/tink_proto_structs.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -287,15 +288,14 @@ TEST_P(JwtRsaSsaPssProtoSerializationTest, SerializeParametersSucceeds) {
           serialization->get());
 
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(),
-              Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(test_case.output_prefix_type));
-
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
   JwtRsaSsaPssKeyFormat key_format;
-  ASSERT_THAT(
-      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
 
   EXPECT_THAT(key_format.algorithm(), Eq(test_case.proto_algorithm));
   EXPECT_THAT(key_format.modulus_size_in_bits(),

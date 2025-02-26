@@ -34,7 +34,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
+absl::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
     const Ed25519PublicKey& public_key, const RestrictedData& private_key_bytes,
     PartialKeyAccessToken token) {
   if (private_key_bytes.size() != 32) {
@@ -42,7 +42,7 @@ util::StatusOr<Ed25519PrivateKey> Ed25519PrivateKey::Create(
                         "Ed25519 private key length must be 32 bytes.");
   }
   // Confirm that private key and public key are a valid Ed25519 key pair.
-  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key_pair =
       internal::NewEd25519Key(
           private_key_bytes.Get(InsecureSecretKeyAccess::Get()));
   absl::string_view expected_public_key = public_key.GetPublicKeyBytes(token);

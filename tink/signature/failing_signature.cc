@@ -38,7 +38,7 @@ class AlwaysFailPublicKeySign : public PublicKeySign {
   explicit AlwaysFailPublicKeySign(std::string message)
       : message_(std::move(message)) {}
 
-  util::StatusOr<std::string> Sign(
+  absl::StatusOr<std::string> Sign(
       absl::string_view /*message*/) const override {
     return absl::Status(
         absl::StatusCode::kInternal,

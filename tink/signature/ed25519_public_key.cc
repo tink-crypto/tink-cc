@@ -34,7 +34,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-util::StatusOr<std::string> ComputeOutputPrefix(
+absl::StatusOr<std::string> ComputeOutputPrefix(
     const Ed25519Parameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case Ed25519Parameters::Variant::kNoPrefix:
@@ -63,7 +63,7 @@ util::StatusOr<std::string> ComputeOutputPrefix(
 
 }  // namespace
 
-util::StatusOr<Ed25519PublicKey> Ed25519PublicKey::Create(
+absl::StatusOr<Ed25519PublicKey> Ed25519PublicKey::Create(
     const Ed25519Parameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
@@ -82,7 +82,7 @@ util::StatusOr<Ed25519PublicKey> Ed25519PublicKey::Create(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ed25519 public key length must be 32 bytes.");
   }
-  util::StatusOr<std::string> output_prefix =
+  absl::StatusOr<std::string> output_prefix =
       ComputeOutputPrefix(parameters, id_requirement);
   if (!output_prefix.ok()) {
     return output_prefix.status();

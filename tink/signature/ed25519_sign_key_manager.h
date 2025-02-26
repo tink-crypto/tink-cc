@@ -45,7 +45,7 @@ class Ed25519SignKeyManager
                                    List<PublicKeySign>> {
  public:
   class PublicKeySignFactory : public PrimitiveFactory<PublicKeySign> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const google::crypto::tink::Ed25519PrivateKey& private_key)
         const override;
   };
@@ -68,19 +68,18 @@ class Ed25519SignKeyManager
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::Ed25519KeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::Ed25519PrivateKey>
-  CreateKey(
+  absl::StatusOr<google::crypto::tink::Ed25519PrivateKey> CreateKey(
       const google::crypto::tink::Ed25519KeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::Ed25519PublicKey>
-  GetPublicKey(const google::crypto::tink::Ed25519PrivateKey& private_key)
+  absl::StatusOr<google::crypto::tink::Ed25519PublicKey> GetPublicKey(
+      const google::crypto::tink::Ed25519PrivateKey& private_key)
       const override {
     return private_key.public_key();
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::Ed25519PrivateKey>
-  DeriveKey(const google::crypto::tink::Ed25519KeyFormat& key_format,
-            InputStream* input_stream) const override;
+  absl::StatusOr<google::crypto::tink::Ed25519PrivateKey> DeriveKey(
+      const google::crypto::tink::Ed25519KeyFormat& key_format,
+      InputStream* input_stream) const override;
 
  private:
   const std::string key_type_ =

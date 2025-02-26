@@ -26,7 +26,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<Ed25519Parameters> Ed25519Parameters::Create(Variant variant) {
+absl::StatusOr<Ed25519Parameters> Ed25519Parameters::Create(Variant variant) {
   static const std::set<Variant>* supported_variants =
       new std::set<Variant>({Variant::kTink, Variant::kCrunchy,
                              Variant::kLegacy, Variant::kNoPrefix});

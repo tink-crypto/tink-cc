@@ -49,7 +49,7 @@ using ::google::crypto::tink::EcdsaKeyFormat;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
 using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 
-StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::CreateKey(
+absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::CreateKey(
     const EcdsaKeyFormat& ecdsa_key_format) const {
   // Generate new EC key.
   auto ec_key_result = internal::NewEcKey(
@@ -69,7 +69,7 @@ StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::CreateKey(
   return ecdsa_private_key;
 }
 
-StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
+absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
     const EcdsaKeyFormat& ecdsa_key_format, InputStream* input_stream) const {
   if (IsFipsModeEnabled()) {
     return absl::Status(absl::StatusCode::kInternal,
@@ -103,7 +103,7 @@ StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
                           "Curve does not support key derivation.");
   }
 
-  crypto::tink::util::StatusOr<util::SecretData> randomness =
+  absl::StatusOr<util::SecretData> randomness =
       ReadSecretBytesFromStream(random_bytes_used, input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
@@ -115,10 +115,9 @@ StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
   }
 
   // Generate new EC key from the seed.
-  crypto::tink::util::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(
-          util::Enums::ProtoToSubtle(ecdsa_key_format.params().curve()),
-          *randomness);
+  absl::StatusOr<internal::EcKey> ec_key = internal::NewEcKey(
+      util::Enums::ProtoToSubtle(ecdsa_key_format.params().curve()),
+      *randomness);
 
   if (!ec_key.ok()) {
     return ec_key.status();
@@ -137,7 +136,7 @@ StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
   return ecdsa_private_key;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 EcdsaSignKeyManager::PublicKeySignFactory::Create(
     const EcdsaPrivateKeyProto& ecdsa_private_key) const {
   const EcdsaPublicKeyProto& public_key = ecdsa_private_key.public_key();

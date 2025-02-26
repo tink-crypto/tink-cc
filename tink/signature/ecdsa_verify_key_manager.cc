@@ -44,7 +44,7 @@ using ::google::crypto::tink::EcdsaSignatureEncoding;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 EcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const EcdsaPublicKeyProto& ecdsa_public_key) const {
   internal::EcKey ec_key;

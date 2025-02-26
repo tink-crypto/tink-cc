@@ -36,7 +36,7 @@ using ::crypto::tink::util::Status;
 using ::crypto::tink::util::StatusOr;
 using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 Ed25519VerifyKeyManager::PublicKeyVerifyFactory::Create(
     const Ed25519PublicKeyProto& public_key) const {
   return subtle::Ed25519VerifyBoringSsl::New(public_key.key_value());

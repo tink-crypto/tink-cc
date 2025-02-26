@@ -49,9 +49,9 @@ using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::Ed25519KeyFormat;
 using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
 
-StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::CreateKey(
+absl::StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::CreateKey(
     const Ed25519KeyFormat& key_format) const {
-  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
       internal::NewEd25519Key();
   if (!key.ok()) {
     return key.status();
@@ -70,7 +70,7 @@ StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::CreateKey(
   return ed25519_private_key;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 Ed25519SignKeyManager::PublicKeySignFactory::Create(
     const Ed25519PrivateKeyProto& private_key) const {
   // BoringSSL expects a 64-byte private key which contains the public key as a
@@ -101,12 +101,12 @@ Status Ed25519SignKeyManager::ValidateKey(
   return Ed25519VerifyKeyManager().ValidateKey(key.public_key());
 }
 
-StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
+absl::StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
     const Ed25519KeyFormat& key_format, InputStream* input_stream) const {
   absl::Status status = ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
 
-  util::StatusOr<util::SecretData> randomness =
+  absl::StatusOr<util::SecretData> randomness =
       ReadSecretBytesFromStream(kEd25519SecretSeedSize, input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {
@@ -116,7 +116,7 @@ StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
     }
     return randomness.status();
   }
-  util::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
+  absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
       internal::NewEd25519Key(*randomness);
 
   Ed25519PrivateKeyProto ed25519_private_key;

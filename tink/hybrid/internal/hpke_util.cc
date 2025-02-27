@@ -38,7 +38,7 @@ absl::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
     case google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256:
       return HpkeKem::kP256HkdfSha256;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unable to convert unsupported HPKE KEM: ", kem));
   }
@@ -49,7 +49,7 @@ absl::StatusOr<HpkeKdf> HpkeKdfProtoToEnum(google::crypto::tink::HpkeKdf kdf) {
     case google::crypto::tink::HpkeKdf::HKDF_SHA256:
       return HpkeKdf::kHkdfSha256;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unable to convert unsupported HPKE KDF: ", kdf));
   }
@@ -65,7 +65,7 @@ absl::StatusOr<HpkeAead> HpkeAeadProtoToEnum(
     case google::crypto::tink::HpkeAead::CHACHA20_POLY1305:
       return HpkeAead::kChaCha20Poly1305;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unable to convert unsupported HPKE AEAD: ", aead));
   }
@@ -96,7 +96,7 @@ absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
           subtle::EllipticCurveType::NIST_P256,
           subtle::EcPointFormat::UNCOMPRESSED);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unable to determine KEM-encoding length for ", kem));
   }

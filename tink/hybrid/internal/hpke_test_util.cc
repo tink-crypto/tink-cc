@@ -179,7 +179,7 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(
       params.kem = HpkeKem::kX25519HkdfSha256;
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("No test parameters for specified KEM:",
                                        proto_params.kem()));
   }
@@ -189,7 +189,7 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(
       params.kdf = HpkeKdf::kHkdfSha256;
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("No test parameters for specified KDF:",
                                        proto_params.kdf()));
   }
@@ -205,7 +205,7 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(
       params.aead = HpkeAead::kChaCha20Poly1305;
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("No test parameters for specified AEAD:",
                                        proto_params.aead()));
   }
@@ -214,7 +214,7 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(
 
 absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params) {
   if (params.kdf != HpkeKdf::kHkdfSha256) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("No test parameters for specified KDF:", params.kdf));
   }
@@ -227,7 +227,7 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params) {
       case HpkeAead::kChaCha20Poly1305:
         return HpkeTestParams(kTestP256HkdfSha256ChaCha20Poly1305);
       default:
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             absl::StrCat("No test parameters for specified AEAD:",
                          params.aead));
@@ -241,13 +241,13 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params) {
       case HpkeAead::kChaCha20Poly1305:
         return HpkeTestParams(kTestX25519HkdfSha256ChaCha20Poly1305);
       default:
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             absl::StrCat("No test parameters for specified AEAD:",
                          params.aead));
     }
   } else {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("No test parameters for specified KEM:", params.kem));
   }

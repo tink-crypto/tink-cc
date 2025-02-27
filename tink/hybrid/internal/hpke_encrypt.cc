@@ -56,7 +56,7 @@ absl::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
     case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
       return HpkeKemProto::DHKEM_X25519_HKDF_SHA256;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine KEM.");
   }
 }
@@ -70,7 +70,7 @@ absl::StatusOr<HpkeKdfProto> FromKdfId(HpkeParameters::KdfId kdf_id) {
     case HpkeParameters::KdfId::kHkdfSha512:
       return HpkeKdfProto::HKDF_SHA512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine KDF.");
   }
 }
@@ -84,7 +84,7 @@ absl::StatusOr<HpkeAeadProto> FromAeadId(HpkeParameters::AeadId aead_id) {
     case HpkeParameters::AeadId::kChaCha20Poly1305:
       return HpkeAeadProto::CHACHA20_POLY1305;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine AEAD.");
   }
 }
@@ -139,25 +139,25 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
     const HpkePublicKeyProto& recipient_public_key,
     absl::string_view output_prefix) {
   if (recipient_public_key.public_key().empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is empty.");
   }
   if (!recipient_public_key.has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is missing HPKE parameters.");
   }
   HpkeKemProto kem = recipient_public_key.params().kem();
   if (kem != HpkeKemProto::DHKEM_P256_HKDF_SHA256 &&
       kem != HpkeKemProto::DHKEM_X25519_HKDF_SHA256) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key has an unsupported KEM");
   }
   if (recipient_public_key.params().kdf() != HpkeKdfProto::HKDF_SHA256) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key has an unsupported KDF");
   }
   if (recipient_public_key.params().aead() == HpkeAeadProto::AEAD_UNKNOWN) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is missing AEAD");
   }
   return {

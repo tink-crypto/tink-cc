@@ -58,8 +58,8 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> NewHpkeEncrypt(
 
 }  // namespace
 
-util::Status AddHybridV0(Configuration& config) {
-  util::Status status = ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddHybridV0(Configuration& config) {
+  absl::Status status = ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<HybridEncryptWrapper>(), config);
   if (!status.ok()) {
     return status;

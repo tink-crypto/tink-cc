@@ -63,7 +63,7 @@ class HpkePublicKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::HpkePublicKey& key) const override;
 
  private:

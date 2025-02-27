@@ -36,7 +36,7 @@ absl::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
     case HpkeKem::kX25519HkdfSha256:
       return EVP_hpke_x25519_hkdf_sha256();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported HPKE KEM algorithm: ", params.kem));
   }
@@ -50,7 +50,7 @@ absl::StatusOr<const EVP_HPKE_KEM*> KemParam(
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       return EVP_hpke_x25519_hkdf_sha256();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported HPKE KEM algorithm: ", kem));
   }
@@ -66,7 +66,7 @@ absl::StatusOr<const EVP_HPKE_KDF*> KdfParam(const HpkeParams& params) {
     case HpkeKdf::kHkdfSha256:
       return EVP_hpke_hkdf_sha256();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported HPKE KDF algorithm: ", params.kdf));
   }
@@ -78,7 +78,7 @@ absl::StatusOr<const EVP_HPKE_KDF*> KdfParam(
     case google::crypto::tink::HpkeKdf::HKDF_SHA256:
       return EVP_hpke_hkdf_sha256();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported HPKE KDF algorithm: ", params.kdf()));
   }
@@ -93,7 +93,7 @@ absl::StatusOr<const EVP_HPKE_AEAD*> AeadParam(const HpkeParams& params) {
     case HpkeAead::kChaCha20Poly1305:
       return EVP_hpke_chacha20_poly1305();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported HPKE AEAD algorithm: ", params.aead));
   }
@@ -109,7 +109,7 @@ absl::StatusOr<const EVP_HPKE_AEAD*> AeadParam(
     case google::crypto::tink::HpkeAead::CHACHA20_POLY1305:
       return EVP_hpke_chacha20_poly1305();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported HPKE AEAD algorithm: ", params.aead()));
   }

@@ -65,10 +65,10 @@ class HpkePrivateKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::HpkePrivateKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::HpkeKeyFormat& key_format) const override;
 
   absl::StatusOr<google::crypto::tink::HpkePrivateKey> CreateKey(

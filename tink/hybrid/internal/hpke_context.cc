@@ -52,7 +52,7 @@ absl::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
     return HpkePayloadView(payload.substr(0, kX25519KemEncodingLengthInBytes),
                            payload.substr(kX25519KemEncodingLengthInBytes));
   }
-  return util::Status(
+  return absl::Status(
       absl::StatusCode::kInvalidArgument,
       absl::StrCat("Unable to split HPKE payload for KEM type ", kem));
 }
@@ -61,7 +61,7 @@ absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupSender(
     const HpkeParams& params, absl::string_view recipient_public_key,
     absl::string_view info) {
   if (recipient_public_key.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key is empty.");
   }
   absl::StatusOr<SenderHpkeContextBoringSsl> sender_context =
@@ -77,11 +77,11 @@ absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupRecipient(
     const HpkeParams& params, const util::SecretData& recipient_private_key,
     absl::string_view encapsulated_key, absl::string_view info) {
   if (recipient_private_key.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key is empty.");
   }
   if (encapsulated_key.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Encapsulated key is empty.");
   }
   absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> context =

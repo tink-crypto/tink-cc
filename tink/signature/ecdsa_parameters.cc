@@ -52,7 +52,7 @@ EcdsaParameters::Builder& EcdsaParameters::Builder::SetVariant(
 
 absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   if (!curve_type_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "CurveType is not set.");
   }
 
@@ -61,12 +61,12 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   }
 
   if (!signature_encoding_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SignatureEncoding is not set.");
   }
 
   if (!variant_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Variant is not set.");
   }
 
@@ -74,7 +74,7 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   static constexpr CurveType kSupportedCurves[] = {
       CurveType::kNistP256, CurveType::kNistP384, CurveType::kNistP521};
   if (!absl::c_linear_search(kSupportedCurves, *curve_type_)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create Ecdsa parameters with unknown CurveType.");
   }
@@ -83,7 +83,7 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   static constexpr HashType kSupportedHashes[] = {
       HashType::kSha256, HashType::kSha384, HashType::kSha512};
   if (!absl::c_linear_search(kSupportedHashes, *hash_type_)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create Ecdsa parameters with unknown HashType.");
   }
@@ -92,25 +92,25 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   switch (*curve_type_) {
     case CurveType::kNistP256:
       if (*hash_type_ != HashType::kSha256) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "NIST_P256 curve requires SHA256.");
       }
       break;
     case CurveType::kNistP384:
       if (*hash_type_ != HashType::kSha384 &&
           *hash_type_ != HashType::kSha512) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "NIST_P384 curve requires SHA384 or SHA512.");
       }
       break;
     case CurveType::kNistP521:
       if (*hash_type_ != HashType::kSha512) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "NIST_P521 curve requires SHA512.");
       }
       break;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Cannot create Ecdsa parameters with unknown CurveType.");
   }
@@ -119,7 +119,7 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   static constexpr SignatureEncoding kSupportedEncodings[] = {
       SignatureEncoding::kDer, SignatureEncoding::kIeeeP1363};
   if (!absl::c_linear_search(kSupportedEncodings, *signature_encoding_)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create Ecdsa parameters with unknown SignatureEncoding.");
   }
@@ -128,7 +128,7 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
   static constexpr Variant kSupportedVariants[] = {
       Variant::kTink, Variant::kCrunchy, Variant::kLegacy, Variant::kNoPrefix};
   if (!absl::c_linear_search(kSupportedVariants, *variant_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create Ecdsa parameters with unknown Variant.");
   }
 

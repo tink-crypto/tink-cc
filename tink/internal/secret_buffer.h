@@ -145,11 +145,11 @@ class SecretBuffer {
     swap(capacity_, other.capacity_);
   }
 
-  SecretBuffer& append(const SecretBuffer& other) {
-    reserve(size_ + other.size_);
-    crypto::tink::internal::SafeMemCopy(data_ + size_, other.data_,
-                                        other.size_);
-    size_ += other.size_;
+  SecretBuffer& append(absl::Span<const uint8_t> other) {
+    reserve(size_ + other.size());
+    crypto::tink::internal::SafeMemCopy(data_ + size_, other.data(),
+                                        other.size());
+    size_ += other.size();
     return *this;
   }
 

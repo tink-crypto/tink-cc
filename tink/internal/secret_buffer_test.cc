@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -193,6 +194,13 @@ TEST(SecretBufferTest, AppendWithEmpty2) {
   SecretBuffer buffer2("some data;");
   buffer1.append(buffer2);
   EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;")));
+}
+
+TEST(SecretBufferTest, AppendWithSecretData) {
+  SecretBuffer buffer1("some data;");
+  util::SecretData data = util::SecretDataFromStringView("some other data;");
+  buffer1.append(data);
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;some other data;")));
 }
 
 TEST(SecretBufferTest, SubstrConstRef) {

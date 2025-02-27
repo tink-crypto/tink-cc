@@ -1987,6 +1987,7 @@ cc_test(
     srcs = ["secret_buffer_test.cc"],
     deps = [
         ":secret_buffer",
+        "//tink/util:secret_data",
         "//tink/util:test_util",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",

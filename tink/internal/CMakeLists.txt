@@ -1918,6 +1918,7 @@ tink_cc_test(
     gmock
     absl::string_view
     absl::span
+    tink::util::secret_data
     tink::util::test_util
 )
 

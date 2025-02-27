@@ -33,6 +33,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
@@ -236,15 +237,16 @@ TEST_F(MlKemProtoSerializationTest, SerializeMlKem768ParametersWorks) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(),
-              Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(OutputPrefixType::TINK));
+
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  internal::OutputPrefixTypeEnum::kTink)));
 
   MlKemKeyFormat key_format;
-  ASSERT_THAT(
-      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
   ASSERT_TRUE(key_format.has_params());
   EXPECT_THAT(key_format.params().ml_kem_key_size(),
               Eq(MlKemKeySize::ML_KEM_768));

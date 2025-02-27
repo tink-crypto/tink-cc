@@ -22,6 +22,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_key.h"
 #include "tink/daead/aes_siv_parameters.h"
@@ -30,12 +32,12 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_siv.pb.h"
 #include "proto/tink.pb.h"
@@ -55,6 +57,9 @@ using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
 using ::testing::Values;
+
+constexpr absl::string_view kAesSivKeyTypeUrl =
+    "type.googleapis.com/google.crypto.tink.AesSivKey";
 
 struct TestCase {
   AesSivParameters::Variant variant;
@@ -187,22 +192,22 @@ TEST_P(AesSivProtoSerializationTest, SerializeParameters) {
           .SerializeParameters<internal::ProtoParametersSerialization>(
               *parameters);
   ASSERT_THAT(serialization, IsOk());
-  EXPECT_THAT((*serialization)->ObjectIdentifier(),
-              Eq("type.googleapis.com/google.crypto.tink.AesSivKey"));
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kAesSivKeyTypeUrl));
 
   const internal::ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().type_url(),
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url,
               Eq("type.googleapis.com/google.crypto.tink.AesSivKey"));
-  EXPECT_THAT(proto_serialization->GetKeyTemplate().output_prefix_type(),
-              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
 
   AesSivKeyFormat key_format;
-  ASSERT_THAT(
-      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
-      IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(key_format.key_size(), Eq(test_case.key_size));
 }
 

@@ -364,6 +364,8 @@ tink_cc_test(
     tink::daead::aes_siv_proto_serialization
     gmock
     absl::status
+    absl::statusor
+    absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -374,8 +376,8 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_siv_cc_proto
     tink::proto::tink_cc_proto

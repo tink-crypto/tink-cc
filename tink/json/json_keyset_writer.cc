@@ -44,7 +44,7 @@ const char kKeysetTypeUrl[] = "type.googleapis.com/google.crypto.tink.Keyset";
 const char kEncryptedKeysetTypeUrl[] =
     "type.googleapis.com/google.crypto.tink.EncryptedKeyset";
 
-util::StatusOr<std::string> ToJsonString(const Keyset& keyset) {
+absl::StatusOr<std::string> ToJsonString(const Keyset& keyset) {
   PrintOptions options;
   std::string output;
   absl::Status status =
@@ -56,7 +56,7 @@ util::StatusOr<std::string> ToJsonString(const Keyset& keyset) {
   return output;
 }
 
-util::StatusOr<std::string> ToJsonString(const EncryptedKeyset& keyset) {
+absl::StatusOr<std::string> ToJsonString(const EncryptedKeyset& keyset) {
   PrintOptions options;
   std::string output;
   absl::Status status = BinaryToJsonString(
@@ -81,7 +81,7 @@ absl::Status WriteData(absl::string_view data, std::ostream* destination) {
 
 
 //  static
-util::StatusOr<std::unique_ptr<JsonKeysetWriter>> JsonKeysetWriter::New(
+absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> JsonKeysetWriter::New(
     std::unique_ptr<std::ostream> destination_stream) {
   if (destination_stream == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

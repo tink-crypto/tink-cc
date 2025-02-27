@@ -184,6 +184,7 @@ tink_cc_test(
     tink::prf::internal::hkdf_prf_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -196,6 +197,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     tink::subtle::random
@@ -215,6 +217,7 @@ tink_cc_test(
     tink::prf::internal::hmac_prf_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -227,6 +230,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::prf::hmac_prf_key
     tink::prf::hmac_prf_parameters
     tink::subtle::random

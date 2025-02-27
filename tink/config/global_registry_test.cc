@@ -65,7 +65,7 @@ class FakeKeyTypeManager
  public:
   class FakePrimitiveFactory : public PrimitiveFactory<FakePrimitive> {
    public:
-    util::StatusOr<std::unique_ptr<FakePrimitive>> Create(
+    absl::StatusOr<std::unique_ptr<FakePrimitive>> Create(
         const AesGcmKeyProto& key) const override {
       return absl::make_unique<FakePrimitive>(key.key_value());
     }
@@ -91,12 +91,12 @@ class FakeKeyTypeManager
     return absl::OkStatus();
   }
 
-  util::StatusOr<AesGcmKeyProto> CreateKey(
+  absl::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
     return AesGcmKeyProto();
   }
 
-  util::StatusOr<AesGcmKeyProto> DeriveKey(
+  absl::StatusOr<AesGcmKeyProto> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
     return AesGcmKeyProto();
@@ -110,7 +110,7 @@ class FakeKeyTypeManager
 class FakePrimitiveWrapper
     : public PrimitiveWrapper<FakePrimitive, FakePrimitive> {
  public:
-  util::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
+  absl::StatusOr<std::unique_ptr<FakePrimitive>> Wrap(
       std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set)
       const override {
     return absl::make_unique<FakePrimitive>(
@@ -148,7 +148,7 @@ TEST(GlobalRegistryTest, GetPrimitiveFromConfig) {
   KeyTemplate templ;
   templ.set_type_url("type.googleapis.com/google.crypto.tink.AesGcmKey");
   templ.set_output_prefix_type(OutputPrefixType::TINK);
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(templ, KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
   EXPECT_THAT(

@@ -402,14 +402,14 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   return vectors;
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> CreatePrfBasedDeriverHandle(
     std::vector<std::shared_ptr<Key>> derived_keys) {
   Keyset keyset;
   keyset.set_primary_key_id(derived_keys[0]->GetIdRequirement().value_or(0));
 
   for (const auto& derived_key : derived_keys) {
     // Get KeyTemplate from Parameters.
-    util::StatusOr<std::unique_ptr<Serialization>> serialization =
+    absl::StatusOr<std::unique_ptr<Serialization>> serialization =
         internal::MutableSerializationRegistry::GlobalInstance()
             .SerializeParameters<internal::ProtoParametersSerialization>(
                 derived_key->GetParameters());
@@ -479,7 +479,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
   ASSERT_THAT(handle, IsOk());
   ASSERT_THAT((*handle)->size(), Eq(derived_keys.size()));
@@ -495,7 +495,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
       IsOk());
 
   // Create primitive.
-  util::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
       (*handle)->GetPrimitive<KeysetDeriver>(ConfigGlobalRegistry());
   ASSERT_THAT(deriver, IsOk());
 
@@ -503,7 +503,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   Registry::Reset();
 
   // Derive KeysetHandle using the non-global ParametersToKeyDeriver map.
-  util::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
       (*deriver)->DeriveKeyset(SaltFromRfc());
   ASSERT_THAT(derived_handle, IsOk());
   ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));
@@ -528,7 +528,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       CreatePrfBasedDeriverHandle(derived_keys);
   ASSERT_THAT(handle, IsOk());
   ASSERT_THAT((*handle)->size(), Eq(derived_keys.size()));
@@ -547,12 +547,12 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeysetWithGlobalRegistry) {
   ASSERT_THAT(AeadConfig::Register(), IsOk());
 
   // Create primitive.
-  util::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
+  absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =
       (*handle)->GetPrimitive<KeysetDeriver>(ConfigGlobalRegistry());
   ASSERT_THAT(deriver, IsOk());
 
   // Derive KeysetHandle using the global registry.
-  util::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> derived_handle =
       (*deriver)->DeriveKeyset(SaltFromRfc());
   ASSERT_THAT(derived_handle, IsOk());
   ASSERT_THAT((*derived_handle)->size(), Eq(derived_keys.size()));

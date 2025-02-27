@@ -43,7 +43,7 @@ PrfBasedKeyDerivationParameters::Builder::SetDerivedKeyParameters(
   return *this;
 }
 
-util::StatusOr<PrfBasedKeyDerivationParameters>
+absl::StatusOr<PrfBasedKeyDerivationParameters>
 PrfBasedKeyDerivationParameters::Builder::Build() {
   if (prf_parameters_ == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

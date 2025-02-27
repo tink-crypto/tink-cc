@@ -599,6 +599,7 @@ tink_cc_library(
     legacy_proto_parameters.h
   DEPS
     tink::internal::proto_parameters_serialization
+    tink::internal::tink_proto_structs
     tink::core::parameters
     tink::proto::tink_cc_proto
 )
@@ -876,6 +877,7 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     absl::status
     absl::strings
     absl::optional
@@ -888,7 +890,6 @@ tink_cc_library(
     tink::core::restricted_data
     tink::core::secret_key_access_token
     tink::util::secret_proto
-    tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
 )
@@ -904,6 +905,7 @@ tink_cc_test(
     tink::internal::legacy_proto_parameters
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::tink_proto_structs
     gmock
     absl::memory
     absl::status

@@ -25,8 +25,8 @@
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -39,9 +39,10 @@ util::StatusOr<std::string> SerializeParametersToProtoFormat(
   const internal::LegacyProtoParameters* legacy_proto_params =
       dynamic_cast<const internal::LegacyProtoParameters*>(&parameters);
   if (legacy_proto_params != nullptr) {
-    return legacy_proto_params->Serialization()
-        .GetKeyTemplate()
-        .SerializeAsString();
+    const internal::KeyTemplateStruct& key_template =
+        legacy_proto_params->Serialization().GetKeyTemplateStruct();
+    return internal::KeyTemplateStruct::GetParser().SerializeIntoString(
+        key_template);
   }
 
   util::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -60,7 +61,10 @@ util::StatusOr<std::string> SerializeParametersToProtoFormat(
                         "Failed to serialize proto parameters.");
   }
 
-  return proto_serialization->GetKeyTemplate().SerializeAsString();
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  return internal::KeyTemplateStruct::GetParser().SerializeIntoString(
+      key_template);
 }
 
 util::StatusOr<std::unique_ptr<Parameters>> ParseParametersFromProtoFormat(

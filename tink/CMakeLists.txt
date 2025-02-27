@@ -795,7 +795,7 @@ tink_cc_library(
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
-    tink::util::status
+    tink::internal::tink_proto_structs
     tink::util::statusor
 )
 

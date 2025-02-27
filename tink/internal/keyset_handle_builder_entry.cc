@@ -34,6 +34,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/parameters.h"
@@ -41,7 +42,6 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_proto.h"
-#include "tink/util/status.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
@@ -120,8 +120,15 @@ CreateKeysetKeyFromProtoParametersSerialization(
   // TODO(tholenst): ensure this doesn't leak.
   // Create KeyData from KeyTemplate and KeyTypeManagers.
   util::StatusOr<std::unique_ptr<KeyData>> key_data;
+  const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
   if (internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
-    key_data = Registry::NewKeyData(serialization.GetKeyTemplate());
+    google::crypto::tink::KeyTemplate proto_key_template;
+    proto_key_template.set_type_url(key_template.type_url);
+    proto_key_template.set_output_prefix_type(
+        static_cast<google::crypto::tink::OutputPrefixType>(
+            key_template.output_prefix_type));
+    proto_key_template.set_value(key_template.value);
+    key_data = Registry::NewKeyData(proto_key_template);
   } else {
     util::StatusOr<const internal::KeyTypeInfoStore*> key_type_info_store =
         internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
@@ -129,13 +136,11 @@ CreateKeysetKeyFromProtoParametersSerialization(
       return key_type_info_store.status();
     }
     util::StatusOr<const internal::KeyTypeInfoStore::Info*> key_type_info =
-        (*key_type_info_store)->Get(serialization.GetKeyTemplate().type_url());
+        (*key_type_info_store)->Get(key_template.type_url);
     if (!key_type_info.ok()) {
       return key_type_info.status();
     }
-    key_data = (*key_type_info)
-                   ->key_factory()
-                   .NewKeyData(serialization.GetKeyTemplate().value());
+    key_data = (*key_type_info)->key_factory().NewKeyData(key_template.value);
   }
   if (!key_data.ok()) {
     return key_data.status();
@@ -145,7 +150,8 @@ CreateKeysetKeyFromProtoParametersSerialization(
   key->set_status(status);
   key->set_key_id(id);
   key->set_output_prefix_type(
-      serialization.GetKeyTemplate().output_prefix_type());
+      static_cast<google::crypto::tink::OutputPrefixType>(
+          key_template.output_prefix_type));
   *key->mutable_key_data() = **key_data;
   return key;
 }

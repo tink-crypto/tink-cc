@@ -16,6 +16,8 @@
 
 #include "tink/internal/keyset_handle_builder_entry.h"
 
+#include <sys/stat.h>
+
 #include <string>
 
 #include "gmock/gmock.h"
@@ -35,6 +37,7 @@
 #include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
@@ -161,11 +164,12 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromParameters) {
 
   EXPECT_THAT((*keyset_key)->status(), Eq(KeyStatusType::ENABLED));
   EXPECT_THAT((*keyset_key)->key_id(), Eq(123));
+  const KeyTemplateStruct& key_template =
+      parameters->Serialization().GetKeyTemplateStruct();
   EXPECT_THAT(
       (*keyset_key)->output_prefix_type(),
-      Eq(parameters->Serialization().GetKeyTemplate().output_prefix_type()));
-  EXPECT_THAT((*keyset_key)->key_data().type_url(),
-              Eq(parameters->Serialization().GetKeyTemplate().type_url()));
+      Eq(static_cast<OutputPrefixType>(key_template.output_prefix_type)));
+  EXPECT_THAT((*keyset_key)->key_data().type_url(), Eq(key_template.type_url));
 }
 
 TEST_F(CreateKeysetKeyTestGlobalRegistry,

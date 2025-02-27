@@ -50,16 +50,15 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
   // such that any bytes written via the wrapper are AEAD-decrypted
   // by 'segment_decrypter' using 'associated_data' as associated
   // authenticated data.
-  static crypto::tink::util::StatusOr<
-      std::unique_ptr<crypto::tink::RandomAccessStream>>
-  New(std::unique_ptr<StreamSegmentDecrypter> segment_decrypter,
+  static absl::StatusOr<std::unique_ptr<crypto::tink::RandomAccessStream>> New(
+      std::unique_ptr<StreamSegmentDecrypter> segment_decrypter,
       std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source);
 
   // -----------------------
   // Methods of RandomAccessStream-interface implemented by this class.
   absl::Status PRead(int64_t position, int count,
                      crypto::tink::util::Buffer* dest_buffer) override;
-  crypto::tink::util::StatusOr<int64_t> size() override;
+  absl::StatusOr<int64_t> size() override;
 
  private:
   DecryptingRandomAccessStream() {}

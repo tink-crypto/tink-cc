@@ -54,7 +54,7 @@ namespace subtle {
 constexpr int kEd25519SignatureLenInBytes = 64;
 
 // static
-util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
     util::SecretData private_key, absl::string_view output_prefix,
     absl::string_view message_suffix) {
   auto status = internal::CheckFipsCompatibility<Ed25519SignBoringSsl>();
@@ -88,7 +88,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
       std::move(ssl_priv_key), output_prefix, message_suffix))};
 }
 
-util::StatusOr<std::string> Ed25519SignBoringSsl::SignWithoutPrefix(
+absl::StatusOr<std::string> Ed25519SignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   data = internal::EnsureStringNonNull(data);
 
@@ -120,9 +120,9 @@ util::StatusOr<std::string> Ed25519SignBoringSsl::SignWithoutPrefix(
   return out_sig;
 }
 
-util::StatusOr<std::string> Ed25519SignBoringSsl::Sign(
+absl::StatusOr<std::string> Ed25519SignBoringSsl::Sign(
     absl::string_view data) const {
-  util::StatusOr<std::string> signature_without_prefix_;
+  absl::StatusOr<std::string> signature_without_prefix_;
   if (message_suffix_.empty()) {
     signature_without_prefix_ = SignWithoutPrefix(data);
   } else {
@@ -138,7 +138,7 @@ util::StatusOr<std::string> Ed25519SignBoringSsl::Sign(
   return absl::StrCat(output_prefix_, *signature_without_prefix_);
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
     const Ed25519PrivateKey &key) {
   internal::SecretBuffer private_key = util::internal::AsSecretBuffer(
       key.GetPrivateKeyBytes(GetPartialKeyAccess())

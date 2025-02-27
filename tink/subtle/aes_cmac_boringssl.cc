@@ -61,7 +61,7 @@ namespace {
 bool ComputeMacInternal(const util::SecretData& key, uint8_t* tag_ptr,
                         absl::string_view data) {
   internal::SslUniquePtr<CMAC_CTX> context(CMAC_CTX_new());
-  util::StatusOr<const EVP_CIPHER*> cipher =
+  absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesCbcCipherForKeySize(key.size());
   if (!cipher.ok()) {
     return false;
@@ -82,7 +82,7 @@ bool ComputeMacInternal(const util::SecretData& key, uint8_t* tag_ptr,
 }  // namespace
 
 // static
-util::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(util::SecretData key,
+absl::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(util::SecretData key,
                                                            uint32_t tag_size) {
   auto status = internal::CheckFipsCompatibility<AesCmacBoringSsl>();
   if (!status.ok()) return status;
@@ -100,7 +100,7 @@ util::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(util::SecretData key,
   return {absl::WrapUnique(new AesCmacBoringSsl(std::move(key), tag_size))};
 }
 
-util::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
+absl::StatusOr<std::string> AesCmacBoringSsl::ComputeMac(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.

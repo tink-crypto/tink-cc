@@ -36,10 +36,10 @@ namespace subtle {
 
 class Ed25519VerifyBoringSsl : public PublicKeyVerify {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       const Ed25519PublicKey& public_key);
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       absl::string_view public_key) {
     return New(public_key, "", "");
   }
@@ -52,7 +52,7 @@ class Ed25519VerifyBoringSsl : public PublicKeyVerify {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       absl::string_view public_key, absl::string_view output_prefix,
       absl::string_view message_suffix);
 

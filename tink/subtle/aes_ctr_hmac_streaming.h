@@ -88,17 +88,17 @@ class AesCtrHmacStreaming : public NonceBasedStreamingAead {
 
   static constexpr int kHmacKeySizeInBytes = 32;
 
-  static util::StatusOr<std::unique_ptr<AesCtrHmacStreaming>> New(
+  static absl::StatusOr<std::unique_ptr<AesCtrHmacStreaming>> New(
       Params params);
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  protected:
-  util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> NewSegmentEncrypter(
+  absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> NewSegmentEncrypter(
       absl::string_view associated_data) const override;
 
-  util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> NewSegmentDecrypter(
+  absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> NewSegmentDecrypter(
       absl::string_view associated_data) const override;
 
  private:
@@ -109,7 +109,7 @@ class AesCtrHmacStreaming : public NonceBasedStreamingAead {
 class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
  public:
   // A factory.
-  static util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> New(
+  static absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> New(
       const AesCtrHmacStreaming::Params& params,
       absl::string_view associated_data);
 
@@ -163,7 +163,7 @@ class AesCtrHmacStreamSegmentEncrypter : public StreamSegmentEncrypter {
 class AesCtrHmacStreamSegmentDecrypter : public StreamSegmentDecrypter {
  public:
   // A factory.
-  static util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> New(
+  static absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> New(
       const AesCtrHmacStreaming::Params& params,
       absl::string_view associated_data);
 

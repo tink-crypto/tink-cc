@@ -35,12 +35,11 @@ namespace subtle {
 
 class AesCmacBoringSsl : public Mac {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<Mac>> New(
-      util::SecretData key, uint32_t tag_size);
+  static absl::StatusOr<std::unique_ptr<Mac>> New(util::SecretData key,
+                                                  uint32_t tag_size);
 
   // Computes and returns the CMAC for 'data'.
-  crypto::tink::util::StatusOr<std::string> ComputeMac(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> ComputeMac(absl::string_view data) const override;
 
   // Verifies if 'mac' is a correct CMAC for 'data'.
   // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.

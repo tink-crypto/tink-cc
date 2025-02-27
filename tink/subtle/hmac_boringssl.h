@@ -38,12 +38,12 @@ namespace subtle {
 
 class HmacBoringSsl : public Mac {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<Mac>> New(
-      HashType hash_type, uint32_t tag_size, util::SecretData key);
+  static absl::StatusOr<std::unique_ptr<Mac>> New(HashType hash_type,
+                                                  uint32_t tag_size,
+                                                  util::SecretData key);
 
   // Computes and returns the HMAC for 'data'.
-  crypto::tink::util::StatusOr<std::string> ComputeMac(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> ComputeMac(absl::string_view data) const override;
 
   // Verifies if 'mac' is a correct HMAC for 'data'.
   // Returns Status::OK if 'mac' is correct, and a non-OK-Status otherwise.

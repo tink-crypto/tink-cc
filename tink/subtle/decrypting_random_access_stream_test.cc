@@ -75,7 +75,7 @@ class DummyRandomAccessStream : public RandomAccessStream {
     return absl::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<int64_t> size() override { return size_; }
+  absl::StatusOr<int64_t> size() override { return size_; }
 
  private:
   int64_t size_;

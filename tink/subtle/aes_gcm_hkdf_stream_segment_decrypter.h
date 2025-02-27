@@ -70,7 +70,7 @@ class AesGcmHkdfStreamSegmentDecrypter : public StreamSegmentDecrypter {
     std::string associated_data;
   };
 
-  static util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> New(
+  static absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>> New(
       Params params);
 
   absl::Status Init(const std::vector<uint8_t>& header) override;

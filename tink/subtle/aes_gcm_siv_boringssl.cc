@@ -43,14 +43,14 @@ namespace subtle {
 constexpr int kIvSizeInBytes = 12;
 constexpr int kTagSizeInBytes = 16;
 
-util::StatusOr<std::unique_ptr<Aead>> AesGcmSivBoringSsl::New(
+absl::StatusOr<std::unique_ptr<Aead>> AesGcmSivBoringSsl::New(
     const util::SecretData& key) {
   auto status = internal::CheckFipsCompatibility<AesGcmSivBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
-  util::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
+  absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
       internal::CreateAesGcmSivOneShotCrypter(key);
   if (!aead.ok()) {
     return aead.status();
@@ -59,7 +59,7 @@ util::StatusOr<std::unique_ptr<Aead>> AesGcmSivBoringSsl::New(
   return {absl::WrapUnique(new AesGcmSivBoringSsl(*std::move(aead)))};
 }
 
-util::StatusOr<std::string> AesGcmSivBoringSsl::Encrypt(
+absl::StatusOr<std::string> AesGcmSivBoringSsl::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data) const {
   const int64_t kCiphertextSize =
       kIvSizeInBytes + aead_->CiphertextSize(plaintext.size());
@@ -72,7 +72,7 @@ util::StatusOr<std::string> AesGcmSivBoringSsl::Encrypt(
   }
   auto nonce = absl::string_view(ct).substr(0, kIvSizeInBytes);
   auto ciphertext_and_tag_buffer = absl::MakeSpan(ct).subspan(kIvSizeInBytes);
-  util::StatusOr<int64_t> written_bytes = aead_->Encrypt(
+  absl::StatusOr<int64_t> written_bytes = aead_->Encrypt(
       plaintext, associated_data, nonce, ciphertext_and_tag_buffer);
   if (!written_bytes.ok()) {
     return written_bytes.status();
@@ -80,7 +80,7 @@ util::StatusOr<std::string> AesGcmSivBoringSsl::Encrypt(
   return ct;
 }
 
-util::StatusOr<std::string> AesGcmSivBoringSsl::Decrypt(
+absl::StatusOr<std::string> AesGcmSivBoringSsl::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   if (ciphertext.size() < kIvSizeInBytes + kTagSizeInBytes) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -94,7 +94,7 @@ util::StatusOr<std::string> AesGcmSivBoringSsl::Decrypt(
   ResizeStringUninitialized(&plaintext, kPlaintextSize);
   auto nonce = ciphertext.substr(0, kIvSizeInBytes);
   auto encrypted = ciphertext.substr(kIvSizeInBytes);
-  util::StatusOr<int64_t> written_bytes = aead_->Decrypt(
+  absl::StatusOr<int64_t> written_bytes = aead_->Decrypt(
       encrypted, associated_data, nonce, absl::MakeSpan(plaintext));
   if (!written_bytes.ok()) {
     return written_bytes.status();

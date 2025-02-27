@@ -33,14 +33,14 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-util::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
+absl::StatusOr<std::unique_ptr<Aead>> AesGcmBoringSsl::New(
     const util::SecretData& key) {
   absl::Status status = internal::CheckFipsCompatibility<AesGcmBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
-  util::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
+  absl::StatusOr<std::unique_ptr<internal::ZeroCopyAead>> zero_copy_aead =
       internal::ZeroCopyAesGcmBoringSsl::New(key);
   if (!zero_copy_aead.ok()) {
     return zero_copy_aead.status();

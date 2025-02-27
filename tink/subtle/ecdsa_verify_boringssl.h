@@ -40,17 +40,17 @@ namespace subtle {
 // ECDSA verification using Boring SSL, accepting signatures in DER-encoding.
 class EcdsaVerifyBoringSsl : public PublicKeyVerify {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
       const EcdsaPublicKey& public_key);
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
-  New(const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
+  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
+      const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
       EcdsaSignatureEncoding encoding) {
     return New(ec_key, hash_type, encoding, "", "");
   }
 
-  static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
-  New(internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
+  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
+      internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
       EcdsaSignatureEncoding encoding) {
     return New(std::move(ec_key), hash_type, encoding, "", "");
   }
@@ -63,12 +63,12 @@ class EcdsaVerifyBoringSsl : public PublicKeyVerify {
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;
 
  private:
-  static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
-  New(const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
+  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
+      const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
       EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
       absl::string_view message_suffix);
-  static crypto::tink::util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>>
-  New(internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
+  static absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> New(
+      internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
       EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
       absl::string_view message_suffix);
 

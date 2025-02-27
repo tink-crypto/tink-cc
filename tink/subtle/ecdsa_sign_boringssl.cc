@@ -46,7 +46,7 @@ namespace tink {
 namespace subtle {
 
 namespace {
-util::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
+absl::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
     EcdsaParameters::CurveType curve_type) {
   switch (curve_type) {
     case EcdsaParameters::CurveType::kNistP256:
@@ -64,8 +64,7 @@ util::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
   }
 }
 
-util::StatusOr<HashType> ConvertHashType(
-    EcdsaParameters::HashType hash_type) {
+absl::StatusOr<HashType> ConvertHashType(EcdsaParameters::HashType hash_type) {
   switch (hash_type) {
     case EcdsaParameters::HashType::kSha256:
       return SHA256;
@@ -82,7 +81,7 @@ util::StatusOr<HashType> ConvertHashType(
   }
 }
 
-util::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
+absl::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
     EcdsaParameters::SignatureEncoding signature_encoding) {
   switch (signature_encoding) {
     case EcdsaParameters::SignatureEncoding::kIeeeP1363:
@@ -100,7 +99,7 @@ util::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
     const EcdsaPrivateKey& key) {
   SubtleUtilBoringSSL::EcKey subtle_ec_key;
   const EcPoint& ec_point = key.GetPublicKey()
@@ -110,20 +109,20 @@ util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
   subtle_ec_key.priv = util::SecretDataFromStringView(
       key.GetPrivateKeyValue(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get()));
-  util::StatusOr<subtle::EllipticCurveType> converted_curve_type =
+  absl::StatusOr<subtle::EllipticCurveType> converted_curve_type =
       ConvertCurveType(key.GetPublicKey().GetParameters().GetCurveType());
   if (!converted_curve_type.ok()) {
     return converted_curve_type.status();
   }
   subtle_ec_key.curve = *converted_curve_type;
 
-  util::StatusOr<HashType> converted_hash_type =
+  absl::StatusOr<HashType> converted_hash_type =
       ConvertHashType(key.GetPublicKey().GetParameters().GetHashType());
   if (!converted_hash_type.ok()) {
     return converted_hash_type.status();
   }
 
-  util::StatusOr<EcdsaSignatureEncoding> converted_signature_encoding =
+  absl::StatusOr<EcdsaSignatureEncoding> converted_signature_encoding =
       ConvertSignatureEncoding(
           key.GetPublicKey().GetParameters().GetSignatureEncoding());
   if (!converted_signature_encoding.ok()) {
@@ -137,7 +136,7 @@ util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
           : "");
 }
 
-util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
+absl::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
     const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
     EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
     absl::string_view message_suffix) {
@@ -149,12 +148,12 @@ util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
   if (!is_safe.ok()) {
     return is_safe;
   }
-  util::StatusOr<const EVP_MD*> hash = internal::EvpHashFromHashType(hash_type);
+  absl::StatusOr<const EVP_MD*> hash = internal::EvpHashFromHashType(hash_type);
   if (!hash.ok()) {
     return hash.status();
   }
 
-  util::StatusOr<std::unique_ptr<internal::EcdsaRawSignBoringSsl>> raw_sign =
+  absl::StatusOr<std::unique_ptr<internal::EcdsaRawSignBoringSsl>> raw_sign =
       internal::EcdsaRawSignBoringSsl::New(ec_key, encoding);
   if (!raw_sign.ok()) return raw_sign.status();
 
@@ -162,7 +161,7 @@ util::StatusOr<std::unique_ptr<EcdsaSignBoringSsl>> EcdsaSignBoringSsl::New(
       *hash, std::move(*raw_sign), output_prefix, message_suffix))};
 }
 
-util::StatusOr<std::string> EcdsaSignBoringSsl::SignWithoutPrefix(
+absl::StatusOr<std::string> EcdsaSignBoringSsl::SignWithoutPrefix(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -182,9 +181,9 @@ util::StatusOr<std::string> EcdsaSignBoringSsl::SignWithoutPrefix(
       absl::string_view(reinterpret_cast<char*>(digest), digest_size));
 }
 
-util::StatusOr<std::string> EcdsaSignBoringSsl::Sign(
+absl::StatusOr<std::string> EcdsaSignBoringSsl::Sign(
     absl::string_view data) const {
-  util::StatusOr<std::string> signature_without_prefix_;
+  absl::StatusOr<std::string> signature_without_prefix_;
   if (message_suffix_.empty()) {
     signature_without_prefix_ = SignWithoutPrefix(data);
   } else {

@@ -61,14 +61,14 @@ namespace subtle {
 // implies that keys must be 64 bytes (2*256 bits) long.
 class AesSivBoringSsl : public DeterministicAead {
  public:
-  static crypto::tink::util::StatusOr<std::unique_ptr<DeterministicAead>> New(
+  static absl::StatusOr<std::unique_ptr<DeterministicAead>> New(
       const util::SecretData& key);
 
-  crypto::tink::util::StatusOr<std::string> EncryptDeterministically(
+  absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
       absl::string_view associated_data) const override;
 
-  crypto::tink::util::StatusOr<std::string> DecryptDeterministically(
+  absl::StatusOr<std::string> DecryptDeterministically(
       absl::string_view ciphertext,
       absl::string_view associated_data) const override;
 

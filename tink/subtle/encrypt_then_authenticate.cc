@@ -46,7 +46,7 @@ static std::string longToBigEndianStr(uint64_t value) {
   return std::string(reinterpret_cast<const char*>(&bytes[0]), sizeof(bytes));
 }
 
-util::StatusOr<std::unique_ptr<Aead>> EncryptThenAuthenticate::New(
+absl::StatusOr<std::unique_ptr<Aead>> EncryptThenAuthenticate::New(
     std::unique_ptr<IndCpaCipher> ind_cpa_cipher, std::unique_ptr<Mac> mac,
     uint8_t tag_size) {
   if (tag_size < kMinTagSizeInBytes) {
@@ -58,7 +58,7 @@ util::StatusOr<std::unique_ptr<Aead>> EncryptThenAuthenticate::New(
   return std::move(aead);
 }
 
-util::StatusOr<std::string> EncryptThenAuthenticate::Encrypt(
+absl::StatusOr<std::string> EncryptThenAuthenticate::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data) const {
   // BoringSSL expects a non-null pointer for plaintext and associated_data,
   // regardless of whether the size is 0.
@@ -89,7 +89,7 @@ util::StatusOr<std::string> EncryptThenAuthenticate::Encrypt(
   return ciphertext->append(tag.value());
 }
 
-util::StatusOr<std::string> EncryptThenAuthenticate::Decrypt(
+absl::StatusOr<std::string> EncryptThenAuthenticate::Decrypt(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   // BoringSSL expects a non-null pointer for associated_data,
   // regardless of whether the size is 0.

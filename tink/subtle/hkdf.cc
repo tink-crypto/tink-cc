@@ -88,12 +88,12 @@ absl::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
 
 }  // namespace
 
-util::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
+absl::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
                                                    const util::SecretData &ikm,
                                                    absl::string_view salt,
                                                    absl::string_view info,
                                                    size_t out_len) {
-  util::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
+  absl::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
   if (!evp_md.ok()) {
     return evp_md.status();
   }
@@ -109,12 +109,12 @@ util::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
   return util::internal::AsSecretData(std::move(out_key));
 }
 
-util::StatusOr<std::string> Hkdf::ComputeHkdf(HashType hash,
+absl::StatusOr<std::string> Hkdf::ComputeHkdf(HashType hash,
                                               absl::string_view ikm,
                                               absl::string_view salt,
                                               absl::string_view info,
                                               size_t out_len) {
-  util::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
+  absl::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
   if (!evp_md.ok()) {
     return evp_md.status();
   }
@@ -129,7 +129,7 @@ util::StatusOr<std::string> Hkdf::ComputeHkdf(HashType hash,
   return out_key;
 }
 
-util::StatusOr<util::SecretData> Hkdf::ComputeEciesHkdfSymmetricKey(
+absl::StatusOr<util::SecretData> Hkdf::ComputeEciesHkdfSymmetricKey(
     HashType hash, absl::string_view kem_bytes,
     const util::SecretData &shared_secret, absl::string_view salt,
     absl::string_view info, size_t out_len) {

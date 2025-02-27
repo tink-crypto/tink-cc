@@ -80,7 +80,7 @@ class AesGcmHkdfStreamSegmentEncrypter : public StreamSegmentEncrypter {
     int ciphertext_segment_size;
   };
 
-  static util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> New(
+  static absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>> New(
       Params params);
 
   absl::Status EncryptSegment(const std::vector<uint8_t>& plaintext,

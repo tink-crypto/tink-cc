@@ -45,7 +45,6 @@ using ::crypto::tink::AeadConfig;
 using ::crypto::tink::KeyDerivationConfig;
 using ::crypto::tink::KeysetDeriver;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::OkStatus;
 using ::crypto::tink::util::Status;
 using ::crypto::tink::util::StatusOr;
 

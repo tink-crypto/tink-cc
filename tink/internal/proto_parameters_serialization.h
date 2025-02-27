@@ -23,7 +23,6 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -66,10 +65,6 @@ class ProtoParametersSerialization : public Serialization {
   // Creates a `ProtoParametersSerialization` object from a key template struct.
   static absl::StatusOr<ProtoParametersSerialization> Create(
       const KeyTemplateStruct& key_template);
-
-  const google::crypto::tink::KeyTemplate& GetKeyTemplate() const {
-    return key_template_;
-  }
 
   KeyTemplateStruct GetKeyTemplateStruct() const;
 

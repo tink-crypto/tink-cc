@@ -581,9 +581,9 @@ cc_test(
         ":tink_proto_structs",
         "//proto:test_proto_cc_proto",
         "//proto:tink_cc_proto",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )

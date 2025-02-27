@@ -550,7 +550,7 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     gmock
     absl::status
-    tink::util::statusor
+    absl::statusor
     tink::util::test_matchers
     tink::proto::test_proto_cc_proto
     tink::proto::tink_cc_proto

@@ -57,7 +57,7 @@ Cecpq2HkdfSenderKemBoringSsl::New(subtle::EllipticCurveType curve,
       return Cecpq2HkdfX25519SenderKemBoringSsl::New(curve, ec_pubx, ec_puby,
                                                      marshalled_hrss_pub);
     default:
-      return util::Status(absl::StatusCode::kUnimplemented,
+      return absl::Status(absl::StatusCode::kUnimplemented,
                           "Unsupported elliptic curve");
   }
 }
@@ -80,15 +80,15 @@ Cecpq2HkdfX25519SenderKemBoringSsl::New(
 
   // Basic input checking
   if (curve != CURVE25519) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "curve is not CURVE25519");
   }
   if (pubx.size() != X25519_PUBLIC_VALUE_LEN) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "pubx has unexpected length");
   }
   if (!puby.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "puby is not empty");
   }
   if (marshalled_hrss_pub.size() != HRSS_PUBLIC_KEY_BYTES) {
@@ -109,12 +109,12 @@ Cecpq2HkdfX25519SenderKemBoringSsl::GenerateKey(
     subtle::EcPointFormat point_format) const {
   // Basic input validation:
   if (point_format != EcPointFormat::COMPRESSED) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "X25519 only supports compressed elliptic curve points");
   }
   if (key_size_in_bytes < 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key size length is smaller than 32 bytes "
                         "and thus not post-quantum secure.");
   }

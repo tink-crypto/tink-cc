@@ -60,7 +60,7 @@ absl::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
     case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
       return HpkeKemProto::DHKEM_X25519_HKDF_SHA256;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine KEM.");
   }
 }
@@ -74,7 +74,7 @@ absl::StatusOr<HpkeKdfProto> FromKdfId(HpkeParameters::KdfId kdf_id) {
     case HpkeParameters::KdfId::kHkdfSha512:
       return HpkeKdfProto::HKDF_SHA512;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine KDF.");
   }
 }
@@ -88,7 +88,7 @@ absl::StatusOr<HpkeAeadProto> FromAeadId(HpkeParameters::AeadId aead_id) {
     case HpkeParameters::AeadId::kChaCha20Poly1305:
       return HpkeAeadProto::CHACHA20_POLY1305;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine AEAD.");
   }
 }
@@ -135,15 +135,15 @@ absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
 absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
     const HpkePrivateKeyProto& recipient_private_key) {
   if (recipient_private_key.private_key().empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key is empty.");
   }
   if (!recipient_private_key.has_public_key()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key is missing public key.");
   }
   if (!recipient_private_key.public_key().has_params()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key is missing HPKE parameters.");
   }
   return New(
@@ -159,15 +159,15 @@ absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
   HpkeKemProto kem = hpke_params.kem();
   if (kem != HpkeKemProto::DHKEM_P256_HKDF_SHA256 &&
       kem != HpkeKemProto::DHKEM_X25519_HKDF_SHA256) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key has an unsupported KEM");
   }
   if (hpke_params.kdf() != HpkeKdfProto::HKDF_SHA256) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key has an unsupported KDF");
   }
   if (hpke_params.aead() == HpkeAeadProto::AEAD_UNKNOWN) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient private key is missing AEAD");
   }
   return {absl::WrapUnique(
@@ -182,7 +182,7 @@ absl::StatusOr<std::string> HpkeDecrypt::DecryptNoPrefix(
 
   // Verify that ciphertext length is at least the encapsulated key length.
   if (ciphertext.size() < *encoding_size) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ciphertext is too short.");
   }
   absl::string_view encapsulated_key = ciphertext.substr(0, *encoding_size);
@@ -203,7 +203,7 @@ absl::StatusOr<std::string> HpkeDecrypt::DecryptNoPrefix(
 absl::StatusOr<std::string> HpkeDecrypt::Decrypt(
     absl::string_view ciphertext, absl::string_view context_info) const {
   if (!absl::StartsWith(ciphertext, output_prefix_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "OutputPrefix does not match");
   }
   return DecryptNoPrefix(absl::StripPrefix(ciphertext, output_prefix_),

@@ -65,7 +65,7 @@ TestHpkeContextBoringSsl::SetupSender(const HpkeParams &params,
           context_info.size(),
           reinterpret_cast<const uint8_t *>(seed_for_testing.data()),
           seed_for_testing.size())) {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "Unable to set up HPKE sender context.");
   }
   SenderHpkeContextBoringSsl tuple;

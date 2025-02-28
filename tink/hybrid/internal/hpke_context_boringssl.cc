@@ -67,7 +67,7 @@ absl::StatusOr<SenderHpkeContextBoringSsl> HpkeContextBoringSsl::SetupSender(
           recipient_public_key.size(),
           reinterpret_cast<const uint8_t *>(context_info.data()),
           context_info.size())) {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "Unable to set up HPKE sender context.");
   }
   SenderHpkeContextBoringSsl tuple;
@@ -103,7 +103,7 @@ HpkeContextBoringSsl::SetupRecipient(
         recipient_private_key.size());
   });
   if (!evp_hpke_key_init_result) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Unable to initialize BoringSSL HPKE recipient private key.");
   }
@@ -116,7 +116,7 @@ HpkeContextBoringSsl::SetupRecipient(
         info.size());
   });
   if (!evp_hpke_ctx_setup_recipient_result) {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "Unable to set up BoringSSL HPKE recipient context.");
   }
   return absl::WrapUnique(new HpkeContextBoringSsl(std::move(context)));
@@ -139,7 +139,7 @@ absl::StatusOr<std::string> HpkeContextBoringSsl::Seal(
         associated_data.size());
   });
   if (!evp_hpke_ctx_seal_result) {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "BoringSSL HPKE encryption failed.");
   }
   if (ciphertext_size < ciphertext.size()) {
@@ -166,7 +166,7 @@ absl::StatusOr<std::string> HpkeContextBoringSsl::Open(
         associated_data.size());
   });
   if (!evp_hpke_ctx_open_result) {
-    return util::Status(absl::StatusCode::kUnknown,
+    return absl::Status(absl::StatusCode::kUnknown,
                         "BoringSSL HPKE decryption failed.");
   }
   DfsanClearLabel(plaintext_data, ciphertext.size());
@@ -183,7 +183,7 @@ absl::StatusOr<util::SecretData> HpkeContextBoringSsl::Export(
           secret_length,
           reinterpret_cast<const uint8_t *>(exporter_context.data()),
           exporter_context.size())) {
-    return util::Status(absl::StatusCode::kUnknown, "Unable to export secret.");
+    return absl::Status(absl::StatusCode::kUnknown, "Unable to export secret.");
   }
   return util::SecretDataFromStringView(secret);
 }

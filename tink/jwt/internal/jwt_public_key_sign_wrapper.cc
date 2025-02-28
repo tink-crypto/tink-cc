@@ -55,7 +55,7 @@ class JwtPublicKeySignSetWrapper : public JwtPublicKeySign {
       : jwt_sign_set_(std::move(jwt_sign_set)),
         monitoring_sign_client_(std::move(monitoring_sign_client)) {}
 
-  crypto::tink::util::StatusOr<std::string> SignAndEncode(
+  absl::StatusOr<std::string> SignAndEncode(
       const crypto::tink::RawJwt& token) const override;
 
   ~JwtPublicKeySignSetWrapper() override = default;
@@ -84,7 +84,7 @@ util::Status Validate(PrimitiveSet<JwtPublicKeySignInternal>* jwt_sign_set) {
   return util::OkStatus();
 }
 
-util::StatusOr<std::string> JwtPublicKeySignSetWrapper::SignAndEncode(
+absl::StatusOr<std::string> JwtPublicKeySignSetWrapper::SignAndEncode(
     const crypto::tink::RawJwt& token) const {
   auto primary = jwt_sign_set_->get_primary();
   auto sign_result = primary->get_primitive().SignAndEncodeWithKid(
@@ -106,7 +106,7 @@ util::StatusOr<std::string> JwtPublicKeySignSetWrapper::SignAndEncode(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<JwtPublicKeySignInternal>> jwt_sign_set)
     const {
   util::Status status = Validate(jwt_sign_set.get());
@@ -121,13 +121,13 @@ util::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
         absl::make_unique<JwtPublicKeySignSetWrapper>(std::move(jwt_sign_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*jwt_sign_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_sign_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_sign_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kSignApi, *keyset_info));
   if (!monitoring_sign_client.ok()) {

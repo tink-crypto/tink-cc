@@ -35,7 +35,7 @@ using ::google::protobuf::util::JsonParseOptions;
 using ::google::protobuf::util::JsonStringToMessage;
 using ::google::protobuf::util::MessageToJsonString;
 
-util::StatusOr<Struct> JsonStringToProtoStruct(absl::string_view json_string) {
+absl::StatusOr<Struct> JsonStringToProtoStruct(absl::string_view json_string) {
   Struct proto;
   JsonParseOptions json_parse_options;
   absl::Status status =
@@ -46,7 +46,7 @@ util::StatusOr<Struct> JsonStringToProtoStruct(absl::string_view json_string) {
   return proto;
 }
 
-util::StatusOr<ListValue> JsonStringToProtoList(absl::string_view json_string) {
+absl::StatusOr<ListValue> JsonStringToProtoList(absl::string_view json_string) {
   ListValue proto;
   JsonParseOptions json_parse_options;
   absl::Status status =
@@ -57,7 +57,7 @@ util::StatusOr<ListValue> JsonStringToProtoList(absl::string_view json_string) {
   return proto;
 }
 
-util::StatusOr<std::string> ProtoStructToJsonString(const Struct& proto) {
+absl::StatusOr<std::string> ProtoStructToJsonString(const Struct& proto) {
   std::string output;
   absl::Status status = MessageToJsonString(proto, &output);
   if (!status.ok()) {
@@ -66,7 +66,7 @@ util::StatusOr<std::string> ProtoStructToJsonString(const Struct& proto) {
   return output;
 }
 
-util::StatusOr<std::string> ProtoListToJsonString(const ListValue& proto) {
+absl::StatusOr<std::string> ProtoListToJsonString(const ListValue& proto) {
   std::string output;
   absl::Status status = MessageToJsonString(proto, &output);
   if (!status.ok()) {

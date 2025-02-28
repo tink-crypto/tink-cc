@@ -165,7 +165,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
             .Build(GetPartialKeyAccess());
     CHECK_OK(key);
 
-    util::StatusOr<JwtValidator> test_vector_validator =
+    absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
             .ExpectIssuer("joe")
             .ExpectTypeHeader("JWT")
@@ -202,7 +202,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
             .Build(GetPartialKeyAccess());
     CHECK_OK(key);
 
-    util::StatusOr<JwtValidator> test_vector_validator =
+    absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
             .ExpectIssuer("issuer")
             .AllowMissingExpiration()
@@ -235,7 +235,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
             .Build(GetPartialKeyAccess());
     CHECK_OK(key);
 
-    util::StatusOr<JwtValidator> test_vector_validator =
+    absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
             .ExpectIssuer("issuer")
             .AllowMissingExpiration()
@@ -267,24 +267,24 @@ TEST_P(JwtMacTest, GetPrimitive) {
 
   JwtMacTestParam test_vector = GetParam();
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               test_vector.key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<JwtMac>> mac =
+  absl::StatusOr<std::unique_ptr<JwtMac>> mac =
       handle->GetPrimitive<JwtMac>(config);
   ASSERT_THAT(mac, IsOk());
 
   // Sign and verify a token.
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtBuilder().SetIssuer("issuer").WithoutExpiration().Build();
   ASSERT_THAT(raw_jwt, IsOk());
-  util::StatusOr<std::string> compact = (*mac)->ComputeMacAndEncode(*raw_jwt);
+  absl::StatusOr<std::string> compact = (*mac)->ComputeMacAndEncode(*raw_jwt);
   ASSERT_THAT(compact, IsOk());
-  util::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
+  absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()
                                                .ExpectIssuer("issuer")
                                                .AllowMissingExpiration()
                                                .Build();

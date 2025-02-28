@@ -79,7 +79,7 @@ namespace tink {
 namespace jwt_internal {
 namespace {
 
-util::StatusOr<EcdsaParameters> RawEcdsaParamsFromJwtEcdsaParams(
+absl::StatusOr<EcdsaParameters> RawEcdsaParamsFromJwtEcdsaParams(
     const JwtEcdsaParameters& params) {
   EcdsaParameters::Builder builder;
   builder.SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363);
@@ -108,7 +108,7 @@ util::StatusOr<EcdsaParameters> RawEcdsaParamsFromJwtEcdsaParams(
   return builder.Build();
 }
 
-util::StatusOr<std::string> AlgorithmName(
+absl::StatusOr<std::string> AlgorithmName(
     const JwtEcdsaParameters::Algorithm& algorithm) {
   switch (algorithm) {
     case JwtEcdsaParameters::Algorithm::kEs256:
@@ -123,16 +123,16 @@ util::StatusOr<std::string> AlgorithmName(
   }
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSigner(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSigner(
     const EcdsaParameters& params, const EcPoint& public_point,
     const RestrictedBigInteger& private_key_value) {
-  util::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
       params, public_point,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   if (!ecdsa_public_key.ok()) {
     return ecdsa_public_key.status();
   }
-  util::StatusOr<EcdsaPrivateKey> raw_ecdsa_private_key =
+  absl::StatusOr<EcdsaPrivateKey> raw_ecdsa_private_key =
       EcdsaPrivateKey::Create(*ecdsa_public_key, private_key_value,
                               GetPartialKeyAccess());
   if (!ecdsa_public_key.ok()) {
@@ -141,7 +141,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> NewEcdsaSigner(
   return subtle::EcdsaSignBoringSsl::New(*raw_ecdsa_private_key);
 }
 
-util::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
 NewJwtEcdsaSignInternal(const JwtEcdsaPrivateKey& jwt_ecdsa_private_key) {
   const JwtEcdsaParameters* jwt_ecdsa_params =
       dynamic_cast<const JwtEcdsaParameters*>(
@@ -152,13 +152,13 @@ NewJwtEcdsaSignInternal(const JwtEcdsaPrivateKey& jwt_ecdsa_private_key) {
                         "Failed to cast JwtEcdsaParameters");
   }
 
-  util::StatusOr<EcdsaParameters> raw_ecdsa_parameters =
+  absl::StatusOr<EcdsaParameters> raw_ecdsa_parameters =
       RawEcdsaParamsFromJwtEcdsaParams(*jwt_ecdsa_params);
   if (!raw_ecdsa_parameters.ok()) {
     return raw_ecdsa_parameters.status();
   }
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> ecdsa_sign_boringssl =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> ecdsa_sign_boringssl =
       NewEcdsaSigner(
           raw_ecdsa_parameters.value(),
           jwt_ecdsa_private_key.GetPublicKey().GetPublicPoint(
@@ -168,7 +168,7 @@ NewJwtEcdsaSignInternal(const JwtEcdsaPrivateKey& jwt_ecdsa_private_key) {
     return ecdsa_sign_boringssl.status();
   }
 
-  util::StatusOr<std::string> algorithm_name =
+  absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_ecdsa_params->GetAlgorithm());
   if (!algorithm_name.ok()) {
     return algorithm_name.status();
@@ -199,7 +199,7 @@ NewJwtEcdsaSignInternal(const JwtEcdsaPrivateKey& jwt_ecdsa_private_key) {
   }
 }
 
-util::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
 NewJwtEcdsaVerifyInternal(const JwtEcdsaPublicKey& jwt_ecdsa_public_key) {
   const JwtEcdsaParameters* jwt_ecdsa_params =
       dynamic_cast<const JwtEcdsaParameters*>(
@@ -208,12 +208,12 @@ NewJwtEcdsaVerifyInternal(const JwtEcdsaPublicKey& jwt_ecdsa_public_key) {
     return util::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtEcdsaParameters");
   }
-  util::StatusOr<EcdsaParameters> raw_ecdsa_parameters =
+  absl::StatusOr<EcdsaParameters> raw_ecdsa_parameters =
       RawEcdsaParamsFromJwtEcdsaParams(*jwt_ecdsa_params);
   if (!raw_ecdsa_parameters.ok()) {
     return raw_ecdsa_parameters.status();
   }
-  util::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
+  absl::StatusOr<EcdsaPublicKey> ecdsa_public_key = EcdsaPublicKey::Create(
       raw_ecdsa_parameters.value(),
       jwt_ecdsa_public_key.GetPublicPoint(GetPartialKeyAccess()), absl::nullopt,
       GetPartialKeyAccess());
@@ -221,10 +221,10 @@ NewJwtEcdsaVerifyInternal(const JwtEcdsaPublicKey& jwt_ecdsa_public_key) {
     return ecdsa_public_key.status();
   }
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> ecdsa_verify_boringssl =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> ecdsa_verify_boringssl =
       subtle::EcdsaVerifyBoringSsl::New(*ecdsa_public_key);
 
-  util::StatusOr<std::string> algorithm_name =
+  absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_ecdsa_params->GetAlgorithm());
   if (!algorithm_name.ok()) {
     return algorithm_name.status();
@@ -254,7 +254,7 @@ NewJwtEcdsaVerifyInternal(const JwtEcdsaPublicKey& jwt_ecdsa_public_key) {
   }
 }
 
-util::StatusOr<std::string> AlgorithmName(
+absl::StatusOr<std::string> AlgorithmName(
     const JwtRsaSsaPkcs1Parameters::Algorithm& algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs256:
@@ -269,10 +269,10 @@ util::StatusOr<std::string> AlgorithmName(
   }
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1Signer(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1Signer(
     const RsaSsaPkcs1Parameters& params,
     const JwtRsaSsaPkcs1PrivateKey& jwt_rsa_ssa_pkcs1_private_key) {
-  util::StatusOr<RsaSsaPkcs1PublicKey> rsa_ssa_pkcs1_public_key =
+  absl::StatusOr<RsaSsaPkcs1PublicKey> rsa_ssa_pkcs1_public_key =
       RsaSsaPkcs1PublicKey::Create(
           params,
           jwt_rsa_ssa_pkcs1_private_key.GetPublicKey().GetModulus(
@@ -281,7 +281,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1Signer(
   if (!rsa_ssa_pkcs1_public_key.ok()) {
     return rsa_ssa_pkcs1_public_key.status();
   }
-  util::StatusOr<RsaSsaPkcs1PrivateKey> raw_rsa_ssa_pkcs1_private_key =
+  absl::StatusOr<RsaSsaPkcs1PrivateKey> raw_rsa_ssa_pkcs1_private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*rsa_ssa_pkcs1_public_key)
           .SetPrimeP(
@@ -300,7 +300,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPkcs1Signer(
   return subtle::RsaSsaPkcs1SignBoringSsl::New(*raw_rsa_ssa_pkcs1_private_key);
 }
 
-util::StatusOr<RsaSsaPkcs1Parameters>
+absl::StatusOr<RsaSsaPkcs1Parameters>
 RawRsaSsaPkcs1ParamsFromJwtRsaSsaPkcs1Params(
     const JwtRsaSsaPkcs1Parameters& params) {
   RsaSsaPkcs1Parameters::Builder builder;
@@ -325,7 +325,7 @@ RawRsaSsaPkcs1ParamsFromJwtRsaSsaPkcs1Params(
   return builder.Build();
 }
 
-util::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
 NewJwtRsaSsaPkcs1SignInternal(
     const JwtRsaSsaPkcs1PrivateKey& jwt_rsa_ssa_pkcs1_private_key) {
   const JwtRsaSsaPkcs1Parameters* jwt_rsa_ssa_pkcs1_params =
@@ -337,20 +337,20 @@ NewJwtRsaSsaPkcs1SignInternal(
                         "Failed to cast JwtRsaSsaPkcs1Parameters");
   }
 
-  util::StatusOr<RsaSsaPkcs1Parameters> raw_rsa_ssa_pkcs1_params =
+  absl::StatusOr<RsaSsaPkcs1Parameters> raw_rsa_ssa_pkcs1_params =
       RawRsaSsaPkcs1ParamsFromJwtRsaSsaPkcs1Params(*jwt_rsa_ssa_pkcs1_params);
   if (!raw_rsa_ssa_pkcs1_params.ok()) {
     return raw_rsa_ssa_pkcs1_params.status();
   }
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> raw_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> raw_signer =
       NewRsaSsaPkcs1Signer(*raw_rsa_ssa_pkcs1_params,
                            jwt_rsa_ssa_pkcs1_private_key);
   if (!raw_signer.ok()) {
     return raw_signer.status();
   }
 
-  util::StatusOr<std::string> algorithm_name =
+  absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_rsa_ssa_pkcs1_params->GetAlgorithm());
   if (!algorithm_name.ok()) {
     return algorithm_name.status();
@@ -381,7 +381,7 @@ NewJwtRsaSsaPkcs1SignInternal(
   }
 }
 
-util::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
 NewJwtRsaSsaPkcs1VerifyInternal(
     const JwtRsaSsaPkcs1PublicKey& jwt_rsa_ssa_pkcs1_public_key) {
   const JwtRsaSsaPkcs1Parameters* jwt_rsa_ssa_pkcs1_params =
@@ -391,12 +391,12 @@ NewJwtRsaSsaPkcs1VerifyInternal(
     return util::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtRsaSsaPkcs1Parameters");
   }
-  util::StatusOr<RsaSsaPkcs1Parameters> raw_rsa_ssa_pkcs1_parameters =
+  absl::StatusOr<RsaSsaPkcs1Parameters> raw_rsa_ssa_pkcs1_parameters =
       RawRsaSsaPkcs1ParamsFromJwtRsaSsaPkcs1Params(*jwt_rsa_ssa_pkcs1_params);
   if (!raw_rsa_ssa_pkcs1_parameters.ok()) {
     return raw_rsa_ssa_pkcs1_parameters.status();
   }
-  util::StatusOr<RsaSsaPkcs1PublicKey> rsa_ssa_pkcs1_public_key =
+  absl::StatusOr<RsaSsaPkcs1PublicKey> rsa_ssa_pkcs1_public_key =
       RsaSsaPkcs1PublicKey::Create(
           raw_rsa_ssa_pkcs1_parameters.value(),
           jwt_rsa_ssa_pkcs1_public_key.GetModulus(GetPartialKeyAccess()),
@@ -405,11 +405,11 @@ NewJwtRsaSsaPkcs1VerifyInternal(
     return rsa_ssa_pkcs1_public_key.status();
   }
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
       rsa_ssa_pkcs1_verify_boringssl =
           subtle::RsaSsaPkcs1VerifyBoringSsl::New(*rsa_ssa_pkcs1_public_key);
 
-  util::StatusOr<std::string> algorithm_name =
+  absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_rsa_ssa_pkcs1_params->GetAlgorithm());
   if (!algorithm_name.ok()) {
     return algorithm_name.status();
@@ -440,10 +440,10 @@ NewJwtRsaSsaPkcs1VerifyInternal(
   }
 }
 
-util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSigner(
+absl::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSigner(
     const RsaSsaPssParameters& params,
     const JwtRsaSsaPssPrivateKey& jwt_rsa_ssa_pss_private_key) {
-  util::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_public_key =
+  absl::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_public_key =
       RsaSsaPssPublicKey::Create(
           params,
           jwt_rsa_ssa_pss_private_key.GetPublicKey().GetModulus(
@@ -452,7 +452,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSigner(
   if (!rsa_ssa_pss_public_key.ok()) {
     return rsa_ssa_pss_public_key.status();
   }
-  util::StatusOr<RsaSsaPssPrivateKey> raw_rsa_ssa_pss_private_key =
+  absl::StatusOr<RsaSsaPssPrivateKey> raw_rsa_ssa_pss_private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*rsa_ssa_pss_public_key)
           .SetPrimeP(
@@ -470,7 +470,7 @@ util::StatusOr<std::unique_ptr<PublicKeySign>> NewRsaSsaPssSigner(
   return subtle::RsaSsaPssSignBoringSsl::New(*raw_rsa_ssa_pss_private_key);
 }
 
-util::StatusOr<RsaSsaPssParameters> RawRsaSsaPssParamsFromJwtRsaSsaPssParams(
+absl::StatusOr<RsaSsaPssParameters> RawRsaSsaPssParamsFromJwtRsaSsaPssParams(
     const JwtRsaSsaPssParameters& params) {
   RsaSsaPssParameters::Builder builder;
   builder.SetModulusSizeInBits(params.GetModulusSizeInBits());
@@ -501,7 +501,7 @@ util::StatusOr<RsaSsaPssParameters> RawRsaSsaPssParamsFromJwtRsaSsaPssParams(
   return builder.Build();
 }
 
-util::StatusOr<std::string> AlgorithmName(
+absl::StatusOr<std::string> AlgorithmName(
     const JwtRsaSsaPssParameters::Algorithm& algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPssParameters::Algorithm::kPs256:
@@ -516,7 +516,7 @@ util::StatusOr<std::string> AlgorithmName(
   }
 }
 
-util::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
 NewJwtRsaSsaPssSignInternal(
     const JwtRsaSsaPssPrivateKey& jwt_rsa_ssa_pss_private_key) {
   const JwtRsaSsaPssParameters* jwt_rsa_ssa_pss_params =
@@ -528,19 +528,19 @@ NewJwtRsaSsaPssSignInternal(
                         "Failed to cast JwtRsaSsaPssParameters");
   }
 
-  util::StatusOr<RsaSsaPssParameters> raw_rsa_ssa_pss_params =
+  absl::StatusOr<RsaSsaPssParameters> raw_rsa_ssa_pss_params =
       RawRsaSsaPssParamsFromJwtRsaSsaPssParams(*jwt_rsa_ssa_pss_params);
   if (!raw_rsa_ssa_pss_params.ok()) {
     return raw_rsa_ssa_pss_params.status();
   }
 
-  util::StatusOr<std::unique_ptr<PublicKeySign>> raw_signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> raw_signer =
       NewRsaSsaPssSigner(*raw_rsa_ssa_pss_params, jwt_rsa_ssa_pss_private_key);
   if (!raw_signer.ok()) {
     return raw_signer.status();
   }
 
-  util::StatusOr<std::string> algorithm_name =
+  absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_rsa_ssa_pss_params->GetAlgorithm());
   if (!algorithm_name.ok()) {
     return algorithm_name.status();
@@ -571,7 +571,7 @@ NewJwtRsaSsaPssSignInternal(
   }
 }
 
-util::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
 NewJwtRsaSsaPssVerifyInternal(
     const JwtRsaSsaPssPublicKey& jwt_rsa_ssa_pss_public_key) {
   const JwtRsaSsaPssParameters* jwt_rsa_ssa_pss_params =
@@ -581,12 +581,12 @@ NewJwtRsaSsaPssVerifyInternal(
     return util::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtRsaSsaPssParameters");
   }
-  util::StatusOr<RsaSsaPssParameters> raw_rsa_ssa_pss_parameters =
+  absl::StatusOr<RsaSsaPssParameters> raw_rsa_ssa_pss_parameters =
       RawRsaSsaPssParamsFromJwtRsaSsaPssParams(*jwt_rsa_ssa_pss_params);
   if (!raw_rsa_ssa_pss_parameters.ok()) {
     return raw_rsa_ssa_pss_parameters.status();
   }
-  util::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_public_key =
+  absl::StatusOr<RsaSsaPssPublicKey> rsa_ssa_pss_public_key =
       RsaSsaPssPublicKey::Create(
           raw_rsa_ssa_pss_parameters.value(),
           jwt_rsa_ssa_pss_public_key.GetModulus(GetPartialKeyAccess()),
@@ -595,11 +595,11 @@ NewJwtRsaSsaPssVerifyInternal(
     return rsa_ssa_pss_public_key.status();
   }
 
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>>
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
       rsa_ssa_pss_verify_boringssl =
           subtle::RsaSsaPssVerifyBoringSsl::New(*rsa_ssa_pss_public_key);
 
-  util::StatusOr<std::string> algorithm_name =
+  absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_rsa_ssa_pss_params->GetAlgorithm());
   if (!algorithm_name.ok()) {
     return algorithm_name.status();

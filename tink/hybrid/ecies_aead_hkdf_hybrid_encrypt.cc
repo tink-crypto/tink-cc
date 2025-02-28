@@ -41,9 +41,9 @@ namespace tink {
 
 namespace {
 
-util::Status Validate(const EciesAeadHkdfPublicKey& key) {
+absl::Status Validate(const EciesAeadHkdfPublicKey& key) {
   if (key.x().empty() || !key.has_params()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Invalid EciesAeadHkdfPublicKey: missing required fields.");
   }
@@ -51,17 +51,17 @@ util::Status Validate(const EciesAeadHkdfPublicKey& key) {
   if (key.params().has_kem_params() &&
       key.params().kem_params().curve_type() == EllipticCurveType::CURVE25519) {
     if (!key.y().empty()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Invalid EciesAeadHkdfPublicKey: has unexpected field.");
     }
   } else if (key.y().empty()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Invalid EciesAeadHkdfPublicKey: missing required fields.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -69,7 +69,7 @@ util::Status Validate(const EciesAeadHkdfPublicKey& key) {
 // static
 absl::StatusOr<std::unique_ptr<HybridEncrypt>> EciesAeadHkdfHybridEncrypt::New(
     const EciesAeadHkdfPublicKey& recipient_key) {
-  util::Status status = Validate(recipient_key);
+  absl::Status status = Validate(recipient_key);
   if (!status.ok()) return status;
 
   auto kem_result = subtle::EciesHkdfSenderKemBoringSsl::New(

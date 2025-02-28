@@ -141,30 +141,30 @@ TEST_F(BinaryKeysetWriterTest, testDestinationStreamErrors) {
 }
 
 TEST_F(BinaryKeysetWriterTest, EncryptedKeysetOverhead) {
-  util::StatusOr<std::unique_ptr<KeysetHandle>> keysetEncryptionHandle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keysetEncryptionHandle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                 KeyGenConfigGlobalRegistry());
   ASSERT_THAT(keysetEncryptionHandle, IsOk());
-  util::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
+  absl::StatusOr<std::unique_ptr<Aead>> keyset_encryption_aead =
       (*keysetEncryptionHandle)->GetPrimitive<Aead>(ConfigGlobalRegistry());
   ASSERT_THAT(keyset_encryption_aead, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Gcm(),
                                 KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
 
-  crypto::tink::util::StatusOr<util::SecretData> serialized_keyset =
+  absl::StatusOr<util::SecretData> serialized_keyset =
       SerializeKeysetToProtoKeysetFormat(**handle,
                                          InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_keyset, IsOk());
-  util::StatusOr<std::string> raw_encrypted_keyset =
+  absl::StatusOr<std::string> raw_encrypted_keyset =
       (*keyset_encryption_aead)
           ->Encrypt(util::SecretDataAsStringView(*serialized_keyset), "");
   ASSERT_THAT(raw_encrypted_keyset, IsOk());
 
   std::stringbuf encrypted_keyset;
-  crypto::tink::util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
+  absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
       BinaryKeysetWriter::New(
           absl::make_unique<std::ostream>(&encrypted_keyset));
   ASSERT_THAT(writer, IsOk());

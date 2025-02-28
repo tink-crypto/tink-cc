@@ -38,7 +38,7 @@ using google::crypto::tink::EncryptedKeyset;
 using google::crypto::tink::Keyset;
 
 //  static
-util::StatusOr<std::unique_ptr<KeysetReader>> BinaryKeysetReader::New(
+absl::StatusOr<std::unique_ptr<KeysetReader>> BinaryKeysetReader::New(
     std::unique_ptr<std::istream> keyset_stream) {
   if (keyset_stream == nullptr) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -50,14 +50,14 @@ util::StatusOr<std::unique_ptr<KeysetReader>> BinaryKeysetReader::New(
 }
 
 //  static
-util::StatusOr<std::unique_ptr<KeysetReader>> BinaryKeysetReader::New(
+absl::StatusOr<std::unique_ptr<KeysetReader>> BinaryKeysetReader::New(
     absl::string_view serialized_keyset) {
   std::unique_ptr<KeysetReader> reader(
       new BinaryKeysetReader(serialized_keyset));
   return std::move(reader);
 }
 
-util::StatusOr<std::unique_ptr<Keyset>> BinaryKeysetReader::Read() {
+absl::StatusOr<std::unique_ptr<Keyset>> BinaryKeysetReader::Read() {
   auto keyset = absl::make_unique<Keyset>();
   if (!keyset->ParseFromString(serialized_keyset_)) {
     return util::Status(absl::StatusCode::kInvalidArgument,
@@ -66,7 +66,7 @@ util::StatusOr<std::unique_ptr<Keyset>> BinaryKeysetReader::Read() {
   return std::move(keyset);
 }
 
-util::StatusOr<std::unique_ptr<EncryptedKeyset>>
+absl::StatusOr<std::unique_ptr<EncryptedKeyset>>
 BinaryKeysetReader::ReadEncrypted() {
   auto enc_keyset = absl::make_unique<EncryptedKeyset>();
   if (!enc_keyset->ParseFromString(serialized_keyset_)) {

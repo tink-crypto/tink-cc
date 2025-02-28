@@ -64,7 +64,7 @@ class ExampleKeyTypeManager
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKeyProto& key) const override {
       // Ignore the key and returned one with a fixed size for this test.
       return {subtle::AesGcmBoringSsl::New(
@@ -74,7 +74,7 @@ class ExampleKeyTypeManager
 
   class AeadVariantFactory : public PrimitiveFactory<AeadVariant> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<AeadVariant>> Create(
+    absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKeyProto& key) const override {
       return absl::make_unique<AeadVariant>(key.key_value());
     }
@@ -103,7 +103,7 @@ class ExampleKeyTypeManager
     return util::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<AesGcmKeyProto> CreateKey(
+  absl::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
     AesGcmKeyProto result;
     result.set_key_value(subtle::Random::GetRandomBytes(key_format.key_size()));
@@ -149,7 +149,7 @@ class ExampleKeyTypeManagerWithoutFactory
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKeyProto& key) const override {
       // Ignore the key and returned one with a fixed size for this test.
       return {subtle::AesGcmBoringSsl::New(
@@ -159,7 +159,7 @@ class ExampleKeyTypeManagerWithoutFactory
 
   class AeadVariantFactory : public PrimitiveFactory<AeadVariant> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<AeadVariant>> Create(
+    absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKeyProto& key) const override {
       return absl::make_unique<AeadVariant>(key.key_value());
     }

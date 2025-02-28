@@ -32,18 +32,18 @@ class AlwaysFailingKeyFactory : public KeyFactory {
   explicit AlwaysFailingKeyFactory(const crypto::tink::util::Status& status)
       : status_(status) {}
 
-  crypto::tink::util::StatusOr<std::unique_ptr<portable_proto::MessageLite>>
-  NewKey(const portable_proto::MessageLite& key_format) const override {
+  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+      const portable_proto::MessageLite& key_format) const override {
     return status_;
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<portable_proto::MessageLite>>
-  NewKey(absl::string_view serialized_key_format) const override {
+  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+      absl::string_view serialized_key_format) const override {
     return status_;
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
-  NewKeyData(absl::string_view serialized_key_format) const override {
+  absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>> NewKeyData(
+      absl::string_view serialized_key_format) const override {
     return status_;
   }
 

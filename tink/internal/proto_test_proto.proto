@@ -27,6 +27,7 @@ message InnerProtoTestProto {
 message ProtoTestProto {
   uint32 uint32_field_1 = 1;
   uint32 uint32_field_2 = 2;
+  uint64 uint64_field_1 = 5;
 
   bytes bytes_field_1 = 3;
   bytes bytes_field_2 = 4;

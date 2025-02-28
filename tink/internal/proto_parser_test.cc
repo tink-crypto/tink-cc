@@ -84,6 +84,7 @@ struct InnerStruct {
 struct ParsedStruct {
   uint32_t uint32_member_1;
   uint32_t uint32_member_2;
+  uint64_t uint64_member_1;
   absl::optional<uint32_t> optional_uint32_member_1;
   std::string string_member_1;
   std::string string_member_2;
@@ -168,6 +169,21 @@ TEST(ProtoParserTest, OptionalUint32NonZeroWorks) {
   absl::StatusOr<ParsedStruct> parsed = parser->Parse(HexDecodeOrDie("0801"));
   ASSERT_THAT(parsed, IsOk());
   EXPECT_THAT(parsed->optional_uint32_member_1, Optional(1));
+}
+
+TEST(ProtoParserTest, SingleUint64Works) {
+  ProtoTestProto proto;
+  proto.set_uint64_field_1(0xffffffffff);
+
+  absl::StatusOr<ProtoParser<ParsedStruct>> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddUint64Field(5, &ParsedStruct::uint64_member_1)
+          .Build();
+  ASSERT_THAT(parser.status(), IsOk());
+  absl::StatusOr<ParsedStruct> parsed =
+      parser->Parse(proto.SerializeAsString());
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->uint64_member_1, Eq(0xffffffffff));
 }
 
 TEST(ProtoParserTest, SingleEnumWorks) {

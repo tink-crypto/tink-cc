@@ -1454,6 +1454,7 @@ cc_library(
         ":proto_parser_presence_fields",
         ":proto_parser_secret_data_with_crc_field",
         ":proto_parser_state",
+        ":proto_parser_uint64_field",
         ":proto_parsing_helpers",
         ":proto_parsing_low_level_parser",
         ":secret_buffer",

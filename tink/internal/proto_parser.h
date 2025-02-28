@@ -43,6 +43,7 @@
 #include "tink/internal/proto_parser_presence_fields.h"
 #include "tink/internal/proto_parser_secret_data_with_crc_field.h"
 #include "tink/internal/proto_parser_state.h"
+#include "tink/internal/proto_parser_uint64_field.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/internal/secret_buffer.h"
@@ -158,6 +159,12 @@ class ProtoParserBuilder {
     fields_.push_back(
         absl::make_unique<proto_parsing::Uint32FieldWithPresence<Struct>>(
             tag, value));
+    return *this;
+  }
+
+  ProtoParserBuilder& AddUint64Field(int tag, uint64_t Struct::* value) {
+    fields_.push_back(
+        absl::make_unique<proto_parsing::Uint64Field<Struct>>(tag, value));
     return *this;
   }
 

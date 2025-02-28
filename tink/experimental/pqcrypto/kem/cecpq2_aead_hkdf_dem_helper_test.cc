@@ -54,9 +54,10 @@ using ::testing::HasSubstr;
 absl::Status EncryptThenDecrypt(const AeadOrDaead& dem,
                                 absl::string_view message,
                                 absl::string_view associated_data) {
-  StatusOr<std::string> encryption_or = dem.Encrypt(message, associated_data);
+  absl::StatusOr<std::string> encryption_or =
+      dem.Encrypt(message, associated_data);
   if (!encryption_or.status().ok()) return encryption_or.status();
-  StatusOr<std::string> decryption_or =
+  absl::StatusOr<std::string> decryption_or =
       dem.Decrypt(encryption_or.value(), associated_data);
   if (!decryption_or.status().ok()) return decryption_or.status();
   if (decryption_or.value() != message) {
@@ -94,7 +95,7 @@ TEST(Cecpq2AeadHkdfDemHelperTest, DemHelperWithAesGcmKeyType) {
   util::SecretData seed_32_bytes = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"));
-  StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
+  absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
       dem_helper->GetAeadOrDaead(seed_32_bytes);
   ASSERT_THAT(aead_or_daead_result_or, IsOk());
 
@@ -124,7 +125,7 @@ TEST(Cecpq2AeadHkdfDemHelperTest, DemHelperWithAesSivKeyType) {
                            "000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"));
-  StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
+  absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
       dem_helper->GetAeadOrDaead(seed_64_bytes);
   ASSERT_THAT(aead_or_daead_result_or, IsOk());
 
@@ -151,7 +152,7 @@ TEST(Cecpq2AeadHkdfDemHelperTest, DemHelperWithXchacha20Poly1305KeyType) {
   util::SecretData seed_32_bytes = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"));
-  StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
+  absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
       dem_helper->GetAeadOrDaead(seed_32_bytes);
   ASSERT_THAT(aead_or_daead_result_or, IsOk());
 

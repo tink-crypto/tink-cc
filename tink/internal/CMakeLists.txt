@@ -1991,3 +1991,30 @@ tink_cc_library(
   SRCS
     common_proto_enums.h
 )
+
+tink_cc_library(
+  NAME proto_parser_uint64_field
+  SRCS
+    proto_parser_uint64_field.h
+  DEPS
+    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
+    absl::status
+    absl::statusor
+)
+
+tink_cc_test(
+  NAME proto_parser_uint64_field_test
+  SRCS
+    proto_parser_uint64_field_test.cc
+  DEPS
+    tink::internal::proto_parser_state
+    tink::internal::proto_parser_uint64_field
+    gmock
+    absl::strings
+    absl::span
+    tink::util::test_matchers
+    tink::util::test_util
+)

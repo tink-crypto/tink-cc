@@ -60,6 +60,8 @@ constexpr int32_t kBytesField1Number = 3;
 struct ParsedStruct {
   uint32_t uint32_member_1;
   uint32_t uint32_member_2;
+  uint64_t uint64_member_1;
+  uint64_t uint64_member_2;
   std::string string_member_1;
   std::string string_member_2;
   SecretData secret_data_member_1;
@@ -314,6 +316,8 @@ TEST(Uint32Field, GetFieldNumber) {
                                    &ParsedStruct::uint32_member_2);
   ASSERT_THAT(field2.GetFieldNumber(), Eq(kUint32Field2Number));
 }
+
+// Uint64Field ==============================================================
 
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {

@@ -79,7 +79,7 @@ class KemEncapsulateSetWrapper : public KemEncapsulate {
         monitoring_encapsulation_client_(
             std::move(monitoring_encapsulation_client)) {}
 
-  util::StatusOr<KemEncapsulation> Encapsulate() const override;
+  absl::StatusOr<KemEncapsulation> Encapsulate() const override;
 
   ~KemEncapsulateSetWrapper() override = default;
 
@@ -88,9 +88,9 @@ class KemEncapsulateSetWrapper : public KemEncapsulate {
   std::unique_ptr<MonitoringClient> monitoring_encapsulation_client_;
 };
 
-util::StatusOr<KemEncapsulation> KemEncapsulateSetWrapper::Encapsulate() const {
+absl::StatusOr<KemEncapsulation> KemEncapsulateSetWrapper::Encapsulate() const {
   auto primary = kem_encapsulate_set_->get_primary();
-  util::StatusOr<KemEncapsulation> encapsulation =
+  absl::StatusOr<KemEncapsulation> encapsulation =
       primary->get_primitive().Encapsulate();
   if (monitoring_encapsulation_client_ != nullptr) {
     if (encapsulation.ok()) {
@@ -106,7 +106,7 @@ util::StatusOr<KemEncapsulation> KemEncapsulateSetWrapper::Encapsulate() const {
 
 }  // anonymous namespace
 
-util::StatusOr<std::unique_ptr<KemEncapsulate>> KemEncapsulateWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<KemEncapsulate>> KemEncapsulateWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<KemEncapsulate>> primitive_set) const {
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) {
@@ -122,13 +122,13 @@ util::StatusOr<std::unique_ptr<KemEncapsulate>> KemEncapsulateWrapper::Wrap(
         absl::make_unique<KemEncapsulateSetWrapper>(std::move(primitive_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<MonitoringClient>>
       monitoring_encapsulation_client = monitoring_factory->New(
           MonitoringContext(kPrimitive, kEncapsulateApi, *keyset_info));
   if (!monitoring_encapsulation_client.ok()) {

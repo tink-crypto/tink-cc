@@ -72,7 +72,7 @@ HpkeKeyFormat CreateKeyFormat(HpkeKem kem, HpkeKdf kdf, HpkeAead aead) {
   return key_format;
 }
 
-util::StatusOr<HpkePrivateKeyProto> CreateKey(HpkeKem kem, HpkeKdf kdf,
+absl::StatusOr<HpkePrivateKeyProto> CreateKey(HpkeKem kem, HpkeKdf kdf,
                                               HpkeAead aead) {
   return HpkePrivateKeyManager().CreateKey(CreateKeyFormat(kem, kdf, aead));
 }
@@ -123,7 +123,7 @@ TEST(HpkePrivateKeyManagerTest, CreateKeySucceeds) {
       CreateKeyFormat(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
 
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
 
@@ -142,7 +142,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP256KeySucceeds) {
       CreateKeyFormat(HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
 
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
 
   ASSERT_THAT(key, IsOk());
@@ -160,7 +160,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP256KeySucceeds) {
   absl::btree_set<std::string> private_keys;
   absl::btree_set<std::string> public_keys;
   for (int i = 0; i < number_of_keys; ++i) {
-    util::StatusOr<HpkePrivateKeyProto> key =
+    absl::StatusOr<HpkePrivateKeyProto> key =
         HpkePrivateKeyManager().CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
     private_keys.insert(std::string(key->private_key()));
@@ -175,7 +175,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP384KeySucceeds) {
       CreateKeyFormat(HpkeKem::DHKEM_P384_HKDF_SHA384, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
 
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
 
   ASSERT_THAT(key, IsOk());
@@ -193,7 +193,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP384KeySucceeds) {
   absl::btree_set<std::string> private_keys;
   absl::btree_set<std::string> public_keys;
   for (int i = 0; i < number_of_keys; ++i) {
-    util::StatusOr<HpkePrivateKeyProto> key =
+    absl::StatusOr<HpkePrivateKeyProto> key =
         HpkePrivateKeyManager().CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
     private_keys.insert(std::string(key->private_key()));
@@ -208,7 +208,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP521KeySucceeds) {
       CreateKeyFormat(HpkeKem::DHKEM_P521_HKDF_SHA512, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
 
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
 
   ASSERT_THAT(key, IsOk());
@@ -226,7 +226,7 @@ TEST(HpkePrivateKeyManagerTest, CreateP521KeySucceeds) {
   absl::btree_set<std::string> private_keys;
   absl::btree_set<std::string> public_keys;
   for (int i = 0; i < number_of_keys; ++i) {
-    util::StatusOr<HpkePrivateKeyProto> key =
+    absl::StatusOr<HpkePrivateKeyProto> key =
         HpkePrivateKeyManager().CreateKey(key_format);
     ASSERT_THAT(key, IsOk());
     private_keys.insert(std::string(key->private_key()));
@@ -250,7 +250,7 @@ TEST(HpkePrivateKeyManagerTest, ValidateEmptyKeyFails) {
 }
 
 TEST(HpkePrivateKeyManagerTest, ValidateKeySucceeds) {
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(key, IsOk());
@@ -259,7 +259,7 @@ TEST(HpkePrivateKeyManagerTest, ValidateKeySucceeds) {
 }
 
 TEST(HpkePrivateKeyManagerTest, ValidateKeyWithWrongVersionFails) {
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(key, IsOk());
@@ -270,7 +270,7 @@ TEST(HpkePrivateKeyManagerTest, ValidateKeyWithWrongVersionFails) {
 }
 
 TEST(HpkePrivateKeyManagerTest, ValidateKeyWithInvalidKemFails) {
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(key, IsOk());
@@ -281,7 +281,7 @@ TEST(HpkePrivateKeyManagerTest, ValidateKeyWithInvalidKemFails) {
 }
 
 TEST(HpkePrivateKeyManagerTest, ValidateKeyWithInvalidKdfFails) {
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::KDF_UNKNOWN,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(key, IsOk());
@@ -291,7 +291,7 @@ TEST(HpkePrivateKeyManagerTest, ValidateKeyWithInvalidKdfFails) {
 }
 
 TEST(HpkePrivateKeyManagerTest, ValidateKeyWithInvalidAeadFails) {
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AEAD_UNKNOWN);
   ASSERT_THAT(key, IsOk());
@@ -304,11 +304,11 @@ TEST(HpkePrivateKeyManagerTest, GetPublicKeySucceeds) {
   HpkeKeyFormat key_format =
       CreateKeyFormat(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*key);
   ASSERT_THAT(public_key, IsOk());
 
@@ -325,11 +325,11 @@ TEST(HpkePrivateKeyManagerTest, GetPublicKeyP256Succeeds) {
   HpkeKeyFormat key_format =
       CreateKeyFormat(HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*key);
   ASSERT_THAT(public_key, IsOk());
 
@@ -346,11 +346,11 @@ TEST(HpkePrivateKeyManagerTest, GetPublicKey384Succeeds) {
   HpkeKeyFormat key_format =
       CreateKeyFormat(HpkeKem::DHKEM_P384_HKDF_SHA384, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*key);
   ASSERT_THAT(public_key, IsOk());
 
@@ -367,11 +367,11 @@ TEST(HpkePrivateKeyManagerTest, GetPublicKey521Succeeds) {
   HpkeKeyFormat key_format =
       CreateKeyFormat(HpkeKem::DHKEM_P521_HKDF_SHA512, HpkeKdf::HKDF_SHA256,
                       HpkeAead::AES_128_GCM);
-  util::StatusOr<HpkePrivateKeyProto> key =
+  absl::StatusOr<HpkePrivateKeyProto> key =
       HpkePrivateKeyManager().CreateKey(key_format);
   ASSERT_THAT(key, IsOk());
 
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*key);
   ASSERT_THAT(public_key, IsOk());
 
@@ -393,16 +393,16 @@ INSTANTIATE_TEST_SUITE_P(HpkePrivateKeyManagerTestSuite,
 
 TEST_P(HpkePrivateKeyManagerTest, EncryptThenDecryptSucceeds) {
   HpkeKem kem = GetParam();
-  util::StatusOr<HpkePrivateKeyProto> private_key =
+  absl::StatusOr<HpkePrivateKeyProto> private_key =
       CreateKey(kem, HpkeKdf::HKDF_SHA256, HpkeAead::AES_128_GCM);
   ASSERT_THAT(private_key, IsOk());
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
       HpkePrivateKeyManager().GetPrimitive<HybridDecrypt>(*private_key);
   ASSERT_THAT(decrypt, IsOk());
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
       HpkeEncrypt::New(*public_key);
   ASSERT_THAT(encrypt, IsOk());
 
@@ -412,53 +412,53 @@ TEST_P(HpkePrivateKeyManagerTest, EncryptThenDecryptSucceeds) {
 }
 
 TEST(HpkePrivateKeyManagerTest, GetPrimitiveP384Fails) {
-  util::StatusOr<HpkePrivateKeyProto> private_key =
+  absl::StatusOr<HpkePrivateKeyProto> private_key =
       CreateKey(HpkeKem::DHKEM_P384_HKDF_SHA384, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(private_key, IsOk());
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
       HpkePrivateKeyManager().GetPrimitive<HybridDecrypt>(*private_key);
   ASSERT_THAT(decrypt.status(), StatusIs(absl::StatusCode::kInvalidArgument));
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
       HpkeEncrypt::New(*public_key);
   ASSERT_THAT(encrypt.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(HpkePrivateKeyManagerTest, GetPrimitiveP521Fails) {
-  util::StatusOr<HpkePrivateKeyProto> private_key =
+  absl::StatusOr<HpkePrivateKeyProto> private_key =
       CreateKey(HpkeKem::DHKEM_P521_HKDF_SHA512, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(private_key, IsOk());
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*private_key);
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
       HpkePrivateKeyManager().GetPrimitive<HybridDecrypt>(*private_key);
   ASSERT_THAT(decrypt.status(), StatusIs(absl::StatusCode::kInvalidArgument));
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
       HpkeEncrypt::New(*public_key);
   ASSERT_THAT(encrypt.status(), StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
 TEST(HpkePrivateKeyManagerTest, EncryptThenDecryptWithDifferentKeysFails) {
-  util::StatusOr<HpkePrivateKeyProto> private_key =
+  absl::StatusOr<HpkePrivateKeyProto> private_key =
       CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(private_key, IsOk());
-  util::StatusOr<HpkePrivateKeyProto> different_private_key =
+  absl::StatusOr<HpkePrivateKeyProto> different_private_key =
       CreateKey(HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                 HpkeAead::AES_128_GCM);
   ASSERT_THAT(different_private_key, IsOk());
-  util::StatusOr<HpkePublicKeyProto> public_key =
+  absl::StatusOr<HpkePublicKeyProto> public_key =
       HpkePrivateKeyManager().GetPublicKey(*different_private_key);
   ASSERT_THAT(public_key, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypt =
       HpkePrivateKeyManager().GetPrimitive<HybridDecrypt>(*private_key);
   ASSERT_THAT(decrypt, IsOk());
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypt =
       HpkeEncrypt::New(*public_key);
   ASSERT_THAT(encrypt, IsOk());
 
@@ -473,14 +473,14 @@ TEST_P(HpkeTestVectorTest, DecryptWorks) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHpke(), IsOk());
   const HybridTestVector& param = GetParam();
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(decrypter, IsOk());
   EXPECT_THAT((*decrypter)->Decrypt(param.ciphertext, param.context_info),
@@ -491,14 +491,14 @@ TEST_P(HpkeTestVectorTest, DecryptDifferentContextInfoFails) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHpke(), IsOk());
   const HybridTestVector& param = GetParam();
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(decrypter, IsOk());
   EXPECT_THAT(
@@ -511,25 +511,25 @@ TEST_P(HpkeTestVectorTest, EncryptThenDecryptWorks) {
   ASSERT_THAT(RegisterHpkeProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHpke(), IsOk());
   const HybridTestVector& param = GetParam();
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               param.hybrid_private_key, KeyStatus::kEnabled,
               /*is_primary=*/true))
           .Build();
   ASSERT_THAT(handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
+  absl::StatusOr<std::unique_ptr<HybridDecrypt>> decrypter =
       handle->GetPrimitive<HybridDecrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(decrypter, IsOk());
 
-  util::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
       handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
   ASSERT_THAT(public_handle, IsOk());
-  util::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
+  absl::StatusOr<std::unique_ptr<HybridEncrypt>> encrypter =
       (*public_handle)->GetPrimitive<HybridEncrypt>(ConfigGlobalRegistry());
   ASSERT_THAT(encrypter, IsOk());
 
-  util::StatusOr<std::string> ciphertext =
+  absl::StatusOr<std::string> ciphertext =
       (*encrypter)->Encrypt(param.plaintext, param.context_info);
   ASSERT_THAT(ciphertext, IsOk());
   EXPECT_THAT((*decrypter)->Decrypt(*ciphertext, param.context_info),

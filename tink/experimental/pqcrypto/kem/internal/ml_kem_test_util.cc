@@ -41,7 +41,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-util::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
+absl::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
     const MlKemParameters& key_parameters, absl::optional<int> id_requirement) {
   if (key_parameters.GetKeySize() != 768) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -54,7 +54,7 @@ util::StatusOr<MlKemPrivateKey> GenerateMlKemPrivateKey(
   MLKEM768_generate_key(reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
                         private_seed_bytes.data(), private_key.get());
 
-  util::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
+  absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
       key_parameters, public_key_bytes, id_requirement, GetPartialKeyAccess());
 
   return MlKemPrivateKey::Create(

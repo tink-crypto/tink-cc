@@ -48,7 +48,7 @@ class MlKemEncapsulateAes256Gcm : public KemEncapsulate {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static util::StatusOr<std::unique_ptr<KemEncapsulate>> New(
+  static absl::StatusOr<std::unique_ptr<KemEncapsulate>> New(
       MlKemPublicKey recipient_key, AesGcmParameters aes_gcm_parameters);
 
   explicit MlKemEncapsulateAes256Gcm(
@@ -57,14 +57,14 @@ class MlKemEncapsulateAes256Gcm : public KemEncapsulate {
       : raw_kem_encapsulate_(std::move(raw_kem_encapsulate)),
         aes_gcm_parameters_(std::move(aes_gcm_parameters)) {}
 
-  util::StatusOr<KemEncapsulation> Encapsulate() const override;
+  absl::StatusOr<KemEncapsulation> Encapsulate() const override;
 
  private:
   std::unique_ptr<RawKemEncapsulate> raw_kem_encapsulate_;
   AesGcmParameters aes_gcm_parameters_;
 };
 
-util::StatusOr<std::unique_ptr<KemEncapsulate>> MlKemEncapsulateAes256Gcm::New(
+absl::StatusOr<std::unique_ptr<KemEncapsulate>> MlKemEncapsulateAes256Gcm::New(
     MlKemPublicKey recipient_key, AesGcmParameters aes_gcm_parameters) {
   absl::Status status = CheckFipsCompatibility<MlKemEncapsulateAes256Gcm>();
   if (!status.ok()) {
@@ -87,7 +87,7 @@ util::StatusOr<std::unique_ptr<KemEncapsulate>> MlKemEncapsulateAes256Gcm::New(
                         "have an ID requirement");
   }
 
-  util::StatusOr<std::unique_ptr<RawKemEncapsulate>> raw_kem_encapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemEncapsulate>> raw_kem_encapsulate =
       NewMlKemRawEncapsulateBoringSsl(std::move(recipient_key));
   if (!raw_kem_encapsulate.ok()) {
     return raw_kem_encapsulate.status();
@@ -97,15 +97,15 @@ util::StatusOr<std::unique_ptr<KemEncapsulate>> MlKemEncapsulateAes256Gcm::New(
       *std::move(raw_kem_encapsulate), std::move(aes_gcm_parameters));
 }
 
-util::StatusOr<KemEncapsulation> MlKemEncapsulateAes256Gcm::Encapsulate()
+absl::StatusOr<KemEncapsulation> MlKemEncapsulateAes256Gcm::Encapsulate()
     const {
-  util::StatusOr<RawKemEncapsulation> raw_kem_encapsulation =
+  absl::StatusOr<RawKemEncapsulation> raw_kem_encapsulation =
       raw_kem_encapsulate_->Encapsulate();
   if (!raw_kem_encapsulation.ok()) {
     return raw_kem_encapsulation.status();
   }
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       aes_gcm_parameters_, raw_kem_encapsulation->shared_secret,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
@@ -115,7 +115,7 @@ util::StatusOr<KemEncapsulation> MlKemEncapsulateAes256Gcm::Encapsulate()
   KeysetHandleBuilder::Entry entry = KeysetHandleBuilder::Entry::CreateFromKey(
       absl::make_unique<AesGcmKey>(*key), KeyStatus::kEnabled,
       /*is_primary=*/true);
-  util::StatusOr<KeysetHandle> keyset_handle =
+  absl::StatusOr<KeysetHandle> keyset_handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   if (!keyset_handle.ok()) {
     return keyset_handle.status();
@@ -129,7 +129,7 @@ util::StatusOr<KemEncapsulation> MlKemEncapsulateAes256Gcm::Encapsulate()
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<KemEncapsulate>> NewMlKemEncapsulateAes256Gcm(
+absl::StatusOr<std::unique_ptr<KemEncapsulate>> NewMlKemEncapsulateAes256Gcm(
     MlKemPublicKey recipient_key, AesGcmParameters aes_gcm_parameters) {
   return MlKemEncapsulateAes256Gcm::New(std::move(recipient_key),
                                         std::move(aes_gcm_parameters));

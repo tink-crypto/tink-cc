@@ -49,10 +49,10 @@ class MlKemRawEncapsulateBoringSsl : public RawKemEncapsulate {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static util::StatusOr<std::unique_ptr<RawKemEncapsulate>> New(
+  static absl::StatusOr<std::unique_ptr<RawKemEncapsulate>> New(
       MlKemPublicKey recipient_key);
 
-  util::StatusOr<RawKemEncapsulation> Encapsulate() const override;
+  absl::StatusOr<RawKemEncapsulation> Encapsulate() const override;
 
   explicit MlKemRawEncapsulateBoringSsl(
       MlKemPublicKey public_key,
@@ -64,7 +64,7 @@ class MlKemRawEncapsulateBoringSsl : public RawKemEncapsulate {
   std::unique_ptr<MLKEM768_public_key> boringssl_public_key_;
 };
 
-util::StatusOr<std::unique_ptr<RawKemEncapsulate>>
+absl::StatusOr<std::unique_ptr<RawKemEncapsulate>>
 MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
   absl::Status status = CheckFipsCompatibility<MlKemRawEncapsulateBoringSsl>();
   if (!status.ok()) {
@@ -92,7 +92,7 @@ MlKemRawEncapsulateBoringSsl::New(MlKemPublicKey recipient_key) {
       std::move(recipient_key), std::move(public_key));
 }
 
-util::StatusOr<RawKemEncapsulation> MlKemRawEncapsulateBoringSsl::Encapsulate()
+absl::StatusOr<RawKemEncapsulation> MlKemRawEncapsulateBoringSsl::Encapsulate()
     const {
   size_t output_prefix_size = public_key_.GetOutputPrefix().size();
 
@@ -114,7 +114,7 @@ util::StatusOr<RawKemEncapsulation> MlKemRawEncapsulateBoringSsl::Encapsulate()
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<RawKemEncapsulate>>
+absl::StatusOr<std::unique_ptr<RawKemEncapsulate>>
 NewMlKemRawEncapsulateBoringSsl(MlKemPublicKey recipient_key) {
   return MlKemRawEncapsulateBoringSsl::New(std::move(recipient_key));
 }

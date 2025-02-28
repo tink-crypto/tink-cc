@@ -50,7 +50,7 @@ class MlKemDecapsulateAes256Gcm : public KemDecapsulate {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static util::StatusOr<std::unique_ptr<KemDecapsulate>> New(
+  static absl::StatusOr<std::unique_ptr<KemDecapsulate>> New(
       MlKemPrivateKey recipient_key, AesGcmParameters aes_gcm_parameters);
 
   explicit MlKemDecapsulateAes256Gcm(
@@ -59,7 +59,7 @@ class MlKemDecapsulateAes256Gcm : public KemDecapsulate {
       : raw_kem_decapsulate_(std::move(raw_kem_decapsulate)),
         aes_gcm_parameters_(std::move(aes_gcm_parameters)) {}
 
-  util::StatusOr<KeysetHandle> Decapsulate(
+  absl::StatusOr<KeysetHandle> Decapsulate(
       absl::string_view ciphertext) const override;
 
  private:
@@ -67,7 +67,7 @@ class MlKemDecapsulateAes256Gcm : public KemDecapsulate {
   AesGcmParameters aes_gcm_parameters_;
 };
 
-util::StatusOr<std::unique_ptr<KemDecapsulate>> MlKemDecapsulateAes256Gcm::New(
+absl::StatusOr<std::unique_ptr<KemDecapsulate>> MlKemDecapsulateAes256Gcm::New(
     MlKemPrivateKey recipient_key, AesGcmParameters aes_gcm_parameters) {
   absl::Status status = CheckFipsCompatibility<MlKemDecapsulateAes256Gcm>();
   if (!status.ok()) {
@@ -90,7 +90,7 @@ util::StatusOr<std::unique_ptr<KemDecapsulate>> MlKemDecapsulateAes256Gcm::New(
                         "have an ID requirement");
   }
 
-  util::StatusOr<std::unique_ptr<RawKemDecapsulate>> raw_kem_decapsulate =
+  absl::StatusOr<std::unique_ptr<RawKemDecapsulate>> raw_kem_decapsulate =
       NewMlKemRawDecapsulateBoringSsl(std::move(recipient_key));
   if (!raw_kem_decapsulate.ok()) {
     return raw_kem_decapsulate.status();
@@ -100,15 +100,15 @@ util::StatusOr<std::unique_ptr<KemDecapsulate>> MlKemDecapsulateAes256Gcm::New(
       *std::move(raw_kem_decapsulate), std::move(aes_gcm_parameters));
 }
 
-util::StatusOr<KeysetHandle> MlKemDecapsulateAes256Gcm::Decapsulate(
+absl::StatusOr<KeysetHandle> MlKemDecapsulateAes256Gcm::Decapsulate(
     absl::string_view ciphertext) const {
-  util::StatusOr<RestrictedData> shared_secret =
+  absl::StatusOr<RestrictedData> shared_secret =
       raw_kem_decapsulate_->Decapsulate(ciphertext);
   if (!shared_secret.ok()) {
     return shared_secret.status();
   }
 
-  util::StatusOr<AesGcmKey> key = AesGcmKey::Create(
+  absl::StatusOr<AesGcmKey> key = AesGcmKey::Create(
       aes_gcm_parameters_, *shared_secret,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
   if (!key.ok()) {
@@ -123,7 +123,7 @@ util::StatusOr<KeysetHandle> MlKemDecapsulateAes256Gcm::Decapsulate(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<KemDecapsulate>> NewMlKemDecapsulateAes256Gcm(
+absl::StatusOr<std::unique_ptr<KemDecapsulate>> NewMlKemDecapsulateAes256Gcm(
     MlKemPrivateKey recipient_key, AesGcmParameters aes_gcm_parameters) {
   return MlKemDecapsulateAes256Gcm::New(std::move(recipient_key),
                                         std::move(aes_gcm_parameters));

@@ -48,10 +48,10 @@ class MlKemRawDecapsulateBoringSsl : public RawKemDecapsulate {
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
-  static util::StatusOr<std::unique_ptr<RawKemDecapsulate>> New(
+  static absl::StatusOr<std::unique_ptr<RawKemDecapsulate>> New(
       MlKemPrivateKey recipient_key);
 
-  util::StatusOr<RestrictedData> Decapsulate(
+  absl::StatusOr<RestrictedData> Decapsulate(
       absl::string_view ciphertext) const override;
 
   explicit MlKemRawDecapsulateBoringSsl(
@@ -64,7 +64,7 @@ class MlKemRawDecapsulateBoringSsl : public RawKemDecapsulate {
   util::SecretUniquePtr<MLKEM768_private_key> boringssl_private_key_;
 };
 
-util::StatusOr<std::unique_ptr<RawKemDecapsulate>>
+absl::StatusOr<std::unique_ptr<RawKemDecapsulate>>
 MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
   absl::Status status = CheckFipsCompatibility<MlKemRawDecapsulateBoringSsl>();
   if (!status.ok()) {
@@ -94,7 +94,7 @@ MlKemRawDecapsulateBoringSsl::New(MlKemPrivateKey recipient_key) {
       std::move(recipient_key), std::move(boringssl_private_key));
 }
 
-util::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
+absl::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
     absl::string_view ciphertext) const {
   size_t output_prefix_size = private_key_.GetOutputPrefix().size();
 
@@ -121,7 +121,7 @@ util::StatusOr<RestrictedData> MlKemRawDecapsulateBoringSsl::Decapsulate(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<RawKemDecapsulate>>
+absl::StatusOr<std::unique_ptr<RawKemDecapsulate>>
 NewMlKemRawDecapsulateBoringSsl(MlKemPrivateKey recipient_key) {
   return MlKemRawDecapsulateBoringSsl::New(std::move(recipient_key));
 }

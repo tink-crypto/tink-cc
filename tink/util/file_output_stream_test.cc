@@ -50,7 +50,7 @@ util::StatusOr<int> OpenTestFileToWrite(absl::string_view filename) {
   mode_t mode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
   int fd = open(full_filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, mode);
   if (fd == -1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Cannot open file ", full_filename,
                                      " error: ", std::strerror(errno)));
   }
@@ -60,7 +60,7 @@ util::StatusOr<int> OpenTestFileToWrite(absl::string_view filename) {
 // Writes 'contents' the specified 'output_stream', and closes the stream.
 // Returns the status of output_stream->Close()-operation, or a non-OK status
 // of a prior output_stream->Next()-operation, if any.
-util::Status WriteToStream(util::FileOutputStream* output_stream,
+absl::Status WriteToStream(util::FileOutputStream* output_stream,
                            absl::string_view contents) {
   void* buffer;
   int pos = 0;

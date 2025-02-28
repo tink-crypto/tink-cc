@@ -30,16 +30,16 @@ using google::crypto::tink::KeyStatusType;
 namespace crypto {
 namespace tink {
 
-util::Status ValidateAesKeySize(uint32_t key_size) {
+absl::Status ValidateAesKeySize(uint32_t key_size) {
   if (key_size != 16 && key_size != 32) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "AES key has %d bytes; supported sizes: 16 or 32 bytes.",
                      key_size);
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status ValidateKey(const Keyset::Key& key) {
+absl::Status ValidateKey(const Keyset::Key& key) {
   if (!key.has_key_data()) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "key %d, has no key data", key.key_id());
@@ -55,12 +55,12 @@ util::Status ValidateKey(const Keyset::Key& key) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "key %d has unknown status", key.key_id());
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status ValidateKeyset(const Keyset& keyset) {
+absl::Status ValidateKeyset(const Keyset& keyset) {
   if (keyset.key_size() < 1) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "A valid keyset must contain at least one key.");
   }
 
@@ -86,7 +86,7 @@ util::Status ValidateKeyset(const Keyset& keyset) {
     if (key.status() == KeyStatusType::ENABLED &&
         key.key_id() == primary_key_id) {
       if (has_primary_key) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "keyset contains multiple primary keys");
       }
       has_primary_key = true;
@@ -98,7 +98,7 @@ util::Status ValidateKeyset(const Keyset& keyset) {
   }
 
   if (enabled_keys == 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "keyset must contain at least one ENABLED key");
   }
 
@@ -106,21 +106,21 @@ util::Status ValidateKeyset(const Keyset& keyset) {
   // key. Therefore, it is okay to have a keyset that contains public but
   // doesn't have a primary key set.
   if (!has_primary_key && !contains_only_public_key_material) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "keyset doesn't contain a valid primary key");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status ValidateVersion(uint32_t candidate, uint32_t max_expected) {
+absl::Status ValidateVersion(uint32_t candidate, uint32_t max_expected) {
   if (candidate > max_expected) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Key has version '%d'; "
                      "only keys with version in range [0..%d] are supported.",
                      candidate, max_expected);
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

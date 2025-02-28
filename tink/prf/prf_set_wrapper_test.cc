@@ -68,7 +68,7 @@ KeysetInfo::KeyInfo MakeKey(uint32_t id) {
 class FakePrf : public Prf {
  public:
   explicit FakePrf(const std::string& output) : output_(output) {}
-  util::StatusOr<std::string> Compute(absl::string_view input,
+  absl::StatusOr<std::string> Compute(absl::string_view input,
                                       size_t output_length) const override {
     return output_;
   }
@@ -81,7 +81,7 @@ class PrfSetWrapperTest : public ::testing::Test {
  protected:
   void SetUp() override { prf_set_ = absl::make_unique<PrimitiveSet<Prf>>(); }
 
-  util::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> AddPrf(
+  absl::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> AddPrf(
       const std::string& output, const KeysetInfo::KeyInfo& key_info) {
     auto prf = absl::make_unique<FakePrf>(output);
     return prf_set_->AddPrimitive(std::move(prf), key_info);
@@ -164,7 +164,7 @@ class PrfSetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -186,7 +186,7 @@ class AlwaysFailingPrf : public Prf {
  public:
   AlwaysFailingPrf() = default;
 
-  util::StatusOr<std::string> Compute(absl::string_view input,
+  absl::StatusOr<std::string> Compute(absl::string_view input,
                                       size_t output_length) const override {
     return absl::Status(absl::StatusCode::kOutOfRange, "AlwaysFailingPrf");
   }
@@ -196,7 +196,7 @@ TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringFailure) {
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
   auto primitive_set = absl::make_unique<PrimitiveSet<Prf>>(annotations);
-  util::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> entry =
+  absl::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> entry =
       primitive_set->AddPrimitive(absl::make_unique<AlwaysFailingPrf>(),
                                   MakeKey(/*id=*/1));
   ASSERT_THAT(entry, IsOk());
@@ -206,7 +206,7 @@ TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringFailure) {
                                  MakeKey(/*id=*/1))
                   .status(),
               IsOk());
-  util::StatusOr<std::unique_ptr<PrfSet>> prf_set =
+  absl::StatusOr<std::unique_ptr<PrfSet>> prf_set =
       PrfSetWrapper().Wrap(std::move(primitive_set));
   ASSERT_THAT(prf_set, IsOk());
   EXPECT_CALL(*monitoring_client_ref_, LogFailure());
@@ -219,7 +219,7 @@ TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringVerifySuccess) {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
   auto primitive_set = absl::make_unique<PrimitiveSet<Prf>>(annotations);
 
-  util::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> entry =
+  absl::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> entry =
       primitive_set->AddPrimitive(absl::make_unique<FakePrf>("output"),
                                   MakeKey(/*id=*/1));
   ASSERT_THAT(entry, IsOk());
@@ -230,7 +230,7 @@ TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringVerifySuccess) {
                   .status(),
               IsOk());
 
-  util::StatusOr<std::unique_ptr<PrfSet>> prf_set =
+  absl::StatusOr<std::unique_ptr<PrfSet>> prf_set =
       PrfSetWrapper().Wrap(std::move(primitive_set));
   ASSERT_THAT(prf_set, IsOk());
   std::map<uint32_t, Prf*> prf_map = (*prf_set)->GetPrfs();

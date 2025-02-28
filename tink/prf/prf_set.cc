@@ -27,7 +27,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<std::string> PrfSet::ComputePrimary(absl::string_view input,
+absl::StatusOr<std::string> PrfSet::ComputePrimary(absl::string_view input,
                                                    size_t output_length) const {
   auto prfs = GetPrfs();
   auto prf_it = prfs.find(GetPrimaryId());

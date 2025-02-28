@@ -62,7 +62,7 @@ absl::StatusOr<VerifiedJwt> CreateVerifiedJwt(const RawJwt& raw_jwt) {
           "AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1"
           "qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow",
           &key_value)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to parse key");
   }
   absl::StatusOr<std::unique_ptr<Mac>> mac = subtle::HmacBoringSsl::New(

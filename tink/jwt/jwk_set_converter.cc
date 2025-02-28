@@ -76,61 +76,61 @@ absl::StatusOr<std::string> GetStringItem(const Struct& key_struct,
                                           absl::string_view name) {
   auto it = key_struct.fields().find(std::string(name));
   if (it == key_struct.fields().end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "not found");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "not found");
   }
   if (it->second.kind_case() != Value::kStringValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "is not a string");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "is not a string");
   }
   return it->second.string_value();
 }
 
-util::Status ExpectStringItem(const Struct& key_struct, absl::string_view name,
+absl::Status ExpectStringItem(const Struct& key_struct, absl::string_view name,
                               absl::string_view value) {
   absl::StatusOr<std::string> item = GetStringItem(key_struct, name);
   if (!item.ok()) {
     return item.status();
   }
   if (*item != value) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "unexpected value");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "unexpected value");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status ValidateUseIsSig(const Struct& key_struct) {
+absl::Status ValidateUseIsSig(const Struct& key_struct) {
   if (!HasItem(key_struct, "use")) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   return ExpectStringItem(key_struct, "use", "sig");
 }
 
-util::Status ValidateKeyOpsIsVerify(const Struct& key_struct) {
+absl::Status ValidateKeyOpsIsVerify(const Struct& key_struct) {
   if (!HasItem(key_struct, "key_ops")) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
   auto it = key_struct.fields().find("key_ops");
   if (it == key_struct.fields().end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key_ops not found");
   }
   if (it->second.kind_case() != Value::kListValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key_ops is not a list");
   }
   const ListValue& key_ops_list = it->second.list_value();
   if (key_ops_list.values_size() != 1) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key_ops size is not 1");
   }
   const Value & value = key_ops_list.values().Get(0);
   if (value.kind_case() != Value::kStringValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key_ops item is not a string");
   }
   if (value.string_value() != "verify") {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "key_ops is not equal to [\"verify\"]");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 absl::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
@@ -148,24 +148,24 @@ absl::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   } else if (*alg == "RS512") {
     public_key_proto.set_algorithm(JwtRsaSsaPkcs1Algorithm::RS512);
   } else {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid alg");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid alg");
   }
 
   if (HasItem(key_struct, "p") || HasItem(key_struct, "q") ||
       HasItem(key_struct, "dq") || HasItem(key_struct, "dp") ||
       HasItem(key_struct, "d") || HasItem(key_struct, "qi")) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "private keys cannot be converted");
   }
-  util::Status status_kty = ExpectStringItem(key_struct, "kty", "RSA");
+  absl::Status status_kty = ExpectStringItem(key_struct, "kty", "RSA");
   if (!status_kty.ok()) {
     return status_kty;
   }
-  util::Status status_use = ValidateUseIsSig(key_struct);
+  absl::Status status_use = ValidateUseIsSig(key_struct);
   if (!status_use.ok()) {
     return status_use;
   }
-  util::Status status_key_ops = ValidateKeyOpsIsVerify(key_struct);
+  absl::Status status_key_ops = ValidateKeyOpsIsVerify(key_struct);
   if (!status_key_ops.ok()) {
     return status_key_ops;
   }
@@ -176,7 +176,7 @@ absl::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   std::string decoded_e;
   if (!absl::WebSafeBase64Unescape(*e, &decoded_e)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode e");
   }
   public_key_proto.set_e(decoded_e);
@@ -187,7 +187,7 @@ absl::StatusOr<KeyData> RsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   std::string decoded_n;
   if (!absl::WebSafeBase64Unescape(*n, &decoded_n)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode n");
   }
   public_key_proto.set_n(decoded_n);
@@ -222,24 +222,24 @@ absl::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   } else if (*alg == "PS512") {
     public_key_proto.set_algorithm(JwtRsaSsaPssAlgorithm::PS512);
   } else {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid alg");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid alg");
   }
 
   if (HasItem(key_struct, "p") || HasItem(key_struct, "q") ||
       HasItem(key_struct, "dq") || HasItem(key_struct, "dp") ||
       HasItem(key_struct, "d") || HasItem(key_struct, "qi")) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "private keys cannot be converted");
   }
-  util::Status status_kty = ExpectStringItem(key_struct, "kty", "RSA");
+  absl::Status status_kty = ExpectStringItem(key_struct, "kty", "RSA");
   if (!status_kty.ok()) {
     return status_kty;
   }
-  util::Status status_use = ValidateUseIsSig(key_struct);
+  absl::Status status_use = ValidateUseIsSig(key_struct);
   if (!status_use.ok()) {
     return status_use;
   }
-  util::Status status_key_ops = ValidateKeyOpsIsVerify(key_struct);
+  absl::Status status_key_ops = ValidateKeyOpsIsVerify(key_struct);
   if (!status_key_ops.ok()) {
     return status_key_ops;
   }
@@ -250,7 +250,7 @@ absl::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   std::string decoded_e;
   if (!absl::WebSafeBase64Unescape(*e, &decoded_e)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode e");
   }
   public_key_proto.set_e(decoded_e);
@@ -261,7 +261,7 @@ absl::StatusOr<KeyData> PsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   std::string decoded_n;
   if (!absl::WebSafeBase64Unescape(*n, &decoded_n)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode n");
   }
   public_key_proto.set_n(decoded_n);
@@ -295,39 +295,39 @@ absl::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   if (*alg == "ES256") {
     if (*curve != "P-256") {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "crv is not equal to P-256");
     }
     public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
   } else if (*alg == "ES384") {
     if (*curve != "P-384") {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "crv is not equal to P-384");
     }
     public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES384);
   } else if (*alg == "ES512") {
     if (*curve != "P-521") {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "crv is not equal to P-521");
     }
     public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES512);
   } else {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid alg");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid alg");
   }
 
   if (HasItem(key_struct, "d")) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "private keys cannot be converted");
   }
-  util::Status status_kty = ExpectStringItem(key_struct, "kty", "EC");
+  absl::Status status_kty = ExpectStringItem(key_struct, "kty", "EC");
   if (!status_kty.ok()) {
     return status_kty;
   }
-  util::Status status_use = ValidateUseIsSig(key_struct);
+  absl::Status status_use = ValidateUseIsSig(key_struct);
   if (!status_use.ok()) {
     return status_use;
   }
-  util::Status status_key_ops = ValidateKeyOpsIsVerify(key_struct);
+  absl::Status status_key_ops = ValidateKeyOpsIsVerify(key_struct);
   if (!status_key_ops.ok()) {
     return status_key_ops;
   }
@@ -338,7 +338,7 @@ absl::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   std::string decoded_x;
   if (!absl::WebSafeBase64Unescape(*x, &decoded_x)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode x");
   }
   public_key_proto.set_x(decoded_x);
@@ -349,7 +349,7 @@ absl::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
   }
   std::string decoded_y;
   if (!absl::WebSafeBase64Unescape(*y, &decoded_y)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "failed to decode y");
   }
   public_key_proto.set_y(decoded_y);
@@ -388,7 +388,7 @@ absl::StatusOr<std::pair<std::string, std::string>> Sec1EncodeCoordinates(
     return uncompressed_point.status();
   }
   if ((*uncompressed_point).size() != *encoded_size * 2 + 1) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "invalid encoded size");
   }
   return std::make_pair(
@@ -407,21 +407,21 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
   }
   auto it = jwk_set_struct->fields().find("keys");
   if (it == jwk_set_struct->fields().end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "keys not found");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "keys not found");
   }
   if (it->second.kind_case() != Value::kListValue) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "keys is not a list");
   }
   if (it->second.list_value().values_size() <= 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "keys list is empty");
   }
   uint32_t last_key_id = 0;
   Keyset keyset;
   for (const Value& value : it->second.list_value().values()) {
     if (value.kind_case() != Value::kStructValue) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "key is not a JSON object");
     }
     const Struct& key_struct = value.struct_value();
@@ -461,7 +461,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
       }
       *key->mutable_key_data() = *key_data;
     } else {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "invalid alg prefix");
     }
     last_key_id = key_id;
@@ -485,7 +485,7 @@ void AddKeyOpsVerifyEntry(Struct* key) {
 absl::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
   JwtEcdsaPublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "parse JwtEcdsaPublicKey failed");
   }
 
@@ -508,7 +508,7 @@ absl::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
       curve_type = subtle::EllipticCurveType::NIST_P521;
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "unknown JwtEcdsaAlgorithm");
   }
 
@@ -539,7 +539,7 @@ absl::StatusOr<Struct> EsPublicKeyToKeyStruct(const Keyset_Key& key) {
 absl::StatusOr<Struct> RsPublicKeyToKeyStruct(const Keyset_Key& key) {
   JwtRsaSsaPkcs1PublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "parse JwtRsaSsaPkcs1PublicKey failed");
   }
 
@@ -556,7 +556,7 @@ absl::StatusOr<Struct> RsPublicKeyToKeyStruct(const Keyset_Key& key) {
       AddStringEntry(&output_key, "alg", "RS512");
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "unknown JwtRsaSsaPkcs1Algorithm");
   }
 
@@ -579,7 +579,7 @@ absl::StatusOr<Struct> RsPublicKeyToKeyStruct(const Keyset_Key& key) {
 absl::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
   JwtRsaSsaPssPublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "parse JwtRsaSsaPkcs1PublicKey failed");
   }
 
@@ -596,7 +596,7 @@ absl::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
       AddStringEntry(&output_key, "alg", "PS512");
       break;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "unknown JwtRsaSsaPkcs1Algorithm");
   }
 
@@ -619,8 +619,8 @@ absl::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
 absl::StatusOr<Struct> Ed25519PublicKeyToKeyStruct(const Keyset_Key& key) {
   Ed25519PublicKey public_key;
   if (!public_key.ParseFromString(key.key_data().value())) {
-    return ::crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
-                                        "parse Ed25519PublicKey failed");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "parse Ed25519PublicKey failed");
   }
   Struct output_key;
   AddStringEntry(&output_key, "kty", "OKP");
@@ -646,13 +646,13 @@ absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
   if (!writer.ok()) {
     return writer.status();
   }
-  util::Status status = keyset_handle.WriteNoSecret((*writer).get());
+  absl::Status status = keyset_handle.WriteNoSecret((*writer).get());
   if (!status.ok()) {
     return status;
   }
   Keyset keyset;
   if (!keyset.ParseFromString(keyset_buf.str())) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "parse Keyset failed");
   }
 
@@ -666,12 +666,12 @@ absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     }
     if ((key.output_prefix_type() != OutputPrefixType::RAW) &&
         (key.output_prefix_type() != OutputPrefixType::TINK)) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Unknown output prefix type");
     }
 
     if (key.key_data().key_material_type() != KeyData::ASYMMETRIC_PUBLIC) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Only asymmetric public keys are supported");
     }
     if (key.key_data().type_url() ==
@@ -706,7 +706,7 @@ absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
       }
       *keys_list->add_values()->mutable_struct_value() = *output_key;
     } else {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Unknown key type url");
     }
   }

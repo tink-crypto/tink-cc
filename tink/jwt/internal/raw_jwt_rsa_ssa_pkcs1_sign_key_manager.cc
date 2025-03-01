@@ -127,10 +127,10 @@ RawJwtRsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
       RawJwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(
           private_key.public_key());
   if (!verifier.ok()) return verifier.status();
-  util::Status sign_verify_result =
+  absl::Status sign_verify_result =
       SignAndVerify(signer->get(), verifier->get());
   if (!sign_verify_result.ok()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "security bug: signing with private key followed by "
                         "verifying with public key failed");
   }

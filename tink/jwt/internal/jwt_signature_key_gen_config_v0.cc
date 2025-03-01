@@ -31,8 +31,8 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-util::Status AddJwtSignatureKeyGenV0(KeyGenConfiguration& config) {
-  util::Status status =
+absl::Status AddJwtSignatureKeyGenV0(KeyGenConfiguration& config) {
+  absl::Status status =
       internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
           absl::make_unique<JwtEcdsaSignKeyManager>(),
           absl::make_unique<JwtEcdsaVerifyKeyManager>(), config);

@@ -9,6 +9,8 @@ tink_cc_library(
     tink::keyderivation::internal::config_prf_for_deriver
     tink::keyderivation::internal::key_derivers
     absl::memory
+    absl::status
+    absl::statusor
     absl::string_view
     tink::core::cleartext_keyset_handle
     tink::core::input_stream
@@ -25,9 +27,9 @@ tink_cc_library(
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::registry_impl
+    tink::internal::tink_proto_structs
     tink::keyderivation::keyset_deriver
     tink::subtle::prf::streaming_prf
-    tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
 )

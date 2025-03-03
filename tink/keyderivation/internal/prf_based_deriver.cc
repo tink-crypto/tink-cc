@@ -20,6 +20,8 @@
 #include <utility>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
 #include "tink/aead/aes_gcm_proto_serialization.h"
@@ -31,17 +33,15 @@
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/registry_impl.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyderivation/internal/config_prf_for_deriver.h"
 #include "tink/keyderivation/internal/key_derivers.h"
 #include "tink/keyderivation/keyset_deriver.h"
 #include "tink/keyset_handle.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/parameters.h"
 #include "tink/subtle/prf/streaming_prf.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -85,15 +85,16 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithGlobalRegistry(
 
 absl::StatusOr<std::unique_ptr<KeysetHandle>> DeriveWithParametersMap(
     const KeyTemplate& key_template, InputStream& randomness) {
-  // Fill placeholders OutputPrefixType::RAW and KeyStatus::kEnabled.
+  // Fill placeholders OutputPrefixTypeEnum::kRaw and KeyStatus::kEnabled.
   // Tink users interact with this keyset only after it has been processed by
   // KeysetDeriverSetWrapper::DeriveKeyset, which uses
   // google::crypto::tink::KeyData's value field (the serialized *Key proto) and
   // nothing else.
   // http://google3/third_party/tink/cc/keyderivation/keyset_deriver_wrapper.cc;l=88-91;rcl=592310815
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(
-          key_template.type_url(), OutputPrefixType::RAW, key_template.value());
+      ProtoParametersSerialization::Create(key_template.type_url(),
+                                           OutputPrefixTypeEnum::kRaw,
+                                           key_template.value());
   if (!serialization.ok()) {
     return serialization.status();
   }

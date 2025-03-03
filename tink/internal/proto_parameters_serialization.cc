@@ -32,11 +32,10 @@ namespace tink {
 namespace internal {
 
 using ::google::crypto::tink::KeyTemplate;
-using ::google::crypto::tink::OutputPrefixType;
 
 absl::StatusOr<ProtoParametersSerialization>
 ProtoParametersSerialization::Create(absl::string_view type_url,
-                                     OutputPrefixType output_prefix_type,
+                                     OutputPrefixTypeEnum output_prefix_type,
                                      absl::string_view serialized_proto) {
   if (!IsPrintableAscii(type_url)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -44,8 +43,7 @@ ProtoParametersSerialization::Create(absl::string_view type_url,
   }
   KeyTemplateStruct key_template;
   key_template.type_url = std::string(type_url);
-  key_template.output_prefix_type =
-      static_cast<OutputPrefixTypeEnum>(output_prefix_type);
+  key_template.output_prefix_type = output_prefix_type;
   key_template.value = std::string(serialized_proto);
   return ProtoParametersSerialization(key_template);
 }

@@ -45,7 +45,7 @@ class DilithiumSignKeyManager
                                    List<PublicKeySign>> {
  public:
   class PublicKeySignFactory : public PrimitiveFactory<PublicKeySign> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const google::crypto::tink::DilithiumPrivateKey& private_key)
         const override;
   };
@@ -68,12 +68,12 @@ class DilithiumSignKeyManager
   absl::Status ValidateKeyFormat(const google::crypto::tink::DilithiumKeyFormat&
                                      key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::DilithiumPrivateKey>
-  CreateKey(const google::crypto::tink::DilithiumKeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::DilithiumPrivateKey> CreateKey(
+      const google::crypto::tink::DilithiumKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::DilithiumPublicKey>
-  GetPublicKey(const google::crypto::tink::DilithiumPrivateKey& private_key)
+  absl::StatusOr<google::crypto::tink::DilithiumPublicKey> GetPublicKey(
+      const google::crypto::tink::DilithiumPrivateKey& private_key)
       const override {
     return private_key.public_key();
   }

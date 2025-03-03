@@ -54,7 +54,7 @@ using ::google::crypto::tink::DilithiumKeyFormat;
 using ::google::crypto::tink::DilithiumPrivateKey;
 using ::google::crypto::tink::DilithiumPublicKey;
 
-StatusOr<DilithiumPrivateKey> DilithiumSignKeyManager::CreateKey(
+absl::StatusOr<DilithiumPrivateKey> DilithiumSignKeyManager::CreateKey(
     const DilithiumKeyFormat& key_format) const {
   DilithiumPrivateKey dilithium_sk;
   dilithium_sk.set_version(get_version());
@@ -62,7 +62,7 @@ StatusOr<DilithiumPrivateKey> DilithiumSignKeyManager::CreateKey(
   DilithiumPublicKey* dilithium_pk = dilithium_sk.mutable_public_key();
   dilithium_pk->set_version(get_version());
 
-  util::StatusOr<
+  absl::StatusOr<
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
       key_pair = DilithiumPrivateKeyPqclean::GenerateKeyPair(
           key_format.params().key_size(),
@@ -79,13 +79,13 @@ StatusOr<DilithiumPrivateKey> DilithiumSignKeyManager::CreateKey(
   return dilithium_sk;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 DilithiumSignKeyManager::PublicKeySignFactory::Create(
     const DilithiumPrivateKey& private_key) const {
   util::SecretData sk_data =
       util::SecretDataFromStringView(private_key.key_value());
 
-  util::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
+  absl::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
       DilithiumPrivateKeyPqclean::NewPrivateKey(
           sk_data, EnumsPqcrypto::ProtoToSubtle(
                        private_key.public_key().params().seed_expansion()));

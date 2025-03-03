@@ -45,7 +45,7 @@ class FalconSignKeyManager
                                    List<PublicKeySign>> {
  public:
   class PublicKeySignFactory : public PrimitiveFactory<PublicKeySign> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const google::crypto::tink::FalconPrivateKey& private_key)
         const override;
   };
@@ -68,12 +68,11 @@ class FalconSignKeyManager
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::FalconKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::FalconPrivateKey>
-  CreateKey(const google::crypto::tink::FalconKeyFormat& key_format)
-      const override;
+  absl::StatusOr<google::crypto::tink::FalconPrivateKey> CreateKey(
+      const google::crypto::tink::FalconKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::FalconPublicKey>
-  GetPublicKey(const google::crypto::tink::FalconPrivateKey& private_key)
+  absl::StatusOr<google::crypto::tink::FalconPublicKey> GetPublicKey(
+      const google::crypto::tink::FalconPrivateKey& private_key)
       const override {
     return private_key.public_key();
   }

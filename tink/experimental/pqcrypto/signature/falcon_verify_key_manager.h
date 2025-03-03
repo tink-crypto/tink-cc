@@ -44,9 +44,8 @@ class FalconVerifyKeyManager
                             List<PublicKeyVerify>> {
  public:
   class PublicKeyVerifyFactory : public PrimitiveFactory<PublicKeyVerify> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
-        const google::crypto::tink::FalconPublicKey& public_key)
-        const override;
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
+        const google::crypto::tink::FalconPublicKey& public_key) const override;
   };
 
   FalconVerifyKeyManager()

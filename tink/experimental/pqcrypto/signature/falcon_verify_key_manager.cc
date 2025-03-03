@@ -40,10 +40,10 @@ using ::crypto::tink::util::Status;
 using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::FalconPublicKey;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 FalconVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const FalconPublicKey& public_key) const {
-  StatusOr<FalconPublicKeyPqclean> falcon_public_key_pqclean =
+  absl::StatusOr<FalconPublicKeyPqclean> falcon_public_key_pqclean =
       FalconPublicKeyPqclean::NewPublicKey(public_key.key_value());
 
   if (!falcon_public_key_pqclean.ok()) {

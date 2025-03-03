@@ -47,7 +47,7 @@ namespace subtle {
 // Curve25519. This method was designed to be generic enough to faciliate the
 // extension of this hybrid KEM to support other curves.
 // static
-util::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
 Cecpq2HkdfSenderKemBoringSsl::New(subtle::EllipticCurveType curve,
                                   const absl::string_view ec_pubx,
                                   const absl::string_view ec_puby,
@@ -70,7 +70,7 @@ Cecpq2HkdfX25519SenderKemBoringSsl::Cecpq2HkdfX25519SenderKemBoringSsl(
 }
 
 // static
-util::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl>>
 Cecpq2HkdfX25519SenderKemBoringSsl::New(
     subtle::EllipticCurveType curve, const absl::string_view pubx,
     const absl::string_view puby, const absl::string_view marshalled_hrss_pub) {
@@ -102,7 +102,7 @@ Cecpq2HkdfX25519SenderKemBoringSsl::New(
   return std::move(sender_kem);
 }
 
-util::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl::KemKey>>
+absl::StatusOr<std::unique_ptr<const Cecpq2HkdfSenderKemBoringSsl::KemKey>>
 Cecpq2HkdfX25519SenderKemBoringSsl::GenerateKey(
     subtle::HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,

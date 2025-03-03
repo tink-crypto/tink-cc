@@ -40,7 +40,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
+absl::StatusOr<MlKemPrivateKey> MlKemPrivateKey::Create(
     const MlKemPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
   if (private_seed_bytes.size() != MLKEM_SEED_BYTES) {

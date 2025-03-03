@@ -72,12 +72,12 @@ absl::Status Validate(
 }  // namespace
 
 // static
-util::StatusOr<std::unique_ptr<HybridDecrypt>> Cecpq2AeadHkdfHybridDecrypt::New(
+absl::StatusOr<std::unique_ptr<HybridDecrypt>> Cecpq2AeadHkdfHybridDecrypt::New(
     const google::crypto::tink::Cecpq2AeadHkdfPrivateKey& private_key) {
   absl::Status status = Validate(private_key);
   if (!status.ok()) return status;
 
-  util::StatusOr<std::unique_ptr<subtle::Cecpq2HkdfRecipientKemBoringSsl>>
+  absl::StatusOr<std::unique_ptr<subtle::Cecpq2HkdfRecipientKemBoringSsl>>
       kem_result = subtle::Cecpq2HkdfRecipientKemBoringSsl::New(
           util::Enums::ProtoToSubtle(
               private_key.public_key().params().kem_params().curve_type()),
@@ -85,7 +85,7 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> Cecpq2AeadHkdfHybridDecrypt::New(
           util::SecretDataFromStringView(private_key.hrss_private_key_seed()));
   if (!kem_result.ok()) return kem_result.status();
 
-  util::StatusOr<std::unique_ptr<const Cecpq2AeadHkdfDemHelper>> dem_result =
+  absl::StatusOr<std::unique_ptr<const Cecpq2AeadHkdfDemHelper>> dem_result =
       Cecpq2AeadHkdfDemHelper::New(
           private_key.public_key().params().dem_params().aead_dem());
   if (!dem_result.ok()) return dem_result.status();
@@ -95,9 +95,9 @@ util::StatusOr<std::unique_ptr<HybridDecrypt>> Cecpq2AeadHkdfHybridDecrypt::New(
       std::move(dem_result).value()))};
 }
 
-util::StatusOr<std::string> Cecpq2AeadHkdfHybridDecrypt::Decrypt(
+absl::StatusOr<std::string> Cecpq2AeadHkdfHybridDecrypt::Decrypt(
     absl::string_view ciphertext, absl::string_view context_info) const {
-  util::StatusOr<int32_t> cecpq2_header_point_encoding_size =
+  absl::StatusOr<int32_t> cecpq2_header_point_encoding_size =
       internal::EcPointEncodingSizeInBytes(
           util::Enums::ProtoToSubtle(
               recipient_key_params_.kem_params().curve_type()),
@@ -114,13 +114,13 @@ util::StatusOr<std::string> Cecpq2AeadHkdfHybridDecrypt::Decrypt(
   }
 
   // Get the key material size based on the DEM type_url.
-  util::StatusOr<uint32_t> key_material_size_or =
+  absl::StatusOr<uint32_t> key_material_size_or =
       dem_helper_->GetKeyMaterialSize();
   if (!key_material_size_or.ok()) return key_material_size_or.status();
   uint32_t key_material_size = key_material_size_or.value();
 
   // Use KEM to get a symmetric key.
-  util::StatusOr<util::SecretData> symmetric_key_result =
+  absl::StatusOr<util::SecretData> symmetric_key_result =
       recipient_kem_->GenerateKey(
           absl::string_view(ciphertext).substr(0, cecpq2_header_size),
           util::Enums::ProtoToSubtle(
@@ -133,14 +133,14 @@ util::StatusOr<std::string> Cecpq2AeadHkdfHybridDecrypt::Decrypt(
   util::SecretData symmetric_key = std::move(symmetric_key_result.value());
 
   // Use the symmetric key to get an AEAD-primitive.
-  util::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
+  absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
       aead_or_daead_result = dem_helper_->GetAeadOrDaead(symmetric_key);
   if (!aead_or_daead_result.ok()) return aead_or_daead_result.status();
   std::unique_ptr<crypto::tink::subtle::AeadOrDaead> aead_or_daead =
       std::move(aead_or_daead_result.value());
 
   // Do the actual decryption using the AEAD-primitive.
-  util::StatusOr<std::string> decrypt_result = aead_or_daead->Decrypt(
+  absl::StatusOr<std::string> decrypt_result = aead_or_daead->Decrypt(
       ciphertext.substr(cecpq2_header_size), "");  // empty aad
   if (!decrypt_result.ok()) return decrypt_result.status();
 

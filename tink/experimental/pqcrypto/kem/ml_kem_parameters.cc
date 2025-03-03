@@ -24,7 +24,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<MlKemParameters> MlKemParameters::Create(int key_size,
+absl::StatusOr<MlKemParameters> MlKemParameters::Create(int key_size,
                                                         Variant variant) {
   if (key_size != 768) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

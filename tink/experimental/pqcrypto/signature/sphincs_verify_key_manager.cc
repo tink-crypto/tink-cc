@@ -45,7 +45,7 @@ using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::SphincsParams;
 using ::google::crypto::tink::SphincsPublicKey;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 SphincsVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const SphincsPublicKey& public_key) const {
   SphincsParamsPqclean sphincs_params_pqclean = {

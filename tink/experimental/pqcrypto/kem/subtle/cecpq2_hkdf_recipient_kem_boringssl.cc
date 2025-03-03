@@ -47,7 +47,7 @@ namespace subtle {
 // Curve25519. This method was designed to be generic enough to faciliate the
 // extension of this hybrid KEM to support other curves.
 // static
-util::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>>
 Cecpq2HkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
                                      util::SecretData ec_private_key,
                                      util::SecretData hrss_private_key_seed) {
@@ -62,7 +62,7 @@ Cecpq2HkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
 }
 
 // static
-util::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>>
 Cecpq2HkdfX25519RecipientKemBoringSsl::New(
     EllipticCurveType curve, util::SecretData ec_private_key,
     util::SecretData hrss_private_key_seed) {
@@ -84,7 +84,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::New(
       std::move(ec_private_key), std::move(hrss_private_key_seed)))};
 }
 
-crypto::tink::util::StatusOr<util::SecretData>
+absl::StatusOr<util::SecretData>
 Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
     absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,

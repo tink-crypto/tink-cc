@@ -44,9 +44,9 @@ using ::google::crypto::tink::FalconKeyFormat;
 using ::google::crypto::tink::FalconPrivateKey;
 using ::google::crypto::tink::FalconPublicKey;
 
-StatusOr<FalconPrivateKey> FalconSignKeyManager::CreateKey(
+absl::StatusOr<FalconPrivateKey> FalconSignKeyManager::CreateKey(
     const FalconKeyFormat& key_format) const {
-  util::StatusOr<FalconKeyPair> key_pair =
+  absl::StatusOr<FalconKeyPair> key_pair =
       subtle::GenerateFalconKeyPair(key_format.key_size());
 
   if (!key_pair.status().ok()) {
@@ -65,13 +65,13 @@ StatusOr<FalconPrivateKey> FalconSignKeyManager::CreateKey(
   return falcon_private_key;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 FalconSignKeyManager::PublicKeySignFactory::Create(
     const FalconPrivateKey& private_key) const {
   util::SecretData sk_data =
       util::SecretDataFromStringView(private_key.key_value());
 
-  util::StatusOr<FalconPrivateKeyPqclean> falcon_private_key =
+  absl::StatusOr<FalconPrivateKeyPqclean> falcon_private_key =
       FalconPrivateKeyPqclean::NewPrivateKey(sk_data);
 
   if (!falcon_private_key.ok()) {

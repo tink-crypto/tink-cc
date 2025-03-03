@@ -19,14 +19,12 @@
 #include <sys/stat.h>
 
 #include <string>
-#include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/internal/util.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -44,10 +42,11 @@ ProtoParametersSerialization::Create(absl::string_view type_url,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  KeyTemplate key_template;
-  key_template.set_type_url(std::string(type_url));
-  key_template.set_output_prefix_type(output_prefix_type);
-  key_template.set_value(std::string(serialized_proto));
+  KeyTemplateStruct key_template;
+  key_template.type_url = std::string(type_url);
+  key_template.output_prefix_type =
+      static_cast<OutputPrefixTypeEnum>(output_prefix_type);
+  key_template.value = std::string(serialized_proto);
   return ProtoParametersSerialization(key_template);
 }
 
@@ -57,7 +56,12 @@ ProtoParametersSerialization::Create(KeyTemplate key_template) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  return ProtoParametersSerialization(std::move(key_template));
+  KeyTemplateStruct key_template_struct;
+  key_template_struct.type_url = key_template.type_url();
+  key_template_struct.output_prefix_type =
+      static_cast<OutputPrefixTypeEnum>(key_template.output_prefix_type());
+  key_template_struct.value = key_template.value();
+  return ProtoParametersSerialization(key_template_struct);
 }
 
 absl::StatusOr<ProtoParametersSerialization>
@@ -66,23 +70,7 @@ ProtoParametersSerialization::Create(const KeyTemplateStruct& key_template) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  KeyTemplate proto_key_template;
-  proto_key_template.set_type_url(key_template.type_url);
-  proto_key_template.set_output_prefix_type(
-      static_cast<OutputPrefixType>(key_template.output_prefix_type));
-  proto_key_template.set_value(key_template.value);
-  return ProtoParametersSerialization(std::move(proto_key_template));
-}
-
-KeyTemplateStruct ProtoParametersSerialization::GetKeyTemplateStruct() const {
-  // Once this class is fully migrated to use KeyTemplateStruct, we will return
-  // a reference to the underlying struct instead of copying it.
-  KeyTemplateStruct key_template_struct;
-  key_template_struct.type_url = key_template_.type_url();
-  key_template_struct.value = key_template_.value();
-  key_template_struct.output_prefix_type =
-      static_cast<OutputPrefixTypeEnum>(key_template_.output_prefix_type());
-  return key_template_struct;
+  return ProtoParametersSerialization(key_template);
 }
 
 bool ProtoParametersSerialization::EqualsWithPotentialFalseNegatives(
@@ -92,14 +80,14 @@ bool ProtoParametersSerialization::EqualsWithPotentialFalseNegatives(
   if (that == nullptr) {
     return false;
   }
-  if (key_template_.type_url() != that->key_template_.type_url()) {
+  if (key_template_.type_url != that->key_template_.type_url) {
     return false;
   }
-  if (key_template_.output_prefix_type() !=
-      that->key_template_.output_prefix_type()) {
+  if (key_template_.output_prefix_type !=
+      that->key_template_.output_prefix_type) {
     return false;
   }
-  if (key_template_.value() != that->key_template_.value()) {
+  if (key_template_.value != that->key_template_.value) {
     return false;
   }
   if (object_identifier_ != that->object_identifier_) {

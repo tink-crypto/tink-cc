@@ -66,7 +66,9 @@ class ProtoParametersSerialization : public Serialization {
   static absl::StatusOr<ProtoParametersSerialization> Create(
       const KeyTemplateStruct& key_template);
 
-  KeyTemplateStruct GetKeyTemplateStruct() const;
+  const KeyTemplateStruct& GetKeyTemplateStruct() const {
+    return key_template_;
+  }
 
   absl::string_view ObjectIdentifier() const override {
     return object_identifier_;
@@ -79,10 +81,9 @@ class ProtoParametersSerialization : public Serialization {
   friend class LegacyProtoParameters;
   friend class LegacyProtoParametersTest;
 
-  explicit ProtoParametersSerialization(
-      google::crypto::tink::KeyTemplate key_template)
+  explicit ProtoParametersSerialization(const KeyTemplateStruct& key_template)
       : key_template_(key_template),
-        object_identifier_(key_template.type_url()) {}
+        object_identifier_(key_template.type_url) {}
 
   // Returns `true` if this `ProtoParametersSerialization` object is equal to
   // `other` (with the possibility of false negatives due to lack of
@@ -91,7 +92,7 @@ class ProtoParametersSerialization : public Serialization {
   bool EqualsWithPotentialFalseNegatives(
       const ProtoParametersSerialization& other) const;
 
-  google::crypto::tink::KeyTemplate key_template_;
+  KeyTemplateStruct key_template_;
   std::string object_identifier_;
 };
 

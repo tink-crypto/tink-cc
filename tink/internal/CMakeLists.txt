@@ -536,8 +536,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 

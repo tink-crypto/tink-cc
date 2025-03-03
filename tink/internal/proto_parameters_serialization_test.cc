@@ -170,7 +170,8 @@ TEST_F(ProtoParametersSerializationTest, GetKeyTemplateStruct) {
       ProtoParametersSerialization::Create(key_template);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  KeyTemplateStruct key_template_struct = serialization->GetKeyTemplateStruct();
+  const KeyTemplateStruct& key_template_struct =
+      serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template_struct.type_url, "type_url");
   EXPECT_THAT(key_template_struct.output_prefix_type,
               OutputPrefixTypeEnum::kTink);

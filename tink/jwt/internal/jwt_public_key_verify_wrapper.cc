@@ -57,7 +57,7 @@ class JwtPublicKeyVerifySetWrapper : public JwtPublicKeyVerify {
       : jwt_verify_set_(std::move(jwt_verify_set)),
         monitoring_verify_client_(std::move(monitoring_verify_client)) {}
 
-  crypto::tink::util::StatusOr<crypto::tink::VerifiedJwt> VerifyAndDecode(
+  absl::StatusOr<crypto::tink::VerifiedJwt> VerifyAndDecode(
       absl::string_view compact,
       const crypto::tink::JwtValidator& validator) const override;
 
@@ -84,7 +84,7 @@ absl::Status Validate(
   return absl::OkStatus();
 }
 
-util::StatusOr<crypto::tink::VerifiedJwt>
+absl::StatusOr<crypto::tink::VerifiedJwt>
 JwtPublicKeyVerifySetWrapper::VerifyAndDecode(
     absl::string_view compact,
     const crypto::tink::JwtValidator& validator) const {
@@ -93,7 +93,7 @@ JwtPublicKeyVerifySetWrapper::VerifyAndDecode(
     JwtPublicKeyVerifyInternal& jwt_verify = entry->get_primitive();
     absl::optional<std::string> kid =
         GetKid(entry->get_key_id(), entry->get_output_prefix_type());
-    util::StatusOr<VerifiedJwt> verified_jwt =
+    absl::StatusOr<VerifiedJwt> verified_jwt =
         jwt_verify.VerifyAndDecodeWithKid(compact, validator, kid);
     if (verified_jwt.ok()) {
       if (monitoring_verify_client_ != nullptr) {
@@ -118,7 +118,7 @@ JwtPublicKeyVerifySetWrapper::VerifyAndDecode(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<JwtPublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>>
 JwtPublicKeyVerifyWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set)
     const {
@@ -133,13 +133,13 @@ JwtPublicKeyVerifyWrapper::Wrap(
         std::move(jwt_verify_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*jwt_verify_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
   if (!monitoring_verify_client.ok()) {

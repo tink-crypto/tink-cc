@@ -48,7 +48,7 @@ using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::JwtHmacKey;
 using ::google::crypto::tink::JwtHmacKeyFormat;
 
-util::StatusOr<std::unique_ptr<JwtMacInternal>>
+absl::StatusOr<std::unique_ptr<JwtMacInternal>>
 JwtHmacKeyManager::JwtMacFactory::Create(const JwtHmacKey& jwt_hmac_key) const {
   int tag_size;
   std::string algorithm;
@@ -73,7 +73,7 @@ JwtHmacKeyManager::JwtMacFactory::Create(const JwtHmacKey& jwt_hmac_key) const {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Unknown algorithm.");
   }
-  util::StatusOr<std::unique_ptr<Mac>> mac = subtle::HmacBoringSsl::New(
+  absl::StatusOr<std::unique_ptr<Mac>> mac = subtle::HmacBoringSsl::New(
       util::Enums::ProtoToSubtle(hash_type), tag_size,
       util::SecretDataFromStringView(jwt_hmac_key.key_value()));
   if (!mac.ok()) {
@@ -103,12 +103,12 @@ const std::string& JwtHmacKeyManager::get_key_type() const {
   return raw_key_manager_.get_key_type();
 }
 
-StatusOr<JwtHmacKey> JwtHmacKeyManager::CreateKey(
+absl::StatusOr<JwtHmacKey> JwtHmacKeyManager::CreateKey(
     const JwtHmacKeyFormat& jwt_hmac_key_format) const {
   return raw_key_manager_.CreateKey(jwt_hmac_key_format);
 }
 
-StatusOr<JwtHmacKey> JwtHmacKeyManager::DeriveKey(
+absl::StatusOr<JwtHmacKey> JwtHmacKeyManager::DeriveKey(
     const JwtHmacKeyFormat& jwt_hmac_key_format,
     InputStream* input_stream) const {
   return raw_key_manager_.DeriveKey(jwt_hmac_key_format, input_stream);

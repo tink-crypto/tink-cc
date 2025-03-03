@@ -43,11 +43,11 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-util::StatusOr<std::string> JwtMacImpl::ComputeMacAndEncodeWithKid(
+absl::StatusOr<std::string> JwtMacImpl::ComputeMacAndEncodeWithKid(
     const RawJwt& token, absl::optional<absl::string_view> kid) const {
   absl::optional<std::string> type_header;
   if (token.HasTypeHeader()) {
-    util::StatusOr<std::string> type = token.GetTypeHeader();
+    absl::StatusOr<std::string> type = token.GetTypeHeader();
     if (!type.ok()) {
       return type.status();
     }
@@ -67,19 +67,19 @@ util::StatusOr<std::string> JwtMacImpl::ComputeMacAndEncodeWithKid(
     }
     kid = *custom_kid_;
   }
-  util::StatusOr<std::string> encoded_header =
+  absl::StatusOr<std::string> encoded_header =
       CreateHeader(algorithm_, type_header, kid);
   if (!encoded_header.ok()) {
     return encoded_header.status();
   }
-  util::StatusOr<std::string> payload = token.GetJsonPayload();
+  absl::StatusOr<std::string> payload = token.GetJsonPayload();
   if (!payload.ok()) {
     return payload.status();
   }
   std::string encoded_payload = EncodePayload(*payload);
   std::string unsigned_token =
       absl::StrCat(*encoded_header, ".", encoded_payload);
-  util::StatusOr<std::string> tag = mac_->ComputeMac(unsigned_token);
+  absl::StatusOr<std::string> tag = mac_->ComputeMac(unsigned_token);
   if (!tag.ok()) {
     return tag.status();
   }
@@ -87,7 +87,7 @@ util::StatusOr<std::string> JwtMacImpl::ComputeMacAndEncodeWithKid(
   return absl::StrCat(unsigned_token, ".", encoded_tag);
 }
 
-util::StatusOr<VerifiedJwt> JwtMacImpl::VerifyMacAndDecodeWithKid(
+absl::StatusOr<VerifiedJwt> JwtMacImpl::VerifyMacAndDecodeWithKid(
     absl::string_view compact, const JwtValidator& validator,
     absl::optional<absl::string_view> kid) const {
   if (kid_.has_value() && kid != kid_) {
@@ -121,7 +121,7 @@ util::StatusOr<VerifiedJwt> JwtMacImpl::VerifyMacAndDecodeWithKid(
   if (!DecodeHeader(parts[0], &json_header)) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid header");
   }
-  util::StatusOr<google::protobuf::Struct> header =
+  absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
   if (!header.ok()) {
     return header.status();
@@ -136,7 +136,7 @@ util::StatusOr<VerifiedJwt> JwtMacImpl::VerifyMacAndDecodeWithKid(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "invalid JWT payload");
   }
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtParser::FromJson(GetTypeHeader(*header), json_payload);
   if (!raw_jwt.ok()) {
     return raw_jwt.status();

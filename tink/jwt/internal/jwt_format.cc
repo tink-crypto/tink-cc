@@ -97,7 +97,7 @@ absl::optional<uint32_t> GetKeyId(absl::string_view kid) {
   return absl::big_endian::Load32(decoded_kid.data());
 }
 
-util::StatusOr<std::string> CreateHeader(
+absl::StatusOr<std::string> CreateHeader(
     absl::string_view algorithm, absl::optional<absl::string_view> type_header,
     absl::optional<absl::string_view> kid) {
   google::protobuf::Struct header;
@@ -109,7 +109,7 @@ util::StatusOr<std::string> CreateHeader(
     (*fields)["typ"].set_string_value(std::string(type_header.value()));
   }
   (*fields)["alg"].set_string_value(std::string(algorithm));
-  util::StatusOr<std::string> json_header =
+  absl::StatusOr<std::string> json_header =
       jwt_internal::ProtoStructToJsonString(header);
   if (!json_header.ok()) {
     return json_header.status();
@@ -196,7 +196,7 @@ bool DecodeSignature(absl::string_view encoded_signature,
   return StrictWebSafeBase64Unescape(encoded_signature, signature);
 }
 
-util::StatusOr<RawJwt> RawJwtParser::FromJson(
+absl::StatusOr<RawJwt> RawJwtParser::FromJson(
     absl::optional<std::string> type_header, absl::string_view json_payload) {
   return RawJwt::FromJson(type_header, json_payload);
 }

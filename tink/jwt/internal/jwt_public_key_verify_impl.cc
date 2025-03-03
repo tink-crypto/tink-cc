@@ -42,7 +42,7 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-util::StatusOr<VerifiedJwt> JwtPublicKeyVerifyImpl::VerifyAndDecodeWithKid(
+absl::StatusOr<VerifiedJwt> JwtPublicKeyVerifyImpl::VerifyAndDecodeWithKid(
     absl::string_view compact, const JwtValidator& validator,
     absl::optional<absl::string_view> kid) const {
   if (kid_.has_value() && kid != kid_) {
@@ -79,7 +79,7 @@ util::StatusOr<VerifiedJwt> JwtPublicKeyVerifyImpl::VerifyAndDecodeWithKid(
   if (!DecodeHeader(parts[0], &json_header)) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "invalid header");
   }
-  util::StatusOr<google::protobuf::Struct> header =
+  absl::StatusOr<google::protobuf::Struct> header =
       JsonStringToProtoStruct(json_header);
   if (!header.ok()) {
     return header.status();
@@ -94,7 +94,7 @@ util::StatusOr<VerifiedJwt> JwtPublicKeyVerifyImpl::VerifyAndDecodeWithKid(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "invalid JWT payload");
   }
-  util::StatusOr<RawJwt> raw_jwt =
+  absl::StatusOr<RawJwt> raw_jwt =
       RawJwtParser::FromJson(GetTypeHeader(*header), json_payload);
   if (!raw_jwt.ok()) {
     return raw_jwt.status();

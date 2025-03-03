@@ -50,7 +50,7 @@ class RawJwtHmacKeyManager
                             google::crypto::tink::JwtHmacKeyFormat, List<Mac>> {
  public:
   class MacFactory : public PrimitiveFactory<Mac> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Mac>> Create(
+    absl::StatusOr<std::unique_ptr<Mac>> Create(
         const google::crypto::tink::JwtHmacKey& jwt_hmac_key) const override {
       int tag_size;
       google::crypto::tink::HashType hash_type;
@@ -94,10 +94,10 @@ class RawJwtHmacKeyManager
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::JwtHmacKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtHmacKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::JwtHmacKey> CreateKey(
       const google::crypto::tink::JwtHmacKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtHmacKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::JwtHmacKey> DeriveKey(
       const google::crypto::tink::JwtHmacKeyFormat& key_format,
       InputStream* input_stream) const override;
 

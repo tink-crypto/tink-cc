@@ -36,11 +36,11 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-util::StatusOr<std::string> JwtPublicKeySignImpl::SignAndEncodeWithKid(
+absl::StatusOr<std::string> JwtPublicKeySignImpl::SignAndEncodeWithKid(
     const RawJwt& token, absl::optional<absl::string_view> kid) const {
   absl::optional<std::string> type_header;
   if (token.HasTypeHeader()) {
-    util::StatusOr<std::string> type = token.GetTypeHeader();
+    absl::StatusOr<std::string> type = token.GetTypeHeader();
     if (!type.ok()) {
       return type.status();
     }
@@ -62,19 +62,19 @@ util::StatusOr<std::string> JwtPublicKeySignImpl::SignAndEncodeWithKid(
     }
     kid = *custom_kid_;
   }
-  util::StatusOr<std::string> encoded_header =
+  absl::StatusOr<std::string> encoded_header =
       CreateHeader(algorithm_, type_header, kid);
   if (!encoded_header.ok()) {
     return encoded_header.status();
   }
-  util::StatusOr<std::string> payload = token.GetJsonPayload();
+  absl::StatusOr<std::string> payload = token.GetJsonPayload();
   if (!payload.ok()) {
     return payload.status();
   }
   std::string encoded_payload = EncodePayload(*payload);
   std::string unsigned_token =
       absl::StrCat(*encoded_header, ".", encoded_payload);
-  util::StatusOr<std::string> tag = sign_->Sign(unsigned_token);
+  absl::StatusOr<std::string> tag = sign_->Sign(unsigned_token);
   if (!tag.ok()) {
     return tag.status();
   }

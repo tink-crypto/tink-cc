@@ -41,7 +41,7 @@ class RawJwtRsaSsaPssVerifyKeyManager
                             List<PublicKeyVerify>> {
  public:
   class PublicKeyVerifyFactory : public PrimitiveFactory<PublicKeyVerify> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
         const google::crypto::tink::JwtRsaSsaPssPublicKey&
             rsa_ssa_pss_public_key) const override;
   };
@@ -69,11 +69,10 @@ class RawJwtRsaSsaPssVerifyKeyManager
   static absl::Status ValidateAlgorithm(
       const google::crypto::tink::JwtRsaSsaPssAlgorithm& algorithm);
 
-  static crypto::tink::util::StatusOr<google::crypto::tink::HashType>
-  HashForPssAlgorithm(
+  static absl::StatusOr<google::crypto::tink::HashType> HashForPssAlgorithm(
       const google::crypto::tink::JwtRsaSsaPssAlgorithm& algorithm);
 
-  static crypto::tink::util::StatusOr<int> SaltLengthForPssAlgorithm(
+  static absl::StatusOr<int> SaltLengthForPssAlgorithm(
       const google::crypto::tink::JwtRsaSsaPssAlgorithm& algorithm);
 
   const std::string key_type_ =

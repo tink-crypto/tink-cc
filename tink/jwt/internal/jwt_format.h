@@ -40,9 +40,9 @@ absl::optional<std::string> GetKid(
     ::google::crypto::tink::OutputPrefixType output_prefix_type);
 absl::optional<uint32_t> GetKeyId(absl::string_view kid);
 
-util::StatusOr<std::string> CreateHeader(absl::string_view algorithm,
-                         absl::optional<absl::string_view> type_header,
-                         absl::optional<absl::string_view> kid);
+absl::StatusOr<std::string> CreateHeader(
+    absl::string_view algorithm, absl::optional<absl::string_view> type_header,
+    absl::optional<absl::string_view> kid);
 absl::Status ValidateHeader(const google::protobuf::Struct& header,
                             absl::string_view algorithm,
                             absl::optional<absl::string_view> tink_kid,
@@ -59,7 +59,7 @@ bool DecodeSignature(absl::string_view encoded_signature,
 
 class RawJwtParser {
  public:
-  static util::StatusOr<RawJwt> FromJson(
+  static absl::StatusOr<RawJwt> FromJson(
       absl::optional<std::string> type_header, absl::string_view json_payload);
 };
 

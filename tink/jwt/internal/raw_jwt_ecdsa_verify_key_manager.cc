@@ -43,11 +43,11 @@ using google::crypto::tink::JwtEcdsaPublicKey;
 using google::crypto::tink::EllipticCurveType;
 using google::crypto::tink::HashType;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RawJwtEcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
-      const JwtEcdsaPublicKey& jwt_ecdsa_public_key) const {
+    const JwtEcdsaPublicKey& jwt_ecdsa_public_key) const {
   internal::EcKey ec_key;
-  util::StatusOr<google::crypto::tink::EllipticCurveType> curve =
+  absl::StatusOr<google::crypto::tink::EllipticCurveType> curve =
       CurveForEcdsaAlgorithm(jwt_ecdsa_public_key.algorithm());
   if (!curve.ok()) {
     return curve.status();
@@ -55,7 +55,7 @@ RawJwtEcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
   ec_key.curve = Enums::ProtoToSubtle(*curve);
   ec_key.pub_x = jwt_ecdsa_public_key.x();
   ec_key.pub_y = jwt_ecdsa_public_key.y();
-  util::StatusOr<google::crypto::tink::HashType> hash_type =
+  absl::StatusOr<google::crypto::tink::HashType> hash_type =
       HashForEcdsaAlgorithm(jwt_ecdsa_public_key.algorithm());
   if (!hash_type.ok()) {
     return hash_type.status();
@@ -67,7 +67,7 @@ RawJwtEcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
   return {*std::move(result)};
 }
 
-StatusOr<EllipticCurveType>
+absl::StatusOr<EllipticCurveType>
 RawJwtEcdsaVerifyKeyManager::CurveForEcdsaAlgorithm(
     const JwtEcdsaAlgorithm& algorithm) {
   switch (algorithm) {
@@ -83,7 +83,7 @@ RawJwtEcdsaVerifyKeyManager::CurveForEcdsaAlgorithm(
   }
 }
 
-StatusOr<HashType> RawJwtEcdsaVerifyKeyManager::HashForEcdsaAlgorithm(
+absl::StatusOr<HashType> RawJwtEcdsaVerifyKeyManager::HashForEcdsaAlgorithm(
     const JwtEcdsaAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtEcdsaAlgorithm::ES256:

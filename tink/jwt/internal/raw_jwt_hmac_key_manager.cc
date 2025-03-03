@@ -40,7 +40,7 @@ using google::crypto::tink::JwtHmacKeyFormat;
 
 namespace {
 
-StatusOr<int> MinimumKeySize(const JwtHmacAlgorithm& algorithm) {
+absl::StatusOr<int> MinimumKeySize(const JwtHmacAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtHmacAlgorithm::HS256:
       return 32;
@@ -56,7 +56,7 @@ StatusOr<int> MinimumKeySize(const JwtHmacAlgorithm& algorithm) {
 
 }  // namespace
 
-StatusOr<JwtHmacKey> RawJwtHmacKeyManager::CreateKey(
+absl::StatusOr<JwtHmacKey> RawJwtHmacKeyManager::CreateKey(
     const JwtHmacKeyFormat& jwt_hmac_key_format) const {
   JwtHmacKey jwt_hmac_key;
   jwt_hmac_key.set_version(get_version());
@@ -66,7 +66,7 @@ StatusOr<JwtHmacKey> RawJwtHmacKeyManager::CreateKey(
   return jwt_hmac_key;
 }
 
-StatusOr<JwtHmacKey> RawJwtHmacKeyManager::DeriveKey(
+absl::StatusOr<JwtHmacKey> RawJwtHmacKeyManager::DeriveKey(
     const JwtHmacKeyFormat& jwt_hmac_key_format,
     InputStream* input_stream) const {
   return absl::Status(absl::StatusCode::kUnimplemented,
@@ -76,7 +76,7 @@ StatusOr<JwtHmacKey> RawJwtHmacKeyManager::DeriveKey(
 Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
-  StatusOr<int> min_key_size = MinimumKeySize(key.algorithm());
+  absl::StatusOr<int> min_key_size = MinimumKeySize(key.algorithm());
   if (!min_key_size.ok()) {
     return min_key_size.status();
   }
@@ -90,7 +90,7 @@ Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
 // static
 Status RawJwtHmacKeyManager::ValidateKeyFormat(
     const JwtHmacKeyFormat& key_format) const {
-  StatusOr<int> min_key_size = MinimumKeySize(key_format.algorithm());
+  absl::StatusOr<int> min_key_size = MinimumKeySize(key_format.algorithm());
   if (!min_key_size.ok()) {
     return min_key_size.status();
   }

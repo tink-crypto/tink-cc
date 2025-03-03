@@ -41,9 +41,9 @@ class JwtRsaSsaPkcs1VerifyKeyManager
  public:
   class PublicKeyVerifyFactory
       : public PrimitiveFactory<JwtPublicKeyVerifyInternal> {
-    crypto::tink::util::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
-    Create(const google::crypto::tink::JwtRsaSsaPkcs1PublicKey&
-               jwt_rsa_ssa_pkcs1_public_key) const override;
+    absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> Create(
+        const google::crypto::tink::JwtRsaSsaPkcs1PublicKey&
+            jwt_rsa_ssa_pkcs1_public_key) const override;
 
    private:
     const RawJwtRsaSsaPkcs1VerifyKeyManager raw_key_manager_;
@@ -67,7 +67,7 @@ class JwtRsaSsaPkcs1VerifyKeyManager
   }
 
  private:
-  static crypto::tink::util::StatusOr<std::string> AlgorithmName(
+  static absl::StatusOr<std::string> AlgorithmName(
       const google::crypto::tink::JwtRsaSsaPkcs1Algorithm& algorithm);
   const RawJwtRsaSsaPkcs1VerifyKeyManager raw_key_manager_;
   friend class JwtRsaSsaPkcs1SignKeyManager;

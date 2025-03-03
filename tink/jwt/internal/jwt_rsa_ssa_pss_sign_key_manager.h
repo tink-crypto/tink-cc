@@ -43,8 +43,8 @@ class JwtRsaSsaPssSignKeyManager
  public:
   class PublicKeySignFactory
       : public PrimitiveFactory<JwtPublicKeySignInternal> {
-    crypto::tink::util::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
-    Create(const google::crypto::tink::JwtRsaSsaPssPrivateKey& private_key)
+    absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> Create(
+        const google::crypto::tink::JwtRsaSsaPssPrivateKey& private_key)
         const override;
 
    private:
@@ -68,12 +68,12 @@ class JwtRsaSsaPssSignKeyManager
       const google::crypto::tink::JwtRsaSsaPssKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtRsaSsaPssPrivateKey>
-  CreateKey(const google::crypto::tink::JwtRsaSsaPssKeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::JwtRsaSsaPssPrivateKey> CreateKey(
+      const google::crypto::tink::JwtRsaSsaPssKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtRsaSsaPssPublicKey>
-  GetPublicKey(const google::crypto::tink::JwtRsaSsaPssPrivateKey& private_key)
+  absl::StatusOr<google::crypto::tink::JwtRsaSsaPssPublicKey> GetPublicKey(
+      const google::crypto::tink::JwtRsaSsaPssPrivateKey& private_key)
       const override;
 
   internal::FipsCompatibility FipsStatus() const override {

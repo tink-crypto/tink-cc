@@ -45,18 +45,18 @@ using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
 using ::google::crypto::tink::JwtRsaSsaPssPublicKey;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RawJwtRsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const JwtRsaSsaPssPublicKey& rsa_ssa_pss_public_key) const {
   internal::RsaPublicKey rsa_pub_key;
   rsa_pub_key.n = rsa_ssa_pss_public_key.n();
   rsa_pub_key.e = rsa_ssa_pss_public_key.e();
   JwtRsaSsaPssAlgorithm algorithm = rsa_ssa_pss_public_key.algorithm();
-  StatusOr<HashType> hash_or = HashForPssAlgorithm(algorithm);
+  absl::StatusOr<HashType> hash_or = HashForPssAlgorithm(algorithm);
   if (!hash_or.ok()) {
     return hash_or.status();
   }
-  StatusOr<int> salt_length = SaltLengthForPssAlgorithm(algorithm);
+  absl::StatusOr<int> salt_length = SaltLengthForPssAlgorithm(algorithm);
   if (!salt_length.ok()) {
     return salt_length.status();
   }
@@ -65,7 +65,7 @@ RawJwtRsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
   params.mgf1_hash = Enums::ProtoToSubtle(hash_or.value());
   params.salt_length = *salt_length;
 
-  util::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verify =
+  absl::StatusOr<std::unique_ptr<RsaSsaPssVerifyBoringSsl>> verify =
       subtle::RsaSsaPssVerifyBoringSsl::New(rsa_pub_key, params);
   if (!verify.ok()) {
     return verify.status();
@@ -79,7 +79,7 @@ Status RawJwtRsaSsaPssVerifyKeyManager::ValidateKey(
   if (!status.ok()) {
     return status;
   }
-  StatusOr<internal::SslUniquePtr<BIGNUM>> n =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n());
   if (!n.ok()) {
     return n.status();
@@ -110,7 +110,7 @@ Status RawJwtRsaSsaPssVerifyKeyManager::ValidateAlgorithm(
   return absl::OkStatus();
 }
 
-StatusOr<HashType> RawJwtRsaSsaPssVerifyKeyManager::HashForPssAlgorithm(
+absl::StatusOr<HashType> RawJwtRsaSsaPssVerifyKeyManager::HashForPssAlgorithm(
     const JwtRsaSsaPssAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPssAlgorithm::PS256:
@@ -125,7 +125,7 @@ StatusOr<HashType> RawJwtRsaSsaPssVerifyKeyManager::HashForPssAlgorithm(
   }
 }
 
-StatusOr<int> RawJwtRsaSsaPssVerifyKeyManager::SaltLengthForPssAlgorithm(
+absl::StatusOr<int> RawJwtRsaSsaPssVerifyKeyManager::SaltLengthForPssAlgorithm(
     const JwtRsaSsaPssAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPssAlgorithm::PS256:

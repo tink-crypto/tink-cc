@@ -87,9 +87,9 @@ internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
 
 }  // namespace
 
-StatusOr<JwtRsaSsaPssPrivateKey> RawJwtRsaSsaPssSignKeyManager::CreateKey(
+absl::StatusOr<JwtRsaSsaPssPrivateKey> RawJwtRsaSsaPssSignKeyManager::CreateKey(
     const JwtRsaSsaPssKeyFormat& key_format) const {
-  StatusOr<internal::SslUniquePtr<BIGNUM>> e =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(key_format.public_exponent());
   if (!e.ok()) {
     return e.status();
@@ -109,17 +109,17 @@ StatusOr<JwtRsaSsaPssPrivateKey> RawJwtRsaSsaPssSignKeyManager::CreateKey(
   return key_proto;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 RawJwtRsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
     const JwtRsaSsaPssPrivateKey& private_key) const {
   auto key = RsaPrivateKeyProtoToSubtle(private_key);
   JwtRsaSsaPssAlgorithm algorithm = private_key.public_key().algorithm();
-  StatusOr<HashType> hash =
+  absl::StatusOr<HashType> hash =
       RawJwtRsaSsaPssVerifyKeyManager::HashForPssAlgorithm(algorithm);
   if (!hash.ok()) {
     return hash.status();
   }
-  StatusOr<int> salt_length =
+  absl::StatusOr<int> salt_length =
       RawJwtRsaSsaPssVerifyKeyManager::SaltLengthForPssAlgorithm(algorithm);
   if (!salt_length.ok()) {
     return salt_length.status();
@@ -128,12 +128,12 @@ RawJwtRsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
   params.sig_hash = Enums::ProtoToSubtle(*hash);
   params.mgf1_hash = Enums::ProtoToSubtle(*hash);
   params.salt_length = *salt_length;
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       subtle::RsaSsaPssSignBoringSsl::New(key, params);
   if (!signer.ok()) return signer.status();
   // To check that the key is correct, we sign a test message with private key
   // and verify with public key.
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RawJwtRsaSsaPssVerifyKeyManager().GetPrimitive<PublicKeyVerify>(
           private_key.public_key());
   if (!verifier.ok()) return verifier.status();

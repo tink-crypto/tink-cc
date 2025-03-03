@@ -42,7 +42,7 @@ class RawJwtEcdsaVerifyKeyManager
                             List<PublicKeyVerify>> {
  public:
   class PublicKeyVerifyFactory : public PrimitiveFactory<PublicKeyVerify> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
         const google::crypto::tink::JwtEcdsaPublicKey& jwt_ecdsa_public_key)
         const override;
   };
@@ -70,12 +70,11 @@ class RawJwtEcdsaVerifyKeyManager
   static absl::Status ValidateAlgorithm(
       const google::crypto::tink::JwtEcdsaAlgorithm& algorithm);
 
-  static crypto::tink::util::StatusOr<google::crypto::tink::EllipticCurveType>
+  static absl::StatusOr<google::crypto::tink::EllipticCurveType>
   CurveForEcdsaAlgorithm(
       const google::crypto::tink::JwtEcdsaAlgorithm& algorithm);
 
-  static crypto::tink::util::StatusOr<google::crypto::tink::HashType>
-  HashForEcdsaAlgorithm(
+  static absl::StatusOr<google::crypto::tink::HashType> HashForEcdsaAlgorithm(
       const google::crypto::tink::JwtEcdsaAlgorithm& algorithm);
 
   const std::string key_type_ =

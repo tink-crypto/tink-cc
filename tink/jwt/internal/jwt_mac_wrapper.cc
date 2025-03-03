@@ -62,10 +62,10 @@ class JwtMacSetWrapper : public JwtMac {
         monitoring_compute_client_(std::move(monitoring_compute_client)),
         monitoring_verify_client_(std::move(monitoring_verify_client)) {}
 
-  crypto::tink::util::StatusOr<std::string> ComputeMacAndEncode(
+  absl::StatusOr<std::string> ComputeMacAndEncode(
       const crypto::tink::RawJwt& token) const override;
 
-  crypto::tink::util::StatusOr<crypto::tink::VerifiedJwt> VerifyMacAndDecode(
+  absl::StatusOr<crypto::tink::VerifiedJwt> VerifyMacAndDecode(
       absl::string_view compact,
       const crypto::tink::JwtValidator& validator) const override;
 
@@ -96,13 +96,13 @@ absl::Status Validate(PrimitiveSet<JwtMacInternal>* jwt_mac_set) {
   return absl::OkStatus();
 }
 
-util::StatusOr<std::string> JwtMacSetWrapper::ComputeMacAndEncode(
+absl::StatusOr<std::string> JwtMacSetWrapper::ComputeMacAndEncode(
     const crypto::tink::RawJwt& token) const {
   auto primary = jwt_mac_set_->get_primary();
   absl::optional<std::string> kid =
       GetKid(primary->get_key_id(), primary->get_output_prefix_type());
 
-  util::StatusOr<std::string> compute_mac_result =
+  absl::StatusOr<std::string> compute_mac_result =
       primary->get_primitive().ComputeMacAndEncodeWithKid(token, kid);
   if (!compute_mac_result.ok()) {
     if (monitoring_compute_client_ != nullptr) {
@@ -116,7 +116,7 @@ util::StatusOr<std::string> JwtMacSetWrapper::ComputeMacAndEncode(
   return compute_mac_result;
 }
 
-util::StatusOr<crypto::tink::VerifiedJwt> JwtMacSetWrapper::VerifyMacAndDecode(
+absl::StatusOr<crypto::tink::VerifiedJwt> JwtMacSetWrapper::VerifyMacAndDecode(
     absl::string_view compact,
     const crypto::tink::JwtValidator& validator) const {
   absl::optional<absl::Status> interesting_status;
@@ -124,7 +124,7 @@ util::StatusOr<crypto::tink::VerifiedJwt> JwtMacSetWrapper::VerifyMacAndDecode(
     JwtMacInternal& jwt_mac = mac_entry->get_primitive();
     absl::optional<std::string> kid =
         GetKid(mac_entry->get_key_id(), mac_entry->get_output_prefix_type());
-    util::StatusOr<VerifiedJwt> verified_jwt =
+    absl::StatusOr<VerifiedJwt> verified_jwt =
         jwt_mac.VerifyMacAndDecodeWithKid(compact, validator, kid);
     if (verified_jwt.ok()) {
       if (monitoring_verify_client_ != nullptr) {
@@ -150,7 +150,7 @@ util::StatusOr<crypto::tink::VerifiedJwt> JwtMacSetWrapper::VerifyMacAndDecode(
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<JwtMacInternal>> jwt_mac_set) const {
   absl::Status status = Validate(jwt_mac_set.get());
   if (!status.ok()) return status;
@@ -163,20 +163,20 @@ util::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
     return {absl::make_unique<JwtMacSetWrapper>(std::move(jwt_mac_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*jwt_mac_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_compute_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_compute_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
   if (!monitoring_compute_client.ok()) {
     return monitoring_compute_client.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
   if (!monitoring_verify_client.ok()) {

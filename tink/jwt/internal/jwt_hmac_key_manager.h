@@ -41,7 +41,7 @@ class JwtHmacKeyManager
                             List<JwtMacInternal>> {
  public:
   class JwtMacFactory : public PrimitiveFactory<JwtMacInternal> {
-    crypto::tink::util::StatusOr<std::unique_ptr<JwtMacInternal>> Create(
+    absl::StatusOr<std::unique_ptr<JwtMacInternal>> Create(
         const google::crypto::tink::JwtHmacKey& jwt_hmac_key) const override;
   };
 
@@ -60,10 +60,10 @@ class JwtHmacKeyManager
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::JwtHmacKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtHmacKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::JwtHmacKey> CreateKey(
       const google::crypto::tink::JwtHmacKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtHmacKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::JwtHmacKey> DeriveKey(
       const google::crypto::tink::JwtHmacKeyFormat& key_format,
       InputStream* input_stream) const override;
 

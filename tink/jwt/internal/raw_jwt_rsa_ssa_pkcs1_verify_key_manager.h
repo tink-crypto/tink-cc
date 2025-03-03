@@ -42,7 +42,7 @@ class RawJwtRsaSsaPkcs1VerifyKeyManager
                             List<PublicKeyVerify>> {
  public:
   class PublicKeyVerifyFactory : public PrimitiveFactory<PublicKeyVerify> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Create(
         const google::crypto::tink::JwtRsaSsaPkcs1PublicKey&
             jwt_rsa_ssa_pkcs1_public_key) const override;
   };
@@ -70,8 +70,7 @@ class RawJwtRsaSsaPkcs1VerifyKeyManager
   static absl::Status ValidateAlgorithm(
       const google::crypto::tink::JwtRsaSsaPkcs1Algorithm& algorithm);
 
-  static crypto::tink::util::StatusOr<google::crypto::tink::HashType>
-  HashForPkcs1Algorithm(
+  static absl::StatusOr<google::crypto::tink::HashType> HashForPkcs1Algorithm(
       const google::crypto::tink::JwtRsaSsaPkcs1Algorithm& algorithm);
 
   const std::string key_type_ = absl::StrCat(

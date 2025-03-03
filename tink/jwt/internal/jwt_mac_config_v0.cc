@@ -49,7 +49,7 @@ struct HashAndTagSize {
   int tag_size;
 };
 
-util::StatusOr<HashAndTagSize> HashTypeAndTagSize(
+absl::StatusOr<HashAndTagSize> HashTypeAndTagSize(
     JwtHmacParameters::Algorithm algorithm) {
   switch (algorithm) {
     case JwtHmacParameters::Algorithm::kHs256:
@@ -63,7 +63,7 @@ util::StatusOr<HashAndTagSize> HashTypeAndTagSize(
                           "Unsupported algorithm");
   }
 }
-util::StatusOr<std::string> AlgorithmName(
+absl::StatusOr<std::string> AlgorithmName(
     JwtHmacParameters::Algorithm algorithm) {
   switch (algorithm) {
     case JwtHmacParameters::Algorithm::kHs256:
@@ -78,17 +78,17 @@ util::StatusOr<std::string> AlgorithmName(
   }
 }
 
-util::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwHmacInternal(
+absl::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwHmacInternal(
     const JwtHmacKey& key) {
   const JwtHmacParameters& jwt_hmac_params = key.GetParameters();
-  util::StatusOr<HashAndTagSize> hash_and_tag_size =
+  absl::StatusOr<HashAndTagSize> hash_and_tag_size =
       HashTypeAndTagSize(jwt_hmac_params.GetAlgorithm());
   if (!hash_and_tag_size.ok()) {
     return hash_and_tag_size.status();
   }
 
   // Get a raw MAC primitive.
-  util::StatusOr<std::unique_ptr<Mac>> raw_mac = subtle::HmacBoringSsl::New(
+  absl::StatusOr<std::unique_ptr<Mac>> raw_mac = subtle::HmacBoringSsl::New(
       hash_and_tag_size->hash_type, hash_and_tag_size->tag_size,
       key.GetKeyBytes(GetPartialKeyAccess())
           .Get(internal::GetInsecureSecretKeyAccessInternal()));
@@ -96,7 +96,7 @@ util::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwHmacInternal(
     return raw_mac.status();
   }
 
-  util::StatusOr<std::string> algorithm_name =
+  absl::StatusOr<std::string> algorithm_name =
       AlgorithmName(jwt_hmac_params.GetAlgorithm());
   if (!algorithm_name.ok()) {
     return algorithm_name.status();

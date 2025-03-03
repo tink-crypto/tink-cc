@@ -43,8 +43,8 @@ class JwtEcdsaSignKeyManager
  public:
   class PublicKeySignFactory
       : public PrimitiveFactory<JwtPublicKeySignInternal> {
-    crypto::tink::util::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>>
-    Create(const google::crypto::tink::JwtEcdsaPrivateKey& private_key)
+    absl::StatusOr<std::unique_ptr<JwtPublicKeySignInternal>> Create(
+        const google::crypto::tink::JwtEcdsaPrivateKey& private_key)
         const override;
 
    private:
@@ -67,12 +67,11 @@ class JwtEcdsaSignKeyManager
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::JwtEcdsaKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtEcdsaPrivateKey>
-  CreateKey(
+  absl::StatusOr<google::crypto::tink::JwtEcdsaPrivateKey> CreateKey(
       const google::crypto::tink::JwtEcdsaKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtEcdsaPublicKey>
-  GetPublicKey(const google::crypto::tink::JwtEcdsaPrivateKey& private_key)
+  absl::StatusOr<google::crypto::tink::JwtEcdsaPublicKey> GetPublicKey(
+      const google::crypto::tink::JwtEcdsaPrivateKey& private_key)
       const override;
 
   internal::FipsCompatibility FipsStatus() const override {

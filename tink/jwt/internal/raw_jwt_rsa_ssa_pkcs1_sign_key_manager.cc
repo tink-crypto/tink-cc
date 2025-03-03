@@ -82,9 +82,10 @@ internal::RsaPrivateKey RsaPrivateKeyProtoToSubtle(
 
 }  // namespace
 
-StatusOr<JwtRsaSsaPkcs1PrivateKey> RawJwtRsaSsaPkcs1SignKeyManager::CreateKey(
+absl::StatusOr<JwtRsaSsaPkcs1PrivateKey>
+RawJwtRsaSsaPkcs1SignKeyManager::CreateKey(
     const JwtRsaSsaPkcs1KeyFormat& jwt_rsa_ssa_pkcs1_key_format) const {
-  StatusOr<internal::SslUniquePtr<BIGNUM>> e =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> e =
       internal::StringToBignum(jwt_rsa_ssa_pkcs1_key_format.public_exponent());
   if (!e.ok()) {
     return e.status();
@@ -106,11 +107,11 @@ StatusOr<JwtRsaSsaPkcs1PrivateKey> RawJwtRsaSsaPkcs1SignKeyManager::CreateKey(
   return key_proto;
 }
 
-StatusOr<std::unique_ptr<PublicKeySign>>
+absl::StatusOr<std::unique_ptr<PublicKeySign>>
 RawJwtRsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
     const JwtRsaSsaPkcs1PrivateKey& private_key) const {
   internal::RsaPrivateKey key = RsaPrivateKeyProtoToSubtle(private_key);
-  util::StatusOr<google::crypto::tink::HashType> hash =
+  absl::StatusOr<google::crypto::tink::HashType> hash =
       RawJwtRsaSsaPkcs1VerifyKeyManager::HashForPkcs1Algorithm(
           private_key.public_key().algorithm());
   if (!hash.ok()) {
@@ -118,12 +119,12 @@ RawJwtRsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
   }
   internal::RsaSsaPkcs1Params params;
   params.hash_type = Enums::ProtoToSubtle(*hash);
-  util::StatusOr<std::unique_ptr<PublicKeySign>> signer =
+  absl::StatusOr<std::unique_ptr<PublicKeySign>> signer =
       subtle::RsaSsaPkcs1SignBoringSsl::New(key, params);
   if (!signer.ok()) return signer.status();
   // To check that the key is correct, we sign a test message with private key
   // and verify with public key.
-  util::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
+  absl::StatusOr<std::unique_ptr<PublicKeyVerify>> verifier =
       RawJwtRsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(
           private_key.public_key());
   if (!verifier.ok()) return verifier.status();

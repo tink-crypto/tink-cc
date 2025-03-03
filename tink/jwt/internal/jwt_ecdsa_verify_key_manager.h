@@ -41,8 +41,8 @@ class JwtEcdsaVerifyKeyManager
  public:
   class PublicKeyVerifyFactory
       : public PrimitiveFactory<JwtPublicKeyVerifyInternal> {
-    crypto::tink::util::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>>
-    Create(const google::crypto::tink::JwtEcdsaPublicKey& jwt_ecdsa_public_key)
+    absl::StatusOr<std::unique_ptr<JwtPublicKeyVerifyInternal>> Create(
+        const google::crypto::tink::JwtEcdsaPublicKey& jwt_ecdsa_public_key)
         const override;
 
    private:
@@ -67,7 +67,7 @@ class JwtEcdsaVerifyKeyManager
   }
 
  private:
-  static crypto::tink::util::StatusOr<std::string> AlgorithmName(
+  static absl::StatusOr<std::string> AlgorithmName(
       const google::crypto::tink::JwtEcdsaAlgorithm& algorithm);
   const RawJwtEcdsaVerifyKeyManager raw_key_manager_;
   friend class JwtEcdsaSignKeyManager;

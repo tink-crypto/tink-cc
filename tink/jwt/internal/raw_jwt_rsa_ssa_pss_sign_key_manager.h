@@ -42,7 +42,7 @@ class RawJwtRsaSsaPssSignKeyManager
                                    List<PublicKeySign>> {
  public:
   class PublicKeySignFactory : public PrimitiveFactory<PublicKeySign> {
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicKeySign>> Create(
+    absl::StatusOr<std::unique_ptr<PublicKeySign>> Create(
         const google::crypto::tink::JwtRsaSsaPssPrivateKey& private_key)
         const override;
   };
@@ -66,12 +66,12 @@ class RawJwtRsaSsaPssSignKeyManager
       const google::crypto::tink::JwtRsaSsaPssKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtRsaSsaPssPrivateKey>
-  CreateKey(const google::crypto::tink::JwtRsaSsaPssKeyFormat& key_format)
+  absl::StatusOr<google::crypto::tink::JwtRsaSsaPssPrivateKey> CreateKey(
+      const google::crypto::tink::JwtRsaSsaPssKeyFormat& key_format)
       const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::JwtRsaSsaPssPublicKey>
-  GetPublicKey(const google::crypto::tink::JwtRsaSsaPssPrivateKey& private_key)
+  absl::StatusOr<google::crypto::tink::JwtRsaSsaPssPublicKey> GetPublicKey(
+      const google::crypto::tink::JwtRsaSsaPssPrivateKey& private_key)
       const override {
     return private_key.public_key();
   }

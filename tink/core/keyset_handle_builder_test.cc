@@ -98,7 +98,7 @@ using ::testing::Values;
 class KeysetHandleBuilderTest : public Test {
  protected:
   void SetUp() override {
-    util::Status status = TinkConfig::Register();
+    absl::Status status = TinkConfig::Register();
     ASSERT_TRUE(status.ok()) << status;
   }
 };
@@ -968,7 +968,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoParams) {
   ASSERT_THAT(mac.status(), IsOk());
   util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
-  util::Status verified = (*mac)->VerifyMac(*tag, "some input");
+  absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
 }
 
@@ -992,7 +992,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromParams) {
   ASSERT_THAT(mac.status(), IsOk());
   util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
-  util::Status verified = (*mac)->VerifyMac(*tag, "some input");
+  absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
 }
 
@@ -1031,7 +1031,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoKey) {
   ASSERT_THAT(mac.status(), IsOk());
   util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
-  util::Status verified = (*mac)->VerifyMac(*tag, "some input");
+  absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
 }
 
@@ -1059,7 +1059,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromKey) {
   ASSERT_THAT(mac.status(), IsOk());
   util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
-  util::Status verified = (*mac)->VerifyMac(*tag, "some input");
+  absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
 }
 
@@ -1176,14 +1176,13 @@ class FakeAeadKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
-      const AesGcmKeyProto& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const AesGcmKeyProto& key) const override {
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const AesGcmKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   crypto::tink::util::StatusOr<AesGcmKeyProto> CreateKey(

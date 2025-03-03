@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -27,25 +28,23 @@
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 
-using ::google::crypto::tink::KeyTemplate;
+using ::crypto::tink::internal::KeyTemplateStruct;
 
-util::StatusOr<std::string> SerializeParametersToProtoFormat(
+absl::StatusOr<std::string> SerializeParametersToProtoFormat(
     const Parameters& parameters) {
   const internal::LegacyProtoParameters* legacy_proto_params =
       dynamic_cast<const internal::LegacyProtoParameters*>(&parameters);
   if (legacy_proto_params != nullptr) {
-    const internal::KeyTemplateStruct& key_template =
+    const KeyTemplateStruct& key_template =
         legacy_proto_params->Serialization().GetKeyTemplateStruct();
-    return internal::KeyTemplateStruct::GetParser().SerializeIntoString(
-        key_template);
+    return KeyTemplateStruct::GetParser().SerializeIntoString(key_template);
   }
 
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<internal::ProtoParametersSerialization>(
               parameters);
@@ -61,22 +60,21 @@ util::StatusOr<std::string> SerializeParametersToProtoFormat(
                         "Failed to serialize proto parameters.");
   }
 
-  const internal::KeyTemplateStruct& key_template =
+  const KeyTemplateStruct& key_template =
       proto_serialization->GetKeyTemplateStruct();
-  return internal::KeyTemplateStruct::GetParser().SerializeIntoString(
-      key_template);
+  return KeyTemplateStruct::GetParser().SerializeIntoString(key_template);
 }
 
-util::StatusOr<std::unique_ptr<Parameters>> ParseParametersFromProtoFormat(
+absl::StatusOr<std::unique_ptr<Parameters>> ParseParametersFromProtoFormat(
     absl::string_view serialized_parameters) {
-  KeyTemplate key_template;
-  if (!key_template.ParseFromString(serialized_parameters)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Failed to parse proto parameters into key template.");
+  absl::StatusOr<KeyTemplateStruct> key_template =
+      KeyTemplateStruct::GetParser().Parse(serialized_parameters);
+  if (!key_template.ok()) {
+    return key_template.status();
   }
 
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(key_template);
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
+      internal::ProtoParametersSerialization::Create(*key_template);
   if (!serialization.ok()) {
     return serialization.status();
   }

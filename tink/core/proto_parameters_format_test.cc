@@ -151,7 +151,7 @@ TEST_F(ProtoParametersFormatTest, ParseInvalidKeyTemplateFails) {
       ParseParametersFromProtoFormat("invalid_key_template").status(),
       StatusIs(
           absl::StatusCode::kInvalidArgument,
-          HasSubstr("Failed to parse proto parameters into key template")));
+          HasSubstr("Not enough data to read kFixed32")));
 }
 
 TEST_F(ProtoParametersFormatTest, ParseInvalidAesCmacKeyFormatFails) {

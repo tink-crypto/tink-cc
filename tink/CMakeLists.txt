@@ -790,6 +790,7 @@ tink_cc_library(
   DEPS
     tink::core::parameters
     absl::status
+    absl::statusor
     absl::strings
     tink::internal::legacy_proto_parameters
     tink::internal::mutable_serialization_registry

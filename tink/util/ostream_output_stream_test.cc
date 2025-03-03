@@ -50,7 +50,7 @@ std::unique_ptr<std::ostream> GetTestOstream(absl::string_view filename) {
 // Writes 'contents' to the specified 'output_stream', and closes the stream.
 // Returns the status of output_stream->Close()-operation, or a non-OK status
 // of a prior output_stream->Next()-operation, if any.
-util::Status WriteToStream(util::OstreamOutputStream* output_stream,
+absl::Status WriteToStream(util::OstreamOutputStream* output_stream,
                            absl::string_view contents) {
   void* buffer;
   int pos = 0;

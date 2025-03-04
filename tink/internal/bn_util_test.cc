@@ -265,6 +265,22 @@ TEST(BnUtil, CompareBignumWithWord) {
   }
 }
 
+TEST(BnUtil, InlineBigNum) {
+  InlineBignum bn;
+  BN_set_word(bn.get(), /*value=*/0x0fffffffffffffffUL);
+  EXPECT_EQ(CompareBignumWithWord(bn.get(), /*word=*/0x0fffffffffffffffL), 0);
+}
+
+TEST(BnUtil, InlineBigNumRelease) {
+  InlineBignum bn;
+  BN_set_word(bn.get(), /*value=*/0x0fffffffffffffffUL);
+  BIGNUM* bn_ptr = bn.get();
+  bn.release();
+  EXPECT_EQ(bn.get(), nullptr);
+  EXPECT_EQ(CompareBignumWithWord(bn_ptr, /*word=*/0x0fffffffffffffffL), 0);
+  BN_free(bn_ptr);
+}
+
 }  // namespace
 }  // namespace internal
 }  // namespace tink

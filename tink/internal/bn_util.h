@@ -32,6 +32,33 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+// A BIGNUM that is allocated inline if possible.
+class InlineBignum {
+ public:
+  explicit InlineBignum() {
+#if defined(OPENSSL_IS_BORINGSSL)
+    BN_init(&inline_storage_);
+    bignum_ = internal::SslUniquePtr<BIGNUM>(&inline_storage_);
+#else
+    bignum_ = internal::SslUniquePtr<BIGNUM>(BN_new());
+#endif
+  }
+  // Returns a pointer to the BIGNUM.
+  BIGNUM* get() {
+    return bignum_.get();
+  }
+  // Releases BIGNUM to the caller.
+  // get() will return nullptr after this.
+  void release() {
+    bignum_.release();
+  }
+ private:
+#if defined(OPENSSL_IS_BORINGSSL)
+  BIGNUM inline_storage_;
+#endif
+  internal::SslUniquePtr<BIGNUM> bignum_;
+};
+
 // Compares `bignum` with the given `word`. It returns a result < 0 if `bignum`
 // < `word`, 0 if `bignum` == `word`, and > 0 if `bignum` > `word`.
 int CompareBignumWithWord(const BIGNUM* bignum, BN_ULONG word);

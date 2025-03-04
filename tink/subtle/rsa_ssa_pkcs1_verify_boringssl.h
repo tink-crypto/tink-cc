@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "openssl/rsa.h"
+#include "tink/internal/bn_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
@@ -84,6 +85,8 @@ class RsaSsaPkcs1VerifyBoringSsl : public PublicKeyVerify {
   absl::Status VerifyWithoutPrefix(absl::string_view signature,
                                    absl::string_view data) const;
 
+  internal::InlineBignum modulus_;
+  internal::InlineBignum public_exponent_;
   const internal::SslUniquePtr<RSA> rsa_;
   const EVP_MD* const sig_hash_;  // Owned by BoringSSL.
   const std::string output_prefix_;

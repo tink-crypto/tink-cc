@@ -365,6 +365,7 @@ cc_library(
         ":common_enums",
         "//tink:partial_key_access",
         "//tink:public_key_verify",
+        "//tink/internal:bn_util",
         "//tink/internal:fips_utils",
         "//tink/internal:md_util",
         "//tink/internal:rsa_util",

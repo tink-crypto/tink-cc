@@ -348,6 +348,7 @@ tink_cc_library(
     crypto
     tink::core::partial_key_access
     tink::core::public_key_verify
+    tink::internal::bn_util
     tink::internal::fips_utils
     tink::internal::md_util
     tink::internal::rsa_util

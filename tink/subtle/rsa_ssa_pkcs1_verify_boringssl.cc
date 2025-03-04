@@ -107,15 +107,38 @@ RsaSsaPkcs1VerifyBoringSsl::New(const internal::RsaPublicKey& pub_key,
 
   // The RSA modulus and exponent are checked as part of the conversion to
   // internal::SslUniquePtr<RSA>.
-  absl::StatusOr<internal::SslUniquePtr<RSA>> rsa =
-      internal::RsaPublicKeyToRsa(pub_key);
-  if (!rsa.ok()) {
-    return rsa.status();
+  internal::SslUniquePtr<RSA> rsa(RSA_new());
+  if (rsa.get() == nullptr) {
+    return absl::Status(absl::StatusCode::kInternal, "RSA allocation error");
   }
 
   std::unique_ptr<RsaSsaPkcs1VerifyBoringSsl> verify(
-      new RsaSsaPkcs1VerifyBoringSsl(*std::move(rsa), *sig_hash, output_prefix,
+      new RsaSsaPkcs1VerifyBoringSsl(std::move(rsa), *sig_hash, output_prefix,
                                      message_suffix));
+  if (!BN_bin2bn(reinterpret_cast<const uint8_t*>(pub_key.n.data()),
+                 pub_key.n.size(), verify->modulus_.get())) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Could not convert modulus to BIGNUM.");
+  }
+  if (!BN_bin2bn(reinterpret_cast<const uint8_t*>(pub_key.e.data()),
+                 pub_key.e.size(), verify->public_exponent_.get())) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Could not convert public exponent to BIGNUM.");
+  }
+  status =
+      internal::ValidateRsaModulusSize(BN_num_bits(verify->modulus_.get()));
+  if (!status.ok()) {
+    return status;
+  }
+  if (!RSA_set0_key(verify->rsa_.get(), verify->modulus_.get(),
+                    verify->public_exponent_.get(),
+                    /*d=*/nullptr)) {
+    return absl::Status(absl::StatusCode::kInternal, "Could not set RSA key.");
+  }
+  // A successful RSA_set0_key() takes ownership of the BIGNUMs, hence we
+  // release them here.
+  verify->modulus_.release();
+  verify->public_exponent_.release();
   return std::move(verify);
 }
 

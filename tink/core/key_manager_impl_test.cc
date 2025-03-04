@@ -71,7 +71,7 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKey& key) const override {
       // Ignore the key and returned one with a fixed size for this test.
       return {subtle::AesGcmBoringSsl::New(
@@ -81,7 +81,7 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
 
   class AeadVariantFactory : public PrimitiveFactory<AeadVariant> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<AeadVariant>> Create(
+    absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKey& key) const override {
       return absl::make_unique<AeadVariant>(key.key_value());
     }
@@ -104,13 +104,13 @@ class ExampleKeyTypeManager : public KeyTypeManager<AesGcmKey, AesGcmKeyFormat,
               (const, override));
   MOCK_METHOD(absl::Status, ValidateKeyFormat, (const AesGcmKeyFormat& key),
               (const, override));
-  MOCK_METHOD(crypto::tink::util::StatusOr<AesGcmKey>, DeriveKey,
+  MOCK_METHOD(absl::StatusOr<AesGcmKey>, DeriveKey,
               (const KeyFormatProto& key_format, InputStream* input_stream),
               (const, override));
 
   const std::string& get_key_type() const override { return kKeyType; }
 
-  crypto::tink::util::StatusOr<AesGcmKey> CreateKey(
+  absl::StatusOr<AesGcmKey> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
     AesGcmKey result;
     result.set_key_value(subtle::Random::GetRandomBytes(key_format.key_size()));
@@ -238,8 +238,8 @@ TEST(CreateDeriverFunctionForTest, UseParametersAndReturnValue) {
   key_format.set_key_size(9);
 
   EXPECT_CALL(internal_km, DeriveKey(_, _))
-      .WillOnce([](const AesGcmKeyFormat& format, InputStream* randomness)
-                    -> crypto::tink::util::StatusOr<AesGcmKey> {
+      .WillOnce([](const AesGcmKeyFormat& format,
+                   InputStream* randomness) -> absl::StatusOr<AesGcmKey> {
         auto bytes_or = ReadBytesFromStream(format.key_size(), randomness);
         if (!bytes_or.ok()) {
           return bytes_or.status();
@@ -440,7 +440,7 @@ class ExampleKeyTypeManagerWithoutFactory
  public:
   class AeadFactory : public PrimitiveFactory<Aead> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKey& key) const override {
       // Ignore the key and returned one with a fixed size for this test.
       return {subtle::AesGcmBoringSsl::New(
@@ -450,7 +450,7 @@ class ExampleKeyTypeManagerWithoutFactory
 
   class AeadVariantFactory : public PrimitiveFactory<AeadVariant> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<AeadVariant>> Create(
+    absl::StatusOr<std::unique_ptr<AeadVariant>> Create(
         const AesGcmKey& key) const override {
       return absl::make_unique<AeadVariant>(key.key_value());
     }

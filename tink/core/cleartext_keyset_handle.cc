@@ -40,16 +40,16 @@ namespace crypto {
 namespace tink {
 
 // static
-util::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> CleartextKeysetHandle::Read(
     std::unique_ptr<KeysetReader> reader,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
-  util::StatusOr<std::unique_ptr<Keyset>> keyset_result = reader->Read();
+  absl::StatusOr<std::unique_ptr<Keyset>> keyset_result = reader->Read();
   if (!keyset_result.ok()) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Error reading keyset data: %s",
                      keyset_result.status().message());
   }
-  util::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
+  absl::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
       entries = KeysetHandle::GetEntriesFromKeyset(**keyset_result);
   if (!entries.ok()) {
     return entries.status();

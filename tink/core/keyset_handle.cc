@@ -72,7 +72,7 @@ namespace tink {
 
 namespace {
 
-util::StatusOr<std::unique_ptr<EncryptedKeyset>> Encrypt(
+absl::StatusOr<std::unique_ptr<EncryptedKeyset>> Encrypt(
     const Keyset& keyset, const Aead& master_key_aead,
     absl::string_view associated_data) {
   auto encrypt_result =
@@ -83,7 +83,7 @@ util::StatusOr<std::unique_ptr<EncryptedKeyset>> Encrypt(
   return std::move(enc_keyset);
 }
 
-util::StatusOr<util::SecretProto<Keyset>> Decrypt(
+absl::StatusOr<util::SecretProto<Keyset>> Decrypt(
     const EncryptedKeyset& enc_keyset, const Aead& master_key_aead,
     absl::string_view associated_data) {
   auto decrypt_result =
@@ -114,7 +114,7 @@ absl::Status ValidateNoSecret(const Keyset& keyset) {
   return absl::OkStatus();
 }
 
-util::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
+absl::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
     const Keyset::Key& key) {
   absl::optional<int> id_requirement = absl::nullopt;
   if (key.output_prefix_type() != OutputPrefixType::RAW) {
@@ -129,7 +129,7 @@ util::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
 }
 
 // Tries to serialize a LegacyProtoKey. Fails if the key is not a legacy type.
-util::StatusOr<internal::ProtoKeySerialization> SerializeLegacyKey(
+absl::StatusOr<internal::ProtoKeySerialization> SerializeLegacyKey(
     const Key& key) {
   const internal::LegacyProtoKey* proto_key =
       dynamic_cast<const internal::LegacyProtoKey*>(&key);
@@ -137,7 +137,7 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeLegacyKey(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to serialize legacy proto key.");
   }
-  util::StatusOr<const internal::ProtoKeySerialization*> serialized_key =
+  absl::StatusOr<const internal::ProtoKeySerialization*> serialized_key =
       proto_key->Serialization(InsecureSecretKeyAccess::Get());
   if (!serialized_key.ok()) {
     return serialized_key.status();
@@ -146,8 +146,8 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeLegacyKey(
   return **serialized_key;
 }
 
-util::StatusOr<internal::ProtoKeySerialization> SerializeKey(const Key& key) {
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(const Key& key) {
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       internal::MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<internal::ProtoKeySerialization>(
               key, InsecureSecretKeyAccess::Get());
@@ -166,9 +166,9 @@ util::StatusOr<internal::ProtoKeySerialization> SerializeKey(const Key& key) {
   return *serialized_proto_key;
 }
 
-util::StatusOr<internal::ProtoKeySerialization> GetProtoKeySerialization(
+absl::StatusOr<internal::ProtoKeySerialization> GetProtoKeySerialization(
     const Key& key) {
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       SerializeKey(key);
   // TODO(b/359489205): Make sure that this excludes kNotFound error
   // potentially returned by registered classes.
@@ -197,7 +197,7 @@ SecretProto<Keyset::Key> ToKeysetKey(
   return key;
 }
 
-util::StatusOr<SecretProto<Keyset::Key>>
+absl::StatusOr<SecretProto<Keyset::Key>>
 CreateKeysetKeyFromProtoKeySerialization(
     const internal::ProtoKeySerialization& key, int id, KeyStatusType status) {
   absl::optional<int> id_requirement = key.IdRequirement();
@@ -208,9 +208,9 @@ CreateKeysetKeyFromProtoKeySerialization(
   return ToKeysetKey(id, status, key);
 }
 
-util::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKey(const Key& key, int id,
+absl::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKey(const Key& key, int id,
                                                          KeyStatusType status) {
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       GetProtoKeySerialization(key);
   if (!serialization.ok()) {
     return serialization.status();
@@ -239,7 +239,7 @@ absl::Status KeysetHandle::ValidateAt(int index) const {
                         "Non-printable ASCII character in type URL.");
   }
 
-  util::StatusOr<KeyStatus> key_status =
+  absl::StatusOr<KeyStatus> key_status =
       internal::FromKeyStatusType(proto_key.status());
   if (!key_status.ok()) return key_status.status();
 
@@ -313,22 +313,22 @@ KeysetHandle::Entry KeysetHandle::CreateEntryAt(int index) const {
   absl::Status validation = ValidateAt(index);
   CHECK_OK(validation);
 
-  util::StatusOr<Entry> entry =
+  absl::StatusOr<Entry> entry =
       CreateEntry(keyset_->key(index), keyset_->primary_key_id());
   // Status should be OK since this keyset handle has been validated.
   CHECK_OK(entry.status());
   return *entry;
 }
 
-util::StatusOr<KeysetHandle::Entry> KeysetHandle::CreateEntry(
+absl::StatusOr<KeysetHandle::Entry> KeysetHandle::CreateEntry(
     const Keyset::Key& proto_key, uint32_t primary_key_id) {
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       ToProtoKeySerialization(proto_key);
   if (!serialization.ok()) {
     return serialization.status();
   }
 
-  util::StatusOr<std::shared_ptr<const Key>> key =
+  absl::StatusOr<std::shared_ptr<const Key>> key =
       internal::MutableSerializationRegistry::GlobalInstance()
           .ParseKeyWithLegacyFallback(*serialization,
                                       InsecureSecretKeyAccess::Get());
@@ -336,7 +336,7 @@ util::StatusOr<KeysetHandle::Entry> KeysetHandle::CreateEntry(
     return key.status();
   }
 
-  util::StatusOr<KeyStatus> key_status =
+  absl::StatusOr<KeyStatus> key_status =
       internal::FromKeyStatusType(proto_key.status());
   if (!key_status.ok()) {
     return key_status.status();
@@ -346,7 +346,7 @@ util::StatusOr<KeysetHandle::Entry> KeysetHandle::CreateEntry(
                proto_key.key_id() == primary_key_id);
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::Read(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::Read(
     std::unique_ptr<KeysetReader> reader, const Aead& master_key_aead,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   return ReadWithAssociatedData(std::move(reader), master_key_aead,
@@ -354,12 +354,12 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::Read(
                                 std::move(monitoring_annotations));
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>>
+absl::StatusOr<std::unique_ptr<KeysetHandle>>
 KeysetHandle::ReadWithAssociatedData(
     std::unique_ptr<KeysetReader> reader, const Aead& master_key_aead,
     absl::string_view associated_data,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
-  util::StatusOr<std::unique_ptr<EncryptedKeyset>> enc_keyset_result =
+  absl::StatusOr<std::unique_ptr<EncryptedKeyset>> enc_keyset_result =
       reader->ReadEncrypted();
   if (!enc_keyset_result.ok()) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
@@ -374,7 +374,7 @@ KeysetHandle::ReadWithAssociatedData(
                      "Error decrypting encrypted keyset: %s",
                      keyset_result.status().message());
   }
-  util::StatusOr<std::vector<std::shared_ptr<const Entry>>> entries =
+  absl::StatusOr<std::vector<std::shared_ptr<const Entry>>> entries =
       GetEntriesFromKeyset(**keyset_result);
   if (!entries.ok()) {
     return entries.status();
@@ -388,7 +388,7 @@ KeysetHandle::ReadWithAssociatedData(
                                            std::move(monitoring_annotations)));
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
     const std::string& serialized_keyset,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   util::SecretProto<Keyset> keyset;
@@ -400,7 +400,7 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::ReadNoSecret(
   if (!validation.ok()) {
     return validation;
   }
-  util::StatusOr<std::vector<std::shared_ptr<const Entry>>> entries =
+  absl::StatusOr<std::vector<std::shared_ptr<const Entry>>> entries =
       GetEntriesFromKeyset(*keyset);
   if (!entries.ok()) {
     return entries.status();
@@ -447,12 +447,12 @@ absl::Status KeysetHandle::WriteNoSecret(KeysetWriter* writer) const {
   return writer->Write(*keyset_);
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
     const KeyTemplate& key_template, const KeyGenConfiguration& config,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
   auto handle = absl::WrapUnique(new KeysetHandle(
       util::SecretProto<Keyset>(), std::move(monitoring_annotations)));
-  util::StatusOr<uint32_t> const result =
+  const absl::StatusOr<uint32_t> result =
       handle->AddKey(key_template, /*as_primary=*/true, config);
   if (!result.ok()) {
     return result.status();
@@ -460,12 +460,12 @@ util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
   return std::move(handle);
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
+absl::StatusOr<std::unique_ptr<KeysetHandle>> KeysetHandle::GenerateNew(
     const KeyTemplate& key_template, const KeyGenConfiguration& config) {
   return GenerateNew(key_template, config, /*monitoring_annotations=*/{});
 }
 
-util::StatusOr<std::unique_ptr<Keyset::Key>> ExtractPublicKey(
+absl::StatusOr<std::unique_ptr<Keyset::Key>> ExtractPublicKey(
     const Keyset::Key& key, const KeyGenConfiguration& config) {
   if (key.key_data().key_material_type() != KeyData::ASYMMETRIC_PRIVATE) {
     return absl::Status(
@@ -473,17 +473,17 @@ util::StatusOr<std::unique_ptr<Keyset::Key>> ExtractPublicKey(
         "Key material is not of type KeyData::ASYMMETRIC_PRIVATE");
   }
 
-  util::StatusOr<std::unique_ptr<KeyData>> key_data;
+  absl::StatusOr<std::unique_ptr<KeyData>> key_data;
   if (internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
     key_data = Registry::GetPublicKeyData(key.key_data().type_url(),
                                           key.key_data().value());
   } else {
-    util::StatusOr<const internal::KeyTypeInfoStore*> key_type_info_store =
+    absl::StatusOr<const internal::KeyTypeInfoStore*> key_type_info_store =
         internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
     if (!key_type_info_store.ok()) {
       return key_type_info_store.status();
     }
-    util::StatusOr<const internal::KeyTypeInfoStore::Info*> key_type_info =
+    absl::StatusOr<const internal::KeyTypeInfoStore::Info*> key_type_info =
         (*key_type_info_store)->Get(key.key_data().type_url());
     if (!key_type_info.ok()) {
       return key_type_info.status();
@@ -510,7 +510,7 @@ util::StatusOr<std::unique_ptr<Keyset::Key>> ExtractPublicKey(
   return std::move(public_key);
 }
 
-util::StatusOr<std::unique_ptr<KeysetHandle>>
+absl::StatusOr<std::unique_ptr<KeysetHandle>>
 KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
   util::SecretProto<Keyset> public_keyset;
   std::vector<std::shared_ptr<const Entry>> public_entries;
@@ -521,12 +521,12 @@ KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
     const PrivateKey* private_key =
         dynamic_cast<const PrivateKey*>(entry.GetKey().get());
     if (private_key != nullptr) {
-      util::StatusOr<KeyStatusType> key_status =
+      absl::StatusOr<KeyStatusType> key_status =
           internal::ToKeyStatusType(entry.GetStatus());
       if (!key_status.ok()) {
         return key_status.status();
       }
-      util::StatusOr<SecretProto<Keyset::Key>> public_key = CreateKeysetKey(
+      absl::StatusOr<SecretProto<Keyset::Key>> public_key = CreateKeysetKey(
           private_key->GetPublicKey(), entry.GetId(), key_status.value());
       if (!public_key.ok()) {
         return public_key.status();
@@ -534,7 +534,7 @@ KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
       // TODO(b/370439805): Replace this with creating a new entry from the
       // public key directly, after a way to get a dynamically allocated copy of
       // a key object reference is implemented.
-      util::StatusOr<const Entry> public_key_entry =
+      absl::StatusOr<const Entry> public_key_entry =
           CreateEntry(*public_key.value(), keyset_->primary_key_id());
       if (!public_key_entry.ok()) {
         return public_key_entry.status();
@@ -548,7 +548,7 @@ KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
       if (!public_key_result.ok()) {
         return public_key_result.status();
       }
-      util::StatusOr<const Entry> entry =
+      absl::StatusOr<const Entry> entry =
           CreateEntry(*public_key_result.value(), keyset_->primary_key_id());
       if (!entry.ok()) {
         return entry.status();
@@ -567,7 +567,7 @@ KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
       new KeysetHandle(std::move(public_keyset), std::move(public_entries)));
 }
 
-crypto::tink::util::StatusOr<uint32_t> KeysetHandle::AddToKeyset(
+absl::StatusOr<uint32_t> KeysetHandle::AddToKeyset(
     const google::crypto::tink::KeyTemplate& key_template, bool as_primary,
     const KeyGenConfiguration& config, Keyset* keyset) {
   if (key_template.output_prefix_type() ==
@@ -582,16 +582,16 @@ crypto::tink::util::StatusOr<uint32_t> KeysetHandle::AddToKeyset(
   }
 
   // Generate new key data.
-  util::StatusOr<std::unique_ptr<KeyData>> key_data;
+  absl::StatusOr<std::unique_ptr<KeyData>> key_data;
   if (internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
     key_data = Registry::NewKeyData(key_template);
   } else {
-    util::StatusOr<const internal::KeyTypeInfoStore*> key_type_info_store =
+    absl::StatusOr<const internal::KeyTypeInfoStore*> key_type_info_store =
         internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
     if (!key_type_info_store.ok()) {
       return key_type_info_store.status();
     }
-    util::StatusOr<const internal::KeyTypeInfoStore::Info*> key_type_info =
+    absl::StatusOr<const internal::KeyTypeInfoStore::Info*> key_type_info =
         (*key_type_info_store)->Get(key_template.type_url());
     if (!key_type_info.ok()) {
       return key_type_info.status();
@@ -616,15 +616,15 @@ crypto::tink::util::StatusOr<uint32_t> KeysetHandle::AddToKeyset(
   return key_id;
 }
 
-crypto::tink::util::StatusOr<uint32_t> KeysetHandle::AddKey(
+absl::StatusOr<uint32_t> KeysetHandle::AddKey(
     const google::crypto::tink::KeyTemplate& key_template, bool as_primary,
     const KeyGenConfiguration& config) {
-  util::StatusOr<uint32_t> id =
+  absl::StatusOr<uint32_t> id =
       AddToKeyset(key_template, as_primary, config, keyset_.get());
   if (!id.ok()) {
     return id.status();
   }
-  util::StatusOr<const Entry> entry = CreateEntry(
+  absl::StatusOr<const Entry> entry = CreateEntry(
       keyset_->key(keyset_->key_size() - 1), keyset_->primary_key_id());
   if (!entry.ok()) {
     return entry.status();
@@ -637,11 +637,11 @@ KeysetInfo KeysetHandle::GetKeysetInfo() const {
   return KeysetInfoFromKeyset(*keyset_);
 }
 
-util::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
+absl::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
 KeysetHandle::GetEntriesFromKeyset(const Keyset& keyset) {
   std::vector<std::shared_ptr<const Entry>> entries;
   for (const Keyset::Key& key : keyset.key()) {
-    util::StatusOr<const Entry> entry =
+    absl::StatusOr<const Entry> entry =
         CreateEntry(key, keyset.primary_key_id());
     if (!entry.ok()) {
       return entry.status();

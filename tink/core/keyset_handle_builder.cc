@@ -97,7 +97,7 @@ KeysetHandleBuilder::Entry KeysetHandleBuilder::Entry::CreateFromParams(
   return entry;
 }
 
-util::StatusOr<int32_t> KeysetHandleBuilder::NextIdFromKeyIdStrategy(
+absl::StatusOr<int32_t> KeysetHandleBuilder::NextIdFromKeyIdStrategy(
     internal::KeyIdStrategy strategy, const std::set<int32_t>& ids_so_far) {
   if (strategy.strategy == internal::KeyIdStrategyEnum::kFixedId) {
     if (!strategy.id_requirement.has_value()) {
@@ -166,7 +166,7 @@ KeysetHandleBuilder& KeysetHandleBuilder::SetMonitoringAnnotations(
   return *this;
 }
 
-util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
+absl::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
     const KeyGenConfiguration& config) {
   if (build_called_) {
     return absl::Status(absl::StatusCode::kFailedPrecondition,
@@ -181,7 +181,7 @@ util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
 
   std::set<int32_t> ids_so_far;
   for (KeysetHandleBuilder::Entry& entry : entries_) {
-    util::StatusOr<int> id =
+    absl::StatusOr<int> id =
         NextIdFromKeyIdStrategy(entry.GetKeyIdStrategy(), ids_so_far);
     if (!id.ok()) return id.status();
 
@@ -192,7 +192,7 @@ util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
     }
     ids_so_far.insert(*id);
 
-    util::StatusOr<util::SecretProto<Keyset::Key>> key =
+    absl::StatusOr<util::SecretProto<Keyset::Key>> key =
         entry.CreateKeysetKey(*id, config);
     if (!key.ok()) return key.status();
 
@@ -213,7 +213,7 @@ util::StatusOr<KeysetHandle> KeysetHandleBuilder::Build(
                         "No primary set in this keyset.");
   }
   keyset->set_primary_key_id(*primary_id);
-  util::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
+  absl::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
       entries = KeysetHandle::GetEntriesFromKeyset(*keyset);
   if (!entries.ok()) {
     return entries.status();

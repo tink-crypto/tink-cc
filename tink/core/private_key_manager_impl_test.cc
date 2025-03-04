@@ -70,7 +70,7 @@ class ExamplePrivateKeyTypeManager
  public:
   class PrivatePrimitiveFactory : public PrimitiveFactory<PrivatePrimitive> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<PrivatePrimitive>> Create(
+    absl::StatusOr<std::unique_ptr<PrivatePrimitive>> Create(
         const EcdsaPrivateKey& key) const override {
       return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented");
     }
@@ -95,7 +95,7 @@ class ExamplePrivateKeyTypeManager
 
   const std::string& get_key_type() const override { return kKeyType; }
 
-  crypto::tink::util::StatusOr<EcdsaPrivateKey> CreateKey(
+  absl::StatusOr<EcdsaPrivateKey> CreateKey(
       const EcdsaKeyFormat& key_format) const override {
     EcdsaPublicKey public_key;
     *public_key.mutable_params() = key_format.params();
@@ -104,7 +104,7 @@ class ExamplePrivateKeyTypeManager
     return result;
   }
 
-  crypto::tink::util::StatusOr<EcdsaPublicKey> GetPublicKey(
+  absl::StatusOr<EcdsaPublicKey> GetPublicKey(
       const EcdsaPrivateKey& private_key) const override {
     return private_key.public_key();
   }
@@ -119,7 +119,7 @@ class TestPublicKeyTypeManager
  public:
   class PublicPrimitiveFactory : public PrimitiveFactory<PublicPrimitive> {
    public:
-    crypto::tink::util::StatusOr<std::unique_ptr<PublicPrimitive>> Create(
+    absl::StatusOr<std::unique_ptr<PublicPrimitive>> Create(
         const EcdsaPublicKey& key) const override {
       return absl::Status(absl::StatusCode::kUnimplemented, "Not implemented");
     }

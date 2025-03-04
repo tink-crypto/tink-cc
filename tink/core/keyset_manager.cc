@@ -42,7 +42,7 @@ using google::crypto::tink::KeyStatusType;
 using google::crypto::tink::KeyTemplate;
 
 // static
-StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
+absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
     const KeyTemplate& key_template) {
   auto manager = absl::make_unique<KeysetManager>();
   auto rotate_result = manager->Rotate(key_template);
@@ -51,7 +51,7 @@ StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
 }
 
 // static
-StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
+absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
     const KeysetHandle& keyset_handle) {
   auto manager = absl::make_unique<KeysetManager>();
   absl::MutexLock lock(&manager->keyset_mutex_);
@@ -65,11 +65,11 @@ std::unique_ptr<KeysetHandle> KeysetManager::GetKeysetHandle() {
   return handle;
 }
 
-StatusOr<uint32_t> KeysetManager::Add(const KeyTemplate& key_template) {
+absl::StatusOr<uint32_t> KeysetManager::Add(const KeyTemplate& key_template) {
   return Add(key_template, false);
 }
 
-StatusOr<uint32_t> KeysetManager::Add(
+absl::StatusOr<uint32_t> KeysetManager::Add(
     const google::crypto::tink::KeyTemplate& key_template, bool as_primary) {
   KeyGenConfiguration config;
   Status status =
@@ -82,7 +82,8 @@ StatusOr<uint32_t> KeysetManager::Add(
                                    keyset_.get());
 }
 
-StatusOr<uint32_t> KeysetManager::Rotate(const KeyTemplate& key_template) {
+absl::StatusOr<uint32_t> KeysetManager::Rotate(
+    const KeyTemplate& key_template) {
   return Add(key_template, true);
 }
 

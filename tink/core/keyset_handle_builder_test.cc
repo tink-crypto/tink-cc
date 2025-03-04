@@ -105,9 +105,9 @@ class KeysetHandleBuilderTest : public Test {
 
 using KeysetHandleBuilderDeathTest = KeysetHandleBuilderTest;
 
-util::StatusOr<internal::LegacyProtoParameters> CreateLegacyProtoParameters(
+absl::StatusOr<internal::LegacyProtoParameters> CreateLegacyProtoParameters(
     KeyTemplate key_template) {
-  util::StatusOr<internal::ProtoParametersSerialization> serialization =
+  absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(key_template);
   if (!serialization.ok()) return serialization.status();
 
@@ -115,11 +115,11 @@ util::StatusOr<internal::LegacyProtoParameters> CreateLegacyProtoParameters(
 }
 
 // Creates an XChaCha20Poly1305Key from the given parameters.
-crypto::tink::util::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
+absl::StatusOr<std::unique_ptr<XChaCha20Poly1305Key>>
 CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
                            absl::optional<int> id_requirement) {
   RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
-  util::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
+  absl::StatusOr<XChaCha20Poly1305Key> key = XChaCha20Poly1305Key::Create(
       params.GetVariant(), secret, id_requirement, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
@@ -128,11 +128,11 @@ CreateXChaCha20Poly1305Key(const XChaCha20Poly1305Parameters& params,
 }
 
 // Creates an AesGcmSivKey from the given parameters.
-crypto::tink::util::StatusOr<std::unique_ptr<AesGcmSivKey>> CreateAesGcmSivKey(
+absl::StatusOr<std::unique_ptr<AesGcmSivKey>> CreateAesGcmSivKey(
     const AesGcmSivParameters& params, absl::optional<int> id_requirement) {
   RestrictedData secret =
       RestrictedData(/*num_random_bytes=*/params.KeySizeInBytes());
-  util::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
+  absl::StatusOr<AesGcmSivKey> key = AesGcmSivKey::Create(
       params, secret, id_requirement, GetPartialKeyAccess());
   if (!key.ok()) {
     return key.status();
@@ -141,7 +141,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<AesGcmSivKey>> CreateAesGcmSivKey(
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildWithSingleKey) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -150,7 +150,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithSingleKey) {
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true,
           /*id=*/123);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
   EXPECT_THAT(*handle, SizeIs(1));
@@ -163,7 +163,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithSingleKey) {
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildWithMultipleKeys) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -183,7 +183,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithMultipleKeys) {
           *parameters, KeyStatus::kDisabled,
           /*is_primary=*/false, /*id=*/789);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .AddEntry(std::move(entry2))
@@ -222,7 +222,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_P(KeysetHandleBuilderCustomConfigTest, BuildWithSingleKey) {
   XChaCha20Poly1305Parameters::Variant variant = GetParam();
 
-  util::StatusOr<XChaCha20Poly1305Parameters> params =
+  absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(variant);
   ASSERT_THAT(params.status(), IsOk());
 
@@ -242,7 +242,7 @@ TEST_P(KeysetHandleBuilderCustomConfigTest, BuildWithSingleKey) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *params, KeyStatus::kEnabled, /*is_primary=*/true,
           /*id=*/123);
-  util::StatusOr<KeysetHandle> handle1 = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle1 = KeysetHandleBuilder()
                                              .AddEntry(std::move(entry1))
                                              .Build(key_creator_config);
   ASSERT_THAT(handle1.status(), IsOk());
@@ -257,7 +257,7 @@ TEST_P(KeysetHandleBuilderCustomConfigTest, BuildWithSingleKey) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *params, KeyStatus::kEnabled, /*is_primary=*/true,
           /*id=*/123);
-  util::StatusOr<KeysetHandle> handle2 = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle2 = KeysetHandleBuilder()
                                              .AddEntry(std::move(entry2))
                                              .Build(key_manager_config);
   ASSERT_THAT(handle2.status(), IsOk());
@@ -270,7 +270,7 @@ TEST_P(KeysetHandleBuilderCustomConfigTest, BuildWithSingleKey) {
 }
 
 TEST(KeysetHandleBuilderCustomConfigTest, BuildWithEmptyConfigFails) {
-  util::StatusOr<XChaCha20Poly1305Parameters> params =
+  absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(params.status(), IsOk());
@@ -282,19 +282,19 @@ TEST(KeysetHandleBuilderCustomConfigTest, BuildWithEmptyConfigFails) {
           *params, KeyStatus::kEnabled, /*is_primary=*/true,
           /*id=*/123);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build(config);
   EXPECT_THAT(handle.status(), StatusIs(absl::StatusCode::kNotFound));
 }
 
 TEST(KeysetHandleBuilderCustomConfigTest,
      BuildWithMultipleKeysUsingKeyCreators) {
-  util::StatusOr<XChaCha20Poly1305Parameters> xchacha_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> xchacha_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(xchacha_parameters.status(), IsOk());
 
-  util::StatusOr<AesGcmSivParameters> aes_gcm_siv_parameters =
+  absl::StatusOr<AesGcmSivParameters> aes_gcm_siv_parameters =
       AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
                                   AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(aes_gcm_siv_parameters.status(), IsOk());
@@ -325,7 +325,7 @@ TEST(KeysetHandleBuilderCustomConfigTest,
           *xchacha_parameters, KeyStatus::kDisabled,
           /*is_primary=*/false);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .AddEntry(std::move(entry2))
@@ -351,12 +351,12 @@ TEST(KeysetHandleBuilderCustomConfigTest,
 
 TEST(KeysetHandleBuilderCustomConfigTest,
      BuildWithMultipleKeysUsingKeyManagers) {
-  util::StatusOr<XChaCha20Poly1305Parameters> xchacha_parameters =
+  absl::StatusOr<XChaCha20Poly1305Parameters> xchacha_parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
   ASSERT_THAT(xchacha_parameters.status(), IsOk());
 
-  util::StatusOr<AesGcmSivParameters> aes_gcm_siv_parameters =
+  absl::StatusOr<AesGcmSivParameters> aes_gcm_siv_parameters =
       AesGcmSivParameters::Create(/*key_size_in_bytes=*/32,
                                   AesGcmSivParameters::Variant::kTink);
   ASSERT_THAT(aes_gcm_siv_parameters.status(), IsOk());
@@ -385,7 +385,7 @@ TEST(KeysetHandleBuilderCustomConfigTest,
           *xchacha_parameters, KeyStatus::kDisabled,
           /*is_primary=*/false);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .AddEntry(std::move(entry2))
@@ -410,7 +410,7 @@ TEST(KeysetHandleBuilderCustomConfigTest,
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildCopy) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -430,14 +430,14 @@ TEST_F(KeysetHandleBuilderTest, BuildCopy) {
           *parameters, KeyStatus::kDisabled,
           /*is_primary=*/false, /*id=*/789);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .AddEntry(std::move(entry2))
                                             .Build();
   ASSERT_THAT(handle.status(), IsOk());
 
-  util::StatusOr<KeysetHandle> copy = KeysetHandleBuilder(*handle).Build();
+  absl::StatusOr<KeysetHandle> copy = KeysetHandleBuilder(*handle).Build();
   ASSERT_THAT(copy.status(), IsOk());
   EXPECT_THAT(copy->size(), Eq(3));
 
@@ -461,7 +461,7 @@ TEST_F(KeysetHandleBuilderTest, BuildCopy) {
 }
 
 TEST_F(KeysetHandleBuilderTest, IsPrimary) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -477,7 +477,7 @@ TEST_F(KeysetHandleBuilderTest, IsPrimary) {
 }
 
 TEST_F(KeysetHandleBuilderTest, SetAndGetStatus) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -495,7 +495,7 @@ TEST_F(KeysetHandleBuilderTest, SetAndGetStatus) {
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildWithRandomId) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -514,7 +514,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithRandomId) {
     builder.AddEntry(std::move(non_primary));
   }
 
-  util::StatusOr<KeysetHandle> handle = builder.Build();
+  absl::StatusOr<KeysetHandle> handle = builder.Build();
   ASSERT_THAT(handle.status(), IsOk());
 
   std::set<int> ids;
@@ -525,7 +525,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithRandomId) {
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildWithRandomIdAfterFixedId) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -537,7 +537,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithRandomIdAfterFixedId) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/false);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(fixed))
                                             .AddEntry(std::move(random))
                                             .Build();
@@ -548,7 +548,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithRandomIdAfterFixedId) {
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildWithFixedIdAfterRandomIdFails) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -560,7 +560,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithFixedIdAfterRandomIdFails) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true, /*id=*/123);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(random))
                                             .AddEntry(std::move(fixed))
                                             .Build();
@@ -568,7 +568,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithFixedIdAfterRandomIdFails) {
 }
 
 TEST_F(KeysetHandleBuilderDeathTest, AddEntryToAnotherBuilderCrashes) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -585,7 +585,7 @@ TEST_F(KeysetHandleBuilderDeathTest, AddEntryToAnotherBuilderCrashes) {
 }
 
 TEST_F(KeysetHandleBuilderDeathTest, ReAddEntryToSameBuilderCrashes) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -602,7 +602,7 @@ TEST_F(KeysetHandleBuilderDeathTest, ReAddEntryToSameBuilderCrashes) {
 
 TEST_F(KeysetHandleBuilderDeathTest,
        AddDereferencedEntryToAnotherBuilderCrashes) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -619,7 +619,7 @@ TEST_F(KeysetHandleBuilderDeathTest,
 }
 
 TEST_F(KeysetHandleBuilderTest, RemoveEntry) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -631,14 +631,14 @@ TEST_F(KeysetHandleBuilderTest, RemoveEntry) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true, /*id=*/456);
 
-  util::StatusOr<KeysetHandle> handle0 = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle0 = KeysetHandleBuilder()
                                              .AddEntry(std::move(entry0))
                                              .AddEntry(std::move(entry1))
                                              .Build();
   ASSERT_THAT(handle0.status(), IsOk());
   ASSERT_THAT(*handle0, SizeIs(2));
 
-  util::StatusOr<KeysetHandle> handle1 =
+  absl::StatusOr<KeysetHandle> handle1 =
       KeysetHandleBuilder(*handle0).RemoveEntry(0).Build();
   ASSERT_THAT(handle1.status(), IsOk());
   ASSERT_THAT(*handle1, SizeIs(1));
@@ -651,7 +651,7 @@ TEST_F(KeysetHandleBuilderTest, RemoveEntry) {
 }
 
 TEST_F(KeysetHandleBuilderDeathTest, RemoveOutofRangeIndexEntryCrashes) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -659,7 +659,7 @@ TEST_F(KeysetHandleBuilderDeathTest, RemoveOutofRangeIndexEntryCrashes) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true, /*id=*/123);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
   ASSERT_THAT(*handle, SizeIs(1));
@@ -670,7 +670,7 @@ TEST_F(KeysetHandleBuilderDeathTest, RemoveOutofRangeIndexEntryCrashes) {
 }
 
 TEST_F(KeysetHandleBuilderTest, Size) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -694,7 +694,7 @@ TEST_F(KeysetHandleBuilderTest, Size) {
 }
 
 TEST_F(KeysetHandleBuilderTest, NoPrimaryFails) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -708,7 +708,7 @@ TEST_F(KeysetHandleBuilderTest, NoPrimaryFails) {
           *parameters, KeyStatus::kEnabled, /*is_primary=*/false,
           /*id=*/456);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .Build();
@@ -716,7 +716,7 @@ TEST_F(KeysetHandleBuilderTest, NoPrimaryFails) {
 }
 
 TEST_F(KeysetHandleBuilderTest, RemovePrimaryFails) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -730,7 +730,7 @@ TEST_F(KeysetHandleBuilderTest, RemovePrimaryFails) {
           *parameters, KeyStatus::kEnabled, /*is_primary=*/false,
           /*id=*/456);
 
-  util::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
+  absl::StatusOr<KeysetHandle> handle = KeysetHandleBuilder()
                                             .AddEntry(std::move(entry0))
                                             .AddEntry(std::move(entry1))
                                             .RemoveEntry(0)
@@ -739,7 +739,7 @@ TEST_F(KeysetHandleBuilderTest, RemovePrimaryFails) {
 }
 
 TEST_F(KeysetHandleBuilderTest, AddPrimaryClearsOtherPrimary) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -758,7 +758,7 @@ TEST_F(KeysetHandleBuilderTest, AddPrimaryClearsOtherPrimary) {
 }
 
 TEST_F(KeysetHandleBuilderTest, NoIdStrategySucceeds) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -766,17 +766,17 @@ TEST_F(KeysetHandleBuilderTest, NoIdStrategySucceeds) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle, IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, DuplicateId) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
               *parameters, KeyStatus::kEnabled,
@@ -791,7 +791,7 @@ TEST_F(KeysetHandleBuilderTest, DuplicateId) {
 }
 
 TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromParams) {
-  util::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
@@ -801,7 +801,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromParams) {
           absl::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 }
@@ -812,7 +812,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromLegacyKey) {
   AddTinkKey("first_key_type", 11, key, KeyStatusType::DISABLED,
              KeyData::SYMMETRIC, &keyset);
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           key.key_data().type_url(),
           RestrictedData(key.SerializeAsString(),
@@ -820,7 +820,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromLegacyKey) {
           key.key_data().key_material_type(), key.output_prefix_type(),
           key.key_id());
 
-  util::StatusOr<internal::LegacyProtoKey> proto_key =
+  absl::StatusOr<internal::LegacyProtoKey> proto_key =
       internal::LegacyProtoKey::Create(*serialization,
                                        InsecureSecretKeyAccess::Get());
   ASSERT_THAT(proto_key.status(), IsOk());
@@ -829,19 +829,19 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromLegacyKey) {
       absl::make_unique<internal::LegacyProtoKey>(std::move(*proto_key)),
       KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromKey) {
-  util::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(32);
-  util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *params, secret, /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key.status(), IsOk());
 
@@ -849,14 +849,14 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromKey) {
       absl::make_unique<AesCmacKey>(std::move(*key)), KeyStatus::kEnabled,
       /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest,
        MergeTwoKeysetsWithTheSameIdButNoIdRequirementWorks) {
-  util::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
@@ -866,7 +866,7 @@ TEST_F(KeysetHandleBuilderTest,
           absl::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
   entry1.SetFixedId(123);
-  util::StatusOr<KeysetHandle> handle1 =
+  absl::StatusOr<KeysetHandle> handle1 =
       KeysetHandleBuilder().AddEntry(std::move(entry1)).Build();
   ASSERT_THAT(handle1.status(), IsOk());
 
@@ -875,14 +875,14 @@ TEST_F(KeysetHandleBuilderTest,
           absl::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
   entry2.SetFixedId(123);
-  util::StatusOr<KeysetHandle> handle2 =
+  absl::StatusOr<KeysetHandle> handle2 =
       KeysetHandleBuilder().AddEntry(std::move(entry2)).Build();
   ASSERT_THAT(handle2.status(), IsOk());
 
   // handle1 and handle2 each contain one key with the same ID, but no ID
   // requirement. We can add them to a new keyset because they will get new,
   // random and distinct IDs.
-  util::StatusOr<KeysetHandle> handle12 =
+  absl::StatusOr<KeysetHandle> handle12 =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               (*handle1)[0].GetKey(), KeyStatus::kEnabled, /*is_primary=*/true))
@@ -899,7 +899,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromCopyableKey) {
   AddTinkKey("first_key_type", 11, key, KeyStatusType::DISABLED,
              KeyData::SYMMETRIC, &keyset);
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           key.key_data().type_url(),
           RestrictedData(key.SerializeAsString(),
@@ -907,7 +907,7 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromCopyableKey) {
           key.key_data().key_material_type(), key.output_prefix_type(),
           key.key_id());
 
-  util::StatusOr<internal::LegacyProtoKey> proto_key =
+  absl::StatusOr<internal::LegacyProtoKey> proto_key =
       internal::LegacyProtoKey::Create(*serialization,
                                        InsecureSecretKeyAccess::Get());
   ASSERT_THAT(proto_key.status(), IsOk());
@@ -916,13 +916,13 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromCopyableKey) {
       KeysetHandleBuilder::Entry::CreateFromCopyableKey(
           *proto_key, KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromParameters) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -931,13 +931,13 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromParameters) {
           absl::make_unique<internal::LegacyProtoParameters>(*parameters),
           KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromCopyableParameters) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -945,13 +945,13 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromCopyableParameters) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoParams) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -959,21 +959,21 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoParams) {
       KeysetHandleBuilder::Entry::CreateFromCopyableParams(
           *parameters, KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       handle->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac.status(), IsOk());
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
   absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromParams) {
-  util::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
@@ -983,14 +983,14 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromParams) {
           absl::make_unique<AesCmacParameters>(std::move(*params)),
           KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       handle->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac.status(), IsOk());
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
   absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
@@ -1004,7 +1004,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoKey) {
   key.set_version(0);
   key.set_key_value(subtle::Random::GetRandomBytes(32));
 
-  util::StatusOr<internal::ProtoKeySerialization> serialization =
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
           RestrictedData(key.SerializeAsString(),
@@ -1013,7 +1013,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoKey) {
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
-  util::StatusOr<internal::LegacyProtoKey> proto_key =
+  absl::StatusOr<internal::LegacyProtoKey> proto_key =
       internal::LegacyProtoKey::Create(*serialization,
                                        InsecureSecretKeyAccess::Get());
   ASSERT_THAT(proto_key.status(), IsOk());
@@ -1022,27 +1022,27 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoKey) {
       KeysetHandleBuilder::Entry::CreateFromCopyableKey(
           *proto_key, KeyStatus::kEnabled, /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       handle->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac.status(), IsOk());
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
   absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromKey) {
-  util::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
   RestrictedData secret = RestrictedData(32);
-  util::StatusOr<AesCmacKey> key = AesCmacKey::Create(
+  absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *params, secret, /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(key.status(), IsOk());
 
@@ -1050,21 +1050,21 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromKey) {
       absl::make_unique<AesCmacKey>(std::move(*key)), KeyStatus::kEnabled,
       /*is_primary=*/true);
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder().AddEntry(std::move(entry)).Build();
   ASSERT_THAT(handle.status(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       handle->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac.status(), IsOk());
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac("some input");
   ASSERT_THAT(tag.status(), IsOk());
   absl::Status verified = (*mac)->VerifyMac(*tag, "some input");
   EXPECT_THAT(verified, IsOk());
 }
 
 TEST_F(KeysetHandleBuilderTest, BuildTwiceFails) {
-  util::StatusOr<internal::LegacyProtoParameters> parameters =
+  absl::StatusOr<internal::LegacyProtoParameters> parameters =
       CreateLegacyProtoParameters(MacKeyTemplates::AesCmac());
   ASSERT_THAT(parameters.status(), IsOk());
 
@@ -1088,12 +1088,12 @@ TEST_F(KeysetHandleBuilderTest, BuildEmptyKeysetHandleFails) {
 }
 
 TEST_F(KeysetHandleBuilderTest, UsePrimitivesFromSplitKeyset) {
-  util::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
+  absl::StatusOr<AesCmacParameters> params = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kTink);
   ASSERT_THAT(params, IsOk());
 
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
               *params, KeyStatus::kEnabled, /*is_primary=*/false))
@@ -1102,7 +1102,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitivesFromSplitKeyset) {
           .Build();
   ASSERT_THAT(handle, IsOkAndHolds(SizeIs(2)));
 
-  util::StatusOr<KeysetHandle> handle0 =
+  absl::StatusOr<KeysetHandle> handle0 =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               (*handle)[0].GetKey(), KeyStatus::kEnabled,
@@ -1111,7 +1111,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitivesFromSplitKeyset) {
   ASSERT_THAT(handle0, IsOkAndHolds(SizeIs(1)));
   ASSERT_THAT((*handle)[0].GetId(), Eq((*handle0)[0].GetId()));
 
-  util::StatusOr<KeysetHandle> handle1 =
+  absl::StatusOr<KeysetHandle> handle1 =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromKey(
               (*handle)[1].GetKey(), KeyStatus::kEnabled,
@@ -1120,20 +1120,20 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitivesFromSplitKeyset) {
   ASSERT_THAT(handle1, IsOkAndHolds(SizeIs(1)));
   ASSERT_THAT((*handle)[1].GetId(), Eq((*handle1)[0].GetId()));
 
-  util::StatusOr<std::unique_ptr<Mac>> mac0 =
+  absl::StatusOr<std::unique_ptr<Mac>> mac0 =
       handle0->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac0.status(), IsOk());
-  util::StatusOr<std::string> tag0 = (*mac0)->ComputeMac("some input");
+  absl::StatusOr<std::string> tag0 = (*mac0)->ComputeMac("some input");
   ASSERT_THAT(tag0.status(), IsOk());
 
-  util::StatusOr<std::unique_ptr<Mac>> mac1 =
+  absl::StatusOr<std::unique_ptr<Mac>> mac1 =
       handle1->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac1.status(), IsOk());
-  util::StatusOr<std::string> tag1 = (*mac1)->ComputeMac("some other input");
+  absl::StatusOr<std::string> tag1 = (*mac1)->ComputeMac("some other input");
   ASSERT_THAT(tag1.status(), IsOk());
 
   // Use original keyset to verify tags computed from new keysets.
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       handle->GetPrimitive<crypto::tink::Mac>(ConfigGlobalRegistry());
   ASSERT_THAT(mac.status(), IsOk());
   EXPECT_THAT((*mac)->VerifyMac(*tag0, "some input"), IsOk());
@@ -1142,7 +1142,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitivesFromSplitKeyset) {
 
 class MockAeadPrimitiveWrapper : public PrimitiveWrapper<Aead, Aead> {
  public:
-  MOCK_METHOD(util::StatusOr<std::unique_ptr<Aead>>, Wrap,
+  MOCK_METHOD(absl::StatusOr<std::unique_ptr<Aead>>, Wrap,
               (std::unique_ptr<PrimitiveSet<Aead>> primitive_set),
               (const, override));
 };
@@ -1154,7 +1154,7 @@ class FakeAeadKeyManager
    public:
     explicit AeadFactory(absl::string_view key_type) : key_type_(key_type) {}
 
-    util::StatusOr<std::unique_ptr<Aead>> Create(
+    absl::StatusOr<std::unique_ptr<Aead>> Create(
         const AesGcmKeyProto& key) const override {
       return {absl::make_unique<test::DummyAead>(key_type_)};
     }
@@ -1185,12 +1185,12 @@ class FakeAeadKeyManager
     return absl::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<AesGcmKeyProto> CreateKey(
+  absl::StatusOr<AesGcmKeyProto> CreateKey(
       const AesGcmKeyFormat& key_format) const override {
     return AesGcmKeyProto();
   }
 
-  crypto::tink::util::StatusOr<AesGcmKeyProto> DeriveKey(
+  absl::StatusOr<AesGcmKeyProto> DeriveKey(
       const AesGcmKeyFormat& key_format,
       InputStream* input_stream) const override {
     return AesGcmKeyProto();
@@ -1203,7 +1203,7 @@ class FakeAeadKeyManager
 TEST_F(KeysetHandleBuilderTest, BuildWithAnnotations) {
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}};
-  util::StatusOr<AesGcmParameters> aes_128_gcm =
+  absl::StatusOr<AesGcmParameters> aes_128_gcm =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(16)
           .SetIvSizeInBytes(12)
@@ -1212,7 +1212,7 @@ TEST_F(KeysetHandleBuilderTest, BuildWithAnnotations) {
           .Build();
   ASSERT_THAT(aes_128_gcm, IsOk());
 
-  util::StatusOr<KeysetHandle> keyset_handle =
+  absl::StatusOr<KeysetHandle> keyset_handle =
       KeysetHandleBuilder()
           .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableParams(
               *aes_128_gcm, crypto::tink::KeyStatus::kEnabled,

@@ -62,22 +62,22 @@ class PrivateKeyFactoryImpl : public PrivateKeyFactory {
         public_key_type_(public_key_manager->get_key_type()),
         public_key_material_type_(public_key_manager->key_material_type()) {}
 
-  crypto::tink::util::StatusOr<std::unique_ptr<portable_proto::MessageLite>>
-  NewKey(const portable_proto::MessageLite& key_format) const override {
+  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+      const portable_proto::MessageLite& key_format) const override {
     return key_factory_impl_.NewKey(key_format);
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<portable_proto::MessageLite>>
-  NewKey(absl::string_view serialized_key_format) const override {
+  absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
+      absl::string_view serialized_key_format) const override {
     return key_factory_impl_.NewKey(serialized_key_format);
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
-  NewKeyData(absl::string_view serialized_key_format) const override {
+  absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>> NewKeyData(
+      absl::string_view serialized_key_format) const override {
     return key_factory_impl_.NewKeyData(serialized_key_format);
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
+  absl::StatusOr<std::unique_ptr<google::crypto::tink::KeyData>>
   GetPublicKeyData(absl::string_view serialized_private_key) const override {
     util::SecretProto<PrivateKeyProto> private_key;
     bool parsed = internal::CallWithCoreDumpProtection(

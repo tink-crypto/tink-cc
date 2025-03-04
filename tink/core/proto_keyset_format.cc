@@ -48,7 +48,7 @@ namespace tink {
 
 using ::crypto::tink::internal::SecretBuffer;
 
-util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
+absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
     absl::string_view serialized_keyset, SecretKeyAccessToken token) {
   util::SecretProto<google::crypto::tink::Keyset> keyset_proto;
   bool parsed = internal::CallWithCoreDumpProtection(
@@ -56,7 +56,7 @@ util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
   if (!parsed) {
     return absl::Status(absl::StatusCode::kInternal, "Failed to parse keyset");
   }
-  util::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
+  absl::StatusOr<std::vector<std::shared_ptr<const KeysetHandle::Entry>>>
       entries = KeysetHandle::GetEntriesFromKeyset(*keyset_proto);
   if (!entries.ok()) {
     return entries.status();
@@ -68,7 +68,7 @@ util::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
   return KeysetHandle(std::move(keyset_proto), *std::move(entries));
 }
 
-util::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
+absl::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
     const KeysetHandle& keyset_handle, SecretKeyAccessToken token) {
   const google::crypto::tink::Keyset& keyset =
       CleartextKeysetHandle::GetKeyset(keyset_handle);
@@ -82,10 +82,10 @@ util::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
   return util::internal::AsSecretData(std::move(result));
 }
 
-util::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(
+absl::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(
     absl::string_view serialized_keyset) {
   std::string keyset_copy = std::string(serialized_keyset);
-  util::StatusOr<std::unique_ptr<KeysetHandle>> result =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> result =
       KeysetHandle::ReadNoSecret(keyset_copy);
   if (!result.ok()) {
     return result.status();
@@ -93,10 +93,10 @@ util::StatusOr<KeysetHandle> ParseKeysetWithoutSecretFromProtoKeysetFormat(
   return std::move(**result);
 }
 
-util::StatusOr<std::string> SerializeKeysetWithoutSecretToProtoKeysetFormat(
+absl::StatusOr<std::string> SerializeKeysetWithoutSecretToProtoKeysetFormat(
     const KeysetHandle& keyset_handle) {
   std::stringbuf string_buf(std::ios_base::out);
-  util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> keyset_writer =
+  absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> keyset_writer =
       BinaryKeysetWriter::New(std::make_unique<std::ostream>(&string_buf));
   if (!keyset_writer.ok()) {
     return keyset_writer.status();
@@ -108,15 +108,15 @@ util::StatusOr<std::string> SerializeKeysetWithoutSecretToProtoKeysetFormat(
   return string_buf.str();
 }
 
-util::StatusOr<KeysetHandle> ParseKeysetFromEncryptedKeysetFormat(
+absl::StatusOr<KeysetHandle> ParseKeysetFromEncryptedKeysetFormat(
     absl::string_view encrypted_keyset, const Aead& keyset_encryption_aead,
     absl::string_view associated_data) {
-  util::StatusOr<std::unique_ptr<KeysetReader>> reader =
+  absl::StatusOr<std::unique_ptr<KeysetReader>> reader =
       BinaryKeysetReader::New(encrypted_keyset);
   if (!reader.ok()) {
     return reader.status();
   }
-  util::StatusOr<std::unique_ptr<KeysetHandle>> handle =
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::ReadWithAssociatedData(
           std::move(*reader), keyset_encryption_aead, associated_data);
   if (!handle.ok()) {
@@ -125,11 +125,11 @@ util::StatusOr<KeysetHandle> ParseKeysetFromEncryptedKeysetFormat(
   return std::move(**handle);
 }
 
-util::StatusOr<std::string> SerializeKeysetToEncryptedKeysetFormat(
+absl::StatusOr<std::string> SerializeKeysetToEncryptedKeysetFormat(
     const KeysetHandle& keyset_handle, const Aead& keyset_encryption_aead,
     absl::string_view associated_data) {
   std::stringbuf encrypted_keyset;
-  util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
+  absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> writer =
       BinaryKeysetWriter::New(
           absl::make_unique<std::ostream>(&encrypted_keyset));
   if (!writer.ok()) {

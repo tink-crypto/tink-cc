@@ -53,7 +53,7 @@ absl::Status WriteProto(const portable_proto::MessageLite& proto,
 
 
 //  static
-util::StatusOr<std::unique_ptr<BinaryKeysetWriter>> BinaryKeysetWriter::New(
+absl::StatusOr<std::unique_ptr<BinaryKeysetWriter>> BinaryKeysetWriter::New(
     std::unique_ptr<std::ostream> destination_stream) {
   if (destination_stream == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

@@ -43,7 +43,7 @@ absl::Status WriteEncryptedKeyset(
     std::unique_ptr<std::ostream> output_stream,
     const crypto::tink::Aead& keyset_encryption_aead) {
   // Create a writer that will write the keyset to output_stream as JSON.
-  StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
+  absl::StatusOr<std::unique_ptr<JsonKeysetWriter>> writer =
       JsonKeysetWriter::New(std::move(output_stream));
   if (!writer.ok()) return writer.status();
   return keyset.Write(writer->get(), keyset_encryption_aead);

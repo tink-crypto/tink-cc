@@ -184,7 +184,7 @@ TEST(MacWrapperTest, testLegacyAuthentication) {
 // Produces a mac which starts in the same way as a legacy non-raw signature.
 class TryBreakLegacyMac : public Mac {
  public:
-  crypto::tink::util::StatusOr<std::string> ComputeMac(
+  absl::StatusOr<std::string> ComputeMac(
       absl::string_view data) const override {
     return absl::StrCat(std::string("\x00", 1), "\xff\xff\xff\xff", data);
   }
@@ -278,10 +278,10 @@ class MacSetWrapperWithMonitoringTest : public Test {
     // corresponding MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(compute_monitoring_client)))))
         .WillOnce(
-            Return(ByMove(util::StatusOr<std::unique_ptr<MonitoringClient>>(
+            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
                 std::move(verify_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -319,7 +319,7 @@ TEST_F(MacSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<Mac>::Entry<Mac>*> last =
+  absl::StatusOr<PrimitiveSet<Mac>::Entry<Mac> *> last =
       mac_primitive_set->AddPrimitive(absl::make_unique<DummyMac>("mac2"),
                                       keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
@@ -328,7 +328,7 @@ TEST_F(MacSetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a MAC and compute an authentication tag
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       MacWrapper().Wrap(std::move(mac_primitive_set));
   ASSERT_THAT(mac, IsOkAndHolds(NotNull()));
 
@@ -358,7 +358,7 @@ TEST_F(MacSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<Mac>::Entry<Mac>*> last =
+  absl::StatusOr<PrimitiveSet<Mac>::Entry<Mac> *> last =
       mac_primitive_set->AddPrimitive(absl::make_unique<DummyMac>("mac2"),
                                       keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
@@ -367,14 +367,14 @@ TEST_F(MacSetWrapperWithMonitoringTest,
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a MAC, compute a Mac and verify it.
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       MacWrapper().Wrap(std::move(mac_primitive_set));
   ASSERT_THAT(mac, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view message = "This is some message!";
 
   // Check that calling VerifyMac triggers a Log() call.
-  util::StatusOr<std::string> tag = (*mac)->ComputeMac(message);
+  absl::StatusOr<std::string> tag = (*mac)->ComputeMac(message);
   EXPECT_THAT(tag.status(), IsOk());
 
   // In the log expect the size of the message without the non-raw prefix.
@@ -400,14 +400,14 @@ TEST_F(MacSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<Mac>::Entry<Mac>*> last =
+  absl::StatusOr<PrimitiveSet<Mac>::Entry<Mac> *> last =
       mac_primitive_set->AddPrimitive(CreateAlwaysFailingMac("mac "),
                                       keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
   ASSERT_THAT(mac_primitive_set->set_primary(*last), IsOk());
 
   // Create a MAC and compute a tag.
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       MacWrapper().Wrap(std::move(mac_primitive_set));
   ASSERT_THAT(mac, IsOkAndHolds(NotNull()));
 
@@ -438,14 +438,14 @@ TEST_F(MacSetWrapperWithMonitoringTest,
                   .status(),
               IsOk());
   // Set the last as primary.
-  util::StatusOr<PrimitiveSet<Mac>::Entry<Mac>*> last =
+  absl::StatusOr<PrimitiveSet<Mac>::Entry<Mac> *> last =
       mac_primitive_set->AddPrimitive(CreateAlwaysFailingMac("mac "),
                                       keyset_info.key_info(2));
   ASSERT_THAT(last.status(), IsOk());
   ASSERT_THAT(mac_primitive_set->set_primary(*last), IsOk());
 
   // Create a MAC and verify a tag.
-  util::StatusOr<std::unique_ptr<Mac>> mac =
+  absl::StatusOr<std::unique_ptr<Mac>> mac =
       MacWrapper().Wrap(std::move(mac_primitive_set));
   ASSERT_THAT(mac, IsOkAndHolds(NotNull()));
 

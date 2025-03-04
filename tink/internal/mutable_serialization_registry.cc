@@ -83,28 +83,28 @@ absl::Status MutableSerializationRegistry::RegisterKeySerializer(
   return absl::OkStatus();
 }
 
-util::StatusOr<std::unique_ptr<Parameters>>
+absl::StatusOr<std::unique_ptr<Parameters>>
 MutableSerializationRegistry::ParseParameters(
     const Serialization& serialization) {
   absl::ReaderMutexLock lock(&registry_mutex_);
   return registry_.ParseParameters(serialization);
 }
 
-util::StatusOr<std::unique_ptr<Parameters>>
+absl::StatusOr<std::unique_ptr<Parameters>>
 MutableSerializationRegistry::ParseParametersWithLegacyFallback(
     const Serialization& serialization) {
   absl::ReaderMutexLock lock(&registry_mutex_);
   return registry_.ParseParametersWithLegacyFallback(serialization);
 }
 
-util::StatusOr<std::unique_ptr<Key>> MutableSerializationRegistry::ParseKey(
+absl::StatusOr<std::unique_ptr<Key>> MutableSerializationRegistry::ParseKey(
     const Serialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   absl::ReaderMutexLock lock(&registry_mutex_);
   return registry_.ParseKey(serialization, token);
 }
 
-util::StatusOr<std::unique_ptr<Key>>
+absl::StatusOr<std::unique_ptr<Key>>
 MutableSerializationRegistry::ParseKeyWithLegacyFallback(
     const Serialization& serialization, SecretKeyAccessToken token) {
   absl::ReaderMutexLock lock(&registry_mutex_);

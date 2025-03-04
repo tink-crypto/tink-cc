@@ -59,7 +59,7 @@ using AesSivProtoKeySerializerImpl =
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesSivKey";
 
-util::StatusOr<AesSivParameters::Variant> ToVariant(
+absl::StatusOr<AesSivParameters::Variant> ToVariant(
     OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
     case OutputPrefixTypeEnum::kLegacy:
@@ -91,7 +91,7 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
   }
 }
 
-util::StatusOr<AesSivParameters> ParseParameters(
+absl::StatusOr<AesSivParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplateStruct().type_url != kTypeUrl) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -109,14 +109,14 @@ util::StatusOr<AesSivParameters> ParseParameters(
                         "Only version 0 keys are accepted.");
   }
 
-  util::StatusOr<AesSivParameters::Variant> variant =
+  absl::StatusOr<AesSivParameters::Variant> variant =
       ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
   if (!variant.ok()) return variant.status();
 
   return AesSivParameters::Create(proto_key_format->key_size, *variant);
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesSivParameters& parameters) {
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
@@ -136,7 +136,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
                                               *serialized_proto);
 }
 
-util::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
+absl::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
                                    absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -161,7 +161,7 @@ util::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
       static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
   if (!variant.ok()) return variant.status();
 
-  util::StatusOr<AesSivParameters> parameters =
+  absl::StatusOr<AesSivParameters> parameters =
       AesSivParameters::Create(proto_key->key_value.size(), *variant);
   if (!parameters.ok()) return parameters.status();
 
@@ -170,9 +170,9 @@ util::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeKey(
+absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const AesSivKey& key, absl::optional<SecretKeyAccessToken> token) {
-  util::StatusOr<RestrictedData> restricted_input =
+  absl::StatusOr<RestrictedData> restricted_input =
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {

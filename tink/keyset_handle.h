@@ -130,7 +130,7 @@ class KeysetHandle {
   // Creates a KeysetHandle from an encrypted keyset obtained via `reader`
   // using `master_key_aead` to decrypt the keyset, with monitoring annotations
   // `monitoring_annotations`; by default, `monitoring_annotations` is empty.
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>> Read(
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>> Read(
       std::unique_ptr<KeysetReader> reader, const Aead& master_key_aead,
       absl::flat_hash_map<std::string, std::string> monitoring_annotations =
           {});
@@ -139,22 +139,21 @@ class KeysetHandle {
   // using `master_key_aead` to decrypt the keyset, expecting `associated_data`.
   // The keyset is annotated for monitoring with `monitoring_annotations`; by
   // default, `monitoring_annotations` is empty.
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  ReadWithAssociatedData(std::unique_ptr<KeysetReader> reader,
-                         const Aead& master_key_aead,
-                         absl::string_view associated_data,
-                         absl::flat_hash_map<std::string, std::string>
-                             monitoring_annotations = {});
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>> ReadWithAssociatedData(
+      std::unique_ptr<KeysetReader> reader, const Aead& master_key_aead,
+      absl::string_view associated_data,
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations =
+          {});
 
   // Creates a KeysetHandle from a serialized keyset `serialized_keyset` which
   // contains no secret key material, and annotates it with
   // `monitoring_annotations` for monitoring; by default,
   // `monitoring_annotations` is empty. This can be used to load public keysets
   // or envelope encryption keysets.
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  ReadNoSecret(const std::string& serialized_keyset,
-               absl::flat_hash_map<std::string, std::string>
-                   monitoring_annotations = {});
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>> ReadNoSecret(
+      const std::string& serialized_keyset,
+      absl::flat_hash_map<std::string, std::string> monitoring_annotations =
+          {});
 
   // Returns a KeysetHandle containing one new key generated according to
   // `key_template` using `config`. When specified, the keyset is annotated
@@ -164,14 +163,13 @@ class KeysetHandle {
   // example, use //tink/aead:key_gen_config_v0 for AEAD. If a single
   // GenerateNew call handles multiple primitives, use
   // //tink//config:key_gen_v0.
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GenerateNew(
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>> GenerateNew(
       const google::crypto::tink::KeyTemplate& key_template,
       const crypto::tink::KeyGenConfiguration& config,
       absl::flat_hash_map<std::string, std::string> monitoring_annotations);
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GenerateNew(const google::crypto::tink::KeyTemplate& key_template,
-              const crypto::tink::KeyGenConfiguration& config);
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>> GenerateNew(
+      const google::crypto::tink::KeyTemplate& key_template,
+      const crypto::tink::KeyGenConfiguration& config);
 
   // Returns a KeysetHandle containing one new key generated according to
   // `parameters` using `config`. When specified, the keyset is annotated
@@ -182,13 +180,13 @@ class KeysetHandle {
   // `crypto::tink::internal::KeyGenConfigurationImpl::AddKeyCreator`. Note that
   // `AddKeyCreator` function is currently restricted.
   template <typename P>
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>>
   GenerateNewFromParameters(
       const P& parameters, const crypto::tink::KeyGenConfiguration& config,
       absl::flat_hash_map<std::string, std::string> monitoring_annotations);
 
   template <typename P>
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>>
   GenerateNewFromParameters(const P& parameters,
                             const crypto::tink::KeyGenConfiguration& config);
 
@@ -196,16 +194,15 @@ class KeysetHandle {
   // `key_template` using the global registry. When specified, the keyset is
   //  annotated for monitoring with `monitoring_annotations`.
   ABSL_DEPRECATE_AND_INLINE()
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GenerateNew(
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>> GenerateNew(
       const google::crypto::tink::KeyTemplate& key_template,
       absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
     return GenerateNew(key_template, crypto::tink::KeyGenConfigGlobalRegistry(),
                        std::move(monitoring_annotations));
   }
   ABSL_DEPRECATE_AND_INLINE()
-  static crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GenerateNew(const google::crypto::tink::KeyTemplate& key_template) {
+  static absl::StatusOr<std::unique_ptr<KeysetHandle>> GenerateNew(
+      const google::crypto::tink::KeyTemplate& key_template) {
     return GenerateNew(key_template,
                        crypto::tink::KeyGenConfigGlobalRegistry());
   }
@@ -237,16 +234,15 @@ class KeysetHandle {
   // private keys in this handle. Relies on key type managers stored in `config`
   // to do so. Returns an error if this handle contains keys that are not
   // private keys.
-  crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GetPublicKeysetHandle(const KeyGenConfiguration& config) const;
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> GetPublicKeysetHandle(
+      const KeyGenConfiguration& config) const;
 
   // Returns a new KeysetHandle containing public keys corresponding to the
   // private keys in this handle. Relies on key type managers stored in the
   // global registry to do so. Returns an error if this handle contains keys
   // that are not private keys.
   ABSL_DEPRECATE_AND_INLINE()
-  crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
-  GetPublicKeysetHandle() const {
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> GetPublicKeysetHandle() const {
     return GetPublicKeysetHandle(crypto::tink::KeyGenConfigGlobalRegistry());
   }
 
@@ -290,9 +286,8 @@ class KeysetHandle {
   // KeysetHandleBuilder::Build() needs access to KeysetHandle(Keyset).
   friend class KeysetHandleBuilder;
 
-  friend crypto::tink::util::StatusOr<KeysetHandle>
-  ParseKeysetFromProtoKeysetFormat(absl::string_view serialized_keyset,
-                                   SecretKeyAccessToken token);
+  friend absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
+      absl::string_view serialized_keyset, SecretKeyAccessToken token);
 
   // Creates a handle that contains the given keyset.
   explicit KeysetHandle(util::SecretProto<google::crypto::tink::Keyset> keyset)
@@ -319,22 +314,22 @@ class KeysetHandle {
         monitoring_annotations_(std::move(monitoring_annotations)) {}
 
   // Generates a key from `key_template` and adds it `keyset`.
-  static crypto::tink::util::StatusOr<uint32_t> AddToKeyset(
+  static absl::StatusOr<uint32_t> AddToKeyset(
       const google::crypto::tink::KeyTemplate& key_template, bool as_primary,
       const crypto::tink::KeyGenConfiguration& config,
       google::crypto::tink::Keyset* keyset);
 
   // Creates list of KeysetHandle::Entry entries derived from `keyset` in order.
-  static crypto::tink::util::StatusOr<std::vector<std::shared_ptr<const Entry>>>
+  static absl::StatusOr<std::vector<std::shared_ptr<const Entry>>>
   GetEntriesFromKeyset(const google::crypto::tink::Keyset& keyset);
 
   // Creates KeysetHandle::Entry for `key`, which will be set to primary if
   // its key id equals `primary_key_id`.
-  static util::StatusOr<Entry> CreateEntry(
+  static absl::StatusOr<Entry> CreateEntry(
       const google::crypto::tink::Keyset::Key& key, uint32_t primary_key_id);
 
   // Generates a key from `key_template` and adds it to the keyset handle.
-  crypto::tink::util::StatusOr<uint32_t> AddKey(
+  absl::StatusOr<uint32_t> AddKey(
       const google::crypto::tink::KeyTemplate& key_template, bool as_primary,
       const crypto::tink::KeyGenConfiguration& config);
 
@@ -454,7 +449,7 @@ class KeysetHandleBuilder {
       return entry_->GetKeyIdStrategy();
     }
 
-    crypto::tink::util::StatusOr<
+    absl::StatusOr<
         crypto::tink::util::SecretProto<google::crypto::tink::Keyset::Key>>
     CreateKeysetKey(int32_t id, const KeyGenConfiguration& config) {
       return entry_->CreateKeysetKey(id, config);
@@ -490,7 +485,7 @@ class KeysetHandleBuilder {
   // KeysetHandleBuilder object.  Otherwise, the KeysetHandleBuilder::Entry
   // IDs would randomly change for each call to Build(), which would result
   // in incompatible keysets.
-  crypto::tink::util::StatusOr<KeysetHandle> Build() {
+  absl::StatusOr<KeysetHandle> Build() {
     return Build(KeyGenConfigGlobalRegistry());
   }
 
@@ -499,12 +494,11 @@ class KeysetHandleBuilder {
   //
   // Falls back to the global registry if the `config` does not provide the
   // functionality to create the required key type.
-  crypto::tink::util::StatusOr<KeysetHandle> Build(
-      const KeyGenConfiguration& config);
+  absl::StatusOr<KeysetHandle> Build(const KeyGenConfiguration& config);
 
  private:
   // Select the next key id based on the given strategy.
-  crypto::tink::util::StatusOr<int32_t> NextIdFromKeyIdStrategy(
+  absl::StatusOr<int32_t> NextIdFromKeyIdStrategy(
       internal::KeyIdStrategy strategy, const std::set<int32_t>& ids_so_far);
 
   // Unset primary flag on all entries.
@@ -567,8 +561,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
         *keyset_, monitoring_annotations_);
   }
 
-  crypto::tink::util::StatusOr<
-      const crypto::tink::internal::KeysetWrapperStore*>
+  absl::StatusOr<const crypto::tink::internal::KeysetWrapperStore*>
       wrapper_store =
           crypto::tink::internal::ConfigurationImpl::GetKeysetWrapperStore(
               config);
@@ -590,7 +583,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
 // This will only work for key types, whose key creation functions have been
 // added to `config` using `AddKeyCreator`.
 template <typename P>
-crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+absl::StatusOr<std::unique_ptr<KeysetHandle>>
 KeysetHandle::GenerateNewFromParameters(
     const P& parameters, const crypto::tink::KeyGenConfiguration& config,
     absl::flat_hash_map<std::string, std::string> monitoring_annotations) {
@@ -602,7 +595,7 @@ KeysetHandle::GenerateNewFromParameters(
           parameters, KeyStatus::kEnabled,
           /*is_primary=*/true,
           /*id=*/absl::nullopt);
-  util::StatusOr<KeysetHandle> handle =
+  absl::StatusOr<KeysetHandle> handle =
       KeysetHandleBuilder()
           .AddEntry(std::move(entry))
           .SetMonitoringAnnotations(monitoring_annotations)
@@ -614,7 +607,7 @@ KeysetHandle::GenerateNewFromParameters(
 }
 
 template <typename P>
-crypto::tink::util::StatusOr<std::unique_ptr<KeysetHandle>>
+absl::StatusOr<std::unique_ptr<KeysetHandle>>
 KeysetHandle::GenerateNewFromParameters(
     const P& parameters, const crypto::tink::KeyGenConfiguration& config) {
   return GenerateNewFromParameters(parameters, config,

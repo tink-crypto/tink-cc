@@ -56,8 +56,7 @@ class MacSetWrapper : public Mac {
         monitoring_compute_client_(std::move(monitoring_compute_client)),
         monitoring_verify_client_(std::move(monitoring_verify_client)) {}
 
-  crypto::tink::util::StatusOr<std::string> ComputeMac(
-      absl::string_view data) const override;
+  absl::StatusOr<std::string> ComputeMac(absl::string_view data) const override;
 
   absl::Status VerifyMac(absl::string_view mac_value,
                          absl::string_view data) const override;
@@ -82,7 +81,7 @@ absl::Status Validate(PrimitiveSet<Mac>* mac_set) {
   return absl::OkStatus();
 }
 
-util::StatusOr<std::string> MacSetWrapper::ComputeMac(
+absl::StatusOr<std::string> MacSetWrapper::ComputeMac(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -167,7 +166,7 @@ absl::Status MacSetWrapper::VerifyMac(absl::string_view mac_value,
 
 }  // namespace
 
-util::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
+absl::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<Mac>> mac_set) const {
   absl::Status status = Validate(mac_set.get());
   if (!status.ok()) return status;
@@ -180,20 +179,20 @@ util::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
     return {absl::make_unique<MacSetWrapper>(std::move(mac_set))};
   }
 
-  util::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*mac_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_compute_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_compute_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
   if (!monitoring_compute_client.ok()) {
     return monitoring_compute_client.status();
   }
 
-  util::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
+  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
       monitoring_factory->New(
           MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
   if (!monitoring_verify_client.ok()) {

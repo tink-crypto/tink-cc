@@ -51,10 +51,10 @@ using ::google::crypto::tink::DilithiumPublicKey;
 using ::google::crypto::tink::DilithiumSeedExpansion;
 using ::crypto::tink::util::EnumsPqcrypto;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 DilithiumVerifyKeyManager::PublicKeyVerifyFactory::Create(
     const DilithiumPublicKey& public_key) const {
-  util::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
+  absl::StatusOr<DilithiumPublicKeyPqclean> dilithium_public_key =
       DilithiumPublicKeyPqclean::NewPublicKey(
           public_key.key_value(),
           EnumsPqcrypto::ProtoToSubtle(public_key.params().seed_expansion()));

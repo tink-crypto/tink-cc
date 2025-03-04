@@ -45,7 +45,7 @@ namespace {
 using ::crypto::tink::test::IsOk;
 
 // Opens test file `filename` and returns a file descriptor to it.
-util::StatusOr<int> OpenTestFileToWrite(absl::string_view filename) {
+absl::StatusOr<int> OpenTestFileToWrite(absl::string_view filename) {
   std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
   mode_t mode = S_IWUSR | S_IRUSR | S_IRGRP | S_IROTH;
   int fd = open(full_filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, mode);
@@ -92,7 +92,7 @@ TEST_F(FileOutputStreamTest, WritingStreams) {
     std::string filename = absl::StrCat(
         stream_size, internal::GetTestFileNamePrefix(), "_test.bin");
     ASSERT_THAT(internal::CreateTestFile(filename, stream_contents), IsOk());
-    util::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
+    absl::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
     ASSERT_THAT(output_fd.status(), IsOk());
     auto output_stream = absl::make_unique<util::FileOutputStream>(*output_fd);
     auto status = WriteToStream(output_stream.get(), stream_contents);
@@ -111,7 +111,7 @@ TEST_F(FileOutputStreamTest, CustomBufferSizes) {
     std::string filename = absl::StrCat(
         buffer_size, internal::GetTestFileNamePrefix(), "_test.bin");
     ASSERT_THAT(internal::CreateTestFile(filename, stream_contents), IsOk());
-    util::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
+    absl::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
     ASSERT_THAT(output_fd.status(), IsOk());
     auto output_stream =
         absl::make_unique<util::FileOutputStream>(*output_fd, buffer_size);
@@ -137,7 +137,7 @@ TEST_F(FileOutputStreamTest, BackupAndPosition) {
   std::string filename =
       absl::StrCat(buffer_size, internal::GetTestFileNamePrefix(), "_test.bin");
   ASSERT_THAT(internal::CreateTestFile(filename, stream_contents), IsOk());
-  util::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
+  absl::StatusOr<int> output_fd = OpenTestFileToWrite(filename);
   ASSERT_THAT(output_fd.status(), IsOk());
 
   // Prepare the stream and do the first call to Next().

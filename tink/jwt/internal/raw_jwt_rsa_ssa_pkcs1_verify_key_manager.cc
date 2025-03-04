@@ -43,14 +43,14 @@ using google::crypto::tink::HashType;
 using google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
 using google::crypto::tink::JwtRsaSsaPkcs1PublicKey;
 
-StatusOr<std::unique_ptr<PublicKeyVerify>>
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
 RawJwtRsaSsaPkcs1VerifyKeyManager::PublicKeyVerifyFactory::Create(
     const JwtRsaSsaPkcs1PublicKey& jwt_rsa_ssa_pkcs1_public_key) const {
   internal::RsaPublicKey rsa_pub_key;
   rsa_pub_key.n = jwt_rsa_ssa_pkcs1_public_key.n();
   rsa_pub_key.e = jwt_rsa_ssa_pkcs1_public_key.e();
 
-  util::StatusOr<google::crypto::tink::HashType> hash =
+  absl::StatusOr<google::crypto::tink::HashType> hash =
       RawJwtRsaSsaPkcs1VerifyKeyManager::HashForPkcs1Algorithm(
           jwt_rsa_ssa_pkcs1_public_key.algorithm());
   if (!hash.ok()) {
@@ -59,7 +59,7 @@ RawJwtRsaSsaPkcs1VerifyKeyManager::PublicKeyVerifyFactory::Create(
   internal::RsaSsaPkcs1Params params;
   params.hash_type = Enums::ProtoToSubtle(*hash);
 
-  util::StatusOr<std::unique_ptr<subtle::RsaSsaPkcs1VerifyBoringSsl>> verify =
+  absl::StatusOr<std::unique_ptr<subtle::RsaSsaPkcs1VerifyBoringSsl>> verify =
       subtle::RsaSsaPkcs1VerifyBoringSsl::New(rsa_pub_key, params);
   if (!verify.ok()) return verify.status();
   return {std::move(*verify)};
@@ -69,7 +69,7 @@ Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateKey(
     const JwtRsaSsaPkcs1PublicKey& key) const {
   Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
-  StatusOr<internal::SslUniquePtr<BIGNUM>> n =
+  absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n());
   if (!n.ok()) {
     return n.status();
@@ -100,7 +100,8 @@ Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateAlgorithm(
   return absl::OkStatus();
 }
 
-StatusOr<HashType> RawJwtRsaSsaPkcs1VerifyKeyManager::HashForPkcs1Algorithm(
+absl::StatusOr<HashType>
+RawJwtRsaSsaPkcs1VerifyKeyManager::HashForPkcs1Algorithm(
     const JwtRsaSsaPkcs1Algorithm& algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPkcs1Algorithm::RS256:

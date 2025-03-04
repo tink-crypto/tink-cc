@@ -68,7 +68,7 @@ absl::Status HmacPrfKeyManager::ValidateKeyFormat(
   return ValidateParams(key_format.params());
 }
 
-crypto::tink::util::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::CreateKey(
+absl::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::CreateKey(
     const HmacPrfKeyFormat& key_format) const {
   HmacPrfKeyProto key;
   key.set_version(get_version());
@@ -77,13 +77,13 @@ crypto::tink::util::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::CreateKey(
   return key;
 }
 
-StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::DeriveKey(
+absl::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::DeriveKey(
     const HmacPrfKeyFormat& hmac_prf_key_format,
     InputStream* input_stream) const {
   absl::Status status = ValidateKeyFormat(hmac_prf_key_format);
   if (!status.ok()) return status;
 
-  crypto::tink::util::StatusOr<std::string> randomness =
+  absl::StatusOr<std::string> randomness =
       ReadBytesFromStream(hmac_prf_key_format.key_size(), input_stream);
   if (!randomness.status().ok()) {
     return randomness.status();

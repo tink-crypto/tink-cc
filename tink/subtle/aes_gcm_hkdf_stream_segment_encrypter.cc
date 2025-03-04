@@ -125,13 +125,13 @@ AesGcmHkdfStreamSegmentEncrypter::AesGcmHkdfStreamSegmentEncrypter(
       ciphertext_segment_size_(params.ciphertext_segment_size),
       ciphertext_offset_(params.ciphertext_offset) {}
 
-util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
 AesGcmHkdfStreamSegmentEncrypter::New(Params params) {
   absl::Status status = Validate(params);
   if (!status.ok()) {
     return status;
   }
-  util::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
+  absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
       internal::CreateAesGcmOneShotCrypter(params.key);
   if (!aead.ok()) {
     return aead.status();
@@ -166,7 +166,7 @@ absl::Status AesGcmHkdfStreamSegmentEncrypter::EncryptSegment(
       ConstructNonce(nonce_prefix_, static_cast<uint32_t>(get_segment_number()),
                      is_last_segment);
 
-  util::StatusOr<uint64_t> written_bytes = aead_->Encrypt(
+  absl::StatusOr<uint64_t> written_bytes = aead_->Encrypt(
       absl::string_view(reinterpret_cast<const char*>(plaintext.data()),
                         plaintext.size()),
       /*associated_data=*/absl::string_view(""), iv,

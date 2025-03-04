@@ -24,7 +24,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<AesCmacPrfParameters> AesCmacPrfParameters::Create(
+absl::StatusOr<AesCmacPrfParameters> AesCmacPrfParameters::Create(
     int key_size_in_bytes) {
   if (key_size_in_bytes != 16 && key_size_in_bytes != 32) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

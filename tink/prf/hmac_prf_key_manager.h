@@ -57,7 +57,7 @@ class HmacPrfKeyManager
                             google::crypto::tink::HmacPrfKeyFormat, List<Prf>> {
  public:
   class PrfFactory : public PrimitiveFactory<Prf> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Prf>> Create(
+    absl::StatusOr<std::unique_ptr<Prf>> Create(
         const google::crypto::tink::HmacPrfKey& key) const override {
       crypto::tink::subtle::HashType hash =
           util::Enums::ProtoToSubtle(key.params().hash());
@@ -93,10 +93,10 @@ class HmacPrfKeyManager
   absl::Status ValidateKeyFormat(
       const google::crypto::tink::HmacPrfKeyFormat& key_format) const override;
 
-  crypto::tink::util::StatusOr<google::crypto::tink::HmacPrfKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::HmacPrfKey> CreateKey(
       const google::crypto::tink::HmacPrfKeyFormat& key_format) const override;
 
-  util::StatusOr<google::crypto::tink::HmacPrfKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::HmacPrfKey> DeriveKey(
       const google::crypto::tink::HmacPrfKeyFormat& hmac_prf_key_format,
       InputStream* input_stream) const override;
 

@@ -129,7 +129,7 @@ static absl::Status Validate(const AesCtrHmacStreaming::Params& params) {
 
 // AesCtrHmacStreaming
 // static
-util::StatusOr<std::unique_ptr<AesCtrHmacStreaming>> AesCtrHmacStreaming::New(
+absl::StatusOr<std::unique_ptr<AesCtrHmacStreaming>> AesCtrHmacStreaming::New(
     Params params) {
   auto status = internal::CheckFipsCompatibility<AesCtrHmacStreaming>();
   if (!status.ok()) return status;
@@ -140,14 +140,14 @@ util::StatusOr<std::unique_ptr<AesCtrHmacStreaming>> AesCtrHmacStreaming::New(
 }
 
 // static
-util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
 AesCtrHmacStreaming::NewSegmentEncrypter(
     absl::string_view associated_data) const {
   return AesCtrHmacStreamSegmentEncrypter::New(params_, associated_data);
 }
 
 // static
-util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
 AesCtrHmacStreaming::NewSegmentDecrypter(
     absl::string_view associated_data) const {
   return AesCtrHmacStreamSegmentDecrypter::New(params_, associated_data);
@@ -162,7 +162,7 @@ static std::string MakeHeader(absl::string_view salt,
 }
 
 // static
-util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
 AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
                                       absl::string_view associated_data) {
   auto status = Validate(params);
@@ -179,7 +179,7 @@ AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
                       params.key_size, &key_value, &hmac_key_value);
   if (!status.ok()) return status;
 
-  util::StatusOr<const EVP_CIPHER*> cipher =
+  absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesCtrCipherForKeySize(params.key_size);
   if (!cipher.ok()) {
     return cipher.status();
@@ -307,7 +307,7 @@ absl::Status AesCtrHmacStreamSegmentEncrypter::EncryptSegment(
 
 // AesCtrHmacStreamSegmentDecrypter
 // static
-util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
 AesCtrHmacStreamSegmentDecrypter::New(const AesCtrHmacStreaming::Params& params,
                                       absl::string_view associated_data) {
   auto status = Validate(params);
@@ -345,7 +345,7 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::Init(
                            &key_value_, &hmac_key_value);
   if (!status.ok()) return status;
 
-  util::StatusOr<const EVP_CIPHER*> cipher =
+  absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesCtrCipherForKeySize(key_size_);
   if (!cipher.ok()) {
     return cipher.status();

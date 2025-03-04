@@ -27,7 +27,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<HkdfPrfKey> HkdfPrfKey::Create(
+absl::StatusOr<HkdfPrfKey> HkdfPrfKey::Create(
     const HkdfPrfParameters& parameters, const RestrictedData& key_bytes,
     PartialKeyAccessToken token) {
   if (parameters.KeySizeInBytes() != key_bytes.size()) {

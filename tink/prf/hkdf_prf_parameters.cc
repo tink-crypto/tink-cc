@@ -30,7 +30,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<HkdfPrfParameters> HkdfPrfParameters::Create(
+absl::StatusOr<HkdfPrfParameters> HkdfPrfParameters::Create(
     int key_size_in_bytes, HashType hash_type,
     absl::optional<absl::string_view> salt) {
   if (key_size_in_bytes < 16) {

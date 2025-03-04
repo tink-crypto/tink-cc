@@ -66,7 +66,7 @@ absl::Status Validate(const AesGcmHkdfStreaming::Params& params) {
 }
 }  // namespace
 
-util::StatusOr<std::unique_ptr<AesGcmHkdfStreaming>> AesGcmHkdfStreaming::New(
+absl::StatusOr<std::unique_ptr<AesGcmHkdfStreaming>> AesGcmHkdfStreaming::New(
     Params params) {
   auto status = internal::CheckFipsCompatibility<AesGcmHkdfStreaming>();
   if (!status.ok()) return status;
@@ -76,7 +76,7 @@ util::StatusOr<std::unique_ptr<AesGcmHkdfStreaming>> AesGcmHkdfStreaming::New(
   return {absl::WrapUnique(new AesGcmHkdfStreaming(std::move(params)))};
 }
 
-util::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentEncrypter>>
 AesGcmHkdfStreaming::NewSegmentEncrypter(
     absl::string_view associated_data) const {
   AesGcmHkdfStreamSegmentEncrypter::Params params;
@@ -90,7 +90,7 @@ AesGcmHkdfStreaming::NewSegmentEncrypter(
   return AesGcmHkdfStreamSegmentEncrypter::New(std::move(params));
 }
 
-util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
 AesGcmHkdfStreaming::NewSegmentDecrypter(
     absl::string_view associated_data) const {
   AesGcmHkdfStreamSegmentDecrypter::Params params;

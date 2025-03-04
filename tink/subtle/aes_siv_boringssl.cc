@@ -51,7 +51,7 @@ namespace {
 using crypto::tink::internal::CallWithCoreDumpProtection;
 using crypto::tink::internal::SafeCryptoMemEquals;
 
-crypto::tink::util::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
+absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
     absl::Span<const uint8_t> key) {
   util::SecretUniquePtr<AES_KEY> aes_key = util::MakeSecretUniquePtr<AES_KEY>();
   if (CallWithCoreDumpProtection([&]() {
@@ -67,8 +67,8 @@ crypto::tink::util::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
 }  // namespace
 
 // static
-crypto::tink::util::StatusOr<std::unique_ptr<DeterministicAead>>
-AesSivBoringSsl::New(const util::SecretData& key) {
+absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
+    const util::SecretData& key) {
   auto status = internal::CheckFipsCompatibility<AesSivBoringSsl>();
   if (!status.ok()) return status;
 
@@ -218,7 +218,7 @@ absl::Status AesSivBoringSsl::AesCtrCrypt(absl::string_view in,
   return internal::AesCtr128Crypt(in, iv, key, out);
 }
 
-util::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
+absl::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
     absl::string_view plaintext, absl::string_view associated_data) const {
   size_t ciphertext_size = plaintext.size() + kBlockSize;
   std::string ciphertext;
@@ -249,7 +249,7 @@ util::StatusOr<std::string> AesSivBoringSsl::EncryptDeterministically(
   return ciphertext;
 }
 
-util::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
+absl::StatusOr<std::string> AesSivBoringSsl::DecryptDeterministically(
     absl::string_view ciphertext, absl::string_view associated_data) const {
   if (ciphertext.size() < kBlockSize) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

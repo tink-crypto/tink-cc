@@ -39,7 +39,7 @@ class AlwaysFailPrf : public Prf {
  public:
   explicit AlwaysFailPrf(std::string message) : message_(std::move(message)) {}
 
-  util::StatusOr<std::string> Compute(absl::string_view /*input*/,
+  absl::StatusOr<std::string> Compute(absl::string_view /*input*/,
                                       size_t /*output_length*/) const override {
     return absl::Status(
         absl::StatusCode::kInternal,
@@ -69,7 +69,7 @@ class AlwaysFailPrfSet : public PrfSet {
   // The map is guaranteed to contain getPrimaryId() as a key.
   const std::map<uint32_t, Prf*>& GetPrfs() const override { return prfs_; };
 
-  util::StatusOr<std::string> ComputePrimary(absl::string_view /*input*/,
+  absl::StatusOr<std::string> ComputePrimary(absl::string_view /*input*/,
                                              size_t /*output_length*/) const {
     return absl::Status(
         absl::StatusCode::kInternal,

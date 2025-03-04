@@ -53,7 +53,7 @@ class HkdfPrfKeyManager
                             List<StreamingPrf, Prf>> {
  public:
   class StreamingPrfFactory : public PrimitiveFactory<StreamingPrf> {
-    crypto::tink::util::StatusOr<std::unique_ptr<StreamingPrf>> Create(
+    absl::StatusOr<std::unique_ptr<StreamingPrf>> Create(
         const google::crypto::tink::HkdfPrfKey& key) const override {
       return subtle::HkdfStreamingPrf::New(
           crypto::tink::util::Enums::ProtoToSubtle(key.params().hash()),
@@ -62,7 +62,7 @@ class HkdfPrfKeyManager
   };
 
   class PrfSetFactory : public PrimitiveFactory<Prf> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Prf>> Create(
+    absl::StatusOr<std::unique_ptr<Prf>> Create(
         const google::crypto::tink::HkdfPrfKey& key) const override {
       auto hkdf_result = subtle::HkdfStreamingPrf::New(
           crypto::tink::util::Enums::ProtoToSubtle(key.params().hash()),
@@ -105,7 +105,7 @@ class HkdfPrfKeyManager
     return ValidateParams(key_format.params());
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::HkdfPrfKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::HkdfPrfKey> CreateKey(
       const google::crypto::tink::HkdfPrfKeyFormat& key_format) const override {
     google::crypto::tink::HkdfPrfKey key;
     key.set_version(get_version());
@@ -115,14 +115,14 @@ class HkdfPrfKeyManager
     return key;
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::HkdfPrfKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::HkdfPrfKey> DeriveKey(
       const google::crypto::tink::HkdfPrfKeyFormat& key_format,
       InputStream* input_stream) const override {
     auto status = ValidateKeyFormat(key_format);
     if (!status.ok()) {
       return status;
     }
-    crypto::tink::util::StatusOr<std::string> randomness =
+    absl::StatusOr<std::string> randomness =
         ReadBytesFromStream(key_format.key_size(), input_stream);
     if (!randomness.ok()) {
       return randomness.status();

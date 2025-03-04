@@ -54,7 +54,7 @@ class AesCmacPrfKeyManager
                             List<Prf>> {
  public:
   class PrfSetFactory : public PrimitiveFactory<Prf> {
-    crypto::tink::util::StatusOr<std::unique_ptr<Prf>> Create(
+    absl::StatusOr<std::unique_ptr<Prf>> Create(
         const google::crypto::tink::AesCmacPrfKey& key) const override {
       return subtle::CreatePrfFromStatefulMacFactory(
           absl::make_unique<internal::StatefulCmacBoringSslFactory>(
@@ -100,7 +100,7 @@ class AesCmacPrfKeyManager
     return absl::OkStatus();
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesCmacPrfKey> CreateKey(
+  absl::StatusOr<google::crypto::tink::AesCmacPrfKey> CreateKey(
       const google::crypto::tink::AesCmacPrfKeyFormat& key_format)
       const override {
     google::crypto::tink::AesCmacPrfKey key;
@@ -109,14 +109,14 @@ class AesCmacPrfKeyManager
     return key;
   }
 
-  crypto::tink::util::StatusOr<google::crypto::tink::AesCmacPrfKey> DeriveKey(
+  absl::StatusOr<google::crypto::tink::AesCmacPrfKey> DeriveKey(
       const google::crypto::tink::AesCmacPrfKeyFormat& key_format,
       InputStream* input_stream) const override {
     auto status = ValidateKeyFormat(key_format);
     if (!status.ok()) {
       return status;
     }
-    crypto::tink::util::StatusOr<std::string> randomness =
+    absl::StatusOr<std::string> randomness =
         ReadBytesFromStream(key_format.key_size(), input_stream);
     if (!randomness.status().ok()) {
       return randomness.status();

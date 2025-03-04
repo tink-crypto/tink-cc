@@ -103,7 +103,7 @@ AesGcmHkdfStreamSegmentDecrypter::AesGcmHkdfStreamSegmentDecrypter(
                    AesGcmHkdfStreamSegmentEncrypter::kNoncePrefixSizeInBytes) {}
 
 // static
-util::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
+absl::StatusOr<std::unique_ptr<StreamSegmentDecrypter>>
 AesGcmHkdfStreamSegmentDecrypter::New(Params params) {
   auto status = Validate(params);
   if (!status.ok()) {
@@ -140,7 +140,7 @@ absl::Status AesGcmHkdfStreamSegmentDecrypter::Init(
                nonce_prefix_.begin());
 
   // Derive symmetric key.
-  util::StatusOr<util::SecretData> key = Hkdf::ComputeHkdf(
+  absl::StatusOr<util::SecretData> key = Hkdf::ComputeHkdf(
       hkdf_hash_, ikm_,
       absl::string_view(reinterpret_cast<const char*>(salt_.data()),
                         derived_key_size_),
@@ -149,7 +149,7 @@ absl::Status AesGcmHkdfStreamSegmentDecrypter::Init(
     return key.status();
   }
 
-  util::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead_ptr =
+  absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead_ptr =
       internal::CreateAesGcmOneShotCrypter(*key);
   if (!aead_ptr.ok()) {
     return aead_ptr.status();
@@ -202,7 +202,7 @@ absl::Status AesGcmHkdfStreamSegmentDecrypter::DecryptSegment(
       static_cast<uint32_t>(segment_number));
   iv.back() = is_last_segment ? 1 : 0;
 
-  util::StatusOr<uint64_t> written_bytes = aead_->Decrypt(
+  absl::StatusOr<uint64_t> written_bytes = aead_->Decrypt(
       absl::string_view(reinterpret_cast<const char*>(ciphertext.data()),
                         ciphertext.size()),
       /*associated_data=*/absl::string_view(""),

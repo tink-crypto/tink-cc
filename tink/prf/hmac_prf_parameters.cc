@@ -27,7 +27,7 @@
 namespace crypto {
 namespace tink {
 
-util::StatusOr<HmacPrfParameters> HmacPrfParameters::Create(
+absl::StatusOr<HmacPrfParameters> HmacPrfParameters::Create(
     int key_size_in_bytes, HashType hash_type) {
   if (key_size_in_bytes < 16) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

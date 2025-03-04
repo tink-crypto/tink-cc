@@ -47,7 +47,8 @@ using crypto::tink::util::Status;
 using crypto::tink::util::StatusOr;
 
 // static
-StatusOr<std::unique_ptr<RandomAccessStream>> DecryptingRandomAccessStream::New(
+absl::StatusOr<std::unique_ptr<RandomAccessStream>>
+DecryptingRandomAccessStream::New(
     std::unique_ptr<StreamSegmentDecrypter> segment_decrypter,
     std::unique_ptr<RandomAccessStream> ciphertext_source) {
   if (segment_decrypter == nullptr) {
@@ -155,7 +156,7 @@ void DecryptingRandomAccessStream::InitializeIfNeeded()
   ct_segment_overhead_ = ct_segment_size_ - pt_segment_size_;
 
   // Calculate the number of segments and the plaintext size.
-  StatusOr<int64_t> ct_size_result = ct_source_->size();
+  absl::StatusOr<int64_t> ct_size_result = ct_source_->size();
   if (!ct_size_result.ok()) {
     status_ = ct_size_result.status();
     return;
@@ -299,7 +300,7 @@ absl::Status DecryptingRandomAccessStream::PReadAndDecrypt(
   return absl::OkStatus();
 }
 
-StatusOr<int64_t> DecryptingRandomAccessStream::size() {
+absl::StatusOr<int64_t> DecryptingRandomAccessStream::size() {
   {  // Initialize, if not initialized yet.
     absl::MutexLock lock(&status_mutex_);
     InitializeIfNeeded();

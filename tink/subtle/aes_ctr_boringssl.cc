@@ -45,12 +45,12 @@ namespace subtle {
 
 using ::crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe;
 
-util::StatusOr<std::unique_ptr<IndCpaCipher>> AesCtrBoringSsl::New(
+absl::StatusOr<std::unique_ptr<IndCpaCipher>> AesCtrBoringSsl::New(
     util::SecretData key, int iv_size) {
   auto status = internal::CheckFipsCompatibility<AesCtrBoringSsl>();
   if (!status.ok()) return status;
 
-  util::StatusOr<const EVP_CIPHER*> cipher =
+  absl::StatusOr<const EVP_CIPHER *> cipher =
       internal::GetAesCtrCipherForKeySize(key.size());
   if (!cipher.ok()) {
     return cipher.status();
@@ -63,7 +63,7 @@ util::StatusOr<std::unique_ptr<IndCpaCipher>> AesCtrBoringSsl::New(
       absl::WrapUnique(new AesCtrBoringSsl(std::move(key), iv_size, *cipher))};
 }
 
-util::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
+absl::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
     absl::string_view plaintext) const {
   // BoringSSL expects a non-null pointer for plaintext, regardless of whether
   // the size is 0.
@@ -120,7 +120,7 @@ util::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
   return ciphertext;
 }
 
-util::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
+absl::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
     absl::string_view ciphertext) const {
   if (ciphertext.size() < iv_size_) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

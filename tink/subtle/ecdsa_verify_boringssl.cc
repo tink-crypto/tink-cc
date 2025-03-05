@@ -52,7 +52,7 @@ namespace subtle {
 
 namespace {
 
-util::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
+absl::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
     EcdsaParameters::CurveType curve_type) {
   switch (curve_type) {
     case EcdsaParameters::CurveType::kNistP256:
@@ -70,8 +70,7 @@ util::StatusOr<subtle::EllipticCurveType> ConvertCurveType(
   }
 }
 
-util::StatusOr<HashType> ConvertHashType(
-    EcdsaParameters::HashType hash_type) {
+absl::StatusOr<HashType> ConvertHashType(EcdsaParameters::HashType hash_type) {
   switch (hash_type) {
     case EcdsaParameters::HashType::kSha256:
       return SHA256;
@@ -88,7 +87,7 @@ util::StatusOr<HashType> ConvertHashType(
   }
 }
 
-util::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
+absl::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
     EcdsaParameters::SignatureEncoding signature_encoding) {
   switch (signature_encoding) {
     case EcdsaParameters::SignatureEncoding::kIeeeP1363:
@@ -106,28 +105,28 @@ util::StatusOr<EcdsaSignatureEncoding> ConvertSignatureEncoding(
 
 }  // namespace
 
-crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>>
-EcdsaVerifyBoringSsl::New(const EcdsaPublicKey& public_key) {
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> EcdsaVerifyBoringSsl::New(
+    const EcdsaPublicKey& public_key) {
   SubtleUtilBoringSSL::EcKey subtle_ec_key;
   subtle_ec_key.pub_x = std::string(
       public_key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue());
   subtle_ec_key.pub_y = std::string(
       public_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue());
 
-  util::StatusOr<subtle::EllipticCurveType> converted_curve_type =
+  absl::StatusOr<subtle::EllipticCurveType> converted_curve_type =
       ConvertCurveType(public_key.GetParameters().GetCurveType());
   if (!converted_curve_type.ok()) {
     return converted_curve_type.status();
   }
   subtle_ec_key.curve = *converted_curve_type;
 
-  util::StatusOr<HashType> converted_hash_type =
+  absl::StatusOr<HashType> converted_hash_type =
       ConvertHashType(public_key.GetParameters().GetHashType());
   if (!converted_hash_type.ok()) {
     return converted_hash_type.status();
   }
 
-  util::StatusOr<EcdsaSignatureEncoding> converted_signature_encoding =
+  absl::StatusOr<EcdsaSignatureEncoding> converted_signature_encoding =
       ConvertSignatureEncoding(
           public_key.GetParameters().GetSignatureEncoding());
   if (!converted_signature_encoding.ok()) {
@@ -142,7 +141,7 @@ EcdsaVerifyBoringSsl::New(const EcdsaPublicKey& public_key) {
                  : "");
 }
 
-util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
+absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     const SubtleUtilBoringSSL::EcKey& ec_key, HashType hash_type,
     EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
     absl::string_view message_suffix) {
@@ -167,7 +166,7 @@ util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
              message_suffix);
 }
 
-util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
+absl::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
     internal::SslUniquePtr<EC_KEY> ec_key, HashType hash_type,
     EcdsaSignatureEncoding encoding, absl::string_view output_prefix,
     absl::string_view message_suffix) {
@@ -182,7 +181,7 @@ util::StatusOr<std::unique_ptr<EcdsaVerifyBoringSsl>> EcdsaVerifyBoringSsl::New(
   if (!is_safe.ok()) {
     return is_safe;
   }
-  util::StatusOr<const EVP_MD*> hash = internal::EvpHashFromHashType(hash_type);
+  absl::StatusOr<const EVP_MD*> hash = internal::EvpHashFromHashType(hash_type);
   if (!hash.ok()) {
     return hash.status();
   }

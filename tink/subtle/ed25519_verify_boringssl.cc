@@ -47,8 +47,8 @@ namespace subtle {
 
 constexpr int kEd25519SignatureLenInBytes = 64;
 
-crypto::tink::util::StatusOr<std::unique_ptr<PublicKeyVerify>>
-Ed25519VerifyBoringSsl::New(const Ed25519PublicKey &public_key) {
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
+    const Ed25519PublicKey &public_key) {
   return New(public_key.GetPublicKeyBytes(GetPartialKeyAccess()),
              public_key.GetOutputPrefix(),
              public_key.GetParameters().GetVariant() ==
@@ -57,7 +57,7 @@ Ed25519VerifyBoringSsl::New(const Ed25519PublicKey &public_key) {
                  : "");
 }
 
-util::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
     absl::string_view public_key, absl::string_view output_prefix,
     absl::string_view message_suffix) {
   auto status = internal::CheckFipsCompatibility<Ed25519VerifyBoringSsl>();

@@ -40,7 +40,7 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
 EciesHkdfSenderKemBoringSsl::New(subtle::EllipticCurveType curve,
                                  const std::string& pubx,
                                  const std::string& puby) {
@@ -66,7 +66,7 @@ EciesHkdfNistPCurveSendKemBoringSsl::EciesHkdfNistPCurveSendKemBoringSsl(
       peer_pub_key_(std::move(peer_pub_key)) {}
 
 // static
-util::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
 EciesHkdfNistPCurveSendKemBoringSsl::New(subtle::EllipticCurveType curve,
                                          const std::string& pubx,
                                          const std::string& puby) {
@@ -80,7 +80,7 @@ EciesHkdfNistPCurveSendKemBoringSsl::New(subtle::EllipticCurveType curve,
       curve, pubx, puby, std::move(status_or_ec_point.value())));
 }
 
-util::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl::KemKey>>
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl::KemKey>>
 EciesHkdfNistPCurveSendKemBoringSsl::GenerateKey(
     subtle::HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
@@ -133,7 +133,7 @@ EciesHkdfX25519SendKemBoringSsl::EciesHkdfX25519SendKemBoringSsl(
     : peer_public_key_(std::move(peer_public_key)) {}
 
 // static
-util::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl>>
 EciesHkdfX25519SendKemBoringSsl::New(subtle::EllipticCurveType curve,
                                      const std::string& pubx,
                                      const std::string& puby) {
@@ -166,7 +166,7 @@ EciesHkdfX25519SendKemBoringSsl::New(subtle::EllipticCurveType curve,
       new EciesHkdfX25519SendKemBoringSsl(std::move(peer_public_key)));
 }
 
-util::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl::KemKey>>
+absl::StatusOr<std::unique_ptr<const EciesHkdfSenderKemBoringSsl::KemKey>>
 EciesHkdfX25519SendKemBoringSsl::GenerateKey(
     subtle::HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
@@ -178,7 +178,7 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
   }
 
   // Generate an ephemeral key pair; the public key is the KEM key to use.
-  util::StatusOr<std::unique_ptr<internal::X25519Key>> ephemeral_key =
+  absl::StatusOr<std::unique_ptr<internal::X25519Key>> ephemeral_key =
       internal::NewX25519Key();
 
   internal::SslUniquePtr<EVP_PKEY> ssl_priv_key(EVP_PKEY_new_raw_private_key(
@@ -190,7 +190,7 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
                         "EVP_PKEY_new_raw_private_key failed");
   }
 
-  util::StatusOr<util::SecretData> shared_secret =
+  absl::StatusOr<util::SecretData> shared_secret =
       internal::ComputeX25519SharedSecret(ssl_priv_key.get(),
                                           peer_public_key_.get());
 
@@ -198,7 +198,7 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
       reinterpret_cast<const char*>((*ephemeral_key)->public_value),
       internal::X25519KeyPubKeySize());
 
-  util::StatusOr<util::SecretData> symmetric_key =
+  absl::StatusOr<util::SecretData> symmetric_key =
       Hkdf::ComputeEciesHkdfSymmetricKey(hash, public_key, *shared_secret,
                                          hkdf_salt, hkdf_info,
                                          key_size_in_bytes);

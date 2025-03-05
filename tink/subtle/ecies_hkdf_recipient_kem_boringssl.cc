@@ -42,7 +42,7 @@ namespace tink {
 namespace subtle {
 
 // static
-util::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
 EciesHkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
                                     util::SecretData priv_key) {
   switch (curve) {
@@ -61,7 +61,7 @@ EciesHkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
 }
 
 // static
-util::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
 EciesHkdfNistPCurveRecipientKemBoringSsl::New(EllipticCurveType curve,
                                               util::SecretData priv_key) {
   auto status = internal::CheckFipsCompatibility<
@@ -87,7 +87,7 @@ EciesHkdfNistPCurveRecipientKemBoringSsl::
       priv_key_value_(std::move(priv_key_value)),
       ec_group_(std::move(ec_group)) {}
 
-util::StatusOr<util::SecretData>
+absl::StatusOr<util::SecretData>
 EciesHkdfNistPCurveRecipientKemBoringSsl::GenerateKey(
     absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
@@ -121,7 +121,7 @@ EciesHkdfX25519RecipientKemBoringSsl::EciesHkdfX25519RecipientKemBoringSsl(
     : private_key_(std::move(private_key)) {}
 
 // static
-util::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
+absl::StatusOr<std::unique_ptr<EciesHkdfRecipientKemBoringSsl>>
 EciesHkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
                                           util::SecretData priv_key) {
   auto status =
@@ -153,7 +153,7 @@ EciesHkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
       new EciesHkdfX25519RecipientKemBoringSsl(std::move(ssl_priv_key)))};
 }
 
-crypto::tink::util::StatusOr<util::SecretData>
+absl::StatusOr<util::SecretData>
 EciesHkdfX25519RecipientKemBoringSsl::GenerateKey(
     absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
@@ -178,7 +178,7 @@ EciesHkdfX25519RecipientKemBoringSsl::GenerateKey(
                         "EVP_PKEY_new_raw_public_key failed");
   }
 
-  util::StatusOr<util::SecretData> shared_secret =
+  absl::StatusOr<util::SecretData> shared_secret =
       internal::ComputeX25519SharedSecret(private_key_.get(), peer_key.get());
   if (!shared_secret.ok()) {
     return shared_secret.status();

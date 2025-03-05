@@ -44,13 +44,13 @@ namespace crypto {
 namespace tink {
 namespace subtle {
 
-util::StatusOr<std::unique_ptr<Mac>> HmacBoringSsl::New(HashType hash_type,
+absl::StatusOr<std::unique_ptr<Mac>> HmacBoringSsl::New(HashType hash_type,
                                                         uint32_t tag_size,
                                                         util::SecretData key) {
   auto status = internal::CheckFipsCompatibility<HmacBoringSsl>();
   if (!status.ok()) return status;
 
-  util::StatusOr<const EVP_MD*> md = internal::EvpHashFromHashType(hash_type);
+  absl::StatusOr<const EVP_MD*> md = internal::EvpHashFromHashType(hash_type);
   if (!md.ok()) {
     return md.status();
   }
@@ -66,7 +66,7 @@ util::StatusOr<std::unique_ptr<Mac>> HmacBoringSsl::New(HashType hash_type,
   return {absl::WrapUnique(new HmacBoringSsl(*md, tag_size, std::move(key)))};
 }
 
-util::StatusOr<std::string> HmacBoringSsl::ComputeMac(
+absl::StatusOr<std::string> HmacBoringSsl::ComputeMac(
     absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.

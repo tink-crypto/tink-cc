@@ -53,8 +53,8 @@ class FakeKmsClient : public crypto::tink::KmsClient {
       absl::string_view key_uri, absl::string_view credentials_path);
 
   // Creates a new client and registers it in KMSClients.
-  static crypto::tink::util::Status RegisterNewClient(
-      absl::string_view key_uri, absl::string_view credentials_path);
+  static absl::Status RegisterNewClient(absl::string_view key_uri,
+                                        absl::string_view credentials_path);
 
   // Returns a new, random fake key_uri.
   static absl::StatusOr<std::string> CreateFakeKeyUri();

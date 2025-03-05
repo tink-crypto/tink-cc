@@ -44,12 +44,12 @@ class OstreamOutputStream : public crypto::tink::OutputStream {
 
   void BackUp(int count) override;
 
-  crypto::tink::util::Status Close() override;
+  absl::Status Close() override;
 
   int64_t Position() const override;
 
  private:
-  util::Status status_;
+  absl::Status status_;
   std::unique_ptr<std::ostream> output_;
   std::unique_ptr<uint8_t[]> buffer_;
   const int buffer_size_;

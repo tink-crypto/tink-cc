@@ -105,7 +105,7 @@ absl::StatusOr<std::unique_ptr<Aead>> FakeKmsClient::GetAead(
   }
   std::string keyset;
   if (!absl::WebSafeBase64Unescape(GetEncodedKeyset(key_uri), &keyset)) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "Invalid Keyset");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Invalid Keyset");
   }
   auto reader_result = BinaryKeysetReader::New(keyset);
   if (!reader_result.ok()) {

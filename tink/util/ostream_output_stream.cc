@@ -44,7 +44,7 @@ OstreamOutputStream::OstreamOutputStream(std::unique_ptr<std::ostream> output,
   buffer_ = nullptr;
   position_ = 0;
   buffer_offset_ = 0;
-  status_ = OkStatus();
+  status_ = absl::OkStatus();
 }
 
 absl::StatusOr<int> OstreamOutputStream::Next(void** data) {
@@ -109,7 +109,7 @@ OstreamOutputStream::~OstreamOutputStream() {
   Close().IgnoreError();
 }
 
-Status OstreamOutputStream::Close() {
+absl::Status OstreamOutputStream::Close() {
   if (!status_.ok()) return status_;
   if (count_in_buffer_ > 0) {
     // Try to write the remaining bytes.
@@ -126,8 +126,9 @@ Status OstreamOutputStream::Close() {
                         "I/O error upon flushing: %d", errno);
     return status_;
   }
-  status_ = Status(absl::StatusCode::kFailedPrecondition, "Stream closed");
-  return OkStatus();
+  status_ =
+      absl::Status(absl::StatusCode::kFailedPrecondition, "Stream closed");
+  return absl::OkStatus();
 }
 
 int64_t OstreamOutputStream::Position() const {

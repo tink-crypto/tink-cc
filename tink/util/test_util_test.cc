@@ -191,7 +191,7 @@ TEST(DummyStreamingAead, DummyDecryptingStreamPreadInChunksSucceeds) {
   auto buffer = util::Buffer::New(chunk_size);
   std::string plaintext;
   int64_t position = 0;
-  util::Status status = (*decrypting_random_access_stream)
+  absl::Status status = (*decrypting_random_access_stream)
                             ->PRead(position, chunk_size, buffer->get());
   while (status.ok()) {
     plaintext.append((*buffer)->get_mem_block(), (*buffer)->size());

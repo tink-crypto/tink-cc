@@ -58,13 +58,13 @@ int read_ignoring_eintr(int fd, void *buf, size_t count) {
 }  // anonymous namespace
 
 FileInputStream::FileInputStream(int file_descriptor, int buffer_size)
-    : status_(util::OkStatus()),
+    : status_(absl::OkStatus()),
       fd_(file_descriptor),
       buffer_(buffer_size > 0 ? buffer_size : kDefaultBufferSize) {}
 
 absl::StatusOr<int> FileInputStream::Next(const void** data) {
   if (data == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Data pointer must not be nullptr");
   }
   if (!status_.ok()) return status_;
@@ -80,7 +80,7 @@ absl::StatusOr<int> FileInputStream::Next(const void** data) {
   int read_result = read_ignoring_eintr(fd_, buffer_.data(), buffer_.size());
   if (read_result <= 0) {  // EOF or an I/O error.
     if (read_result == 0) {
-      status_ = Status(absl::StatusCode::kOutOfRange, "EOF");
+      status_ = absl::Status(absl::StatusCode::kOutOfRange, "EOF");
     } else {
       status_ =
           ToStatusF(absl::StatusCode::kInternal, "I/O error: %d", read_result);

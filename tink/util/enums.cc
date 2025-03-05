@@ -198,7 +198,7 @@ absl::StatusOr<int> Enums::HashLength(pb::HashType hash_type) {
     case pb::HashType::SHA512:
       return 64;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported hashing algorithm ",
                                        util::Enums::HashName(hash_type)));
   }

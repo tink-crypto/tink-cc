@@ -43,7 +43,7 @@ TEST(TestMatchersTest, MatchersWithStatusOr) {
               Not(StatusIs(absl::StatusCode::kInvalidArgument)));
 
   absl::StatusOr<int> invalid_status_or =
-      util::Status(absl::StatusCode::kInvalidArgument, "invalid argument");
+      absl::Status(absl::StatusCode::kInvalidArgument, "invalid argument");
   EXPECT_THAT(invalid_status_or, Not(IsOkAndHolds(Eq(123))));
   EXPECT_THAT(invalid_status_or, Not(IsOk()));
   EXPECT_THAT(invalid_status_or, StatusIs(absl::StatusCode::kInvalidArgument));
@@ -51,13 +51,13 @@ TEST(TestMatchersTest, MatchersWithStatusOr) {
 }
 
 TEST(TestMatchersTest, MatchersWithStatus) {
-  util::Status ok_status = util::OkStatus();
+  absl::Status ok_status = absl::OkStatus();
   EXPECT_THAT(ok_status, IsOk());
   EXPECT_THAT(ok_status, StatusIs(absl::StatusCode::kOk));
   EXPECT_THAT(ok_status, Not(StatusIs(absl::StatusCode::kInvalidArgument)));
 
-  util::Status invalid_arg =
-      util::Status(absl::StatusCode::kInvalidArgument, "invalid argument");
+  absl::Status invalid_arg =
+      absl::Status(absl::StatusCode::kInvalidArgument, "invalid argument");
   EXPECT_THAT(invalid_arg, Not(IsOk()));
   EXPECT_THAT(invalid_arg, StatusIs(absl::StatusCode::kInvalidArgument));
   EXPECT_THAT(invalid_arg, Not(StatusIs(absl::StatusCode::kOk)));

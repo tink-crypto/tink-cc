@@ -50,7 +50,7 @@ class FileInputStream : public crypto::tink::InputStream {
 
  private:
   // Status of the stream.
-  util::Status status_ = util::OkStatus();
+  absl::Status status_ = absl::OkStatus();
   int fd_;
   std::vector<uint8_t> buffer_;
 

@@ -48,7 +48,7 @@ class IstreamInputStream : public crypto::tink::InputStream {
   int64_t Position() const override;
 
  private:
-  util::Status status_;
+  absl::Status status_;
   std::unique_ptr<std::istream> input_;
   std::unique_ptr<uint8_t[]> buffer_;
   const int buffer_size_;

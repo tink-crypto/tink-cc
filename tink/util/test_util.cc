@@ -91,7 +91,7 @@ absl::StatusOr<std::string> HexDecode(absl::string_view hex) {
   std::string decoded;
   const bool result = absl::HexStringToBytes(hex, &decoded);
   if (!result) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Failed to decode hex: ", hex));
   }
   return decoded;
@@ -318,7 +318,7 @@ EcdsaPrivateKeyProto GetEcdsaTestPrivateKey(
   return ecdsa_key;
 }
 
-util::Status ZTestUniformString(absl::string_view bytes) {
+absl::Status ZTestUniformString(absl::string_view bytes) {
   double expected = bytes.size() * 8.0 / 2.0;
   double stddev = std::sqrt(static_cast<double>(bytes.size()) * 8.0 / 4.0);
   uint64_t num_set_bits = 0;
@@ -331,9 +331,9 @@ util::Status ZTestUniformString(absl::string_view bytes) {
   }
   // Check that the number of bits is within 10 stddevs.
   if (abs(static_cast<double>(num_set_bits) - expected) < 10.0 * stddev) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
-  return util::Status(
+  return absl::Status(
       absl::StatusCode::kInternal,
       absl::StrCat("Z test for uniformly distributed variable out of bounds; "
                    "Actual number of set bits was ",
@@ -351,10 +351,10 @@ std::string Rotate(absl::string_view bytes) {
   return result;
 }
 
-util::Status ZTestCrosscorrelationUniformStrings(absl::string_view bytes1,
+absl::Status ZTestCrosscorrelationUniformStrings(absl::string_view bytes1,
                                                  absl::string_view bytes2) {
   if (bytes1.size() != bytes2.size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Strings are not of equal length");
   }
   std::string crossed(bytes1.size(), '\0');
@@ -364,7 +364,7 @@ util::Status ZTestCrosscorrelationUniformStrings(absl::string_view bytes1,
   return ZTestUniformString(crossed);
 }
 
-util::Status ZTestAutocorrelationUniformString(absl::string_view bytes) {
+absl::Status ZTestAutocorrelationUniformString(absl::string_view bytes) {
   std::string rotated(bytes);
   std::vector<int> violations;
   for (int i = 1; i < bytes.size() * 8; i++) {
@@ -375,9 +375,9 @@ util::Status ZTestAutocorrelationUniformString(absl::string_view bytes) {
     }
   }
   if (violations.empty()) {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
-  return util::Status(
+  return absl::Status(
       absl::StatusCode::kInternal,
       absl::StrCat("Autocorrelation exceeded 10 standard deviation at ",
                    violations.size(),

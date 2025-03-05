@@ -63,7 +63,7 @@ class SecretProto {
       return proto->ParseFromArray(data.data(), data.size());
     });
     if (!parsed) {
-      return Status(absl::StatusCode::kInternal, "Could not parse proto");
+      return absl::Status(absl::StatusCode::kInternal, "Could not parse proto");
     }
     return proto;
   }
@@ -104,7 +104,8 @@ class SecretProto {
     bool serialized = crypto::tink::internal::CallWithCoreDumpProtection(
         [&] { return value_->SerializeToArray(buffer.data(), buffer.size()); });
     if (!serialized) {
-      return Status(absl::StatusCode::kInternal, "Could not serialize proto");
+      return absl::Status(absl::StatusCode::kInternal,
+                          "Could not serialize proto");
     }
     return internal::AsSecretData(std::move(buffer));
   }

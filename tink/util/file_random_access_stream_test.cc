@@ -55,7 +55,7 @@ absl::StatusOr<int> OpenTestFileToRead(absl::string_view filename) {
   std::string full_filename = absl::StrCat(test::TmpDir(), "/", filename);
   int fd = open(full_filename.c_str(), O_RDONLY);
   if (fd == -1) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         absl::StrCat("Cannot open file ", full_filename,
                                      " error: ", std::strerror(errno)));
   }
@@ -65,7 +65,7 @@ absl::StatusOr<int> OpenTestFileToRead(absl::string_view filename) {
 // Reads the entire 'ra_stream' in chunks of size 'chunk_size',
 // until no more bytes can be read, and puts the read bytes into 'contents'.
 // Returns the status of the last ra_stream->Next()-operation.
-util::Status ReadAll(RandomAccessStream* ra_stream, int chunk_size,
+absl::Status ReadAll(RandomAccessStream* ra_stream, int chunk_size,
                      std::string* contents) {
   contents->clear();
   auto buffer = std::move(Buffer::New(chunk_size).value());

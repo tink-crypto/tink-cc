@@ -58,7 +58,7 @@ class Buffer {
   // Sets the size of this buffer to 'new_size', which must
   // be in range 0..allocated_size().
   // Returns OK iff 0 <= new_size <= allocated_size();
-  virtual util::Status set_size(int new_size) = 0;
+  virtual absl::Status set_size(int new_size) = 0;
 
   virtual ~Buffer() = default;
 };

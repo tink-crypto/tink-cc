@@ -41,9 +41,7 @@ class FileRandomAccessStream : public crypto::tink::RandomAccessStream {
 
   ~FileRandomAccessStream() override;
 
-  crypto::tink::util::Status PRead(int64_t position,
-                                   int count,
-                                   Buffer* dest_buffer) override;
+  absl::Status PRead(int64_t position, int count, Buffer* dest_buffer) override;
 
   absl::StatusOr<int64_t> size() override;
 

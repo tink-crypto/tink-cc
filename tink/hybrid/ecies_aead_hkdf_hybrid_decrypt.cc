@@ -40,10 +40,10 @@ namespace crypto {
 namespace tink {
 
 namespace {
-util::Status Validate(const EciesAeadHkdfPrivateKey& key) {
+absl::Status Validate(const EciesAeadHkdfPrivateKey& key) {
   if (!key.has_public_key() || !key.public_key().has_params() ||
       key.public_key().x().empty() || key.key_value().empty()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Invalid EciesAeadHkdfPublicKey: missing required fields.");
   }
@@ -52,23 +52,23 @@ util::Status Validate(const EciesAeadHkdfPrivateKey& key) {
       key.public_key().params().kem_params().curve_type() ==
           EllipticCurveType::CURVE25519) {
     if (!key.public_key().y().empty()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Invalid EciesAeadHkdfPublicKey: has unexpected field.");
     }
   } else if (key.public_key().y().empty()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Invalid EciesAeadHkdfPublicKey: missing required fields.");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 }  // namespace
 
 // static
 absl::StatusOr<std::unique_ptr<HybridDecrypt>> EciesAeadHkdfHybridDecrypt::New(
     const EciesAeadHkdfPrivateKey& recipient_key) {
-  util::Status status = Validate(recipient_key);
+  absl::Status status = Validate(recipient_key);
   if (!status.ok()) return status;
 
   auto kem_result = subtle::EciesHkdfRecipientKemBoringSsl::New(
@@ -96,7 +96,7 @@ absl::StatusOr<std::string> EciesAeadHkdfHybridDecrypt::Decrypt(
   if (!header_size_result.ok()) return header_size_result.status();
   auto header_size = header_size_result.value();
   if (ciphertext.size() < header_size) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
 

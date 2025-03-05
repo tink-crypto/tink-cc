@@ -103,19 +103,19 @@ absl::StatusOr<std::string> HybridDecryptSetWrapper::Decrypt(
   if (monitoring_decryption_client_ != nullptr) {
     monitoring_decryption_client_->LogFailure();
   }
-  return util::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
+  return absl::Status(absl::StatusCode::kInvalidArgument, "decryption failed");
 }
 
-util::Status Validate(PrimitiveSet<HybridDecrypt>* hybrid_decrypt_set) {
+absl::Status Validate(PrimitiveSet<HybridDecrypt>* hybrid_decrypt_set) {
   if (hybrid_decrypt_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "hybrid_decrypt_set must be non-NULL");
   }
   if (hybrid_decrypt_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "hybrid_decrypt_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // anonymous namespace
@@ -123,7 +123,7 @@ util::Status Validate(PrimitiveSet<HybridDecrypt>* hybrid_decrypt_set) {
 // static
 absl::StatusOr<std::unique_ptr<HybridDecrypt>> HybridDecryptWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<HybridDecrypt>> primitive_set) const {
-  util::Status status = Validate(primitive_set.get());
+  absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

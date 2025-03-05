@@ -63,12 +63,12 @@ absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
     case EciesParameters::CurveType::kX25519:
       return subtle::EllipticCurveType::CURVE25519;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unknown curve type: ", curve_type));
   }
 }
 
-util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
+absl::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
                                  const RestrictedBigInteger& private_key_value,
                                  PartialKeyAccessToken token) {
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
@@ -89,7 +89,7 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
   // Set EC_KEY public key.
   absl::optional<EcPoint> ec_point = public_key.GetNistCurvePoint(token);
   if (!ec_point.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Missing public point for NIST curve public key.");
   }
   absl::StatusOr<internal::SslUniquePtr<EC_POINT>> public_point =
@@ -99,7 +99,7 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
     return public_point.status();
   }
   if (!EC_KEY_set_public_key(key.get(), public_point->get())) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid public key: ", internal::GetSslErrors()));
   }
@@ -114,7 +114,7 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
   int ec_key_set_private_key_result = internal::CallWithCoreDumpProtection(
       [&]() { return EC_KEY_set_private_key(key.get(), priv_big_num->get()); });
   if (!ec_key_set_private_key_result) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid private key: ", internal::GetSslErrors()));
   }
@@ -123,15 +123,15 @@ util::Status ValidateNistKeyPair(const EciesPublicKey& public_key,
   int ec_key_check_key_result = internal::CallWithCoreDumpProtection(
       [&]() { return EC_KEY_check_key(key.get()); });
   if (!ec_key_check_key_result) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid EC key pair: ", internal::GetSslErrors()));
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
+absl::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
                                    const RestrictedData& private_key_bytes,
                                    PartialKeyAccessToken token) {
   absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
@@ -144,7 +144,7 @@ util::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
   absl::optional<absl::string_view> public_key_bytes =
       public_key.GetX25519CurvePointBytes(token);
   if (!public_key_bytes.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Missing public key bytes for X25519 public key.");
   }
 
@@ -153,12 +153,12 @@ util::Status ValidateX25519KeyPair(const EciesPublicKey& public_key,
       internal::X25519KeyPubKeySize());
 
   if (public_key_bytes != public_key_bytes_from_private) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "X25519 private key does not match the specified X25519 public key.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -168,7 +168,7 @@ absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForNistCurve(
     const RestrictedBigInteger& private_key_value,
     PartialKeyAccessToken token) {
   // Validate that public and private key match.
-  util::Status key_pair_validation =
+  absl::Status key_pair_validation =
       ValidateNistKeyPair(public_key, private_key_value, token);
   if (!key_pair_validation.ok()) {
     return key_pair_validation;
@@ -183,7 +183,7 @@ absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForCurveX25519(
   int private_key_length =
       private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get()).length();
   if (private_key_length != internal::X25519KeyPrivKeySize()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat(
             "Invalid X25519 private key length (expected %d, got %d)",
@@ -191,7 +191,7 @@ absl::StatusOr<EciesPrivateKey> EciesPrivateKey::CreateForCurveX25519(
   }
 
   // Validate that public and private key match.
-  util::Status key_pair_validation =
+  absl::Status key_pair_validation =
       ValidateX25519KeyPair(public_key, private_key_bytes, token);
   if (!key_pair_validation.ok()) {
     return key_pair_validation;

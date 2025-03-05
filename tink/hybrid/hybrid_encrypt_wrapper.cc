@@ -41,16 +41,16 @@ namespace {
 constexpr absl::string_view kPrimitive = "hybrid_encrypt";
 constexpr absl::string_view kEncryptApi = "encrypt";
 
-util::Status Validate(PrimitiveSet<HybridEncrypt>* hybrid_encrypt_set) {
+absl::Status Validate(PrimitiveSet<HybridEncrypt>* hybrid_encrypt_set) {
   if (hybrid_encrypt_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "hybrid_encrypt_set must be non-NULL");
   }
   if (hybrid_encrypt_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "hybrid_encrypt_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // Returns an HybridEncrypt-primitive that uses the primary
@@ -104,7 +104,7 @@ absl::StatusOr<std::string> HybridEncryptSetWrapper::Encrypt(
 
 absl::StatusOr<std::unique_ptr<HybridEncrypt>> HybridEncryptWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<HybridEncrypt>> primitive_set) const {
-  util::Status status = Validate(primitive_set.get());
+  absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

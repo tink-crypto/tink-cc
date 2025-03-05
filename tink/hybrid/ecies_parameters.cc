@@ -87,7 +87,7 @@ absl::StatusOr<EciesParameters> EciesParameters::Builder::Build() {
       new std::set<CurveType>({CurveType::kNistP256, CurveType::kNistP384,
                                CurveType::kNistP521, CurveType::kX25519});
   if (kSupportedCurves->find(curve_type_) == kSupportedCurves->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create ECIES parameters with unknown curve type.");
   }
@@ -96,7 +96,7 @@ absl::StatusOr<EciesParameters> EciesParameters::Builder::Build() {
       {HashType::kSha1, HashType::kSha224, HashType::kSha256, HashType::kSha384,
        HashType::kSha512});
   if (kSupportedHashes->find(hash_type_) == kSupportedHashes->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create ECIES parameters with unknown hash type.");
   }
@@ -107,7 +107,7 @@ absl::StatusOr<EciesParameters> EciesParameters::Builder::Build() {
            PointFormat::kLegacyUncompressed, absl::nullopt});
   if (kSupportedPointFormats->find(point_format_) ==
       kSupportedPointFormats->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create ECIES parameters with unknown point format.");
   }
@@ -117,26 +117,26 @@ absl::StatusOr<EciesParameters> EciesParameters::Builder::Build() {
        DemId::kXChaCha20Poly1305Raw, DemId::kAes128CtrHmacSha256Raw,
        DemId::kAes256CtrHmacSha256Raw});
   if (kSupportedDemIds->find(dem_id_) == kSupportedDemIds->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create ECIES parameters with unknown DEM.");
   }
 
   static const std::set<Variant>* kSupportedVariants = new std::set<Variant>(
       {Variant::kTink, Variant::kCrunchy, Variant::kNoPrefix});
   if (kSupportedVariants->find(variant_) == kSupportedVariants->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create ECIES parameters with unknown variant.");
   }
 
   if (curve_type_ == EciesParameters::CurveType::kX25519 &&
       point_format_.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Point format must not be specified for the X25519 curve.");
   }
 
   if (IsNistCurve(curve_type_) && !point_format_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Point format must be specified for a NIST curve.");
   }
 
@@ -209,7 +209,7 @@ EciesParameters::CreateDemParameters() const {
     }
 
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInternal,
           absl::StrCat("Cannot create DEM parameters for DEM id: ", dem_id_));
   }

@@ -51,28 +51,28 @@ absl::StatusOr<HpkeParameters> HpkeParameters::Builder::Build() {
       {KemId::kDhkemP256HkdfSha256, KemId::kDhkemP384HkdfSha384,
        KemId::kDhkemP521HkdfSha512, KemId::kDhkemX25519HkdfSha256});
   if (supported_kem_ids->find(kem_id_) == supported_kem_ids->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create HPKE parameters with unknown KEM ID.");
   }
 
   static const std::set<KdfId>* supported_kdf_ids = new std::set<KdfId>(
       {KdfId::kHkdfSha256, KdfId::kHkdfSha384, KdfId::kHkdfSha512});
   if (supported_kdf_ids->find(kdf_id_) == supported_kdf_ids->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create HPKE parameters with unknown KDF ID.");
   }
 
   static const std::set<AeadId>* supported_aead_ids = new std::set<AeadId>(
       {AeadId::kAesGcm128, AeadId::kAesGcm256, AeadId::kChaCha20Poly1305});
   if (supported_aead_ids->find(aead_id_) == supported_aead_ids->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create HPKE parameters with unknown AEAD ID.");
   }
 
   static const std::set<Variant>* supported_variants = new std::set<Variant>(
       {Variant::kTink, Variant::kCrunchy, Variant::kNoPrefix});
   if (supported_variants->find(variant_) == supported_variants->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create HPKE parameters with unknown variant.");
   }
 

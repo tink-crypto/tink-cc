@@ -17,12 +17,13 @@
 #include "tink/keyderivation/key_derivation_config.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "tink/config/tink_fips.h"
 #include "tink/keyderivation/internal/prf_based_deriver_key_manager.h"
 #include "tink/keyderivation/keyset_deriver_wrapper.h"
+#include "tink/keyderivation/prf_based_key_derivation_proto_serialization.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
 #include "tink/registry.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +41,11 @@ absl::Status KeyDerivationConfig::Register() {
   // implementations, so none are registered in FIPS-only mode.
   if (IsFipsModeEnabled()) {
     return absl::OkStatus();
+  }
+
+  status = RegisterPrfBasedKeyDerivationProtoSerialization();
+  if (!status.ok()) {
+    return status;
   }
 
   // Register required key manager for PrfBasedDeriverKeyManager.

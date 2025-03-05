@@ -63,19 +63,19 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Encrypt(
     absl::Span<char> buffer) const {
   const int64_t max_encryption_size = MaxEncryptionSize(plaintext.size());
   if (buffer.size() < max_encryption_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Encryption buffer too small; expected at least ",
                      max_encryption_size, " bytes, got ", buffer.size()));
   }
   absl::string_view buffer_string(buffer.data(), buffer.size());
   if (BuffersOverlap(plaintext, buffer_string)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kFailedPrecondition,
         "Plaintext and ciphertext buffers overlap; this is disallowed");
   }
 
-  util::Status res =
+  absl::Status res =
       subtle::Random::GetRandomBytes(buffer.subspan(0, kIvSizeInBytes));
   if (!res.ok()) {
     return res;
@@ -105,7 +105,7 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
     absl::Span<char> buffer) const {
   const size_t min_ciphertext_size = kIvSizeInBytes + kTagSizeInBytes;
   if (ciphertext.size() < min_ciphertext_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Ciphertext too short; expected at least ",
                      min_ciphertext_size, " bytes, got ", ciphertext.size()));
@@ -113,7 +113,7 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
 
   const int64_t max_decryption_size = MaxDecryptionSize(ciphertext.size());
   if (buffer.size() < max_decryption_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Decryption buffer too small; expected at least ",
                      max_decryption_size, " bytes, got ", buffer.size()));
@@ -121,7 +121,7 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
 
   absl::string_view buffer_string(buffer.data(), buffer.size());
   if (BuffersOverlap(ciphertext, buffer_string)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kFailedPrecondition,
         "Plaintext and ciphertext buffers overlap; this is disallowed");
   }

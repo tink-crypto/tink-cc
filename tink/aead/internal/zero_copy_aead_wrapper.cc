@@ -43,16 +43,16 @@ namespace {
 typedef crypto::tink::PrimitiveSet<ZeroCopyAead>::Entry<ZeroCopyAead>
     ZeroCopyAeadEntry;
 
-util::Status Validate(PrimitiveSet<ZeroCopyAead>* aead_set) {
+absl::Status Validate(PrimitiveSet<ZeroCopyAead>* aead_set) {
   if (aead_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "aead_set must be non-NULL");
   }
   if (aead_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "aead_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class ZeroCopyAeadSetWrapper : public Aead {
@@ -138,14 +138,14 @@ absl::StatusOr<std::string> ZeroCopyAeadSetWrapper::Decrypt(
     }
   }
 
-  return util::Status(absl::StatusCode::kInvalidArgument, "Decryption failed");
+  return absl::Status(absl::StatusCode::kInvalidArgument, "Decryption failed");
 }
 
 }  // anonymous namespace
 
 absl::StatusOr<std::unique_ptr<Aead>> ZeroCopyAeadWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<ZeroCopyAead>> aead_set) const {
-  util::Status status = Validate(aead_set.get());
+  absl::Status status = Validate(aead_set.get());
   if (!status.ok()) return status;
   std::unique_ptr<Aead> aead =
       absl::make_unique<ZeroCopyAeadSetWrapper>(std::move(aead_set));

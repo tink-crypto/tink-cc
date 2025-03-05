@@ -81,12 +81,12 @@ absl::StatusOr<std::unique_ptr<Keyset>> JsonKeysetReader::Read() {
       JsonToBinaryString(internal::GetTinkTypeResolver(), kKeysetTypeUrl,
                          *serialized_keyset, &binary_keyset, parse_options);
   if (!status.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid JSON Keyset");
   }
   auto keyset = absl::make_unique<Keyset>();
   if (!keyset->ParseFromString(binary_keyset)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "internal error parsing keyset");
   };
   return std::move(keyset);
@@ -110,11 +110,11 @@ JsonKeysetReader::ReadEncrypted() {
       internal::GetTinkTypeResolver(), kEncryptedKeysetTypeUrl,
       *serialized_keyset, &binary_encrypted_keyset, parse_options);
   if (!status.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
   }
   auto encrypted_keyset = absl::make_unique<EncryptedKeyset>();
   if (!encrypted_keyset->ParseFromString(binary_encrypted_keyset)) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "internal error parsing encrypted_keyset");
   };
   return std::move(encrypted_keyset);

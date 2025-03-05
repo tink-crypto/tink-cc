@@ -65,23 +65,23 @@ class JwtPublicKeySignSetWrapper : public JwtPublicKeySign {
   std::unique_ptr<MonitoringClient> monitoring_sign_client_;
 };
 
-util::Status Validate(PrimitiveSet<JwtPublicKeySignInternal>* jwt_sign_set) {
+absl::Status Validate(PrimitiveSet<JwtPublicKeySignInternal>* jwt_sign_set) {
   if (jwt_sign_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "jwt_sign_set must be non-NULL");
   }
   if (jwt_sign_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "jwt_sign_set has no primary");
   }
   for (const auto* entry : jwt_sign_set->get_all()) {
     if ((entry->get_output_prefix_type() != OutputPrefixType::RAW) &&
         (entry->get_output_prefix_type() != OutputPrefixType::TINK)) {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "all JWT keys must be either RAW or TINK");
     }
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 absl::StatusOr<std::string> JwtPublicKeySignSetWrapper::SignAndEncode(
@@ -109,7 +109,7 @@ absl::StatusOr<std::string> JwtPublicKeySignSetWrapper::SignAndEncode(
 absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<JwtPublicKeySignInternal>> jwt_sign_set)
     const {
-  util::Status status = Validate(jwt_sign_set.get());
+  absl::Status status = Validate(jwt_sign_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

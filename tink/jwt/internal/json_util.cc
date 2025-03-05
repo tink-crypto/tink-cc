@@ -41,7 +41,7 @@ absl::StatusOr<Struct> JsonStringToProtoStruct(absl::string_view json_string) {
   absl::Status status =
       JsonStringToMessage(json_string, &proto, json_parse_options);
   if (!status.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
   }
   return proto;
 }
@@ -52,7 +52,7 @@ absl::StatusOr<ListValue> JsonStringToProtoList(absl::string_view json_string) {
   absl::Status status =
       JsonStringToMessage(json_string, &proto, json_parse_options);
   if (!status.ok()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "invalid JSON");
   }
   return proto;
 }

@@ -56,13 +56,13 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
                                   absl::string_view associated_data,
                                   absl::Span<char> buffer) const override {
     if (buffer.size() < MaxEncryptionSize(plaintext.size())) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Encryption buffer too small; expected at least ",
                        MaxEncryptionSize(plaintext.size()), " bytes, got ",
                        buffer.size()));
     }
-    util::Status status =
+    absl::Status status =
         Random::GetRandomBytes(buffer.subspan(0, base_x_aes_gcm_.salt_size()));
     if (!status.ok()) {
       return status;
@@ -100,14 +100,14 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
                                   absl::string_view associated_data,
                                   absl::Span<char> buffer) const override {
     if (ciphertext.size() < base_x_aes_gcm_.min_ct_size()) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Ciphertext too short; expected at least ",
                        base_x_aes_gcm_.min_ct_size(), " bytes, got ",
                        ciphertext.size()));
     }
     if (buffer.size() < MaxDecryptionSize(ciphertext.size())) {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Decryption buffer too small; expected at least ",
                        MaxDecryptionSize(ciphertext.size()), " bytes, got ",

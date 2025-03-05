@@ -101,7 +101,7 @@ absl::StatusOr<EcdsaParameters> RawEcdsaParamsFromJwtEcdsaParams(
       break;
     }
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported algorithm: ", params.GetAlgorithm()));
   }
@@ -118,7 +118,7 @@ absl::StatusOr<std::string> AlgorithmName(
     case JwtEcdsaParameters::Algorithm::kEs512:
       return std::string("ES512");
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported algorithm: ", algorithm));
   }
 }
@@ -148,7 +148,7 @@ NewJwtEcdsaSignInternal(const JwtEcdsaPrivateKey& jwt_ecdsa_private_key) {
           &jwt_ecdsa_private_key.GetParameters());
   if (jwt_ecdsa_params == nullptr) {
     // Should never happen.
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtEcdsaParameters");
   }
 
@@ -194,7 +194,7 @@ NewJwtEcdsaSignInternal(const JwtEcdsaPrivateKey& jwt_ecdsa_private_key) {
                                        *algorithm_name);
     default:
       // Should never happen.
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
 }
@@ -205,7 +205,7 @@ NewJwtEcdsaVerifyInternal(const JwtEcdsaPublicKey& jwt_ecdsa_public_key) {
       dynamic_cast<const JwtEcdsaParameters*>(
           &jwt_ecdsa_public_key.GetParameters());
   if (jwt_ecdsa_params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtEcdsaParameters");
   }
   absl::StatusOr<EcdsaParameters> raw_ecdsa_parameters =
@@ -249,7 +249,7 @@ NewJwtEcdsaVerifyInternal(const JwtEcdsaPublicKey& jwt_ecdsa_public_key) {
                                          *algorithm_name);
     default:
       // Should never happen.
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
 }
@@ -264,7 +264,7 @@ absl::StatusOr<std::string> AlgorithmName(
     case JwtRsaSsaPkcs1Parameters::Algorithm::kRs512:
       return std::string("RS4096");
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported algorithm: ", algorithm));
   }
 }
@@ -318,7 +318,7 @@ RawRsaSsaPkcs1ParamsFromJwtRsaSsaPkcs1Params(
       builder.SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512);
       break;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported algorithm: ", params.GetAlgorithm()));
   }
@@ -333,7 +333,7 @@ NewJwtRsaSsaPkcs1SignInternal(
           &jwt_rsa_ssa_pkcs1_private_key.GetParameters());
   if (jwt_rsa_ssa_pkcs1_params == nullptr) {
     // Should never happen.
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtRsaSsaPkcs1Parameters");
   }
 
@@ -376,7 +376,7 @@ NewJwtRsaSsaPkcs1SignInternal(
       return JwtPublicKeySignImpl::Raw(*std::move(raw_signer), *algorithm_name);
     default:
       // Should never happen.
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
 }
@@ -388,7 +388,7 @@ NewJwtRsaSsaPkcs1VerifyInternal(
       dynamic_cast<const JwtRsaSsaPkcs1Parameters*>(
           &jwt_rsa_ssa_pkcs1_public_key.GetParameters());
   if (jwt_rsa_ssa_pkcs1_params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtRsaSsaPkcs1Parameters");
   }
   absl::StatusOr<RsaSsaPkcs1Parameters> raw_rsa_ssa_pkcs1_parameters =
@@ -435,7 +435,7 @@ NewJwtRsaSsaPkcs1VerifyInternal(
           *std::move(rsa_ssa_pkcs1_verify_boringssl), *algorithm_name);
     default:
       // Should never happen.
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
 }
@@ -494,7 +494,7 @@ absl::StatusOr<RsaSsaPssParameters> RawRsaSsaPssParamsFromJwtRsaSsaPssParams(
       builder.SetSaltLengthInBytes(64);
       break;
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Unsupported algorithm: ", params.GetAlgorithm()));
   }
@@ -511,7 +511,7 @@ absl::StatusOr<std::string> AlgorithmName(
     case JwtRsaSsaPssParameters::Algorithm::kPs512:
       return std::string("PS4096");
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unsupported algorithm: ", algorithm));
   }
 }
@@ -524,7 +524,7 @@ NewJwtRsaSsaPssSignInternal(
           &jwt_rsa_ssa_pss_private_key.GetParameters());
   if (jwt_rsa_ssa_pss_params == nullptr) {
     // Should never happen.
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtRsaSsaPssParameters");
   }
 
@@ -566,7 +566,7 @@ NewJwtRsaSsaPssSignInternal(
       return JwtPublicKeySignImpl::Raw(*std::move(raw_signer), *algorithm_name);
     default:
       // Should never happen.
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
 }
@@ -578,7 +578,7 @@ NewJwtRsaSsaPssVerifyInternal(
       dynamic_cast<const JwtRsaSsaPssParameters*>(
           &jwt_rsa_ssa_pss_public_key.GetParameters());
   if (jwt_rsa_ssa_pss_params == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to cast JwtRsaSsaPssParameters");
   }
   absl::StatusOr<RsaSsaPssParameters> raw_rsa_ssa_pss_parameters =
@@ -625,15 +625,15 @@ NewJwtRsaSsaPssVerifyInternal(
           *std::move(rsa_ssa_pss_verify_boringssl), *algorithm_name);
     default:
       // Should never happen.
-      return util::Status(absl::StatusCode::kInternal,
+      return absl::Status(absl::StatusCode::kInternal,
                           "Unsupported kid strategy");
   }
 }
 
 }  // namespace
 
-util::Status AddJwtSignatureV0(Configuration& config) {
-  util::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
+absl::Status AddJwtSignatureV0(Configuration& config) {
+  absl::Status status = internal::ConfigurationImpl::AddPrimitiveWrapper(
       absl::make_unique<JwtPublicKeySignWrapper>(), config);
   if (!status.ok()) {
     return status;

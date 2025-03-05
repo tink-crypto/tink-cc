@@ -93,14 +93,13 @@ class ExampleKeyTypeManager
 
   const std::string& get_key_type() const override { return kKeyType; }
 
-  crypto::tink::util::Status ValidateKey(
-      const AesGcmKeyProto& key) const override {
-    return util::OkStatus();
+  absl::Status ValidateKey(const AesGcmKeyProto& key) const override {
+    return absl::OkStatus();
   }
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const AesGcmKeyFormat& key_format) const override {
-    return util::OkStatus();
+    return absl::OkStatus();
   }
 
   absl::StatusOr<AesGcmKeyProto> CreateKey(
@@ -178,8 +177,8 @@ class ExampleKeyTypeManagerWithoutFactory
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  util::Status ValidateKey(const AesGcmKeyProto& key) const override {
-    util::Status status = ValidateVersion(key.version(), kVersion);
+  absl::Status ValidateKey(const AesGcmKeyProto& key) const override {
+    absl::Status status = ValidateVersion(key.version(), kVersion);
     if (!status.ok()) return status;
     return ValidateAesKeySize(key.key_value().size());
   }

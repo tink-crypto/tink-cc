@@ -76,7 +76,7 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
   if (cipher == "xchacha20_poly1305") {
     return CreateXchacha20Poly1305OneShotCrypter(key);
   }
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       absl::StrCat("Invalid cipher ", cipher));
 }
 

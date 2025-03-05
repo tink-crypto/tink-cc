@@ -29,7 +29,7 @@ namespace tink {
 class AlwaysFailingKeyFactory : public KeyFactory {
  public:
   AlwaysFailingKeyFactory() = delete;
-  explicit AlwaysFailingKeyFactory(const crypto::tink::util::Status& status)
+  explicit AlwaysFailingKeyFactory(const absl::Status& status)
       : status_(status) {}
 
   absl::StatusOr<std::unique_ptr<portable_proto::MessageLite>> NewKey(
@@ -48,10 +48,10 @@ class AlwaysFailingKeyFactory : public KeyFactory {
   }
 
  private:
-  crypto::tink::util::Status status_;
+  absl::Status status_;
 };
 std::unique_ptr<KeyFactory> KeyFactory::AlwaysFailingFactory(
-    const crypto::tink::util::Status& status) {
+    const absl::Status& status) {
   return absl::make_unique<AlwaysFailingKeyFactory>(status);
 }
 }  // namespace tink

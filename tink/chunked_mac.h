@@ -40,7 +40,7 @@ class ChunkedMacComputation {
   // arbitrary slicing of the input data is allowed):
   //   1.  Update("ab"),  Update("cd"), Update("ef")
   //   2.  Update("abc"), Update("def")
-  virtual util::Status Update(absl::string_view data) = 0;
+  virtual absl::Status Update(absl::string_view data) = 0;
 
   // Finalizes the MAC computation and returns the authentication tag.
   // After this method has been called, this object can no longer be used.
@@ -63,12 +63,12 @@ class ChunkedMacVerification {
   // arbitrary slicing of the input data is allowed):
   //   1.  Update("ab"),  Update("cd"), Update("ef")
   //   2.  Update("abc"), Update("def")
-  virtual util::Status Update(absl::string_view data) = 0;
+  virtual absl::Status Update(absl::string_view data) = 0;
 
   // Finalizes the MAC computation and returns OK if the tag is successfully
   // verified.  Otherwise, returns an error status.  After this method has been
   // called, this object can no longer be used.  Requires exclusive access.
-  virtual util::Status VerifyMac() = 0;
+  virtual absl::Status VerifyMac() = 0;
 
   virtual ~ChunkedMacVerification() = default;
 };

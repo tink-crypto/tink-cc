@@ -47,8 +47,8 @@ class CleartextKeysetHandle {
 
   // Writes the keyset in the given `keyset_handle` to the `writer` which must
   // be non-null.
-  static crypto::tink::util::Status Write(KeysetWriter* writer,
-                                          const KeysetHandle& keyset_handle);
+  static absl::Status Write(KeysetWriter* writer,
+                            const KeysetHandle& keyset_handle);
 
   // Creates a KeysetHandle object for the given 'keyset'.
   static std::unique_ptr<KeysetHandle> GetKeysetHandle(

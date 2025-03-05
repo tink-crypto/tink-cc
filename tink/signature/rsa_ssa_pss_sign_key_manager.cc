@@ -96,7 +96,7 @@ absl::StatusOr<RsaSsaPssPrivateKeyProto> RsaSsaPssSignKeyManager::CreateKey(
 
   internal::RsaPrivateKey private_key;
   internal::RsaPublicKey public_key;
-  util::Status status = internal::NewRsaKeyPair(
+  absl::Status status = internal::NewRsaKeyPair(
       key_format.modulus_size_in_bits(), e->get(), &private_key, &public_key);
   if (!status.ok()) {
     return status;
@@ -127,7 +127,7 @@ RsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
   auto sign_verify_result =
       SignAndVerify(signer.value().get(), verifier.value().get());
   if (!sign_verify_result.ok()) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "security bug: signing with private key followed by "
                         "verifying with public key failed");
   }

@@ -39,13 +39,13 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
     PartialKeyAccessToken token) {
   // Only 64-byte private keys are currently supported.
   if (private_key_bytes.size() != SLHDSA_SHA2_128S_PRIVATE_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SLH-DSA private key length must be 64 bytes.");
   }
 
   if (public_key.GetParameters().GetPrivateKeySizeInBytes() !=
       private_key_bytes.size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Private key size does not match parameters");
   }
   // Confirm that the private key and public key are a valid SLH-DSA key pair.
@@ -63,7 +63,7 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   if (CRYPTO_memcmp(expected_public_key_bytes.data(),
                     public_key_bytes_regen.data(),
                     SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES) != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid SLH-DSA key pair");
   }
 

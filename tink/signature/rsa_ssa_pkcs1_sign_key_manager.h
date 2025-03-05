@@ -61,10 +61,10 @@ class RsaSsaPkcs1SignKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::RsaSsaPkcs1PrivateKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::RsaSsaPkcs1KeyFormat& key_format)
       const override;
 

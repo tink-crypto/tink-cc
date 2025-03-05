@@ -40,12 +40,12 @@ absl::StatusOr<std::string> ComputeOutputPrefix(
       return std::string("");  // Empty prefix.
     case SlhDsaParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must have value with kTink");
       }
       return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid variant: ", parameters.GetVariant()));
   }
@@ -57,20 +57,20 @@ absl::StatusOr<SlhDsaPublicKey> SlhDsaPublicKey::Create(
     const SlhDsaParameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key without ID requirement with parameters with ID "
         "requirement");
   }
   if (!parameters.HasIdRequirement() && id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
   // Only 32-byte public keys are supported at the moment.
   if (public_key_bytes.size() != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid public key size. Only 32-byte keys are "
                         "currently supported.");
   }

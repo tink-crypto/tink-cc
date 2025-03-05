@@ -148,7 +148,7 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
     std::unique_ptr<PublicKeySign> pk_sign(
         new DummyPublicKeySign(signature_name_0));
     std::string signature = pk_sign->Sign(data).value();
-    util::Status status = pk_verify->Verify(signature, data);
+    absl::Status status = pk_verify->Verify(signature, data);
     EXPECT_TRUE(status.ok()) << status;
   }
 }

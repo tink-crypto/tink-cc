@@ -45,16 +45,16 @@ constexpr absl::string_view kVerifyApi = "verify";
 
 using ::google::crypto::tink::OutputPrefixType;
 
-util::Status Validate(PrimitiveSet<PublicKeyVerify>* public_key_verify_set) {
+absl::Status Validate(PrimitiveSet<PublicKeyVerify>* public_key_verify_set) {
   if (public_key_verify_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "public_key_verify_set must be non-NULL");
   }
   if (public_key_verify_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "public_key_verify_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class PublicKeyVerifySetWrapper : public PublicKeyVerify {
@@ -65,8 +65,8 @@ class PublicKeyVerifySetWrapper : public PublicKeyVerify {
       : public_key_verify_set_(std::move(public_key_verify_set)),
       monitoring_verify_client_(std::move(monitoring_verify_client)) {}
 
-  crypto::tink::util::Status Verify(absl::string_view signature,
-                                    absl::string_view data) const override;
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
 
   ~PublicKeyVerifySetWrapper() override = default;
 
@@ -75,7 +75,7 @@ class PublicKeyVerifySetWrapper : public PublicKeyVerify {
   std::unique_ptr<MonitoringClient> monitoring_verify_client_;
 };
 
-util::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
+absl::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
                                                absl::string_view data) const {
   // BoringSSL expects a non-null pointer for data,
   // regardless of whether the size is 0.
@@ -85,7 +85,7 @@ util::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
   if (signature.length() <= CryptoFormat::kNonRawPrefixSize) {
     // This also rejects raw signatures with size of 4 bytes or fewer.
     // We're not aware of any schemes that output signatures that small.
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature too short.");
   }
   absl::string_view key_id =
@@ -108,7 +108,7 @@ util::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
         if (monitoring_verify_client_ != nullptr) {
           monitoring_verify_client_->Log(entry->get_key_id(), data.size());
         }
-        return util::OkStatus();
+        return absl::OkStatus();
       } else {
         // LOG that a matching key didn't verify the signature.
       }
@@ -126,14 +126,14 @@ util::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
           monitoring_verify_client_->Log(public_key_verify_entry->get_key_id(),
                                          data.size());
         }
-        return util::OkStatus();
+        return absl::OkStatus();
       }
     }
   }
   if (monitoring_verify_client_ != nullptr) {
     monitoring_verify_client_->LogFailure();
   }
-  return util::Status(absl::StatusCode::kInvalidArgument, "Invalid signature.");
+  return absl::Status(absl::StatusCode::kInvalidArgument, "Invalid signature.");
 }
 
 }  // anonymous namespace
@@ -141,7 +141,7 @@ util::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> PublicKeyVerifyWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<PublicKeyVerify>> public_key_verify_set)
     const {
-  util::Status status = Validate(public_key_verify_set.get());
+  absl::Status status = Validate(public_key_verify_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

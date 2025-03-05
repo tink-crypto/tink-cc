@@ -299,7 +299,7 @@ absl::StatusOr<EcdsaPublicKeyProto> GetExpectedEcdsaPublicKeyProto(
       break;
     }
     default: {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid curve type.");
     }
   }
@@ -333,7 +333,7 @@ absl::StatusOr<EcdsaPrivateKeyProto> GetExpectedEcdsaPrivateKeyProto(
       break;
     }
     default: {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid curve type.");
     }
   }

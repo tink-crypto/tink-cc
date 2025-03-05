@@ -27,13 +27,13 @@ namespace tink {
 absl::StatusOr<MlDsaParameters> MlDsaParameters::Create(Instance instance,
                                                         Variant variant) {
   if (instance != Instance::kMlDsa65) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid ML-DSA instance. Only ML-DSA-65 keys are "
                         "currently supported.");
   }
 
   if (variant != Variant::kTink && variant != Variant::kNoPrefix) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create ML-DSA parameters with unknown Variant.");
   }

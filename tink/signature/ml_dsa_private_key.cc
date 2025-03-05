@@ -45,7 +45,7 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid ML-DSA private seed size. The seed must be ",
                      MLDSA_SEED_BYTES, " bytes."));
@@ -53,7 +53,7 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
 
   if (public_key.GetParameters().GetInstance() !=
       MlDsaParameters::Instance::kMlDsa65) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid ML-DSA instance. Only ML-DSA-65 is "
                         "currently supported.");
   }
@@ -65,14 +65,14 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
           boringssl_private_key.get(),
           reinterpret_cast<const uint8_t*>(private_seed_view.data()),
           private_seed_view.size())) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to create ML-DSA private key from seed.");
   }
 
   auto boringssl_public_key = std::make_unique<MLDSA65_public_key>();
   if (!MLDSA65_public_from_private(boringssl_public_key.get(),
                                    boringssl_private_key.get())) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to get ML-DSA public key from private key.");
   }
 
@@ -85,7 +85,7 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
                       MLDSA65_PUBLIC_KEY_BYTES) ||
       !MLDSA65_marshal_public_key(&cbb, boringssl_public_key.get()) ||
       !CBB_finish(&cbb, nullptr, &size) || size != MLDSA65_PUBLIC_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Failed to serialize ML-DSA public key.");
   }
 
@@ -95,7 +95,7 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
   if (CRYPTO_memcmp(expected_public_key_bytes.data(),
                     public_key_bytes_regen.data(),
                     MLDSA65_PUBLIC_KEY_BYTES) != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ML-DSA public key doesn't match the private key.");
   }
 

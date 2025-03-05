@@ -45,19 +45,19 @@ absl::StatusOr<std::string> ComputeOutputPrefix(
       ABSL_FALLTHROUGH_INTENDED;
     case RsaSsaPssParameters::Variant::kCrunchy:
       if (!id_requirement.has_value()) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "ID requirement must have value with kCrunchy or kLegacy");
       }
       return internal::ComputeOutputPrefix(0, *id_requirement);
     case RsaSsaPssParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must have value with kTink");
       }
       return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid variant: ", parameters.GetVariant()));
   }
@@ -69,13 +69,13 @@ absl::StatusOr<RsaSsaPssPublicKey> RsaSsaPssPublicKey::Create(
     const RsaSsaPssParameters& parameters, const BigInteger& modulus,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key without ID requirement with parameters with ID "
         "requirement");
   }
   if (!parameters.HasIdRequirement() && id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
@@ -83,7 +83,7 @@ absl::StatusOr<RsaSsaPssPublicKey> RsaSsaPssPublicKey::Create(
 
   // Check if the modulus length matches the modulus_size_in_bits parameter.
   if (modulus.SizeInBytes() * 8 != parameters.GetModulusSizeInBits()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid modulus length (expected %d, got %d)",
                         parameters.GetModulusSizeInBits(),

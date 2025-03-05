@@ -70,23 +70,23 @@ RsaSsaPkcs1Parameters::Builder& RsaSsaPkcs1Parameters::Builder::SetVariant(
 
 absl::StatusOr<RsaSsaPkcs1Parameters> RsaSsaPkcs1Parameters::Builder::Build() {
   if (!modulus_size_in_bits_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size is not set.");
   }
 
   if (!hash_type_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Hash type is not set.");
   }
 
   if (!variant_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Variant is not set.");
   }
 
   // Validate modulus size.
   if (*modulus_size_in_bits_ < 2048) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid key size: must be at least 2048 bits, got ",
                      *modulus_size_in_bits_, " bits."));
@@ -94,7 +94,7 @@ absl::StatusOr<RsaSsaPkcs1Parameters> RsaSsaPkcs1Parameters::Builder::Build() {
 
   // Validate the public exponent: public exponent needs to be odd, greater than
   // 65536 and (for consistency with BoringSSL), smaller that 32 bits.
-  util::Status exponent_status =
+  absl::Status exponent_status =
       internal::ValidateRsaPublicExponent(public_exponent_.GetValue());
   if (!exponent_status.ok()) {
     return exponent_status;
@@ -104,7 +104,7 @@ absl::StatusOr<RsaSsaPkcs1Parameters> RsaSsaPkcs1Parameters::Builder::Build() {
   static const std::set<HashType>* supported_hashes = new std::set<HashType>(
       {HashType::kSha256, HashType::kSha384, HashType::kSha512});
   if (supported_hashes->find(*hash_type_) == supported_hashes->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create RsaSsaPkcs1 parameters with unknown HashType.");
   }
@@ -114,7 +114,7 @@ absl::StatusOr<RsaSsaPkcs1Parameters> RsaSsaPkcs1Parameters::Builder::Build() {
       new std::set<Variant>({Variant::kTink, Variant::kCrunchy,
                              Variant::kLegacy, Variant::kNoPrefix});
   if (supported_variants->find(*variant_) == supported_variants->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create RsaSsaPkcs1 parameters with unknown variant.");
   }

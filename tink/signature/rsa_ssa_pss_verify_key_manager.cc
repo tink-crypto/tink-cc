@@ -88,7 +88,7 @@ Status RsaSsaPssVerifyKeyManager::ValidateKey(
 
 Status RsaSsaPssVerifyKeyManager::ValidateParams(
     const RsaSsaPssParams& params) const {
-  util::Status hash_result = internal::IsHashTypeSafeForSignature(
+  absl::Status hash_result = internal::IsHashTypeSafeForSignature(
       Enums::ProtoToSubtle(params.sig_hash()));
   if (!hash_result.ok()) {
     return hash_result;
@@ -105,16 +105,16 @@ Status RsaSsaPssVerifyKeyManager::ValidateParams(
   //
   //  - Conscrypt/BouncyCastle do not support different hashes.
   if (params.mgf1_hash() != params.sig_hash()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("MGF1 hash '", params.mgf1_hash(),
                                      "' is different from signature hash '",
                                      params.sig_hash(), "'"));
   }
   if (params.salt_length() < 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "salt length is negative");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace tink

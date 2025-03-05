@@ -81,32 +81,32 @@ RsaSsaPssParameters::Builder& RsaSsaPssParameters::Builder::SetVariant(
 
 absl::StatusOr<RsaSsaPssParameters> RsaSsaPssParameters::Builder::Build() {
   if (!modulus_size_in_bits_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size is not set.");
   }
 
   if (!sig_hash_type_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature hash type is not set.");
   }
 
   if (!mgf1_hash_type_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "MGF1 hash type is not set.");
   }
 
   if (!salt_length_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Salt length is not set.");
   }
 
   if (!variant_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Variant is not set.");
   }
 
   if (*salt_length_in_bytes_ < 0) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid salt length in bytes: ", *salt_length_in_bytes_,
                      ". Salt length must be positive."));
@@ -117,25 +117,25 @@ absl::StatusOr<RsaSsaPssParameters> RsaSsaPssParameters::Builder::Build() {
       {HashType::kSha256, HashType::kSha384, HashType::kSha512});
 
   if (supported_hashes->find(*sig_hash_type_) == supported_hashes->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create RsaSsaPss parameters with unknown SigHashType.");
   }
 
   if (supported_hashes->find(*mgf1_hash_type_) == supported_hashes->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create RsaSsaPss parameters with unknown Mgf1HashType.");
   }
 
   if (*sig_hash_type_ != *mgf1_hash_type_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature hash type and MGF1 hash type should match.");
   }
 
   // Validate modulus size.
   if (*modulus_size_in_bits_ < 2048) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid key size: must be at least 2048 bits, got ",
                      *modulus_size_in_bits_, " bits."));
@@ -143,7 +143,7 @@ absl::StatusOr<RsaSsaPssParameters> RsaSsaPssParameters::Builder::Build() {
 
   // Validate the public exponent: public exponent needs to be odd, greater than
   // 65536 and (for consistency with BoringSSL), smaller that 32 bits.
-  util::Status exponent_status =
+  absl::Status exponent_status =
       internal::ValidateRsaPublicExponent(public_exponent_.GetValue());
   if (!exponent_status.ok()) {
     return exponent_status;
@@ -154,7 +154,7 @@ absl::StatusOr<RsaSsaPssParameters> RsaSsaPssParameters::Builder::Build() {
       new std::set<Variant>({Variant::kTink, Variant::kCrunchy,
                              Variant::kLegacy, Variant::kNoPrefix});
   if (supported_variants->find(*variant_) == supported_variants->end()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create RsaSsaPss parameters with unknown variant.");
   }

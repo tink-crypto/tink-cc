@@ -77,10 +77,10 @@ namespace {
 
 // Sets the parameters for an RSASSA-PSS key `parameters` given the PEM
 // parameters `pem_parameters`.
-util::Status SetRsaSsaPssParameters(const PemKeyParams& pem_parameters,
+absl::Status SetRsaSsaPssParameters(const PemKeyParams& pem_parameters,
                                     RsaSsaPssParams* parameters) {
   if (parameters == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Null parameters provided");
   }
   parameters->set_mgf1_hash(pem_parameters.hash_type);
@@ -89,22 +89,22 @@ util::Status SetRsaSsaPssParameters(const PemKeyParams& pem_parameters,
   if (!salt_len_or.ok()) return salt_len_or.status();
   parameters->set_salt_length(salt_len_or.value());
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // Sets the parameters for an ECDSA key `parameters` given the PEM
 // parameters `pem_parameters`.
-util::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
+absl::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
                                 EcdsaParams* parameters) {
   if (parameters == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Null parameters provided");
   }
 
   switch (pem_parameters.hash_type) {
     case HashType::SHA256: {
       if (pem_parameters.key_size_in_bits != 256) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "For NIST_P256 ECDSA, the key should be 256 bits long.");
       }
@@ -113,7 +113,7 @@ util::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
     }
     case HashType::SHA384: {
       if (pem_parameters.key_size_in_bits != 384) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "For NIST_P384 ECDSA, the key should be 384 bits long.");
       }
@@ -122,7 +122,7 @@ util::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
     }
     case HashType::SHA512: {
       if (pem_parameters.key_size_in_bits != 521) {
-        return util::Status(
+        return absl::Status(
             absl::StatusCode::kInvalidArgument,
             "For NIST_P521 ECDSA, the key should be 521 bits long.");
       }
@@ -130,7 +130,7 @@ util::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
       break;
     }
     default: {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Only NIST_P256, NIST_P384, and NIST_P521 ECDSA are "
                           "supported. The hash type "
                           "should be SHA256, SHA384, or SHA512 respectively.");
@@ -151,14 +151,14 @@ util::Status SetEcdsaParameters(const PemKeyParams& pem_parameters,
       break;
     }
     default: {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           "Only ECDSA supported. The algorithm parameter should be "
           "ECDSA_IEEE or ECDSA_DER.");
     }
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // Creates a new Keyset::Key with ID `key_id`. The key has key data
@@ -200,7 +200,7 @@ absl::StatusOr<EcdsaPrivateKeyProto> NewEcdsaPrivateKey(
   public_key_proto->set_y(private_key_subtle.pub_y);
 
   // ECDSA public key parameters.
-  util::Status set_parameter_status =
+  absl::Status set_parameter_status =
       SetEcdsaParameters(parameters, public_key_proto->mutable_params());
   if (!set_parameter_status.ok()) {
     return set_parameter_status;
@@ -286,7 +286,7 @@ RsaSsaPkcs1PrivateKeyProto NewRsaSsaPkcs1PrivateKey(
 }
 
 // Adds the PEM-encoded ECDSA private key `pem_key` to `keyset`.
-util::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
+absl::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
   absl::StatusOr<std::unique_ptr<internal::EcKey>> private_key_subtle =
       subtle::PemParser::ParseEcPrivateKey(pem_key.serialized_key);
   if (!private_key_subtle.ok()) return private_key_subtle.status();
@@ -296,7 +296,7 @@ util::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       **private_key_subtle, key_manager.get_version(), pem_key.parameters);
   if (!private_key_proto.ok()) return private_key_proto.status();
 
-  util::Status key_validation_status =
+  absl::Status key_validation_status =
       key_manager.ValidateKey(*private_key_proto);
   if (!key_validation_status.ok()) return key_validation_status;
 
@@ -304,11 +304,11 @@ util::Status AddEcdsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
       key_manager.key_material_type(), private_key_proto->SerializeAsString());
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // Adds the PEM-encoded private key `pem_key` to `keyset`.
-util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
+absl::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
   // Try to parse the PEM RSA private key.
   auto private_key_subtle_or =
       subtle::PemParser::ParseRsaPrivateKey(pem_key.serialized_key);
@@ -319,7 +319,7 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
 
   size_t modulus_size = private_key_subtle->n.length() * 8;
   if (pem_key.parameters.key_size_in_bits != modulus_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid RSA Key modulus size; found: ", modulus_size,
                      ", expected: ", pem_key.parameters.key_size_in_bits));
@@ -361,16 +361,16 @@ util::Status AddRsaSsaPrivateKey(const PemKey& pem_key, Keyset& keyset) {
       break;
     }
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid RSA algorithm ", pem_key.parameters.algorithm));
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 // Parses a given PEM-encoded ECDSA public key `pem_key`, and adds it to the
 // keyset `keyset`.
-util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
+absl::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   // Parse the PEM string into a ECDSA public key.
   auto public_key_subtle_or =
       subtle::PemParser::ParseEcPublicKey(pem_key.serialized_key);
@@ -399,17 +399,17 @@ util::Status AddEcdsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
       GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
       key_manager.key_material_type(), ecdsa_key.SerializeAsString());
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
-util::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
+absl::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
   if (pem_key.parameters.hash_type != HashType::SHA512) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Invalid ed25519 hash type: ",
                                      pem_key.parameters.hash_type));
   }
   if (pem_key.parameters.key_size_in_bits != 253) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Invalid ed25519 key size: ",
                                      pem_key.parameters.key_size_in_bits));
   }
@@ -429,12 +429,12 @@ util::Status AddEd25519PublicKey(const PemKey& pem_key, Keyset& keyset) {
       GenerateUnusedKeyId(keyset), key_manager.get_key_type(),
       key_manager.key_material_type(), ed25519_key.SerializeAsString());
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 // Parses a given PEM-encoded RSA public key `pem_key`, and adds it to the
 // keyset `keyset`.
-util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
+absl::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   // Parse the PEM string into a RSA public key.
   auto public_key_subtle_or =
       subtle::PemParser::ParseRsaPublicKey(pem_key.serialized_key);
@@ -446,7 +446,7 @@ util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
   // Check key length is as expected.
   size_t modulus_size = public_key_subtle->n.length() * 8;
   if (pem_key.parameters.key_size_in_bits != modulus_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Invalid RSA Key modulus size; found ", modulus_size,
                      ", expected ", pem_key.parameters.key_size_in_bits));
@@ -502,11 +502,11 @@ util::Status AddRsaSsaPublicKey(const PemKey& pem_key, Keyset& keyset) {
       break;
     }
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid RSA algorithm ", pem_key.parameters.algorithm));
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace
@@ -518,7 +518,7 @@ void SignaturePemKeysetReaderBuilder::Add(const PemKey& pem_serialized_key) {
 absl::StatusOr<std::unique_ptr<KeysetReader>>
 SignaturePemKeysetReaderBuilder::Build() {
   if (pem_serialized_keys_.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Empty array of PEM-encoded keys");
   }
 
@@ -532,13 +532,13 @@ SignaturePemKeysetReaderBuilder::Build() {
           new PublicKeyVerifyPemKeysetReader(pem_serialized_keys_));
     }
   }
-  return util::Status(absl::StatusCode::kInvalidArgument,
+  return absl::Status(absl::StatusCode::kInvalidArgument,
                       "Unknown pem_reader_type_");
 }
 
 absl::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
   if (pem_serialized_keys_.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Empty array of PEM-encoded keys");
   }
 
@@ -567,7 +567,7 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeySignPemKeysetReader::Read() {
 
 absl::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
   if (pem_serialized_keys_.empty()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Empty array of PEM-encoded keys");
   }
 
@@ -594,7 +594,7 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
             break;
           }
           default:
-            return util::Status(absl::StatusCode::kInvalidArgument,
+            return absl::Status(absl::StatusCode::kInvalidArgument,
                                 absl::StrCat("Invalid ECC algorithm ",
                                              pem_key.parameters.algorithm));
         }
@@ -609,7 +609,7 @@ absl::StatusOr<std::unique_ptr<Keyset>> PublicKeyVerifyPemKeysetReader::Read() {
 
 absl::StatusOr<std::unique_ptr<EncryptedKeyset>>
 SignaturePemKeysetReader::ReadEncrypted() {
-  return util::Status(absl::StatusCode::kUnimplemented,
+  return absl::Status(absl::StatusCode::kUnimplemented,
                       "Reading Encrypted PEM is not supported");
 }
 

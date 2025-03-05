@@ -60,27 +60,27 @@ RsaSsaPkcs1VerifyKeyManager::PublicKeyVerifyFactory::Create(
   return {std::move(rsa_ssa_pkcs1_result.value())};
 }
 
-util::Status RsaSsaPkcs1VerifyKeyManager::ValidateParams(
+absl::Status RsaSsaPkcs1VerifyKeyManager::ValidateParams(
     const RsaSsaPkcs1Params& params) const {
   return internal::IsHashTypeSafeForSignature(
       Enums::ProtoToSubtle(params.hash_type()));
 }
 
-util::Status RsaSsaPkcs1VerifyKeyManager::ValidateKey(
+absl::Status RsaSsaPkcs1VerifyKeyManager::ValidateKey(
     const RsaSsaPkcs1PublicKeyProto& key) const {
-  util::Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n());
   if (!n.ok()) {
     return n.status();
   }
-  util::Status modulus_status =
+  absl::Status modulus_status =
       internal::ValidateRsaModulusSize(BN_num_bits(n->get()));
   if (!modulus_status.ok()) {
     return modulus_status;
   }
-  util::Status exponent_status = internal::ValidateRsaPublicExponent(key.e());
+  absl::Status exponent_status = internal::ValidateRsaPublicExponent(key.e());
   if (!exponent_status.ok()) {
     return exponent_status;
   }

@@ -44,16 +44,16 @@ namespace {
 constexpr absl::string_view kPrimitive = "public_key_sign";
 constexpr absl::string_view kSignApi = "sign";
 
-util::Status Validate(PrimitiveSet<PublicKeySign>* public_key_sign_set) {
+absl::Status Validate(PrimitiveSet<PublicKeySign>* public_key_sign_set) {
   if (public_key_sign_set == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "public_key_sign_set must be non-NULL");
   }
   if (public_key_sign_set->get_primary() == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "public_key_sign_set has no primary");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 class PublicKeySignSetWrapper : public PublicKeySign {
@@ -105,7 +105,7 @@ absl::StatusOr<std::string> PublicKeySignSetWrapper::Sign(
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
     std::unique_ptr<PrimitiveSet<PublicKeySign>> primitive_set) const {
-  util::Status status = Validate(primitive_set.get());
+  absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 
   MonitoringClientFactory* const monitoring_factory =

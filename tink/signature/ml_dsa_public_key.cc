@@ -39,12 +39,12 @@ absl::StatusOr<std::string> ComputeOutputPrefix(
       return std::string("");  // Empty prefix.
     case MlDsaParameters::Variant::kTink:
       if (!id_requirement.has_value()) {
-        return util::Status(absl::StatusCode::kInvalidArgument,
+        return absl::Status(absl::StatusCode::kInvalidArgument,
                             "ID requirement must have value with kTink");
       }
       return internal::ComputeOutputPrefix(1, *id_requirement);
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Invalid variant: ", parameters.GetVariant()));
   }
@@ -56,26 +56,26 @@ absl::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
     const MlDsaParameters& parameters, absl::string_view public_key_bytes,
     absl::optional<int> id_requirement, PartialKeyAccessToken token) {
   if (parameters.HasIdRequirement() && !id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key without ID requirement with parameters with ID "
         "requirement");
   }
   if (!parameters.HasIdRequirement() && id_requirement.has_value()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create key with ID requirement with parameters without ID "
         "requirement");
   }
 
   if (parameters.GetInstance() != MlDsaParameters::Instance::kMlDsa65) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid ML-DSA instance. Only ML-DSA-65 is "
                         "currently supported.");
   }
 
   if (public_key_bytes.size() != MLDSA65_PUBLIC_KEY_BYTES) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Invalid ML-DSA public key size. Only ",
                                      MLDSA65_PUBLIC_KEY_BYTES,
                                      "-byte keys are currently supported."));

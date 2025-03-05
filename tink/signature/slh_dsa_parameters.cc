@@ -29,27 +29,27 @@ absl::StatusOr<SlhDsaParameters> SlhDsaParameters::Create(
     SignatureType signature_type, Variant variant) {
   // Validate HashType - only SHA2 is currently supported.
   if (hash_type != HashType::kSha2) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create Slh-DSA parameters with unknown HashType.");
   }
 
   if (private_key_size_in_bytes != 64) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid private key size. Only 64-bytes keys are "
                         "currently supported.");
   }
 
   // Validate SignatureType - only SmallSignature is currently supported.
   if (signature_type != SignatureType::kSmallSignature) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create SLH-DSA parameters with unknown SignatureType.");
   }
 
   // Validate Variant.
   if (variant != Variant::kTink && variant != Variant::kNoPrefix) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Cannot create SLH-DSA parameters with unknown Variant.");
   }

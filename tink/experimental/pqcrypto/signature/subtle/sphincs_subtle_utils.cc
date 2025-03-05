@@ -35,7 +35,7 @@ namespace subtle {
 absl::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
     SphincsParamsPqclean params) {
   // Check if parameters are valid.
-  util::Status valid_parameters = ValidateParams(params);
+  absl::Status valid_parameters = ValidateParams(params);
   if (!valid_parameters.ok()) {
     return valid_parameters;
   }
@@ -58,7 +58,7 @@ absl::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
   if (0 != sphincs_helper_pqclean.Keygen(
                reinterpret_cast<uint8_t *>(public_key.data()),
                reinterpret_cast<uint8_t *>(private_key.data()))) {
-    return util::Status(absl::StatusCode::kInternal, "Key generation failed.");
+    return absl::Status(absl::StatusCode::kInternal, "Key generation failed.");
   }
 
   util::SecretData private_key_data =
@@ -70,14 +70,14 @@ absl::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
   return key_pair;
 }
 
-crypto::tink::util::Status ValidatePrivateKeySize(int32_t key_size) {
+absl::Status ValidatePrivateKeySize(int32_t key_size) {
   switch (key_size) {
     case kSphincsPrivateKeySize64:
     case kSphincsPrivateKeySize96:
     case kSphincsPrivateKeySize128:
-      return util::OkStatus();
+      return absl::OkStatus();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrFormat("Invalid private key size (%d). "
                           "The only valid sizes are %d, %d, %d.",
@@ -86,14 +86,14 @@ crypto::tink::util::Status ValidatePrivateKeySize(int32_t key_size) {
   }
 }
 
-crypto::tink::util::Status ValidatePublicKeySize(int32_t key_size) {
+absl::Status ValidatePublicKeySize(int32_t key_size) {
   switch (key_size) {
     case kSphincsPublicKeySize32:
     case kSphincsPublicKeySize48:
     case kSphincsPublicKeySize64:
-      return util::OkStatus();
+      return absl::OkStatus();
     default:
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrFormat("Invalid private key size (%d). "
                           "The only valid sizes are %d, %d, %d.",
@@ -111,12 +111,12 @@ absl::StatusOr<int32_t> SphincsKeySizeToIndex(int32_t key_size) {
     case kSphincsPrivateKeySize128:
       return 2;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid key size");
   }
 }
 
-crypto::tink::util::Status ValidateParams(SphincsParamsPqclean params) {
+absl::Status ValidateParams(SphincsParamsPqclean params) {
   switch (params.hash_type) {
     case SphincsHashType::HARAKA:
     case SphincsHashType::SHA256:
@@ -124,7 +124,7 @@ crypto::tink::util::Status ValidateParams(SphincsParamsPqclean params) {
       break;
     }
     default: {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid hash type");
     }
   }
@@ -135,7 +135,7 @@ crypto::tink::util::Status ValidateParams(SphincsParamsPqclean params) {
       break;
     }
     default: {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid variant");
     }
   }
@@ -146,7 +146,7 @@ crypto::tink::util::Status ValidateParams(SphincsParamsPqclean params) {
       break;
     }
     default: {
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid signature type");
     }
   }

@@ -44,12 +44,12 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> SphincsSign::New(
   auto status = internal::CheckFipsCompatibility<SphincsSign>();
   if (!status.ok()) return status;
 
-  util::Status key_size = ValidatePrivateKeySize(key.GetKey().size());
+  absl::Status key_size = ValidatePrivateKeySize(key.GetKey().size());
   if (!key_size.ok()) {
     return key_size;
   }
 
-  util::Status valid_parameters = ValidateParams(key.GetParams());
+  absl::Status valid_parameters = ValidateParams(key.GetParams());
   if (!valid_parameters.ok()) {
     return valid_parameters;
   }
@@ -75,7 +75,7 @@ absl::StatusOr<std::string> SphincsSign::Sign(absl::string_view data) const {
            reinterpret_cast<uint8_t *>(signature.data()), &sig_length,
            reinterpret_cast<const uint8_t *>(data.data()), data.size(),
            reinterpret_cast<const uint8_t *>(key_.GetKey().data())) != 0)) {
-    return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
   }
 
   return signature;

@@ -129,14 +129,13 @@ absl::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
     SphincsParamsPqclean params);
 
 // Validates whether the private key size is safe to use for sphincs signature.
-crypto::tink::util::Status ValidatePrivateKeySize(int32_t key_size);
+absl::Status ValidatePrivateKeySize(int32_t key_size);
 
 // Validates whether the public key size is safe to use for sphincs signature.
-crypto::tink::util::Status ValidatePublicKeySize(int32_t key_size);
+absl::Status ValidatePublicKeySize(int32_t key_size);
 
 // Validates whether the parameters are safe to use for sphincs signature.
-crypto::tink::util::Status ValidateParams(SphincsParamsPqclean params);
-
+absl::Status ValidateParams(SphincsParamsPqclean params);
 
 // Convert the sphincs private key size to the appropriate index in the
 // pqclean functions array.

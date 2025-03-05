@@ -51,7 +51,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> FalconVerify::New(
       absl::WrapUnique<FalconVerify>(new FalconVerify(public_key))};
 }
 
-util::Status FalconVerify::Verify(absl::string_view signature,
+absl::Status FalconVerify::Verify(absl::string_view signature,
                                   absl::string_view data) const {
   int32_t key_size = public_key_.GetKey().size();
   int result = 1;
@@ -72,15 +72,15 @@ util::Status FalconVerify::Verify(absl::string_view signature,
       break;
     }
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid keysize.");
   }
 
   if (result != 0) {
-    return util::Status(absl::StatusCode::kInternal, "Signature is not valid.");
+    return absl::Status(absl::StatusCode::kInternal, "Signature is not valid.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace subtle

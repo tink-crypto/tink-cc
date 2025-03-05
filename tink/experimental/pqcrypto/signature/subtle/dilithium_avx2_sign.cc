@@ -58,7 +58,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> DilithiumAvx2Sign::New(
   if (key_size != PQCLEAN_DILITHIUM2_CRYPTO_SECRETKEYBYTES &&
       key_size != PQCLEAN_DILITHIUM3_CRYPTO_SECRETKEYBYTES &&
       key_size != PQCLEAN_DILITHIUM5_CRYPTO_SECRETKEYBYTES) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid private key size (%d). "
                         "The only valid sizes are %d, %d, %d.",
@@ -101,7 +101,7 @@ absl::StatusOr<std::string> DilithiumAvx2Sign::Sign(
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "Invalid seed expansion.");
         }
       }
@@ -128,7 +128,7 @@ absl::StatusOr<std::string> DilithiumAvx2Sign::Sign(
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "Invalid seed expansion.");
         }
       }
@@ -155,18 +155,18 @@ absl::StatusOr<std::string> DilithiumAvx2Sign::Sign(
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "Invalid seed expansion.");
         }
       }
       break;
     }
     default:
-      return util::Status(absl::StatusCode::kInternal, "Invalid keysize.");
+      return absl::Status(absl::StatusCode::kInternal, "Invalid keysize.");
   }
 
   if (result != 0) {
-    return util::Status(absl::StatusCode::kInternal, "Signing failed.");
+    return absl::Status(absl::StatusCode::kInternal, "Signing failed.");
   }
 
   return signature;

@@ -41,7 +41,7 @@ namespace subtle {
 // static
 absl::StatusOr<FalconPrivateKeyPqclean> FalconPrivateKeyPqclean::NewPrivateKey(
     const util::SecretData& key_data) {
-  util::Status status = ValidateFalconPrivateKeySize(key_data.size());
+  absl::Status status = ValidateFalconPrivateKeySize(key_data.size());
   if (!status.ok()) {
     return status;
   }
@@ -52,7 +52,7 @@ absl::StatusOr<FalconPrivateKeyPqclean> FalconPrivateKeyPqclean::NewPrivateKey(
 // static
 absl::StatusOr<FalconPublicKeyPqclean> FalconPublicKeyPqclean::NewPublicKey(
     absl::string_view key_data) {
-  util::Status status = ValidateFalconPublicKeySize(key_data.size());
+  absl::Status status = ValidateFalconPublicKeySize(key_data.size());
   if (!status.ok()) {
     return status;
   }
@@ -85,7 +85,7 @@ absl::StatusOr<FalconKeyPair> GenerateFalconKeyPair(int32_t private_key_size) {
     }
     // Invalid key size.
     default: {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrFormat("Invalid private key size (%d). "
                           "The only valid sizes are %d, %d",
@@ -103,7 +103,7 @@ absl::StatusOr<FalconKeyPair> GenerateFalconKeyPair(int32_t private_key_size) {
       FalconPublicKeyPqclean::NewPublicKey(public_key);
 
   if (!falcon_private_key.ok() || !falcon_public_key.ok()) {
-    return util::Status(absl::StatusCode::kInternal, "Key generation failed.");
+    return absl::Status(absl::StatusCode::kInternal, "Key generation failed.");
   }
 
   FalconKeyPair key_pair(*falcon_private_key, *falcon_public_key);
@@ -111,13 +111,13 @@ absl::StatusOr<FalconKeyPair> GenerateFalconKeyPair(int32_t private_key_size) {
   return key_pair;
 }
 
-crypto::tink::util::Status ValidateFalconPrivateKeySize(int32_t key_size) {
+absl::Status ValidateFalconPrivateKeySize(int32_t key_size) {
   switch (key_size) {
     case kFalcon512PrivateKeySize:
     case kFalcon1024PrivateKeySize:
-      return util::OkStatus();
+      return absl::OkStatus();
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrFormat("Invalid private key size (%d). "
                                           "The only valid sizes are %d, %d",
                                           key_size, kFalcon512PrivateKeySize,
@@ -125,13 +125,13 @@ crypto::tink::util::Status ValidateFalconPrivateKeySize(int32_t key_size) {
   }
 }
 
-crypto::tink::util::Status ValidateFalconPublicKeySize(int32_t key_size) {
+absl::Status ValidateFalconPublicKeySize(int32_t key_size) {
   switch (key_size) {
     case kFalcon512PublicKeySize:
     case kFalcon1024PublicKeySize:
-      return util::OkStatus();
+      return absl::OkStatus();
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrFormat("Invalid public key size (%d). "
                                           "The only valid sizes are %d, %d",
                                           key_size, kFalcon512PublicKeySize,

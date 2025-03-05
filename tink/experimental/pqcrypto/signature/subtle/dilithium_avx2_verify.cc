@@ -58,7 +58,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> DilithiumAvx2Verify::New(
   if (key_size != PQCLEAN_DILITHIUM2_CRYPTO_PUBLICKEYBYTES &&
       key_size != PQCLEAN_DILITHIUM3_CRYPTO_PUBLICKEYBYTES &&
       key_size != PQCLEAN_DILITHIUM5_CRYPTO_PUBLICKEYBYTES) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid public key size (%d). "
                         "The only valid sizes are %d, %d, %d.",
@@ -70,7 +70,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> DilithiumAvx2Verify::New(
   return {absl::WrapUnique(new DilithiumAvx2Verify(std::move(public_key)))};
 }
 
-util::Status DilithiumAvx2Verify::Verify(absl::string_view signature,
+absl::Status DilithiumAvx2Verify::Verify(absl::string_view signature,
                                          absl::string_view data) const {
   int32_t key_size = public_key_.GetKeyData().size();
   int result = 1;
@@ -98,7 +98,7 @@ util::Status DilithiumAvx2Verify::Verify(absl::string_view signature,
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "Invalid seed expansion.");
         }
       }
@@ -125,7 +125,7 @@ util::Status DilithiumAvx2Verify::Verify(absl::string_view signature,
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "Invalid seed expansion.");
         }
       }
@@ -152,22 +152,22 @@ util::Status DilithiumAvx2Verify::Verify(absl::string_view signature,
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInternal,
+          return absl::Status(absl::StatusCode::kInternal,
                               "Invalid seed expansion.");
         }
       }
       break;
     }
     default:
-      return util::Status(absl::StatusCode::kInternal, "Invalid keysize.");
+      return absl::Status(absl::StatusCode::kInternal, "Invalid keysize.");
   }
 
   if (result != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace subtle

@@ -43,12 +43,12 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> SphincsVerify::New(
   auto status = internal::CheckFipsCompatibility<SphincsVerify>();
   if (!status.ok()) return status;
 
-  util::Status key_size = ValidatePublicKeySize(public_key.GetKey().size());
+  absl::Status key_size = ValidatePublicKeySize(public_key.GetKey().size());
   if (!key_size.ok()) {
     return key_size;
   }
 
-  util::Status valid_parameters = ValidateParams(public_key.GetParams());
+  absl::Status valid_parameters = ValidateParams(public_key.GetParams());
   if (!valid_parameters.ok()) {
     return valid_parameters;
   }
@@ -57,7 +57,7 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> SphincsVerify::New(
       new SphincsVerify(std::move(public_key)))};
 }
 
-util::Status SphincsVerify::Verify(absl::string_view signature,
+absl::Status SphincsVerify::Verify(absl::string_view signature,
                                    absl::string_view data) const {
   SphincsParamsPqclean params = key_.GetParams();
   absl::StatusOr<int32_t> key_size_index =
@@ -74,11 +74,11 @@ util::Status SphincsVerify::Verify(absl::string_view signature,
           reinterpret_cast<const uint8_t *>(signature.data()), signature.size(),
           reinterpret_cast<const uint8_t *>(data.data()), data.size(),
           reinterpret_cast<const uint8_t *>(key_.GetKey().data()))) != 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Signature is not valid.");
   }
 
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 }  // namespace subtle

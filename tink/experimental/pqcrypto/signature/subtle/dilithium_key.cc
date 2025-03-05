@@ -76,7 +76,7 @@ DilithiumPrivateKeyPqclean::GenerateKeyPair(
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInvalidArgument,
+          return absl::Status(absl::StatusCode::kInvalidArgument,
                               "Invalid seed expansion");
         }
       }
@@ -100,7 +100,7 @@ DilithiumPrivateKeyPqclean::GenerateKeyPair(
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInvalidArgument,
+          return absl::Status(absl::StatusCode::kInvalidArgument,
                               "Invalid seed expansion");
         }
       }
@@ -124,7 +124,7 @@ DilithiumPrivateKeyPqclean::GenerateKeyPair(
           break;
         }
         default: {
-          return util::Status(absl::StatusCode::kInvalidArgument,
+          return absl::Status(absl::StatusCode::kInvalidArgument,
                               "Invalid seed expansion");
         }
       }
@@ -132,7 +132,7 @@ DilithiumPrivateKeyPqclean::GenerateKeyPair(
     }
     // Invalid key size.
     default: {
-      return util::Status(
+      return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrFormat("Invalid private key size (%d). "
                           "The only valid sizes are %d, %d, %d.",

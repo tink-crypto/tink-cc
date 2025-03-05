@@ -41,9 +41,9 @@ using ::crypto::tink::util::StatusOr;
 
 // Checks whether Decrypt(Encrypt(message)) == message with the given
 // aead_or_daead.
-crypto::tink::util::Status EncryptThenDecrypt(
-    const AeadOrDaead& aead_or_daead, absl::string_view message,
-    absl::string_view associated_data) {
+absl::Status EncryptThenDecrypt(const AeadOrDaead& aead_or_daead,
+                                absl::string_view message,
+                                absl::string_view associated_data) {
   absl::StatusOr<std::string> encryption_or =
       aead_or_daead.Encrypt(message, associated_data);
   if (!encryption_or.status().ok()) return encryption_or.status();
@@ -51,10 +51,10 @@ crypto::tink::util::Status EncryptThenDecrypt(
       aead_or_daead.Decrypt(encryption_or.value(), associated_data);
   if (!decryption_or.status().ok()) return decryption_or.status();
   if (decryption_or.value() != message) {
-    return crypto::tink::util::Status(absl::StatusCode::kInternal,
-                                      "Message/Decryption mismatch");
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Message/Decryption mismatch");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 }
 
 TEST(AeadOrDaead, testWithAeadPrimitive) {

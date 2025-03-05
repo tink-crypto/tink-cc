@@ -31,7 +31,7 @@ absl::StatusOr<AesGcmHkdfStreamingKey> AesGcmHkdfStreamingKey::Create(
     const AesGcmHkdfStreamingParameters& parameters,
     const RestrictedData& initial_key_material, PartialKeyAccessToken token) {
   if (parameters.KeySizeInBytes() != initial_key_material.size()) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Key size does not match AES-GCM-HKDF Streaming parameters");
   }

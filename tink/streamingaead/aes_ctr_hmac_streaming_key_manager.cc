@@ -98,8 +98,7 @@ absl::StatusOr<google::crypto::tink::AesCtrHmacStreamingKey>
 AesCtrHmacStreamingKeyManager::DeriveKey(
     const google::crypto::tink::AesCtrHmacStreamingKeyFormat& key_format,
     InputStream* input_stream) const {
-  crypto::tink::util::Status status =
-      ValidateVersion(key_format.version(), get_version());
+  absl::Status status = ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
 
   absl::StatusOr<std::string> randomness_or =

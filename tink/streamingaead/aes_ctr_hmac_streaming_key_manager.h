@@ -84,10 +84,10 @@ class AesCtrHmacStreamingKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesCtrHmacStreamingKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::AesCtrHmacStreamingKeyFormat& key_format)
       const override;
 

@@ -48,7 +48,7 @@ BufferedInputStream::BufferedInputStream(
   after_rewind_ = false;
   rewinding_enabled_ = true;
   direct_access_ = false;
-  status_ = util::OkStatus();
+  status_ = absl::OkStatus();
 }
 
 absl::StatusOr<int> BufferedInputStream::Next(const void** data) {
@@ -122,13 +122,13 @@ void BufferedInputStream::DisableRewinding() {
   rewinding_enabled_ = false;
 }
 
-crypto::tink::util::Status BufferedInputStream::Rewind() {
+absl::Status BufferedInputStream::Rewind() {
   if (!rewinding_enabled_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "rewinding is disabled");
   }
   if (status_.ok() || status_.code() == absl::StatusCode::kOutOfRange) {
-    status_ = util::OkStatus();
+    status_ = absl::OkStatus();
     position_ = 0;
     count_backedup_ = 0;
     buffer_offset_ = 0;

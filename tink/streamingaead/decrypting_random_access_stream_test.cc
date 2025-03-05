@@ -203,7 +203,7 @@ TEST(DecryptingRandomAccessStreamTest, SelectiveDecryption) {
                                       ", position = ", position,
                                       ", chunk_size = ", chunk_size));
             auto buffer = std::move(util::Buffer::New(chunk_size).value());
-            util::Status status =
+            absl::Status status =
                 dec_stream->PRead(position, chunk_size, buffer.get());
             EXPECT_THAT(status,
                         testing::AnyOf(

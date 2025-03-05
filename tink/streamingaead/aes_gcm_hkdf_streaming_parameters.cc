@@ -57,35 +57,35 @@ AesGcmHkdfStreamingParameters::Builder::SetCiphertextSegmentSizeInBytes(
 absl::StatusOr<AesGcmHkdfStreamingParameters>
 AesGcmHkdfStreamingParameters::Builder::Build() {
   if (!key_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size must be set.");
   }
   if (!derived_key_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Derived key size must be set.");
   }
   if (!hash_type_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Hash type must be set.");
   }
   if (!segment_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ciphertext segment size must be set.");
   }
 
   if (*derived_key_size_in_bytes_ != 16 && *derived_key_size_in_bytes_ != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Derived key size must be either 16 or 32 bytes");
   }
   if (*key_size_in_bytes_ < *derived_key_size_in_bytes_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size must be at least the derived key size.");
   }
   // CiphertextSegmentSize > DerivedKeySize + 24
   // https://developers.google.com/tink/streaming-aead/aes_gcm_hkdf_streaming#key_and_parameters
   int min_segment_size = *derived_key_size_in_bytes_ + 24;
   if (*segment_size_in_bytes_ < min_segment_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Ciphertext segment size must be at least ",
                      min_segment_size, " bytes"));
@@ -93,7 +93,7 @@ AesGcmHkdfStreamingParameters::Builder::Build() {
   // Ensure that maximum ciphertext segment size is consistent with Tink Java.
   // Only reachable if sizeof(int) > 4 bytes.
   if (*segment_size_in_bytes_ > INT32_MAX) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         absl::StrCat("Ciphertext segment size must be at most ",
                                      INT32_MAX, " bytes"));
   }
@@ -104,7 +104,7 @@ AesGcmHkdfStreamingParameters::Builder::Build() {
            AesGcmHkdfStreamingParameters::HashType::kSha256,
            AesGcmHkdfStreamingParameters::HashType::kSha512});
   if (!kSupportedHashTypes->contains(*hash_type_)) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Hash type not supported.");
   }
 

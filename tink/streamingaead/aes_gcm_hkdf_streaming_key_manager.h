@@ -81,10 +81,10 @@ class AesGcmHkdfStreamingKeyManager
 
   const std::string& get_key_type() const override { return key_type_; }
 
-  crypto::tink::util::Status ValidateKey(
+  absl::Status ValidateKey(
       const google::crypto::tink::AesGcmHkdfStreamingKey& key) const override;
 
-  crypto::tink::util::Status ValidateKeyFormat(
+  absl::Status ValidateKeyFormat(
       const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format)
       const override;
 
@@ -103,7 +103,7 @@ class AesGcmHkdfStreamingKeyManager
       kTypeGoogleapisCom,
       google::crypto::tink::AesGcmHkdfStreamingKey().GetTypeName());
 
-  static crypto::tink::util::Status Validate(
+  static absl::Status Validate(
       const google::crypto::tink::AesGcmHkdfStreamingKeyFormat& key_format);
 };
 

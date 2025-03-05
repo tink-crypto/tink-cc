@@ -63,21 +63,21 @@ DecryptingRandomAccessStream::New(
       primitives, std::move(ciphertext_source), associated_data))};
 }
 
-util::Status DecryptingRandomAccessStream::PRead(
+absl::Status DecryptingRandomAccessStream::PRead(
     int64_t position, int count, crypto::tink::util::Buffer* dest_buffer) {
   if (dest_buffer == nullptr) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "dest_buffer must be non-null");
   }
   if (count < 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "count cannot be negative");
   }
   if (count > dest_buffer->allocated_size()) {
-    return util::Status(absl::StatusCode::kInvalidArgument, "buffer too small");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "buffer too small");
   }
   if (position < 0) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "position cannot be negative");
   }
   absl::StatusOr<crypto::tink::RandomAccessStream*> matched_stream =

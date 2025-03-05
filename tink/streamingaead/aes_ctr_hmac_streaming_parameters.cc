@@ -69,50 +69,50 @@ AesCtrHmacStreamingParameters::Builder::SetCiphertextSegmentSizeInBytes(
 absl::StatusOr<AesCtrHmacStreamingParameters>
 AesCtrHmacStreamingParameters::Builder::Build() {
   if (!key_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size must be set.");
   }
   if (!derived_key_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Derived key size must be set.");
   }
   if (!hkdf_hash_type_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "HKDF hash type must be set.");
   }
   if (!hmac_hash_type_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "HMAC hash type must be set.");
   }
   if (!tag_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "HMAC tag size must be set.");
   }
   if (!segment_size_in_bytes_.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ciphertext segment size must be set.");
   }
 
   if (*derived_key_size_in_bytes_ != 16 && *derived_key_size_in_bytes_ != 32) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Derived key size must be either 16 or 32 bytes");
   }
   if (*key_size_in_bytes_ < *derived_key_size_in_bytes_) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Key size must be at least the derived key size.");
   }
   // CiphertextSegmentSize > DerivedKeySize + HmacTagSize + len(Header)
   // https://developers.google.com/tink/streaming-aead/aes_ctr_hmac_streaming#splitting_the_message
   int min_segment_size = *derived_key_size_in_bytes_ + *tag_size_in_bytes_ + 9;
   if (*segment_size_in_bytes_ < min_segment_size) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Ciphertext segment size must be at least ",
                      min_segment_size, " bytes"));
   }
 
   if (*tag_size_in_bytes_ < 10) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Tag size is too small.");
   }
   static const std::map<AesCtrHmacStreamingParameters::HashType, uint32_t>*
@@ -123,15 +123,15 @@ AesCtrHmacStreamingParameters::Builder::Build() {
                {AesCtrHmacStreamingParameters::HashType::kSha512, 64}});
   // Re-purposing max_tag_size map to check that HKDF hash type is supported.
   if (max_tag_size->find(*hkdf_hash_type_) == max_tag_size->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "HKDF hash type not supported.");
   }
   if (max_tag_size->find(*hmac_hash_type_) == max_tag_size->end()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "HMAC hash type not supported.");
   }
   if (*tag_size_in_bytes_ > max_tag_size->at(*hmac_hash_type_)) {
-    return util::Status(
+    return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Tag size is too big for given ", *hmac_hash_type_,
                      " , got ", *tag_size_in_bytes_, " bytes."));

@@ -8,8 +8,8 @@ the official
 [security policy](https://csrc.nist.gov/CSRC/media/projects/cryptographic-module-validation-program/documents/security-policies/140sp3678.pdf)
 for BoringCrypto.
 
-To use the BoringCrypto module with Tink, you must update the Tink
-[WORKSPACE file](https://github.com/google/tink/blob/master/cc/WORKSPACE)
-to use the BoringSSL targets in this WORKSPACE. Tink then offers a
-[FIPS-only mode](../../../g3doc/FIPS.md) which will restrict the usage to
+To use the BoringCrypto module with Tink, you must update the Tink [WORKSPACE
+file](https://github.com/tink-crypto/tink-cc/blob/main/WORKSPACE) to use the
+BoringSSL targets in this WORKSPACE. Tink then offers a [FIPS-only
+mode](https://developers.google.com/tink/FIPS) which will restrict the usage to
 algorithms which are FIPS approved *and* utilize the BoringCrypto module.

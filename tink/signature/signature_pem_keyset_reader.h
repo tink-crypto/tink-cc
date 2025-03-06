@@ -32,8 +32,6 @@ namespace crypto {
 namespace tink {
 
 // Type of key.
-//
-// Currently, PEM_EC only supports PublicKeyVerify.
 enum PemKeyType { PEM_RSA, PEM_EC };
 
 // Algorithm to use with this key.
@@ -84,14 +82,14 @@ class SignaturePemKeysetReader : public KeysetReader {
 //
 // std::string some_public_key_pem = ...;
 // PemKeyType key_type = ...;
+// PemAlgorithm algorithm = ...;
 // size_t key_size_in_bits = ...;
 // HashType hash_type = ...;
-// PemAlgorithm algorithm = ...;
 //
 // auto builder = SignaturePemKeysetReaderBuilder(
-//     PemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
+//     SignaturePemKeysetReaderBuilder::PemReaderType::PUBLIC_KEY_VERIFY);
 // builder.Add(
-//     {.serialized_key = some_rsa_public_key_pem,
+//     {.serialized_key = some_public_key_pem,
 //      .parameters = {
 //          .key_type = key_type,
 //          .algorithm = algorithm,

@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_AEAD_INTERNAL_CHACHA20_POLY1305_PROTO_STRUCTS_H_
-#define TINK_AEAD_INTERNAL_CHACHA20_POLY1305_PROTO_STRUCTS_H_
+#ifndef TINK_AEAD_INTERNAL_XCHACHA20_POLY1305_PROTO_STRUCTS_H_
+#define TINK_AEAD_INTERNAL_XCHACHA20_POLY1305_PROTO_STRUCTS_H_
 
 #include <cstdint>
 
@@ -67,4 +67,4 @@ struct XChaCha20Poly1305KeyStruct {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_AEAD_INTERNAL_CHACHA20_POLY1305_PROTO_STRUCTS_H_
+#endif  // TINK_AEAD_INTERNAL_XCHACHA20_POLY1305_PROTO_STRUCTS_H_

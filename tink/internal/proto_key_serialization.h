@@ -26,7 +26,6 @@
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -80,8 +79,16 @@ class ProtoKeySerialization : public Serialization {
     return key_material_type_;
   }
 
+  KeyMaterialTypeEnum GetKeyMaterialTypeEnum() const {
+    return static_cast<KeyMaterialTypeEnum>(key_material_type_);
+  }
+
   google::crypto::tink::OutputPrefixType GetOutputPrefixType() const {
     return output_prefix_type_;
+  }
+
+  OutputPrefixTypeEnum GetOutputPrefixTypeEnum() const {
+    return static_cast<OutputPrefixTypeEnum>(output_prefix_type_);
   }
 
   absl::optional<int> IdRequirement() const { return id_requirement_; }

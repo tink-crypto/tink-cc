@@ -206,8 +206,8 @@ absl::StatusOr<Ed25519PublicKey> ParsePublicKey(
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<Ed25519Parameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<Ed25519Parameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) {
     return variant.status();
   }
@@ -248,8 +248,8 @@ absl::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
         "Only version 0 public keys are accepted.");
   }
 
-  absl::StatusOr<Ed25519Parameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<Ed25519Parameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) {
     return variant.status();
   }

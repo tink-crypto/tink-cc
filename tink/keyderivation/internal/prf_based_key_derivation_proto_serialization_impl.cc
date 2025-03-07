@@ -212,8 +212,7 @@ absl::StatusOr<KeyDataStruct> PrfKeyToKeyData(const PrfKey& prf_key,
   KeyDataStruct key_data;
   key_data.value = proto_serialization->SerializedKeyProto().Get(token);
   key_data.type_url = proto_serialization->TypeUrl();
-  key_data.key_material_type =
-      static_cast<KeyMaterialTypeEnum>(proto_serialization->KeyMaterialType());
+  key_data.key_material_type = proto_serialization->GetKeyMaterialTypeEnum();
 
   return key_data;
 }
@@ -320,7 +319,7 @@ absl::StatusOr<PrfBasedKeyDerivationKey> ParseKey(
                         "Only version 0 keys are accepted.");
   }
 
-  if (static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()) !=
+  if (serialization.GetOutputPrefixTypeEnum() !=
       proto_key->params.derived_key_template.output_prefix_type) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

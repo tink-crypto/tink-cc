@@ -340,9 +340,7 @@ absl::StatusOr<SlhDsaPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<SlhDsaParameters> parameters =
-      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
-                       serialization.GetOutputPrefixType()),
-                   proto_key->params);
+      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key->params);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -372,10 +370,8 @@ absl::StatusOr<SlhDsaPrivateKey> ParsePrivateKey(
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<SlhDsaParameters> parameters =
-      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
-                       serialization.GetOutputPrefixType()),
-                   proto_key->public_key.params);
+  absl::StatusOr<SlhDsaParameters> parameters = ToParameters(
+      serialization.GetOutputPrefixTypeEnum(), proto_key->public_key.params);
   if (!parameters.ok()) {
     return parameters.status();
   }

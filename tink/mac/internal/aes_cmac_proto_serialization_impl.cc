@@ -204,8 +204,8 @@ absl::StatusOr<AesCmacKey> ParseKey(
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<AesCmacParameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<AesCmacParameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) return variant.status();
 
   absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(

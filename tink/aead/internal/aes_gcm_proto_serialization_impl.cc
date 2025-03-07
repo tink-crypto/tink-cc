@@ -181,8 +181,8 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<AesGcmParameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<AesGcmParameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) {
     return variant.status();
   }

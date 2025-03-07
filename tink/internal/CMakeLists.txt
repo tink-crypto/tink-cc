@@ -624,13 +624,14 @@ tink_cc_library(
     legacy_proto_key.h
   DEPS
     tink::internal::proto_key_serialization
+    tink::internal::tink_proto_structs
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key
     tink::core::parameters
     tink::core::secret_key_access_token
-    tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
 )
@@ -877,6 +878,7 @@ tink_cc_library(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::insecure_secret_key_access

@@ -292,10 +292,9 @@ absl::StatusOr<RsaSsaPkcs1PublicKey> ParsePublicKey(
 
   BigInteger modulus(proto_key->n);
   int modulus_size_in_bits = modulus.SizeInBytes() * 8;
-  absl::StatusOr<RsaSsaPkcs1Parameters> parameters = ToParameters(
-      static_cast<internal::OutputPrefixTypeEnum>(
-          serialization.GetOutputPrefixType()),
-      proto_key->params, modulus_size_in_bits, BigInteger(proto_key->e));
+  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key->params,
+                   modulus_size_in_bits, BigInteger(proto_key->e));
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -332,11 +331,9 @@ absl::StatusOr<RsaSsaPkcs1PrivateKey> ParsePrivateKey(
   BigInteger modulus(proto_key->public_key.n);
   int modulus_size_in_bits = modulus.SizeInBytes() * 8;
 
-  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
-      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
-                       serialization.GetOutputPrefixType()),
-                   proto_key->public_key.params, modulus_size_in_bits,
-                   BigInteger(proto_key->public_key.e));
+  absl::StatusOr<RsaSsaPkcs1Parameters> parameters = ToParameters(
+      serialization.GetOutputPrefixTypeEnum(), proto_key->public_key.params,
+      modulus_size_in_bits, BigInteger(proto_key->public_key.e));
   if (!parameters.ok()) {
     return parameters.status();
   }

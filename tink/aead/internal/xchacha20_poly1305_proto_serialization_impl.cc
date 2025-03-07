@@ -163,8 +163,8 @@ absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<XChaCha20Poly1305Parameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<XChaCha20Poly1305Parameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) {
     return variant.status();
   }

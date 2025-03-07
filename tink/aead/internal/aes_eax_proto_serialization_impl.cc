@@ -43,8 +43,6 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -121,7 +119,7 @@ absl::StatusOr<AesEaxParameters::Variant> ToVariant(
     case OutputPrefixTypeEnum::kTink:
       return AesEaxParameters::Variant::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine AesEaxParameters::Variant");
   }
 }
@@ -136,7 +134,7 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     case AesEaxParameters::Variant::kTink:
       return OutputPrefixTypeEnum::kTink;
     default:
-      return util::Status(absl::StatusCode::kInvalidArgument,
+      return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine output prefix type");
   }
 }
@@ -215,11 +213,11 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
                                    absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kTypeUrl) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesEaxKey.");
   }
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
 
@@ -233,8 +231,8 @@ absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<AesEaxParameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<AesEaxParameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) {
     return variant.status();
   }
@@ -266,7 +264,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
       key.GetKeyBytes(GetPartialKeyAccess());
   if (!restricted_input.ok()) return restricted_input.status();
   if (!token.has_value()) {
-    return util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
 
@@ -313,9 +311,9 @@ AesEaxProtoKeySerializerImpl* AesEaxProtoKeySerializer() {
 
 }  // namespace
 
-util::Status RegisterAesEaxProtoSerializationWithMutableRegistry(
+absl::Status RegisterAesEaxProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  util::Status status =
+  absl::Status status =
       registry.RegisterParametersParser(AesEaxProtoParametersParser());
   if (!status.ok()) return status;
 
@@ -329,9 +327,9 @@ util::Status RegisterAesEaxProtoSerializationWithMutableRegistry(
   return registry.RegisterKeySerializer(AesEaxProtoKeySerializer());
 }
 
-util::Status RegisterAesEaxProtoSerializationWithRegistryBuilder(
+absl::Status RegisterAesEaxProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  util::Status status =
+  absl::Status status =
       builder.RegisterParametersParser(AesEaxProtoParametersParser());
   if (!status.ok()) return status;
 

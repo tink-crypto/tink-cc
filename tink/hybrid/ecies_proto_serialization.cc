@@ -711,9 +711,7 @@ absl::StatusOr<EciesPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<EciesParameters> parameters =
-      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
-                       serialization.GetOutputPrefixType()),
-                   proto_key->params);
+      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key->params);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -749,8 +747,7 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
   }
 
   const internal::OutputPrefixTypeEnum output_prefix_type =
-      static_cast<internal::OutputPrefixTypeEnum>(
-          serialization.GetOutputPrefixType());
+      serialization.GetOutputPrefixTypeEnum();
 
   absl::StatusOr<EciesParameters::Variant> variant =
       ToVariant(output_prefix_type);

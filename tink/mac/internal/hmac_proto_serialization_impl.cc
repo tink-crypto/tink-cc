@@ -230,8 +230,8 @@ absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<HmacParameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<HmacParameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) return variant.status();
   absl::StatusOr<HmacParameters::HashType> hash_type =
       ToHashType(proto_key->params.hash);

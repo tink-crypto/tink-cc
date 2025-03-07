@@ -157,8 +157,8 @@ absl::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
                         "Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<AesSivParameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<AesSivParameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) return variant.status();
 
   absl::StatusOr<AesSivParameters> parameters =

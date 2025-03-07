@@ -406,9 +406,8 @@ absl::StatusOr<EcdsaPublicKey> ParsePublicKey(
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  absl::StatusOr<EcdsaParameters> parameters = ToParameters(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()),
-      proto_key->params);
+  absl::StatusOr<EcdsaParameters> parameters =
+      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key->params);
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -444,7 +443,7 @@ absl::StatusOr<EcdsaPrivateKey> ParsePrivateKey(
   }
 
   OutputPrefixTypeEnum output_prefix_type =
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType());
+      serialization.GetOutputPrefixTypeEnum();
 
   absl::StatusOr<EcdsaParameters::Variant> variant =
       ToVariant(output_prefix_type);

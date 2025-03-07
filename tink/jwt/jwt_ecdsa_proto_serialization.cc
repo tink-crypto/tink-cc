@@ -380,9 +380,8 @@ absl::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
   }
 
   absl::StatusOr<JwtEcdsaParameters> parameters = ToParameters(
-      static_cast<internal::OutputPrefixTypeEnum>(
-          serialization.GetOutputPrefixType()),
-      public_key_struct->algorithm, public_key_struct->custom_kid.has_value());
+      serialization.GetOutputPrefixTypeEnum(), public_key_struct->algorithm,
+      public_key_struct->custom_kid.has_value());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -439,8 +438,7 @@ absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<JwtEcdsaParameters> parameters =
-      ToParameters(static_cast<internal::OutputPrefixTypeEnum>(
-                       serialization.GetOutputPrefixType()),
+      ToParameters(serialization.GetOutputPrefixTypeEnum(),
                    private_key_struct->public_key.algorithm,
                    private_key_struct->public_key.custom_kid.has_value());
   if (!parameters.ok()) {

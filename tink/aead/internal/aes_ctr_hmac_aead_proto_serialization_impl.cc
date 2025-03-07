@@ -264,8 +264,8 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
         "Only version 0 keys inner HMAC keys are accepted.");
   }
 
-  absl::StatusOr<AesCtrHmacAeadParameters::Variant> variant = ToVariant(
-      static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()));
+  absl::StatusOr<AesCtrHmacAeadParameters::Variant> variant =
+      ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) {
     return variant.status();
   }

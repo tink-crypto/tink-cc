@@ -21,6 +21,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
@@ -42,7 +43,6 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_proto.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -60,14 +60,17 @@ SecretProto<Keyset::Key> ToKeysetKey(
   SecretProto<Keyset::Key> key;
   key->set_status(status);
   key->set_key_id(id);
-  key->set_output_prefix_type(serialization.GetOutputPrefixType());
+  key->set_output_prefix_type(
+      static_cast<google::crypto::tink::OutputPrefixType>(
+          serialization.GetOutputPrefixTypeEnum()));
   KeyData* key_data = key->mutable_key_data();
   key_data->set_type_url(std::string(serialization.TypeUrl()));
   internal::CallWithCoreDumpProtection([&]() {
     key_data->set_value(serialization.SerializedKeyProto().GetSecret(
         InsecureSecretKeyAccess::Get()));
   });
-  key_data->set_key_material_type(serialization.KeyMaterialType());
+  key_data->set_key_material_type(static_cast<KeyData::KeyMaterialType>(
+      serialization.GetKeyMaterialTypeEnum()));
   return key;
 }
 

@@ -276,11 +276,9 @@ absl::StatusOr<JwtHmacKey> ParseKey(
         "Parsing JwtHmacKey failed: only version 0 is accepted.");
   }
 
-  absl::StatusOr<JwtHmacParameters> parameters =
-      ToParameters(key_struct->key_value.size(),
-                   static_cast<internal::OutputPrefixTypeEnum>(
-                       serialization.GetOutputPrefixType()),
-                   key_struct->algorithm, key_struct->custom_kid.has_value());
+  absl::StatusOr<JwtHmacParameters> parameters = ToParameters(
+      key_struct->key_value.size(), serialization.GetOutputPrefixTypeEnum(),
+      key_struct->algorithm, key_struct->custom_kid.has_value());
   if (!parameters.ok()) {
     return parameters.status();
   }

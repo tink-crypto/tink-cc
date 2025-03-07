@@ -17,7 +17,6 @@
 #include "tink/keyset_handle.h"
 
 #include <cstdint>
-#include <cstdio>
 #include <memory>
 #include <string>
 #include <utility>
@@ -54,8 +53,6 @@
 #include "tink/util/keyset_util.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/secret_proto.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 using ::crypto::tink::util::SecretProto;
@@ -186,14 +183,16 @@ SecretProto<Keyset::Key> ToKeysetKey(
   SecretProto<Keyset::Key> key;
   key->set_status(status);
   key->set_key_id(id);
-  key->set_output_prefix_type(serialization.GetOutputPrefixType());
+  key->set_output_prefix_type(
+      static_cast<OutputPrefixType>(serialization.GetOutputPrefixTypeEnum()));
   KeyData* key_data = key->mutable_key_data();
   key_data->set_type_url(std::string(serialization.TypeUrl()));
   internal::CallWithCoreDumpProtection([&]() {
     key_data->set_value(serialization.SerializedKeyProto().GetSecret(
         InsecureSecretKeyAccess::Get()));
   });
-  key_data->set_key_material_type(serialization.KeyMaterialType());
+  key_data->set_key_material_type(static_cast<KeyData::KeyMaterialType>(
+      serialization.GetKeyMaterialTypeEnum()));
   return key;
 }
 

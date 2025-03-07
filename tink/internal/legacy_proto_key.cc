@@ -16,29 +16,24 @@
 
 #include "tink/internal/legacy_proto_key.h"
 
-#include <string>
-
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
-using ::google::crypto::tink::KeyData;
-
-absl::Status CheckKeyAccess(KeyData::KeyMaterialType key_material_type,
+absl::Status CheckKeyAccess(KeyMaterialTypeEnum key_material_type,
                             absl::optional<SecretKeyAccessToken> token) {
-  if (key_material_type == KeyData::SYMMETRIC ||
-      key_material_type == KeyData::ASYMMETRIC_PRIVATE) {
+  if (key_material_type == KeyMaterialTypeEnum::kSymmetric ||
+      key_material_type == KeyMaterialTypeEnum::kAsymmetricPrivate) {
     if (!token.has_value()) {
       return absl::Status(
           absl::StatusCode::kPermissionDenied,
@@ -64,7 +59,7 @@ absl::StatusOr<LegacyProtoKey> LegacyProtoKey::Create(
     ProtoKeySerialization serialization,
     absl::optional<SecretKeyAccessToken> token) {
   absl::Status access_check_status =
-      CheckKeyAccess(serialization.KeyMaterialType(), token);
+      CheckKeyAccess(serialization.GetKeyMaterialTypeEnum(), token);
   if (!access_check_status.ok()) {
     return access_check_status;
   }
@@ -82,7 +77,7 @@ bool LegacyProtoKey::operator==(const Key& other) const {
 absl::StatusOr<const ProtoKeySerialization*> LegacyProtoKey::Serialization(
     absl::optional<SecretKeyAccessToken> token) const {
   absl::Status access_check_status =
-      CheckKeyAccess(serialization_.KeyMaterialType(), token);
+      CheckKeyAccess(serialization_.GetKeyMaterialTypeEnum(), token);
   if (!access_check_status.ok()) {
     return access_check_status;
   }

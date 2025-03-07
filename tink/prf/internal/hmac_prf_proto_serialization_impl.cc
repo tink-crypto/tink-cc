@@ -221,8 +221,7 @@ absl::StatusOr<HmacPrfKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required.");
   }
-  if (static_cast<OutputPrefixTypeEnum>(serialization.GetOutputPrefixType()) !=
-      OutputPrefixTypeEnum::kRaw) {
+  if (serialization.GetOutputPrefixTypeEnum() != OutputPrefixTypeEnum::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for HmacPrfKey.");
   }

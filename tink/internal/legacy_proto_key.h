@@ -21,13 +21,13 @@
 #include <memory>
 #include <string>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -105,8 +105,10 @@ class LegacyProtoKey : public Key {
  private:
   explicit LegacyProtoKey(const ProtoKeySerialization& serialization)
       : serialization_(serialization),
-        unusable_proto_parameters_(serialization.TypeUrl(),
-                                   serialization.GetOutputPrefixType()) {}
+        unusable_proto_parameters_(
+            serialization.TypeUrl(),
+            static_cast<google::crypto::tink::OutputPrefixType>(
+                serialization.GetOutputPrefixTypeEnum())) {}
 
   ProtoKeySerialization serialization_;
   UnusableLegacyProtoParameters unusable_proto_parameters_;

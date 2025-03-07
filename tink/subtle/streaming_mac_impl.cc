@@ -210,7 +210,7 @@ void VerifyMacOutputStream::WriteIntoMac() {
   buffer_.replace(0, buffer_position_, buffer_position_, 0);
 }
 
-absl::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
+absl::StatusOr<std::unique_ptr<OutputStreamWithResult<absl::Status>>>
 StreamingMacImpl::NewVerifyMacOutputStream(const std::string& mac_value) const {
   absl::StatusOr<std::unique_ptr<internal::StatefulMac>> mac_status =
       mac_factory_->Create();

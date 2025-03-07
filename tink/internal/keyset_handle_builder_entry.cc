@@ -71,9 +71,9 @@ SecretProto<Keyset::Key> ToKeysetKey(
   return key;
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const Parameters& params) {
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeParameters<ProtoParametersSerialization>(params);
   if (!serialization.ok()) return serialization.status();
@@ -88,7 +88,7 @@ util::StatusOr<ProtoParametersSerialization> SerializeParameters(
   return *proto_serialization;
 }
 
-util::StatusOr<ProtoParametersSerialization> SerializeLegacyParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeLegacyParameters(
     const Parameters* params) {
   const LegacyProtoParameters* proto_params =
       dynamic_cast<const LegacyProtoParameters*>(params);
@@ -99,9 +99,9 @@ util::StatusOr<ProtoParametersSerialization> SerializeLegacyParameters(
   return proto_params->Serialization();
 }
 
-util::StatusOr<ProtoParametersSerialization> GetProtoParametersSerialization(
+absl::StatusOr<ProtoParametersSerialization> GetProtoParametersSerialization(
     const Parameters& params) {
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       SerializeParameters(params);
   // TODO(b/359489205): Make sure that this excludes kNotFound error
   // potentially returned by registered classes.
@@ -113,13 +113,13 @@ util::StatusOr<ProtoParametersSerialization> GetProtoParametersSerialization(
   return serialization;
 }
 
-util::StatusOr<SecretProto<Keyset::Key>>
+absl::StatusOr<SecretProto<Keyset::Key>>
 CreateKeysetKeyFromProtoParametersSerialization(
     const ProtoParametersSerialization& serialization, int id,
     KeyStatusType status, const KeyGenConfiguration& config) {
   // TODO(tholenst): ensure this doesn't leak.
   // Create KeyData from KeyTemplate and KeyTypeManagers.
-  util::StatusOr<std::unique_ptr<KeyData>> key_data;
+  absl::StatusOr<std::unique_ptr<KeyData>> key_data;
   const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
   if (internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
     google::crypto::tink::KeyTemplate proto_key_template;
@@ -130,12 +130,12 @@ CreateKeysetKeyFromProtoParametersSerialization(
     proto_key_template.set_value(key_template.value);
     key_data = Registry::NewKeyData(proto_key_template);
   } else {
-    util::StatusOr<const internal::KeyTypeInfoStore*> key_type_info_store =
+    absl::StatusOr<const internal::KeyTypeInfoStore *> key_type_info_store =
         internal::KeyGenConfigurationImpl::GetKeyTypeInfoStore(config);
     if (!key_type_info_store.ok()) {
       return key_type_info_store.status();
     }
-    util::StatusOr<const internal::KeyTypeInfoStore::Info*> key_type_info =
+    absl::StatusOr<const internal::KeyTypeInfoStore::Info *> key_type_info =
         (*key_type_info_store)->Get(key_template.type_url);
     if (!key_type_info.ok()) {
       return key_type_info.status();
@@ -157,10 +157,10 @@ CreateKeysetKeyFromProtoParametersSerialization(
 }
 
 // Creates Keyset::Key from KeyTemplate stored in serialized `parameters`.
-util::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKeyFromParameters(
+absl::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKeyFromParameters(
     const Parameters& parameters, int id, KeyStatusType status,
     const KeyGenConfiguration& config) {
-  util::StatusOr<ProtoParametersSerialization> serialization =
+  absl::StatusOr<ProtoParametersSerialization> serialization =
       GetProtoParametersSerialization(parameters);
   if (!serialization.ok()) {
     return serialization.status();
@@ -170,8 +170,8 @@ util::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKeyFromParameters(
                                                          status, config);
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeKey(const Key& key) {
-  util::StatusOr<std::unique_ptr<Serialization>> serialization =
+absl::StatusOr<ProtoKeySerialization> SerializeKey(const Key& key) {
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       MutableSerializationRegistry::GlobalInstance()
           .SerializeKey<ProtoKeySerialization>(key,
                                                InsecureSecretKeyAccess::Get());
@@ -187,21 +187,21 @@ util::StatusOr<ProtoKeySerialization> SerializeKey(const Key& key) {
   return *serialized_proto_key;
 }
 
-util::StatusOr<ProtoKeySerialization> SerializeLegacyKey(const Key* key) {
+absl::StatusOr<ProtoKeySerialization> SerializeLegacyKey(const Key* key) {
   const LegacyProtoKey* proto_key = dynamic_cast<const LegacyProtoKey*>(key);
   if (proto_key == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to serialize legacy proto key.");
   }
-  util::StatusOr<const ProtoKeySerialization*> serialized_key =
+  absl::StatusOr<const ProtoKeySerialization *> serialized_key =
       proto_key->Serialization(InsecureSecretKeyAccess::Get());
   if (!serialized_key.ok()) return serialized_key.status();
 
   return **serialized_key;
 }
 
-util::StatusOr<ProtoKeySerialization> GetProtoKeySerialization(const Key& key) {
-  util::StatusOr<ProtoKeySerialization> serialization = SerializeKey(key);
+absl::StatusOr<ProtoKeySerialization> GetProtoKeySerialization(const Key& key) {
+  absl::StatusOr<ProtoKeySerialization> serialization = SerializeKey(key);
   // TODO(b/359489205): Make sure that this excludes kNotFound error
   // potentially returned by registered classes.
   if (serialization.status().code() == absl::StatusCode::kNotFound) {
@@ -212,7 +212,7 @@ util::StatusOr<ProtoKeySerialization> GetProtoKeySerialization(const Key& key) {
   return serialization;
 }
 
-util::StatusOr<SecretProto<Keyset::Key>>
+absl::StatusOr<SecretProto<Keyset::Key>>
 CreateKeysetKeyFromProtoKeySerialization(const ProtoKeySerialization& key,
                                          int id, KeyStatusType status) {
   absl::optional<int> id_requirement = key.IdRequirement();
@@ -223,9 +223,9 @@ CreateKeysetKeyFromProtoKeySerialization(const ProtoKeySerialization& key,
   return ToKeysetKey(id, status, key);
 }
 
-util::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKeyFromKey(
+absl::StatusOr<SecretProto<Keyset::Key>> CreateKeysetKeyFromKey(
     const Key& key, int id, KeyStatusType status) {
-  util::StatusOr<ProtoKeySerialization> serialization =
+  absl::StatusOr<ProtoKeySerialization> serialization =
       GetProtoKeySerialization(key);
   if (!serialization.ok()) {
     return serialization.status();
@@ -250,9 +250,9 @@ void KeysetHandleBuilderEntry::SetRandomId() {
 // However, CreateKeysetKey is defined in the parent KeysetHandleBuilderEntry,
 // which both KeyEntry and ParametersEntry inherit from, so `config` must be
 // part of this function signature.
-util::StatusOr<SecretProto<Keyset::Key>> KeyEntry::CreateKeysetKey(
+absl::StatusOr<SecretProto<Keyset::Key>> KeyEntry::CreateKeysetKey(
     int32_t id, const KeyGenConfiguration& /*config*/) {
-  util::StatusOr<KeyStatusType> key_status = ToKeyStatusType(key_status_);
+  absl::StatusOr<KeyStatusType> key_status = ToKeyStatusType(key_status_);
   if (!key_status.ok()) return key_status.status();
 
   if (GetKeyIdRequirement().has_value() && GetKeyIdRequirement() != id) {
@@ -263,9 +263,9 @@ util::StatusOr<SecretProto<Keyset::Key>> KeyEntry::CreateKeysetKey(
   return CreateKeysetKeyFromKey(*key_, id, *key_status);
 }
 
-util::StatusOr<SecretProto<Keyset::Key>> ParametersEntry::CreateKeysetKey(
+absl::StatusOr<SecretProto<Keyset::Key>> ParametersEntry::CreateKeysetKey(
     int32_t id, const KeyGenConfiguration& config) {
-  util::StatusOr<KeyStatusType> key_status = ToKeyStatusType(key_status_);
+  absl::StatusOr<KeyStatusType> key_status = ToKeyStatusType(key_status_);
   if (!key_status.ok()) return key_status.status();
 
   if (GetKeyIdRequirement().has_value() && GetKeyIdRequirement() != id) {
@@ -282,7 +282,7 @@ util::StatusOr<SecretProto<Keyset::Key>> ParametersEntry::CreateKeysetKey(
     absl::optional<int> id_requirement = parameters_->HasIdRequirement()
                                              ? absl::make_optional(id)
                                              : absl::nullopt;
-    util::StatusOr<std::unique_ptr<Key>> key =
+    absl::StatusOr<std::unique_ptr<Key>> key =
         internal::KeyGenConfigurationImpl::CreateKey(*parameters_,
                                                      id_requirement, config);
 

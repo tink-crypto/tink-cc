@@ -107,7 +107,7 @@ std::unique_ptr<OutputStreamWithResult<absl::Status>> GetVerifyMacOutputStream(
       absl::make_unique<DummyStatefulMacFactory>());
   auto streaming_mac =
       absl::make_unique<StreamingMacImpl>(std::move(mac_factory));
-  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<util::Status>>>
+  absl::StatusOr<std::unique_ptr<OutputStreamWithResult<absl::Status>>>
       stream_status = streaming_mac->NewVerifyMacOutputStream(expected_mac);
   EXPECT_THAT(stream_status, IsOk());
   return std::move(*stream_status);

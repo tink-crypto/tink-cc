@@ -196,6 +196,27 @@ TEST(SecretBufferTest, AppendWithEmpty2) {
   EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;")));
 }
 
+TEST(SecretBufferTest, AppendStringView) {
+  SecretBuffer buffer1("some data;");
+  SecretBuffer buffer2("some other data;");
+  buffer1.append(buffer2.AsStringView());
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;some other data;")));
+}
+
+TEST(SecretBufferTest, AppendStringViewWithEmpty) {
+  SecretBuffer buffer1("some data;");
+  SecretBuffer buffer2;
+  buffer1.append(buffer2.AsStringView());
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;")));
+}
+
+TEST(SecretBufferTest, AppendStringViewWithEmpty2) {
+  SecretBuffer buffer1;
+  SecretBuffer buffer2("some data;");
+  buffer1.append(buffer2.AsStringView());
+  EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;")));
+}
+
 TEST(SecretBufferTest, AppendWithSecretData) {
   SecretBuffer buffer1("some data;");
   util::SecretData data = util::SecretDataFromStringView("some other data;");

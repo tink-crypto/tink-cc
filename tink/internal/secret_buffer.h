@@ -153,6 +153,14 @@ class SecretBuffer {
     return *this;
   }
 
+  SecretBuffer& append(absl::string_view other) {
+    reserve(size_ + other.size());
+    crypto::tink::internal::SafeMemCopy(data_ + size_, other.data(),
+                                        other.size());
+    size_ += other.size();
+    return *this;
+  }
+
   SecretBuffer substr(
       size_t pos, size_t count = std::numeric_limits<size_t>::max()) const& {
     CHECK(pos <= size());

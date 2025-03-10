@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/key_manager.h"
@@ -96,7 +98,7 @@ class Registry {
   // TODO(tholenst): Remove Reset() from the interface, as it could violate this
   // but should be test only anyhow.
   template <class P>
-  static crypto::tink::util::StatusOr<const KeyManager<P>*> get_key_manager(
+  static absl::StatusOr<const KeyManager<P>*> get_key_manager(
       absl::string_view type_url) {
     return internal::RegistryImpl::GlobalInstance().get_key_manager<P>(
         type_url);
@@ -106,7 +108,7 @@ class Registry {
   // in 'key_data'.  It looks up a KeyManager identified by key_data.type_url,
   // and calls manager's GetPrimitive(key_data)-method.
   template <class P>
-  static crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
+  static absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const google::crypto::tink::KeyData& key_data) {
     return internal::RegistryImpl::GlobalInstance().GetPrimitive<P>(key_data);
   }
@@ -134,7 +136,7 @@ class Registry {
   // Looks up the globally registered PrimitiveWrapper for this primitive
   // and wraps the given PrimitiveSet with it.
   template <class P>
-  static crypto::tink::util::StatusOr<std::unique_ptr<P>> Wrap(
+  static absl::StatusOr<std::unique_ptr<P>> Wrap(
       std::unique_ptr<PrimitiveSet<P>> primitive_set) {
     return internal::RegistryImpl::GlobalInstance().Wrap<P>(
         std::move(primitive_set));

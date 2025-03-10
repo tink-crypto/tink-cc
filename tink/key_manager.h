@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/util/errors.h"
@@ -100,11 +102,11 @@ template <class P>
 class KeyManager : public KeyManagerBase {
  public:
   // Constructs an instance of P for the given 'key_data'.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
+  virtual absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const google::crypto::tink::KeyData& key_data) const = 0;
 
   // Constructs an instance of P for the given 'key'.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
+  virtual absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const portable_proto::MessageLite& key) const = 0;
 };
 

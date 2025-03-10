@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@
 #include "absl/functional/any_invocable.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/core/key_type_manager.h"
@@ -90,7 +91,7 @@ class RegistryImpl {
       bool new_key_allowed) ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   template <class P>
-  crypto::tink::util::StatusOr<const KeyManager<P>*> get_key_manager(
+  absl::StatusOr<const KeyManager<P>*> get_key_manager(
       absl::string_view type_url) const ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   // Takes ownership of 'wrapper', which must be non-nullptr.
@@ -99,7 +100,7 @@ class RegistryImpl {
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   template <class P>
-  crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const google::crypto::tink::KeyData& key_data) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
@@ -113,13 +114,13 @@ class RegistryImpl {
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   template <class P>
-  crypto::tink::util::StatusOr<std::unique_ptr<P>> Wrap(
+  absl::StatusOr<std::unique_ptr<P>> Wrap(
       std::unique_ptr<PrimitiveSet<P>> primitive_set) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
 
   // Wraps a `keyset` and annotates it with `annotations`.
   template <class P>
-  crypto::tink::util::StatusOr<std::unique_ptr<P>> WrapKeyset(
+  absl::StatusOr<std::unique_ptr<P>> WrapKeyset(
       const google::crypto::tink::Keyset& keyset,
       const absl::flat_hash_map<std::string, std::string>& annotations) const
       ABSL_LOCKS_EXCLUDED(maps_mutex_);
@@ -232,13 +233,13 @@ absl::Status RegistryImpl::RegisterPrimitiveWrapper(
   std::unique_ptr<PrimitiveWrapper<P, Q>> owned_wrapper(wrapper);
 
   absl::MutexLock lock(&maps_mutex_);
-  absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+  absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
       const google::crypto::tink::KeyData& key_data) const>
       primitive_getter = [this](const google::crypto::tink::KeyData& key_data) {
         return this->GetPrimitive<P>(key_data);
       };
 
-  absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+  absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
       const Key& key) const>
       always_failing_primitive_getter = [](const Key& key) {
         return absl::Status(
@@ -253,7 +254,7 @@ absl::Status RegistryImpl::RegisterPrimitiveWrapper(
 
 // TODO: b/284059638 - Remove this and upstream functions from the public API.
 template <class P>
-crypto::tink::util::StatusOr<const KeyManager<P>*>
+absl::StatusOr<const KeyManager<P>*>
 RegistryImpl::get_key_manager(absl::string_view type_url) const {
   absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*> info =
       get_key_type_info(type_url);
@@ -264,7 +265,7 @@ RegistryImpl::get_key_manager(absl::string_view type_url) const {
 }
 
 template <class P>
-crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::GetPrimitive(
+absl::StatusOr<std::unique_ptr<P>> RegistryImpl::GetPrimitive(
     const google::crypto::tink::KeyData& key_data) const {
   absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*> info =
       get_key_type_info(key_data.type_url());
@@ -275,7 +276,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::GetPrimitive(
 }
 
 template <class P>
-crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::Wrap(
+absl::StatusOr<std::unique_ptr<P>> RegistryImpl::Wrap(
     std::unique_ptr<PrimitiveSet<P>> primitive_set) const {
   if (primitive_set == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -284,7 +285,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::Wrap(
   const PrimitiveWrapper<P, P>* wrapper = nullptr;
   {
     absl::MutexLock lock(&maps_mutex_);
-    crypto::tink::util::StatusOr<const PrimitiveWrapper<P, P>*> wrapper_status =
+    absl::StatusOr<const PrimitiveWrapper<P, P>*> wrapper_status =
         keyset_wrapper_store_.GetPrimitiveWrapper<P>();
     if (!wrapper_status.ok()) {
       return wrapper_status.status();
@@ -295,13 +296,13 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::Wrap(
 }
 
 template <class P>
-crypto::tink::util::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
+absl::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
     const google::crypto::tink::Keyset& keyset,
     const absl::flat_hash_map<std::string, std::string>& annotations) const {
   const KeysetWrapper<P>* keyset_wrapper = nullptr;
   {
     absl::MutexLock lock(&maps_mutex_);
-    crypto::tink::util::StatusOr<const KeysetWrapper<P>*>
+    absl::StatusOr<const KeysetWrapper<P>*>
         keyset_wrapper_status = keyset_wrapper_store_.Get<P>();
     if (!keyset_wrapper_status.ok()) {
       return keyset_wrapper_status.status();

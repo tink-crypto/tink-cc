@@ -29,6 +29,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/crypto_format.h"
@@ -65,7 +66,7 @@ class PrimitiveSet {
   template <class P2>
   class Entry {
    public:
-    static crypto::tink::util::StatusOr<std::unique_ptr<Entry<P>>> New(
+    static absl::StatusOr<std::unique_ptr<Entry<P>>> New(
         std::unique_ptr<P> primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
       if (key_info.status() != google::crypto::tink::KeyStatusType::ENABLED) {
@@ -157,7 +158,7 @@ class PrimitiveSet {
     return absl::OkStatus();
   }
 
-  static crypto::tink::util::StatusOr<Entry<P>*> AddPrimitiveImpl(
+  static absl::StatusOr<Entry<P>*> AddPrimitiveImpl(
       std::unique_ptr<P> primitive,
       const google::crypto::tink::KeysetInfo::KeyInfo& key_info,
       CiphertextPrefixToPrimitivesMap& primitives,
@@ -235,7 +236,7 @@ class PrimitiveSet {
       return std::move(AddAnnotations(std::move(annotations)));
     }
 
-    crypto::tink::util::StatusOr<PrimitiveSet<P>> Build() && {
+    absl::StatusOr<PrimitiveSet<P>> Build() && {
       absl::MutexLock lock(&mutex_);
       if (!status_.ok()) return status_;
       return PrimitiveSet<P>(std::move(primitives_), primary_,
@@ -279,7 +280,7 @@ class PrimitiveSet {
   ABSL_DEPRECATED(
       "Mutating PrimitiveSets after construction is deprecated. Use "
       "PrimitiveSet<>::Builder instead.")
-  crypto::tink::util::StatusOr<Entry<P>*> AddPrimitive(
+  absl::StatusOr<Entry<P>*> AddPrimitive(
       std::unique_ptr<P> primitive,
       const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
     if (!is_mutable()) {
@@ -293,7 +294,7 @@ class PrimitiveSet {
   }
 
   // Returns the entries with primitives identified by 'identifier'.
-  crypto::tink::util::StatusOr<const Primitives*> get_primitives(
+  absl::StatusOr<const Primitives*> get_primitives(
       absl::string_view identifier) const {
     absl::MutexLockMaybe lock(primitives_mutex_.get());
     auto found = primitives_.find(std::string(identifier));
@@ -305,7 +306,7 @@ class PrimitiveSet {
   }
 
   // Returns all primitives that use RAW prefix.
-  crypto::tink::util::StatusOr<const Primitives*> get_raw_primitives() const {
+  absl::StatusOr<const Primitives*> get_raw_primitives() const {
     return get_primitives(CryptoFormat::kRawPrefix);
   }
 

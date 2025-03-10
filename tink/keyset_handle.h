@@ -28,6 +28,8 @@
 #include "absl/base/macros.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
@@ -253,14 +255,14 @@ class KeysetHandle {
   // use //tink/aead:config_v0 for AEAD. If a single GenerateNew call handles
   // multiple primitives, use //tink//config:v0.
   template <class P>
-  crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const Configuration& config) const;
 
   // Creates a wrapped primitive using this keyset handle and the global
   // registry, which stores necessary primitive wrappers and key type managers.
   template <class P>
   ABSL_DEPRECATE_AND_INLINE()
-  crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive() const {
+  absl::StatusOr<std::unique_ptr<P>> GetPrimitive() const {
     return GetPrimitive<P>(crypto::tink::ConfigGlobalRegistry());
   }
 
@@ -271,7 +273,7 @@ class KeysetHandle {
   // TINK-PENDING-REMOVAL-IN-3.0.0-START
   template <class P>
   ABSL_DEPRECATED("Register the keymanager and use GetPrimitive")
-  crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
       const KeyManager<P>* custom_manager) const;
   // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
@@ -345,7 +347,7 @@ class KeysetHandle {
   // implements the corresponding Primitive-interface.
   // TINK-PENDING-REMOVAL-IN-3.0.0-START
   template <class P>
-  crypto::tink::util::StatusOr<std::unique_ptr<PrimitiveSet<P>>>
+  absl::StatusOr<std::unique_ptr<PrimitiveSet<P>>>
   GetPrimitives(
       const KeyManager<P>* custom_manager) const;
   // TINK-PENDING-REMOVAL-IN-3.0.0-END
@@ -518,9 +520,9 @@ class KeysetHandleBuilder {
 
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
 template <class P>
-crypto::tink::util::StatusOr<std::unique_ptr<PrimitiveSet<P>>>
+absl::StatusOr<std::unique_ptr<PrimitiveSet<P>>>
 KeysetHandle::GetPrimitives(const KeyManager<P>* custom_manager) const {
-  crypto::tink::util::Status status = ValidateKeyset(*keyset_);
+  absl::Status status = ValidateKeyset(*keyset_);
   if (!status.ok()) return status;
   typename PrimitiveSet<P>::Builder primitives_builder;
   primitives_builder.AddAnnotations(monitoring_annotations_);
@@ -553,7 +555,7 @@ KeysetHandle::GetPrimitives(const KeyManager<P>* custom_manager) const {
 // TINK-PENDING-REMOVAL-IN-3.0.0-END
 
 template <class P>
-crypto::tink::util::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
+absl::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
     const Configuration& config) const {
   if (crypto::tink::internal::ConfigurationImpl::IsInGlobalRegistryMode(
           config)) {
@@ -568,7 +570,7 @@ crypto::tink::util::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
   if (!wrapper_store.ok()) {
     return wrapper_store.status();
   }
-  crypto::tink::util::StatusOr<const crypto::tink::internal::KeysetWrapper<P>*>
+  absl::StatusOr<const crypto::tink::internal::KeysetWrapper<P>*>
       wrapper = (*wrapper_store)->Get<P>();
   if (!wrapper.ok()) {
     return wrapper.status();
@@ -616,10 +618,10 @@ KeysetHandle::GenerateNewFromParameters(
 
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
 template <class P>
-crypto::tink::util::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
+absl::StatusOr<std::unique_ptr<P>> KeysetHandle::GetPrimitive(
     const KeyManager<P>* custom_manager) const {
   if (custom_manager == nullptr) {
-    return crypto::tink::util::Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                                       "custom_manager must not be null");
   }
   auto primitives_result = this->GetPrimitives<P>(custom_manager);

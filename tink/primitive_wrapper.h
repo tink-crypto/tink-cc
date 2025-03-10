@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/primitive_set.h"
 #include "tink/util/statusor.h"
 
@@ -40,7 +41,7 @@ class PrimitiveWrapper {
   using InputPrimitive = InputPrimitiveParam;
   using Primitive = PrimitiveParam;
 
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<Primitive>> Wrap(
+  virtual absl::StatusOr<std::unique_ptr<Primitive>> Wrap(
       std::unique_ptr<PrimitiveSet<InputPrimitive>> primitive_set) const = 0;
 };
 

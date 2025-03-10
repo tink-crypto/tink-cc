@@ -376,6 +376,7 @@ tink_cc_library(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::synchronization
     tink::util::errors
@@ -390,6 +391,7 @@ tink_cc_library(
     primitive_wrapper.h
   DEPS
     tink::core::primitive_set
+    absl::statusor
     tink::util::statusor
 )
 
@@ -400,6 +402,8 @@ tink_cc_library(
   DEPS
     tink::core::key_manager
     tink::core::primitive_set
+    absl::status
+    absl::statusor
     absl::strings
     tink::internal::registry_impl
     tink::util::status
@@ -447,6 +451,7 @@ tink_cc_library(
     absl::check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::optional
@@ -505,6 +510,8 @@ tink_cc_library(
     key_manager.h
   DEPS
     absl::memory
+    absl::status
+    absl::statusor
     absl::strings
     tink::util::errors
     tink::util::protobuf_helper

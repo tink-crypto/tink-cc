@@ -112,6 +112,7 @@ tink_cc_library(
     absl::any_invocable
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::synchronization
     tink::core::key_type_manager
@@ -1163,6 +1164,7 @@ tink_cc_library(
     tink::internal::fips_utils
     absl::flat_hash_map
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key_manager_impl

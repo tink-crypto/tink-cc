@@ -27,6 +27,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
@@ -58,9 +59,9 @@ namespace internal {
 //
 // Example:
 //  KeyTypeInfoStore store;
-//  crypto::tink::util::Status status =
+//  absl::Status status =
 //      store.AddKeyTypeManager(absl::make_unique<AesGcmKeyManager>(), true);
-//  crypto::tink::util::StatusOr<KeyTypeInfoStore::Info*> info =
+//  absl::StatusOr<KeyTypeInfoStore::Info*> info =
 //      store.Get(AesGcmKeyManager().get_key_type());
 class KeyTypeInfoStore {
  public:
@@ -142,9 +143,9 @@ class KeyTypeInfoStore {
     }
 
     template <typename P>
-    crypto::tink::util::StatusOr<std::unique_ptr<P>> GetPrimitive(
+    absl::StatusOr<std::unique_ptr<P>> GetPrimitive(
         const google::crypto::tink::KeyData& key_data) const {
-      crypto::tink::util::StatusOr<const KeyManager<P>*> key_manager =
+      absl::StatusOr<const KeyManager<P>*> key_manager =
           get_key_manager<P>(key_data.type_url());
       if (!key_manager.ok()) {
         return key_manager.status();
@@ -153,7 +154,7 @@ class KeyTypeInfoStore {
     }
 
     template <typename P>
-    crypto::tink::util::StatusOr<const KeyManager<P>*> get_key_manager(
+    absl::StatusOr<const KeyManager<P>*> get_key_manager(
         absl::string_view requested_type_url) const {
       auto it = primitive_to_manager_.find(std::type_index(typeid(P)));
       if (it == primitive_to_manager_.end()) {

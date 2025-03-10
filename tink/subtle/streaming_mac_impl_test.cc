@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/mac/internal/stateful_mac.h"
@@ -99,7 +100,7 @@ GetComputeMacOutputStream() {
   return std::move(*stream_status);
 }
 
-// A helper for creating an OutputStreamWithResult<util::Status>,
+// A helper for creating an OutputStreamWithResult<absl::Status>,
 // used for test validation for mac verification.
 std::unique_ptr<OutputStreamWithResult<absl::Status>> GetVerifyMacOutputStream(
     std::string expected_mac) {

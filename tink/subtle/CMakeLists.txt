@@ -165,12 +165,14 @@ tink_cc_library(
     tink::subtle::common_enums
     tink::subtle::subtle_util
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     crypto
     tink::internal::call_with_core_dump_protection
     tink::internal::md_util
     tink::internal::safe_stringops
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::util::secret_data
     tink::util::status
@@ -1565,6 +1567,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     tink::core::output_stream_with_result

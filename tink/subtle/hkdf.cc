@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/evp.h"
+#include "tink/internal/secret_buffer.h"
 // BoringSSL and OpenSSL have incompatible ways to compute HKDF: BoringSSL
 // provides a one-shot API HKDF, while OpenSSL doesn't make that API public, but
 // instead provides this functionality over the EVP interface, which in turn
@@ -75,14 +77,14 @@ absl::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
       EVP_PKEY_CTX_set1_hkdf_salt(pctx.get(), salt_ptr, salt.size()) <= 0 ||
       EVP_PKEY_CTX_set1_hkdf_key(pctx.get(), ikm_ptr, ikm.size()) <= 0 ||
       EVP_PKEY_CTX_add1_hkdf_info(pctx.get(), info_ptr, info.size()) <= 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_PKEY_CTX setup failed");
   }
   size_t output_length = out_key.size();
   if (EVP_PKEY_derive(pctx.get(), out_key.data(), &output_length) <= 0) {
-    return util::Status(absl::StatusCode::kInternal, "HKDF failed");
+    return absl::Status(absl::StatusCode::kInternal, "HKDF failed");
   }
-  return util::OkStatus();
+  return absl::OkStatus();
 #endif
 }
 

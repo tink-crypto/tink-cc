@@ -161,24 +161,6 @@ class SecretDataInternalClass {
     return result;
   }
 
-  // Semantics of std::string::substr
-  SecretDataInternalClass substr(size_t pos, size_t count = kMaxCount) const& {
-    count = std::min(count, size() - pos);
-    SecretDataInternalClass result;
-    result.CopyIntoStorage(data_ + pos, count);
-    return result;
-  }
-
-  // Semantics of std::string::append
-  SecretDataInternalClass& append(const SecretDataInternalClass& other) {
-    CHECK(other.size_ <= max_size() - size_);
-    reserve(size_ + other.size_);
-    crypto::tink::internal::SafeMemCopy(data_ + size_, other.data_,
-                                        other.size_);
-    size_ += other.size_;
-    return *this;
-  }
-
   bool operator==(const SecretDataInternalClass& other) const {
     return size_ == other.size_ &&
            ::crypto::tink::internal::SafeCryptoMemEquals(data_, other.data_,

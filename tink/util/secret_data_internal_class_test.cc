@@ -185,23 +185,6 @@ TEST(SecretDataInternalClassTest, Swap) {
   }
 }
 
-TEST(SecretDataInternalClassTest, SubStr) {
-  SecretDataInternalClass secret_data =
-      SecretDataInternalClassFromStringView("Hello world!");
-  SecretDataInternalClass world = secret_data.substr(strlen("Hello "));
-  EXPECT_EQ(SecretDataInternalClassAsStringView(world), "world!");
-  SecretDataInternalClass hello = secret_data.substr(0, strlen("Hello"));
-  EXPECT_EQ(SecretDataInternalClassAsStringView(hello), "Hello");
-  SecretDataInternalClass ello = secret_data.substr(1, strlen("ello"));
-  EXPECT_EQ(SecretDataInternalClassAsStringView(ello), "ello");
-  SecretDataInternalClass lo = secret_data.substr(3, 1000);
-  EXPECT_EQ(SecretDataInternalClassAsStringView(lo), "lo world!");
-  SecretDataInternalClass full = secret_data.substr(0, 1000);
-  EXPECT_EQ(SecretDataInternalClassAsStringView(full), "Hello world!");
-  SecretDataInternalClass other_full = secret_data.substr(0);
-  EXPECT_EQ(SecretDataInternalClassAsStringView(other_full), "Hello world!");
-}
-
 TEST(SecretDataInternalClassDeathTest, IterationOutOfBounds) {
   SecretDataInternalClass secret_data =
       SecretDataInternalClassFromStringView("Hello world!");
@@ -235,23 +218,6 @@ TEST(SecretDataInternalClassDeathTest, IterationOutOfBounds) {
         std::move(secret_data)[-1],
         testing::HasSubstr("SecretData::operator[] pos out of bounds"));
   }
-}
-
-TEST(SecretDataInternalClassTest, SubStrRvalue) {
-  SecretDataInternalClass secret_data =
-      SecretDataInternalClassFromStringView("Hello world!");
-  SecretDataInternalClass world =
-      std::move(secret_data).substr(strlen("Hello "));
-  EXPECT_EQ(SecretDataInternalClassAsStringView(world), "world!");
-}
-
-TEST(SecretDataInternalClassTest, Append) {
-  SecretDataInternalClass hello =
-      SecretDataInternalClassFromStringView("Hello ");
-  SecretDataInternalClass world =
-      SecretDataInternalClassFromStringView("world!");
-  hello.append(world);
-  EXPECT_EQ(SecretDataInternalClassAsStringView(hello), "Hello world!");
 }
 
 TEST(SecretDataInternalClassTest, StringViewConstructor) {

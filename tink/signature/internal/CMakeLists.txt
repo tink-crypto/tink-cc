@@ -659,14 +659,19 @@ tink_cc_test(
     absl::string_view
     absl::optional
     crypto
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
     tink::core::public_key_sign
     tink::core::public_key_verify
+    tink::core::restricted_data
     tink::internal::fips_utils
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
+    tink::signature::slh_dsa_public_key
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
+    tink::util::test_util
   TAGS
     exclude_if_openssl
 )

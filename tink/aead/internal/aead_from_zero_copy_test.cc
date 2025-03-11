@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/mock_zero_copy_aead.h"
@@ -42,8 +43,6 @@ constexpr absl::string_view kCiphertext = "37ajhgdahjsdg8653821218236182631";
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::testing::_;
 using ::testing::Invoke;
 using ::testing::Return;
@@ -71,8 +70,8 @@ TEST(AeadFromZeroCopyTest, EncryptFailsIfZeroCopyEncryptFails) {
   EXPECT_CALL(*mock_zero_copy_aead, MaxEncryptionSize(kPlaintext.size()))
       .WillOnce(Return(kCiphertext.size()));
   EXPECT_CALL(*mock_zero_copy_aead, Encrypt(kPlaintext, kAssociatedData, _))
-      .WillOnce(
-          Return(Status(absl::StatusCode::kInternal, "Some error happened!")));
+      .WillOnce(Return(
+          absl::Status(absl::StatusCode::kInternal, "Some error happened!")));
   AeadFromZeroCopy aead(std::move(mock_zero_copy_aead));
   EXPECT_THAT(aead.Encrypt(kPlaintext, kAssociatedData).status(),
               StatusIs(absl::StatusCode::kInternal));
@@ -100,8 +99,8 @@ TEST(AeadFromZeroCopyTest, EncryptFailsIfZeroCopyDecryptFails) {
   EXPECT_CALL(*mock_zero_copy_aead, MaxDecryptionSize(kCiphertext.size()))
       .WillOnce(Return(kPlaintext.size()));
   EXPECT_CALL(*mock_zero_copy_aead, Decrypt(kCiphertext, kAssociatedData, _))
-      .WillOnce(
-          Return(Status(absl::StatusCode::kInternal, "Some error happened!")));
+      .WillOnce(Return(
+          absl::Status(absl::StatusCode::kInternal, "Some error happened!")));
   AeadFromZeroCopy aead(std::move(mock_zero_copy_aead));
   EXPECT_THAT(aead.Decrypt(kCiphertext, kAssociatedData).status(),
               StatusIs(absl::StatusCode::kInternal));

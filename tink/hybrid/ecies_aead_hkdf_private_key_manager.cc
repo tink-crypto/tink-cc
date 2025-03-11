@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/ecies_aead_hkdf_hybrid_decrypt.h"
 #include "tink/hybrid/ecies_aead_hkdf_public_key_manager.h"
@@ -39,17 +40,15 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::EciesAeadHkdfKeyFormat;
 using google::crypto::tink::EciesAeadHkdfPrivateKey;
 using google::crypto::tink::EciesAeadHkdfPublicKey;
 using google::crypto::tink::EciesHkdfKemParams;
 
-Status EciesAeadHkdfPrivateKeyManager::ValidateKeyFormat(
+absl::Status EciesAeadHkdfPrivateKeyManager::ValidateKeyFormat(
     const EciesAeadHkdfKeyFormat& key_format) const {
   if (!key_format.has_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing params.");
   }
   return EciesAeadHkdfPublicKeyManager().ValidateParams(key_format.params());
 }
@@ -84,12 +83,13 @@ EciesAeadHkdfPrivateKeyManager::GetPublicKey(
   return private_key.public_key();
 }
 
-Status EciesAeadHkdfPrivateKeyManager::ValidateKey(
+absl::Status EciesAeadHkdfPrivateKeyManager::ValidateKey(
     const EciesAeadHkdfPrivateKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (!key.has_public_key()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing public_key.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Missing public_key.");
   }
   return EciesAeadHkdfPublicKeyManager().ValidateKey(key.public_key());
 }

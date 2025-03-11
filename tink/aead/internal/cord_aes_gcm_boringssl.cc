@@ -118,14 +118,14 @@ absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContextFromPartial(
 //
 // [1]https://github.com/openssl/openssl/blob/eb52450f5151e8e78743ab05de21a344823316f5/crypto/evp/evp_enc.c#L1427
 // [2]https://github.com/openssl/openssl/blob/cac250755efd0c40cc6127a0e4baceb8d226c7e3/providers/implementations/include/prov/ciphercommon_aead.h#L30
-util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContext(
+absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContext(
     const util::SecretData& key, absl::string_view iv, bool encryption) {
   internal::SslUniquePtr<EVP_CIPHER_CTX> context(EVP_CIPHER_CTX_new());
   if (context == nullptr) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "EVP_CIPHER_CTX_new failed");
   }
-  util::StatusOr<const EVP_CIPHER*> cipher =
+  absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesGcmCipherForKeySize(key.size());
   if (!cipher.ok()) {
     return cipher.status();
@@ -133,10 +133,10 @@ util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContext(
   if (EVP_CipherInit_ex(context.get(), *cipher, /*impl=*/nullptr,
                         reinterpret_cast<const uint8_t*>(key.data()),
                         /*iv=*/nullptr, /*enc=*/1) <= 0) {
-    return util::Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                         "Context initialization failed");
   }
-  util::Status res =
+  absl::Status res =
       SetIvAndDirection(context.get(), iv, /*encryption=*/encryption);
   if (!res.ok()) {
     return res;
@@ -223,7 +223,7 @@ absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Encrypt(
   absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
       NewContextFromPartial(partial_context_.get(), iv, /*encryption=*/true);
 #else
-  util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
+  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
       NewContext(key_, iv, /*encryption=*/true);
 #endif
   if (!context.ok()) {
@@ -274,7 +274,7 @@ absl::StatusOr<absl::Cord> CordAesGcmBoringSsl::Decrypt(
       NewContextFromPartial(partial_context_.get(), iv_view,
                             /*encryption=*/false);
 #else
-  util::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
+  absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> context =
       NewContext(key_, iv_view, /*encryption=*/false);
 #endif
   if (!context.ok()) {

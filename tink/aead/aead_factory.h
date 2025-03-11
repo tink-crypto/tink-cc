@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -45,13 +45,13 @@ class ABSL_DEPRECATED(
  public:
   // Returns an Aead-primitive that uses key material from the keyset
   // specified via 'keyset_handle'.
-  static crypto::tink::util::StatusOr<std::unique_ptr<Aead>> GetPrimitive(
+  static absl::StatusOr<std::unique_ptr<Aead>> GetPrimitive(
       const KeysetHandle& keyset_handle);
 
   // Returns an Aead-primitive that uses key material from the keyset
   // specified via 'keyset_handle' and is instantiated by the given
   // 'custom_key_manager' (instead of the key manager from the Registry).
-  static crypto::tink::util::StatusOr<std::unique_ptr<Aead>> GetPrimitive(
+  static absl::StatusOr<std::unique_ptr<Aead>> GetPrimitive(
       const KeysetHandle& keyset_handle,
       const KeyManager<Aead>* custom_key_manager);
 

@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,9 +33,6 @@
 namespace crypto {
 namespace tink {
 namespace streamingaead {
-
-using util::Status;
-using util::StatusOr;
 
 BufferedInputStream::BufferedInputStream(
     std::unique_ptr<crypto::tink::InputStream> input_stream) {

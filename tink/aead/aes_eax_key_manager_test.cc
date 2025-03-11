@@ -37,7 +37,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::StatusOr;
 using AesEaxKeyProto = ::google::crypto::tink::AesEaxKey;
 using ::google::crypto::tink::AesEaxKeyFormat;
 using ::testing::Eq;

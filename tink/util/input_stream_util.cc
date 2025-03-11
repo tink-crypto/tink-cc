@@ -21,6 +21,7 @@
 #include <utility>
 
 #include "absl/algorithm/container.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/span.h"
 #include "tink/input_stream.h"
@@ -36,7 +37,7 @@ using ::crypto::tink::internal::SecretBuffer;
 namespace {
 
 template <typename Result>
-util::StatusOr<Result> ReadBytesFromStreamImpl(int num_bytes,
+absl::StatusOr<Result> ReadBytesFromStreamImpl(int num_bytes,
                                                InputStream* input_stream) {
   const void* buffer;
   Result result;

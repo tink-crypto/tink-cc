@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,7 +64,6 @@
 #include "proto/xchacha20_poly1305.pb.h"
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;

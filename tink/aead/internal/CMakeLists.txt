@@ -38,6 +38,7 @@ tink_cc_library(
     absl::cleanup
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     crypto
@@ -299,6 +300,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     tink::util::status

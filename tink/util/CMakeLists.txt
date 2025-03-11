@@ -123,6 +123,7 @@ tink_cc_library(
     tink::util::statusor
     absl::memory
     absl::status
+    absl::statusor
     tink::core::random_access_stream
   TAGS
     exclude_if_windows
@@ -258,6 +259,7 @@ tink_cc_library(
     tink::util::secret_data
     tink::util::statusor
     absl::algorithm_container
+    absl::statusor
     absl::strings
     absl::span
     tink::core::input_stream

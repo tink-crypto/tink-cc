@@ -30,7 +30,6 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::KmsEnvelopeAeadKey;
 
 absl::StatusOr<std::unique_ptr<Aead>>

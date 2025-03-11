@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/random_access_stream.h"
 #include "tink/util/buffer.h"
 #include "tink/util/errors.h"
@@ -34,9 +35,6 @@
 namespace crypto {
 namespace tink {
 namespace util {
-
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 
 namespace {
 
@@ -56,8 +54,8 @@ FileRandomAccessStream::FileRandomAccessStream(int file_descriptor) {
   fd_ = file_descriptor;
 }
 
-Status FileRandomAccessStream::PRead(int64_t position, int count,
-                                     Buffer* dest_buffer) {
+absl::Status FileRandomAccessStream::PRead(int64_t position, int count,
+                                           Buffer* dest_buffer) {
   if (dest_buffer == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "dest_buffer must be non-null");
@@ -96,7 +94,7 @@ FileRandomAccessStream::~FileRandomAccessStream() {
 absl::StatusOr<int64_t> FileRandomAccessStream::size() {
   struct stat s;
   if (fstat(fd_, &s) == -1) {
-    return Status(absl::StatusCode::kUnavailable, "size unavailable");
+    return absl::Status(absl::StatusCode::kUnavailable, "size unavailable");
   } else {
     return s.st_size;
   }

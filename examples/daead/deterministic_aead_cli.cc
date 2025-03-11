@@ -23,6 +23,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
 #include "tink/daead/deterministic_aead_config.h"
@@ -43,8 +45,6 @@ namespace {
 using ::crypto::tink::DeterministicAead;
 using ::crypto::tink::DeterministicAeadConfig;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 constexpr absl::string_view kEncrypt = "encrypt";
 constexpr absl::string_view kDecrypt = "decrypt";
@@ -68,12 +68,12 @@ void ValidateParams() {
 namespace tink_cc_examples {
 
 // Deterministic AEAD example CLI implementation.
-Status DeterministicAeadCli(absl::string_view mode,
-                            const std::string& keyset_filename,
-                            const std::string& input_filename,
-                            const std::string& output_filename,
-                            absl::string_view associated_data) {
-  Status result = DeterministicAeadConfig::Register();
+absl::Status DeterministicAeadCli(absl::string_view mode,
+                                  const std::string& keyset_filename,
+                                  const std::string& input_filename,
+                                  const std::string& output_filename,
+                                  absl::string_view associated_data) {
+  absl::Status result = DeterministicAeadConfig::Register();
   if (!result.ok()) return result;
 
   // Read keyset from file.

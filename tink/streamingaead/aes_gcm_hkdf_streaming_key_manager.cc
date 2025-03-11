@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/input_stream.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_encrypter.h"
 #include "tink/subtle/random.h"
@@ -32,8 +33,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::subtle::AesGcmHkdfStreamSegmentEncrypter;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::AesGcmHkdfStreamingKey;
 using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;
 using ::google::crypto::tink::AesGcmHkdfStreamingParams;
@@ -41,19 +40,19 @@ using ::google::crypto::tink::HashType;
 
 namespace {
 
-Status ValidateParams(const AesGcmHkdfStreamingParams& params) {
+absl::Status ValidateParams(const AesGcmHkdfStreamingParams& params) {
   if (!(params.hkdf_hash_type() == HashType::SHA1 ||
         params.hkdf_hash_type() == HashType::SHA256 ||
         params.hkdf_hash_type() == HashType::SHA512)) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "unsupported hkdf_hash_type");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "unsupported hkdf_hash_type");
   }
   int header_size = 1 + params.derived_key_size() +
       AesGcmHkdfStreamSegmentEncrypter::kNoncePrefixSizeInBytes;
   if (params.ciphertext_segment_size() <=
       header_size + AesGcmHkdfStreamSegmentEncrypter::kTagSizeInBytes) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "ciphertext_segment_size too small");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "ciphertext_segment_size too small");
   }
   return ValidateAesKeySize(params.derived_key_size());
 }
@@ -90,22 +89,22 @@ AesGcmHkdfStreamingKeyManager::DeriveKey(
   return key;
 }
 
-Status AesGcmHkdfStreamingKeyManager::ValidateKey(
+absl::Status AesGcmHkdfStreamingKeyManager::ValidateKey(
     const AesGcmHkdfStreamingKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < key.params().derived_key_size()) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "key_value (i.e. ikm) too short");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "key_value (i.e. ikm) too short");
   }
   return ValidateParams(key.params());
 }
 
-Status AesGcmHkdfStreamingKeyManager::ValidateKeyFormat(
+absl::Status AesGcmHkdfStreamingKeyManager::ValidateKeyFormat(
     const AesGcmHkdfStreamingKeyFormat& key_format) const {
   if (key_format.key_size() < key_format.params().derived_key_size()) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "key_size must not be smaller than derived_key_size");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "key_size must not be smaller than derived_key_size");
   }
   return ValidateParams(key_format.params());
 }

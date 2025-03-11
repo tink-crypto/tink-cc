@@ -180,6 +180,7 @@ cc_library(
         "//tink:random_access_stream",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
     ],
 )
 
@@ -323,6 +324,7 @@ cc_library(
         "//tink:input_stream",
         "//tink/internal:secret_buffer",
         "@com_google_absl//absl/algorithm:container",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:span",
     ],

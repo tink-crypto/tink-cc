@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -106,7 +106,7 @@ class IsOkAndHoldsMatcher {
 };
 
 template <typename T>
-inline const absl::Status& GetStatus(const util::StatusOr<T>& s) {
+inline const absl::Status& GetStatus(const absl::StatusOr<T>& s) {
   return s.status();
 }
 
@@ -114,7 +114,7 @@ inline const absl::Status& GetStatus(const absl::Status& s) { return s; }
 
 }  // namespace internal
 
-// Matches a util::StatusOk() value.
+// Matches an absl::StatusOk() value.
 // This is better than EXPECT_TRUE(status.ok())
 // because the error message is a part of the failure message.
 MATCHER(IsOk,

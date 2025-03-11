@@ -43,7 +43,6 @@ namespace {
 using ::crypto::tink::subtle::AeadOrDaead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 using ::testing::HasSubstr;
 
 // Checks whether Decrypt(Encrypt(message)) == message with the given dem.

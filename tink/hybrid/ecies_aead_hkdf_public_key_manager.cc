@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,50 +33,52 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Status;
 using google::crypto::tink::EciesAeadHkdfParams;
 using google::crypto::tink::EciesAeadHkdfPublicKey;
 using google::crypto::tink::EcPointFormat;
 using google::crypto::tink::EllipticCurveType;
 using google::crypto::tink::HashType;
 
-Status EciesAeadHkdfPublicKeyManager::ValidateParams(
+absl::Status EciesAeadHkdfPublicKeyManager::ValidateParams(
     const EciesAeadHkdfParams& params) const {
   // Validate KEM params.
   if (!params.has_kem_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing kem_params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Missing kem_params.");
   }
   if (params.kem_params().curve_type() == EllipticCurveType::UNKNOWN_CURVE ||
       params.kem_params().hkdf_hash_type() == HashType::UNKNOWN_HASH) {
-    return Status(absl::StatusCode::kInvalidArgument, "Invalid kem_params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Invalid kem_params.");
   }
 
   // Validate DEM params.
   if (!params.has_dem_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing dem_params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Missing dem_params.");
   }
   if (!params.dem_params().has_aead_dem()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Invalid dem_params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Invalid dem_params.");
   }
 
   // Validate EC point format.
   if (params.ec_point_format() == EcPointFormat::UNKNOWN_FORMAT) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "Unknown EC point format.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Unknown EC point format.");
   }
   return absl::OkStatus();
 }
 
-Status EciesAeadHkdfPublicKeyManager::ValidateKey(
+absl::Status EciesAeadHkdfPublicKeyManager::ValidateKey(
     const EciesAeadHkdfPublicKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (!key.has_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing params.");
   }
   return ValidateParams(key.params());
 }
-
 
 }  // namespace tink
 }  // namespace crypto

@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,9 +33,9 @@ namespace tink {
 // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
 // TINK-PENDING-REMOVAL-IN-3.0.0-START
 // static
-util::StatusOr<std::unique_ptr<Aead>> AeadFactory::GetPrimitive(
+absl::StatusOr<std::unique_ptr<Aead>> AeadFactory::GetPrimitive(
     const KeysetHandle& keyset_handle) {
-  util::Status status =
+  absl::Status status =
       Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>());
   if (!status.ok()) {
     return status;
@@ -44,10 +44,10 @@ util::StatusOr<std::unique_ptr<Aead>> AeadFactory::GetPrimitive(
 }
 
 // static
-util::StatusOr<std::unique_ptr<Aead>> AeadFactory::GetPrimitive(
+absl::StatusOr<std::unique_ptr<Aead>> AeadFactory::GetPrimitive(
     const KeysetHandle& keyset_handle,
     const KeyManager<Aead>* custom_key_manager) {
-  util::Status status =
+  absl::Status status =
       Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>());
   if (!status.ok()) {
     return status;

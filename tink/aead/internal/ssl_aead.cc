@@ -27,6 +27,7 @@
 #include "absl/cleanup/cleanup.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -515,7 +516,7 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
   return {absl::make_unique<BoringSslOneShotAeadImpl>(std::move(context),
                                                       kAesGcmTagSizeInBytes)};
 #else
-  util::StatusOr<const EVP_CIPHER *> aead_cipher =
+  absl::StatusOr<const EVP_CIPHER *> aead_cipher =
       GetAesGcmCipherForKeySize(key.size());
   if (!aead_cipher.ok()) {
     return aead_cipher.status();
@@ -547,7 +548,7 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
   return {absl::make_unique<BoringSslOneShotAeadImpl>(
       std::move(context), kAesGcmSivTagSizeInBytes)};
 #else
-  return util::Status(absl::StatusCode::kUnimplemented,
+  return absl::Status(absl::StatusCode::kUnimplemented,
                       "AES-GCM-SIV is unimplemented for OpenSSL");
 #endif
 }
@@ -575,7 +576,7 @@ CreateXchacha20Poly1305OneShotCrypter(const util::SecretData &key) {
   return {absl::make_unique<BoringSslOneShotAeadImpl>(
       std::move(context), kXchacha20Poly1305TagSizeInBytes)};
 #else
-  return util::Status(absl::StatusCode::kUnimplemented,
+  return absl::Status(absl::StatusCode::kUnimplemented,
                       "Xchacha20-Poly1305 is unimplemented for OpenSSL");
 #endif
 }

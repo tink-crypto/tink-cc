@@ -50,9 +50,7 @@ SecretDataInternalClass SecretDataInternalClassFromStringView(
 class SecretDataInternalClass {
  public:
   using value_type = uint8_t;
-  using reference = uint8_t&;
   using const_reference = const uint8_t&;
-  using iterator = uint8_t*;
   using const_iterator = const uint8_t*;
 
   static constexpr size_t kMaxCount = std::numeric_limits<size_t>::max();

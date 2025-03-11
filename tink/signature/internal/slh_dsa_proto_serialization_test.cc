@@ -43,17 +43,16 @@
 #include "tink/subtle/random.h"
 #include "tink/util/test_matchers.h"
 #include "proto/slh_dsa.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::SlhDsaHashType;
 using ::google::crypto::tink::SlhDsaKeyFormat;
 using ::google::crypto::tink::SlhDsaParams;
@@ -72,7 +71,7 @@ const absl::string_view kPublicTypeUrl =
 
 struct TestCase {
   SlhDsaParameters::Variant variant;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   absl::optional<int> id_requirement;
   std::string output_prefix;
 };
@@ -91,12 +90,14 @@ TEST_F(SlhDsaProtoSerializationTest, RegisterTwiceSucceeds) {
 
 INSTANTIATE_TEST_SUITE_P(
     SlhDsaProtoSerializationTestSuite, SlhDsaProtoSerializationTest,
-    Values(TestCase{SlhDsaParameters::Variant::kTink, OutputPrefixType::TINK,
-                    0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{SlhDsaParameters::Variant::kTink, OutputPrefixType::TINK,
-                    0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
-           TestCase{SlhDsaParameters::Variant::kNoPrefix, OutputPrefixType::RAW,
-                    absl::nullopt, ""}));
+    Values(TestCase{SlhDsaParameters::Variant::kTink,
+                    OutputPrefixTypeEnum::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{SlhDsaParameters::Variant::kTink,
+                    OutputPrefixTypeEnum::kTink, 0x03050709,
+                    std::string("\x01\x03\x05\x07\x09", 5)},
+           TestCase{SlhDsaParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""}));
 
 TEST_P(SlhDsaProtoSerializationTest,
        ParseSlhDsa128Sha2SmallSignatureParametersWorks) {
@@ -139,7 +140,7 @@ TEST_F(SlhDsaProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
@@ -161,7 +162,7 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -180,7 +181,7 @@ TEST_F(SlhDsaProtoSerializationTest,
   SlhDsaKeyFormat key_format_proto;
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -206,7 +207,7 @@ TEST_F(SlhDsaProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -233,7 +234,7 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidSigTypeFails) {
 
     absl::StatusOr<internal::ProtoParametersSerialization> serialization =
         internal::ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixType::RAW,
+            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -256,7 +257,7 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidSigTypeFails) {
 
     absl::StatusOr<internal::ProtoParametersSerialization> serialization =
         internal::ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixType::RAW,
+            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -282,7 +283,7 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidHashTypeFails) {
 
     absl::StatusOr<internal::ProtoParametersSerialization> serialization =
         internal::ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixType::RAW,
+            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -304,7 +305,7 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidHashTypeFails) {
 
     absl::StatusOr<internal::ProtoParametersSerialization> serialization =
         internal::ProtoParametersSerialization::Create(
-            kPrivateTypeUrl, OutputPrefixType::RAW,
+            kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
             key_format_proto.SerializeAsString());
     ASSERT_THAT(serialization, IsOk());
 
@@ -374,8 +375,9 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePublicKeyWorks) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          test_case.output_prefix_type, test_case.id_requirement);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, test_case.output_prefix_type,
+          test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -408,10 +410,10 @@ TEST_F(SlhDsaProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -439,10 +441,10 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -480,9 +482,9 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePublicKeyWorks) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PUBLIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
               Eq(test_case.id_requirement));
@@ -534,8 +536,9 @@ TEST_P(SlhDsaProtoSerializationTest, ParsePrivateKeyWorks) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          test_case.output_prefix_type, test_case.id_requirement);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, test_case.output_prefix_type,
+          test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> private_key =
@@ -575,10 +578,10 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -620,10 +623,10 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -665,10 +668,10 @@ TEST_F(SlhDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -718,9 +721,9 @@ TEST_P(SlhDsaProtoSerializationTest, SerializePrivateKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PRIVATE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
               Eq(test_case.id_requirement));

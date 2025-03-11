@@ -41,21 +41,19 @@
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/ed25519.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::Ed25519KeyFormat;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::NotNull;
@@ -67,7 +65,7 @@ constexpr absl::string_view kPrivateKeyTypeUrl =
 
 struct TestCase {
   Ed25519Parameters::Variant variant;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   absl::optional<int> id;
   std::string output_prefix;
 };
@@ -86,17 +84,18 @@ TEST_F(Ed25519ProtoSerializationTest, RegisterTwiceSucceeds) {
 
 INSTANTIATE_TEST_SUITE_P(
     Ed25519ProtoSerializationTestSuite, Ed25519ProtoSerializationTest,
-    Values(TestCase{Ed25519Parameters::Variant::kTink, OutputPrefixType::TINK,
+    Values(TestCase{Ed25519Parameters::Variant::kTink,
+                    OutputPrefixTypeEnum::kTink,
                     /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{Ed25519Parameters::Variant::kCrunchy,
-                    OutputPrefixType::CRUNCHY, /*id=*/0x01030005,
+                    OutputPrefixTypeEnum::kCrunchy, /*id=*/0x01030005,
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{Ed25519Parameters::Variant::kLegacy,
-                    OutputPrefixType::LEGACY, /*id=*/0x07080910,
+                    OutputPrefixTypeEnum::kLegacy, /*id=*/0x07080910,
                     /*output_prefix=*/std::string("\x00\x07\x08\x09\x10", 5)},
            TestCase{Ed25519Parameters::Variant::kNoPrefix,
-                    OutputPrefixType::RAW, /*id=*/absl::nullopt,
+                    OutputPrefixTypeEnum::kRaw, /*id=*/absl::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(Ed25519ProtoSerializationTest, ParseParameters) {
@@ -128,8 +127,9 @@ TEST_F(Ed25519ProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(
-          kPrivateKeyTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+      internal::ProtoParametersSerialization::Create(kPrivateKeyTypeUrl,
+                                                     OutputPrefixTypeEnum::kRaw,
+                                                     "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -146,7 +146,7 @@ TEST_F(Ed25519ProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateKeyTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          kPrivateKeyTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -164,7 +164,7 @@ TEST_F(Ed25519ProtoSerializationTest, ParseParametersWithInvalidVersion) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateKeyTypeUrl, OutputPrefixType::RAW,
+          kPrivateKeyTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -220,7 +220,7 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePublicKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.Ed25519PublicKey",
-          serialized_key, KeyData::ASYMMETRIC_PUBLIC,
+          serialized_key, KeyMaterialTypeEnum::kAsymmetricPublic,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -252,7 +252,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.Ed25519PublicKey",
-          serialized_key, KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK,
+          serialized_key, KeyMaterialTypeEnum::kAsymmetricPublic,
+          OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -275,7 +276,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.Ed25519PublicKey",
-          serialized_key, KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK,
+          serialized_key, KeyMaterialTypeEnum::kAsymmetricPublic,
+          OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -312,9 +314,9 @@ TEST_P(Ed25519ProtoSerializationTest, SerializePublicKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(),
               Eq("type.googleapis.com/google.crypto.tink.Ed25519PublicKey"));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PUBLIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -350,8 +352,9 @@ TEST_P(Ed25519ProtoSerializationTest, ParsePrivateKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateKeyTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          test_case.output_prefix_type, test_case.id);
+          kPrivateKeyTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -389,8 +392,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateKeyTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK,
+          kPrivateKeyTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -417,8 +420,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithNoPublicKeyFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateKeyTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK,
+          kPrivateKeyTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -450,8 +453,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateKeyTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK,
+          kPrivateKeyTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -486,8 +489,8 @@ TEST_F(Ed25519ProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateKeyTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK,
+          kPrivateKeyTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -522,8 +525,8 @@ TEST_F(Ed25519ProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateKeyTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK,
+          kPrivateKeyTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -568,9 +571,9 @@ TEST_P(Ed25519ProtoSerializationTest, SerializePrivateKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateKeyTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PRIVATE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

@@ -1397,10 +1397,8 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::ed25519_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1722,6 +1720,7 @@ tink_cc_test(
     tink::signature::ecdsa_public_key
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     crypto
@@ -1741,11 +1740,9 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

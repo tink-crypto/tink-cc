@@ -509,11 +509,9 @@ tink_cc_test(
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::ml_dsa_cc_proto
-    tink::proto::tink_cc_proto
   TAGS
     exclude_if_openssl
 )
@@ -578,7 +576,6 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::slh_dsa_cc_proto
-    tink::proto::tink_cc_proto
   TAGS
     exclude_if_openssl
 )
@@ -735,10 +732,8 @@ tink_cc_test(
     tink::signature::ed25519_public_key
     tink::subtle::random
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::ed25519_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -867,9 +862,7 @@ tink_cc_test(
     tink::signature::ecdsa_public_key
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::ecdsa_cc_proto
-    tink::proto::tink_cc_proto
 )

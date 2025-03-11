@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
@@ -37,7 +38,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
@@ -58,10 +58,10 @@ using ::google::crypto::tink::AesCtrKeyFormat;
 using ::google::crypto::tink::AesCtrParams;
 using ::google::crypto::tink::HashType;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::google::crypto::tink::HmacKeyFormat;
 using ::google::crypto::tink::HmacParams;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -80,7 +80,7 @@ struct TestCase {
   AesCtrHmacAeadParameters::HashType hash_type;
   HashType proto_hash_type;
   AesCtrHmacAeadParameters::Variant variant;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   absl::optional<int> id_requirement;
   std::string output_prefix;
 };
@@ -98,7 +98,7 @@ INSTANTIATE_TEST_SUITE_P(
                     /*iv_size=*/12, /*tag_size=*/28,
                     AesCtrHmacAeadParameters::HashType::kSha256,
                     HashType::SHA256, AesCtrHmacAeadParameters::Variant::kTink,
-                    OutputPrefixType::TINK,
+                    OutputPrefixTypeEnum::kTink,
                     /*id_requirement=*/0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{/*aes_key_size=*/24, /*hmac_key_size=*/32,
@@ -106,7 +106,7 @@ INSTANTIATE_TEST_SUITE_P(
                     AesCtrHmacAeadParameters::HashType::kSha384,
                     HashType::SHA384,
                     AesCtrHmacAeadParameters::Variant::kCrunchy,
-                    OutputPrefixType::CRUNCHY,
+                    OutputPrefixTypeEnum::kCrunchy,
                     /*id_requirement=*/0x01030005,
                     std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{/*aes_key_size=*/32, /*hmac_key_size=*/16,
@@ -114,7 +114,7 @@ INSTANTIATE_TEST_SUITE_P(
                     AesCtrHmacAeadParameters::HashType::kSha512,
                     HashType::SHA512,
                     AesCtrHmacAeadParameters::Variant::kNoPrefix,
-                    OutputPrefixType::RAW,
+                    OutputPrefixTypeEnum::kRaw,
                     /*id_requirement=*/absl::nullopt, ""}));
 
 AesCtrHmacAeadKeyFormat BuildAesCtrHmacAeadKeyFormat(int aes_key_size,
@@ -213,7 +213,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+          kTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
@@ -232,7 +232,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          kTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -255,7 +255,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW,
+          kTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -278,7 +278,7 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW,
+          kTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -320,8 +320,7 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeParameters) {
       proto_serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
 
   AesCtrHmacAeadKeyFormat aes_ctr_hmac_aead_key_format;
   ASSERT_THAT(aes_ctr_hmac_aead_key_format.ParseFromString(key_template.value),
@@ -356,7 +355,7 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC,
+          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
           test_case.output_prefix_type, test_case.id_requirement);
   ASSERT_THAT(serialization, IsOk());
 
@@ -407,8 +406,8 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC,
-          OutputPrefixType::LEGACY, /*id_requirement=*/123);
+          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
+          OutputPrefixTypeEnum::kLegacy, /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -431,9 +430,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -458,9 +458,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest, ParseKeyNoSecretKeyAccessFails) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -484,9 +485,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest, ParseKeyWithInvalidVersionFails) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -511,9 +513,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -540,9 +543,10 @@ TEST_F(AesCtrHmacAeadProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -594,8 +598,9 @@ TEST_P(AesCtrHmacAeadProtoSerializationTest, SerializeKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(),
               Eq(test_case.id_requirement));

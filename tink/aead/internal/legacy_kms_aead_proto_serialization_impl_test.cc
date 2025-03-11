@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/legacy_kms_aead_key.h"
@@ -37,22 +38,20 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/kms_aead.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KmsAeadKey;
 using ::google::crypto::tink::KmsAeadKeyFormat;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -67,7 +66,7 @@ const absl::string_view kKeyUri = "some://arbitrary.key.uri?q=123#xyz";
 
 struct TestCase {
   LegacyKmsAeadParameters::Variant variant;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   absl::optional<int> id;
   std::string output_prefix;
 };
@@ -101,11 +100,11 @@ INSTANTIATE_TEST_SUITE_P(
     LegacyKmsAeadProtoSerializationTestSuite,
     LegacyKmsAeadProtoSerializationTest,
     Values(TestCase{LegacyKmsAeadParameters::Variant::kTink,
-                    OutputPrefixType::TINK,
+                    OutputPrefixTypeEnum::kTink,
                     /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{LegacyKmsAeadParameters::Variant::kNoPrefix,
-                    OutputPrefixType::RAW, /*id=*/absl::nullopt,
+                    OutputPrefixTypeEnum::kRaw, /*id=*/absl::nullopt,
                     /*output_prefix=*/""}));
 
 TEST_P(LegacyKmsAeadProtoSerializationTest,
@@ -176,7 +175,7 @@ TEST_F(LegacyKmsAeadProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+          kTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -196,7 +195,7 @@ TEST_F(LegacyKmsAeadProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          kTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -295,7 +294,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKeyWithMutableRegistry) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::REMOTE,
+          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kRemote,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -335,7 +334,7 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, ParseKeyWithImmutableRegistry) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::REMOTE,
+          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kRemote,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -367,9 +366,10 @@ TEST_F(LegacyKmsAeadProtoSerializationTest, ParseKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::REMOTE, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kRemote,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -392,9 +392,10 @@ TEST_F(LegacyKmsAeadProtoSerializationTest, ParseKeyWithInvalidVersion) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::REMOTE, OutputPrefixType::TINK,
-          /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kRemote,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -430,8 +431,9 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeKeyWithMutableRegistry) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::REMOTE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kRemote));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -471,8 +473,9 @@ TEST_P(LegacyKmsAeadProtoSerializationTest, SerializeKeyWithImmutableRegistry) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::REMOTE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kRemote));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

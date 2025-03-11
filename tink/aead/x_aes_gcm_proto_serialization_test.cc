@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/x_aes_gcm_key.h"
@@ -37,9 +38,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "proto/tink.pb.h"
 #include "proto/x_aes_gcm.pb.h"
 
 namespace crypto {
@@ -47,14 +46,14 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::InsecureSecretKeyAccess;
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
 using ::crypto::tink::internal::MutableSerializationRegistry;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::internal::ProtoKeySerialization;
 using ::crypto::tink::internal::ProtoParametersSerialization;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::XAesGcmKeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -66,7 +65,7 @@ using ::testing::Values;
 struct XAesGcmTestCase {
   XAesGcmParameters::Variant variant;
   int salt_size;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   absl::optional<int> id;
   std::string output_prefix;
 };
@@ -91,11 +90,11 @@ TEST_F(XAesGcmProtoSerializationTest, RegisterTwiceSucceeds) {
 INSTANTIATE_TEST_SUITE_P(
     XAesGcmProtoSerializationTestSuite, XAesGcmProtoSerializationTest,
     Values(XAesGcmTestCase{XAesGcmParameters::Variant::kNoPrefix, kSaltSize,
-                           OutputPrefixType::RAW,
+                           OutputPrefixTypeEnum::kRaw,
                            /*id=*/absl::nullopt, /*output_prefix=*/""},
            XAesGcmTestCase{
                XAesGcmParameters::Variant::kTink, kSaltSize,
-               OutputPrefixType::TINK,
+               OutputPrefixTypeEnum::kTink,
                /*id=*/0x02030400,
                /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)}));
 
@@ -132,7 +131,7 @@ TEST_P(XAesGcmProtoSerializationTest, ParseParameters) {
 TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixType::RAW,
+      ProtoParametersSerialization::Create(kTypeUrl, OutputPrefixTypeEnum::kRaw,
                                            "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
@@ -148,7 +147,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   ASSERT_THAT(RegisterXAesGcmProtoSerialization(), IsOk());
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          kTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
           ValidKeyFormat(kSaltSize).SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -167,7 +166,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithInvalidVersion) {
   key_format_proto.set_version(1);
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW,
+          kTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -200,8 +199,7 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeParameters) {
       proto_serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
 
   XAesGcmKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
@@ -223,7 +221,7 @@ TEST_P(XAesGcmProtoSerializationTest, ParseKey) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyData::SYMMETRIC,
+                                    KeyMaterialTypeEnum::kSymmetric,
                                     test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -255,7 +253,8 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidSerialization) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -280,7 +279,8 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -303,7 +303,8 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidVersion) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -328,7 +329,8 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidSaltSize) {
 
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -353,7 +355,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidKeyType) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -389,8 +391,9 @@ TEST_P(XAesGcmProtoSerializationTest, SerializeKey) {
       dynamic_cast<const ProtoKeySerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

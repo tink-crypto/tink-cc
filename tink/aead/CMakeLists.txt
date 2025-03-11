@@ -1246,10 +1246,8 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_gcm_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1292,6 +1290,7 @@ tink_cc_test(
     tink::aead::aes_gcm_siv_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -1304,10 +1303,8 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_gcm_siv_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1367,6 +1364,7 @@ tink_cc_test(
     tink::aead::aes_eax_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -1380,10 +1378,8 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_eax_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1425,6 +1421,7 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -1438,9 +1435,7 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
-    tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
 
@@ -1484,6 +1479,7 @@ tink_cc_test(
     tink::aead::chacha20_poly1305_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -1497,10 +1493,8 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::chacha20_poly1305_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1543,6 +1537,7 @@ tink_cc_test(
     tink::aead::aes_ctr_hmac_aead_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -1556,7 +1551,6 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
@@ -1626,6 +1620,7 @@ tink_cc_test(
     tink::aead::x_aes_gcm_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -1639,9 +1634,7 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
-    tink::proto::tink_cc_proto
     tink::proto::x_aes_gcm_cc_proto
 )
 
@@ -1684,6 +1677,7 @@ tink_cc_test(
     tink::aead::legacy_kms_aead_parameters
     tink::aead::legacy_kms_aead_proto_serialization
     gmock
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::key
@@ -1695,10 +1689,8 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::kms_aead_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

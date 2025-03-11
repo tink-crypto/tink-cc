@@ -41,19 +41,18 @@
 #include "tink/subtle/random.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_gcm_siv.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesGcmSivKeyFormat;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::NotNull;
@@ -62,7 +61,7 @@ using ::testing::Values;
 
 struct TestCase {
   AesGcmSivParameters::Variant variant;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   int key_size;
   absl::optional<int> id;
   std::string output_prefix;
@@ -91,15 +90,18 @@ TEST_F(AesGcmSivProtoSerializationTest,
 
 INSTANTIATE_TEST_SUITE_P(
     AesGcmSivProtoSerializationTestSuite, AesGcmSivProtoSerializationTest,
-    Values(
-        TestCase{AesGcmSivParameters::Variant::kTink, OutputPrefixType::TINK,
-                 /*key_size=*/16, /*id=*/0x02030400,
-                 /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
-        TestCase{AesGcmSivParameters::Variant::kCrunchy,
-                 OutputPrefixType::CRUNCHY, /*key_size=*/16, /*id=*/0x01030005,
-                 /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
-        TestCase{AesGcmSivParameters::Variant::kNoPrefix, OutputPrefixType::RAW,
-                 /*key_size=*/32, /*id=*/absl::nullopt, /*output_prefix=*/""}));
+    Values(TestCase{AesGcmSivParameters::Variant::kTink,
+                    OutputPrefixTypeEnum::kTink,
+                    /*key_size=*/16, /*id=*/0x02030400,
+                    /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{AesGcmSivParameters::Variant::kCrunchy,
+                    OutputPrefixTypeEnum::kCrunchy, /*key_size=*/16,
+                    /*id=*/0x01030005,
+                    /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
+           TestCase{AesGcmSivParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeEnum::kRaw,
+                    /*key_size=*/32, /*id=*/absl::nullopt,
+                    /*output_prefix=*/""}));
 
 TEST_P(AesGcmSivProtoSerializationTest, ParseParametersWithMutableRegistry) {
   TestCase test_case = GetParam();
@@ -167,7 +169,7 @@ TEST_F(AesGcmSivProtoSerializationTest,
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
-          OutputPrefixType::RAW, "invalid_serialization");
+          OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -187,7 +189,7 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
-          OutputPrefixType::UNKNOWN_PREFIX,
+          OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -208,7 +210,7 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseParametersWithInvalidVersion) {
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
-          OutputPrefixType::RAW, key_format_proto.SerializeAsString());
+          OutputPrefixTypeEnum::kRaw, key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -242,8 +244,7 @@ TEST_P(AesGcmSivProtoSerializationTest,
   EXPECT_THAT(key_template.type_url,
               Eq("type.googleapis.com/google.crypto.tink.AesGcmSivKey"));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
 
   AesGcmSivKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
@@ -277,8 +278,7 @@ TEST_P(AesGcmSivProtoSerializationTest,
   EXPECT_THAT(key_template.type_url,
               Eq("type.googleapis.com/google.crypto.tink.AesGcmSivKey"));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
 
   AesGcmSivKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
@@ -301,7 +301,8 @@ TEST_P(AesGcmSivProtoSerializationTest, ParseKeyWithMutableRegistry) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
-          KeyData::SYMMETRIC, test_case.output_prefix_type, test_case.id);
+          KeyMaterialTypeEnum::kSymmetric, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -341,7 +342,8 @@ TEST_P(AesGcmSivProtoSerializationTest, ParseKeyWithRegistryBuilder) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
-          KeyData::SYMMETRIC, test_case.output_prefix_type, test_case.id);
+          KeyMaterialTypeEnum::kSymmetric, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -379,7 +381,8 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseLegacyKeyAsCrunchy) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::LEGACY, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kLegacy,
+          /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -404,7 +407,7 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -428,7 +431,7 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -452,7 +455,7 @@ TEST_F(AesGcmSivProtoSerializationTest, ParseKeyWithInvalidVersion) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -490,8 +493,9 @@ TEST_P(AesGcmSivProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(),
               Eq("type.googleapis.com/google.crypto.tink.AesGcmSivKey"));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -533,8 +537,9 @@ TEST_P(AesGcmSivProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(),
               Eq("type.googleapis.com/google.crypto.tink.AesGcmSivKey"));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

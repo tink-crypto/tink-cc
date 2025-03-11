@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/internal/configuration_helper.h"
 #include "tink/internal/keyset_wrapper.h"
@@ -46,9 +47,9 @@ namespace internal {
 //
 // Example:
 //  KeysetWrapperStore store;
-//  crypto::tink::util::Status status = store.Add<Aead, Aead>(
+//  absl::Status status = store.Add<Aead, Aead>(
 //      absl::make_unique<AeadWrapper>(), std::move(primitive_getter));
-//  crypto::tink::util::StatusOr<const KeysetWrapper<Aead>*> wrapper =
+//  absl::StatusOr<const KeysetWrapper<Aead>*> wrapper =
 //      store.Get<Aead>();
 class KeysetWrapperStore {
  public:
@@ -63,22 +64,20 @@ class KeysetWrapperStore {
   // KeysetWrapperStore. The wrapper would first check the key objects API, and
   // if that fails, it would fall back to the using KeyData.
   template <class P, class Q>
-  absl::Status Add(
-      std::unique_ptr<PrimitiveWrapper<P, Q>> wrapper,
-      absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
-          const google::crypto::tink::KeyData& key_data) const>
-          primitive_getter,
-      PrimitiveGetterFn<P, Key> primitive_getter_from_key);
+  absl::Status Add(std::unique_ptr<PrimitiveWrapper<P, Q>> wrapper,
+                   absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
+                       const google::crypto::tink::KeyData& key_data) const>
+                       primitive_getter,
+                   PrimitiveGetterFn<P, Key> primitive_getter_from_key);
 
   // Gets the PrimitiveWrapper that produces primitive P. This is a legacy
   // function.
   template <class P>
-  crypto::tink::util::StatusOr<const PrimitiveWrapper<P, P>*>
-  GetPrimitiveWrapper() const;
+  absl::StatusOr<const PrimitiveWrapper<P, P>*> GetPrimitiveWrapper() const;
 
   // Gets the KeysetWrapper that produces primitive Q.
   template <class Q>
-  crypto::tink::util::StatusOr<const KeysetWrapper<Q>*> Get() const;
+  absl::StatusOr<const KeysetWrapper<Q>*> Get() const;
 
   bool IsEmpty() const { return primitive_to_info_.empty(); }
 
@@ -86,12 +85,11 @@ class KeysetWrapperStore {
   class Info {
    public:
     template <typename P, typename Q>
-    explicit Info(
-        std::unique_ptr<PrimitiveWrapper<P, Q>> wrapper,
-        absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
-            const google::crypto::tink::KeyData& key_data) const>
-            primitive_getter,
-        PrimitiveGetterFn<P, Key> primitive_getter_from_key)
+    explicit Info(std::unique_ptr<PrimitiveWrapper<P, Q>> wrapper,
+                  absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
+                      const google::crypto::tink::KeyData& key_data) const>
+                      primitive_getter,
+                  PrimitiveGetterFn<P, Key> primitive_getter_from_key)
         : is_same_primitive_wrapping_(std::is_same<P, Q>::value),
           wrapper_type_index_(std::type_index(typeid(*wrapper))),
           q_type_index_(std::type_index(typeid(Q))) {
@@ -102,7 +100,7 @@ class KeysetWrapperStore {
     }
 
     template <typename Q>
-    crypto::tink::util::StatusOr<const KeysetWrapper<Q>*> Get() const {
+    absl::StatusOr<const KeysetWrapper<Q>*> Get() const {
       if (q_type_index_ != std::type_index(typeid(Q))) {
         return absl::Status(
             absl::StatusCode::kInternal,
@@ -113,8 +111,7 @@ class KeysetWrapperStore {
 
     // TODO(b/171021679): Deprecate this and upstream functions.
     template <typename P>
-    crypto::tink::util::StatusOr<const PrimitiveWrapper<P, P>*>
-    GetPrimitiveWrapper() const {
+    absl::StatusOr<const PrimitiveWrapper<P, P>*> GetPrimitiveWrapper() const {
       if (!is_same_primitive_wrapping_) {
         // This happens if a user uses a legacy method (like Registry::Wrap)
         // directly or has a custom key manager for a primitive which has a
@@ -162,7 +159,7 @@ class KeysetWrapperStore {
 template <class P, class Q>
 absl::Status KeysetWrapperStore::Add(
     std::unique_ptr<PrimitiveWrapper<P, Q>> wrapper,
-    absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+    absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
         const google::crypto::tink::KeyData& key_data) const>
         primitive_getter,
     PrimitiveGetterFn<P, Key> primitive_getter_from_key) {
@@ -188,7 +185,7 @@ absl::Status KeysetWrapperStore::Add(
 }
 
 template <class P>
-crypto::tink::util::StatusOr<const PrimitiveWrapper<P, P>*>
+absl::StatusOr<const PrimitiveWrapper<P, P>*>
 KeysetWrapperStore::GetPrimitiveWrapper() const {
   auto it = primitive_to_info_.find(std::type_index(typeid(P)));
   if (it == primitive_to_info_.end()) {
@@ -200,8 +197,7 @@ KeysetWrapperStore::GetPrimitiveWrapper() const {
 }
 
 template <class P>
-crypto::tink::util::StatusOr<const KeysetWrapper<P>*> KeysetWrapperStore::Get()
-    const {
+absl::StatusOr<const KeysetWrapper<P>*> KeysetWrapperStore::Get() const {
   auto it = primitive_to_info_.find(std::type_index(typeid(P)));
   if (it == primitive_to_info_.end()) {
     return absl::Status(

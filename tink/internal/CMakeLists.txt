@@ -16,6 +16,7 @@ tink_cc_library(
     keyset_wrapper.h
   DEPS
     absl::flat_hash_map
+    absl::statusor
     tink::util::statusor
     tink::proto::tink_cc_proto
 )
@@ -60,6 +61,7 @@ tink_cc_library(
     absl::flat_hash_map
     absl::any_invocable
     absl::status
+    absl::statusor
     absl::optional
     tink::core::key
     tink::core::primitive_set
@@ -705,6 +707,7 @@ tink_cc_library(
     tink::internal::parser_index
     tink::internal::serialization
     absl::status
+    absl::statusor
     absl::strings
     tink::core::parameters
     tink::util::status
@@ -736,6 +739,7 @@ tink_cc_library(
     tink::internal::serialization
     tink::internal::serializer_index
     absl::status
+    absl::statusor
     absl::strings
     tink::core::parameters
     tink::util::status
@@ -769,6 +773,7 @@ tink_cc_library(
     absl::function_ref
     absl::log
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key
@@ -807,6 +812,7 @@ tink_cc_library(
     absl::function_ref
     absl::log
     absl::status
+    absl::statusor
     absl::optional
     tink::core::key
     tink::core::secret_key_access_token
@@ -1107,6 +1113,7 @@ tink_cc_library(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper_store
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     tink::core::configuration
@@ -1220,6 +1227,7 @@ tink_cc_library(
     absl::flat_hash_map
     absl::any_invocable
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key
     tink::core::primitive_wrapper
@@ -1700,6 +1708,7 @@ tink_cc_library(
   DEPS
     absl::flat_hash_map
     absl::any_invocable
+    absl::statusor
     tink::util::statusor
 )
 

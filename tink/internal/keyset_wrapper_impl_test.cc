@@ -451,7 +451,7 @@ TEST(KeysetWrapperImplTest, OnlyEnabled) {
 template <class I, class O>
 class MockWrapper : public PrimitiveWrapper<I, O> {
  public:
-  MOCK_METHOD(util::StatusOr<std::unique_ptr<O>>, Wrap,
+  MOCK_METHOD(absl::StatusOr<std::unique_ptr<O>>, Wrap,
               (std::unique_ptr<PrimitiveSet<I>> primitive_set),
               (const, override));
 };

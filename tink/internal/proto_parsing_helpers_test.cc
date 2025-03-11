@@ -46,7 +46,6 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsEmpty;

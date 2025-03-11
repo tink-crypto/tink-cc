@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/configuration.h"
@@ -56,13 +57,11 @@ class ConfigurationImpl {
     // `primitive_getter` must be defined here, as PW::InputPrimitive is not
     // accessible later.
     // TODO(b/284084337): Move primitive getter out of key manager.
-    std::function<crypto::tink::util::StatusOr<
-        std::unique_ptr<typename PW::InputPrimitive>>(
+    std::function<absl::StatusOr<std::unique_ptr<typename PW::InputPrimitive>>(
         const google::crypto::tink::KeyData& key_data)>
         primitive_getter =
             [&config](const google::crypto::tink::KeyData& key_data)
-        -> crypto::tink::util::StatusOr<
-            std::unique_ptr<typename PW::InputPrimitive>> {
+        -> absl::StatusOr<std::unique_ptr<typename PW::InputPrimitive>> {
       absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*>
           info = config.key_type_info_store_.Get(key_data.type_url());
       if (!info.ok()) {
@@ -73,8 +72,7 @@ class ConfigurationImpl {
 
     PrimitiveGetterFn<typename PW::InputPrimitive, Key>
         primitive_getter_from_key = [&config](const Key& key)
-        -> crypto::tink::util::StatusOr<
-            std::unique_ptr<typename PW::InputPrimitive>> {
+        -> absl::StatusOr<std::unique_ptr<typename PW::InputPrimitive>> {
       auto it = config.primitive_getter_fn_map_.find(
           std::tuple<std::type_index, std::type_index>(
               std::type_index(typeid(typename PW::InputPrimitive)),

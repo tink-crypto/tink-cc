@@ -24,6 +24,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/key_info.h"
@@ -48,18 +49,18 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
  public:
   explicit KeysetWrapperImpl(
       const PrimitiveWrapper<P, Q>* transforming_wrapper,
-      absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+      absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
           const google::crypto::tink::KeyData& key_data) const>
           primitive_getter,
-      absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
-          const Key& key) const>
+      absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(const Key& key)
+                             const>
           primitive_getter_from_key)
       : primitive_getter_(std::move(primitive_getter)),
         primitive_getter_from_key_(std::move(primitive_getter_from_key)),
 
         transforming_wrapper_(*transforming_wrapper) {}
 
-  crypto::tink::util::StatusOr<std::unique_ptr<Q>> Wrap(
+  absl::StatusOr<std::unique_ptr<Q>> Wrap(
       const google::crypto::tink::Keyset& keyset,
       const absl::flat_hash_map<std::string, std::string>& annotations)
       const override {
@@ -89,7 +90,7 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
           internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
               *serialization, internal::GetInsecureSecretKeyAccessInternal());
 
-      util::StatusOr<std::unique_ptr<P>> primitive;
+      absl::StatusOr<std::unique_ptr<P>> primitive;
       if (!key.ok() ||
           primitive_getter_from_key_(*key.value()).status().code() ==
               absl::StatusCode::kNotFound) {
@@ -111,7 +112,7 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
                                         KeyInfoFromKey(proto_key));
       }
     }
-    crypto::tink::util::StatusOr<PrimitiveSet<P>> primitives =
+    absl::StatusOr<PrimitiveSet<P>> primitives =
         std::move(primitives_builder).Build();
     if (!primitives.ok()) return primitives.status();
     return transforming_wrapper_.Wrap(
@@ -119,11 +120,10 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
   }
 
  private:
-  absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
+  absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
       const google::crypto::tink::KeyData& key_data) const>
       primitive_getter_;
-  absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
-      const Key& key) const>
+  absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(const Key& key) const>
       primitive_getter_from_key_;
   const PrimitiveWrapper<P, Q>& transforming_wrapper_;
 };

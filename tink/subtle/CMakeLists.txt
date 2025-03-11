@@ -728,6 +728,7 @@ tink_cc_library(
     tink::subtle::stream_segment_decrypter
     absl::memory
     absl::status
+    absl::statusor
     tink::core::input_stream
     tink::util::status
     tink::util::statusor

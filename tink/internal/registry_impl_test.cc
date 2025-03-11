@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,7 +80,6 @@ using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::DummyAead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::Status;
 using ::google::crypto::tink::AesCtrHmacAeadKey;
 using ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
@@ -260,7 +259,7 @@ template <typename P, typename Q = P>
 class TestWrapper : public PrimitiveWrapper<P, Q> {
  public:
   TestWrapper() = default;
-  crypto::tink::util::StatusOr<std::unique_ptr<Q>> Wrap(
+  absl::StatusOr<std::unique_ptr<Q>> Wrap(
       std::unique_ptr<PrimitiveSet<P>> primitive_set) const override {
     return absl::Status(absl::StatusCode::kUnimplemented,
                         "This is a test wrapper.");

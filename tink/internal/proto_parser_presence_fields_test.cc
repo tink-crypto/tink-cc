@@ -43,7 +43,6 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretData;
-using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::Optional;

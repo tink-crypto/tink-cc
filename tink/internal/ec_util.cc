@@ -401,11 +401,11 @@ absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type,
   // used when FIPS-only mode is enabled at compile time, nor currently
   // implemented for OpenSSL.
 #if defined(TINK_USE_ONLY_FIPS)
-  return util::Status(
+  return absl::Status(
       absl::StatusCode::kUnimplemented,
       "Deriving EC keys from a secret seed is not allowed in FIPS mode");
 #elif !defined(OPENSSL_IS_BORINGSSL)
-  return util::Status(
+  return absl::Status(
       absl::StatusCode::kUnimplemented,
       "Deriving EC keys from a secret seed is not supported with OpenSSL");
 #else

@@ -23,6 +23,7 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
+#include "absl/status/statusor.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
@@ -31,8 +32,7 @@ namespace internal {
 
 template <class P, class K>
 using PrimitiveGetterFn =
-    absl::AnyInvocable<crypto::tink::util::StatusOr<std::unique_ptr<P>>(
-        const K&) const>;
+    absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(const K&) const>;
 // Stores a PrimitiveGetterFn for each given (Primitive, Key) pair. shared_ptr
 // is used because unique_ptr<void> is invalid.
 using PrimitiveGetterFnMap =

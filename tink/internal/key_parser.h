@@ -26,6 +26,7 @@
 #include "absl/functional/function_ref.h"
 #include "absl/log/log.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/parser_index.h"
@@ -78,7 +79,7 @@ class KeyParserImpl : public KeyParser {
   // referenced `function` should outlive the created key parser object.
   explicit KeyParserImpl(
       absl::string_view object_identifier,
-      absl::FunctionRef<util::StatusOr<KeyT>(
+      absl::FunctionRef<absl::StatusOr<KeyT>(
           SerializationT, absl::optional<SecretKeyAccessToken>)>
           function)
       : object_identifier_(object_identifier), function_(function) {}
@@ -96,7 +97,7 @@ class KeyParserImpl : public KeyParser {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Invalid serialization type for this key parser.");
     }
-    util::StatusOr<KeyT> key = function_(*st, token);
+    absl::StatusOr<KeyT> key = function_(*st, token);
     if (!key.ok()) return key.status();
     return {absl::make_unique<KeyT>(std::move(*key))};
   }
@@ -111,7 +112,7 @@ class KeyParserImpl : public KeyParser {
 
  private:
   std::string object_identifier_;
-  std::function<util::StatusOr<KeyT>(SerializationT,
+  std::function<absl::StatusOr<KeyT>(SerializationT,
                                      absl::optional<SecretKeyAccessToken>)>
       function_;
 };

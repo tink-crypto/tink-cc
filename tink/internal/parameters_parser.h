@@ -24,6 +24,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/parser_index.h"
 #include "tink/internal/serialization.h"
@@ -71,7 +72,7 @@ class ParametersParserImpl : public ParametersParser {
  public:
   explicit ParametersParserImpl(
       absl::string_view object_identifier,
-      const std::function<util::StatusOr<ParametersT>(SerializationT)>&
+      const std::function<absl::StatusOr<ParametersT>(SerializationT)>&
           function)
       : object_identifier_(object_identifier), function_(function) {}
 
@@ -89,7 +90,7 @@ class ParametersParserImpl : public ParametersParser {
           absl::StatusCode::kInvalidArgument,
           "Invalid serialization type for this parameters parser.");
     }
-    util::StatusOr<ParametersT> parameters = function_(*st);
+    absl::StatusOr<ParametersT> parameters = function_(*st);
     if (!parameters.ok()) return parameters.status();
     return {absl::make_unique<ParametersT>(std::move(*parameters))};
   }
@@ -104,7 +105,7 @@ class ParametersParserImpl : public ParametersParser {
 
  private:
   std::string object_identifier_;
-  std::function<util::StatusOr<ParametersT>(SerializationT)> function_;
+  std::function<absl::StatusOr<ParametersT>(SerializationT)> function_;
 };
 
 }  // namespace internal

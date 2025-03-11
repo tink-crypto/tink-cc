@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/status/statusor.h"
 #include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
@@ -45,7 +46,7 @@ class KeysetWrapper {
   virtual ~KeysetWrapper() = default;
 
   // Wraps a given `keyset` with annotations `annotations`.
-  virtual crypto::tink::util::StatusOr<std::unique_ptr<Primitive>> Wrap(
+  virtual absl::StatusOr<std::unique_ptr<Primitive>> Wrap(
       const google::crypto::tink::Keyset& keyset,
       const absl::flat_hash_map<std::string, std::string>& annotations)
       const = 0;

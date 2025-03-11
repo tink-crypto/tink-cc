@@ -55,7 +55,6 @@
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/rsa_ssa_pss.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -70,8 +69,6 @@ using ::crypto::tink::internal::proto_testing::SerializeMessage;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::google::crypto::tink::RsaSsaPssKeyFormat;
 using ::google::crypto::tink::RsaSsaPssParams;
 using ::testing::Eq;
@@ -1120,7 +1117,8 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
             FieldWithNumber(3).IsVarint(11)}),
        FieldWithNumber(3).IsString(values.n),
        FieldWithNumber(4).IsString(values.e)},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK, 101020);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+      101020);
 
   return KeyAndSerialization("PublicKeyTink",
                              std::make_shared<RsaSsaPssPublicKey>(*public_key),
@@ -1148,7 +1146,8 @@ KeyAndSerialization PublicKeyAndSerializationRaw() {
             FieldWithNumber(2).IsVarint(HashType::SHA512)}),
        FieldWithNumber(3).IsString(values.n),
        FieldWithNumber(4).IsString(values.e)},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
   return KeyAndSerialization("PublicKeyRAW",
                              std::make_shared<RsaSsaPssPublicKey>(*public_key),
@@ -1196,7 +1195,8 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
        FieldWithNumber(6).IsString(values.dp),
        FieldWithNumber(7).IsString(values.dq),
        FieldWithNumber(8).IsString(values.q_inv)},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
   return KeyAndSerialization(
       "PrivateKeyRAW", std::make_shared<RsaSsaPssPrivateKey>(*private_key),
@@ -1243,7 +1243,8 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
        FieldWithNumber(6).IsString(values.dp),
        FieldWithNumber(7).IsString(values.dq),
        FieldWithNumber(8).IsString(values.q_inv)},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 4455);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+      4455);
 
   return KeyAndSerialization(
       "PrivateKeyTINK", std::make_shared<RsaSsaPssPrivateKey>(*private_key),
@@ -1294,7 +1295,8 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
        FieldWithNumber(7).IsString(values.dq),
        FieldWithNumber(3).IsString(values.d),
        FieldWithNumber(8).IsString(values.q_inv)},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 4455);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+      4455);
 
   return KeyAndSerialization(
       "PrivateKeyTinkNonCanonical",

@@ -504,7 +504,6 @@ tink_cc_test(
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_cc_proto
     tink::proto::tink_cc_proto

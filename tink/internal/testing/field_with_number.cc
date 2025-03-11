@@ -31,6 +31,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
 
 namespace crypto {
@@ -80,8 +81,8 @@ std::string FieldWithNumber::IsSubMessage(const std::vector<std::string>& s) {
 
 ProtoKeySerialization SerializeMessage(
     absl::string_view type_url, const std::vector<std::string>& v,
-    google::crypto::tink::KeyData::KeyMaterialType key_material_type,
-    google::crypto::tink::OutputPrefixType output_prefix_type,
+    crypto::tink::internal::KeyMaterialTypeEnum key_material_type,
+    crypto::tink::internal::OutputPrefixTypeEnum output_prefix_type,
     absl::optional<int> id_requirement) {
   absl::StatusOr<ProtoKeySerialization> result = ProtoKeySerialization::Create(
       type_url,

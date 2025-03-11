@@ -1542,7 +1542,6 @@ tink_cc_test(
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1645,7 +1644,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

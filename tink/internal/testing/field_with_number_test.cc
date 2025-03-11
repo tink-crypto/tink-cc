@@ -18,26 +18,26 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/testing/equals_proto_key_serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace proto_testing {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 
 constexpr absl::string_view kTypeUrl = "SomeArbitraryTypeUrl";
 
@@ -50,7 +50,8 @@ TEST(FieldWithNumberTest, Example) {
            {FieldWithNumber(1).IsVarint(7),
             FieldWithNumber(2).IsString(HexDecodeOrDie("889988998899"))}),
        FieldWithNumber(5).IsVarint(5)},
-      KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/12345);
+      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+      /*id_requirement=*/12345);
 
   RestrictedData expected_key = RestrictedData(
       HexDecodeOrDie(absl::StrCat(/* field 1 */ "080a",
@@ -61,8 +62,9 @@ TEST(FieldWithNumberTest, Example) {
                                   /* field 5 */ "2805")),
       InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> expected =
-      ProtoKeySerialization::Create(kTypeUrl, expected_key, KeyData::SYMMETRIC,
-                                    OutputPrefixType::TINK,
+      ProtoKeySerialization::Create(kTypeUrl, expected_key,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/12345);
   ASSERT_THAT(expected.status(), IsOk());
   EXPECT_THAT(serialization, EqualsProtoKeySerialization(*expected));

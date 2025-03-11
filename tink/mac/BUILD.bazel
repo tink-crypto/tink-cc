@@ -535,7 +535,6 @@ cc_test(
         "//tink/internal/testing:equals_proto_key_serialization",
         "//tink/internal/testing:field_with_number",
         "//tink/subtle:random",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/memory",

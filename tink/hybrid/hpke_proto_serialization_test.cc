@@ -51,8 +51,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/hpke.pb.h"
 #include "proto/tink.pb.h"
@@ -61,6 +59,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::internal::ProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
@@ -1007,11 +1007,12 @@ KeyAndSerialization PrivateKeyAndSerializationNistP256() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PrivateKeyP256", std::make_shared<HpkePrivateKey>(*private_key),
-      serialization);
+  return KeyAndSerialization("PrivateKeyP256",
+                             std::make_shared<HpkePrivateKey>(*private_key),
+                             serialization);
 }
 
 KeyAndSerialization PrivateKeyAndSerializationNistP384() {
@@ -1044,11 +1045,12 @@ KeyAndSerialization PrivateKeyAndSerializationNistP384() {
             FieldWithNumber(3).IsString(P384PointAsString())}),
        FieldWithNumber(3).IsString(
            P384SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PrivateKeyP384", std::make_shared<HpkePrivateKey>(*private_key),
-      serialization);
+  return KeyAndSerialization("PrivateKeyP384",
+                             std::make_shared<HpkePrivateKey>(*private_key),
+                             serialization);
 }
 
 KeyAndSerialization PrivateKeyAndSerializationNistP521() {
@@ -1081,11 +1083,12 @@ KeyAndSerialization PrivateKeyAndSerializationNistP521() {
             FieldWithNumber(3).IsString(P521PointAsString())}),
        FieldWithNumber(3).IsString(
            P521SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PrivateKeyP521", std::make_shared<HpkePrivateKey>(*private_key),
-      serialization);
+  return KeyAndSerialization("PrivateKeyP521",
+                             std::make_shared<HpkePrivateKey>(*private_key),
+                             serialization);
 }
 
 KeyAndSerialization PrivateKeyAndSerializationX25519() {
@@ -1118,11 +1121,12 @@ KeyAndSerialization PrivateKeyAndSerializationX25519() {
             FieldWithNumber(3).IsString(X25519PublicValue())}),
        FieldWithNumber(3).IsString(
            X25519SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PrivateKeyX25519", std::make_shared<HpkePrivateKey>(*private_key),
-      serialization);
+  return KeyAndSerialization("PrivateKeyX25519",
+                             std::make_shared<HpkePrivateKey>(*private_key),
+                             serialization);
 }
 
 KeyAndSerialization PrivateKeyAndSerializationTink() {
@@ -1155,11 +1159,12 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK, 0x12341234);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+      0x12341234);
 
-  return KeyAndSerialization(
-      "PrivateKeyTink", std::make_shared<HpkePrivateKey>(*private_key),
-      serialization);
+  return KeyAndSerialization("PrivateKeyTink",
+                             std::make_shared<HpkePrivateKey>(*private_key),
+                             serialization);
 }
 
 KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
@@ -1192,11 +1197,12 @@ KeyAndSerialization PrivateKeyAndSerializationCrunchy() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::CRUNCHY, 0x12341234);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kCrunchy,
+      0x12341234);
 
-  return KeyAndSerialization(
-      "PrivateKeyCrunchy", std::make_shared<HpkePrivateKey>(*private_key),
-      serialization);
+  return KeyAndSerialization("PrivateKeyCrunchy",
+                             std::make_shared<HpkePrivateKey>(*private_key),
+                             serialization);
 }
 
 KeyAndSerialization PublicKeyAndSerializationNistP256() {
@@ -1221,11 +1227,12 @@ KeyAndSerialization PublicKeyAndSerializationNistP256() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PublicKeyP256", std::make_shared<HpkePublicKey>(*public_key),
-      serialization);
+  return KeyAndSerialization("PublicKeyP256",
+                             std::make_shared<HpkePublicKey>(*public_key),
+                             serialization);
 }
 
 KeyAndSerialization PublicKeyAndSerializationNistP384() {
@@ -1250,11 +1257,12 @@ KeyAndSerialization PublicKeyAndSerializationNistP384() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(P384PointAsString())},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PublicKeyP384", std::make_shared<HpkePublicKey>(*public_key),
-      serialization);
+  return KeyAndSerialization("PublicKeyP384",
+                             std::make_shared<HpkePublicKey>(*public_key),
+                             serialization);
 }
 
 KeyAndSerialization PublicKeyAndSerializationNistP521() {
@@ -1279,11 +1287,12 @@ KeyAndSerialization PublicKeyAndSerializationNistP521() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA512),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P521PointAsString())},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PublicKeyP521", std::make_shared<HpkePublicKey>(*public_key),
-      serialization);
+  return KeyAndSerialization("PublicKeyP521",
+                             std::make_shared<HpkePublicKey>(*public_key),
+                             serialization);
 }
 
 KeyAndSerialization PublicKeyAndSerializationX25519() {
@@ -1308,11 +1317,12 @@ KeyAndSerialization PublicKeyAndSerializationX25519() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA384),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_256_GCM)}),
        FieldWithNumber(3).IsString(X25519PublicValue())},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
-  return KeyAndSerialization(
-      "PublicKeyX25519", std::make_shared<HpkePublicKey>(*public_key),
-      serialization);
+  return KeyAndSerialization("PublicKeyX25519",
+                             std::make_shared<HpkePublicKey>(*public_key),
+                             serialization);
 }
 
 KeyAndSerialization PublicKeyAndSerializationTink() {
@@ -1337,11 +1347,12 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK, 0x12341234);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+      0x12341234);
 
-  return KeyAndSerialization(
-      "PublicKeyTink", std::make_shared<HpkePublicKey>(*public_key),
-      serialization);
+  return KeyAndSerialization("PublicKeyTink",
+                             std::make_shared<HpkePublicKey>(*public_key),
+                             serialization);
 }
 
 KeyAndSerialization PublicKeyAndSerializationCrunchy() {
@@ -1366,11 +1377,12 @@ KeyAndSerialization PublicKeyAndSerializationCrunchy() {
             FieldWithNumber(2).IsVarint(::google::crypto::tink::HKDF_SHA256),
             FieldWithNumber(3).IsVarint(::google::crypto::tink::AES_128_GCM)}),
        FieldWithNumber(3).IsString(P256PointAsString())},
-      KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::CRUNCHY, 0x12341234);
+      KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kCrunchy,
+      0x12341234);
 
-  return KeyAndSerialization(
-      "PublicKeyCrunchy", std::make_shared<HpkePublicKey>(*public_key),
-      serialization);
+  return KeyAndSerialization("PublicKeyCrunchy",
+                             std::make_shared<HpkePublicKey>(*public_key),
+                             serialization);
 }
 
 // We check that some non-standard feature of proto are respected (unknown
@@ -1411,7 +1423,8 @@ KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
             FieldWithNumber(3).IsString(P256PointAsString())}),
        FieldWithNumber(3).IsString(
            P256SecretValue().GetSecret(InsecureSecretKeyAccess::Get()))},
-      KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
   return KeyAndSerialization("NonCanonicalSerialization",
                              std::make_shared<HpkePrivateKey>(*private_key),
@@ -1420,19 +1433,17 @@ KeyAndSerialization PrivateKeyWithNonStandardSerialization() {
 
 INSTANTIATE_TEST_SUITE_P(
     ParseTest, ParseTest,
-    testing::Values(PrivateKeyAndSerializationNistP256(),
-                    PrivateKeyAndSerializationNistP384(),
-                    PrivateKeyAndSerializationNistP521(),
-                    PrivateKeyAndSerializationX25519(),
-                    PrivateKeyAndSerializationTink(),
-                    PrivateKeyAndSerializationCrunchy(),
-                    PublicKeyAndSerializationNistP256(),
-                    PublicKeyAndSerializationNistP384(),
-                    PublicKeyAndSerializationNistP521(),
-                    PublicKeyAndSerializationX25519(),
-                    PublicKeyAndSerializationTink(),
-                    PublicKeyAndSerializationCrunchy(),
-                    PrivateKeyWithNonStandardSerialization()),
+    testing::Values(
+        PrivateKeyAndSerializationNistP256(),
+        PrivateKeyAndSerializationNistP384(),
+        PrivateKeyAndSerializationNistP521(),
+        PrivateKeyAndSerializationX25519(), PrivateKeyAndSerializationTink(),
+        PrivateKeyAndSerializationCrunchy(),
+        PublicKeyAndSerializationNistP256(),
+        PublicKeyAndSerializationNistP384(),
+        PublicKeyAndSerializationNistP521(), PublicKeyAndSerializationX25519(),
+        PublicKeyAndSerializationTink(), PublicKeyAndSerializationCrunchy(),
+        PrivateKeyWithNonStandardSerialization()),
     [](testing::TestParamInfo<class KeyAndSerialization> info) {
       return info.param.test_name;
     });

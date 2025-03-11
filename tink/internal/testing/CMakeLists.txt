@@ -47,6 +47,7 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
+    tink::internal::tink_proto_structs
 )
 
 tink_cc_test(
@@ -57,15 +58,15 @@ tink_cc_test(
     tink::internal::testing::equals_proto_key_serialization
     tink::internal::testing::field_with_number
     gmock
+    absl::statusor
     absl::strings
     absl::string_view
     tink::core::insecure_secret_key_access
     tink::core::restricted_data
     tink::internal::proto_key_serialization
-    tink::util::statusor
+    tink::internal::tink_proto_structs
     tink::util::test_matchers
     tink::util::test_util
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

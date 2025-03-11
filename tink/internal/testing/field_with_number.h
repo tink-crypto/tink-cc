@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 
 namespace crypto {
 namespace tink {
@@ -65,8 +66,8 @@ class FieldWithNumber {
 
 ProtoKeySerialization SerializeMessage(
     absl::string_view type_url, const std::vector<std::string>& v,
-    google::crypto::tink::KeyData::KeyMaterialType key_material_type,
-    google::crypto::tink::OutputPrefixType output_prefix_type,
+    crypto::tink::internal::KeyMaterialTypeEnum key_material_type,
+    crypto::tink::internal::OutputPrefixTypeEnum output_prefix_type,
     absl::optional<int> id_requirement);
 
 }  // namespace proto_testing

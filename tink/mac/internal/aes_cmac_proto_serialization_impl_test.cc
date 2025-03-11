@@ -43,7 +43,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_cmac.pb.h"
 #include "proto/tink.pb.h"
@@ -53,6 +52,8 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::internal::proto_testing::EqualsProtoKeySerialization;
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::internal::proto_testing::SerializeMessage;
@@ -619,7 +620,7 @@ KeyAndSerialization CanonicalKeyAndSerialization0() {
       "type.googleapis.com/google.crypto.tink.AesCmacKey",
       {FieldWithNumber(2).IsString("16 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyData::SYMMETRIC, OutputPrefixType::TINK, 104);
+      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink, 104);
 
   return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
                              serialization);
@@ -639,7 +640,8 @@ KeyAndSerialization CanonicalKeyAndSerialization1() {
       "type.googleapis.com/google.crypto.tink.AesCmacKey",
       {FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyData::SYMMETRIC, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
   return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
                              serialization);
@@ -661,7 +663,8 @@ KeyAndSerialization NonCanonicalKeyAndSerialization2() {
        FieldWithNumber(1).IsVarint(0),
        FieldWithNumber(2).IsString("32 key bytes....32 key bytes...."),
        FieldWithNumber(3).IsSubMessage({FieldWithNumber(1).IsVarint(11)})},
-      KeyData::SYMMETRIC, OutputPrefixType::RAW, absl::nullopt);
+      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
+      absl::nullopt);
 
   return KeyAndSerialization(absl::make_unique<AesCmacKey>(*key),
                              serialization);

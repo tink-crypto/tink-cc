@@ -742,6 +742,7 @@ tink_cc_library(
     tink::subtle::stream_segment_encrypter
     absl::memory
     absl::status
+    absl::statusor
     tink::core::output_stream
     tink::util::status
     tink::util::statusor
@@ -793,6 +794,7 @@ tink_cc_library(
   DEPS
     tink::subtle::test_util
     absl::status
+    absl::statusor
     absl::strings
     absl::cord
     tink::core::aead
@@ -846,6 +848,7 @@ tink_cc_library(
     absl::core_headers
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::synchronization
     tink::core::random_access_stream

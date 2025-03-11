@@ -978,11 +978,11 @@ cc_test(
         "//tink/internal:proto_parameters_serialization",
         "//tink/internal:serialization",
         "//tink/subtle:random",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )

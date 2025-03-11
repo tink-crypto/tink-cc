@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,14 +25,11 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/output_stream.h"
 #include "tink/subtle/stream_segment_encrypter.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 using crypto::tink::OutputStream;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 
 namespace crypto {
 namespace tink {
@@ -74,12 +71,12 @@ StreamingAeadEncryptingStream::New(
     std::unique_ptr<StreamSegmentEncrypter> segment_encrypter,
     std::unique_ptr<OutputStream> ciphertext_destination) {
   if (segment_encrypter == nullptr) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "segment_encrypter must be non-null");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "segment_encrypter must be non-null");
   }
   if (ciphertext_destination == nullptr) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "cipertext_destination must be non-null");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "cipertext_destination must be non-null");
   }
   std::unique_ptr<StreamingAeadEncryptingStream> enc_stream(
       new StreamingAeadEncryptingStream());
@@ -91,8 +88,8 @@ StreamingAeadEncryptingStream::New(
       enc_stream->segment_encrypter_->get_header().size();
 
   if (first_segment_size <= 0) {
-    return Status(absl::StatusCode::kInternal,
-                  "Size of the first segment must be greater than 0.");
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Size of the first segment must be greater than 0.");
   }
   enc_stream->pt_buffer_.resize(first_segment_size);
   enc_stream->pt_to_encrypt_.resize(0);
@@ -162,7 +159,7 @@ void StreamingAeadEncryptingStream::BackUp(int count) {
   position_ -= actual_count;
 }
 
-Status StreamingAeadEncryptingStream::Close() {
+absl::Status StreamingAeadEncryptingStream::Close() {
   if (!status_.ok()) return status_;
   if (is_first_segment_) {  // Next() was never called.
     status_ =
@@ -205,7 +202,8 @@ Status StreamingAeadEncryptingStream::Close() {
     ct_destination_->Close().IgnoreError();
     return status_;
   }
-  status_ = Status(absl::StatusCode::kFailedPrecondition, "Stream closed");
+  status_ =
+      absl::Status(absl::StatusCode::kFailedPrecondition, "Stream closed");
   return ct_destination_->Close();
 }
 

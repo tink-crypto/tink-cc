@@ -34,7 +34,6 @@
 #include "tink/util/buffer.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/ostream_output_stream.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
@@ -42,36 +41,37 @@ namespace tink {
 using ::crypto::tink::internal::TestRandomAccessStream;
 using ::crypto::tink::util::IstreamInputStream;
 using ::crypto::tink::util::OstreamOutputStream;
-using ::crypto::tink::util::Status;
 
 namespace {
 
 // Reads up to 'count' bytes from 'ras' starting at position 'pos'
 // and verifies that the read bytes are equal to the corresponding
 // subsequence in 'full_contents'.
-Status ReadAndVerifyFragment(RandomAccessStream* ras, int pos, int count,
-                             absl::string_view full_contents) {
+absl::Status ReadAndVerifyFragment(RandomAccessStream* ras, int pos, int count,
+                                   absl::string_view full_contents) {
   auto buf_result = util::Buffer::New(count);
   if (!buf_result.ok()) {
-    return Status(absl::StatusCode::kInternal,
-                  absl::StrCat("Could not allocate buffer of size ", count));
+    return absl::Status(
+        absl::StatusCode::kInternal,
+        absl::StrCat("Could not allocate buffer of size ", count));
   }
   auto buf = std::move(buf_result.value());
   int full_size = full_contents.size();
   auto status = ras->PRead(pos, count, buf.get());
   if (!status.ok() && status.code() != absl::StatusCode::kOutOfRange) {
-    return Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("PRead failed with status: ", status.ToString()));
   }
   int exp_size = std::min(count, full_size - pos);
   if (exp_size != buf->size()) {
-    return Status(absl::StatusCode::kInternal,
-                  absl::StrCat("PRead returned ", buf->size(), " bytes, while ",
-                               exp_size, " bytes were expected."));
+    return absl::Status(
+        absl::StatusCode::kInternal,
+        absl::StrCat("PRead returned ", buf->size(), " bytes, while ", exp_size,
+                     " bytes were expected."));
   }
   if (std::memcmp(full_contents.data() + pos, buf->get_mem_block(), exp_size)) {
-    return Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         absl::StrCat("PRead returned bytes [",
                      std::string(buf->get_mem_block(), exp_size), "] while [",
@@ -145,7 +145,7 @@ absl::Status EncryptThenDecrypt(StreamingAead* encrypter,
     for (int count : {1, 10, std::max(pt_size / 2, 1), std::max(pt_size, 1)}) {
       auto status = ReadAndVerifyFragment(dec_ras.get(), pos, count, plaintext);
       if (!status.ok()) {
-        return Status(
+        return absl::Status(
             absl::StatusCode::kInternal,
             absl::StrCat("Random access decryption failed at position=", pos,
                          " with count=", count,

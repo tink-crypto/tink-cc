@@ -291,6 +291,7 @@ tink_cc_library(
     tink::signature::sig_util
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::private_key_type_manager

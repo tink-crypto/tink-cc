@@ -18,17 +18,15 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/cord_aead.h"
 #include "tink/subtle/test_util.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {
-
-using ::crypto::tink::util::StatusOr;
 
 absl::Status EncryptThenDecrypt(const Aead& encrypter, const Aead& decrypter,
                                 absl::string_view message,

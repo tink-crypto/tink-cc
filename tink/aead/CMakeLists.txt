@@ -874,6 +874,7 @@ tink_cc_test(
     absl::check
     absl::memory
     absl::status
+    absl::statusor
     tink::core::aead
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -895,7 +896,6 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_eax_cc_proto
     tink::proto::aes_gcm_cc_proto

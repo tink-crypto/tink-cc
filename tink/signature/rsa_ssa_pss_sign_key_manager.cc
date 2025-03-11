@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/rsa_util.h"
@@ -35,8 +36,6 @@
 #include "tink/util/errors.h"
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/rsa_ssa_pss.pb.h"
 #include "proto/tink.pb.h"
@@ -45,8 +44,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::RsaSsaPssKeyFormat;
 using ::google::crypto::tink::RsaSsaPssParams;
 using RsaSsaPssPrivateKeyProto = ::google::crypto::tink::RsaSsaPssPrivateKey;
@@ -134,21 +131,21 @@ RsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
   return signer;
 }
 
-Status RsaSsaPssSignKeyManager::ValidateKey(
+absl::Status RsaSsaPssSignKeyManager::ValidateKey(
     const RsaSsaPssPrivateKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return RsaSsaPssVerifyKeyManager().ValidateKey(key.public_key());
 }
 
-Status RsaSsaPssSignKeyManager::ValidateKeyFormat(
+absl::Status RsaSsaPssSignKeyManager::ValidateKeyFormat(
     const RsaSsaPssKeyFormat& key_format) const {
-  Status modulus_status =
+  absl::Status modulus_status =
       internal::ValidateRsaModulusSize(key_format.modulus_size_in_bits());
   if (!modulus_status.ok()) {
     return modulus_status;
   }
-  Status exponent_status =
+  absl::Status exponent_status =
       internal::ValidateRsaPublicExponent(key_format.public_exponent());
   if (!exponent_status.ok()) {
     return exponent_status;

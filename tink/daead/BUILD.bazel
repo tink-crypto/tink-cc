@@ -387,7 +387,6 @@ cc_test(
         ":aes_siv_parameters",
         ":aes_siv_proto_serialization",
         "//proto:aes_siv_cc_proto",
-        "//proto:tink_cc_proto",
         "//tink:insecure_secret_key_access",
         "//tink:key",
         "//tink:parameters",

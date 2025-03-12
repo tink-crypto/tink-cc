@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -53,7 +54,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/util/test_matchers.h"
 #include "proto/hpke.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -74,8 +74,6 @@ using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkeKeyFormat;
 using ::google::crypto::tink::HpkeParams;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsNull;
 using ::testing::IsTrue;
@@ -159,7 +157,7 @@ struct TestCase {
   HpkeParameters::KemId kem_id;
   HpkeParameters::KdfId kdf_id;
   HpkeParameters::AeadId aead_id;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   HpkeKem kem;
   HpkeKdf kdf;
   HpkeAead aead;
@@ -185,7 +183,8 @@ INSTANTIATE_TEST_SUITE_P(
     Values(TestCase{HpkeParameters::Variant::kTink,
                     HpkeParameters::KemId::kDhkemP256HkdfSha256,
                     HpkeParameters::KdfId::kHkdfSha256,
-                    HpkeParameters::AeadId::kAesGcm128, OutputPrefixType::TINK,
+                    HpkeParameters::AeadId::kAesGcm128,
+                    OutputPrefixTypeEnum::kTink,
                     HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
                     HpkeAead::AES_128_GCM, /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5),
@@ -194,8 +193,9 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KemId::kDhkemP384HkdfSha384,
                     HpkeParameters::KdfId::kHkdfSha384,
                     HpkeParameters::AeadId::kAesGcm256,
-                    OutputPrefixType::CRUNCHY, HpkeKem::DHKEM_P384_HKDF_SHA384,
-                    HpkeKdf::HKDF_SHA384, HpkeAead::AES_256_GCM,
+                    OutputPrefixTypeEnum::kCrunchy,
+                    HpkeKem::DHKEM_P384_HKDF_SHA384, HpkeKdf::HKDF_SHA384,
+                    HpkeAead::AES_256_GCM,
                     /*id=*/0x01030005,
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5),
                     subtle::EllipticCurveType::NIST_P384},
@@ -203,8 +203,9 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KemId::kDhkemP521HkdfSha512,
                     HpkeParameters::KdfId::kHkdfSha512,
                     HpkeParameters::AeadId::kAesGcm256,
-                    OutputPrefixType::CRUNCHY, HpkeKem::DHKEM_P521_HKDF_SHA512,
-                    HpkeKdf::HKDF_SHA512, HpkeAead::AES_256_GCM,
+                    OutputPrefixTypeEnum::kCrunchy,
+                    HpkeKem::DHKEM_P521_HKDF_SHA512, HpkeKdf::HKDF_SHA512,
+                    HpkeAead::AES_256_GCM,
                     /*id=*/0x07080910,
                     /*output_prefix=*/std::string("\x00\x07\x08\x09\x10", 5),
                     subtle::EllipticCurveType::NIST_P521},
@@ -212,8 +213,9 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeParameters::KemId::kDhkemX25519HkdfSha256,
                     HpkeParameters::KdfId::kHkdfSha256,
                     HpkeParameters::AeadId::kChaCha20Poly1305,
-                    OutputPrefixType::RAW, HpkeKem::DHKEM_X25519_HKDF_SHA256,
-                    HpkeKdf::HKDF_SHA256, HpkeAead::CHACHA20_POLY1305,
+                    OutputPrefixTypeEnum::kRaw,
+                    HpkeKem::DHKEM_X25519_HKDF_SHA256, HpkeKdf::HKDF_SHA256,
+                    HpkeAead::CHACHA20_POLY1305,
                     /*id=*/absl::nullopt, /*output_prefix=*/"",
                     subtle::EllipticCurveType::CURVE25519}));
 
@@ -261,7 +263,7 @@ TEST_F(HpkeProtoSerializationTest, ParseLegacyAsCrunchy) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::LEGACY,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kLegacy,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -289,7 +291,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithInvalidSerialization) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -310,7 +312,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -333,7 +335,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKem) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::TINK,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -356,7 +358,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownKdf) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::TINK,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -379,7 +381,7 @@ TEST_F(HpkeProtoSerializationTest, ParseParametersWithUnkownAead) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::TINK,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -417,8 +419,7 @@ TEST_P(HpkeProtoSerializationTest, SerializeParameters) {
       proto_serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
 
   HpkeKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
@@ -483,8 +484,9 @@ TEST_P(HpkeProtoSerializationTest, ParsePublicKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          test_case.output_prefix_type, test_case.id);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -519,10 +521,10 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -551,10 +553,10 @@ TEST_F(HpkeProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -594,9 +596,9 @@ TEST_P(HpkeProtoSerializationTest, SerializePublicKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PUBLIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -640,8 +642,9 @@ TEST_P(HpkeProtoSerializationTest, ParsePrivateKey) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          test_case.output_prefix_type, test_case.id);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -681,10 +684,10 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -708,10 +711,10 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithNoPublicKey) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -746,10 +749,10 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -787,10 +790,10 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyWithInvalidPublicKeyVersion) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -828,10 +831,10 @@ TEST_F(HpkeProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -877,9 +880,9 @@ TEST_P(HpkeProtoSerializationTest, SerializePrivateKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PRIVATE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

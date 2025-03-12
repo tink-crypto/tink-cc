@@ -39,23 +39,21 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/experimental/pqcrypto/ml_kem.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::MlKemKeyFormat;
 using ::google::crypto::tink::MlKemKeySize;
 using ::google::crypto::tink::MlKemParams;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -99,7 +97,7 @@ TEST_F(MlKemProtoSerializationTest, ParseMlKem768ParametersWorks) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::TINK,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -123,7 +121,8 @@ TEST_F(MlKemProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::TINK, "invalid_serialization");
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
+          "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   EXPECT_THAT(internal::MutableSerializationRegistry::GlobalInstance()
@@ -142,7 +141,7 @@ TEST_F(MlKemProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::TINK,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -161,7 +160,7 @@ TEST_F(MlKemProtoSerializationTest,
   MlKemKeyFormat key_format_proto;
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::TINK,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kTink,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -182,7 +181,7 @@ TEST_F(MlKemProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -206,7 +205,7 @@ TEST_F(MlKemProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::UNKNOWN_PREFIX,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -241,9 +240,7 @@ TEST_F(MlKemProtoSerializationTest, SerializeMlKem768ParametersWorks) {
   const internal::KeyTemplateStruct& key_template =
       proto_serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  internal::OutputPrefixTypeEnum::kTink)));
+  EXPECT_THAT(key_template.output_prefix_type, Eq(OutputPrefixTypeEnum::kTink));
 
   MlKemKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
@@ -297,8 +294,9 @@ TEST_F(MlKemProtoSerializationTest, ParsePublicKeyWorks) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          OutputPrefixType::TINK, 0x03050709);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -327,10 +325,10 @@ TEST_F(MlKemProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -359,8 +357,9 @@ TEST_F(MlKemProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          OutputPrefixType::TINK, 0x03050709);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -399,10 +398,10 @@ TEST_F(MlKemProtoSerializationTest, SerializePublicKeyWorks) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PUBLIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
-              Eq(OutputPrefixType::TINK));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(OutputPrefixTypeEnum::kTink));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(0x03050709));
 
   google::crypto::tink::MlKemPublicKey proto_key;
@@ -480,8 +479,9 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWorks) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK, 0x03050709);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> private_key =
@@ -518,10 +518,10 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -559,8 +559,9 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK, 0x03050709);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -600,8 +601,9 @@ TEST_F(MlKemProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK, 0x03050709);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -648,10 +650,10 @@ TEST_F(MlKemProtoSerializationTest, SerializePrivateKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PRIVATE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
-              Eq(OutputPrefixType::TINK));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(OutputPrefixTypeEnum::kTink));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(0x03050709));
 
   google::crypto::tink::MlKemPrivateKey proto_key;
@@ -830,8 +832,9 @@ TEST_F(MlKemProtoSerializationTest, ParseGoldenPrivateKeyWorks) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::TINK, 0x03050709);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          0x03050709);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> private_key =

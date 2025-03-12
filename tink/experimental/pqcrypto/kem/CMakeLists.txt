@@ -395,9 +395,7 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::tink_proto_structs
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
-    tink::proto::tink_cc_proto
     tink::proto::ml_kem_cc_proto
 )

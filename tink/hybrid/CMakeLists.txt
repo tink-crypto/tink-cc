@@ -953,7 +953,6 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::hpke_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

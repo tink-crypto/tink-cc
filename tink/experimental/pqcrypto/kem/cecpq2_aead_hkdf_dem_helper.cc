@@ -24,6 +24,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/daead/subtle/aead_or_daead.h"
@@ -68,7 +69,7 @@ class Cecpq2AeadHkdfDemHelperImpl : public Cecpq2AeadHkdfDemHelper {
         key_template_, &input_stream);
     if (!key_or.ok()) return key_or.status();
     auto key = std::move(key_or).value();
-    util::StatusOr<std::unique_ptr<EncryptionPrimitive>> primitive_or =
+    absl::StatusOr<std::unique_ptr<EncryptionPrimitive>> primitive_or =
         Registry::GetPrimitive<EncryptionPrimitive>(key);
     if (!primitive_or.ok()) return primitive_or.status();
     return absl::make_unique<AeadOrDaead>(std::move(primitive_or.value()));

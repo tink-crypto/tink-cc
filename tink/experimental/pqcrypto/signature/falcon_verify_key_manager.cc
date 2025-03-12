@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/experimental/pqcrypto/signature/subtle/falcon_subtle_utils.h"
@@ -36,8 +38,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::subtle::FalconPublicKeyPqclean;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::FalconPublicKey;
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
@@ -53,8 +53,9 @@ FalconVerifyKeyManager::PublicKeyVerifyFactory::Create(
   return subtle::FalconVerify::New(*falcon_public_key_pqclean);
 }
 
-Status FalconVerifyKeyManager::ValidateKey(const FalconPublicKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+absl::Status FalconVerifyKeyManager::ValidateKey(
+    const FalconPublicKey& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) {
     return status;
   }

@@ -19,6 +19,8 @@
 #include <memory>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/experimental/pqcrypto/signature/falcon_verify_key_manager.h"
@@ -38,8 +40,6 @@ namespace tink {
 
 using ::crypto::tink::subtle::FalconKeyPair;
 using ::crypto::tink::subtle::FalconPrivateKeyPqclean;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::FalconKeyFormat;
 using ::google::crypto::tink::FalconPrivateKey;
 using ::google::crypto::tink::FalconPublicKey;
@@ -81,8 +81,9 @@ FalconSignKeyManager::PublicKeySignFactory::Create(
   return subtle::FalconSign::New(*falcon_private_key);
 }
 
-Status FalconSignKeyManager::ValidateKey(const FalconPrivateKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+absl::Status FalconSignKeyManager::ValidateKey(
+    const FalconPrivateKey& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) {
     return status;
   }
@@ -95,9 +96,10 @@ Status FalconSignKeyManager::ValidateKey(const FalconPrivateKey& key) const {
   return FalconVerifyKeyManager().ValidateKey(key.public_key());
 }
 
-Status FalconSignKeyManager::ValidateKeyFormat(
+absl::Status FalconSignKeyManager::ValidateKeyFormat(
     const FalconKeyFormat& key_format) const {
-  Status status = subtle::ValidateFalconPrivateKeySize(key_format.key_size());
+  absl::Status status =
+      subtle::ValidateFalconPrivateKeySize(key_format.key_size());
   if (!status.ok()) {
     return status;
   }

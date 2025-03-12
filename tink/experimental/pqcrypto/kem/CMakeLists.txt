@@ -6,6 +6,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::aead
     tink::core::deterministic_aead
@@ -30,6 +31,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::registry
     tink::aead::aes_gcm_key_manager
@@ -57,6 +59,7 @@ tink_cc_library(
     tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::key_type_manager
@@ -112,6 +115,7 @@ tink_cc_library(
     tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_dem_helper
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util

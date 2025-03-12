@@ -20,6 +20,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/experimental/pqcrypto/signature/subtle/dilithium_avx2_verify.h"
@@ -44,8 +45,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::subtle::DilithiumPublicKeyPqclean;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::DilithiumParams;
 using ::google::crypto::tink::DilithiumPublicKey;
 using ::google::crypto::tink::DilithiumSeedExpansion;
@@ -64,21 +63,21 @@ DilithiumVerifyKeyManager::PublicKeyVerifyFactory::Create(
   return subtle::DilithiumAvx2Verify::New(*dilithium_public_key);
 }
 
-Status DilithiumVerifyKeyManager::ValidateKey(
+absl::Status DilithiumVerifyKeyManager::ValidateKey(
     const DilithiumPublicKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
 
   if (key.key_value().length() != PQCLEAN_DILITHIUM2_CRYPTO_PUBLICKEYBYTES &&
       key.key_value().length() != PQCLEAN_DILITHIUM3_CRYPTO_PUBLICKEYBYTES &&
       key.key_value().length() != PQCLEAN_DILITHIUM5_CRYPTO_PUBLICKEYBYTES) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "Invalid dilithium public key size.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Invalid dilithium public key size.");
   }
   return absl::OkStatus();
 }
 
-Status DilithiumVerifyKeyManager::ValidateParams(
+absl::Status DilithiumVerifyKeyManager::ValidateParams(
     const DilithiumParams& params) const {
   switch (params.seed_expansion()) {
     case DilithiumSeedExpansion::SEED_EXPANSION_SHAKE:
@@ -86,8 +85,8 @@ Status DilithiumVerifyKeyManager::ValidateParams(
       break;
     }
     default: {
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Invalid seed expansion");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid seed expansion");
     }
   }
 
@@ -98,7 +97,8 @@ Status DilithiumVerifyKeyManager::ValidateParams(
       break;
     }
     default: {
-      return Status(absl::StatusCode::kInvalidArgument, "Invalid key size.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Invalid key size.");
     }
   }
 

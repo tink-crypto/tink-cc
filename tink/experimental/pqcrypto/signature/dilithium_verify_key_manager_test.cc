@@ -23,6 +23,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/experimental/pqcrypto/signature/dilithium_sign_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/subtle/dilithium_avx2_sign.h"
@@ -54,7 +56,6 @@ namespace {
 using ::crypto::tink::subtle::DilithiumPrivateKeyPqclean;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::EnumsPqcrypto;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::DilithiumKeyFormat;
 using ::google::crypto::tink::DilithiumParams;
 using ::google::crypto::tink::DilithiumPrivateKey;

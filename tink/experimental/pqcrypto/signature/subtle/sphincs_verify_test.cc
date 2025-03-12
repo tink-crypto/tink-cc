@@ -92,7 +92,6 @@ struct SphincsTestCase {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using crypto::tink::util::Status;
 
 using SphincsVerifyTest = testing::TestWithParam<SphincsTestCase>;
 
@@ -130,7 +129,7 @@ TEST_P(SphincsVerifyTest, BasicSignVerify) {
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, message);
+  absl::Status status = (*verifier)->Verify(*signature, message);
   EXPECT_THAT(status, IsOk());
 }
 
@@ -168,7 +167,7 @@ TEST_P(SphincsVerifyTest, FailsWithWrongSignature) {
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
-  Status status =
+  absl::Status status =
       (*verifier)->Verify(*signature + "some trailing data", message);
   EXPECT_FALSE(status.ok());
 }
@@ -207,7 +206,7 @@ TEST_P(SphincsVerifyTest, FailsWithWrongMessage) {
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, "some bad message");
+  absl::Status status = (*verifier)->Verify(*signature, "some bad message");
   EXPECT_FALSE(status.ok());
 }
 
@@ -248,7 +247,7 @@ TEST_P(SphincsVerifyTest, FailsWithBytesFlipped) {
   (*signature)[0] ^= 1;
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, message);
+  absl::Status status = (*verifier)->Verify(*signature, message);
   EXPECT_FALSE(status.ok());
 }
 

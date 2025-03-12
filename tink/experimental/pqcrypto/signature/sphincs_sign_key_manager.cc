@@ -20,6 +20,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/experimental/pqcrypto/signature/sphincs_verify_key_manager.h"
@@ -42,8 +43,6 @@ using ::crypto::tink::subtle::SphincsKeyPair;
 using ::crypto::tink::subtle::SphincsParamsPqclean;
 using ::crypto::tink::subtle::SphincsPrivateKeyPqclean;
 using ::crypto::tink::util::EnumsPqcrypto;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::SphincsKeyFormat;
 using ::google::crypto::tink::SphincsPrivateKey;
 using ::google::crypto::tink::SphincsPublicKey;
@@ -99,8 +98,9 @@ SphincsSignKeyManager::PublicKeySignFactory::Create(
   return subtle::SphincsSign::New(sphincs_private_key_pqclean);
 }
 
-Status SphincsSignKeyManager::ValidateKey(const SphincsPrivateKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+absl::Status SphincsSignKeyManager::ValidateKey(
+    const SphincsPrivateKey& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) {
     return status;
   }
@@ -113,10 +113,10 @@ Status SphincsSignKeyManager::ValidateKey(const SphincsPrivateKey& key) const {
   return SphincsVerifyKeyManager().ValidateKey(key.public_key());
 }
 
-Status SphincsSignKeyManager::ValidateKeyFormat(
+absl::Status SphincsSignKeyManager::ValidateKeyFormat(
     const SphincsKeyFormat& key_format) const {
   if (!key_format.has_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing params.");
   }
 
   return SphincsVerifyKeyManager().ValidateParams(key_format.params());

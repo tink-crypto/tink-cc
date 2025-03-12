@@ -21,6 +21,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/hrss.h"
 #include "tink/experimental/pqcrypto/kem/cecpq2_aead_hkdf_public_key_manager.h"
@@ -41,16 +42,14 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::Cecpq2AeadHkdfKeyFormat;
 using google::crypto::tink::Cecpq2AeadHkdfPrivateKey;
 using google::crypto::tink::Cecpq2AeadHkdfPublicKey;
 
-Status Cecpq2AeadHkdfPrivateKeyManager::ValidateKeyFormat(
+absl::Status Cecpq2AeadHkdfPrivateKeyManager::ValidateKeyFormat(
     const Cecpq2AeadHkdfKeyFormat& key_format) const {
   if (!key_format.has_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing params.");
   }
   return Cecpq2AeadHkdfPublicKeyManager().ValidateParams(key_format.params());
 }
@@ -92,12 +91,13 @@ Cecpq2AeadHkdfPrivateKeyManager::GetPublicKey(
   return private_key.public_key();
 }
 
-Status Cecpq2AeadHkdfPrivateKeyManager::ValidateKey(
+absl::Status Cecpq2AeadHkdfPrivateKeyManager::ValidateKey(
     const Cecpq2AeadHkdfPrivateKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (!key.has_public_key()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing public_key.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Missing public_key.");
   }
   return Cecpq2AeadHkdfPublicKeyManager().ValidateKey(key.public_key());
 }

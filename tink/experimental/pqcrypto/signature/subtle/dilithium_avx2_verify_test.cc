@@ -61,7 +61,6 @@ struct DilithiumTestCase {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using crypto::tink::util::Status;
 
 using DilithiumAvx2VerifyTest = testing::TestWithParam<DilithiumTestCase>;
 
@@ -125,7 +124,7 @@ TEST_P(DilithiumAvx2VerifyTest, BasicSignVerify) {
   ASSERT_THAT(signature, IsOk());
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, message);
+  absl::Status status = (*verifier)->Verify(*signature, message);
   EXPECT_THAT(status, IsOk());
 }
 
@@ -160,7 +159,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithWrongMessage) {
   ASSERT_THAT(signature, IsOk());
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, "some bad message");
+  absl::Status status = (*verifier)->Verify(*signature, "some bad message");
   EXPECT_FALSE(status.ok());
 }
 
@@ -195,7 +194,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithWrongSignature) {
   ASSERT_THAT(signature, IsOk());
 
   // Verify signature.
-  Status status =
+  absl::Status status =
       (*verifier)->Verify(*signature + "some trailing data", message);
   EXPECT_FALSE(status.ok());
 }
@@ -234,7 +233,7 @@ TEST_P(DilithiumAvx2VerifyTest, FailsWithByteFlipped) {
   (*signature)[0] ^= 1;
 
   // Verify signature.
-  Status status = (*verifier)->Verify("some bad signature", message);
+  absl::Status status = (*verifier)->Verify("some bad signature", message);
   EXPECT_FALSE(status.ok());
 }
 
@@ -871,7 +870,7 @@ TEST(DilithiumAvx2VerifyTest, Vectors) {
     ASSERT_THAT(verifier, IsOk());
 
     // Verify signature.
-    Status status = (*verifier)->Verify(v.signature, v.message);
+    absl::Status status = (*verifier)->Verify(v.signature, v.message);
     EXPECT_THAT(status, IsOk());
   }
 }
@@ -1427,7 +1426,7 @@ TEST(DilithiumAvx2VerifyTest, AesVectors) {
     ASSERT_THAT(verifier, IsOk());
 
     // Verify signature.
-    Status status = (*verifier)->Verify(v.signature, v.message);
+    absl::Status status = (*verifier)->Verify(v.signature, v.message);
     EXPECT_THAT(status, IsOk());
   }
 }

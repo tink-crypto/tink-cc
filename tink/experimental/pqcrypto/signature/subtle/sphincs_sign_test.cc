@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/config/tink_fips.h"
 #include "tink/experimental/pqcrypto/signature/subtle/sphincs_helper_pqclean.h"
@@ -90,7 +91,6 @@ struct SphincsTestCase {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using crypto::tink::util::Status;
 
 using SphincsSignTest = testing::TestWithParam<SphincsTestCase>;
 

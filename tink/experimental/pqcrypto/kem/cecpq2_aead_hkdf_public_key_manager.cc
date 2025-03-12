@@ -17,6 +17,7 @@
 #include "tink/experimental/pqcrypto/kem/cecpq2_aead_hkdf_public_key_manager.h"
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/experimental/pqcrypto/kem/subtle/cecpq2_aead_hkdf_hybrid_encrypt.h"
 #include "tink/hybrid_encrypt.h"
@@ -32,48 +33,50 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Status;
 using google::crypto::tink::Cecpq2AeadHkdfParams;
 using google::crypto::tink::Cecpq2AeadHkdfPublicKey;
 using google::crypto::tink::EcPointFormat;
 using google::crypto::tink::EllipticCurveType;
 using google::crypto::tink::HashType;
 
-Status Cecpq2AeadHkdfPublicKeyManager::ValidateParams(
+absl::Status Cecpq2AeadHkdfPublicKeyManager::ValidateParams(
     const Cecpq2AeadHkdfParams& params) const {
   // Validate KEM params
   if (!params.has_kem_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing kem_params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Missing kem_params.");
   }
   if (params.kem_params().curve_type() == EllipticCurveType::UNKNOWN_CURVE ||
       params.kem_params().curve_type() != EllipticCurveType::CURVE25519 ||
       params.kem_params().hkdf_hash_type() == HashType::UNKNOWN_HASH) {
-    return Status(absl::StatusCode::kInvalidArgument, "Invalid kem_params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Invalid kem_params.");
   }
 
   // Validate DEM params
   if (!params.has_dem_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing dem_params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Missing dem_params.");
   }
   if (!params.dem_params().has_aead_dem()) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "dem_params has no aead_dem.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "dem_params has no aead_dem.");
   }
 
   // Validate EC point format
   if (params.kem_params().ec_point_format() == EcPointFormat::UNKNOWN_FORMAT) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "Unknown EC point format.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Unknown EC point format.");
   }
   return absl::OkStatus();
 }
 
-Status Cecpq2AeadHkdfPublicKeyManager::ValidateKey(
+absl::Status Cecpq2AeadHkdfPublicKeyManager::ValidateKey(
     const Cecpq2AeadHkdfPublicKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (!key.has_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing params.");
   }
   return ValidateParams(key.params());
 }

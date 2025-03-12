@@ -21,6 +21,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/experimental/pqcrypto/signature/dilithium_verify_key_manager.h"
@@ -48,8 +49,6 @@ namespace tink {
 using ::crypto::tink::subtle::DilithiumPrivateKeyPqclean;
 using ::crypto::tink::subtle::DilithiumPublicKeyPqclean;
 using ::crypto::tink::util::EnumsPqcrypto;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::DilithiumKeyFormat;
 using ::google::crypto::tink::DilithiumPrivateKey;
 using ::google::crypto::tink::DilithiumPublicKey;
@@ -95,24 +94,24 @@ DilithiumSignKeyManager::PublicKeySignFactory::Create(
   return subtle::DilithiumAvx2Sign::New(*dilithium_private_key);
 }
 
-Status DilithiumSignKeyManager::ValidateKey(
+absl::Status DilithiumSignKeyManager::ValidateKey(
     const DilithiumPrivateKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().length() != PQCLEAN_DILITHIUM2_CRYPTO_SECRETKEYBYTES &&
       key.key_value().length() != PQCLEAN_DILITHIUM3_CRYPTO_SECRETKEYBYTES &&
       key.key_value().length() != PQCLEAN_DILITHIUM5_CRYPTO_SECRETKEYBYTES) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "Invalid dilithium private key size.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Invalid dilithium private key size.");
   }
 
   return absl::OkStatus();
 }
 
-Status DilithiumSignKeyManager::ValidateKeyFormat(
+absl::Status DilithiumSignKeyManager::ValidateKeyFormat(
     const DilithiumKeyFormat& key_format) const {
   if (!key_format.has_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing params.");
   }
 
   return DilithiumVerifyKeyManager().ValidateParams(key_format.params());

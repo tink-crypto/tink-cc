@@ -20,6 +20,8 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/experimental/pqcrypto/signature/subtle/sphincs_subtle_utils.h"
@@ -40,8 +42,6 @@ namespace tink {
 using ::crypto::tink::subtle::SphincsParamsPqclean;
 using ::crypto::tink::subtle::SphincsPublicKeyPqclean;
 using ::crypto::tink::util::EnumsPqcrypto;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::SphincsParams;
 using ::google::crypto::tink::SphincsPublicKey;
 
@@ -62,8 +62,9 @@ SphincsVerifyKeyManager::PublicKeyVerifyFactory::Create(
   return subtle::SphincsVerify::New(sphincs_public_key_pqclean);
 }
 
-Status SphincsVerifyKeyManager::ValidateKey(const SphincsPublicKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+absl::Status SphincsVerifyKeyManager::ValidateKey(
+    const SphincsPublicKey& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) {
     return status;
   }
@@ -76,7 +77,7 @@ Status SphincsVerifyKeyManager::ValidateKey(const SphincsPublicKey& key) const {
   return absl::OkStatus();
 }
 
-Status SphincsVerifyKeyManager::ValidateParams(
+absl::Status SphincsVerifyKeyManager::ValidateParams(
     const SphincsParams& params) const {
   SphincsParamsPqclean sphincs_params_pqclean = {
       .hash_type = EnumsPqcrypto::ProtoToSubtle(params.hash_type()),
@@ -84,7 +85,7 @@ Status SphincsVerifyKeyManager::ValidateParams(
       .sig_length_type = EnumsPqcrypto::ProtoToSubtle(params.sig_length_type()),
       .private_key_size = params.key_size()};
 
-  Status status = subtle::ValidateParams(sphincs_params_pqclean);
+  absl::Status status = subtle::ValidateParams(sphincs_params_pqclean);
   if (!status.ok()) {
     return status;
   }

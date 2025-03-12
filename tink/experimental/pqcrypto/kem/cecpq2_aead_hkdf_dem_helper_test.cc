@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
@@ -47,7 +48,6 @@ namespace {
 using ::crypto::tink::subtle::AeadOrDaead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 using ::testing::HasSubstr;
 
 // Checks whether Decrypt(Encrypt(message)) == message with the given dem.

@@ -23,6 +23,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/experimental/pqcrypto/signature/subtle/falcon_sign.h"
 #include "tink/experimental/pqcrypto/signature/subtle/falcon_subtle_utils.h"
@@ -41,7 +43,6 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::FalconKeyFormat;
 using ::google::crypto::tink::FalconPrivateKey;
 using ::google::crypto::tink::FalconPublicKey;

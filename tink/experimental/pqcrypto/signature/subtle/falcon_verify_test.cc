@@ -48,7 +48,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using crypto::tink::util::Status;
 
 struct FalconTestCase {
   std::string test_name;
@@ -86,7 +85,7 @@ TEST_P(FalconVerifyTest, BasicSignVerify) {
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, message);
+  absl::Status status = (*verifier)->Verify(*signature, message);
   EXPECT_THAT(status, IsOk());
 }
 
@@ -118,7 +117,7 @@ TEST_P(FalconVerifyTest, FailsWithWrongSignature) {
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
-  Status status =
+  absl::Status status =
       (*verifier)->Verify(*signature + "some trailing data", message);
   EXPECT_FALSE(status.ok());
 }
@@ -151,7 +150,7 @@ TEST_P(FalconVerifyTest, FailsWithWrongMessage) {
   ASSERT_THAT(verifier, IsOk());
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, "some bad message");
+  absl::Status status = (*verifier)->Verify(*signature, "some bad message");
   EXPECT_FALSE(status.ok());
 }
 
@@ -186,7 +185,7 @@ TEST_P(FalconVerifyTest, FailsWithBytesFlipped) {
   (*signature)[0] ^= 1;
 
   // Verify signature.
-  Status status = (*verifier)->Verify(*signature, message);
+  absl::Status status = (*verifier)->Verify(*signature, message);
   EXPECT_FALSE(status.ok());
 }
 

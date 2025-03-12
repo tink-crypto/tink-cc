@@ -25,6 +25,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/secret_buffer.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -254,10 +255,12 @@ TEST_P(HpkePrivateKeyTest, CreateNistPrivateKeyWithInvalidKeyLengthFails) {
                             test_case.id_requirement, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  util::SecretData private_key_input = ec_key->priv;
+  internal::SecretBuffer private_key_input =
+      util::internal::AsSecretBuffer(ec_key->priv);
   private_key_input.resize(private_key_input.size() + 1);
-  RestrictedData expanded_private_key_bytes(private_key_input,
-                                            InsecureSecretKeyAccess::Get());
+  RestrictedData expanded_private_key_bytes(
+      util::internal::AsSecretData(std::move(private_key_input)),
+      InsecureSecretKeyAccess::Get());
 
   EXPECT_THAT(HpkePrivateKey::Create(*public_key, expanded_private_key_bytes,
                                      GetPartialKeyAccess())

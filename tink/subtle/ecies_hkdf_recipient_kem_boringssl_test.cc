@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
 #include "tink/config/tink_fips.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
@@ -195,11 +196,12 @@ TEST_F(EciesHkdfX25519RecipientKemBoringSslTest, TestNewShortKey) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::SecretData private_key = util::SecretDataFromStringView(
+  internal::SecretBuffer private_key(
       test::HexDecodeOrDie(kX25519PrivateKeyHex));
   private_key.resize(private_key.size() / 2);
   auto status_or_recipient_kem = EciesHkdfX25519RecipientKemBoringSsl::New(
-      EllipticCurveType::CURVE25519, private_key);
+      EllipticCurveType::CURVE25519,
+      util::internal::AsSecretData(std::move(private_key)));
   EXPECT_EQ(status_or_recipient_kem.status().code(),
             absl::StatusCode::kInvalidArgument);
 }

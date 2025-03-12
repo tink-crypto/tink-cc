@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -25,12 +26,14 @@
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
 #include "tink/subtle/random.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
@@ -131,7 +134,11 @@ TEST(Ed25519PrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
                                /*id_requirement=*/123, GetPartialKeyAccess());
   ASSERT_THAT(public_key, IsOk());
 
-  (*key_pair)->private_key.resize(31);
+  internal::SecretBuffer private_key_buffer =
+      util::internal::AsSecretBuffer(std::move((*key_pair)->private_key));
+  private_key_buffer.resize(31);
+  (*key_pair)->private_key =
+      util::internal::AsSecretData(std::move(private_key_buffer));
   RestrictedData private_key_bytes =
       RestrictedData((*key_pair)->private_key, InsecureSecretKeyAccess::Get());
 

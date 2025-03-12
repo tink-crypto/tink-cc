@@ -913,6 +913,7 @@ tink_cc_test(
     gmock
     absl::status
     tink::config::tink_fips
+    tink::internal::secret_buffer
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

@@ -909,6 +909,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::internal::ec_util
+    tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
     tink::subtle::random

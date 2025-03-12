@@ -1365,7 +1365,9 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::internal::ec_util
+    tink::internal::secret_buffer
     tink::subtle::random
+    tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
 )

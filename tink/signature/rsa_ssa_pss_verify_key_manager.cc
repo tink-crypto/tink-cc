@@ -41,8 +41,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::RsaSsaPssParams;
 using RsaSsaPssPublicKeyProto = ::google::crypto::tink::RsaSsaPssPublicKey;
 
@@ -65,28 +63,28 @@ RsaSsaPssVerifyKeyManager::PublicKeyVerifyFactory::Create(
   return {std::move(rsa_ssa_pss_result).value()};
 }
 
-Status RsaSsaPssVerifyKeyManager::ValidateKey(
+absl::Status RsaSsaPssVerifyKeyManager::ValidateKey(
     const RsaSsaPssPublicKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n());
   if (!n.ok()) {
     return n.status();
   }
-  Status modulus_status =
+  absl::Status modulus_status =
       internal::ValidateRsaModulusSize(BN_num_bits(n->get()));
   if (!modulus_status.ok()) {
     return modulus_status;
   }
-  Status exponent_status = internal::ValidateRsaPublicExponent(key.e());
+  absl::Status exponent_status = internal::ValidateRsaPublicExponent(key.e());
   if (!exponent_status.ok()) {
     return exponent_status;
   }
   return ValidateParams(key.params());
 }
 
-Status RsaSsaPssVerifyKeyManager::ValidateParams(
+absl::Status RsaSsaPssVerifyKeyManager::ValidateParams(
     const RsaSsaPssParams& params) const {
   absl::Status hash_result = internal::IsHashTypeSafeForSignature(
       Enums::ProtoToSubtle(params.sig_hash()));

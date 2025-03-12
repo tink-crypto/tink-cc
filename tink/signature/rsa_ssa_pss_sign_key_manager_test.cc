@@ -51,7 +51,6 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::RsaSsaPssKeyFormat;

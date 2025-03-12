@@ -20,6 +20,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/ec_util.h"
 #include "tink/public_key_verify.h"
@@ -36,8 +37,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::EcdsaParams;
 using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
 using ::google::crypto::tink::EcdsaSignatureEncoding;
@@ -58,7 +57,8 @@ EcdsaVerifyKeyManager::PublicKeyVerifyFactory::Create(
   return {std::move(result.value())};
 }
 
-Status EcdsaVerifyKeyManager::ValidateParams(const EcdsaParams& params) const {
+absl::Status EcdsaVerifyKeyManager::ValidateParams(
+    const EcdsaParams& params) const {
   switch (params.encoding()) {
     case EcdsaSignatureEncoding::DER:  // fall through
     case EcdsaSignatureEncoding::IEEE_P1363:
@@ -73,34 +73,35 @@ Status EcdsaVerifyKeyManager::ValidateParams(const EcdsaParams& params) const {
       // leftmost bits of the hash is used in signature computation.
       // Therefore, we don't allow it here to prevent security illusion.
       if (params.hash_type() != HashType::SHA256) {
-        return Status(absl::StatusCode::kInvalidArgument,
-                      "Only SHA256 is supported for NIST P256.");
+        return absl::Status(absl::StatusCode::kInvalidArgument,
+                            "Only SHA256 is supported for NIST P256.");
       }
       break;
     case EllipticCurveType::NIST_P384:
       // Allow using SHA384 and SHA512 with NIST-P384.
       if ((params.hash_type() != HashType::SHA384) &&
           (params.hash_type() != HashType::SHA512)) {
-        return Status(absl::StatusCode::kInvalidArgument,
-                      "Only SHA384 and SHA512 are supported for this curve.");
+        return absl::Status(
+            absl::StatusCode::kInvalidArgument,
+            "Only SHA384 and SHA512 are supported for this curve.");
       }
       break;
     case EllipticCurveType::NIST_P521:
       if (params.hash_type() != HashType::SHA512) {
-        return Status(absl::StatusCode::kInvalidArgument,
-                      "Only SHA512 is supported for this curve.");
+        return absl::Status(absl::StatusCode::kInvalidArgument,
+                            "Only SHA512 is supported for this curve.");
       }
       break;
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported elliptic curve");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported elliptic curve");
   }
   return absl::OkStatus();
 }
 
-Status EcdsaVerifyKeyManager::ValidateKey(
+absl::Status EcdsaVerifyKeyManager::ValidateKey(
     const EcdsaPublicKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return ValidateParams(key.params());
 }

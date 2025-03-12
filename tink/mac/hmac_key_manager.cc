@@ -21,6 +21,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/mac.h"
@@ -41,8 +42,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::google::crypto::tink::HmacKeyFormat;
@@ -89,7 +88,7 @@ absl::StatusOr<HmacKeyProto> HmacKeyManager::DeriveKey(
   return hmac_key;
 }
 
-Status HmacKeyManager::ValidateParams(const HmacParams& params) const {
+absl::Status HmacKeyManager::ValidateParams(const HmacParams& params) const {
   if (params.tag_size() < kMinTagSizeInBytes) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Invalid HmacParams: tag_size %d is too small.",
@@ -115,8 +114,8 @@ Status HmacKeyManager::ValidateParams(const HmacParams& params) const {
   return absl::OkStatus();
 }
 
-Status HmacKeyManager::ValidateKey(const HmacKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+absl::Status HmacKeyManager::ValidateKey(const HmacKeyProto& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().size() < kMinKeySizeInBytes) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -126,7 +125,7 @@ Status HmacKeyManager::ValidateKey(const HmacKeyProto& key) const {
 }
 
 // static
-Status HmacKeyManager::ValidateKeyFormat(
+absl::Status HmacKeyManager::ValidateKeyFormat(
     const HmacKeyFormat& key_format) const {
   if (key_format.key_size() < kMinKeySizeInBytes) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

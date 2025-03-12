@@ -108,6 +108,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::chunked_mac
     tink::core::key_type_manager

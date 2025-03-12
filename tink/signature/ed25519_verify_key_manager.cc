@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/public_key_verify.h"
 #include "tink/subtle/ed25519_verify_boringssl.h"
@@ -32,8 +33,6 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>>
@@ -42,14 +41,14 @@ Ed25519VerifyKeyManager::PublicKeyVerifyFactory::Create(
   return subtle::Ed25519VerifyBoringSsl::New(public_key.key_value());
 }
 
-Status Ed25519VerifyKeyManager::ValidateKey(
+absl::Status Ed25519VerifyKeyManager::ValidateKey(
     const Ed25519PublicKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
 
   if (key.key_value().length() != 32) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "The ED25519 public key must be 32-bytes long.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "The ED25519 public key must be 32-bytes long.");
   }
   return absl::OkStatus();
 }

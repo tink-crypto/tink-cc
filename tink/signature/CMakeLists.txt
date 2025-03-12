@@ -138,6 +138,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
@@ -165,6 +166,7 @@ tink_cc_library(
     tink::signature::ed25519_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::private_key_type_manager
     tink::core::template_util
@@ -194,6 +196,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
@@ -230,6 +233,7 @@ tink_cc_library(
     tink::signature::sig_util
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::private_key_type_manager
     tink::core::template_util
@@ -999,6 +1003,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_verify_key_manager
     gmock
     absl::status
+    absl::statusor
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -1053,6 +1058,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_status
     tink::core::keyset_handle
@@ -1116,6 +1122,7 @@ tink_cc_test(
     tink::signature::signature_config
     gmock
     absl::flat_hash_set
+    absl::statusor
     absl::optional
     crypto
     tink::core::key_status

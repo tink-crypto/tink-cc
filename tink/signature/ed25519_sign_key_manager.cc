@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
@@ -44,8 +45,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::internal::SecretBuffer;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::Ed25519KeyFormat;
 using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
 
@@ -90,13 +89,13 @@ Ed25519SignKeyManager::PublicKeySignFactory::Create(
       util::internal::AsSecretData(std::move(sk)));
 }
 
-Status Ed25519SignKeyManager::ValidateKey(
+absl::Status Ed25519SignKeyManager::ValidateKey(
     const Ed25519PrivateKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   if (key.key_value().length() != 32) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "The ED25519 private key must be 32-bytes long.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "The ED25519 private key must be 32-bytes long.");
   }
   return Ed25519VerifyKeyManager().ValidateKey(key.public_key());
 }
@@ -132,7 +131,7 @@ absl::StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
   return ed25519_private_key;
 }
 
-Status Ed25519SignKeyManager::ValidateKeyFormat(
+absl::Status Ed25519SignKeyManager::ValidateKeyFormat(
     const Ed25519KeyFormat& key_format) const {
   return absl::OkStatus();
 }

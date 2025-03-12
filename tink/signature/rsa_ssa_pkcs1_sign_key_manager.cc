@@ -21,6 +21,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/rsa_util.h"
@@ -43,8 +44,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;
 using ::google::crypto::tink::RsaSsaPkcs1Params;
 using RsaSsaPkcs1PrivateKeyProto =
@@ -133,21 +132,21 @@ RsaSsaPkcs1SignKeyManager::PublicKeySignFactory::Create(
   return signer;
 }
 
-Status RsaSsaPkcs1SignKeyManager::ValidateKey(
+absl::Status RsaSsaPkcs1SignKeyManager::ValidateKey(
     const RsaSsaPkcs1PrivateKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return RsaSsaPkcs1VerifyKeyManager().ValidateKey(key.public_key());
 }
 
-Status RsaSsaPkcs1SignKeyManager::ValidateKeyFormat(
+absl::Status RsaSsaPkcs1SignKeyManager::ValidateKeyFormat(
     const RsaSsaPkcs1KeyFormat& key_format) const {
-  Status modulus_status =
+  absl::Status modulus_status =
       internal::ValidateRsaModulusSize(key_format.modulus_size_in_bits());
   if (!modulus_status.ok()) {
     return modulus_status;
   }
-  Status exponent_status =
+  absl::Status exponent_status =
       internal::ValidateRsaPublicExponent(key_format.public_exponent());
   if (!exponent_status.ok()) {
     return exponent_status;

@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
 #include "tink/internal/ec_util.h"
@@ -53,7 +54,6 @@ namespace tink {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using ::google::crypto::tink::EcdsaParams;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;

@@ -50,7 +50,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::Ed25519KeyFormat;
 using Ed25519PrivateKeyProto = ::google::crypto::tink::Ed25519PrivateKey;
 using Ed25519PublicKeyProto = ::google::crypto::tink::Ed25519PublicKey;

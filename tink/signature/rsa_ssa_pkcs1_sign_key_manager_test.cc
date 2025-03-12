@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "openssl/rsa.h"
 #include "tink/config/global_registry.h"
@@ -50,7 +51,6 @@ namespace tink {
 namespace {
 
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::RsaSsaPkcs1KeyFormat;

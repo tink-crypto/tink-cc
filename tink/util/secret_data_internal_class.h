@@ -56,11 +56,9 @@ class SecretDataInternalClass {
   static constexpr size_t kMaxCount = std::numeric_limits<size_t>::max();
 
   SecretDataInternalClass() = default;
-  explicit SecretDataInternalClass(size_t size, uint8_t value = 0) {
-    reserve(size);
-    memset(data_, value, size);
-    size_ = size;
-  }
+  explicit SecretDataInternalClass(size_t size, uint8_t value = 0)
+      : SecretDataInternalClass(
+            crypto::tink::internal::SecretBuffer(size, value)) {}
   SecretDataInternalClass(const SecretDataInternalClass& other) {
     *this = other;
   }

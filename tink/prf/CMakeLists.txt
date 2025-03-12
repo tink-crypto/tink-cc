@@ -582,10 +582,8 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_prf_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -642,11 +640,9 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::hmac_prf_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -707,10 +703,8 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
-    tink::proto::tink_cc_proto
 )

@@ -506,7 +506,6 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::aes_cmac_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -549,6 +548,7 @@ tink_cc_test(
     tink::mac::hmac_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
@@ -561,11 +561,9 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::hmac_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

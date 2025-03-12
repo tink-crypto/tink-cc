@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -36,23 +37,21 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/hmac.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::HmacKeyFormat;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsTrue;
 using ::testing::NotNull;
@@ -61,7 +60,7 @@ using ::testing::Values;
 
 struct TestCase {
   HmacParameters::Variant variant;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   HmacParameters::HashType hash_type;
   HashType proto_hash_type;
   int key_size;
@@ -85,28 +84,31 @@ TEST_F(HmacProtoSerializationTest, RegisterTwiceSucceeds) {
 
 INSTANTIATE_TEST_SUITE_P(
     HmacProtoSerializationTestSuite, HmacProtoSerializationTest,
-    Values(TestCase{HmacParameters::Variant::kTink, OutputPrefixType::TINK,
+    Values(TestCase{HmacParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
                     HmacParameters::HashType::kSha1, HashType::SHA1,
                     /*key_size=*/16, /*cryptographic_tag_size=*/10,
                     /*total_size=*/15, /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{HmacParameters::Variant::kCrunchy,
-                    OutputPrefixType::CRUNCHY,
+                    OutputPrefixTypeEnum::kCrunchy,
                     HmacParameters::HashType::kSha224, HashType::SHA224,
                     /*key_size=*/16, /*tag_size=*/12, /*total_size=*/17,
                     /*id=*/0x01030005,
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
-           TestCase{HmacParameters::Variant::kLegacy, OutputPrefixType::LEGACY,
+           TestCase{HmacParameters::Variant::kLegacy,
+                    OutputPrefixTypeEnum::kLegacy,
                     HmacParameters::HashType::kSha256, HashType::SHA256,
                     /*key_size=*/32, /*cryptographic_tag_size=*/14,
                     /*total_tag_size=*/19, /*id=*/0x01020304,
                     /*output_prefix=*/std::string("\x00\x01\x02\x03\x04", 5)},
-           TestCase{HmacParameters::Variant::kNoPrefix, OutputPrefixType::RAW,
+           TestCase{HmacParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeEnum::kRaw,
                     HmacParameters::HashType::kSha384, HashType::SHA384,
                     /*key_size=*/32, /*cryptographic_tag_size=*/16,
                     /*total_tag_size=*/16, /*id=*/absl::nullopt,
                     /*output_prefix=*/""},
-           TestCase{HmacParameters::Variant::kNoPrefix, OutputPrefixType::RAW,
+           TestCase{HmacParameters::Variant::kNoPrefix,
+                    OutputPrefixTypeEnum::kRaw,
                     HmacParameters::HashType::kSha512, HashType::SHA512,
                     /*key_size=*/32, /*cryptographic_tag_size=*/20,
                     /*total_tag_size=*/20, /*id=*/absl::nullopt,
@@ -147,7 +149,7 @@ TEST_F(HmacProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey",
-          OutputPrefixType::RAW, "invalid_serialization");
+          OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -168,7 +170,7 @@ TEST_F(HmacProtoSerializationTest, ParseParametersWithInvalidVersion) {
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey",
-          OutputPrefixType::RAW, key_format_proto.SerializeAsString());
+          OutputPrefixTypeEnum::kRaw, key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -189,7 +191,7 @@ TEST_F(HmacProtoSerializationTest, ParseParametersWithUnknownHashType) {
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey",
-          OutputPrefixType::RAW, key_format_proto.SerializeAsString());
+          OutputPrefixTypeEnum::kRaw, key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -208,7 +210,7 @@ TEST_F(HmacProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey",
-          OutputPrefixType::UNKNOWN_PREFIX,
+          OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -270,7 +272,8 @@ TEST_P(HmacProtoSerializationTest, ParseKey) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey", serialized_key,
-          KeyData::SYMMETRIC, test_case.output_prefix_type, test_case.id);
+          KeyMaterialTypeEnum::kSymmetric, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -309,7 +312,7 @@ TEST_F(HmacProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -334,7 +337,7 @@ TEST_F(HmacProtoSerializationTest, ParseKeyWithInvalidVersion) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -359,7 +362,7 @@ TEST_F(HmacProtoSerializationTest, ParseKeyWithUnknownOutputPrefixType) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::UNKNOWN_PREFIX,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kUnknownPrefix,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -384,7 +387,7 @@ TEST_F(HmacProtoSerializationTest, ParseKeyWithUnknownHashType) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -409,7 +412,7 @@ TEST_F(HmacProtoSerializationTest, ParseKeyWithoutSecretKeyAccess) {
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.HmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -449,8 +452,9 @@ TEST_P(HmacProtoSerializationTest, SerializeKey) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(),
               Eq("type.googleapis.com/google.crypto.tink.HmacKey"));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

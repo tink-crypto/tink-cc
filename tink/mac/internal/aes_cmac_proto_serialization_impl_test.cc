@@ -45,7 +45,6 @@
 #include "tink/subtle/random.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_cmac.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -61,8 +60,6 @@ using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::AesCmacKeyFormat;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsNull;
 using ::testing::IsTrue;
@@ -72,7 +69,7 @@ using ::testing::Values;
 
 struct TestCase {
   AesCmacParameters::Variant variant;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   int key_size;
   int tag_size;
   int total_size;
@@ -103,21 +100,22 @@ TEST_F(AesCmacProtoSerializationTest,
 
 INSTANTIATE_TEST_SUITE_P(
     AesCmacProtoSerializationTestSuite, AesCmacProtoSerializationTest,
-    Values(TestCase{AesCmacParameters::Variant::kTink, OutputPrefixType::TINK,
+    Values(TestCase{AesCmacParameters::Variant::kTink,
+                    OutputPrefixTypeEnum::kTink,
                     /*key_size=*/16, /*tag_size=*/10, /*total_size=*/15,
                     /*id=*/0x02030400,
                     /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
            TestCase{AesCmacParameters::Variant::kCrunchy,
-                    OutputPrefixType::CRUNCHY, /*key_size=*/16,
+                    OutputPrefixTypeEnum::kCrunchy, /*key_size=*/16,
                     /*tag_size=*/12, /*total_size=*/17, /*id=*/0x01030005,
                     /*output_prefix=*/std::string("\x00\x01\x03\x00\x05", 5)},
            TestCase{AesCmacParameters::Variant::kLegacy,
-                    OutputPrefixType::LEGACY, /*key_size=*/32,
+                    OutputPrefixTypeEnum::kLegacy, /*key_size=*/32,
                     /*cryptographic_tag_size=*/14, /*total_tag_size=*/19,
                     /*id=*/0x01020304,
                     /*output_prefix=*/std::string("\x00\x01\x02\x03\x04", 5)},
            TestCase{AesCmacParameters::Variant::kNoPrefix,
-                    OutputPrefixType::RAW, /*key_size=*/32,
+                    OutputPrefixTypeEnum::kRaw, /*key_size=*/32,
                     /*cryptographic_tag_size=*/16, /*total_tag_size=*/16,
                     /*id=*/absl::nullopt, /*output_prefix=*/""}));
 
@@ -196,7 +194,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseParametersWithInvalidSerialization) {
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
-          OutputPrefixType::RAW, "invalid_serialization");
+          OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -216,7 +214,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
   absl::StatusOr<ProtoParametersSerialization> serialization =
       ProtoParametersSerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
-          OutputPrefixType::UNKNOWN_PREFIX,
+          OutputPrefixTypeEnum::kUnknownPrefix,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -249,8 +247,7 @@ TEST_P(AesCmacProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   EXPECT_THAT(key_template.type_url,
               Eq("type.googleapis.com/google.crypto.tink.AesCmacKey"));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
 
   AesCmacKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
@@ -283,8 +280,7 @@ TEST_P(AesCmacProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   EXPECT_THAT(key_template.type_url,
               Eq("type.googleapis.com/google.crypto.tink.AesCmacKey"));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
 
   AesCmacKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
@@ -309,7 +305,8 @@ TEST_P(AesCmacProtoSerializationTest, ParseKeyWithMutableRegistry) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyData::SYMMETRIC, test_case.output_prefix_type, test_case.id);
+          KeyMaterialTypeEnum::kSymmetric, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -356,7 +353,8 @@ TEST_P(AesCmacProtoSerializationTest, ParseKeyWithRegistryBuilder) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyData::SYMMETRIC, test_case.output_prefix_type, test_case.id);
+          KeyMaterialTypeEnum::kSymmetric, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -396,7 +394,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseKeyWithInvalidSerialization) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -421,7 +419,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseKeyNoSecretKeyAccess) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -446,7 +444,7 @@ TEST_F(AesCmacProtoSerializationTest, ParseKeyWithInvalidVersion) {
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create(
           "type.googleapis.com/google.crypto.tink.AesCmacKey", serialized_key,
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
@@ -484,8 +482,9 @@ TEST_P(AesCmacProtoSerializationTest, SerializeKeyWithMutableRegistry) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(),
               Eq("type.googleapis.com/google.crypto.tink.AesCmacKey"));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -528,8 +527,9 @@ TEST_P(AesCmacProtoSerializationTest, SerializeKeyWithRegistryBuilder) {
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(),
               Eq("type.googleapis.com/google.crypto.tink.AesCmacKey"));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

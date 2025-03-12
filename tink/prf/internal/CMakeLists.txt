@@ -155,6 +155,7 @@ tink_cc_test(
     tink::prf::internal::aes_cmac_prf_proto_serialization_impl
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access_testonly
@@ -167,13 +168,12 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_prf_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -201,12 +201,10 @@ tink_cc_test(
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -234,9 +232,7 @@ tink_cc_test(
     tink::prf::hmac_prf_key
     tink::prf::hmac_prf_parameters
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::hmac_prf_cc_proto
-    tink::proto::tink_cc_proto
 )

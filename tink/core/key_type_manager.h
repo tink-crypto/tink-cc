@@ -26,6 +26,7 @@
 #include <typeinfo>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
@@ -54,14 +55,14 @@ class InternalKeyFactory {
   virtual absl::Status ValidateKeyFormat(
       const KeyFormatProto& key_format) const = 0;
   // Creates a new key. This is expected to be randomized.
-  virtual crypto::tink::util::StatusOr<KeyProto> CreateKey(
+  virtual absl::StatusOr<KeyProto> CreateKey(
       const KeyFormatProto& key_format) const = 0;
   // Creates a new key. Only needs to be overridden if it should be possible to
   // derive keys of this type. This must be deterministic. Furthermore, in order
   // to support long term usability of old keys, the KeyFormatProto should be
   // versioned.
-  virtual crypto::tink::util::StatusOr<KeyProto> DeriveKey(
-      const KeyFormatProto& key_format, InputStream* input_stream) const {
+  virtual absl::StatusOr<KeyProto> DeriveKey(const KeyFormatProto& key_format,
+                                             InputStream* input_stream) const {
     return absl::Status(absl::StatusCode::kUnimplemented,
                         "Deriving key not implemented for this key type.");
   }
@@ -116,7 +117,7 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
   class PrimitiveFactory {
    public:
     virtual ~PrimitiveFactory() = default;
-    virtual crypto::tink::util::StatusOr<std::unique_ptr<Primitive>> Create(
+    virtual absl::StatusOr<std::unique_ptr<Primitive>> Create(
         const KeyProto& key) const = 0;
   };
 
@@ -142,7 +143,7 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
   // Creates a new primitive using one of the primitive factories passed in at
   // construction time.
   template <typename Primitive>
-  util::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
       const KeyProto& key) const {
     return GetPrimitiveImpl<Primitive>(key);
   }
@@ -157,7 +158,7 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
   template <typename Primitive>
   typename std::enable_if<
       !internal::OccursInTuple<Primitive, std::tuple<Primitives...>>::value,
-      util::StatusOr<std::unique_ptr<Primitive>>>::type
+      absl::StatusOr<std::unique_ptr<Primitive>>>::type
   GetPrimitiveImpl(const KeyProto& key) const {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -167,7 +168,7 @@ class KeyTypeManager<KeyProtoParam, KeyFormatProtoParam, List<Primitives...>>
   template <typename Primitive>
   typename std::enable_if<
       internal::OccursInTuple<Primitive, std::tuple<Primitives...>>::value,
-      util::StatusOr<std::unique_ptr<Primitive>>>::type
+      absl::StatusOr<std::unique_ptr<Primitive>>>::type
   GetPrimitiveImpl(const KeyProto& key) const {
     // TODO(C++14) replace with std::get<T> after migration
     constexpr size_t index =

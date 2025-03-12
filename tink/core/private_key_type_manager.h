@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/util/statusor.h"
@@ -48,7 +49,7 @@ class PrivateKeyTypeManager<KeyProto, KeyFormatProto, PublicKeyProto,
       : KeyTypeManager<KeyProto, KeyFormatProto, List<Primitives...>>(
             std::move(primitives)...) {}
 
-  virtual crypto::tink::util::StatusOr<PublicKeyProto> GetPublicKey(
+  virtual absl::StatusOr<PublicKeyProto> GetPublicKey(
       const KeyProto& private_key) const = 0;
 };
 

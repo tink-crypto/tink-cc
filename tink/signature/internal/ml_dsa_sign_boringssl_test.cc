@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
 #include "tink/internal/fips_utils.h"
@@ -40,8 +41,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::testing::TestWithParam;
 using ::testing::Values;
 

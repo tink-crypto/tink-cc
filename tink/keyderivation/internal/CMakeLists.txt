@@ -101,6 +101,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
     tink::core::registry

@@ -50,8 +50,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::testing::HasSubstr;
 
 TEST(SlhDsaVerifyBoringSslTest, BasicSignVerifyRawWorks) {

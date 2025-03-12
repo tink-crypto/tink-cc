@@ -209,6 +209,7 @@ tink_cc_test(
   DEPS
     gmock
     absl::status
+    absl::statusor
     tink::core::chunked_mac
     tink::core::keyset_handle
     tink::core::mac

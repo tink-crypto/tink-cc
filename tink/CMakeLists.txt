@@ -531,6 +531,7 @@ tink_cc_library(
     absl::core_headers
     absl::memory
     absl::status
+    absl::statusor
     absl::synchronization
     tink::internal::key_gen_configuration_impl
     tink::util::enums
@@ -561,6 +562,7 @@ tink_cc_library(
     tink::core::kms_client
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::synchronization
     tink::util::errors
@@ -584,6 +586,7 @@ tink_cc_library(
     tink::core::template_util
     tink::core::input_stream
     absl::status
+    absl::statusor
     absl::strings
     tink::internal::fips_utils
     tink::util::status
@@ -603,6 +606,7 @@ tink_cc_library(
     absl::base
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::internal::call_with_core_dump_protection
     tink::util::constants
@@ -620,6 +624,7 @@ tink_cc_library(
   DEPS
     tink::core::key_type_manager
     tink::core::template_util
+    absl::statusor
     tink::util::statusor
 )
 
@@ -634,6 +639,7 @@ tink_cc_library(
     tink::core::key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::internal::call_with_core_dump_protection
     tink::util::secret_proto

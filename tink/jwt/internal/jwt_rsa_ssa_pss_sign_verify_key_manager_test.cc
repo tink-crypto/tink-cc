@@ -49,7 +49,6 @@ namespace jwt_internal {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
 using ::google::crypto::tink::JwtRsaSsaPssKeyFormat;
 using ::google::crypto::tink::JwtRsaSsaPssPrivateKey;

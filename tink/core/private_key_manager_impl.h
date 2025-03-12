@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/core/key_type_manager.h"
@@ -91,7 +92,7 @@ class PrivateKeyFactoryImpl : public PrivateKeyFactory {
     auto validation = private_key_manager_->ValidateKey(*private_key);
     if (!validation.ok()) return validation;
     auto key_data = absl::make_unique<google::crypto::tink::KeyData>();
-    util::StatusOr<PublicKeyProto> public_key_result =
+    absl::StatusOr<PublicKeyProto> public_key_result =
         private_key_manager_->GetPublicKey(*private_key);
     if (!public_key_result.ok()) return public_key_result.status();
     key_data->set_type_url(public_key_type_);

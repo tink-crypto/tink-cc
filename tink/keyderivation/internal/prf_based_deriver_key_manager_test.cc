@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/cleartext_keyset_handle.h"
@@ -47,7 +48,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::HashType;
 using HkdfPrfKeyProto = ::google::crypto::tink::HkdfPrfKey;

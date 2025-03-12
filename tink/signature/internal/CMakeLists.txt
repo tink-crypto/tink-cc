@@ -389,6 +389,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_sign_boringssl
     gmock
     absl::status
+    absl::statusor
     absl::optional
     crypto
     tink::core::public_key_sign
@@ -609,6 +610,7 @@ tink_cc_test(
     tink::signature::internal::slh_dsa_sign_boringssl
     gmock
     absl::status
+    absl::statusor
     absl::optional
     crypto
     tink::core::public_key_sign

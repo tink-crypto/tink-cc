@@ -25,6 +25,7 @@
 #include "absl/base/casts.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/core/key_type_manager.h"
@@ -75,9 +76,8 @@ class KeyFactoryImpl<
     if (!validation.ok()) {
       return validation;
     }
-    crypto::tink::util::StatusOr<KeyProto> new_key_result =
-        key_type_manager_->CreateKey(
-            static_cast<const KeyFormatProto&>(key_format));
+    absl::StatusOr<KeyProto> new_key_result = key_type_manager_->CreateKey(
+        static_cast<const KeyFormatProto&>(key_format));
     if (!new_key_result.ok()) return new_key_result.status();
     return absl::implicit_cast<std::unique_ptr<portable_proto::MessageLite>>(
         absl::make_unique<KeyProto>(std::move(new_key_result.value())));
@@ -181,7 +181,7 @@ class KeyManagerImpl<
                 key_type_manager_)) {}
 
   // Constructs an instance of Primitive for the given 'key_data'.
-  crypto::tink::util::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
       const google::crypto::tink::KeyData& key_data) const override {
     if (!this->DoesSupport(key_data.type_url())) {
       return ToStatusF(absl::StatusCode::kInvalidArgument,
@@ -203,7 +203,7 @@ class KeyManagerImpl<
     return key_type_manager_->template GetPrimitive<Primitive>(*key_proto);
   }
 
-  crypto::tink::util::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
+  absl::StatusOr<std::unique_ptr<Primitive>> GetPrimitive(
       const portable_proto::MessageLite& key) const override {
     std::string key_type = absl::StrCat(kTypeGoogleapisCom, key.GetTypeName());
     if (!this->DoesSupport(key_type)) {

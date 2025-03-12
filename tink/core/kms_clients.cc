@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/kms_client.h"
@@ -31,19 +32,16 @@
 namespace crypto {
 namespace tink {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
-
 // static
 KmsClients& KmsClients::GlobalInstance() {
   static KmsClients* instance = new KmsClients();
   return *instance;
 }
 
-Status KmsClients::LocalAdd(std::unique_ptr<KmsClient> kms_client) {
+absl::Status KmsClients::LocalAdd(std::unique_ptr<KmsClient> kms_client) {
   if (kms_client == nullptr) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "kms_client must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "kms_client must be non-null.");
   }
   absl::MutexLock lock(&clients_mutex_);
   clients_.push_back(std::move(kms_client));
@@ -53,8 +51,8 @@ Status KmsClients::LocalAdd(std::unique_ptr<KmsClient> kms_client) {
 absl::StatusOr<const KmsClient*> KmsClients::LocalGet(
     absl::string_view key_uri) {
   if (key_uri.empty()) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "key_uri must be non-empty.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "key_uri must be non-empty.");
   }
   absl::MutexLock lock(&clients_mutex_);
   for (const auto& client : clients_) {

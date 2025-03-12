@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/config/global_registry.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac.h"
@@ -41,7 +42,6 @@ namespace {
 using ::crypto::tink::MacKeyTemplates;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;

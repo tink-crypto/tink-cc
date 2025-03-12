@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
@@ -36,8 +37,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using google::crypto::tink::KeyStatusType;
 using google::crypto::tink::KeyTemplate;
 
@@ -72,7 +71,7 @@ absl::StatusOr<uint32_t> KeysetManager::Add(const KeyTemplate& key_template) {
 absl::StatusOr<uint32_t> KeysetManager::Add(
     const google::crypto::tink::KeyTemplate& key_template, bool as_primary) {
   KeyGenConfiguration config;
-  Status status =
+  absl::Status status =
       internal::KeyGenConfigurationImpl::SetGlobalRegistryMode(config);
   if (!status.ok()) {
     return status;
@@ -87,7 +86,7 @@ absl::StatusOr<uint32_t> KeysetManager::Rotate(
   return Add(key_template, true);
 }
 
-Status KeysetManager::Enable(uint32_t key_id) {
+absl::Status KeysetManager::Enable(uint32_t key_id) {
   absl::MutexLock lock(&keyset_mutex_);
   for (auto& key : *(keyset_->mutable_key())) {
     if (key.key_id() == key_id) {
@@ -105,7 +104,7 @@ Status KeysetManager::Enable(uint32_t key_id) {
                    "No key with key_id %u found in the keyset.", key_id);
 }
 
-Status KeysetManager::Disable(uint32_t key_id) {
+absl::Status KeysetManager::Disable(uint32_t key_id) {
   absl::MutexLock lock(&keyset_mutex_);
   if (keyset_->primary_key_id() == key_id) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
@@ -127,7 +126,7 @@ Status KeysetManager::Disable(uint32_t key_id) {
                    "No key with key_id %u found in the keyset.", key_id);
 }
 
-Status KeysetManager::Delete(uint32_t key_id) {
+absl::Status KeysetManager::Delete(uint32_t key_id) {
   absl::MutexLock lock(&keyset_mutex_);
   if (keyset_->primary_key_id() == key_id) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
@@ -146,7 +145,7 @@ Status KeysetManager::Delete(uint32_t key_id) {
                    "No key with key_id %u found in the keyset.", key_id);
 }
 
-Status KeysetManager::Destroy(uint32_t key_id) {
+absl::Status KeysetManager::Destroy(uint32_t key_id) {
   absl::MutexLock lock(&keyset_mutex_);
   if (keyset_->primary_key_id() == key_id) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
@@ -170,7 +169,7 @@ Status KeysetManager::Destroy(uint32_t key_id) {
                    "No key with key_id %u found in the keyset.", key_id);
 }
 
-Status KeysetManager::SetPrimary(uint32_t key_id) {
+absl::Status KeysetManager::SetPrimary(uint32_t key_id) {
   absl::MutexLock lock(&keyset_mutex_);
   for (auto& key : keyset_->key()) {
     if (key.key_id() == key_id) {

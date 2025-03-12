@@ -96,6 +96,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     tink::core::keyset_handle
     tink::core::mac
     tink::core::registry
@@ -314,6 +315,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_ecdsa_sign_key_manager
     gmock
     absl::status
+    absl::statusor
     tink::core::public_key_sign
     tink::internal::ec_util
     tink::subtle::common_enums
@@ -414,6 +416,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_sign_key_manager
     gmock
     absl::flat_hash_set
+    absl::statusor
     crypto
     tink::core::public_key_sign
     tink::internal::bn_util
@@ -464,6 +467,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_verify_key_manager
     gmock
     absl::status
+    absl::statusor
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -520,6 +524,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_sign_key_manager
     gmock
     absl::flat_hash_set
+    absl::statusor
     crypto
     tink::core::public_key_sign
     tink::internal::bn_util
@@ -713,6 +718,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_internal
     protobuf::libprotobuf
     gmock
+    absl::statusor
     absl::strings
     absl::optional
     tink::jwt::jwt_validator
@@ -873,6 +879,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
     protobuf::libprotobuf
     gmock
+    absl::statusor
     absl::strings
     absl::optional
     crypto

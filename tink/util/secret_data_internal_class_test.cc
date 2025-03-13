@@ -38,8 +38,6 @@ absl::string_view SecretDataInternalClassAsStringView(
 
 using ::crypto::tink::internal::SecretBuffer;
 using ::testing::Eq;
-using ::testing::Ge;
-using ::testing::Le;
 using ::testing::Lt;
 
 constexpr absl::string_view kTestData = "123";
@@ -157,17 +155,6 @@ TEST(SecretDataInternalClassTest, Iteration) {
     ASSERT_THAT(i, Lt(kTestData.size()));
     EXPECT_THAT(*it, Eq(kTestData[i])) << i;
   }
-}
-
-TEST(SecretDataInternalClassTest, Reserve) {
-  SecretDataInternalClass data;
-  data.reserve(10);
-  EXPECT_TRUE(data.empty());
-  EXPECT_THAT(data.size(), Eq(0));
-  EXPECT_THAT(data.capacity(), Ge(10));
-  data.reserve(5);
-  EXPECT_THAT(data.capacity(), Ge(10));
-  EXPECT_THAT(data.capacity(), Le(data.max_size()));
 }
 
 TEST(SecretDataInternalClassTest, Swap) {

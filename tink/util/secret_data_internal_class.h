@@ -112,20 +112,7 @@ class SecretDataInternalClass {
   bool empty() const { return size_ == 0; }
   size_t size() const { return size_; }
   size_t max_size() const { return kMaxCount; }
-  void reserve(size_t new_cap) {
-    if (new_cap <= capacity_) {
-      return;
-    }
-    uint8_t* new_data =
-        internal::SanitizingAllocator<uint8_t>().allocate(new_cap);
-    CHECK(new_data != nullptr);
-    if (data_ != nullptr) {
-      ::crypto::tink::internal::SafeMemCopy(new_data, data_, size_);
-      internal::SanitizingAllocator<uint8_t>().deallocate(data_, capacity_);
-    }
-    data_ = new_data;
-    capacity_ = new_cap;
-  }
+
   size_t capacity() const { return capacity_; }
 
   void clear() { size_ = 0; }
@@ -173,6 +160,21 @@ class SecretDataInternalClass {
  private:
   friend SecretDataInternalClass SecretDataInternalClassFromStringView(
       absl::string_view secret);
+
+  void reserve(size_t new_cap) {
+    if (new_cap <= capacity_) {
+      return;
+    }
+    uint8_t* new_data =
+        internal::SanitizingAllocator<uint8_t>().allocate(new_cap);
+    CHECK(new_data != nullptr);
+    if (data_ != nullptr) {
+      ::crypto::tink::internal::SafeMemCopy(new_data, data_, size_);
+      internal::SanitizingAllocator<uint8_t>().deallocate(data_, capacity_);
+    }
+    data_ = new_data;
+    capacity_ = new_cap;
+  }
 
   uint8_t* data_ = nullptr;
   size_t size_ = 0;

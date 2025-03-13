@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 #include "gmock/gmock.h"
@@ -53,7 +54,7 @@ TEST(SecretUniqueptrTest, Alignment) {
 #endif
 
 TEST(SecretDataTest, SecretDataFromSpan) {
-  constexpr unsigned char kContents[] = {41, 42, 64, 12, 41, 0,
+  constexpr unsigned char kContents[] = {41, 42, 64, 12, 41,  0,
                                          52, 56, 6,  12, 127, 13};
   SecretData data = SecretDataFromSpan(kContents);
   EXPECT_THAT(data, ElementsAreArray(kContents));
@@ -83,7 +84,7 @@ TEST(SecretDataTest, StringViewFromSecretData) {
 }
 
 TEST(SecretDataTest, SecretDataCopy) {
-  constexpr unsigned char kContents[] = {41, 42, 64, 12, 41, 0,
+  constexpr unsigned char kContents[] = {41, 42, 64, 12, 41,  0,
                                          52, 56, 6,  12, 127, 13};
   SecretData data = SecretDataFromSpan(kContents);
   SecretData data_copy = data;
@@ -132,46 +133,66 @@ TEST(SecretDataTest, FromSecretBufferRvalue) {
   EXPECT_THAT(SecretDataAsStringView(data), Eq("abc"));
 }
 
-TEST(SecretValueTest, DefaultConstructor) {
-  SecretValue<int> s;
-  EXPECT_THAT(s.value(), Eq(0));
+struct MyNonTrivialInt {
+  explicit MyNonTrivialInt(int value = 0) : value(value) {}
+  MyNonTrivialInt(const MyNonTrivialInt& other) { value = other.value; }
+  MyNonTrivialInt& operator=(const MyNonTrivialInt& other) = default;
+  bool operator==(const MyNonTrivialInt& other) const {
+    return value == other.value;
+  }
+  bool operator!=(const MyNonTrivialInt& other) const {
+    return value != other.value;
+  }
+  int value;
+};
+
+static_assert(!std::is_trivially_copyable_v<MyNonTrivialInt>);
+
+template <typename T>
+class SecretValueTest : public testing::Test {};
+
+using TestTypes = ::testing::Types<int, MyNonTrivialInt>;
+TYPED_TEST_SUITE(SecretValueTest, TestTypes);
+
+TYPED_TEST(SecretValueTest, DefaultConstructor) {
+  SecretValue<TypeParam> s;
+  EXPECT_THAT(s.value(), Eq(TypeParam(0)));
 }
 
-TEST(SecretValueTest, Constructor) {
-  SecretValue<int> s(102);
-  EXPECT_THAT(s.value(), Eq(102));
+TYPED_TEST(SecretValueTest, Constructor) {
+  SecretValue<TypeParam> s(TypeParam(102));
+  EXPECT_THAT(s.value(), Eq(TypeParam(102)));
 }
 
-TEST(SecretValueTest, CopyConstructor) {
-  SecretValue<int> s(102);
-  SecretValue<int> t(s);
-  EXPECT_THAT(t.value(), Eq(102));
+TYPED_TEST(SecretValueTest, CopyConstructor) {
+  SecretValue<TypeParam> s(TypeParam(102));
+  SecretValue<TypeParam> t(s);
+  EXPECT_THAT(t.value(), Eq(TypeParam(102)));
 }
 
-TEST(SecretValueTest, AssignmentOperator) {
-  SecretValue<int> s(102);
-  SecretValue<int> t(101);
+TYPED_TEST(SecretValueTest, AssignmentOperator) {
+  SecretValue<TypeParam> s(TypeParam(102));
+  SecretValue<TypeParam> t(TypeParam(101));
   t = s;
-  EXPECT_THAT(t.value(), Eq(102));
+  EXPECT_THAT(t.value(), Eq(TypeParam(102)));
 }
 
-TEST(SecretValueTest, MoveConstructor) {
-  SecretValue<int> s(102);
-  SecretValue<int> t(std::move(s));
-  EXPECT_THAT(t.value(), Eq(102));
+TYPED_TEST(SecretValueTest, MoveConstructor) {
+  SecretValue<TypeParam> s(TypeParam(102));
+  SecretValue<TypeParam> t(std::move(s));
+  EXPECT_THAT(t.value(), Eq(TypeParam(102)));
   // NOLINTNEXTLINE(bugprone-use-after-move)
-  EXPECT_THAT(s.value(), AnyOf(Eq(0), Eq(102)));
+  EXPECT_THAT(s.value(), AnyOf(Eq(TypeParam(0)), Eq(TypeParam(102))));
 }
 
-TEST(SecretValueTest, MoveAssignment) {
-  SecretValue<int> s(102);
-  SecretValue<int> t;
+TYPED_TEST(SecretValueTest, MoveAssignment) {
+  SecretValue<TypeParam> s(TypeParam(102));
+  SecretValue<TypeParam> t;
   t = std::move(s);
-  EXPECT_THAT(t.value(), Eq(102));
+  EXPECT_THAT(t.value(), Eq(TypeParam(102)));
   // NOLINTNEXTLINE(bugprone-use-after-move)
-  EXPECT_THAT(s.value(), AnyOf(Eq(0), Eq(102)));
+  EXPECT_THAT(s.value(), AnyOf(Eq(TypeParam(0)), Eq(TypeParam(102))));
 }
-
 
 }  // namespace
 }  // namespace util

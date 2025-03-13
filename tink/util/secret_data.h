@@ -75,7 +75,6 @@ using SecretData = std::vector<uint8_t, internal::SanitizingAllocator<uint8_t>>;
 using SecretData = internal::SecretDataInternalClass;
 #endif
 
-
 // Constant-time comparison for SecretData
 // SecretDataEquals should be used instead of regular operator== in most cases.
 inline bool SecretDataEquals(const SecretData& lhs, const SecretData& rhs) {
@@ -230,14 +229,38 @@ class SecretValue {
   explicit SecretValue(T t = T())
       : ptr_(MakeSecretUniquePtr<T>(std::move(t))) {}
 
+  SecretValue(SecretValue&& other) : ptr_(MakeSecretUniquePtr<T>()) {
+    ptr_.swap(other.ptr_);
+  }
+
+  SecretValue& operator=(SecretValue&& other) {
+    ptr_.swap(other.ptr_);
+    return *this;
+  }
+
   SecretValue(const SecretValue& other) {
-    crypto::tink::internal::CallWithCoreDumpProtection(
-        [&]() { ptr_ = MakeSecretUniquePtr<T>(*other.ptr_); });
+    if constexpr (std::is_trivially_copyable_v<T>) {
+      if (this != &other) {
+        ptr_ = MakeSecretUniquePtr<T>();
+        crypto::tink::internal::SafeMemCopy(ptr_.get(), other.ptr_.get(),
+                                            sizeof(T));
+      }
+    } else {
+      crypto::tink::internal::CallWithCoreDumpProtection(
+          [&]() { ptr_ = MakeSecretUniquePtr<T>(*other.ptr_); });
+    }
   }
 
   SecretValue& operator=(const SecretValue& other) {
-    crypto::tink::internal::CallWithCoreDumpProtection(
-        [&]() { *ptr_ = *other.ptr_; });
+    if constexpr (std::is_trivially_copyable_v<T>) {
+      if (this != &other) {
+        crypto::tink::internal::SafeMemCopy(ptr_.get(), other.ptr_.get(),
+                                            sizeof(T));
+      }
+    } else {
+      crypto::tink::internal::CallWithCoreDumpProtection(
+          [&]() { *ptr_ = *other.ptr_; });
+    }
     return *this;
   }
 

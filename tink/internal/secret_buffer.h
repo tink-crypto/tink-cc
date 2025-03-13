@@ -21,7 +21,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 #include <limits>
 #include <utility>
 
@@ -49,12 +48,8 @@ namespace internal {
 class SecretBuffer {
  public:
   SecretBuffer() = default;
-  SecretBuffer(const SecretBuffer& other) {
-    *this = other;
-  }
-  SecretBuffer(SecretBuffer&& other) noexcept {
-    *this = std::move(other);
-  }
+  SecretBuffer(const SecretBuffer& other) { *this = other; }
+  SecretBuffer(SecretBuffer&& other) noexcept { *this = std::move(other); }
   SecretBuffer& operator=(const SecretBuffer& other) {
     if (this != &other) {
       reserve(other.size_);
@@ -112,6 +107,8 @@ class SecretBuffer {
 
   size_t size() const { return size_; }
   bool empty() const { return size() == 0; }
+  size_t capacity() const { return capacity_; }
+  void clear() { SecretBuffer().swap(*this); }
 
   void resize(size_t size, uint8_t val = 0) {
     if (size > size_) {

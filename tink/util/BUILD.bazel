@@ -625,10 +625,7 @@ cc_library(
     hdrs = ["secret_data_internal_class.h"],
     include_prefix = "tink/util",
     deps = [
-        "//tink/internal:safe_stringops",
-        "//tink/internal:sanitizing_allocator",
         "//tink/internal:secret_buffer",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
     ],

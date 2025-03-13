@@ -24,11 +24,8 @@
 #include <limits>
 #include <utility>
 
-#include "absl/log/check.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "tink/internal/safe_stringops.h"
-#include "tink/internal/sanitizing_allocator.h"
 #include "tink/internal/secret_buffer.h"
 
 namespace crypto {
@@ -66,7 +63,7 @@ class SecretDataInternalClass {
   }
   SecretDataInternalClass& operator=(const SecretDataInternalClass& other) {
     if (this != &other) {
-      *this = SecretDataInternalClass(other.AsStringView());
+      *this = SecretDataInternalClass(other.data_);
     }
     return *this;
   }
@@ -81,72 +78,42 @@ class SecretDataInternalClass {
   explicit SecretDataInternalClass(absl::Span<const uint8_t> span)
       : SecretDataInternalClass(crypto::tink::internal::SecretBuffer(span)) {}
 
-  explicit SecretDataInternalClass(
-      crypto::tink::internal::SecretBuffer other) noexcept {
-    using std::swap;
-    swap(data_, other.data_);
-    swap(size_, other.size_);
-    swap(capacity_, other.capacity_);
-  }
+  explicit SecretDataInternalClass(crypto::tink::internal::SecretBuffer other)
+      : data_(std::move(other)) {}
 
-  ~SecretDataInternalClass() {
-    if (data_ != nullptr) {
-      internal::SanitizingAllocator<uint8_t>().deallocate(data_, capacity_);
-    }
-  }
+  ~SecretDataInternalClass() = default;
 
-  const uint8_t& operator[](size_t pos) const {
-    CHECK(pos < size_) << "SecretData::operator[] pos out of bounds";
-    return data_[pos];
-  }
+  const uint8_t& operator[](size_t pos) const { return data_[pos]; }
 
-  const uint8_t* data() const { return data_; }
+  const uint8_t* data() const { return data_.data(); }
 
-  const_iterator begin() const { return data_; }
-  const_iterator end() const { return data_ + size_; }
+  const_iterator begin() const { return data_.data(); }
+  const_iterator end() const { return data_.data() + data_.size(); }
 
-  absl::string_view AsStringView() const {
-    return absl::string_view(reinterpret_cast<const char*>(data()), size());
-  }
+  absl::string_view AsStringView() const { return data_.AsStringView(); }
 
-  bool empty() const { return size_ == 0; }
-  size_t size() const { return size_; }
+  bool empty() const { return data_.empty(); }
+  size_t size() const { return data_.size(); }
   size_t max_size() const { return kMaxCount; }
 
-  size_t capacity() const { return capacity_; }
+  void resize(size_t size, uint8_t val = 0) { data_.resize(size, val); }
+  size_t capacity() const { return data_.capacity(); }
+  void clear() { data_.clear(); }
 
-  void clear() { size_ = 0; }
-  void resize(size_t size, uint8_t val = 0) {
-    if (size > size_) {
-      reserve(size);
-      memset(data_ + size_, val, size - size_);
-    }
-    size_ = size;
-  }
   void swap(SecretDataInternalClass& other) noexcept {
     using std::swap;
     swap(data_, other.data_);
-    swap(size_, other.size_);
-    swap(capacity_, other.capacity_);
   }
 
-  ::crypto::tink::internal::SecretBuffer AsSecretBuffer() const& {
-    return ::crypto::tink::internal::SecretBuffer(AsStringView());
-  }
+  crypto::tink::internal::SecretBuffer AsSecretBuffer() const& { return data_; }
 
-  ::crypto::tink::internal::SecretBuffer AsSecretBuffer() && {
-    ::crypto::tink::internal::SecretBuffer result;
-    using std::swap;
-    swap(result.data_, data_);
-    swap(result.size_, size_);
-    swap(result.capacity_, capacity_);
-    return result;
+  crypto::tink::internal::SecretBuffer AsSecretBuffer() && {
+    crypto::tink::internal::SecretBuffer res = std::move(data_);
+    return res;
   }
 
   bool operator==(const SecretDataInternalClass& other) const {
-    return size_ == other.size_ &&
-           ::crypto::tink::internal::SafeCryptoMemEquals(data_, other.data_,
-                                                         size_);
+    return data_ == other.data_;
   }
   bool operator!=(const SecretDataInternalClass& other) const {
     return !(*this == other);
@@ -161,24 +128,7 @@ class SecretDataInternalClass {
   friend SecretDataInternalClass SecretDataInternalClassFromStringView(
       absl::string_view secret);
 
-  void reserve(size_t new_cap) {
-    if (new_cap <= capacity_) {
-      return;
-    }
-    uint8_t* new_data =
-        internal::SanitizingAllocator<uint8_t>().allocate(new_cap);
-    CHECK(new_data != nullptr);
-    if (data_ != nullptr) {
-      ::crypto::tink::internal::SafeMemCopy(new_data, data_, size_);
-      internal::SanitizingAllocator<uint8_t>().deallocate(data_, capacity_);
-    }
-    data_ = new_data;
-    capacity_ = new_cap;
-  }
-
-  uint8_t* data_ = nullptr;
-  size_t size_ = 0;
-  size_t capacity_ = 0;
+  crypto::tink::internal::SecretBuffer data_;
 };
 
 inline SecretDataInternalClass SecretDataInternalClassFromStringView(

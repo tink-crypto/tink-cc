@@ -581,10 +581,7 @@ tink_cc_library(
   SRCS
     secret_data_internal_class.h
   DEPS
-    absl::check
     absl::string_view
     absl::span
-    tink::internal::safe_stringops
-    tink::internal::sanitizing_allocator
     tink::internal::secret_buffer
 )

@@ -176,34 +176,31 @@ TEST(SecretDataInternalClassDeathTest, IterationOutOfBounds) {
   SecretDataInternalClass secret_data =
       SecretDataInternalClassFromStringView("Hello world!");
   EXPECT_DEATH(secret_data[secret_data.size()],
-               testing::HasSubstr("SecretData::operator[] pos out of bounds"));
+               testing::HasSubstr("operator[] pos out of bounds"));
   EXPECT_DEATH(secret_data[secret_data.size() + 1],
-               testing::HasSubstr("SecretData::operator[] pos out of bounds"));
+               testing::HasSubstr("operator[] pos out of bounds"));
   EXPECT_DEATH(secret_data[-1],
-               testing::HasSubstr("SecretData::operator[] pos out of bounds"));
+               testing::HasSubstr("operator[] pos out of bounds"));
   // R-value overload.
   {
     SecretDataInternalClass secret_data =
         SecretDataInternalClassFromStringView("Hello world!");
     size_t secret_data_size = secret_data.size();
-    EXPECT_DEATH(
-        std::move(secret_data)[secret_data_size],
-        testing::HasSubstr("SecretData::operator[] pos out of bounds"));
+    EXPECT_DEATH(std::move(secret_data)[secret_data_size],
+                 testing::HasSubstr("operator[] pos out of bounds"));
   }
   {
     SecretDataInternalClass secret_data =
         SecretDataInternalClassFromStringView("Hello world!");
     size_t secret_data_size = secret_data.size();
-    EXPECT_DEATH(
-        std::move(secret_data)[secret_data_size + 1],
-        testing::HasSubstr("SecretData::operator[] pos out of bounds"));
+    EXPECT_DEATH(std::move(secret_data)[secret_data_size + 1],
+                 testing::HasSubstr("operator[] pos out of bounds"));
   }
   {
     SecretDataInternalClass secret_data =
         SecretDataInternalClassFromStringView("Hello world!");
-    EXPECT_DEATH(
-        std::move(secret_data)[-1],
-        testing::HasSubstr("SecretData::operator[] pos out of bounds"));
+    EXPECT_DEATH(std::move(secret_data)[-1],
+                 testing::HasSubstr("operator[] pos out of bounds"));
   }
 }
 

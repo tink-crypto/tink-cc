@@ -15,6 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "tink/internal/secret_buffer.h"
+
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -47,6 +48,27 @@ TEST(SecretBufferTest, Empty) {
   EXPECT_THAT(buffer.empty(), Eq(true));
   buffer.resize(10);
   EXPECT_THAT(buffer.empty(), Eq(false));
+}
+
+TEST(SecretBufferTest, Clear) {
+  SecretBuffer buffer("some data");
+  EXPECT_THAT(buffer.empty(), IsFalse());
+  buffer.clear();
+  EXPECT_THAT(buffer.empty(), IsTrue());
+  EXPECT_THAT(buffer.capacity(), Eq(0));
+  EXPECT_THAT(buffer.size(), Eq(0));
+}
+
+TEST(SecretBufferTest, Capacity) {
+  absl::string_view data = "some data";
+  SecretBuffer buffer(data);
+  EXPECT_THAT(buffer.capacity(), Eq(data.size()));
+  buffer.resize(100);
+  EXPECT_THAT(buffer.capacity(), Eq(100));
+
+  SecretBuffer buffer2;
+  buffer2.reserve(100);
+  EXPECT_THAT(buffer2.capacity(), Eq(100));
 }
 
 TEST(SecretBufferTest, ConstructorWithSizeAndVal) {

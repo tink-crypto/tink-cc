@@ -21,7 +21,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <iterator>
 #include <limits>
 #include <utility>
 
@@ -67,7 +66,7 @@ class SecretDataInternalClass {
   }
   SecretDataInternalClass& operator=(const SecretDataInternalClass& other) {
     if (this != &other) {
-      CopyIntoStorage(other.data_, other.size_);
+      *this = SecretDataInternalClass(other.AsStringView());
     }
     return *this;
   }
@@ -175,18 +174,6 @@ class SecretDataInternalClass {
   friend SecretDataInternalClass SecretDataInternalClassFromStringView(
       absl::string_view secret);
 
-  SecretDataInternalClass(absl::string_view::const_iterator first,
-                          absl::string_view::const_iterator last) {
-    CopyIntoStorage(reinterpret_cast<const uint8_t*>(&*first),
-                    std::distance(first, last));
-  }
-
-  void CopyIntoStorage(const uint8_t* data, size_t size) {
-    reserve(size);
-    ::crypto::tink::internal::SafeMemCopy(data_, data, size);
-    size_ = size;
-  }
-
   uint8_t* data_ = nullptr;
   size_t size_ = 0;
   size_t capacity_ = 0;
@@ -194,7 +181,7 @@ class SecretDataInternalClass {
 
 inline SecretDataInternalClass SecretDataInternalClassFromStringView(
     absl::string_view secret) {
-  return {secret.begin(), secret.end()};
+  return SecretDataInternalClass(secret);
 }
 
 }  // namespace internal

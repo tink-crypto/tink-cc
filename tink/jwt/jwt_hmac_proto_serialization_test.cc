@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
@@ -37,23 +38,21 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_hmac.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::subtle::Random;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtHmacAlgorithm;
 using ::google::crypto::tink::JwtHmacKeyFormat;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsFalse;
@@ -67,7 +66,7 @@ const absl::string_view kTypeUrl =
 
 struct TestCase {
   JwtHmacParameters::KidStrategy strategy;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   JwtHmacParameters::Algorithm algorithm;
   JwtHmacAlgorithm proto_algorithm;
   int key_size;
@@ -90,23 +89,23 @@ TEST_F(JwtHmacProtoSerializationTest, RegisterTwiceSucceeds) {
 
 INSTANTIATE_TEST_SUITE_P(
     JwtHmacProtoSerializationTestSuite, JwtHmacProtoSerializationTest,
-    Values(TestCase{JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
-                    OutputPrefixType::TINK,
-                    JwtHmacParameters::Algorithm::kHs256,
-                    JwtHmacAlgorithm::HS256,
-                    /*key_size=*/16, /*expected_kid=*/"AgMEAA",
-                    /*id=*/0x02030400,
-                    /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{JwtHmacParameters::KidStrategy::kIgnored,
-                    OutputPrefixType::RAW, JwtHmacParameters::Algorithm::kHs384,
-                    JwtHmacAlgorithm::HS384,
-                    /*key_size=*/32, /*expected_kid=*/absl::nullopt,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""},
-           TestCase{JwtHmacParameters::KidStrategy::kIgnored,
-                    OutputPrefixType::RAW, JwtHmacParameters::Algorithm::kHs512,
-                    JwtHmacAlgorithm::HS512,
-                    /*key_size=*/32, /*expected_kid=*/absl::nullopt,
-                    /*id=*/absl::nullopt, /*output_prefix=*/""}));
+    Values(
+        TestCase{JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+                 OutputPrefixTypeEnum::kTink,
+                 JwtHmacParameters::Algorithm::kHs256, JwtHmacAlgorithm::HS256,
+                 /*key_size=*/16, /*expected_kid=*/"AgMEAA",
+                 /*id=*/0x02030400,
+                 /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
+        TestCase{JwtHmacParameters::KidStrategy::kIgnored,
+                 OutputPrefixTypeEnum::kRaw,
+                 JwtHmacParameters::Algorithm::kHs384, JwtHmacAlgorithm::HS384,
+                 /*key_size=*/32, /*expected_kid=*/absl::nullopt,
+                 /*id=*/absl::nullopt, /*output_prefix=*/""},
+        TestCase{JwtHmacParameters::KidStrategy::kIgnored,
+                 OutputPrefixTypeEnum::kRaw,
+                 JwtHmacParameters::Algorithm::kHs512, JwtHmacAlgorithm::HS512,
+                 /*key_size=*/32, /*expected_kid=*/absl::nullopt,
+                 /*id=*/absl::nullopt, /*output_prefix=*/""}));
 
 TEST_P(JwtHmacProtoSerializationTest, ParseParameters) {
   TestCase test_case = GetParam();
@@ -139,7 +138,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseParametersWithInvalidSerialization) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+          kTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -158,7 +157,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseParametersWithInvalidVersion) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
+          kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -179,7 +178,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseParametersWithUnknownAlgorithm) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
+          kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -190,15 +189,15 @@ TEST_F(JwtHmacProtoSerializationTest, ParseParametersWithUnknownAlgorithm) {
                        HasSubstr("Could not determine JwtHmacAlgorithm")));
 }
 
-using JwtHmacParsePrefixTest = TestWithParam<OutputPrefixType>;
+using JwtHmacParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
 
 INSTANTIATE_TEST_SUITE_P(JwtHmacParsePrefixTestSuite, JwtHmacParsePrefixTest,
-                         Values(OutputPrefixType::CRUNCHY,
-                                OutputPrefixType::LEGACY,
-                                OutputPrefixType::UNKNOWN_PREFIX));
+                         Values(OutputPrefixTypeEnum::kCrunchy,
+                                OutputPrefixTypeEnum::kLegacy,
+                                OutputPrefixTypeEnum::kUnknownPrefix));
 
 TEST_P(JwtHmacParsePrefixTest, ParseParametersWithInvalidPrefix) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtHmacProtoSerialization(), IsOk());
 
@@ -244,8 +243,7 @@ TEST_P(JwtHmacProtoSerializationTest, SerializeParameters) {
       proto_serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
   JwtHmacKeyFormat format;
   ASSERT_THAT(format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(format.version(), Eq(0));
@@ -287,7 +285,7 @@ TEST_P(JwtHmacProtoSerializationTest, ParseKeyWithoutCustomKid) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC,
+          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
           test_case.output_prefix_type, test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
@@ -331,9 +329,10 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithCustomKid) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
-          /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kRaw,
+                                              /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -373,9 +372,10 @@ TEST_F(JwtHmacProtoSerializationTest, ParseTinkKeyWithCustomKidFails) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::TINK,
-          /*id_requirement=*/123);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kTink,
+                                              /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -398,9 +398,10 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithInvalidSerialization) {
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
-          /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kRaw,
+                                              /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -421,9 +422,10 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithInvalidVersion) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
-          /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kRaw,
+                                              /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -437,7 +439,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithInvalidVersion) {
 }
 
 TEST_P(JwtHmacParsePrefixTest, ParseKeyWithInvalidPrefix) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtHmacProtoSerialization(), IsOk());
 
@@ -451,7 +453,7 @@ TEST_P(JwtHmacParsePrefixTest, ParseKeyWithInvalidPrefix) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyData::SYMMETRIC,
+                                              KeyMaterialTypeEnum::kSymmetric,
                                               invalid_output_prefix_type,
                                               /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
@@ -477,9 +479,10 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithUnknownAlgorithm) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
-          /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kRaw,
+                                              /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -502,9 +505,10 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithoutSecretKeyAccess) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC, OutputPrefixType::RAW,
-          /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
+                                              KeyMaterialTypeEnum::kSymmetric,
+                                              OutputPrefixTypeEnum::kRaw,
+                                              /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -546,8 +550,9 @@ TEST_P(JwtHmacProtoSerializationTest, SerializeKeyWithoutCustomKid) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -592,9 +597,10 @@ TEST_F(JwtHmacProtoSerializationTest, SerializeKeyWithCustomKid) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
-              Eq(OutputPrefixType::RAW));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(OutputPrefixTypeEnum::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::JwtHmacKey proto_key;

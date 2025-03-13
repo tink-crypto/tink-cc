@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -44,22 +45,20 @@
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_ecdsa.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtEcdsaAlgorithm;
 using ::google::crypto::tink::JwtEcdsaKeyFormat;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsFalse;
@@ -75,7 +74,7 @@ const absl::string_view kPrivateTypeUrl =
 
 struct TestCase {
   JwtEcdsaParameters::KidStrategy strategy;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   JwtEcdsaParameters::Algorithm algorithm;
   JwtEcdsaAlgorithm proto_algorithm;
   subtle::EllipticCurveType curve;
@@ -100,17 +99,20 @@ INSTANTIATE_TEST_SUITE_P(
     JwtEcdsaProtoSerializationTestSuite, JwtEcdsaProtoSerializationTest,
     Values(
         TestCase{JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-                 OutputPrefixType::TINK, JwtEcdsaParameters::Algorithm::kEs256,
+                 OutputPrefixTypeEnum::kTink,
+                 JwtEcdsaParameters::Algorithm::kEs256,
                  JwtEcdsaAlgorithm::ES256, subtle::EllipticCurveType::NIST_P256,
                  /*expected_kid=*/"AgMEAA", /*id=*/0x02030400,
                  /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
         TestCase{JwtEcdsaParameters::KidStrategy::kIgnored,
-                 OutputPrefixType::RAW, JwtEcdsaParameters::Algorithm::kEs384,
+                 OutputPrefixTypeEnum::kRaw,
+                 JwtEcdsaParameters::Algorithm::kEs384,
                  JwtEcdsaAlgorithm::ES384, subtle::EllipticCurveType::NIST_P384,
                  /*expected_kid=*/absl::nullopt, /*id=*/absl::nullopt,
                  /*output_prefix=*/""},
         TestCase{JwtEcdsaParameters::KidStrategy::kIgnored,
-                 OutputPrefixType::RAW, JwtEcdsaParameters::Algorithm::kEs512,
+                 OutputPrefixTypeEnum::kRaw,
+                 JwtEcdsaParameters::Algorithm::kEs512,
                  JwtEcdsaAlgorithm::ES512, subtle::EllipticCurveType::NIST_P521,
                  /*expected_kid=*/absl::nullopt, /*id=*/absl::nullopt,
                  /*output_prefix=*/""}));
@@ -147,7 +149,7 @@ TEST_F(JwtEcdsaProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -165,7 +167,8 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParseParametersWithInvalidVersion) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+          format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -185,7 +188,8 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParseParametersWithUnknownAlgorithm) {
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW, format.SerializeAsString());
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
+          format.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
@@ -196,15 +200,15 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParseParametersWithUnknownAlgorithm) {
                        HasSubstr("Could not determine JwtEcdsaAlgorithm")));
 }
 
-using JwtEcdsaParsePrefixTest = TestWithParam<OutputPrefixType>;
+using JwtEcdsaParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
 
 INSTANTIATE_TEST_SUITE_P(JwtEcdsaParsePrefixTestSuite, JwtEcdsaParsePrefixTest,
-                         Values(OutputPrefixType::CRUNCHY,
-                                OutputPrefixType::LEGACY,
-                                OutputPrefixType::UNKNOWN_PREFIX));
+                         Values(OutputPrefixTypeEnum::kCrunchy,
+                                OutputPrefixTypeEnum::kLegacy,
+                                OutputPrefixTypeEnum::kUnknownPrefix));
 
 TEST_P(JwtEcdsaParsePrefixTest, ParseParametersWithInvalidPrefix) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
@@ -250,8 +254,7 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializeParameters) {
       proto_serialization->GetKeyTemplateStruct();
   EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type,
-              Eq(static_cast<internal::OutputPrefixTypeEnum>(
-                  test_case.output_prefix_type)));
+              Eq(test_case.output_prefix_type));
   JwtEcdsaKeyFormat format;
   ASSERT_THAT(format.ParseFromString(key_template.value), IsTrue());
   EXPECT_THAT(format.version(), Eq(0));
@@ -293,8 +296,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithoutCustomKid) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          test_case.output_prefix_type, test_case.id);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -340,10 +344,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithCustomKid) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -388,8 +392,9 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParseTinkPublicKeyWithCustomKidFails) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          OutputPrefixType::TINK, /*id_requirement=*/123);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -408,8 +413,9 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithInvalidSerialization) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          OutputPrefixType::RAW, /*id_requirement=*/absl::nullopt);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -434,10 +440,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -452,7 +458,7 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithInvalidVersion) {
 }
 
 TEST_P(JwtEcdsaParsePrefixTest, ParsePublicKeyWithInvalidPrefix) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
@@ -469,10 +475,10 @@ TEST_P(JwtEcdsaParsePrefixTest, ParsePublicKeyWithInvalidPrefix) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              invalid_output_prefix_type,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, invalid_output_prefix_type,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -500,10 +506,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithUnknownAlgorithm) {
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -547,9 +553,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithoutCustomKid) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PUBLIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -599,10 +605,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithCustomKid) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PUBLIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
-              Eq(OutputPrefixType::RAW));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(OutputPrefixTypeEnum::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::JwtEcdsaPublicKey proto_key;
@@ -642,8 +648,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutCustomKid) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          test_case.output_prefix_type, test_case.id);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -702,10 +709,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithCustomKid) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -749,8 +756,9 @@ TEST_F(JwtEcdsaProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          OutputPrefixType::RAW, /*id_requirement=*/absl::nullopt);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -780,10 +788,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -809,10 +817,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutPublicKey) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -822,7 +830,7 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutPublicKey) {
 }
 
 TEST_P(JwtEcdsaParsePrefixTest, ParsePrivateKeyWithInvalidPrefix) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
@@ -844,10 +852,10 @@ TEST_P(JwtEcdsaParsePrefixTest, ParsePrivateKeyWithInvalidPrefix) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              invalid_output_prefix_type,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, invalid_output_prefix_type,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -880,10 +888,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithUnknownAlgorithm) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -915,10 +923,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutSecretKeyAccess) {
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -969,9 +977,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithoutCustomKid) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PRIVATE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -1033,10 +1041,10 @@ TEST_F(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithCustomKid) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PRIVATE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
-              Eq(OutputPrefixType::RAW));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(OutputPrefixTypeEnum::kRaw));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
 
   google::crypto::tink::JwtEcdsaPrivateKey proto_key;

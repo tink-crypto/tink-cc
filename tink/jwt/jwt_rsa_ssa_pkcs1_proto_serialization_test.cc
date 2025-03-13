@@ -46,22 +46,20 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
 using ::google::crypto::tink::JwtRsaSsaPkcs1KeyFormat;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsTrue;
@@ -73,7 +71,7 @@ struct TestCase {
   JwtRsaSsaPkcs1Parameters::KidStrategy strategy;
   // Helper member for parsing/serializing parameters with custom kid strategy.
   JwtRsaSsaPkcs1Parameters::KidStrategy expected_parameters_strategy;
-  OutputPrefixType output_prefix_type;
+  OutputPrefixTypeEnum output_prefix_type;
   JwtRsaSsaPkcs1Parameters::Algorithm algorithm;
   JwtRsaSsaPkcs1Algorithm proto_algorithm;
   int modulus_size_in_bits;
@@ -108,7 +106,7 @@ INSTANTIATE_TEST_SUITE_P(
                         kBase64EncodedKeyId,
                     /*expected_parameters_strategy=*/
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kBase64EncodedKeyId,
-                    OutputPrefixType::TINK,
+                    OutputPrefixTypeEnum::kTink,
                     JwtRsaSsaPkcs1Parameters::Algorithm::kRs256,
                     JwtRsaSsaPkcs1Algorithm::RS256,
                     /*modulus_size_in_bits=*/2048,
@@ -117,7 +115,7 @@ INSTANTIATE_TEST_SUITE_P(
                /*strategy=*/JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
                /*expected_parameters_strategy=*/
                JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-               OutputPrefixType::RAW,
+               OutputPrefixTypeEnum::kRaw,
                JwtRsaSsaPkcs1Parameters::Algorithm::kRs384,
                JwtRsaSsaPkcs1Algorithm::RS384,
                /*modulus_size_in_bits=*/2048,
@@ -126,7 +124,7 @@ INSTANTIATE_TEST_SUITE_P(
            TestCase{/*strategy=*/JwtRsaSsaPkcs1Parameters::KidStrategy::kCustom,
                     /*expected_parameters_strategy=*/
                     JwtRsaSsaPkcs1Parameters::KidStrategy::kIgnored,
-                    OutputPrefixType::RAW,
+                    OutputPrefixTypeEnum::kRaw,
                     JwtRsaSsaPkcs1Parameters::Algorithm::kRs512,
                     JwtRsaSsaPkcs1Algorithm::RS512,
                     /*modulus_size_in_bits=*/2048,
@@ -173,7 +171,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW, "invalid_serialization");
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw, "invalid_serialization");
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Parameters>> parameters =
@@ -196,7 +194,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -207,16 +205,17 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
                        HasSubstr("only version 0 is accepted")));
 }
 
-using JwtRsaSsaPkcs1ParseInvalidPrefixTest = TestWithParam<OutputPrefixType>;
+using JwtRsaSsaPkcs1ParseInvalidPrefixTest =
+    TestWithParam<OutputPrefixTypeEnum>;
 
 INSTANTIATE_TEST_SUITE_P(JwtRsaSsaPkcs1ParseInvalidPrefixTestSuite,
                          JwtRsaSsaPkcs1ParseInvalidPrefixTest,
-                         Values(OutputPrefixType::CRUNCHY,
-                                OutputPrefixType::LEGACY,
-                                OutputPrefixType::UNKNOWN_PREFIX));
+                         Values(OutputPrefixTypeEnum::kCrunchy,
+                                OutputPrefixTypeEnum::kLegacy,
+                                OutputPrefixTypeEnum::kUnknownPrefix));
 
 TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest, ParseParametersWithInvalidPrefix) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtRsaSsaPkcs1ProtoSerialization(), IsOk());
 
@@ -254,7 +253,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kPrivateTypeUrl, OutputPrefixType::RAW,
+          kPrivateTypeUrl, OutputPrefixTypeEnum::kRaw,
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -412,8 +411,9 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest, ParsePublicKeySucceeds) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          test_case.output_prefix_type, test_case.id);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -458,10 +458,10 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -484,10 +484,10 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -513,8 +513,9 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key, KeyData::ASYMMETRIC_PUBLIC,
-          OutputPrefixType::TINK, /*id_requirement=*/123);
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -527,7 +528,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
 TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
        ParsePublicKeyWithInvalidPrefixFails) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtRsaSsaPkcs1ProtoSerialization(), IsOk());
 
@@ -540,10 +541,10 @@ TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              invalid_output_prefix_type,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, invalid_output_prefix_type,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -569,10 +570,10 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest,
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPublicTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PUBLIC,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPublicTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -626,9 +627,9 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest, SerializePublicKeySucceeds) {
 
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PUBLIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 
@@ -677,8 +678,9 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest, ParsePrivateKeySucceeds) {
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key, KeyData::ASYMMETRIC_PRIVATE,
-          test_case.output_prefix_type, test_case.id);
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, test_case.output_prefix_type,
+          test_case.id);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -742,10 +744,10 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       RestrictedData("invalid_serialization", InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::TINK,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -780,10 +782,10 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -820,10 +822,10 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -853,10 +855,10 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -867,7 +869,7 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
 
 TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
        ParsePrivateKeyWithInvalidPrefixFails) {
-  OutputPrefixType invalid_output_prefix_type = GetParam();
+  OutputPrefixTypeEnum invalid_output_prefix_type = GetParam();
   internal::MutableSerializationRegistry::GlobalInstance().Reset();
   ASSERT_THAT(RegisterJwtRsaSsaPkcs1ProtoSerialization(), IsOk());
 
@@ -892,10 +894,10 @@ TEST_P(JwtRsaSsaPkcs1ParseInvalidPrefixTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              invalid_output_prefix_type,
-                                              /*id_requirement=*/0x23456789);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, invalid_output_prefix_type,
+          /*id_requirement=*/0x23456789);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -934,10 +936,10 @@ TEST_F(JwtRsaSsaPkcs1ProtoSerializationTest,
       private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kPrivateTypeUrl, serialized_key,
-                                              KeyData::ASYMMETRIC_PRIVATE,
-                                              OutputPrefixType::RAW,
-                                              /*id_requirement=*/absl::nullopt);
+      internal::ProtoKeySerialization::Create(
+          kPrivateTypeUrl, serialized_key,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
+          /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -1006,9 +1008,9 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest, SerializePrivateKeySucceeds) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(),
-              Eq(KeyData::ASYMMETRIC_PRIVATE));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
               Eq(test_case.output_prefix_type));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(test_case.id));
 

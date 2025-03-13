@@ -869,6 +869,7 @@ tink_cc_test(
     tink::jwt::jwt_hmac_proto_serialization
     gmock
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
@@ -882,11 +883,9 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::jwt_hmac_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -959,6 +958,7 @@ tink_cc_test(
     tink::jwt::jwt_ecdsa_public_key
     gmock
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -978,11 +978,9 @@ tink_cc_test(
     tink::internal::tink_proto_structs
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(
@@ -1180,11 +1178,9 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
     tink::internal::tink_proto_structs
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

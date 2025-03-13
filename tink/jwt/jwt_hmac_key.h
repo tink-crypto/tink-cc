@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
@@ -28,7 +29,6 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

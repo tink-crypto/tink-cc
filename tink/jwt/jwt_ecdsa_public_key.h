@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/ec_point.h"
@@ -29,7 +30,6 @@
 #include "tink/jwt/jwt_signature_public_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

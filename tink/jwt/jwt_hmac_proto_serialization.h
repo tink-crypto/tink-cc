@@ -17,7 +17,7 @@
 #ifndef TINK_JWT_JWT_HMAC_PROTO_SERIALIZATION_H_
 #define TINK_JWT_JWT_HMAC_PROTO_SERIALIZATION_H_
 
-#include "tink/util/status.h"
+#include "absl/status/status.h"
 
 namespace crypto {
 namespace tink {

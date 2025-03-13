@@ -21,14 +21,14 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/jwt/internal/jwt_mac_internal.h"
 #include "tink/jwt/internal/raw_jwt_hmac_key_manager.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/jwt_hmac.pb.h"
 
 namespace crypto {

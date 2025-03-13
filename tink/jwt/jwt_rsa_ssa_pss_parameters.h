@@ -18,13 +18,12 @@
 #define TINK_JWT_JWT_RSA_SSA_PSS_PARAMETERS_H_
 
 #include <memory>
-#include <string>
 
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/jwt/jwt_signature_parameters.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

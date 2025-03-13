@@ -21,13 +21,13 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/public_key_verify.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

@@ -17,8 +17,8 @@
 #ifndef TINK_JWT_INTERNAL_JWT_SIGNATURE_KEY_GEN_CONFIG_V0_H_
 #define TINK_JWT_INTERNAL_JWT_SIGNATURE_KEY_GEN_CONFIG_V0_H_
 
+#include "absl/status/status.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {

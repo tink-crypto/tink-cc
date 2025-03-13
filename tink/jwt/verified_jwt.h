@@ -20,13 +20,10 @@
 #include <string>
 #include <vector>
 
-#include "google/protobuf/struct.pb.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/time/clock.h"
 #include "absl/time/time.h"
 #include "tink/jwt/raw_jwt.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

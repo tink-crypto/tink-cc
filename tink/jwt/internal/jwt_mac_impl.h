@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/internal/jwt_mac_internal.h"
@@ -28,7 +29,6 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/mac.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

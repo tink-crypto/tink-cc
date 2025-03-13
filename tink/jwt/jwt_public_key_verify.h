@@ -17,9 +17,8 @@
 #ifndef TINK_JWT_JWT_PUBLIC_KEY_VERIFY_H_
 #define TINK_JWT_JWT_PUBLIC_KEY_VERIFY_H_
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/jwt/jwt_validator.h"
 

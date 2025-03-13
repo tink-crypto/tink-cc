@@ -8,6 +8,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
@@ -35,6 +36,7 @@ tink_cc_library(
   DEPS
     protobuf::libprotobuf
     absl::status
+    absl::statusor
     absl::strings
     tink::util::status
     tink::util::statusor
@@ -62,6 +64,7 @@ tink_cc_library(
     protobuf::libprotobuf
     absl::endian
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::jwt::raw_jwt
@@ -121,6 +124,7 @@ tink_cc_library(
     protobuf::libprotobuf
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::optional
@@ -173,6 +177,7 @@ tink_cc_library(
     tink::jwt::internal::raw_jwt_hmac_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key_type_manager
@@ -227,6 +232,7 @@ tink_cc_library(
     tink::jwt::internal::jwt_mac_internal
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::primitive_set
@@ -288,6 +294,8 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::raw_jwt_ecdsa_verify_key_manager
     absl::memory
+    absl::status
+    absl::statusor
     absl::strings
     tink::core::private_key_type_manager
     tink::core::template_util
@@ -336,6 +344,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
@@ -385,6 +394,7 @@ tink_cc_library(
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::private_key_type_manager
@@ -438,6 +448,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::key_type_manager
@@ -493,6 +504,7 @@ tink_cc_library(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::private_key_type_manager
@@ -546,6 +558,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::key_type_manager
@@ -601,6 +614,7 @@ tink_cc_library(
     tink::jwt::internal::jwt_public_key_sign_internal
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::optional
@@ -622,6 +636,7 @@ tink_cc_library(
     protobuf::libprotobuf
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::optional
@@ -644,7 +659,6 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_impl
     protobuf::libprotobuf
     gmock
-    absl::memory
     absl::strings
     absl::time
     absl::optional
@@ -670,6 +684,8 @@ tink_cc_library(
     tink::jwt::internal::jwt_public_key_sign_internal
     tink::jwt::internal::raw_jwt_ecdsa_sign_key_manager
     absl::memory
+    absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::private_key_type_manager
@@ -693,6 +709,7 @@ tink_cc_library(
     tink::jwt::internal::raw_jwt_ecdsa_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::key_type_manager
@@ -741,6 +758,7 @@ tink_cc_library(
     tink::jwt::internal::jwt_public_key_sign_internal
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::primitive_set
     tink::core::primitive_wrapper
@@ -764,6 +782,7 @@ tink_cc_library(
     tink::jwt::internal::jwt_public_key_verify_internal
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::primitive_set
@@ -831,6 +850,8 @@ tink_cc_library(
     tink::jwt::internal::jwt_rsa_ssa_pkcs1_verify_key_manager
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_sign_key_manager
     absl::memory
+    absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::private_key_type_manager
@@ -854,6 +875,7 @@ tink_cc_library(
     tink::jwt::internal::raw_jwt_rsa_ssa_pkcs1_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::key_type_manager
@@ -906,6 +928,8 @@ tink_cc_library(
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_sign_key_manager
     absl::memory
+    absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::private_key_type_manager
@@ -929,6 +953,7 @@ tink_cc_library(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::key_type_manager
@@ -974,10 +999,10 @@ tink_cc_library(
   SRCS
     jwt_public_key_sign_internal.h
   DEPS
+    absl::statusor
     absl::strings
     absl::optional
     tink::jwt::raw_jwt
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -985,12 +1010,12 @@ tink_cc_library(
   SRCS
     jwt_mac_internal.h
   DEPS
+    absl::statusor
     absl::strings
     absl::optional
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -998,11 +1023,11 @@ tink_cc_library(
   SRCS
     jwt_public_key_verify_internal.h
   DEPS
+    absl::statusor
     absl::strings
     absl::optional
     tink::jwt::jwt_validator
     tink::jwt::verified_jwt
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -1039,6 +1064,7 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::jwt_hmac_key_manager
     absl::memory
+    absl::status
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
     tink::util::status
@@ -1208,6 +1234,7 @@ tink_cc_library(
     tink::jwt::internal::jwt_rsa_ssa_pss_sign_key_manager
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
+    absl::status
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
     tink::util::status

@@ -10,6 +10,7 @@ tink_cc_library(
   DEPS
     protobuf::libprotobuf
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::time
@@ -27,6 +28,7 @@ tink_cc_library(
   DEPS
     tink::jwt::raw_jwt
     absl::status
+    absl::statusor
     absl::strings
     absl::time
     absl::optional
@@ -41,12 +43,11 @@ tink_cc_library(
     verified_jwt.h
   DEPS
     tink::jwt::raw_jwt
-    protobuf::libprotobuf
+    absl::statusor
     absl::strings
     absl::str_format
     absl::time
     tink::jwt::internal::json_util
-    tink::util::status
     tink::util::statusor
 )
 
@@ -58,9 +59,8 @@ tink_cc_library(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
+    absl::statusor
     absl::strings
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -69,9 +69,7 @@ tink_cc_library(
     jwt_public_key_sign.h
   DEPS
     tink::jwt::raw_jwt
-    absl::strings
-    tink::util::status
-    tink::util::statusor
+    absl::statusor
 )
 
 tink_cc_library(
@@ -81,9 +79,8 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_validator
     tink::jwt::verified_jwt
+    absl::statusor
     absl::strings
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -95,6 +92,7 @@ tink_cc_library(
     protobuf::libprotobuf
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     crypto
@@ -122,8 +120,8 @@ tink_cc_library(
     jwt_mac_config.h
   DEPS
     tink::jwt::jwt_hmac_proto_serialization
-    absl::core_headers
     absl::memory
+    absl::status
     tink::core::registry
     tink::config::config_util
     tink::config::tink_fips
@@ -142,8 +140,8 @@ tink_cc_library(
     tink::jwt::jwt_ecdsa_proto_serialization
     tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
     tink::jwt::jwt_rsa_ssa_pss_proto_serialization
-    absl::core_headers
     absl::memory
+    absl::status
     tink::core::registry
     tink::config::config_util
     tink::config::tink_fips
@@ -203,6 +201,7 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_mac_parameters
     absl::status
+    absl::statusor
     absl::strings
     tink::core::parameters
     tink::util::status
@@ -219,6 +218,7 @@ tink_cc_library(
     tink::jwt::jwt_mac_key
     absl::endian
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -255,7 +255,6 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::status
 )
 
 tink_cc_library(
@@ -296,6 +295,7 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_signature_parameters
     absl::status
+    absl::statusor
     tink::core::parameters
     tink::util::status
     tink::util::statusor
@@ -311,6 +311,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_public_key
     absl::endian
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -335,6 +336,7 @@ tink_cc_library(
     tink::jwt::jwt_ecdsa_public_key
     tink::jwt::jwt_signature_private_key
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::ec_point
@@ -384,7 +386,6 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::status
 )
 
 tink_cc_library(
@@ -396,6 +397,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_parameters
     absl::flat_hash_set
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -419,6 +421,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_public_key
     absl::endian
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::string_view
@@ -483,7 +486,6 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::status
 )
 
 tink_cc_library(
@@ -495,6 +497,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_parameters
     absl::flat_hash_set
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -518,6 +521,7 @@ tink_cc_library(
     tink::jwt::jwt_signature_public_key
     absl::endian
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::string_view
@@ -582,7 +586,6 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::tink_proto_structs
     tink::util::secret_data
-    tink::util::status
 )
 
 tink_cc_library(

@@ -18,11 +18,11 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

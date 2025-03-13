@@ -17,8 +17,8 @@
 #ifndef TINK_JWT_INTERNAL_JWT_MAC_CONFIG_V0_H_
 #define TINK_JWT_INTERNAL_JWT_MAC_CONFIG_V0_H_
 
+#include "absl/status/status.h"
 #include "tink/configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {

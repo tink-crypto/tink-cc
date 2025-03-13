@@ -19,9 +19,9 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/jwt/jwt_mac_parameters.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

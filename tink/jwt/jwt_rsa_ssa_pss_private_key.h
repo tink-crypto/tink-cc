@@ -19,13 +19,13 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 #include "tink/jwt/jwt_signature_private_key.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

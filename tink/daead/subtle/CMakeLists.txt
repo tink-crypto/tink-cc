@@ -23,10 +23,10 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::aead
     tink::core::deterministic_aead
-    tink::util::status
     tink::util::test_matchers
     tink::util::test_util
 )

@@ -23,6 +23,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/synchronization/mutex.h"
 #include "tink/primitive_set.h"
@@ -40,8 +41,6 @@ namespace streamingaead {
 
 using crypto::tink::PrimitiveSet;
 using crypto::tink::StreamingAead;
-using util::Status;
-using util::StatusOr;
 
 using StreamingAeadEntry = PrimitiveSet<StreamingAead>::Entry<StreamingAead>;
 
@@ -52,12 +51,12 @@ DecryptingRandomAccessStream::New(
     std::unique_ptr<crypto::tink::RandomAccessStream> ciphertext_source,
     absl::string_view associated_data) {
   if (primitives == nullptr) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "primitives must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "primitives must be non-null.");
   }
   if (ciphertext_source == nullptr) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "ciphertext_source must be non-null.");
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "ciphertext_source must be non-null.");
   }
   return {absl::WrapUnique(new DecryptingRandomAccessStream(
       primitives, std::move(ciphertext_source), associated_data))};
@@ -96,8 +95,9 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
       if (matching_stream_ != nullptr) {
         return matching_stream_.get();
       }
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Did not find a decrypter matching the ciphertext stream.");
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
+          "Did not find a decrypter matching the ciphertext stream.");
     }
   }
   // Matching has not been attempted yet, so try it now.
@@ -108,8 +108,9 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
     if (matching_stream_ != nullptr) {
       return matching_stream_.get();
     }
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "Did not find a decrypter matching the ciphertext stream.");
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Did not find a decrypter matching the ciphertext stream.");
   }
 
   attempted_matching_ = true;
@@ -127,7 +128,7 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
         streaming_aead.NewDecryptingRandomAccessStream(std::move(shared_ct),
                                                        associated_data_);
     if (decrypting_stream_result.ok()) {
-      Status read_result =
+      absl::Status read_result =
           decrypting_stream_result.value()->PRead(0, 1, buffer->get());
       if (read_result.ok() || absl::IsOutOfRange(read_result)) {
         // Found a match.
@@ -137,8 +138,9 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
     }
     // Not a match, try the next primitive.
   }
-  return Status(absl::StatusCode::kInvalidArgument,
-                "Could not find a decrypter matching the ciphertext stream.");
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "Could not find a decrypter matching the ciphertext stream.");
 }
 
 absl::StatusOr<int64_t> DecryptingRandomAccessStream::size() {

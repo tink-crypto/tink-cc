@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
 #include "tink/input_stream.h"
@@ -37,18 +38,15 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
-
 namespace {
 
-Status Validate(PrimitiveSet<StreamingAead>* primitives) {
+absl::Status Validate(PrimitiveSet<StreamingAead>* primitives) {
   if (primitives == nullptr) {
-    return Status(absl::StatusCode::kInternal,
+    return absl::Status(absl::StatusCode::kInternal,
                   "primitive set must be non-NULL");
   }
   if (primitives->get_primary() == nullptr) {
-    return Status(absl::StatusCode::kInvalidArgument,
+    return absl::Status(absl::StatusCode::kInvalidArgument,
                   "primitive set has no primary");
   }
   return absl::OkStatus();

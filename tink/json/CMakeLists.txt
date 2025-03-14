@@ -43,9 +43,9 @@ tink_cc_test(
     tink::json::json_keyset_reader
     gmock
     absl::status
+    absl::statusor
     absl::strings
     tink::core::keyset_reader
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_eax_cc_proto

@@ -35,8 +35,6 @@
 #include "tink/util/input_stream_util.h"
 #include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/ecdsa.pb.h"
 
@@ -44,8 +42,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::EcdsaKeyFormat;
 using EcdsaPrivateKeyProto = ::google::crypto::tink::EcdsaPrivateKey;
 using EcdsaPublicKeyProto = ::google::crypto::tink::EcdsaPublicKey;
@@ -153,16 +149,17 @@ EcdsaSignKeyManager::PublicKeySignFactory::Create(
   return {std::move(result.value())};
 }
 
-Status EcdsaSignKeyManager::ValidateKey(const EcdsaPrivateKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+absl::Status EcdsaSignKeyManager::ValidateKey(
+    const EcdsaPrivateKeyProto& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return EcdsaVerifyKeyManager().ValidateKey(key.public_key());
 }
 
-Status EcdsaSignKeyManager::ValidateKeyFormat(
+absl::Status EcdsaSignKeyManager::ValidateKeyFormat(
     const EcdsaKeyFormat& key_format) const {
   if (!key_format.has_params()) {
-    return Status(absl::StatusCode::kInvalidArgument, "Missing params.");
+    return absl::Status(absl::StatusCode::kInvalidArgument, "Missing params.");
   }
   return EcdsaVerifyKeyManager().ValidateParams(key_format.params());
 }

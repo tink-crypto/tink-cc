@@ -46,7 +46,6 @@ tink_cc_library(
     tink::config::tink_fips
     tink::keyderivation::internal::prf_based_deriver_key_manager
     tink::prf::hkdf_prf_key_manager
-    tink::util::status
   PUBLIC
 )
 

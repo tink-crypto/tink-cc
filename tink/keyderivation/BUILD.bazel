@@ -49,7 +49,6 @@ cc_library(
         "//tink/config:tink_fips",
         "//tink/keyderivation/internal:prf_based_deriver_key_manager",
         "//tink/prf:hkdf_prf_key_manager",
-        "//tink/util:status",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
     ],

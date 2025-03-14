@@ -1,4 +1,4 @@
-// Copyright 2019 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/primitive_set.h"
@@ -42,8 +43,6 @@ namespace streamingaead {
 
 using crypto::tink::PrimitiveSet;
 using crypto::tink::StreamingAead;
-using util::Status;
-using util::StatusOr;
 
 using StreamingAeadEntry = PrimitiveSet<StreamingAead>::Entry<StreamingAead>;
 
@@ -67,8 +66,9 @@ absl::StatusOr<int> DecryptingInputStream::Next(const void** data) {
     return matching_stream_->Next(data);
   }
   if (attempted_matching_) {
-    return Status(absl::StatusCode::kInvalidArgument,
-                  "Could not find a decrypter matching the ciphertext stream.");
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "Could not find a decrypter matching the ciphertext stream.");
   }
   // Matching has not been attempted yet, so try it now.
   attempted_matching_ = true;
@@ -90,13 +90,14 @@ absl::StatusOr<int> DecryptingInputStream::Next(const void** data) {
       }
     }
     // Not a match, rewind and try the next primitive.
-    Status s = buffered_ct_source_->Rewind();
+    absl::Status s = buffered_ct_source_->Rewind();
     if (!s.ok()) {
       return s;
     }
   }
-  return Status(absl::StatusCode::kInvalidArgument,
-                "Could not find a decrypter matching the ciphertext stream.");
+  return absl::Status(
+      absl::StatusCode::kInvalidArgument,
+      "Could not find a decrypter matching the ciphertext stream.");
 }
 
 void DecryptingInputStream::BackUp(int count) {

@@ -17,7 +17,7 @@
 #ifndef TINK_KEYDERIVATION_KEY_DERIVATION_CONFIG_H_
 #define TINK_KEYDERIVATION_KEY_DERIVATION_CONFIG_H_
 
-#include "tink/util/status.h"
+#include "absl/status/status.h"
 
 namespace crypto {
 namespace tink {
@@ -28,7 +28,7 @@ namespace tink {
 //
 // To register all KeysetDeriver key types, one can do:
 //
-//   crypto::tink::util::Status status = KeyDerivationConfig::Register();
+//   absl::Status status = KeyDerivationConfig::Register();
 //
 class KeyDerivationConfig {
  public:
@@ -37,7 +37,7 @@ class KeyDerivationConfig {
   static absl::Status Register();
 
  private:
-  KeyDerivationConfig() {}
+  KeyDerivationConfig() = default;
 };
 
 }  // namespace tink

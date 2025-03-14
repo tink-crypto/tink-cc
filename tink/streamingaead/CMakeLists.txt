@@ -12,6 +12,7 @@ tink_cc_library(
     tink::streamingaead::decrypting_random_access_stream
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::crypto_format
     tink::core::input_stream
@@ -167,6 +168,7 @@ tink_cc_library(
     tink::streamingaead::shared_input_stream
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::input_stream
     tink::core::primitive_set
@@ -186,6 +188,7 @@ tink_cc_library(
     absl::core_headers
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::synchronization
     tink::core::primitive_set

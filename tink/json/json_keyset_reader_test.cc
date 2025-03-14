@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/substitute.h"
 #include "tink/keyset_reader.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_eax.pb.h"
@@ -50,7 +50,6 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::OutputPrefixType;
-using ::crypto::tink::util::StatusOr;
 using ::testing::Eq;
 using ::testing::Not;
 

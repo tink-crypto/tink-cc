@@ -529,6 +529,7 @@ tink_cc_library(
     tink::util::statusor
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::aead
     tink::core::binary_keyset_reader

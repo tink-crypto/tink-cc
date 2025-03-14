@@ -25,6 +25,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/ascii.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/match.h"
@@ -41,8 +42,6 @@
 #include "tink/kms_client.h"
 #include "tink/kms_clients.h"
 #include "tink/util/errors.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -52,8 +51,6 @@ namespace test {
 namespace {
 
 using crypto::tink::ToStatusF;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::KeyTemplate;
 
 static constexpr char kKeyUriPrefix[] = "fake-kms://";
@@ -120,8 +117,8 @@ absl::StatusOr<std::unique_ptr<Aead>> FakeKmsClient::GetAead(
       ConfigGlobalRegistry());
 }
 
-Status FakeKmsClient::RegisterNewClient(absl::string_view key_uri,
-                                        absl::string_view credentials_path) {
+absl::Status FakeKmsClient::RegisterNewClient(
+    absl::string_view key_uri, absl::string_view credentials_path) {
   auto client_result = FakeKmsClient::New(key_uri, credentials_path);
   if (!client_result.ok()) {
     return client_result.status();

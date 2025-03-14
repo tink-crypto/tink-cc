@@ -34,8 +34,6 @@
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
@@ -45,8 +43,6 @@ namespace crypto {
 namespace tink {
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
 using ::google::crypto::tink::JwtRsaSsaPssKeyFormat;
@@ -148,21 +144,21 @@ RawJwtRsaSsaPssSignKeyManager::PublicKeySignFactory::Create(
   return signer;
 }
 
-Status RawJwtRsaSsaPssSignKeyManager::ValidateKey(
+absl::Status RawJwtRsaSsaPssSignKeyManager::ValidateKey(
     const JwtRsaSsaPssPrivateKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return RawJwtRsaSsaPssVerifyKeyManager().ValidateKey(key.public_key());
 }
 
-Status RawJwtRsaSsaPssSignKeyManager::ValidateKeyFormat(
+absl::Status RawJwtRsaSsaPssSignKeyManager::ValidateKeyFormat(
     const JwtRsaSsaPssKeyFormat& key_format) const {
-  Status modulus_status =
+  absl::Status modulus_status =
       internal::ValidateRsaModulusSize(key_format.modulus_size_in_bits());
   if (!modulus_status.ok()) {
     return modulus_status;
   }
-  Status exponent_status =
+  absl::Status exponent_status =
       internal::ValidateRsaPublicExponent(key_format.public_exponent());
   if (!exponent_status.ok()) {
     return exponent_status;

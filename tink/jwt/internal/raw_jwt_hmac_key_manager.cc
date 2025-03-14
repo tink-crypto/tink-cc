@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,8 +22,6 @@
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_hmac.pb.h"
@@ -33,8 +31,6 @@ namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtHmacAlgorithm;
 using google::crypto::tink::JwtHmacKey;
 using google::crypto::tink::JwtHmacKeyFormat;
@@ -50,8 +46,8 @@ absl::StatusOr<int> MinimumKeySize(const JwtHmacAlgorithm& algorithm) {
     case JwtHmacAlgorithm::HS512:
       return 64;
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported algorithm.");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported algorithm.");
   }
 }
 
@@ -74,8 +70,8 @@ absl::StatusOr<JwtHmacKey> RawJwtHmacKeyManager::DeriveKey(
                       "RawJwtHmacKeyManager::DeriveKey is not implemented");
 }
 
-Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+absl::Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   absl::StatusOr<int> min_key_size = MinimumKeySize(key.algorithm());
   if (!min_key_size.ok()) {
@@ -89,7 +85,7 @@ Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
 }
 
 // static
-Status RawJwtHmacKeyManager::ValidateKeyFormat(
+absl::Status RawJwtHmacKeyManager::ValidateKeyFormat(
     const JwtHmacKeyFormat& key_format) const {
   absl::StatusOr<int> min_key_size = MinimumKeySize(key_format.algorithm());
   if (!min_key_size.ok()) {

@@ -28,8 +28,6 @@
 #include "tink/subtle/ecdsa_sign_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
 #include "proto/jwt_ecdsa.pb.h"
@@ -39,8 +37,6 @@ namespace tink {
 namespace jwt_internal {
 
 using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtEcdsaKeyFormat;
 using google::crypto::tink::JwtEcdsaPrivateKey;
 using google::crypto::tink::JwtEcdsaPublicKey;
@@ -101,14 +97,14 @@ RawJwtEcdsaSignKeyManager::PublicKeySignFactory::Create(
   return {*std::move(result)};
 }
 
-Status RawJwtEcdsaSignKeyManager::ValidateKey(
+absl::Status RawJwtEcdsaSignKeyManager::ValidateKey(
     const JwtEcdsaPrivateKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return RawJwtEcdsaVerifyKeyManager().ValidateKey(key.public_key());
 }
 
-Status RawJwtEcdsaSignKeyManager::ValidateKeyFormat(
+absl::Status RawJwtEcdsaSignKeyManager::ValidateKeyFormat(
     const JwtEcdsaKeyFormat& key_format) const {
   return RawJwtEcdsaVerifyKeyManager::ValidateAlgorithm(key_format.algorithm());
 }

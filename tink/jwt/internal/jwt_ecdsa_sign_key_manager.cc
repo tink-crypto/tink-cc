@@ -27,16 +27,12 @@
 #include "tink/jwt/internal/jwt_public_key_sign_impl.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/public_key_sign.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtEcdsaKeyFormat;
 using google::crypto::tink::JwtEcdsaPrivateKey;
 using google::crypto::tink::JwtEcdsaPublicKey;
@@ -83,12 +79,12 @@ absl::StatusOr<JwtEcdsaPrivateKey> JwtEcdsaSignKeyManager::CreateKey(
   return raw_key_manager_.CreateKey(key_format);
 }
 
-Status JwtEcdsaSignKeyManager::ValidateKey(
+absl::Status JwtEcdsaSignKeyManager::ValidateKey(
     const JwtEcdsaPrivateKey& key) const {
   return raw_key_manager_.ValidateKey(key);
 }
 
-Status JwtEcdsaSignKeyManager::ValidateKeyFormat(
+absl::Status JwtEcdsaSignKeyManager::ValidateKeyFormat(
     const JwtEcdsaKeyFormat& key_format) const {
   return raw_key_manager_.ValidateKeyFormat(key_format);
 }

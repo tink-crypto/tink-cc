@@ -27,16 +27,12 @@
 #include "tink/jwt/internal/jwt_public_key_verify_impl.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/public_key_verify.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtRsaSsaPssAlgorithm;
 using google::crypto::tink::JwtRsaSsaPssPublicKey;
 
@@ -78,7 +74,7 @@ const std::string& JwtRsaSsaPssVerifyKeyManager::get_key_type() const {
   return raw_key_manager_.get_key_type();
 }
 
-Status JwtRsaSsaPssVerifyKeyManager::ValidateKey(
+absl::Status JwtRsaSsaPssVerifyKeyManager::ValidateKey(
     const JwtRsaSsaPssPublicKey& key) const {
   return raw_key_manager_.ValidateKey(key);
 }
@@ -93,8 +89,8 @@ absl::StatusOr<std::string> JwtRsaSsaPssVerifyKeyManager::AlgorithmName(
     case JwtRsaSsaPssAlgorithm::PS512:
       return std::string("PS512");
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported RSA SSA PKCS1 Algorithm");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported RSA SSA PKCS1 Algorithm");
   }
 }
 

@@ -29,8 +29,6 @@
 #include "tink/public_key_verify.h"
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 #include "tink/util/enums.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 
@@ -38,8 +36,6 @@ namespace crypto {
 namespace tink {
 
 using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::HashType;
 using google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
 using google::crypto::tink::JwtRsaSsaPkcs1PublicKey;
@@ -66,28 +62,28 @@ RawJwtRsaSsaPkcs1VerifyKeyManager::PublicKeyVerifyFactory::Create(
   return {std::move(*verify)};
 }
 
-Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateKey(
+absl::Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateKey(
     const JwtRsaSsaPkcs1PublicKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   absl::StatusOr<internal::SslUniquePtr<BIGNUM>> n =
       internal::StringToBignum(key.n());
   if (!n.ok()) {
     return n.status();
   }
-  Status modulus_status =
+  absl::Status modulus_status =
       internal::ValidateRsaModulusSize(BN_num_bits(n->get()));
   if (!modulus_status.ok()) {
     return modulus_status;
   }
-  Status exponent_status = internal::ValidateRsaPublicExponent(key.e());
+  absl::Status exponent_status = internal::ValidateRsaPublicExponent(key.e());
   if (!exponent_status.ok()) {
     return exponent_status;
   }
   return ValidateAlgorithm(key.algorithm());
 }
 
-Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateAlgorithm(
+absl::Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateAlgorithm(
     const JwtRsaSsaPkcs1Algorithm& algorithm) {
   switch (algorithm) {
     case JwtRsaSsaPkcs1Algorithm::RS256:
@@ -95,8 +91,8 @@ Status RawJwtRsaSsaPkcs1VerifyKeyManager::ValidateAlgorithm(
     case JwtRsaSsaPkcs1Algorithm::RS512:
       return absl::OkStatus();
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported RSA SSA PKCS1 Algorithm");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported RSA SSA PKCS1 Algorithm");
   }
   return absl::OkStatus();
 }
@@ -112,8 +108,8 @@ RawJwtRsaSsaPkcs1VerifyKeyManager::HashForPkcs1Algorithm(
     case JwtRsaSsaPkcs1Algorithm::RS512:
       return HashType::SHA512;
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported RSA SSA PKCS1 Algorithm");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported RSA SSA PKCS1 Algorithm");
   }
 }
 

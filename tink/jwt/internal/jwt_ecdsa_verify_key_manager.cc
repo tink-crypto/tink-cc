@@ -27,16 +27,12 @@
 #include "tink/jwt/internal/jwt_public_key_verify_impl.h"
 #include "tink/jwt/internal/jwt_public_key_verify_internal.h"
 #include "tink/public_key_verify.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace jwt_internal {
 
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtEcdsaPublicKey;
 using google::crypto::tink::JwtEcdsaAlgorithm;
 
@@ -77,7 +73,7 @@ const std::string& JwtEcdsaVerifyKeyManager::get_key_type() const {
   return raw_key_manager_.get_key_type();
 }
 
-Status JwtEcdsaVerifyKeyManager::ValidateKey(
+absl::Status JwtEcdsaVerifyKeyManager::ValidateKey(
     const JwtEcdsaPublicKey& key) const {
   return raw_key_manager_.ValidateKey(key);
 }
@@ -92,7 +88,8 @@ absl::StatusOr<std::string> JwtEcdsaVerifyKeyManager::AlgorithmName(
     case JwtEcdsaAlgorithm::ES512:
       return std::string("ES512");
     default:
-      return Status(absl::StatusCode::kInvalidArgument, "Unknown algorithm");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unknown algorithm");
   }
 }
 

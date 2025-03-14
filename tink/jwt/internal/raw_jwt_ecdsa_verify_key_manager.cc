@@ -37,8 +37,6 @@ namespace tink {
 namespace jwt_internal {
 
 using crypto::tink::util::Enums;
-using crypto::tink::util::Status;
-using crypto::tink::util::StatusOr;
 using google::crypto::tink::JwtEcdsaAlgorithm;
 using google::crypto::tink::JwtEcdsaPublicKey;
 using google::crypto::tink::EllipticCurveType;
@@ -79,8 +77,8 @@ RawJwtEcdsaVerifyKeyManager::CurveForEcdsaAlgorithm(
     case JwtEcdsaAlgorithm::ES512:
       return EllipticCurveType::NIST_P521;
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported Ecdsa Algorithm");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported Ecdsa Algorithm");
   }
 }
 
@@ -94,12 +92,12 @@ absl::StatusOr<HashType> RawJwtEcdsaVerifyKeyManager::HashForEcdsaAlgorithm(
     case JwtEcdsaAlgorithm::ES512:
       return HashType::SHA512;
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported Ecdsa Algorithm");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported Ecdsa Algorithm");
   }
 }
 
-Status RawJwtEcdsaVerifyKeyManager::ValidateAlgorithm(
+absl::Status RawJwtEcdsaVerifyKeyManager::ValidateAlgorithm(
     const JwtEcdsaAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtEcdsaAlgorithm::ES256:
@@ -107,15 +105,15 @@ Status RawJwtEcdsaVerifyKeyManager::ValidateAlgorithm(
     case JwtEcdsaAlgorithm::ES512:
       return absl::OkStatus();
     default:
-      return Status(absl::StatusCode::kInvalidArgument,
-                    "Unsupported Ecdsa Algorithm");
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          "Unsupported Ecdsa Algorithm");
   }
   return absl::OkStatus();
 }
 
-Status RawJwtEcdsaVerifyKeyManager::ValidateKey(
+absl::Status RawJwtEcdsaVerifyKeyManager::ValidateKey(
     const JwtEcdsaPublicKey& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
   return ValidateAlgorithm(key.algorithm());
 }

@@ -20,8 +20,6 @@ tink_cc_library(
     tink::util::constants
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_hmac_cc_proto
@@ -180,8 +178,6 @@ tink_cc_library(
     tink::subtle::hmac_boringssl
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::proto::common_cc_proto
     tink::proto::jwt_hmac_cc_proto
     tink::proto::tink_cc_proto
@@ -296,8 +292,6 @@ tink_cc_library(
     tink::util::constants
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
@@ -398,8 +392,6 @@ tink_cc_library(
     tink::util::constants
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
@@ -448,8 +440,6 @@ tink_cc_library(
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::util::constants
     tink::util::enums
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
@@ -506,8 +496,6 @@ tink_cc_library(
     tink::util::constants
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
@@ -556,8 +544,6 @@ tink_cc_library(
     tink::subtle::rsa_ssa_pss_verify_boringssl
     tink::util::constants
     tink::util::enums
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::common_cc_proto
     tink::proto::jwt_rsa_ssa_pss_cc_proto
@@ -673,8 +659,6 @@ tink_cc_library(
     tink::core::template_util
     tink::core::public_key_sign
     tink::internal::fips_utils
-    tink::util::status
-    tink::util::statusor
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -697,8 +681,6 @@ tink_cc_library(
     tink::core::template_util
     tink::core::public_key_verify
     tink::internal::fips_utils
-    tink::util::status
-    tink::util::statusor
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -833,8 +815,6 @@ tink_cc_library(
     tink::core::template_util
     tink::core::public_key_sign
     tink::internal::fips_utils
-    tink::util::status
-    tink::util::statusor
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -857,8 +837,6 @@ tink_cc_library(
     tink::core::template_util
     tink::core::public_key_verify
     tink::internal::fips_utils
-    tink::util::status
-    tink::util::statusor
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -909,8 +887,6 @@ tink_cc_library(
     tink::core::template_util
     tink::core::public_key_sign
     tink::internal::fips_utils
-    tink::util::status
-    tink::util::statusor
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )
@@ -933,8 +909,6 @@ tink_cc_library(
     tink::core::template_util
     tink::core::public_key_verify
     tink::internal::fips_utils
-    tink::util::status
-    tink::util::statusor
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
 )

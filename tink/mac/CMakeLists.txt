@@ -422,6 +422,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     tink::core::chunked_mac
     tink::core::key_manager_impl
     tink::core::mac
@@ -429,8 +430,6 @@ tink_cc_test(
     tink::util::enums
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::hmac_cc_proto
     tink::proto::tink_cc_proto

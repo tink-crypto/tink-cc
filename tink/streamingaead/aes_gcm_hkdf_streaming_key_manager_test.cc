@@ -41,8 +41,6 @@
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/ostream_output_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_eax.pb.h"
 #include "proto/aes_gcm_hkdf_streaming.pb.h"
@@ -56,7 +54,6 @@ using ::crypto::tink::internal::StreamingAeadTestVector;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::AesGcmHkdfStreamingKey;
 using ::google::crypto::tink::AesGcmHkdfStreamingKeyFormat;
 using ::google::crypto::tink::HashType;

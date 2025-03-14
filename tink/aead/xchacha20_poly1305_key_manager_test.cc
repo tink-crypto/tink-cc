@@ -30,8 +30,6 @@
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
@@ -43,7 +41,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 using XChaCha20Poly1305KeyProto = ::google::crypto::tink::XChaCha20Poly1305Key;
 using ::google::crypto::tink::XChaCha20Poly1305KeyFormat;
 using ::testing::Eq;

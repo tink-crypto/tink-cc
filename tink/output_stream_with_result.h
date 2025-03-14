@@ -20,6 +20,7 @@
 #include <type_traits>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/output_stream.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -65,7 +66,7 @@ class OutputStreamWithResult : public OutputStream {
   // The return type is StatusOr<T> if T != Status, and Status otherwise.
   using ResultType =
       typename std::conditional<std::is_same<T, absl::Status>::value,
-                                absl::Status, util::StatusOr<T>>::type;
+                                absl::Status, absl::StatusOr<T>>::type;
 
   // Get the result associated with this OutputStream. Can only be called on
   // closed streams, and will otherwise fail with FAILED_PRECONDITION as error

@@ -21,6 +21,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/input_stream.h"
 #include "tink/subtle/common_enums.h"
@@ -28,8 +29,6 @@
 #include "tink/util/enums.h"
 #include "tink/util/errors.h"
 #include "tink/util/input_stream_util.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/hmac_prf.pb.h"
 
@@ -42,8 +41,6 @@ constexpr int kMinKeySizeInBytes = 16;
 using HmacPrfKeyProto = ::google::crypto::tink::HmacPrfKey;
 using ::crypto::tink::subtle::HashType;
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HmacPrfKeyFormat;
 using ::google::crypto::tink::HmacPrfParams;
 
@@ -96,7 +93,8 @@ absl::StatusOr<HmacPrfKeyProto> HmacPrfKeyManager::DeriveKey(
   return key;
 }
 
-Status HmacPrfKeyManager::ValidateParams(const HmacPrfParams& params) const {
+absl::Status HmacPrfKeyManager::ValidateParams(
+    const HmacPrfParams& params) const {
   static const std::set<HashType>* supported_hash_types =
       new std::set<HashType>({HashType::SHA1, HashType::SHA224,
                               HashType::SHA256, HashType::SHA384,

@@ -426,8 +426,6 @@ tink_cc_test(
     tink::util::istream_input_stream
     tink::util::ostream_output_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_eax_cc_proto
     tink::proto::aes_gcm_hkdf_streaming_cc_proto

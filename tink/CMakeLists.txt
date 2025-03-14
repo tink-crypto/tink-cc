@@ -184,6 +184,7 @@ tink_cc_library(
   DEPS
     tink::core::output_stream
     absl::status
+    absl::statusor
     tink::util::status
     tink::util::statusor
 )

@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/chunked_mac.h"
 #include "tink/core/key_manager_impl.h"
 #include "tink/mac.h"
@@ -31,8 +32,6 @@
 #include "tink/util/enums.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/hmac.pb.h"
 #include "proto/tink.pb.h"
@@ -43,7 +42,6 @@ namespace tink {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::HashType;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
 using ::google::crypto::tink::HmacKeyFormat;

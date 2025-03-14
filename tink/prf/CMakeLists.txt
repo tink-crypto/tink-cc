@@ -136,6 +136,7 @@ tink_cc_library(
     tink::prf::prf_set
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key_type_manager
@@ -353,7 +354,6 @@ tink_cc_test(
     tink::util::input_stream_util
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::hkdf_prf_cc_proto
@@ -450,13 +450,12 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     tink::core::key_manager_impl
     tink::subtle::hmac_boringssl
     tink::util::enums
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::hmac_prf_cc_proto
     tink::proto::tink_cc_proto

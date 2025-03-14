@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,8 +37,6 @@
 #include "tink/util/enums.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
@@ -55,8 +53,6 @@ constexpr int kMinTagSizeInBytes = 10;
 }  // namespace
 
 using ::crypto::tink::util::Enums;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 using AesCtrHmacAeadKeyProto = ::google::crypto::tink::AesCtrHmacAeadKey;
 using ::google::crypto::tink::AesCtrHmacAeadKeyFormat;
 using AesCtrKeyProto = ::google::crypto::tink::AesCtrKey;
@@ -107,9 +103,9 @@ AesCtrHmacAeadKeyManager::AeadFactory::Create(
   return std::move(cipher_res.value());
 }
 
-Status AesCtrHmacAeadKeyManager::ValidateKey(
+absl::Status AesCtrHmacAeadKeyManager::ValidateKey(
     const AesCtrHmacAeadKeyProto& key) const {
-  Status status = ValidateVersion(key.version(), get_version());
+  absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
 
   status = ValidateVersion(key.aes_ctr_key().version(), get_version());
@@ -130,7 +126,7 @@ Status AesCtrHmacAeadKeyManager::ValidateKey(
   return HmacKeyManager().ValidateKey(key.hmac_key());
 }
 
-Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
+absl::Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
     const AesCtrHmacAeadKeyFormat& key_format) const {
   // Validate AesCtrKeyFormat.
   auto aes_ctr_key_format = key_format.aes_ctr_key_format();
@@ -196,7 +192,7 @@ Status AesCtrHmacAeadKeyManager::ValidateKeyFormat(
 absl::StatusOr<AesCtrHmacAeadKeyProto> AesCtrHmacAeadKeyManager::DeriveKey(
     const AesCtrHmacAeadKeyFormat& key_format,
     InputStream* input_stream) const {
-  Status status = ValidateKeyFormat(key_format);
+  absl::Status status = ValidateKeyFormat(key_format);
   if (!status.ok()) {
     return status;
   }

@@ -29,8 +29,6 @@
 #include "tink/subtle/aead_test_util.h"
 #include "tink/subtle/aes_gcm_siv_boringssl.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_gcm_siv.pb.h"
 #include "proto/tink.pb.h"
@@ -42,7 +40,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 using AesGcmSivKeyProto = ::google::crypto::tink::AesGcmSivKey;
 using ::google::crypto::tink::AesGcmSivKeyFormat;
 using ::testing::Eq;

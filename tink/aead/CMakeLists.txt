@@ -1008,8 +1008,6 @@ tink_cc_test(
     tink::subtle::aes_gcm_boringssl
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_gcm_cc_proto
     tink::proto::tink_cc_proto
@@ -1028,8 +1026,6 @@ tink_cc_test(
     tink::subtle::aead_test_util
     tink::subtle::aes_gcm_siv_boringssl
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_gcm_siv_cc_proto
     tink::proto::tink_cc_proto
@@ -1076,8 +1072,6 @@ tink_cc_test(
     tink::subtle::xchacha20_poly1305_boringssl
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto

@@ -33,8 +33,6 @@
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
@@ -48,7 +46,6 @@ using ::crypto::tink::internal::CordAesGcmBoringSsl;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::crypto::tink::util::IstreamInputStream;
-using ::crypto::tink::util::StatusOr;
 using AesGcmKeyProto = ::google::crypto::tink::AesGcmKey;
 using ::google::crypto::tink::AesGcmKeyFormat;
 using ::testing::Eq;

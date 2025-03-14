@@ -108,6 +108,7 @@ tink_cc_library(
     tink::signature::ecdsa_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::private_key_type_manager
     tink::core::template_util

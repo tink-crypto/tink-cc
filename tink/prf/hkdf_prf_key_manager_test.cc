@@ -34,7 +34,6 @@
 #include "tink/util/input_stream_util.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 #include "proto/hkdf_prf.pb.h"
@@ -47,7 +46,6 @@ namespace {
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 using HkdfPrfKeyProto = ::google::crypto::tink::HkdfPrfKey;
 using ::google::crypto::tink::HkdfPrfKeyFormat;
 using ::testing::Eq;

@@ -1121,7 +1121,6 @@ cc_test(
         "//tink/internal:serialization",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/memory",

@@ -1085,7 +1085,6 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_cc_proto
     tink::proto::aes_ctr_cc_proto

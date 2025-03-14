@@ -360,7 +360,6 @@ cc_test(
         "//tink/internal:tink_proto_structs",
         "//tink/prf:aes_cmac_prf_key",
         "//tink/prf:aes_cmac_prf_parameters",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings:string_view",

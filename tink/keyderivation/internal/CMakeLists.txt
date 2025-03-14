@@ -350,7 +350,6 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_prf_cc_proto
     tink::proto::prf_based_deriver_cc_proto

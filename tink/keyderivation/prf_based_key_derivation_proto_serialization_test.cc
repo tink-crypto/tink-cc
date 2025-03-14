@@ -39,7 +39,6 @@
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/restricted_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_cmac_prf.pb.h"
 #include "proto/prf_based_deriver.pb.h"
@@ -51,6 +50,8 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::AesCmacPrfKeyFormat;
 using ::google::crypto::tink::KeyData;
@@ -220,8 +221,10 @@ TEST_F(PrfBasedKeyDerivationProtoSerializationTest, ParseKey) {
       key_proto.SerializeAsString(), GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<internal::ProtoKeySerialization> serialization =
       internal::ProtoKeySerialization::Create(
-          kTypeUrl, serialized_key, KeyData::SYMMETRIC,
-          derived_key_template.output_prefix_type(), /*id_requirement=*/123);
+          kTypeUrl, serialized_key, KeyMaterialTypeEnum::kSymmetric,
+          static_cast<OutputPrefixTypeEnum>(
+              derived_key_template.output_prefix_type()),
+          /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> key =
@@ -277,9 +280,11 @@ TEST_F(PrfBasedKeyDerivationProtoSerializationTest, SerializeKey) {
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->KeyMaterialType(), Eq(KeyData::SYMMETRIC));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixType(),
-              Eq(GetXChaCha20Poly1305KeyTemplate().output_prefix_type()));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kSymmetric));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(static_cast<OutputPrefixTypeEnum>(
+                  GetXChaCha20Poly1305KeyTemplate().output_prefix_type())));
   EXPECT_THAT(proto_serialization->IdRequirement(), Eq(123));
 
   google::crypto::tink::PrfBasedDeriverKey key_proto;

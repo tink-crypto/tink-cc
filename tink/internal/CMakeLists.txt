@@ -582,15 +582,15 @@ tink_cc_test(
     proto_key_serialization_test.cc
   DEPS
     tink::internal::proto_key_serialization
+    tink::internal::tink_proto_structs
     gmock
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::restricted_data
-    tink::util::statusor
     tink::util::test_matchers
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

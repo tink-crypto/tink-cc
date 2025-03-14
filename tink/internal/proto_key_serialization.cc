@@ -16,40 +16,36 @@
 
 #include "tink/internal/proto_key_serialization.h"
 
-#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/internal/util.h"
 #include "tink/restricted_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
-
 absl::StatusOr<ProtoKeySerialization> ProtoKeySerialization::Create(
     absl::string_view type_url, RestrictedData serialized_key,
-    KeyData::KeyMaterialType key_material_type,
-    OutputPrefixType output_prefix_type, absl::optional<int> id_requirement) {
+    KeyMaterialTypeEnum key_material_type,
+    OutputPrefixTypeEnum output_prefix_type,
+    absl::optional<int> id_requirement) {
   if (!IsPrintableAscii(type_url)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  if (output_prefix_type == OutputPrefixType::RAW &&
+  if (output_prefix_type == OutputPrefixTypeEnum::kRaw &&
       id_requirement.has_value()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Keys with a RAW output prefix type should not have an "
                         "ID requirement.");
   }
-  if (output_prefix_type != OutputPrefixType::RAW &&
+  if (output_prefix_type != OutputPrefixTypeEnum::kRaw &&
       !id_requirement.has_value()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

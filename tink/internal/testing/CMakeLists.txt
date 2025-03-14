@@ -10,6 +10,7 @@ tink_cc_library(
     absl::string_view
     absl::optional
     tink::core::insecure_secret_key_access
+    tink::internal::tink_proto_structs
     tink::util::test_util
 )
 

@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <string>
+#include <string_view>
 
 #include "tink/internal/proto_parser.h"
 #include "tink/util/secret_data.h"
@@ -37,6 +38,8 @@ enum class OutputPrefixTypeEnum : uint32_t {
   kWithIdRequirement,
 };
 
+std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeEnum type);
+
 // Enum representing the key material type of a key.
 // It represents the proto enum `google.crypto.tink.KeyData.KeyMaterialType`.
 enum class KeyMaterialTypeEnum : uint32_t {
@@ -46,6 +49,8 @@ enum class KeyMaterialTypeEnum : uint32_t {
   kAsymmetricPublic,
   kRemote,
 };
+
+std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeEnum type);
 
 struct KeyTemplateStruct {
   std::string type_url;

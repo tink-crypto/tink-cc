@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -57,19 +58,19 @@ MATCHER_P(EqualsProtoKeySerialization, expected, "") {
         crypto::tink::test::HexEncode(expected_key), "), got '", arg_key,
         "' (hex ", crypto::tink::test::HexEncode(arg_key), ")"));
   }
-  if (expected.KeyMaterialType() != arg.KeyMaterialType()) {
+  if (expected.GetKeyMaterialTypeEnum() != arg.GetKeyMaterialTypeEnum()) {
     equals = false;
     debug_str.push_back(absl::StrCat(
         "KeyMaterialTypes differ, expected ",
-        KeyData_KeyMaterialType_Name(expected.KeyMaterialType()), ", got ",
-        KeyData_KeyMaterialType_Name(arg.KeyMaterialType())));
+        KeyMaterialTypeEnumName(expected.GetKeyMaterialTypeEnum()), ", got ",
+        KeyMaterialTypeEnumName(arg.GetKeyMaterialTypeEnum())));
   }
-  if (expected.GetOutputPrefixType() != arg.GetOutputPrefixType()) {
+  if (expected.GetOutputPrefixTypeEnum() != arg.GetOutputPrefixTypeEnum()) {
     equals = false;
     debug_str.push_back(absl::StrCat(
         "OutputPrefixType differ, expected ",
-        OutputPrefixType_Name(expected.GetOutputPrefixType()), ", got ",
-        OutputPrefixType_Name(arg.GetOutputPrefixType())));
+        OutputPrefixTypeEnumName(expected.GetOutputPrefixTypeEnum()), ", got ",
+        OutputPrefixTypeEnumName(arg.GetOutputPrefixTypeEnum())));
   }
   if (expected.IdRequirement() != arg.IdRequirement()) {
     equals = false;

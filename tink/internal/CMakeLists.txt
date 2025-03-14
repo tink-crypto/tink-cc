@@ -571,8 +571,6 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::restricted_data
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 

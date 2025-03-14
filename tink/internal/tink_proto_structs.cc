@@ -15,6 +15,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/tink_proto_structs.h"
 
+#include <cstddef>
+#include <string_view>
+#include <vector>
+
 #include "absl/base/no_destructor.h"
 #include "tink/internal/proto_parser.h"
 
@@ -28,6 +32,27 @@ bool OutputPrefixTypeValid(int c) { return c >= 0 && c <= 5; }
 bool KeyMaterialTypeValid(int c) { return c >= 0 && c <= 4; }
 
 }  // namespace
+
+std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeEnum type) {
+  static const absl::NoDestructor<std::vector<std::string_view>>
+      kOutputPrefixTypeEnumNames{{
+          "UNKNOWN_PREFIX",
+          "TINK",
+          "LEGACY",
+          "RAW",
+          "CRUNCHY",
+          "WITH_ID_REQUIREMENT",
+      }};
+  return (*kOutputPrefixTypeEnumNames)[static_cast<size_t>(type)];
+}
+
+std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeEnum type) {
+  static const absl::NoDestructor<std::vector<std::string_view>>
+      kKeyMaterialTypeEnumNames{{"UNKNOWN_KEYMATERIAL", "SYMMETRIC",
+                                 "ASYMMETRIC_PRIVATE", "ASYMMETRIC_PUBLIC",
+                                 "REMOTE"}};
+  return (*kKeyMaterialTypeEnumNames)[static_cast<size_t>(type)];
+}
 
 ProtoParser<KeyTemplateStruct> KeyTemplateStruct::CreateParser() {
   return ProtoParserBuilder<KeyTemplateStruct>()

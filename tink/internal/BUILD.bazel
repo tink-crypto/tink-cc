@@ -600,8 +600,6 @@ cc_library(
         ":util",
         "//proto:tink_cc_proto",
         "//tink:restricted_data",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",

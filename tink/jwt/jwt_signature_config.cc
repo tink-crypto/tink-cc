@@ -17,7 +17,7 @@
 #include "tink/jwt/jwt_signature_config.h"
 
 #include "absl/memory/memory.h"
-#include "tink/config/config_util.h"
+#include "absl/status/status.h"
 #include "tink/config/tink_fips.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
 #include "tink/jwt/internal/jwt_ecdsa_verify_key_manager.h"
@@ -31,7 +31,6 @@
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_proto_serialization.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_proto_serialization.h"
 #include "tink/registry.h"
-#include "tink/util/status.h"
 #include "proto/config.pb.h"
 
 namespace crypto {

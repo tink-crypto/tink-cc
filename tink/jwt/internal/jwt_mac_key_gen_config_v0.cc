@@ -17,10 +17,10 @@
 #include "tink/jwt/internal/jwt_mac_key_gen_config_v0.h"
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
 #include "tink/key_gen_configuration.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {

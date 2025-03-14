@@ -22,6 +22,7 @@
 #include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
@@ -39,7 +40,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/ecdsa_sign_boringssl.h"
 #include "tink/subtle/ecdsa_verify_boringssl.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {

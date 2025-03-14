@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/configuration.h"
@@ -71,8 +72,6 @@
 #include "tink/subtle/rsa_ssa_pkcs1_verify_boringssl.h"
 #include "tink/subtle/rsa_ssa_pss_sign_boringssl.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

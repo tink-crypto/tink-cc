@@ -32,8 +32,6 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

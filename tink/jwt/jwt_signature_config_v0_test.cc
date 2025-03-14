@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "tink/jwt/jwt_key_templates.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/jwt_public_key_verify.h"
@@ -28,7 +29,6 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {

@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
@@ -29,8 +30,6 @@
 #include "tink/jwt/internal/jwt_format.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/public_key_sign.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

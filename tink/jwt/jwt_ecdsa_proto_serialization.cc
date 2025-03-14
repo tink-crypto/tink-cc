@@ -17,6 +17,7 @@
 #include "tink/jwt/jwt_ecdsa_proto_serialization.h"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <utility>
 

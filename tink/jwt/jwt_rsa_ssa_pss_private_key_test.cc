@@ -27,7 +27,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/key.h"
-#include "tink/util/test_util.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #endif
@@ -41,7 +40,6 @@
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {

@@ -38,8 +38,6 @@ tink_cc_library(
     absl::status
     absl::statusor
     absl::strings
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(
@@ -50,7 +48,7 @@ tink_cc_test(
     tink::jwt::internal::json_util
     protobuf::libprotobuf
     gmock
-    tink::util::statusor
+    absl::statusor
     tink::util::test_matchers
 )
 
@@ -68,8 +66,6 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::jwt::raw_jwt
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 
@@ -82,10 +78,10 @@ tink_cc_test(
     tink::jwt::internal::jwt_format
     protobuf::libprotobuf
     gmock
+    absl::statusor
     absl::time
     absl::optional
     tink::jwt::raw_jwt
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
@@ -106,7 +102,6 @@ tink_cc_test(
     tink::config::global_registry
     tink::mac::mac_config
     tink::util::istream_input_stream
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_hmac_cc_proto
     tink::proto::tink_cc_proto
@@ -132,8 +127,6 @@ tink_cc_library(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(
@@ -148,6 +141,7 @@ tink_cc_test(
     protobuf::libprotobuf
     gmock
     absl::status
+    absl::statusor
     absl::strings
     absl::time
     absl::optional
@@ -160,8 +154,6 @@ tink_cc_test(
     tink::subtle::random
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::common_cc_proto
 )
@@ -208,6 +200,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::time
     absl::optional
@@ -215,8 +208,6 @@ tink_cc_test(
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     tink::util::istream_input_stream
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_hmac_cc_proto
     tink::proto::tink_cc_proto
@@ -244,8 +235,6 @@ tink_cc_library(
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     tink::monitoring::monitoring
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 
@@ -265,6 +254,7 @@ tink_cc_test(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::cleartext_keyset_handle
     tink::core::keyset_manager
@@ -279,7 +269,6 @@ tink_cc_test(
     tink::mac::failing_mac
     tink::monitoring::monitoring
     tink::monitoring::monitoring_client_mocks
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::jwt_hmac_cc_proto
@@ -329,7 +318,6 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecdsa_verify_boringssl
     tink::util::enums
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::ecdsa_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
@@ -372,13 +360,13 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_ecdsa_verify_key_manager
     gmock
     absl::status
+    absl::statusor
     tink::core::public_key_verify
     tink::internal::ec_util
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::util::enums
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::ecdsa_cc_proto
     tink::proto::jwt_ecdsa_cc_proto
@@ -433,7 +421,6 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
@@ -488,7 +475,6 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_sign_boringssl
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
@@ -544,7 +530,6 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
@@ -588,6 +573,7 @@ tink_cc_test(
     tink::jwt::internal::raw_jwt_rsa_ssa_pss_verify_key_manager
     gmock
     absl::status
+    absl::statusor
     crypto
     tink::core::public_key_sign
     tink::core::public_key_verify
@@ -597,7 +583,6 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::jwt_rsa_ssa_pss_cc_proto
@@ -620,8 +605,6 @@ tink_cc_library(
     absl::optional
     tink::core::public_key_sign
     tink::jwt::raw_jwt
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -644,8 +627,6 @@ tink_cc_library(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(
@@ -659,6 +640,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_public_key_verify_impl
     protobuf::libprotobuf
     gmock
+    absl::statusor
     absl::strings
     absl::time
     absl::optional
@@ -669,7 +651,6 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::ecdsa_sign_boringssl
     tink::subtle::ecdsa_verify_boringssl
-    tink::util::statusor
     tink::util::test_matchers
 )
 
@@ -741,8 +722,6 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_ecdsa_cc_proto
     tink::proto::tink_cc_proto
@@ -767,8 +746,6 @@ tink_cc_library(
     tink::jwt::jwt_public_key_sign
     tink::jwt::raw_jwt
     tink::monitoring::monitoring
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 
@@ -793,8 +770,6 @@ tink_cc_library(
     tink::jwt::jwt_validator
     tink::jwt::verified_jwt
     tink::monitoring::monitoring
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 
@@ -817,6 +792,7 @@ tink_cc_test(
     gmock
     absl::flat_hash_map
     absl::memory
+    absl::statusor
     absl::strings
     tink::core::cleartext_keyset_handle
     tink::core::keyset_manager
@@ -832,7 +808,6 @@ tink_cc_test(
     tink::monitoring::monitoring
     tink::monitoring::monitoring_client_mocks
     tink::signature::failing_signature
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::jwt_ecdsa_cc_proto
@@ -910,8 +885,6 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pkcs1_cc_proto
     tink::proto::tink_cc_proto
@@ -979,6 +952,7 @@ tink_cc_test(
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     protobuf::libprotobuf
     gmock
+    absl::statusor
     absl::strings
     absl::optional
     crypto
@@ -987,8 +961,6 @@ tink_cc_test(
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::jwt_rsa_ssa_pss_cc_proto
     tink::proto::tink_cc_proto
@@ -1042,6 +1014,7 @@ tink_cc_library(
     tink::jwt::internal::jwt_mac_wrapper
     absl::memory
     absl::status
+    absl::statusor
     tink::core::configuration
     tink::core::mac
     tink::core::partial_key_access
@@ -1052,8 +1025,6 @@ tink_cc_library(
     tink::jwt::jwt_hmac_proto_serialization
     tink::subtle::common_enums
     tink::subtle::hmac_boringssl
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -1067,7 +1038,6 @@ tink_cc_library(
     absl::status
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
-    tink::util::status
 )
 
 tink_cc_test(
@@ -1101,7 +1071,6 @@ tink_cc_test(
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
-    tink::util::statusor
     tink::util::test_matchers
 )
 
@@ -1125,6 +1094,7 @@ tink_cc_library(
     tink::jwt::internal::jwt_rsa_ssa_pss_verify_key_manager
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::configuration
@@ -1162,8 +1132,6 @@ tink_cc_library(
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     tink::subtle::rsa_ssa_pss_sign_boringssl
     tink::subtle::rsa_ssa_pss_verify_boringssl
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(
@@ -1217,7 +1185,6 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_public_key
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
-    tink::util::statusor
     tink::util::test_matchers
 )
 
@@ -1237,5 +1204,4 @@ tink_cc_library(
     absl::status
     tink::core::key_gen_configuration
     tink::internal::key_gen_configuration_impl
-    tink::util::status
 )

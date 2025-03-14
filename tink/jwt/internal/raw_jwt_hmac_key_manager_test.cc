@@ -31,7 +31,6 @@
 #include "tink/mac/mac_config.h"
 #include "tink/registry.h"
 #include "tink/util/istream_input_stream.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/jwt_hmac.pb.h"
 #include "proto/tink.pb.h"

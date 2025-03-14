@@ -21,11 +21,10 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;

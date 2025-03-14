@@ -20,6 +20,7 @@
 
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -32,8 +33,6 @@
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

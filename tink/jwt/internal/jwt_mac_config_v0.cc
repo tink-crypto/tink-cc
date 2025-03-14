@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/internal_insecure_secret_key_access.h"
@@ -36,8 +37,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hmac_boringssl.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

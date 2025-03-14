@@ -68,7 +68,6 @@
 #include "tink/keyset_handle.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {

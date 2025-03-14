@@ -21,13 +21,12 @@
 
 #include "absl/base/internal/endian.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/raw_jwt.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

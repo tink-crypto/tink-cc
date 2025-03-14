@@ -21,6 +21,7 @@
 
 #include "absl/base/internal/endian.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
@@ -29,8 +30,6 @@
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

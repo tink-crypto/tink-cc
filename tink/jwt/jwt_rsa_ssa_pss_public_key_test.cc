@@ -30,7 +30,6 @@
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 

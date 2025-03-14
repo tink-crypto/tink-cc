@@ -17,13 +17,12 @@
 #include "tink/jwt/jwt_mac_config.h"
 
 #include "absl/memory/memory.h"
-#include "tink/config/config_util.h"
+#include "absl/status/status.h"
 #include "tink/config/tink_fips.h"
 #include "tink/jwt/internal/jwt_hmac_key_manager.h"
 #include "tink/jwt/internal/jwt_mac_wrapper.h"
 #include "tink/jwt/jwt_hmac_proto_serialization.h"
 #include "tink/registry.h"
-#include "tink/util/status.h"
 #include "proto/config.pb.h"
 
 namespace crypto {

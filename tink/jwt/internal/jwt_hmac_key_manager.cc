@@ -22,6 +22,7 @@
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/input_stream.h"

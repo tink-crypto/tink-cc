@@ -23,11 +23,11 @@
 #include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/time/time.h"
 #include "absl/types/optional.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/raw_jwt.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 

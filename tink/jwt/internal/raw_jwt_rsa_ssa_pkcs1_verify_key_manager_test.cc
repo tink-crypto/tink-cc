@@ -34,7 +34,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pkcs1_sign_boringssl.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"

@@ -31,7 +31,6 @@
 #include "tink/public_key_sign.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
 #include "proto/tink.pb.h"

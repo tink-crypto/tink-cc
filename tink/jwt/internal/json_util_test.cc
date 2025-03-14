@@ -21,7 +21,7 @@
 #include "google/protobuf/struct.pb.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "tink/util/statusor.h"
+#include "absl/status/statusor.h"
 #include "tink/util/test_matchers.h"
 
 using ::crypto::tink::test::IsOk;

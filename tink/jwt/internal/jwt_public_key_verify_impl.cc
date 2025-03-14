@@ -25,6 +25,7 @@
 #include "google/protobuf/struct.pb.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
@@ -35,8 +36,6 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/public_key_verify.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

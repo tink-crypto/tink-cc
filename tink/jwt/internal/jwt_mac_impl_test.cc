@@ -25,6 +25,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
@@ -43,8 +44,6 @@
 #include "tink/subtle/random.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/common.pb.h"
 

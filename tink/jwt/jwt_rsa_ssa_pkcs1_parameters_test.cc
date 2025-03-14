@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #else
@@ -32,7 +33,6 @@
 #include "tink/internal/bn_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {

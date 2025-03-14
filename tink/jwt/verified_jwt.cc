@@ -19,14 +19,10 @@
 #include <string>
 #include <vector>
 
-#include "absl/strings/numbers.h"
-#include "absl/strings/str_format.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/strings/substitute.h"
 #include "absl/time/time.h"
-#include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/raw_jwt.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

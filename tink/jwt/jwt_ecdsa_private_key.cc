@@ -19,6 +19,7 @@
 #include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -39,8 +40,6 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

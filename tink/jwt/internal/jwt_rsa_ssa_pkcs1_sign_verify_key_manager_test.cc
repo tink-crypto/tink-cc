@@ -38,8 +38,6 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/tink.pb.h"

@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
@@ -31,7 +32,6 @@
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 

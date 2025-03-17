@@ -23,11 +23,12 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "util/util.h"
 #include "tink/jwt/jwk_set_converter.h"
 #include "tink/jwt/jwt_signature_config.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, public_keyset_filename, "",
           "Public keyset file in Tink's JSON format");
@@ -38,8 +39,6 @@ namespace {
 
 using ::crypto::tink::JwkSetFromPublicKeysetHandle;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 void ValidateParams() {
   // [START_EXCLUDE]
@@ -54,9 +53,10 @@ void ValidateParams() {
 
 namespace tink_cc_examples {
 
-Status JwtGeneratePublicJwkSet(const std::string& public_keyset_filename,
-                               const std::string& public_jwk_set_filename) {
-  Status result = crypto::tink::JwtSignatureRegister();
+absl::Status JwtGeneratePublicJwkSet(
+    const std::string& public_keyset_filename,
+    const std::string& public_jwk_set_filename) {
+  absl::Status result = crypto::tink::JwtSignatureRegister();
   if (!result.ok()) return result;
 
   absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =

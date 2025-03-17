@@ -23,6 +23,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
 #include "util/util.h"
@@ -30,7 +32,6 @@
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/signature_config.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, keyset_filename, "", "Keyset file in JSON format");
 ABSL_FLAG(std::string, mode, "", "Mode of operation (sign|verify)");
@@ -42,8 +43,6 @@ namespace {
 using ::crypto::tink::KeysetHandle;
 using ::crypto::tink::PublicKeySign;
 using ::crypto::tink::PublicKeyVerify;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 constexpr absl::string_view kSign = "sign";
 constexpr absl::string_view kVerify = "verify";
@@ -68,11 +67,11 @@ void ValidateParams() {
 namespace tink_cc_examples {
 
 // Digital signature example CLI implementation.
-Status DigitalSignatureCli(absl::string_view mode,
-                           const std::string& keyset_filename,
-                           const std::string& input_filename,
-                           const std::string& signature_filename) {
-  Status result = crypto::tink::SignatureConfig::Register();
+absl::Status DigitalSignatureCli(absl::string_view mode,
+                                 const std::string& keyset_filename,
+                                 const std::string& input_filename,
+                                 const std::string& signature_filename) {
+  absl::Status result = crypto::tink::SignatureConfig::Register();
   if (!result.ok()) return result;
 
   // Read the keyset from file.

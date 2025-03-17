@@ -24,6 +24,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/time/clock.h"
 #include "absl/time/time.h"
@@ -33,7 +35,6 @@
 #include "tink/jwt/jwt_signature_config.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, keyset_filename, "", "Keyset file in JSON format");
 ABSL_FLAG(std::string, audience, "", "Expected audience in the token");
@@ -45,8 +46,6 @@ using ::crypto::tink::JwtPublicKeySign;
 using ::crypto::tink::KeysetHandle;
 using ::crypto::tink::RawJwt;
 using ::crypto::tink::RawJwtBuilder;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 void ValidateParams() {
   // [START_EXCLUDE]
@@ -64,9 +63,10 @@ void ValidateParams() {
 namespace tink_cc_examples {
 
 // JWT sign example CLI implementation.
-Status JwtSign(const std::string& keyset_filename, absl::string_view audience,
-               const std::string& token_filename) {
-  Status result = crypto::tink::JwtSignatureRegister();
+absl::Status JwtSign(const std::string& keyset_filename,
+                     absl::string_view audience,
+                     const std::string& token_filename) {
+  absl::Status result = crypto::tink::JwtSignatureRegister();
   if (!result.ok()) return result;
 
   // Read the keyset from file.

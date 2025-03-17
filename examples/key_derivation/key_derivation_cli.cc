@@ -31,7 +31,6 @@
 #include "tink/keyderivation/key_derivation_config.h"
 #include "tink/keyderivation/keyset_deriver.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, keyset_filename, "",
           "File in JSON format containing keyset that derives an AEAD keyset");
@@ -45,8 +44,6 @@ using ::crypto::tink::AeadConfig;
 using ::crypto::tink::KeyDerivationConfig;
 using ::crypto::tink::KeysetDeriver;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 void ValidateParams() {
   // [START_EXCLUDE]
@@ -60,7 +57,7 @@ void ValidateParams() {
 }
 
 // Verifies `handle` contains a valid AEAD primitive.
-Status VerifyDerivedAeadKeyset(const KeysetHandle& handle) {
+absl::Status VerifyDerivedAeadKeyset(const KeysetHandle& handle) {
   // [START_EXCLUDE]
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       handle.GetPrimitive<crypto::tink::Aead>(
@@ -76,7 +73,7 @@ Status VerifyDerivedAeadKeyset(const KeysetHandle& handle) {
   if (!got.ok()) return got.status();
 
   if (*got != plaintext) {
-    return Status(
+    return absl::Status(
         absl::StatusCode::kInternal,
         "AEAD obtained from derived keyset failed to decrypt correctly");
   }
@@ -88,10 +85,10 @@ Status VerifyDerivedAeadKeyset(const KeysetHandle& handle) {
 
 namespace tink_cc_examples {
 
-Status KeyDerivationCli(const std::string& keyset_filename,
-                        const std::string& salt_filename,
-                        const std::string& derived_keyset_filename) {
-  Status result = KeyDerivationConfig::Register();
+absl::Status KeyDerivationCli(const std::string& keyset_filename,
+                              const std::string& salt_filename,
+                              const std::string& derived_keyset_filename) {
+  absl::Status result = KeyDerivationConfig::Register();
   if (!result.ok()) return result;
   result = AeadConfig::Register();
   if (!result.ok()) return result;
@@ -117,7 +114,7 @@ Status KeyDerivationCli(const std::string& keyset_filename,
       (*deriver)->DeriveKeyset(*salt_file_content);
   if (!derived_handle.ok()) return derived_handle.status();
 
-  Status status = VerifyDerivedAeadKeyset(**derived_handle);
+  absl::Status status = VerifyDerivedAeadKeyset(**derived_handle);
   if (!status.ok()) return status;
 
   return WriteJsonCleartextKeyset(derived_keyset_filename, **derived_handle);

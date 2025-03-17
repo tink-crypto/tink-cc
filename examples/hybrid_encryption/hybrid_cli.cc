@@ -23,6 +23,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
 #include "util/util.h"
@@ -33,7 +35,6 @@
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, keyset_filename, "", "Keyset file in JSON format");
 ABSL_FLAG(std::string, mode, "", "Mode of operation {encrypt|decrypt}");
@@ -47,8 +48,6 @@ namespace {
 using ::crypto::tink::HybridDecrypt;
 using ::crypto::tink::HybridEncrypt;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 constexpr absl::string_view kEncrypt = "encrypt";
 constexpr absl::string_view kDecrypt = "decrypt";
@@ -71,11 +70,12 @@ void ValidateParams() {
 
 namespace tink_cc_examples {
 
-Status HybridCli(absl::string_view mode, const std::string& keyset_filename,
-                 const std::string& input_filename,
-                 const std::string& output_filename,
-                 absl::string_view context_info) {
-  Status result = crypto::tink::HybridConfig::Register();
+absl::Status HybridCli(absl::string_view mode,
+                       const std::string& keyset_filename,
+                       const std::string& input_filename,
+                       const std::string& output_filename,
+                       absl::string_view context_info) {
+  absl::Status result = crypto::tink::HybridConfig::Register();
   if (!result.ok()) return result;
 #ifndef TINK_EXAMPLES_EXCLUDE_HPKE
   // HPKE isn't supported when using OpenSSL as a backend.

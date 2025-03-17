@@ -23,13 +23,14 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/config/global_registry.h"
 #include "util/util.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, keyset_filename, "", "Keyset file in JSON format");
 ABSL_FLAG(std::string, mode, "", "Mode of operation {encrypt|decrypt}");
@@ -43,8 +44,6 @@ namespace {
 using ::crypto::tink::Aead;
 using ::crypto::tink::AeadConfig;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 constexpr absl::string_view kEncrypt = "encrypt";
 constexpr absl::string_view kDecrypt = "decrypt";
@@ -68,11 +67,11 @@ void ValidateParams() {
 namespace tink_cc_examples {
 
 // AEAD example CLI implementation.
-Status AeadCli(absl::string_view mode, const std::string& keyset_filename,
-               const std::string& input_filename,
-               const std::string& output_filename,
-               absl::string_view associated_data) {
-  Status result = AeadConfig::Register();
+absl::Status AeadCli(absl::string_view mode, const std::string& keyset_filename,
+                     const std::string& input_filename,
+                     const std::string& output_filename,
+                     absl::string_view associated_data) {
+  absl::Status result = AeadConfig::Register();
   if (!result.ok()) return result;
 
   // Read the keyset from file.

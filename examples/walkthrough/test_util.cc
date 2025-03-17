@@ -19,20 +19,18 @@
 #include <memory>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/config/global_registry.h"
 #include "walkthrough/load_cleartext_keyset.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 namespace tink_walkthrough {
 
 using ::crypto::tink::Aead;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 bool FakeKmsClient::DoesSupport(absl::string_view key_uri) const {
   return absl::StartsWith(key_uri, "fake://");
@@ -53,7 +51,7 @@ bool AlwaysFailingFakeKmsClient::DoesSupport(absl::string_view key_uri) const {
 
 absl::StatusOr<std::unique_ptr<Aead>> AlwaysFailingFakeKmsClient::GetAead(
     absl::string_view key_uri) const {
-  return Status(absl::StatusCode::kUnimplemented, "Unimplemented");
+  return absl::Status(absl::StatusCode::kUnimplemented, "Unimplemented");
 }
 
 }  // namespace tink_walkthrough

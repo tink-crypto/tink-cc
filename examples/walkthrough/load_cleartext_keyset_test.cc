@@ -22,12 +22,12 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/config/global_registry.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace tink_walkthrough {
@@ -52,7 +52,6 @@ constexpr absl::string_view kSerializedKeyset = R"json({
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::StatusOr;
 
 TEST(LoadKeysetTest, LoadKeysetFailsWithInvalidKeyset) {
   EXPECT_THAT(LoadKeyset("Invalid").status(),

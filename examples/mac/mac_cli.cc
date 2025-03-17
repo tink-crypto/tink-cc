@@ -28,13 +28,13 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
 #include "util/util.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac.h"
 #include "tink/mac/mac_config.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, keyset_filename, "", "Keyset file in JSON format");
 ABSL_FLAG(std::string, mode, "", "Mode of operation {compute|verify}");
@@ -46,8 +46,6 @@ namespace {
 using ::crypto::tink::KeysetHandle;
 using ::crypto::tink::Mac;
 using ::crypto::tink::MacConfig;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 constexpr absl::string_view kCompute = "compute";
 constexpr absl::string_view kVerify = "verify";
@@ -71,10 +69,10 @@ void ValidateParams() {
 namespace tink_cc_examples {
 
 // MAC example CLI implementation.
-Status MacCli(absl::string_view mode, const std::string keyset_filename,
-              const std::string& data_filename,
-              const std::string& tag_filename) {
-  Status result = MacConfig::Register();
+absl::Status MacCli(absl::string_view mode, const std::string keyset_filename,
+                    const std::string& data_filename,
+                    const std::string& tag_filename) {
+  absl::Status result = MacConfig::Register();
   if (!result.ok()) return result;
 
   // Read the keyset from file.
@@ -109,7 +107,7 @@ Status MacCli(absl::string_view mode, const std::string keyset_filename,
       exit(1);
     }
     // Verify authentication tag.
-    Status verify_result =
+    absl::Status verify_result =
         (*mac_primitive)->VerifyMac(*tag_result, *data_file_content);
     if (verify_result.ok()) std::clog << "Verification succeeded!" << '\n';
     return verify_result;

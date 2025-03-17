@@ -21,6 +21,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/json/json_keyset_reader.h"
@@ -28,12 +29,10 @@
 #include "tink/keyset_reader.h"
 #include "tink/kms_client.h"
 #include "tink/kms_clients.h"
-#include "tink/util/statusor.h"
 
 namespace tink_walkthrough {
 
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::StatusOr;
 
 // Loads an encrypted JSON-serialized keyset `serialized_encrypted_keyset`.
 // The keyset is decrypted using `keyset_encryption_aead`.

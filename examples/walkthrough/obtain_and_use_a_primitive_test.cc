@@ -23,11 +23,11 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead/aead_config.h"
 #include "walkthrough/load_cleartext_keyset.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace tink_walkthrough {
@@ -52,7 +52,6 @@ constexpr absl::string_view kSerializedKeyset = R"string({
 using ::crypto::tink::KeysetHandle;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
-using ::crypto::tink::util::StatusOr;
 
 TEST(LoadKeysetTest, EncryptDecrypt) {
   ASSERT_THAT(crypto::tink::AeadConfig::Register(), IsOk());

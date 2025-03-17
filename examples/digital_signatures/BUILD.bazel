@@ -18,11 +18,12 @@ cc_binary(
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@tink_cc//tink:keyset_handle",
         "@tink_cc//tink:public_key_sign",
         "@tink_cc//tink:public_key_verify",
         "@tink_cc//tink/signature:signature_config",
-        "@tink_cc//tink/util:status",
     ],
 )
 

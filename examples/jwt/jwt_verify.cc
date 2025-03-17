@@ -24,6 +24,8 @@
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
 #include "absl/log/check.h"
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
 #include "util/util.h"
@@ -32,7 +34,6 @@
 #include "tink/jwt/jwt_signature_config.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, jwk_set_filename, "", "Path to the JWK set file");
 ABSL_FLAG(std::string, audience, "", "Expected audience in the token");
@@ -44,8 +45,6 @@ using ::crypto::tink::JwkSetToPublicKeysetHandle;
 using ::crypto::tink::JwtPublicKeyVerify;
 using ::crypto::tink::JwtValidator;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::Status;
-using ::crypto::tink::util::StatusOr;
 
 void ValidateParams() {
   // [START_EXCLUDE]
@@ -63,10 +62,10 @@ void ValidateParams() {
 namespace tink_cc_examples {
 
 // JWT verify example CLI implementation.
-Status JwtVerify(const std::string& jwk_set_filename,
-                 absl::string_view audience,
-                 const std::string& token_filename) {
-  Status result = crypto::tink::JwtSignatureRegister();
+absl::Status JwtVerify(const std::string& jwk_set_filename,
+                       absl::string_view audience,
+                       const std::string& token_filename) {
+  absl::Status result = crypto::tink::JwtSignatureRegister();
   if (!result.ok()) return result;
 
   // Read the JWK set from file and convert it.

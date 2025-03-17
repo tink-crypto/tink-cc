@@ -21,16 +21,14 @@
 #include <memory>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/json/json_keyset_reader.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
-#include "tink/util/statusor.h"
 
 namespace tink_walkthrough {
-
-using ::crypto::tink::util::StatusOr;
 
 // Loads a JSON-serialized unencrypted keyset `serialized_keyset` and returns a
 // KeysetHandle.

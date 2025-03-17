@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
@@ -39,7 +40,6 @@ using ::crypto::tink::Aead;
 using ::crypto::tink::KeysetHandle;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
-using ::crypto::tink::util::StatusOr;
 
 constexpr absl::string_view kSerializedKeyset = R"string({
   "key": [

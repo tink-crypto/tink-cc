@@ -18,11 +18,12 @@ cc_binary(
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@tink_cc//tink:keyset_handle",
         "@tink_cc//tink/jwt:jwt_public_key_sign",
         "@tink_cc//tink/jwt:jwt_signature_config",
         "@tink_cc//tink/jwt:raw_jwt",
-        "@tink_cc//tink/util:status",
     ],
 )
 
@@ -34,12 +35,13 @@ cc_binary(
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@tink_cc//tink:keyset_handle",
         "@tink_cc//tink/jwt:jwk_set_converter",
         "@tink_cc//tink/jwt:jwt_public_key_verify",
         "@tink_cc//tink/jwt:jwt_signature_config",
         "@tink_cc//tink/jwt:jwt_validator",
-        "@tink_cc//tink/util:status",
     ],
 )
 
@@ -51,10 +53,11 @@ cc_binary(
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@tink_cc//tink:keyset_handle",
         "@tink_cc//tink/jwt:jwk_set_converter",
         "@tink_cc//tink/jwt:jwt_signature_config",
-        "@tink_cc//tink/util:status",
     ],
 )
 

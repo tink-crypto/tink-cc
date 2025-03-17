@@ -396,7 +396,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   absl::StatusOr<JwtEcdsaPublicKeyStruct> proto_public_key =
       ToProtoPublicKey(key);
   if (!proto_public_key.ok()) {
-    proto_public_key.status();
+    return proto_public_key.status();
   }
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =

@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "absl/base/macros.h"
 #include "absl/crc/crc32c.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -48,13 +49,28 @@ class SecretDataWithCrc final {
 
   // Creates a new SecretDataWithCrc and computes the CRC (in a
   // CallWithCoreDumpProtection).
-  static SecretDataWithCrc WithComputedCrc(absl::string_view data);
+  ABSL_DEPRECATE_AND_INLINE()
+  inline static SecretDataWithCrc WithComputedCrc(absl::string_view data) {
+    return SecretDataWithCrc(data);
+  }
 
   // Creates a new SecretDataWithCrc and computes the CRC (in a
   // CallWithCoreDumpProtection).
   // Note: this overload will eventually be removed (as users should instead)
   // call "ComputeAndSetCrc()".
-  static SecretDataWithCrc WithComputedCrc(crypto::tink::util::SecretData data);
+  ABSL_DEPRECATE_AND_INLINE()
+  inline static SecretDataWithCrc WithComputedCrc(
+      crypto::tink::util::SecretData data) {
+    return SecretDataWithCrc(std::move(data));
+  }
+
+  // Creates a new SecretDataWithCrc computing the CRC of the `data`.
+  //
+  // The CRC is computed in a CallWithCoreDumpProtection.
+  //
+  // Complexity: O(n) -- must make a string copy
+  explicit SecretDataWithCrc(absl::string_view data);
+  explicit SecretDataWithCrc(crypto::tink::util::SecretData data);
 
   // Creates a new SecretDataWithCrc.
   // If an adversary can control the provided crc, they might be able to obtain

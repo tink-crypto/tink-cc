@@ -1754,6 +1754,7 @@ tink_cc_library(
   DEPS
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
+    absl::core_headers
     absl::crc32c
     absl::status
     absl::statusor

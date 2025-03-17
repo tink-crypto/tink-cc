@@ -1824,6 +1824,7 @@ cc_library(
         ":dfsan_forwarders",
         "//tink/util:secret_data",
         "//tink/util:status",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

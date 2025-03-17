@@ -60,14 +60,11 @@ SecretValue<absl::crc32c_t> ComputeSecretCrc32c(absl::string_view data) {
 
 }  // namespace
 
-SecretDataWithCrc SecretDataWithCrc::WithComputedCrc(absl::string_view data) {
-  return SecretDataWithCrc(data, ComputeSecretCrc32c(data));
-}
+SecretDataWithCrc::SecretDataWithCrc(absl::string_view data)
+    : SecretDataWithCrc(data, ComputeSecretCrc32c(data)) {}
 
-SecretDataWithCrc SecretDataWithCrc::WithComputedCrc(SecretData data) {
-  SecretValue<absl::crc32c_t> crc =
-      ComputeSecretCrc32c(SecretDataAsStringView(data));
-  return SecretDataWithCrc(std::move(data), std::move(crc));
+SecretDataWithCrc::SecretDataWithCrc(SecretData data) : data_(std::move(data)) {
+  crc_ = ComputeSecretCrc32c(SecretDataAsStringView(data_));
 }
 
 SecretDataWithCrc::SecretDataWithCrc(SecretData data,

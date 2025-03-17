@@ -229,11 +229,11 @@ class SecretValue {
   explicit SecretValue(T t = T())
       : ptr_(MakeSecretUniquePtr<T>(std::move(t))) {}
 
-  SecretValue(SecretValue&& other) : ptr_(MakeSecretUniquePtr<T>()) {
+  SecretValue(SecretValue&& other) noexcept : ptr_(MakeSecretUniquePtr<T>()) {
     ptr_.swap(other.ptr_);
   }
 
-  SecretValue& operator=(SecretValue&& other) {
+  SecretValue& operator=(SecretValue&& other) noexcept {
     ptr_.swap(other.ptr_);
     return *this;
   }

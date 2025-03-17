@@ -22,17 +22,16 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/config/global_registry.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
 
 namespace tink_walkthrough {
 
 using ::crypto::tink::Aead;
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::StatusOr;
 
 // AEAD encrypts `plaintext` with `associated_data` and the primary key in
 // `keyset_handle`.

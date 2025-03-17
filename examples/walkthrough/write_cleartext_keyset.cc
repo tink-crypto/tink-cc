@@ -21,15 +21,15 @@
 #include <ostream>
 #include <utility>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/json/json_keyset_writer.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 namespace tink_walkthrough {
 
 using ::crypto::tink::JsonKeysetWriter;
-using ::crypto::tink::util::StatusOr;
 
 // Writes a `keyset` to `output_stream` as a plaintext JSON format.
 //

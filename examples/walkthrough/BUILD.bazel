@@ -135,6 +135,7 @@ cc_library(
     srcs = ["obtain_and_use_a_primitive.cc"],
     hdrs = ["obtain_and_use_a_primitive.h"],
     deps = [
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@tink_cc//tink:tink_cc",
     ],

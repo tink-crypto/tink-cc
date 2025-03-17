@@ -19,8 +19,8 @@
 #include <memory>
 #include <ostream>
 
+#include "absl/status/status.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 namespace tink_walkthrough {
 

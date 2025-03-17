@@ -19,16 +19,15 @@
 // [START tink_walkthrough_create_keyset]
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/config/global_registry.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace tink_walkthrough {
 
 using ::crypto::tink::KeysetHandle;
-using ::crypto::tink::util::StatusOr;
 using ::google::crypto::tink::KeyTemplate;
 
 // Creates a keyset with a single AES128-GCM key and return a handle to it.

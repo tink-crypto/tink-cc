@@ -1045,8 +1045,7 @@ TEST(ProtoParserTest, SerializeSecredDataFieldAlwaysSerializeWorks) {
 
 TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
   ParsedStruct parsed_struct;
-  parsed_struct.secret_data_with_crc_member_1 =
-      SecretDataWithCrc::WithComputedCrc("some text");
+  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc("some text");
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -1065,10 +1064,9 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
 
 TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
   ParsedStruct parsed_struct;
-  parsed_struct.secret_data_with_crc_member_1 =
-      SecretDataWithCrc::WithComputedCrc("some text");
+  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc("some text");
   parsed_struct.secret_data_with_crc_member_2 =
-      SecretDataWithCrc::WithComputedCrc("another text");
+      SecretDataWithCrc("another text");
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -1123,9 +1121,9 @@ TEST(ProtoParserTest, CrcOfInnerFieldSerializationWorks) {
   std::string text1 = "something";
   std::string text2 = "anything, does not matter";
   parsed_struct.inner_member_1.secret_data_with_crc_member_1 =
-      SecretDataWithCrc::WithComputedCrc(text1);
+      SecretDataWithCrc(text1);
   parsed_struct.inner_member_2.secret_data_with_crc_member_1 =
-      SecretDataWithCrc::WithComputedCrc(text2);
+      SecretDataWithCrc(text2);
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()

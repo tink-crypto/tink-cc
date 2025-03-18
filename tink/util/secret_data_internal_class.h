@@ -95,8 +95,6 @@ class SecretDataInternalClass {
   bool empty() const { return data_.empty(); }
   size_t size() const { return data_.size(); }
   size_t max_size() const { return kMaxCount; }
-
-  void resize(size_t size, uint8_t val = 0) { data_.resize(size, val); }
   size_t capacity() const { return data_.capacity(); }
   void clear() { data_.clear(); }
 

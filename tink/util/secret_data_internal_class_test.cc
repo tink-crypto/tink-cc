@@ -124,22 +124,6 @@ TEST(SecretDataInternalClassTest, AsStringView) {
   EXPECT_THAT(data.AsStringView(), Eq(kTestData));
 }
 
-TEST(SecretDataInternalClassTest, Resize) {
-  SecretDataInternalClass data =
-      SecretDataInternalClassFromStringView(kTestData);
-  data.resize(1);
-  EXPECT_FALSE(data.empty());
-  ASSERT_THAT(data.size(), Eq(1));
-  EXPECT_THAT(data[0], Eq(kTestData[0]));
-  data.resize(5);
-  ASSERT_THAT(data.size(), Eq(5));
-  EXPECT_THAT(data[0], Eq(kTestData[0]));
-  EXPECT_THAT(data[1], Eq(0));
-  EXPECT_THAT(data[2], Eq(0));
-  EXPECT_THAT(data[3], Eq(0));
-  EXPECT_THAT(data[4], Eq(0));
-}
-
 TEST(SecretDataInternalClassTest, Iteration) {
   SecretDataInternalClass data =
       SecretDataInternalClassFromStringView(kTestData);

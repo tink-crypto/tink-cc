@@ -485,6 +485,7 @@ tink_cc_test(
     tink::util::secret_data
     gmock
     absl::strings
+    benchmark::benchmark_main
     tink::internal::secret_buffer
 )
 

@@ -21,6 +21,7 @@
 #include <type_traits>
 #include <utility>
 
+#include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/strings/string_view.h"
@@ -193,6 +194,59 @@ TYPED_TEST(SecretValueTest, MoveAssignment) {
   // NOLINTNEXTLINE(bugprone-use-after-move)
   EXPECT_THAT(s.value(), AnyOf(Eq(TypeParam(0)), Eq(TypeParam(102))));
 }
+
+void BM_SecretDataFromSecretBuffer(benchmark::State& state) {
+  for (auto s : state) {
+    state.PauseTiming();
+    SecretBuffer data(state.range(0), 'x');
+    benchmark::DoNotOptimize(data);
+    state.ResumeTiming();
+    SecretData secret_data = internal::AsSecretData(std::move(data));
+    benchmark::DoNotOptimize(secret_data);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_SecretDataFromSecretBufferCopy(benchmark::State& state) {
+  SecretBuffer data(state.range(0), 'x');
+  benchmark::DoNotOptimize(data);
+  for (auto s : state) {
+    SecretData secret_data = internal::AsSecretData(data);
+    benchmark::DoNotOptimize(secret_data);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+void BM_SecretDataFromStringView(benchmark::State& state) {
+  std::string data(state.range(0), 'x');
+  benchmark::DoNotOptimize(data);
+  for (auto s : state) {
+    SecretData secret_data = SecretDataFromStringView(data);
+    benchmark::DoNotOptimize(secret_data);
+  }
+  state.SetBytesProcessed(state.iterations() * state.range(0));
+}
+
+BENCHMARK(BM_SecretDataFromSecretBuffer)
+    ->Arg(1)
+    ->Arg(32)
+    ->Arg(2048)
+    ->Arg(1 << 10)
+    ->Arg(1 << 20);
+
+BENCHMARK(BM_SecretDataFromSecretBufferCopy)
+    ->Arg(1)
+    ->Arg(32)
+    ->Arg(2048)
+    ->Arg(1 << 10)
+    ->Arg(1 << 20);
+
+BENCHMARK(BM_SecretDataFromStringView)
+    ->Arg(1)
+    ->Arg(32)
+    ->Arg(2048)
+    ->Arg(1 << 10)
+    ->Arg(1 << 20);
 
 }  // namespace
 }  // namespace util

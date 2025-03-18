@@ -578,6 +578,7 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_public_key
     tink::signature::signature_private_key
     absl::status
+    absl::statusor
     absl::optional
     crypto
     tink::core::big_integer

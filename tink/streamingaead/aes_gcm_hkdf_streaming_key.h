@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
@@ -30,7 +31,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a Streaming AEAD that uses AES-GCM-HKDF Streaming.
-class AesGcmHkdfStreamingKey : public StreamingAeadKey {
+class AesGcmHkdfStreamingKey final : public StreamingAeadKey {
  public:
   // Copyable and movable.
   AesGcmHkdfStreamingKey(const AesGcmHkdfStreamingKey& other) = default;

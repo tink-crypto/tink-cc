@@ -35,7 +35,7 @@ namespace tink {
 
 // Representation of the verification function for the ML-DSA digital signature
 // primitive.
-class MlDsaPublicKey : public SignaturePublicKey {
+class MlDsaPublicKey final : public SignaturePublicKey {
  public:
   // Copyable and movable.
   MlDsaPublicKey(const MlDsaPublicKey& other) = default;

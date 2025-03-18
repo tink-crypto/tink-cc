@@ -633,7 +633,6 @@ tink_cc_library(
     tink::core::key
     tink::core::parameters
     tink::core::secret_key_access_token
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 

@@ -33,7 +33,7 @@ namespace tink {
 
 // Representation of the decryption function for an ECIES hybrid encryption
 // primitive.
-class EciesPrivateKey : public HybridPrivateKey {
+class EciesPrivateKey final : public HybridPrivateKey {
  public:
   // Copyable and movable.
   EciesPrivateKey(const EciesPrivateKey& other) = default;

@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aead_key.h"
@@ -35,7 +36,7 @@ namespace crypto {
 namespace tink {
 
 // Represents an AEAD that uses AES-GCM-SIV.
-class AesGcmSivKey : public AeadKey {
+class AesGcmSivKey final : public AeadKey {
  public:
   // Copyable and movable.
   AesGcmSivKey(const AesGcmSivKey& other) = default;

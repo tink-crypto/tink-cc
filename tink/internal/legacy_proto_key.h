@@ -69,7 +69,7 @@ class UnusableLegacyProtoParameters : public Parameters {
 };
 
 // Key type for legacy proto keys.
-class LegacyProtoKey : public Key {
+class LegacyProtoKey final : public Key {
  public:
   // Copyable and movable.
   LegacyProtoKey(const LegacyProtoKey& other) = default;

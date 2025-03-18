@@ -32,7 +32,7 @@ namespace tink {
 
 // Representation of the sign function for an ECDSA digital signature
 // primitive.
-class EcdsaPrivateKey : public SignaturePrivateKey {
+class EcdsaPrivateKey final : public SignaturePrivateKey {
  public:
   // Copyable and movable.
   EcdsaPrivateKey(const EcdsaPrivateKey& other) = default;

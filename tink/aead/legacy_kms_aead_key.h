@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aead_key.h"
@@ -33,7 +34,7 @@ namespace crypto {
 namespace tink {
 
 // Represents an AEAD that is backed by a KMS.
-class LegacyKmsAeadKey : public AeadKey {
+class LegacyKmsAeadKey final : public AeadKey {
  public:
   // Copyable and movable.
   LegacyKmsAeadKey(const LegacyKmsAeadKey& other) = default;

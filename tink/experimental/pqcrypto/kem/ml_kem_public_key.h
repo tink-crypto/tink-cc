@@ -22,6 +22,7 @@
 #include <string>
 
 #include "absl/base/attributes.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/experimental/kem/kem_public_key.h"
@@ -35,7 +36,7 @@ namespace tink {
 
 // Representation of the encapsulation function for the ML-KEM key encapsulation
 // mechanism primitive.
-class MlKemPublicKey : public KemPublicKey {
+class MlKemPublicKey final : public KemPublicKey {
  public:
   // Copyable and movable.
   MlKemPublicKey(const MlKemPublicKey& other) = default;

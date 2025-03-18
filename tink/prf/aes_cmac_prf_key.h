@@ -20,6 +20,7 @@
 #include <memory>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
@@ -31,7 +32,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a PRF that uses AES-CMAC.
-class AesCmacPrfKey : public PrfKey {
+class AesCmacPrfKey final : public PrfKey {
  public:
   // Copyable and movable.
   AesCmacPrfKey(const AesCmacPrfKey& other) = default;

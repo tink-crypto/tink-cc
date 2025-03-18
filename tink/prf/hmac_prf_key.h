@@ -29,7 +29,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a PRF that uses HMAC.
-class HmacPrfKey : public PrfKey {
+class HmacPrfKey final : public PrfKey {
  public:
   // Copyable and movable.
   HmacPrfKey(const HmacPrfKey& other) = default;

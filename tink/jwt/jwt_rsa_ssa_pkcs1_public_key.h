@@ -35,7 +35,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a JWT RSASSA-PKCS1 public key to verify a JWT using RSA.
-class JwtRsaSsaPkcs1PublicKey : public JwtSignaturePublicKey {
+class JwtRsaSsaPkcs1PublicKey final : public JwtSignaturePublicKey {
  public:
   class Builder {
    public:

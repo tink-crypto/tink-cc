@@ -34,7 +34,7 @@
 namespace crypto {
 namespace tink {
 
-class AesCmacKey : public MacKey {
+class AesCmacKey final : public MacKey {
  public:
   // Copyable and movable.
   AesCmacKey(const AesCmacKey& other) = default;

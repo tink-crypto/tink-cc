@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aead_key.h"
@@ -35,7 +36,7 @@ namespace crypto {
 namespace tink {
 
 // Represents an AEAD that uses XChaCha20-Poly1305.
-class XChaCha20Poly1305Key : public AeadKey {
+class XChaCha20Poly1305Key final : public AeadKey {
  public:
   // Copyable and movable.
   XChaCha20Poly1305Key(const XChaCha20Poly1305Key& other) = default;

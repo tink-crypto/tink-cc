@@ -380,6 +380,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::aes_gcm_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key
@@ -423,6 +424,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::aes_gcm_siv_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key
@@ -490,6 +492,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::aes_eax_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -533,6 +536,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::xchacha20_poly1305_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key
@@ -575,6 +579,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::chacha20_poly1305_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key
@@ -621,6 +626,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -665,6 +671,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::x_aes_gcm_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -746,6 +753,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::legacy_kms_aead_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key
@@ -793,6 +801,7 @@ tink_cc_library(
     tink::aead::aead_key
     tink::aead::legacy_kms_envelope_aead_parameters
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional

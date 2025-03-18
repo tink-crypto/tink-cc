@@ -150,6 +150,7 @@ tink_cc_library(
     tink::daead::aes_siv_parameters
     tink::daead::deterministic_aead_key
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::key

@@ -20,6 +20,7 @@
 #include <memory>
 
 #include "absl/base/attributes.h"
+#include "absl/status/statusor.h"
 #include "tink/experimental/kem/kem_private_key.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_public_key.h"
 #include "tink/key.h"
@@ -32,7 +33,7 @@ namespace tink {
 
 // Representation of the decapsulation function for the ML-KEM key encapsulation
 // mechanism primitive.
-class MlKemPrivateKey : public KemPrivateKey {
+class MlKemPrivateKey final : public KemPrivateKey {
  public:
   // Copyable and movable.
   MlKemPrivateKey(const MlKemPrivateKey& other) = default;

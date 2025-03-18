@@ -29,7 +29,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a PRF that uses HKDF.
-class HkdfPrfKey : public PrfKey {
+class HkdfPrfKey final : public PrfKey {
  public:
   // Copyable and movable.
   HkdfPrfKey(const HkdfPrfKey& other) = default;

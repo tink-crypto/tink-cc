@@ -35,7 +35,7 @@ namespace tink {
 
 // Representation of the public key for the RsaSsaPss digital
 // signature scheme.
-class RsaSsaPssPublicKey : public SignaturePublicKey {
+class RsaSsaPssPublicKey final : public SignaturePublicKey {
  public:
   // Copyable and movable.
   RsaSsaPssPublicKey(const RsaSsaPssPublicKey& other) = default;

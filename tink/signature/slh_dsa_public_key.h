@@ -35,7 +35,7 @@ namespace tink {
 
 // Representation of the verification function for the SLH-DSA digital signature
 // primitive.
-class SlhDsaPublicKey : public SignaturePublicKey {
+class SlhDsaPublicKey final : public SignaturePublicKey {
  public:
   // Copyable and movable.
   SlhDsaPublicKey(const SlhDsaPublicKey& other) = default;

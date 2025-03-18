@@ -33,7 +33,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a PRF-based key derivation.
-class PrfBasedKeyDerivationKey : public KeyDerivationKey {
+class PrfBasedKeyDerivationKey final : public KeyDerivationKey {
  public:
   // Copyable and movable.
   PrfBasedKeyDerivationKey(const PrfBasedKeyDerivationKey& other) = default;

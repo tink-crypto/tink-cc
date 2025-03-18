@@ -264,6 +264,7 @@ tink_cc_library(
     tink::streamingaead::aes_ctr_hmac_streaming_parameters
     tink::streamingaead::streaming_aead_key
     absl::status
+    absl::statusor
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
@@ -327,6 +328,7 @@ tink_cc_library(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::streamingaead::streaming_aead_key
     absl::status
+    absl::statusor
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data

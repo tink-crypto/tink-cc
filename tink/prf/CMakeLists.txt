@@ -236,6 +236,7 @@ tink_cc_library(
   DEPS
     tink::prf::aes_cmac_prf_parameters
     tink::prf::prf_key
+    absl::statusor
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data

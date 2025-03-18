@@ -35,7 +35,7 @@ namespace tink {
 
 // Representation of the verify function for an ECDSA digital signature
 // primitive.
-class EcdsaPublicKey : public SignaturePublicKey {
+class EcdsaPublicKey final : public SignaturePublicKey {
  public:
   // Copyable and movable.
   EcdsaPublicKey(const EcdsaPublicKey& other) = default;

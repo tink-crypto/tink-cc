@@ -32,7 +32,7 @@ namespace tink {
 
 // Representation of the signing function for the ML-DSA digital signature
 // primitive.
-class MlDsaPrivateKey : public SignaturePrivateKey {
+class MlDsaPrivateKey final : public SignaturePrivateKey {
  public:
   // Copyable and movable.
   MlDsaPrivateKey(const MlDsaPrivateKey& other) = default;

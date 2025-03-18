@@ -30,7 +30,7 @@
 namespace crypto {
 namespace tink {
 
-class Ed25519PrivateKey : public SignaturePrivateKey {
+class Ed25519PrivateKey final : public SignaturePrivateKey {
  public:
   // Copyable and movable.
   Ed25519PrivateKey(const Ed25519PrivateKey& other) = default;

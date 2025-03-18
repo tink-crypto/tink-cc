@@ -262,6 +262,7 @@ tink_cc_library(
     absl::core_headers
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     crypto
@@ -284,6 +285,7 @@ tink_cc_library(
     tink::experimental::pqcrypto::kem::ml_kem_parameters
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional

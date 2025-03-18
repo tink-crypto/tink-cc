@@ -34,7 +34,7 @@ namespace tink {
 
 // Representation of the encryption function for an HPKE hybrid encryption
 // primitive.
-class HpkePublicKey : public HybridPublicKey {
+class HpkePublicKey final : public HybridPublicKey {
  public:
   // Copyable and movable.
   HpkePublicKey(const HpkePublicKey& other) = default;

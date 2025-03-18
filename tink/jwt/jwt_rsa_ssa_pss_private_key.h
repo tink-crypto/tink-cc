@@ -31,7 +31,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a JWT RSASSA-PSS private key to sign a JWT using RSA.
-class JwtRsaSsaPssPrivateKey : public JwtSignaturePrivateKey {
+class JwtRsaSsaPssPrivateKey final : public JwtSignaturePrivateKey {
  public:
   // Creates JWT RSASSA-PSS private key instances.
   class Builder {

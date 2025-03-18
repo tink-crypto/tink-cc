@@ -31,7 +31,7 @@
 namespace crypto {
 namespace tink {
 
-class RsaSsaPssPrivateKey : public SignaturePrivateKey {
+class RsaSsaPssPrivateKey final : public SignaturePrivateKey {
  public:
   // Copyable and movable.
   RsaSsaPssPrivateKey(const RsaSsaPssPrivateKey& other) = default;

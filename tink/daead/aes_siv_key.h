@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/daead/aes_siv_parameters.h"
@@ -35,7 +36,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a Deterministic AEAD that uses AES-SIV.
-class AesSivKey : public DeterministicAeadKey {
+class AesSivKey final : public DeterministicAeadKey {
  public:
   // Copyable and movable.
   AesSivKey(const AesSivKey& other) = default;

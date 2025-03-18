@@ -35,7 +35,7 @@ namespace crypto {
 namespace tink {
 
 // Represents a JWT ECDSA public key to verify a JWT using ECDSA.
-class JwtEcdsaPublicKey : public JwtSignaturePublicKey {
+class JwtEcdsaPublicKey final : public JwtSignaturePublicKey {
  public:
   // Creates JWT ECDSA public key instances.
   class Builder {

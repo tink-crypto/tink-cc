@@ -34,7 +34,7 @@ namespace crypto {
 namespace tink {
 
 // Represents functions to authenticate and verify JWTs using HMAC.
-class JwtHmacKey : public JwtMacKey {
+class JwtHmacKey final : public JwtMacKey {
  public:
   // Creates JWT HMAC key instances.
   class Builder {

@@ -664,7 +664,6 @@ cc_library(
         "//tink:key",
         "//tink:parameters",
         "//tink:secret_key_access_token",
-        "//tink/util:statusor",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",

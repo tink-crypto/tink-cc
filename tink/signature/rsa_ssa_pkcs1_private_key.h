@@ -19,6 +19,7 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -31,7 +32,7 @@
 namespace crypto {
 namespace tink {
 
-class RsaSsaPkcs1PrivateKey : public SignaturePrivateKey {
+class RsaSsaPkcs1PrivateKey final : public SignaturePrivateKey {
  public:
   // Copyable and movable.
   RsaSsaPkcs1PrivateKey(const RsaSsaPkcs1PrivateKey& other) = default;

@@ -24,13 +24,8 @@
 #include <limits>
 #include <utility>
 
-#include "absl/base/internal/endian.h"
-#include "absl/crc/crc32c.h"
-#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/safe_stringops.h"
 #include "tink/internal/secret_buffer.h"
 
 namespace crypto {
@@ -69,13 +64,6 @@ class SecretDataInternalClass {
   SecretDataInternalClass& operator=(const SecretDataInternalClass& other) {
     if (this != &other) {
       *this = SecretDataInternalClass(other.data_);
-      // Copy the CRC32C from the other object.
-      // TODO - b/379257918: Avoid computing the CRC32C after constructors are
-      // added.
-      if (!other.data_.empty()) {
-        crypto::tink::internal::SafeMemCopy(crc32c_data(), other.crc32c_data(),
-                                            sizeof(uint32_t));
-      }
     }
     return *this;
   }
@@ -91,14 +79,7 @@ class SecretDataInternalClass {
       : SecretDataInternalClass(crypto::tink::internal::SecretBuffer(span)) {}
 
   explicit SecretDataInternalClass(crypto::tink::internal::SecretBuffer other)
-      : data_(std::move(other)) {
-    if (!data_.empty()) {
-      crypto::tink::internal::CallWithCoreDumpProtection([this] {
-        absl::crc32c_t crc = absl::ComputeCrc32c(AsStringView());
-        absl::big_endian::Store32(crc32c_data(), static_cast<uint32_t>(crc));
-      });
-    }
-  }
+      : data_(std::move(other)) {}
 
   ~SecretDataInternalClass() = default;
 
@@ -129,39 +110,8 @@ class SecretDataInternalClass {
     return res;
   }
 
-  // Returns the CRC32C of the data.
-  //
-  // NOTE: This function is not core-dump-safe as the CRC32C may leak. It should
-  // only be called within a CallWithCoreDumpProtection.
-  absl::crc32c_t GetCrc32c() const {
-    if (crc32c_data() == nullptr) {
-      return absl::crc32c_t(0);
-    }
-    return absl::crc32c_t(absl::big_endian::Load32(crc32c_data()));
-  }
-
-  absl::Status ValidateCrc32c() const {
-    return ::crypto::tink::internal::CallWithCoreDumpProtection([this]() {
-      absl::crc32c_t crc = absl::ComputeCrc32c(data_.AsStringView());
-      absl::crc32c_t stored_crc = GetCrc32c();
-      if (crc != stored_crc) {
-        return absl::DataLossError("CRC32C mismatch");
-      }
-      return absl::OkStatus();
-    });
-  }
-
-  // Compares the first `size()` bytes + the CRC32C. Ignores the capacity of the
-  // buffers.
   bool operator==(const SecretDataInternalClass& other) const {
-    if (empty() && other.empty()) {
-      return true;
-    }
-    if (size() != other.size()) {
-      return false;
-    }
-    return crypto::tink::internal::SafeCryptoMemEquals(
-        data(), other.data(), size() + sizeof(uint32_t));
+    return data_ == other.data_;
   }
   bool operator!=(const SecretDataInternalClass& other) const {
     return !(*this == other);
@@ -175,19 +125,6 @@ class SecretDataInternalClass {
  private:
   friend SecretDataInternalClass SecretDataInternalClassFromStringView(
       absl::string_view secret);
-
-  uint8_t* crc32c_data() {
-    if (data_.empty()) {
-      return nullptr;
-    }
-    return data_.data() + data_.size();
-  }
-  const uint8_t* crc32c_data() const {
-    if (data_.empty()) {
-      return nullptr;
-    }
-    return data_.data() + data_.size();
-  }
 
   crypto::tink::internal::SecretBuffer data_;
 };

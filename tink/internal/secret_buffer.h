@@ -25,7 +25,6 @@
 #include <utility>
 
 #include "absl/log/check.h"
-#include "absl/log/log.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/safe_stringops.h"
@@ -85,7 +84,7 @@ class SecretBuffer {
   ~SecretBuffer() {
     if (data_ != nullptr) {
       crypto::tink::util::internal::SanitizingAllocator<uint8_t>().deallocate(
-          data_, buffer_size());
+          data_, capacity_);
     }
   }
 
@@ -123,16 +122,14 @@ class SecretBuffer {
     if (new_cap <= capacity_) {
       return;
     }
-    // Add 4 extra bytes to store the CRC32C of the data. This is going to be
-    // populated in SecretDataInternalClass.
     uint8_t* new_data =
         crypto::tink::util::internal::SanitizingAllocator<uint8_t>().allocate(
-            new_cap + sizeof(uint32_t));
+            new_cap);
     CHECK(new_data != nullptr);
     if (data_ != nullptr) {
       ::crypto::tink::internal::SafeMemCopy(new_data, data_, size_);
       crypto::tink::util::internal::SanitizingAllocator<uint8_t>().deallocate(
-          data_, buffer_size());
+          data_, capacity_);
     }
     data_ = new_data;
     capacity_ = new_cap;
@@ -165,7 +162,11 @@ class SecretBuffer {
       size_t pos, size_t count = std::numeric_limits<size_t>::max()) const& {
     CHECK(pos <= size());
     count = std::min(count, size() - pos);
-    return SecretBuffer(AsStringView().substr(pos, count));
+    SecretBuffer result;
+    result.reserve(count);
+    SafeMemCopy(result.data_, data_ + pos, count);
+    result.size_ = count;
+    return result;
   }
 
   SecretBuffer substr(size_t pos,
@@ -194,9 +195,6 @@ class SecretBuffer {
  private:
   friend class ::crypto::tink::util::internal::SecretDataInternalClass;
 
-  size_t buffer_size() const { return capacity_ + sizeof(uint32_t); }
-
-  // Pointer to a buffer of size `buffer_size()`.
   uint8_t* data_ = nullptr;
   size_t size_ = 0;
   size_t capacity_ = 0;

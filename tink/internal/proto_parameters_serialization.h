@@ -43,16 +43,6 @@ class ProtoParametersSerialization : public Serialization {
       ProtoParametersSerialization&& other) = default;
 
   // Creates a `ProtoParametersSerialization` object from individual components.
-  inline static absl::StatusOr<ProtoParametersSerialization> Create(
-      absl::string_view type_url,
-      google::crypto::tink::OutputPrefixType output_prefix_type,
-      absl::string_view serialized_proto) {
-    return Create(type_url,
-                  static_cast<OutputPrefixTypeEnum>(output_prefix_type),
-                  serialized_proto);
-  }
-
-  // Creates a `ProtoParametersSerialization` object from individual components.
   static absl::StatusOr<ProtoParametersSerialization> Create(
       absl::string_view type_url, OutputPrefixTypeEnum output_prefix_type,
       absl::string_view serialized_proto);

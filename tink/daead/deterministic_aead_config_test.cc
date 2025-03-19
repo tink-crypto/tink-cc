@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_fips.h"
 #include "tink/daead/aes_siv_key.h"
@@ -36,6 +37,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
@@ -44,22 +46,19 @@
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_siv.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::DummyDeterministicAead;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 
 class DeterministicAeadConfigTest : public ::testing::Test {
@@ -141,7 +140,7 @@ TEST_F(DeterministicAeadConfigTest, RegisterFipsValidTemplates) {
     auto new_keyset_handle_result =
         KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
     EXPECT_THAT(new_keyset_handle_result.status(),
-               StatusIs(absl::StatusCode::kNotFound));
+                StatusIs(absl::StatusCode::kNotFound));
   }
 }
 
@@ -198,7 +197,8 @@ TEST_F(DeterministicAeadConfigTest, AesSivProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesSivKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =

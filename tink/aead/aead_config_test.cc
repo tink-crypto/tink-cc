@@ -60,6 +60,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
@@ -84,9 +85,10 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::HasSubstr;
@@ -253,7 +255,8 @@ TEST_F(AeadConfigTest, AesGcmProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesGcmKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -350,7 +353,8 @@ TEST_F(AeadConfigTest, AesGcmSivProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesGcmSivKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -448,7 +452,8 @@ TEST_F(AeadConfigTest, AesEaxProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesEaxKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -751,7 +756,8 @@ TEST_F(AeadConfigTest, ChaCha20Poly1305ProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.ChaCha20Poly1305Key",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(
@@ -839,7 +845,8 @@ TEST_F(AeadConfigTest, XAesGcmProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.XAesGcmKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   ASSERT_THAT(

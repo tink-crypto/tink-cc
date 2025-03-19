@@ -31,6 +31,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_hmac_key.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/jwt/jwt_key_templates.h"
@@ -43,17 +44,16 @@
 #include "tink/subtle/random.h"
 #include "tink/util/test_matchers.h"
 #include "proto/jwt_hmac.pb.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtHmacAlgorithm;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Not;
 
 class JwtMacConfigTest : public ::testing::Test {
@@ -145,7 +145,7 @@ TEST_F(JwtMacConfigTest, JwtHmacProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.JwtHmacKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

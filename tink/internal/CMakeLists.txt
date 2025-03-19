@@ -610,12 +610,12 @@ tink_cc_test(
   DEPS
     tink::internal::legacy_proto_parameters
     tink::internal::proto_parameters_serialization
+    tink::internal::tink_proto_structs
     gmock
+    absl::statusor
     tink::core::parameters
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::test_proto_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(
@@ -643,17 +643,17 @@ tink_cc_test(
   DEPS
     tink::internal::legacy_proto_key
     tink::internal::proto_key_serialization
+    tink::internal::tink_proto_structs
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::util::statusor
     tink::util::test_matchers
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(
@@ -913,6 +913,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key_gen_configuration
@@ -932,7 +933,6 @@ tink_cc_test(
     tink::mac::aes_cmac_parameters
     tink::mac::mac_key_templates
     tink::util::secret_proto
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
@@ -980,17 +980,17 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::serialization_test_util
+    tink::internal::tink_proto_structs
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::util::statusor
     tink::util::test_matchers
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(
@@ -1029,17 +1029,17 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_test_util
+    tink::internal::tink_proto_structs
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::insecure_secret_key_access
     tink::core::key
     tink::core::parameters
     tink::core::restricted_data
     tink::core::secret_key_access_token
-    tink::util::statusor
     tink::util::test_matchers
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

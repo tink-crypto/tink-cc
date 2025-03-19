@@ -34,6 +34,7 @@
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
 #include "tink/jwt/jwt_ecdsa_public_key.h"
@@ -60,13 +61,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::JwtEcdsaAlgorithm;
 using ::google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
 using ::google::crypto::tink::JwtRsaSsaPssAlgorithm;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Not;
 
 class JwtSignatureConfigTest : public ::testing::Test {
@@ -175,7 +176,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.JwtEcdsaPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -242,7 +243,7 @@ TEST_F(JwtSignatureConfigTest, JwtEcdsaProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.JwtEcdsaPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -406,7 +407,7 @@ TEST_F(JwtSignatureConfigTest,
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPkcs1PublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -477,7 +478,7 @@ TEST_F(JwtSignatureConfigTest,
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPkcs1PrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -600,7 +601,7 @@ TEST_F(JwtSignatureConfigTest,
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -671,7 +672,7 @@ TEST_F(JwtSignatureConfigTest,
           "type.googleapis.com/google.crypto.tink.JwtRsaSsaPssPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

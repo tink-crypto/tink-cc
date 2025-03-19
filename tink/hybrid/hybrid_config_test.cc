@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/config/global_registry.h"
@@ -44,6 +45,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
@@ -52,8 +54,7 @@
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
@@ -65,6 +66,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::DummyHybridDecrypt;
 using ::crypto::tink::test::DummyHybridEncrypt;
 using ::crypto::tink::test::IsOk;
@@ -78,7 +81,6 @@ using ::google::crypto::tink::EciesHkdfKemParams;
 using ::google::crypto::tink::EcPointFormat;
 using ::google::crypto::tink::EllipticCurveType;
 using ::google::crypto::tink::HashType;
-using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 
@@ -269,7 +271,7 @@ TEST_F(HybridConfigTest, EciesProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPublicKey",
           RestrictedData(public_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -343,7 +345,7 @@ TEST_F(HybridConfigTest, EciesProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.EciesAeadHkdfPrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::RAW,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
           /*id_requirement=*/absl::nullopt);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

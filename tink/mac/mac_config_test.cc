@@ -25,6 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/chunked_mac.h"
 #include "tink/config/global_registry.h"
 #include "tink/insecure_secret_key_access.h"
@@ -33,6 +34,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac.h"
@@ -49,8 +51,6 @@
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_cmac.pb.h"
@@ -62,13 +62,14 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::DummyMac;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
+using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
-using ::google::crypto::tink::HashType;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Values;
@@ -208,7 +209,8 @@ TEST_F(MacConfigTest, AesCmacProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =
@@ -307,7 +309,8 @@ TEST_F(MacConfigTest, HmacProtoKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HmacKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK, /*id_requirement=*/123);
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
   absl::StatusOr<std::unique_ptr<Key>> parsed_key =

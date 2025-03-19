@@ -328,6 +328,7 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     crypto
     tink::core::chunked_mac
     tink::core::insecure_secret_key_access
@@ -345,9 +346,8 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::subtle::random
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_cmac_cc_proto

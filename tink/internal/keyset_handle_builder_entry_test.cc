@@ -18,12 +18,14 @@
 
 #include <sys/stat.h>
 
+#include <memory>
 #include <string>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
@@ -41,7 +43,6 @@
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
-#include "tink/keyset_handle_builder.h"
 #include "tink/mac/aes_cmac_key.h"
 #include "tink/mac/aes_cmac_parameters.h"
 #include "tink/mac/mac_key_templates.h"
@@ -49,7 +50,6 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_proto.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
@@ -58,6 +58,8 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeyData;
@@ -247,7 +249,8 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromKey) {
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/123);
   ASSERT_THAT(serialization.status(), IsOk());
 
@@ -277,7 +280,8 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/123);
   ASSERT_THAT(serialization.status(), IsOk());
 
@@ -300,7 +304,8 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry,
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/123);
   ASSERT_THAT(serialization.status(), IsOk());
 

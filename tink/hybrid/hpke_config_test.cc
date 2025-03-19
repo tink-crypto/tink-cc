@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/config/global_registry.h"
 #include "tink/config/tink_fips.h"
 #include "tink/hybrid/hpke_parameters.h"
@@ -39,6 +40,7 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/keyset_handle.h"
 #include "tink/parameters.h"
@@ -46,7 +48,7 @@
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "proto/hpke.pb.h"
 #include "proto/tink.pb.h"
@@ -55,15 +57,15 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HpkeAead;
 using ::google::crypto::tink::HpkeKdf;
 using ::google::crypto::tink::HpkeKem;
 using ::google::crypto::tink::HpkeParams;
-using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
-using ::google::crypto::tink::OutputPrefixType;
 
 class HpkeConfigTest : public ::testing::Test {
  protected:
@@ -162,7 +164,7 @@ TEST_F(HpkeConfigTest, HpkeProtoPublicKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePublicKey",
           RestrictedData(key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PUBLIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 
@@ -235,7 +237,7 @@ TEST_F(HpkeConfigTest, HpkeProtoPrivateKeySerializationRegistered) {
           "type.googleapis.com/google.crypto.tink.HpkePrivateKey",
           RestrictedData(private_key_proto.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::ASYMMETRIC_PRIVATE, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(proto_key_serialization, IsOk());
 

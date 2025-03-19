@@ -27,6 +27,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
@@ -48,6 +49,7 @@
 #include "tink/internal/legacy_proto_parameters.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/key_status.h"
 #include "tink/keyset_handle.h"
@@ -61,8 +63,6 @@
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_cmac.pb.h"
@@ -73,6 +73,8 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::AddTinkKey;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
@@ -84,7 +86,6 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::Keyset;
 using ::google::crypto::tink::KeyStatusType;
 using ::google::crypto::tink::KeyTemplate;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::_;
 using ::testing::Eq;
 using ::testing::HasSubstr;
@@ -1009,7 +1010,7 @@ TEST_F(KeysetHandleBuilderTest, UsePrimitiveFromLegacyProtoKey) {
           "type.googleapis.com/google.crypto.tink.AesCmacKey",
           RestrictedData(key.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          KeyData::SYMMETRIC, OutputPrefixType::TINK,
+          KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kTink,
           /*id_requirement=*/123);
   ASSERT_THAT(serialization, IsOk());
 

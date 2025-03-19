@@ -178,7 +178,9 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, derived_key_template.output_prefix_type(),
+          kTypeUrl,
+          static_cast<OutputPrefixTypeEnum>(
+              derived_key_template.output_prefix_type()),
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 
@@ -217,7 +219,9 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
-          kTypeUrl, derived_key_template.output_prefix_type(),
+          kTypeUrl,
+          static_cast<OutputPrefixTypeEnum>(
+              derived_key_template.output_prefix_type()),
           key_format_proto.SerializeAsString());
   ASSERT_THAT(serialization, IsOk());
 

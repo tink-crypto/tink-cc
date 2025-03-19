@@ -1233,18 +1233,16 @@ tink_cc_test(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_unique_ptr
+    tink::internal::tink_proto_structs
     tink::subtle::common_enums
     tink::subtle::random
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::common_cc_proto
     tink::proto::ed25519_cc_proto
     tink::proto::rsa_ssa_pkcs1_cc_proto
     tink::proto::rsa_ssa_pss_cc_proto
-    tink::proto::tink_cc_proto
   TAGS
     exclude_if_openssl
 )

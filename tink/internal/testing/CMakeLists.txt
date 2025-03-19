@@ -21,14 +21,13 @@ tink_cc_test(
   DEPS
     tink::internal::testing::equals_proto_key_serialization
     gmock
+    absl::statusor
     absl::string_view
     tink::core::insecure_secret_key_access
     tink::core::restricted_data
     tink::internal::proto_key_serialization
-    tink::util::statusor
+    tink::internal::tink_proto_structs
     tink::util::test_matchers
-    tink::util::test_util
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_library(

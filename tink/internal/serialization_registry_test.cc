@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/key_parser.h"
@@ -34,22 +35,21 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_test_util.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
+using ::crypto::tink::internal::KeyMaterialTypeEnum;
+using ::crypto::tink::internal::OutputPrefixTypeEnum;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
@@ -98,8 +98,8 @@ TEST(MutableSerializationRegistryTest, ParseParametersWithLegacyFallback) {
 
   // Parse parameters without registered parameters parser.
   absl::StatusOr<ProtoParametersSerialization> serialization =
-      ProtoParametersSerialization::Create("type_url", OutputPrefixType::TINK,
-                                           "serialized_proto");
+      ProtoParametersSerialization::Create(
+          "type_url", OutputPrefixTypeEnum::kTink, "serialized_proto");
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT(registry.ParseParameters(*serialization).status(),
               StatusIs(absl::StatusCode::kNotFound));
@@ -236,7 +236,8 @@ TEST(SerializationRegistryTest, ParseKeyWithLegacyFallback) {
       RestrictedData("serialized_key", InsecureSecretKeyAccess::Get());
   absl::StatusOr<ProtoKeySerialization> serialization =
       ProtoKeySerialization::Create("type_url", serialized_key,
-                                    KeyData::SYMMETRIC, OutputPrefixType::TINK,
+                                    KeyMaterialTypeEnum::kSymmetric,
+                                    OutputPrefixTypeEnum::kTink,
                                     /*id_requirement=*/456);
   ASSERT_THAT(serialization, IsOk());
   EXPECT_THAT(registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get())

@@ -904,6 +904,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::subtle::random
     tink::util::test_matchers
     tink::proto::aes_eax_cc_proto

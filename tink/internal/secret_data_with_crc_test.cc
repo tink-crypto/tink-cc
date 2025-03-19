@@ -24,6 +24,7 @@
 #include "gtest/gtest.h"
 #include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
@@ -54,32 +55,36 @@ TEST(SecretDataWithCrcTest, DefaultConstructor) {
   EXPECT_EQ(secret_data_with_crc.GetCrc32c(), absl::crc32c_t{0});
 }
 
-TEST(SecretDataWithCrcTest, CreateEmpty) {
-  SecretDataWithCrc secret_data_with_crc = SecretDataWithCrc("");
+TEST(SecretDataWithCrcTest, CreateWithComputedCrcEmpty) {
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc("");
   EXPECT_THAT(secret_data_with_crc.AsStringView(), IsEmpty());
   EXPECT_EQ(secret_data_with_crc.GetCrc32c(), absl::crc32c_t{0});
-}
+  }
 
-TEST(SecretDataWithCrcTest, CreateNonEmpty) {
+TEST(SecretDataWithCrcTest, CreateWithComputedCrcNonEmpty) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
 
-  SecretDataWithCrc secret_data_with_crc = SecretDataWithCrc(data);
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc(data);
   EXPECT_THAT(secret_data_with_crc.AsStringView(), Eq(data));
   EXPECT_EQ(secret_data_with_crc.GetCrc32c(), crc);
 }
 
-TEST(SecretDataWithCrcTest, CreateSecretDataEmpty) {
-  SecretDataWithCrc secret_data_with_crc = SecretDataWithCrc(SecretData());
+TEST(SecretDataWithCrcTest, CreateWithComputedCrcSecretDataEmpty) {
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc(SecretData());
   EXPECT_THAT(secret_data_with_crc.AsStringView(), IsEmpty());
   EXPECT_EQ(secret_data_with_crc.GetCrc32c(), absl::crc32c_t{0});
 }
 
-TEST(SecretDataWithCrcTest, CreateSecretDataNonEmpty) {
+TEST(SecretDataWithCrcTest, CreateWithComputedCrcSecretDataNonEmpty) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
   SecretData secret_data = SecretDataFromStringView(data);
-  SecretDataWithCrc secret_data_with_crc = SecretDataWithCrc(secret_data);
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc(secret_data);
   EXPECT_THAT(secret_data_with_crc.AsStringView(), Eq(data));
   EXPECT_EQ(secret_data_with_crc.GetCrc32c(), crc);
 }
@@ -178,7 +183,7 @@ TEST(SecretDataWithCrcTest, AsStringViewWithInvalidCrcSucceeds) {
 TEST(SecretDataWithCrcTest, OperatorBracket) {
   std::string data = HexDecodeOrDie("17ab88bb");
 
-  SecretDataWithCrc secret_data = SecretDataWithCrc(data);
+  SecretDataWithCrc secret_data = SecretDataWithCrc::WithComputedCrc(data);
   EXPECT_THAT(secret_data[0], Eq(0x17));
   EXPECT_THAT(secret_data[1], Eq(0xab));
   EXPECT_THAT(secret_data[2], Eq(0x88));
@@ -188,7 +193,7 @@ TEST(SecretDataWithCrcTest, OperatorBracket) {
 TEST(SecretDataWithCrcTest, Data) {
   std::string data = HexDecodeOrDie("17ab88bb");
 
-  SecretDataWithCrc secret_data = SecretDataWithCrc(data);
+  SecretDataWithCrc secret_data = SecretDataWithCrc::WithComputedCrc(data);
   EXPECT_THAT(
       absl::string_view(reinterpret_cast<const char*>(secret_data.data()), 4),
       Eq(data));
@@ -241,33 +246,39 @@ TEST(SecretDataWithCrcTest, MoveAssignment) {
 }
 
 TEST(SecretDataWithCrcTest, EqualityEqual) {
-  SecretDataWithCrc secret_data_with_crc_1 = SecretDataWithCrc("Some data");
+  SecretDataWithCrc secret_data_with_crc_1 =
+      SecretDataWithCrc::WithComputedCrc("Some data");
   SecretDataWithCrc secret_data_with_crc_1_copy =
-      SecretDataWithCrc("Some data");
+      SecretDataWithCrc::WithComputedCrc("Some data");
   EXPECT_THAT(secret_data_with_crc_1 == secret_data_with_crc_1_copy, IsTrue());
   EXPECT_THAT(secret_data_with_crc_1 != secret_data_with_crc_1_copy, IsFalse());
 }
 
 TEST(SecretDataWithCrcTest, EqualitySameSizeDifferentData) {
-  SecretDataWithCrc secret_data_with_crc_1 = SecretDataWithCrc("Some data");
-  SecretDataWithCrc secret_data_with_crc_2 = SecretDataWithCrc("SOME DATA");
+  SecretDataWithCrc secret_data_with_crc_1 =
+      SecretDataWithCrc::WithComputedCrc("Some data");
+  SecretDataWithCrc secret_data_with_crc_2 =
+      SecretDataWithCrc::WithComputedCrc("SOME DATA");
   EXPECT_THAT(secret_data_with_crc_1 == secret_data_with_crc_2, IsFalse());
   EXPECT_THAT(secret_data_with_crc_1 != secret_data_with_crc_2, IsTrue());
 }
 
 TEST(SecretDataWithCrcTest, EqualityDifferentSize) {
-  SecretDataWithCrc secret_data_with_crc_1 = SecretDataWithCrc("Some data");
-  SecretDataWithCrc secret_data_with_crc_2 = SecretDataWithCrc("Some data 2");
+  SecretDataWithCrc secret_data_with_crc_1 =
+      SecretDataWithCrc::WithComputedCrc("Some data");
+  SecretDataWithCrc secret_data_with_crc_2 =
+      SecretDataWithCrc::WithComputedCrc("Some data 2");
   EXPECT_THAT(secret_data_with_crc_1 == secret_data_with_crc_2, IsFalse());
   EXPECT_THAT(secret_data_with_crc_1 != secret_data_with_crc_2, IsTrue());
 }
 
 TEST(SecretDataWithCrcTest, SizeAndEmpty) {
-  SecretDataWithCrc secret_data_with_crc = SecretDataWithCrc("");
+  SecretDataWithCrc secret_data_with_crc =
+      SecretDataWithCrc::WithComputedCrc("");
   EXPECT_THAT(secret_data_with_crc.size(), Eq(0));
   EXPECT_THAT(secret_data_with_crc.empty(), IsTrue());
 
-  secret_data_with_crc = SecretDataWithCrc("text");
+  secret_data_with_crc = SecretDataWithCrc::WithComputedCrc("text");
   EXPECT_THAT(secret_data_with_crc.size(), Eq(4));
   EXPECT_THAT(secret_data_with_crc.empty(), IsFalse());
 }

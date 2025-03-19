@@ -47,6 +47,23 @@ class SecretDataWithCrc final {
   SecretDataWithCrc(SecretDataWithCrc&& other) = default;
   SecretDataWithCrc& operator=(SecretDataWithCrc&& other) noexcept = default;
 
+  // Creates a new SecretDataWithCrc and computes the CRC (in a
+  // CallWithCoreDumpProtection).
+  ABSL_DEPRECATE_AND_INLINE()
+  inline static SecretDataWithCrc WithComputedCrc(absl::string_view data) {
+    return SecretDataWithCrc(data);
+  }
+
+  // Creates a new SecretDataWithCrc and computes the CRC (in a
+  // CallWithCoreDumpProtection).
+  // Note: this overload will eventually be removed (as users should instead)
+  // call "ComputeAndSetCrc()".
+  ABSL_DEPRECATE_AND_INLINE()
+  inline static SecretDataWithCrc WithComputedCrc(
+      crypto::tink::util::SecretData data) {
+    return SecretDataWithCrc(std::move(data));
+  }
+
   // Creates a new SecretDataWithCrc computing the CRC of the `data`.
   //
   // The CRC is computed in a CallWithCoreDumpProtection.

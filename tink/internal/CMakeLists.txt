@@ -1916,6 +1916,7 @@ tink_cc_library(
   DEPS
     tink::internal::safe_stringops
     tink::internal::sanitizing_allocator
+    absl::log
     absl::check
     absl::string_view
     absl::span

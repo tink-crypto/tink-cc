@@ -43,6 +43,7 @@ using ::testing::Not;
 constexpr absl::string_view kTestData = "123";
 constexpr absl::crc32c_t kTestDataCrc = absl::crc32c_t(0x107b2fb2);
 constexpr absl::string_view kNextTestData = "456";
+constexpr absl::crc32c_t kNextTestDataCrc = absl::crc32c_t(0x6478c48f);
 
 TEST(SecretDataInternalClassTest, DefaultCtor) {
   SecretDataInternalClass data;
@@ -174,9 +175,13 @@ TEST(SecretDataInternalClassTest, Swap) {
   for (size_t i = 0; i < kNextTestData.size(); ++i) {
     EXPECT_THAT(data[i], Eq(kNextTestData[i])) << i;
   }
+  EXPECT_THAT(data.ValidateCrc32c(), IsOk());
+  EXPECT_THAT(data.GetCrc32c(), Eq(absl::crc32c_t(kNextTestDataCrc)));
   for (size_t i = 0; i < kTestData.size(); ++i) {
     EXPECT_THAT(other[i], Eq(kTestData[i])) << i;
   }
+  EXPECT_THAT(other.ValidateCrc32c(), IsOk());
+  EXPECT_THAT(other.GetCrc32c(), Eq(absl::crc32c_t(kTestDataCrc)));
 }
 
 TEST(SecretDataInternalClassDeathTest, IterationOutOfBounds) {
@@ -316,6 +321,80 @@ TEST(SecretDataInternalClassTest, Equals) {
   EXPECT_THAT(c.GetCrc32c(), Eq(kTestDataCrc));
   // The are no longer equal.
   EXPECT_THAT(c, Not(Eq(c_copy)));
+}
+
+TEST(SecretDataInternalClassTest, ConstructorWithCrc) {
+  {
+    SecretDataInternalClass c(SecretBuffer(kTestData), kTestDataCrc);
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(kTestDataCrc));
+  }
+  {
+    SecretDataInternalClass c(kTestData, kTestDataCrc);
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(kTestDataCrc));
+  }
+  {
+    SecretDataInternalClass c(
+        absl::MakeSpan(reinterpret_cast<const uint8_t*>(kTestData.data()),
+                       kTestData.size()),
+        kTestDataCrc);
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(kTestDataCrc));
+  }
+  // Empty buffer.
+  {
+    SecretDataInternalClass c(SecretBuffer(), absl::crc32c_t(0));
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(0)));
+  }
+  {
+    SecretDataInternalClass c(absl::string_view(), absl::crc32c_t(0));
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(0)));
+  }
+  {
+    SecretDataInternalClass c(absl::Span<const uint8_t>(), absl::crc32c_t(0));
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(0)));
+  }
+}
+
+TEST(SecretDataInternalClassTest, ValidateCrc32cFailsWithWrongGivenCrc) {
+  {
+    SecretDataInternalClass c(SecretBuffer(kTestData), absl::crc32c_t(1));
+    EXPECT_THAT(c.ValidateCrc32c(), Not(IsOk()));
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(1)));
+  }
+  {
+    SecretDataInternalClass c(kTestData, absl::crc32c_t(1));
+    EXPECT_THAT(c.ValidateCrc32c(), Not(IsOk()));
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(1)));
+  }
+  {
+    SecretDataInternalClass c(
+        absl::MakeSpan(reinterpret_cast<const uint8_t*>(kTestData.data()),
+                       kTestData.size()),
+        absl::crc32c_t(1));
+    EXPECT_THAT(c.ValidateCrc32c(), Not(IsOk()));
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(1)));
+  }
+  // Empty buffer ignores the CRC32C parameter and always returns 0.
+  {
+    SecretDataInternalClass c(SecretBuffer(), absl::crc32c_t(1));
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(0)));
+  }
+  {
+    SecretDataInternalClass c(absl::string_view(), absl::crc32c_t(1));
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(0)));
+  }
+  {
+    SecretDataInternalClass c(absl::Span<const uint8_t>(), absl::crc32c_t(1));
+    EXPECT_THAT(c.ValidateCrc32c(), IsOk());
+    EXPECT_THAT(c.GetCrc32c(), Eq(absl::crc32c_t(0)));
+  }
 }
 
 }  // namespace

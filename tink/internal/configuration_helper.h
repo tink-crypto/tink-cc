@@ -33,11 +33,16 @@ namespace internal {
 template <class P, class K>
 using PrimitiveGetterFn =
     absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(const K&) const>;
-// Stores a PrimitiveGetterFn for each given (Primitive, Key) pair. shared_ptr
-// is used because unique_ptr<void> is invalid.
+
+// A type-erased form of `PrimitiveGetterFn`, with `void*` replacing
+// references/unique pointers to specific types.
+using TypeErasedPrimitiveGetterFn =
+    absl::AnyInvocable<absl::StatusOr<void*>(const void*) const>;
+
+// Stores a TypeErasedPrimitiveGetterFn for each given (Primitive, Key) pair.
 using PrimitiveGetterFnMap =
     absl::flat_hash_map<std::tuple<std::type_index, std::type_index>,
-                        std::shared_ptr<void>>;
+                        TypeErasedPrimitiveGetterFn>;
 
 }  // namespace internal
 }  // namespace tink

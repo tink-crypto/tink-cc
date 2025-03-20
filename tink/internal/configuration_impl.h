@@ -78,9 +78,15 @@ class ConfigurationImpl {
               std::type_index(typeid(typename PW::InputPrimitive)),
               std::type_index(typeid(key))));
       if (it != config.primitive_getter_fn_map_.end()) {
-        return (*reinterpret_cast<
-                PrimitiveGetterFn<typename PW::InputPrimitive, Key>*>(
-            it->second.get()))(key);
+        const TypeErasedPrimitiveGetterFn& fn = it->second;
+        absl::StatusOr<void*> value = fn(reinterpret_cast<const void*>(&key));
+        if (!value.ok()) {
+          return value.status();
+        }
+        auto* p = reinterpret_cast<typename PW::InputPrimitive*>(*value);
+        // Restore the pointer ownership that was "released" when converting to
+        // a `void*`.
+        return std::unique_ptr<typename PW::InputPrimitive>(p);
       } else {
         // No matching primitive getter is found.
         return absl::Status(
@@ -115,15 +121,25 @@ class ConfigurationImpl {
                                        typeid(P).name(), " already exists."));
     }
 
-    auto fn_ptr = std::make_shared<PrimitiveGetterFn<P, K>>(
-        std::move(primitive_getter_fn));
+    TypeErasedPrimitiveGetterFn wrapper_fn =
+        [primitive_getter_fn = std::move(primitive_getter_fn)](
+            const void* key) -> absl::StatusOr<void*> {
+      absl::StatusOr<std::unique_ptr<P>> value =
+          primitive_getter_fn(*reinterpret_cast<const K*>(key));
+      if (!value.ok()) {
+        return value.status();
+      }
+      // Release ownership, so that `value` doesn't destroy the pointed-to
+      // object when it goes out of scope here. Callsite must re-acquire.
+      return reinterpret_cast<void*>(value->release());
+    };
 
     // Creates a pair to be inserted in the map.
     std::pair<std::tuple<std::type_index, std::type_index>,
-              std::shared_ptr<void>>
+              TypeErasedPrimitiveGetterFn>
         map_entry{std::tuple<std::type_index, std::type_index>(
                       std::type_index(typeid(P)), std::type_index(typeid(K))),
-                  fn_ptr};
+                  std::move(wrapper_fn)};
 
     config.primitive_getter_fn_map_.insert(std::move(map_entry));
     return absl::OkStatus();

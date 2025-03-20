@@ -471,6 +471,7 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::registry_impl
     tink::internal::serialization
+    tink::internal::tink_proto_structs
     tink::internal::util
     tink::subtle::random
     tink::util::errors

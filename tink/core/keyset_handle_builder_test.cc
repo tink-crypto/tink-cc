@@ -818,7 +818,8 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromLegacyKey) {
           key.key_data().type_url(),
           RestrictedData(key.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          key.key_data().key_material_type(), key.output_prefix_type(),
+          static_cast<KeyMaterialTypeEnum>(key.key_data().key_material_type()),
+          static_cast<OutputPrefixTypeEnum>(key.output_prefix_type()),
           key.key_id());
 
   absl::StatusOr<internal::LegacyProtoKey> proto_key =
@@ -905,7 +906,8 @@ TEST_F(KeysetHandleBuilderTest, CreateBuilderEntryFromCopyableKey) {
           key.key_data().type_url(),
           RestrictedData(key.SerializeAsString(),
                          InsecureSecretKeyAccess::Get()),
-          key.key_data().key_material_type(), key.output_prefix_type(),
+          static_cast<KeyMaterialTypeEnum>(key.key_data().key_material_type()),
+          static_cast<OutputPrefixTypeEnum>(key.output_prefix_type()),
           key.key_id());
 
   absl::StatusOr<internal::LegacyProtoKey> proto_key =

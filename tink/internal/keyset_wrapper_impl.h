@@ -31,12 +31,11 @@
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/key.h"
 #include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/restricted_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/tink.pb.h"
 
@@ -79,8 +78,9 @@ class KeysetWrapperImpl : public KeysetWrapper<Q> {
               proto_key.key_data().type_url(),
               RestrictedData(proto_key.key_data().value(),
                              internal::GetInsecureSecretKeyAccessInternal()),
-              proto_key.key_data().key_material_type(),
-              google::crypto::tink::OutputPrefixType::RAW,
+              static_cast<KeyMaterialTypeEnum>(
+                  proto_key.key_data().key_material_type()),
+              OutputPrefixTypeEnum::kRaw,
               /*id_requirement=*/absl::nullopt);
       if (!serialization.ok()) {
         return serialization.status();

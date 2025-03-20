@@ -39,6 +39,7 @@
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/serialization.h"
+#include "tink/internal/tink_proto_structs.h"
 #include "tink/internal/util.h"
 #include "tink/key.h"
 #include "tink/key_gen_configuration.h"
@@ -121,7 +122,9 @@ absl::StatusOr<internal::ProtoKeySerialization> ToProtoKeySerialization(
   return internal::ProtoKeySerialization::Create(
       key.key_data().type_url(),
       RestrictedData(key.key_data().value(), InsecureSecretKeyAccess::Get()),
-      key.key_data().key_material_type(), key.output_prefix_type(),
+      static_cast<internal::KeyMaterialTypeEnum>(
+          key.key_data().key_material_type()),
+      static_cast<internal::OutputPrefixTypeEnum>(key.output_prefix_type()),
       id_requirement);
 }
 

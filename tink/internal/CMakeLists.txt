@@ -58,6 +58,7 @@ tink_cc_library(
     tink::internal::keyset_wrapper
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
+    tink::internal::tink_proto_structs
     absl::flat_hash_map
     absl::any_invocable
     absl::status
@@ -67,8 +68,6 @@ tink_cc_library(
     tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::restricted_data
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::tink_cc_proto
 )
@@ -571,7 +570,6 @@ tink_cc_library(
     absl::strings
     absl::optional
     tink::core::restricted_data
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

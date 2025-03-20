@@ -26,7 +26,6 @@
 #include "tink/internal/serialization.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/restricted_data.h"
-#include "proto/tink.pb.h"
 
 namespace crypto {
 namespace tink {
@@ -49,18 +48,6 @@ class ProtoKeySerialization : public Serialization {
       KeyMaterialTypeEnum key_material_type,
       OutputPrefixTypeEnum output_prefix_type,
       absl::optional<int> id_requirement);
-
-  // Creates a `ProtoKeySerialization` object from individual components.
-  inline static absl::StatusOr<ProtoKeySerialization> Create(
-      absl::string_view type_url, RestrictedData serialized_key,
-      google::crypto::tink::KeyData::KeyMaterialType key_material_type,
-      google::crypto::tink::OutputPrefixType output_prefix_type,
-      absl::optional<int> id_requirement) {
-    return Create(type_url, serialized_key,
-                  static_cast<KeyMaterialTypeEnum>(key_material_type),
-                  static_cast<OutputPrefixTypeEnum>(output_prefix_type),
-                  id_requirement);
-  }
 
   // Returned value is only valid for the lifetime of this object.
   absl::string_view TypeUrl() const { return type_url_; }

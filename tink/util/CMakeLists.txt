@@ -583,7 +583,12 @@ tink_cc_library(
   SRCS
     secret_data_internal_class.h
   DEPS
+    absl::endian
+    absl::crc32c
+    absl::status
     absl::string_view
     absl::span
+    tink::internal::call_with_core_dump_protection
+    tink::internal::safe_stringops
     tink::internal::secret_buffer
 )

@@ -26,6 +26,7 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/secret_data_internal_class.h"
 
@@ -82,6 +83,9 @@ class SecretDataWithCrc final {
   // Complexity: O(n) -- must make a string copy
   explicit SecretDataWithCrc(absl::string_view data, absl::crc32c_t crc)
       : data_(data, crc) {}
+  // Complexity: O(n) -- if `buffer` is a copied. Otherwise, O(1).
+  explicit SecretDataWithCrc(SecretBuffer buffer, absl::crc32c_t crc)
+      : data_(std::move(buffer), crc) {}
 
   // Creates a new SecretDataWithCrc.
   // If an adversary can control the provided crc, they might be able to obtain

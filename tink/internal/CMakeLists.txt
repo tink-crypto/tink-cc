@@ -1751,6 +1751,7 @@ tink_cc_library(
     secret_data_with_crc.h
   DEPS
     tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
     absl::core_headers
     absl::crc32c
     absl::status
@@ -1764,6 +1765,7 @@ tink_cc_test(
   SRCS
     secret_data_with_crc_test.cc
   DEPS
+    tink::internal::secret_buffer
     tink::internal::secret_data_with_crc
     gmock
     absl::crc32c

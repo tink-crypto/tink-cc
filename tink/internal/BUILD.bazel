@@ -1819,6 +1819,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":call_with_core_dump_protection",
+        ":secret_buffer",
         "//tink/util:secret_data",
         "//tink/util:secret_data_internal_class",
         "@com_google_absl//absl/base:core_headers",
@@ -1832,6 +1833,7 @@ cc_test(
     name = "secret_data_with_crc_test",
     srcs = ["secret_data_with_crc_test.cc"],
     deps = [
+        ":secret_buffer",
         ":secret_data_with_crc",
         "//tink/subtle:random",
         "//tink/util:secret_data",

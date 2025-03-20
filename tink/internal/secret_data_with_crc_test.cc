@@ -25,6 +25,7 @@
 #include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -48,6 +49,9 @@ using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::SizeIs;
 
+constexpr absl::string_view kTestData = "123";
+constexpr absl::crc32c_t kTestDataCrc = absl::crc32c_t(0x107b2fb2);
+
 TEST(SecretDataWithCrcTest, DefaultConstructor) {
   SecretDataWithCrc secret_data_with_crc;
   EXPECT_THAT(secret_data_with_crc.AsStringView(), IsEmpty());
@@ -59,7 +63,7 @@ TEST(SecretDataWithCrcTest, CreateWithComputedCrcEmpty) {
       SecretDataWithCrc::WithComputedCrc("");
   EXPECT_THAT(secret_data_with_crc.AsStringView(), IsEmpty());
   EXPECT_EQ(secret_data_with_crc.GetCrc32c(), absl::crc32c_t{0});
-  }
+}
 
 TEST(SecretDataWithCrcTest, CreateWithComputedCrcNonEmpty) {
   std::string data = Random::GetRandomBytes(256);
@@ -109,6 +113,15 @@ TEST(SecretDataWithCrcTest, CreateWithCrc) {
   EXPECT_THAT(data_3.AsStringView(), Eq(data));
   EXPECT_EQ(data_3.GetCrc32c(), crc);
   EXPECT_THAT(data_3, SizeIs(data.size()));
+}
+
+TEST(SecretDataWithCrcTest, CreateFromSecretBufferWithCrc) {
+  SecretBuffer buffer(kTestData);
+
+  SecretDataWithCrc data_1(buffer, absl::crc32c_t(kTestDataCrc));
+  EXPECT_THAT(data_1.AsStringView(), Eq(buffer.AsStringView()));
+  EXPECT_EQ(data_1.GetCrc32c(), absl::crc32c_t(kTestDataCrc));
+  EXPECT_THAT(data_1.ValidateCrc(), IsOk());
 }
 
 TEST(SecretDataWithCrcTest, CreateWithCrcNonSecretValueConstructor) {

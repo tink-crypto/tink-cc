@@ -1748,19 +1748,15 @@ tink_cc_test(
 tink_cc_library(
   NAME secret_data_with_crc
   SRCS
-    secret_data_with_crc.cc
     secret_data_with_crc.h
   DEPS
     tink::internal::call_with_core_dump_protection
-    tink::internal::dfsan_forwarders
     absl::core_headers
     absl::crc32c
     absl::status
-    absl::statusor
     absl::string_view
-    absl::optional
     tink::util::secret_data
-    tink::util::status
+    tink::util::secret_data_internal_class
 )
 
 tink_cc_test(

@@ -23,13 +23,11 @@
 
 #include "absl/base/macros.h"
 #include "absl/crc/crc32c.h"
-#include "absl/status/statusor.h"
+#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/optional.h"
 #include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/dfsan_forwarders.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
+#include "tink/util/secret_data_internal_class.h"
 
 namespace crypto {
 namespace tink {
@@ -69,8 +67,9 @@ class SecretDataWithCrc final {
   // The CRC is computed in a CallWithCoreDumpProtection.
   //
   // Complexity: O(n) -- must make a string copy
-  explicit SecretDataWithCrc(absl::string_view data);
-  explicit SecretDataWithCrc(crypto::tink::util::SecretData data);
+  explicit SecretDataWithCrc(absl::string_view data) : data_(data) {}
+  explicit SecretDataWithCrc(crypto::tink::util::SecretData data)
+      : data_(std::move(data)) {}
 
   // Creates a new SecretDataWithCrc.
   // If an adversary can control the provided crc, they might be able to obtain
@@ -81,7 +80,8 @@ class SecretDataWithCrc final {
   // the CRC on the stack.
   //
   // Complexity: O(n) -- must make a string copy
-  explicit SecretDataWithCrc(absl::string_view data, absl::crc32c_t crc);
+  explicit SecretDataWithCrc(absl::string_view data, absl::crc32c_t crc)
+      : data_(data, crc) {}
 
   // Creates a new SecretDataWithCrc.
   // If an adversary can control the provided crc, they might be able to obtain
@@ -89,17 +89,27 @@ class SecretDataWithCrc final {
   // call will fail). The caller needs to ensure that this is not the case.
   explicit SecretDataWithCrc(
       absl::string_view data,
-      crypto::tink::util::SecretValue<absl::crc32c_t> crc);
+      crypto::tink::util::SecretValue<absl::crc32c_t> crc) {
+    crypto::tink::internal::CallWithCoreDumpProtection([&]() {
+      data_ = crypto::tink::util::internal::SecretDataInternalClass(
+          data, crc.value());
+    });
+  }
   // Creates a new SecretDataWithCrc.
   // If an adversary can control the provided crc, they might be able to obtain
   // information about the secret (since they can provide a wrong CRC and some
   // call will fail). The caller needs to ensure that this is not the case.
   explicit SecretDataWithCrc(
       crypto::tink::util::SecretData data,
-      crypto::tink::util::SecretValue<absl::crc32c_t> crc);
+      crypto::tink::util::SecretValue<absl::crc32c_t> crc) {
+    crypto::tink::internal::CallWithCoreDumpProtection([&]() {
+      data_ = crypto::tink::util::internal::SecretDataInternalClass(
+          util::internal::AsSecretBuffer(std::move(data)), crc.value());
+    });
+  }
 
   // Returns the data without verifying the CRC32C.
-  absl::string_view AsStringView() const;
+  absl::string_view AsStringView() const { return data_.AsStringView(); }
 
   const uint8_t& operator[](size_t pos) const { return data_[pos]; }
   const uint8_t* data() const { return data_.data(); }
@@ -108,30 +118,21 @@ class SecretDataWithCrc final {
   // Should only be called within CallWithCoreDumpProtection (as it passes
   // secret data -- the CRC -- on the stack or in the register).
   // Runtime: O(1)
-  absl::crc32c_t GetCrc32c() const { return crc_.value(); }
-
-  absl::Status ValidateCrc() const;
+  absl::crc32c_t GetCrc32c() const { return data_.GetCrc32c(); }
+  absl::Status ValidateCrc() const { return data_.ValidateCrc32c(); }
 
   bool empty() const { return data_.empty(); }
   size_t size() const { return data_.size(); }
 
   bool operator==(const SecretDataWithCrc& other) const {
-    if (!util::SecretDataEquals(data_, other.data_)) {
-      return false;
-    }
-    return internal::CallWithCoreDumpProtection([&]() {
-      bool result = crc_.value() == other.crc_.value();
-      DfsanClearLabel(&result, sizeof(result));
-      return result;
-    });
+    return data_ == other.data_;
   }
   bool operator!=(const SecretDataWithCrc& other) const {
     return !(*this == other);
   }
 
  private:
-  crypto::tink::util::SecretData data_;
-  crypto::tink::util::SecretValue<absl::crc32c_t> crc_;
+  crypto::tink::util::internal::SecretDataInternalClass data_;
 };
 
 }  // namespace internal

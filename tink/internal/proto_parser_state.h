@@ -25,7 +25,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -74,13 +73,15 @@ class ParsingState final {
 
   // Returns true if this ParsingState maintains a CRC on every call to Advance
   // and AdvanceAndGetCrc.
-  bool HasCrc() const {
-    return crc_to_update_ != nullptr;
-  }
+  bool HasCrc() const { return crc_to_update_ != nullptr; }
 
   // Removes the next `length` bytes from the data to be parsed and returns
   // their CRC. Updates the internal CRC, if any.
-  util::SecretValue<absl::crc32c_t> AdvanceAndGetCrc(size_t length);
+  // NOTE:
+  //  *  The returned CRC is in a register or on the stack, and hence this
+  //     method should only be called in CallWithCoreDumpProtection in case the
+  //     CRC is sensitive.
+  absl::crc32c_t AdvanceAndGetCrc(size_t length);
 
   // Returns the next byte without removing it from the data to be parsed.
   // Must not be called if |ParsingDone|.
@@ -122,17 +123,14 @@ class SerializationState final {
   // All the CRC calculations are done within a CallWithCoreDumpProtection.
   explicit SerializationState(absl::Span<char> output_buffer,
                               absl::Nonnull<absl::crc32c_t*> crc_to_update)
-      : output_buffer_(output_buffer),
-        crc_to_update_(crc_to_update) {}
+      : output_buffer_(output_buffer), crc_to_update_(crc_to_update) {}
 
   // Returns the remaining data to be parsed.
   absl::Span<char> GetBuffer() { return output_buffer_; }
 
   // Returns true if this ParsingState maintains a CRC on every call to Advance
   // and AdvanceWithCrc.
-  bool HasCrc() const {
-    return crc_to_update_ != nullptr;
-  }
+  bool HasCrc() const { return crc_to_update_ != nullptr; }
 
   // Removes the next `length` bytes from the data to be parsed. Updates the
   // internal CRC if any.

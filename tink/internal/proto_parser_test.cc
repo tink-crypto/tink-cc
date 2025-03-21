@@ -1093,8 +1093,8 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcWrongCRC) {
   ParsedStruct parsed_struct;
   std::string text1 = "some text of arbitrary length";
   std::string text2 = "different text of same length";
-  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc(
-      text1, SecretValue<absl::crc32c_t>(absl::ComputeCrc32c(text2)));
+  parsed_struct.secret_data_with_crc_member_1 =
+      SecretDataWithCrc(text1, absl::ComputeCrc32c(text2));
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()

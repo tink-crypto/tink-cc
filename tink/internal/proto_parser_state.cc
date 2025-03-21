@@ -19,25 +19,18 @@
 #include <cstddef>
 
 #include "absl/crc/crc32c.h"
-#include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-util::SecretValue<absl::crc32c_t> ParsingState::AdvanceAndGetCrc(
-    size_t length) {
-  util::SecretValue<absl::crc32c_t> result;
-  CallWithCoreDumpProtection([&]() {
-    result.value() =
-        absl::ComputeCrc32c(remaining_view_to_parse_.substr(0, length));
-    if (crc_to_update_) {
-      *crc_to_update_ =
-          absl::ConcatCrc32c(*crc_to_update_, result.value(), length);
-    };
-  });
+absl::crc32c_t ParsingState::AdvanceAndGetCrc(size_t length) {
+  absl::crc32c_t result =
+      absl::ComputeCrc32c(remaining_view_to_parse_.substr(0, length));
+  if (crc_to_update_ != nullptr) {
+    *crc_to_update_ = absl::ConcatCrc32c(*crc_to_update_, result, length);
+  };
   remaining_view_to_parse_.remove_prefix(length);
   return result;
 }

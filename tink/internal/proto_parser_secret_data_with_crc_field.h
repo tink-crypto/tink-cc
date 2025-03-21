@@ -41,8 +41,8 @@ namespace proto_parsing {
 template <typename Struct>
 class SecretDataWithCrcField : public Field<Struct> {
  public:
-  explicit SecretDataWithCrcField(
-      int field_number, SecretDataWithCrc Struct::*data)
+  explicit SecretDataWithCrcField(int field_number,
+                                  SecretDataWithCrc Struct::* data)
       : data_(data), field_number_(field_number) {}
   // Not copyable and movable.
   SecretDataWithCrcField(const SecretDataWithCrcField&) = delete;
@@ -50,9 +50,7 @@ class SecretDataWithCrcField : public Field<Struct> {
   SecretDataWithCrcField(SecretDataWithCrcField&&) noexcept = delete;
   SecretDataWithCrcField& operator=(SecretDataWithCrcField&&) noexcept = delete;
 
-  void ClearMember(Struct& s) const override {
-    s.*data_ = SecretDataWithCrc();
-  }
+  void ClearMember(Struct& s) const override { s.*data_ = SecretDataWithCrc(); }
 
   absl::Status ConsumeIntoMember(ParsingState& parsing_state,
                                  Struct& s) const override {
@@ -77,9 +75,10 @@ class SecretDataWithCrcField : public Field<Struct> {
                        parsing_state.RemainingData().size()));
     }
     absl::string_view data = parsing_state.RemainingData().substr(0, *length);
-    util::SecretValue<absl::crc32c_t> crc =
-        parsing_state.AdvanceAndGetCrc(*length);
-    s.*data_ = SecretDataWithCrc(data, crc);
+    CallWithCoreDumpProtection([&]() {
+      absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(*length);
+      s.*data_ = SecretDataWithCrc(data, crc);
+    });
     return absl::OkStatus();
   }
 
@@ -87,7 +86,7 @@ class SecretDataWithCrcField : public Field<Struct> {
   int GetFieldNumber() const override { return field_number_; }
 
   absl::Status SerializeWithTagInto(SerializationState& serialization_state,
-                             const Struct& values) const override {
+                                    const Struct& values) const override {
     if (!RequiresSerialization(values)) {
       return absl::OkStatus();
     }
@@ -141,7 +140,7 @@ class SecretDataWithCrcField : public Field<Struct> {
     return (values.*data_).size() > 0;
   }
 
-  SecretDataWithCrc Struct::*data_;
+  SecretDataWithCrc Struct::* data_;
   int field_number_;
 };
 

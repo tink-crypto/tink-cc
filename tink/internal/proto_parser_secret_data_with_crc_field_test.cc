@@ -216,8 +216,7 @@ TEST(SecretDataWithCrcBytesField, CrcIsComputedFromCrc) {
   std::string text1 = "this is some text";
   std::string text2 = "this is different";
   // The buffer is computed from a different value than the CRC.
-  s.secret_with_crc = SecretDataWithCrc(
-      text1, SecretValue<absl::crc32c_t>(absl::ComputeCrc32c(text2)));
+  s.secret_with_crc = SecretDataWithCrc(text1, absl::ComputeCrc32c(text2));
 
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};

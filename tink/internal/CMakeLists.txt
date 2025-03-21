@@ -1681,7 +1681,6 @@ tink_cc_library(
     absl::crc32c
     absl::string_view
     absl::span
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1693,7 +1692,6 @@ tink_cc_test(
     gmock
     absl::crc32c
     absl::span
-    tink::util::secret_data
 )
 
 tink_cc_library(

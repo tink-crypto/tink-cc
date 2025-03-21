@@ -1742,7 +1742,6 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":call_with_core_dump_protection",
-        "//tink/util:secret_data",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/strings:string_view",
@@ -1755,7 +1754,6 @@ cc_test(
     srcs = ["proto_parser_state_test.cc"],
     deps = [
         ":proto_parser_state",
-        "//tink/util:secret_data",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",

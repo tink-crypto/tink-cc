@@ -22,7 +22,6 @@
 #include "gtest/gtest.h"
 #include "absl/crc/crc32c.h"
 #include "absl/types/span.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -57,10 +56,10 @@ TEST(ParsingState, Advance) {
 TEST(ParsingState, AdvanceGetCrc) {
   std::string data = "data";
   ParsingState state = ParsingState(data);
-  util::SecretValue<absl::crc32c_t> crc = state.AdvanceAndGetCrc(2);
+  absl::crc32c_t crc = state.AdvanceAndGetCrc(2);
   EXPECT_THAT(state.PeekByte(), Eq('t'));
   EXPECT_THAT(state.RemainingData(), Eq("ta"));
-  EXPECT_THAT(crc.value(), Eq(absl::ComputeCrc32c("da")));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c("da")));
 }
 
 TEST(ParsingState, RemovePrefix) {
@@ -104,10 +103,10 @@ TEST(ParsingStateWithCrc, AdvanceGetCrc) {
   absl::crc32c_t crc{};
   ParsingState state = ParsingState(data, &crc);
   state.Advance(5);  // Skip "much ".
-  util::SecretValue<absl::crc32c_t> returned_crc = state.AdvanceAndGetCrc(2);
+  absl::crc32c_t returned_crc = state.AdvanceAndGetCrc(2);
   EXPECT_THAT(state.PeekByte(), Eq('t'));
   EXPECT_THAT(state.RemainingData(), Eq("ta"));
-  EXPECT_THAT(returned_crc.value(), Eq(absl::ComputeCrc32c("da")));
+  EXPECT_THAT(returned_crc, Eq(absl::ComputeCrc32c("da")));
   state.Advance(2);  // Skip "ta".
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(data)));
 }
@@ -188,7 +187,6 @@ TEST(SerializationState, AdvanceWithCrc) {
   std::string new_data = "ta";
   EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(new_data)));
 }
-
 
 TEST(SerializationStateWithCrc, Advance) {
   std::string data = "data";

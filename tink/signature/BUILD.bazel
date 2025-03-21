@@ -877,6 +877,7 @@ cc_library(
     srcs = ["ml_dsa_parameters.cc"],
     hdrs = ["ml_dsa_parameters.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         "//tink:parameters",
@@ -891,6 +892,7 @@ cc_library(
     srcs = ["ml_dsa_private_key.cc"],
     hdrs = ["ml_dsa_private_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":ml_dsa_parameters",
         ":ml_dsa_public_key",
@@ -915,6 +917,7 @@ cc_library(
     srcs = ["ml_dsa_public_key.cc"],
     hdrs = ["ml_dsa_public_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":ml_dsa_parameters",
         ":signature_public_key",
@@ -937,6 +940,7 @@ cc_library(
     srcs = ["slh_dsa_parameters.cc"],
     hdrs = ["slh_dsa_parameters.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_parameters",
         "//tink:parameters",
@@ -964,6 +968,7 @@ cc_library(
     srcs = ["slh_dsa_private_key.cc"],
     hdrs = ["slh_dsa_private_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_private_key",
         ":slh_dsa_public_key",
@@ -1955,6 +1960,7 @@ cc_library(
     srcs = ["slh_dsa_public_key.cc"],
     hdrs = ["slh_dsa_public_key.h"],
     include_prefix = "tink/signature",
+    visibility = ["//visibility:public"],
     deps = [
         ":signature_public_key",
         ":slh_dsa_parameters",

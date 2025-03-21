@@ -96,7 +96,7 @@ TEST(SecretDataWithCrcTest, CreateWithCrc) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   EXPECT_THAT(data_1.AsStringView(), Eq(data));
   EXPECT_EQ(data_1.GetCrc32c(), crc);
   EXPECT_THAT(data_1, SizeIs(data.size()));
@@ -143,7 +143,7 @@ TEST(SecretDataWithCrcTest, ValidateCrcSucceeds) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   EXPECT_THAT(data_1.AsStringView(), Eq(data));
   EXPECT_THAT(data_1.ValidateCrc(), IsOk());
 
@@ -163,7 +163,7 @@ TEST(SecretDataWithCrcTest, ValidateCrcFailsIfWrong) {
   absl::crc32c_t crc =
       absl::crc32c_t{static_cast<uint32_t>(absl::ComputeCrc32c(data)) + 1};
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   EXPECT_THAT(data_1.ValidateCrc(), StatusIs(absl::StatusCode::kDataLoss));
 
   SecretData secret_data = SecretDataFromStringView(data);
@@ -180,7 +180,7 @@ TEST(SecretDataWithCrcTest, AsStringViewWithInvalidCrcSucceeds) {
   absl::crc32c_t crc =
       absl::crc32c_t{static_cast<uint32_t>(absl::ComputeCrc32c(data)) + 1};
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   EXPECT_EQ(data_1.AsStringView(), data);
 
   SecretData secret_data = SecretDataFromStringView(data);
@@ -215,7 +215,7 @@ TEST(SecretDataWithCrcTest, CopyConstructor) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   SecretDataWithCrc data_2(data_1);
   EXPECT_THAT(data_2.AsStringView(), Eq(data));
   EXPECT_EQ(data_2.GetCrc32c(), crc);
@@ -226,7 +226,7 @@ TEST(SecretDataWithCrcTest, CopyAssignment) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   SecretDataWithCrc data_2;
   data_2 = data_1;
   EXPECT_THAT(data_2.AsStringView(), Eq(data));
@@ -238,7 +238,7 @@ TEST(SecretDataWithCrcTest, MoveConstructor) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   SecretDataWithCrc data_2(std::move(data_1));
   EXPECT_THAT(data_2.AsStringView(), Eq(data));
   EXPECT_EQ(data_2.GetCrc32c(), crc);
@@ -249,7 +249,7 @@ TEST(SecretDataWithCrcTest, MoveAssignment) {
   std::string data = Random::GetRandomBytes(256);
   absl::crc32c_t crc = absl::ComputeCrc32c(data);
 
-  SecretDataWithCrc data_1(data, SecretValue<absl::crc32c_t>(crc));
+  SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   SecretDataWithCrc data_2;
   data_2 = data_1;
   EXPECT_THAT(data_2.AsStringView(), Eq(data));

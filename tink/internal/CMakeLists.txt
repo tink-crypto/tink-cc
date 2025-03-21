@@ -1400,6 +1400,7 @@ tink_cc_library(
   SRCS
     proto_parser.h
   DEPS
+    tink::internal::call_with_core_dump_protection
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message_field

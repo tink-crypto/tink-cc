@@ -324,21 +324,23 @@ absl::StatusOr<SecretDataWithCrc>
 ProtoParser<Struct>::SerializeIntoSecretDataWithCrc(const Struct& s) const {
   size_t size = low_level_parser_.GetSerializedSize(s);
   crypto::tink::internal::SecretBuffer result_data;
-  crypto::tink::util::SecretValue<absl::crc32c_t> result_crc;
   result_data.resize(size);
   absl::Span<char> buffer = absl::MakeSpan(
       reinterpret_cast<char*>(result_data.data()), result_data.size());
-  proto_parsing::SerializationState serialization_state =
-      proto_parsing::SerializationState(buffer, &(result_crc).value());
-  absl::Status status = low_level_parser_.SerializeInto(serialization_state, s);
-  if (!status.ok()) {
-    return status;
-  }
-  if (!serialization_state.GetBuffer().empty()) {
-    return absl::InternalError("Resulting buffer expected to be empty");
-  }
-  return SecretDataWithCrc(util::internal::AsSecretData(std::move(result_data)),
-                           std::move(result_crc));
+  return CallWithCoreDumpProtection([&]() -> absl::StatusOr<SecretDataWithCrc> {
+    absl::crc32c_t result_crc = absl::crc32c_t(0);
+    proto_parsing::SerializationState serialization_state =
+        proto_parsing::SerializationState(buffer, &result_crc);
+    absl::Status status =
+        low_level_parser_.SerializeInto(serialization_state, s);
+    if (!status.ok()) {
+      return status;
+    }
+    if (!serialization_state.GetBuffer().empty()) {
+      return absl::InternalError("Resulting buffer expected to be empty");
+    }
+    return SecretDataWithCrc(std::move(result_data), result_crc);
+  });
 }
 
 template <typename Struct>

@@ -743,21 +743,21 @@ TEST(ProtoParserTest, MultipleBytesFieldSecretDataWithCrcParsingWorks) {
       parser.ParseWithCrc(serialization);
   ASSERT_THAT(parsed, IsOk());
 
-  EXPECT_THAT(
-      parsed->first.inner_member_1.secret_data_with_crc_member_1.ValidateCrc(),
-      IsOk());
+  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_1
+                  .ValidateCrc32c(),
+              IsOk());
   EXPECT_THAT(
       parsed->first.inner_member_1.secret_data_with_crc_member_1.AsStringView(),
       Eq(text11));
-  EXPECT_THAT(
-      parsed->first.inner_member_1.secret_data_with_crc_member_2.ValidateCrc(),
-      IsOk());
+  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_2
+                  .ValidateCrc32c(),
+              IsOk());
   EXPECT_THAT(
       parsed->first.inner_member_1.secret_data_with_crc_member_2.AsStringView(),
       Eq(text12));
-  EXPECT_THAT(
-      parsed->first.inner_member_2.secret_data_with_crc_member_1.ValidateCrc(),
-      IsOk());
+  EXPECT_THAT(parsed->first.inner_member_2.secret_data_with_crc_member_1
+                  .ValidateCrc32c(),
+              IsOk());
   EXPECT_THAT(
       parsed->first.inner_member_2.secret_data_with_crc_member_1.AsStringView(),
       Eq(text21));
@@ -1083,7 +1083,7 @@ TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
   std::string expected_serialization =
       absl::StrCat(FieldWithNumber(kBytesField1Tag).IsString("some text"),
                    FieldWithNumber(kBytesField2Tag).IsString("another text"));
-  EXPECT_THAT(serialized->ValidateCrc(), IsOk());
+  EXPECT_THAT(serialized->ValidateCrc32c(), IsOk());
   EXPECT_THAT(serialized->AsStringView(), Eq(expected_serialization));
 }
 

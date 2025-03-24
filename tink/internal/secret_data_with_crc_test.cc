@@ -122,6 +122,7 @@ TEST(SecretDataWithCrcTest, CreateFromSecretBufferWithCrc) {
   EXPECT_THAT(data_1.AsStringView(), Eq(buffer.AsStringView()));
   EXPECT_EQ(data_1.GetCrc32c(), absl::crc32c_t(kTestDataCrc));
   EXPECT_THAT(data_1.ValidateCrc(), IsOk());
+  EXPECT_THAT(data_1.ValidateCrc32c(), IsOk());
 }
 
 TEST(SecretDataWithCrcTest, CreateWithCrcNonSecretValueConstructor) {
@@ -132,6 +133,7 @@ TEST(SecretDataWithCrcTest, CreateWithCrcNonSecretValueConstructor) {
   EXPECT_THAT(data_1.AsStringView(), Eq(data));
   EXPECT_EQ(data_1.GetCrc32c(), crc);
   EXPECT_THAT(data_1.ValidateCrc(), IsOk());
+  EXPECT_THAT(data_1.ValidateCrc32c(), IsOk());
 
   SecretDataWithCrc data_2(data, absl::ComputeCrc32c("World"));
   EXPECT_THAT(data_2.AsStringView(), Eq(data));
@@ -146,6 +148,7 @@ TEST(SecretDataWithCrcTest, ValidateCrcSucceeds) {
   SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   EXPECT_THAT(data_1.AsStringView(), Eq(data));
   EXPECT_THAT(data_1.ValidateCrc(), IsOk());
+  EXPECT_THAT(data_1.ValidateCrc32c(), IsOk());
 
   SecretData secret_data = SecretDataFromStringView(data);
   SecretDataWithCrc data_2(secret_data, SecretValue<absl::crc32c_t>(crc));
@@ -165,6 +168,7 @@ TEST(SecretDataWithCrcTest, ValidateCrcFailsIfWrong) {
 
   SecretDataWithCrc data_1(data, absl::crc32c_t(crc));
   EXPECT_THAT(data_1.ValidateCrc(), StatusIs(absl::StatusCode::kDataLoss));
+  EXPECT_THAT(data_1.ValidateCrc32c(), StatusIs(absl::StatusCode::kDataLoss));
 
   SecretData secret_data = SecretDataFromStringView(data);
   SecretDataWithCrc data_2(secret_data, SecretValue<absl::crc32c_t>(crc));

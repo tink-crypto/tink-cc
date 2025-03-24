@@ -111,7 +111,9 @@ class SecretDataWithCrc final {
   // secret data -- the CRC -- on the stack or in the register).
   // Runtime: O(1)
   absl::crc32c_t GetCrc32c() const { return data_.GetCrc32c(); }
-  absl::Status ValidateCrc() const { return data_.ValidateCrc32c(); }
+  ABSL_DEPRECATE_AND_INLINE()
+  absl::Status ValidateCrc() const { return ValidateCrc32c(); }
+  absl::Status ValidateCrc32c() const { return data_.ValidateCrc32c(); }
 
   bool empty() const { return data_.empty(); }
   size_t size() const { return data_.size(); }

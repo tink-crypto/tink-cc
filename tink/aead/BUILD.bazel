@@ -1869,3 +1869,20 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_test(
+    name = "aead_benchmarks",
+    srcs = ["aead_benchmarks.cc"],
+    deps = [
+        ":aead_config",
+        ":aead_key_templates",
+        "//tink:aead",
+        "//tink:keyset_handle",
+        "//tink/config:global_registry",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_benchmark//:benchmark_main",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

@@ -1776,3 +1776,20 @@ tink_cc_test(
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
+
+tink_cc_test(
+  NAME aead_benchmarks
+  SRCS
+    aead_benchmarks.cc
+  DEPS
+    tink::aead::aead_config
+    tink::aead::aead_key_templates
+    gmock
+    absl::check
+    absl::statusor
+    absl::string_view
+    benchmark::benchmark_main
+    tink::core::aead
+    tink::core::keyset_handle
+    tink::config::global_registry
+)

@@ -1457,6 +1457,7 @@ cc_library(
         ":proto_parser_message_field_with_presence",
         ":proto_parser_options",
         ":proto_parser_presence_fields",
+        ":proto_parser_secret_data_field",
         ":proto_parser_secret_data_with_crc_field",
         ":proto_parser_state",
         ":proto_parser_uint64_field",

@@ -1407,10 +1407,8 @@ tink_cc_library(
     tink::internal::proto_parser_options
     tink::internal::proto_parser_presence_fields
     tink::internal::proto_parser_secret_data_field
-    tink::internal::proto_parser_secret_data_with_crc_field
     tink::internal::proto_parser_state
     tink::internal::proto_parser_uint64_field
-    tink::internal::proto_parsing_helpers
     tink::internal::proto_parsing_low_level_parser
     tink::internal::secret_buffer
     tink::internal::secret_data_with_crc
@@ -1424,8 +1422,6 @@ tink_cc_library(
     absl::string_view
     absl::optional
     absl::span
-    tink::core::big_integer
-    tink::core::secret_key_access_token
     tink::util::secret_data
 )
 

@@ -77,8 +77,7 @@ struct InnerStruct {
   uint32_t uint32_member_1;
   uint32_t uint32_member_2;
   SecretData secret_data_member_1;
-  SecretDataWithCrc secret_data_with_crc_member_1;
-  SecretDataWithCrc secret_data_with_crc_member_2;
+  SecretData secret_data_member_2;
 };
 
 struct ParsedStruct {
@@ -95,9 +94,6 @@ struct ParsedStruct {
   absl::optional<InnerStruct> optional_inner_member_1;
   absl::optional<InnerStruct> optional_inner_member_2;
   MyEnum enum_member;
-
-  SecretDataWithCrc secret_data_with_crc_member_1;
-  SecretDataWithCrc secret_data_with_crc_member_2;
 };
 
 // PARSE TESTS =================================================================
@@ -688,11 +684,11 @@ TEST(ProtoParserTest, SkipUnknownFields) {
   EXPECT_THAT(parsed->string_member_1, Eq("foo"));
 }
 
-TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcParsingWorks) {
+#if not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+TEST(ProtoParserTest, SingleBytesFieldSecretDataParsingWorks) {
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddBytesSecretDataWithCrcField(
-              1, &ParsedStruct::secret_data_with_crc_member_1)
+          .AddBytesSecretDataField(1, &ParsedStruct::secret_data_member_1)
           .AddUint32Field(2, &ParsedStruct::uint32_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
@@ -704,9 +700,9 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcParsingWorks) {
       parser->ParseWithCrc(serialization);
   ASSERT_THAT(parsed, IsOk());
 
-  EXPECT_THAT(parsed->first.secret_data_with_crc_member_1.AsStringView(),
+  EXPECT_THAT(parsed->first.secret_data_member_1.AsStringView(),
               Eq("some text"));
-  EXPECT_THAT(parsed->first.secret_data_with_crc_member_1.GetCrc32c(),
+  EXPECT_THAT(parsed->first.secret_data_member_1.GetCrc32c(),
               Eq(absl::ComputeCrc32c("some text")));
   EXPECT_THAT(parsed->first.uint32_member_1, Eq(101));
   EXPECT_THAT(parsed->second.value(), Eq(absl::ComputeCrc32c(serialization)));
@@ -718,22 +714,20 @@ TEST(ProtoParserTest, MultipleBytesFieldSecretDataWithCrcParsingWorks) {
   std::string text21 = "Text for second submessage, first field";
   ProtoParser<ParsedStruct> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddMessageField(
-              1, &ParsedStruct::inner_member_1,
-              ProtoParserBuilder<InnerStruct>()
-                  .AddBytesSecretDataWithCrcField(
-                      1, &InnerStruct::secret_data_with_crc_member_1)
-                  .AddBytesSecretDataWithCrcField(
-                      2, &InnerStruct::secret_data_with_crc_member_2)
-                  .BuildOrDie())
-          .AddMessageField(
-              2, &ParsedStruct::inner_member_2,
-              ProtoParserBuilder<InnerStruct>()
-                  .AddBytesSecretDataWithCrcField(
-                      1, &InnerStruct::secret_data_with_crc_member_1)
-                  .AddBytesSecretDataWithCrcField(
-                      2, &InnerStruct::secret_data_with_crc_member_2)
-                  .BuildOrDie())
+          .AddMessageField(1, &ParsedStruct::inner_member_1,
+                           ProtoParserBuilder<InnerStruct>()
+                               .AddBytesSecretDataField(
+                                   1, &InnerStruct::secret_data_member_1)
+                               .AddBytesSecretDataField(
+                                   2, &InnerStruct::secret_data_member_2)
+                               .BuildOrDie())
+          .AddMessageField(2, &ParsedStruct::inner_member_2,
+                           ProtoParserBuilder<InnerStruct>()
+                               .AddBytesSecretDataField(
+                                   1, &InnerStruct::secret_data_member_1)
+                               .AddBytesSecretDataField(
+                                   2, &InnerStruct::secret_data_member_2)
+                               .BuildOrDie())
           .BuildOrDie();
   std::string serialization = absl::StrCat(
       FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(text11),
@@ -743,25 +737,23 @@ TEST(ProtoParserTest, MultipleBytesFieldSecretDataWithCrcParsingWorks) {
       parser.ParseWithCrc(serialization);
   ASSERT_THAT(parsed, IsOk());
 
-  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_1
-                  .ValidateCrc32c(),
-              IsOk());
   EXPECT_THAT(
-      parsed->first.inner_member_1.secret_data_with_crc_member_1.AsStringView(),
-      Eq(text11));
-  EXPECT_THAT(parsed->first.inner_member_1.secret_data_with_crc_member_2
-                  .ValidateCrc32c(),
-              IsOk());
+      parsed->first.inner_member_1.secret_data_member_1.ValidateCrc32c(),
+      IsOk());
+  EXPECT_THAT(parsed->first.inner_member_1.secret_data_member_1.AsStringView(),
+              Eq(text11));
   EXPECT_THAT(
-      parsed->first.inner_member_1.secret_data_with_crc_member_2.AsStringView(),
-      Eq(text12));
-  EXPECT_THAT(parsed->first.inner_member_2.secret_data_with_crc_member_1
-                  .ValidateCrc32c(),
-              IsOk());
+      parsed->first.inner_member_1.secret_data_member_2.ValidateCrc32c(),
+      IsOk());
+  EXPECT_THAT(parsed->first.inner_member_1.secret_data_member_2.AsStringView(),
+              Eq(text12));
   EXPECT_THAT(
-      parsed->first.inner_member_2.secret_data_with_crc_member_1.AsStringView(),
-      Eq(text21));
+      parsed->first.inner_member_2.secret_data_member_1.ValidateCrc32c(),
+      IsOk());
+  EXPECT_THAT(parsed->first.inner_member_2.secret_data_member_1.AsStringView(),
+              Eq(text21));
 }
+#endif  // not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 
 // Found by a prototype fuzzer.
 TEST(ProtoParserTest, Regression1) {
@@ -1043,14 +1035,15 @@ TEST(ProtoParserTest, SerializeSecredDataFieldAlwaysSerializeWorks) {
   ASSERT_THAT(HexEncode(*serialized), Eq("0a00"));
 }
 
+#if not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
   ParsedStruct parsed_struct;
-  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc("some text");
+  parsed_struct.secret_data_member_1 = SecretData("some text");
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddBytesSecretDataWithCrcField(
-              kBytesField1Tag, &ParsedStruct::secret_data_with_crc_member_1)
+          .AddBytesSecretDataField(kBytesField1Tag,
+                                   &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<SecretDataWithCrc> serialized =
@@ -1064,16 +1057,15 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
 
 TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
   ParsedStruct parsed_struct;
-  parsed_struct.secret_data_with_crc_member_1 = SecretDataWithCrc("some text");
-  parsed_struct.secret_data_with_crc_member_2 =
-      SecretDataWithCrc("another text");
+  parsed_struct.secret_data_member_1 = SecretData("some text");
+  parsed_struct.secret_data_member_2 = SecretData("another text");
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddBytesSecretDataWithCrcField(
-              kBytesField1Tag, &ParsedStruct::secret_data_with_crc_member_1)
-          .AddBytesSecretDataWithCrcField(
-              kBytesField2Tag, &ParsedStruct::secret_data_with_crc_member_2)
+          .AddBytesSecretDataField(kBytesField1Tag,
+                                   &ParsedStruct::secret_data_member_1)
+          .AddBytesSecretDataField(kBytesField2Tag,
+                                   &ParsedStruct::secret_data_member_2)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<SecretDataWithCrc> serialized =
@@ -1093,13 +1085,13 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcWrongCRC) {
   ParsedStruct parsed_struct;
   std::string text1 = "some text of arbitrary length";
   std::string text2 = "different text of same length";
-  parsed_struct.secret_data_with_crc_member_1 =
-      SecretDataWithCrc(text1, absl::ComputeCrc32c(text2));
+  parsed_struct.secret_data_member_1 =
+      SecretData(text1, absl::ComputeCrc32c(text2));
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddBytesSecretDataWithCrcField(
-              kBytesField1Tag, &ParsedStruct::secret_data_with_crc_member_1)
+          .AddBytesSecretDataField(kBytesField1Tag,
+                                   &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<SecretDataWithCrc> serialized =
@@ -1120,25 +1112,23 @@ TEST(ProtoParserTest, CrcOfInnerFieldSerializationWorks) {
   ParsedStruct parsed_struct;
   std::string text1 = "something";
   std::string text2 = "anything, does not matter";
-  parsed_struct.inner_member_1.secret_data_with_crc_member_1 =
-      SecretDataWithCrc(text1);
-  parsed_struct.inner_member_2.secret_data_with_crc_member_1 =
-      SecretDataWithCrc(text2);
+  parsed_struct.inner_member_1.secret_data_member_1 =
+      util::SecretDataFromStringView(text1);
+  parsed_struct.inner_member_2.secret_data_member_1 =
+      util::SecretDataFromStringView(text2);
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
-          .AddMessageField(
-              1, &ParsedStruct::inner_member_1,
-              ProtoParserBuilder<InnerStruct>()
-                  .AddBytesSecretDataWithCrcField(
-                      1, &InnerStruct::secret_data_with_crc_member_1)
-                  .BuildOrDie())
-          .AddMessageField(
-              2, &ParsedStruct::inner_member_2,
-              ProtoParserBuilder<InnerStruct>()
-                  .AddBytesSecretDataWithCrcField(
-                      1, &InnerStruct::secret_data_with_crc_member_1)
-                  .BuildOrDie())
+          .AddMessageField(1, &ParsedStruct::inner_member_1,
+                           ProtoParserBuilder<InnerStruct>()
+                               .AddBytesSecretDataField(
+                                   1, &InnerStruct::secret_data_member_1)
+                               .BuildOrDie())
+          .AddMessageField(2, &ParsedStruct::inner_member_2,
+                           ProtoParserBuilder<InnerStruct>()
+                               .AddBytesSecretDataField(
+                                   1, &InnerStruct::secret_data_member_1)
+                               .BuildOrDie())
           .BuildOrDie();
   ASSERT_THAT(parser.status(), IsOk());
   absl::StatusOr<SecretDataWithCrc> serialized =
@@ -1150,6 +1140,7 @@ TEST(ProtoParserTest, CrcOfInnerFieldSerializationWorks) {
       FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsString(text2)}));
   EXPECT_THAT(serialized->AsStringView(), Eq(expected_serialization));
 }
+#endif  // not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 
 TEST(ProtoParserTest, SerializeMessageField) {
   ParsedStruct s;

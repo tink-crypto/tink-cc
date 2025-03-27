@@ -34,7 +34,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
-#include "tink/big_integer.h"
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message_field.h"
@@ -42,14 +41,11 @@
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_presence_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
-#include "tink/internal/proto_parser_secret_data_with_crc_field.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parser_uint64_field.h"
-#include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/secret_data_with_crc.h"
-#include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {
@@ -105,10 +101,10 @@ class ProtoParser {
   absl::StatusOr<Struct> Parse(absl::string_view input) const;
 
   // Parses the input and returns the struct together with the CRC of the input.
-  // For fields which support CRCs (e.g. AddBytesSecretDataWithCrcField), the
-  // CRC of the field is consistent with the CRC of the output. This enables
-  // end-to-end coverage of the CRC computation: if the returned CRC is known
-  // to be correct, the CRCs of the individual fields must also be correct.
+  // For fields which support CRCs (e.g. SecretData), the CRC of the field is
+  // consistent with the CRC of the output. This enables end-to-end coverage of
+  // the CRC computation: if the returned CRC is known to be correct, the CRCs
+  // of the individual fields must also be correct.
   absl::StatusOr<
       std::pair<Struct, crypto::tink::util::SecretValue<absl::crc32c_t>>>
   ParseWithCrc(absl::string_view input) const;
@@ -118,11 +114,11 @@ class ProtoParser {
       const Struct& s) const;
 
   // Serializes the input and returns the the serialized value. For fields
-  // which support CRCs (e.g. AddBytesSecretDataWithCrcField), the data of the
-  // field is not considered when computing the overall CRC. Instead, only the
-  // CRC of the field is used to compute the result. This enables end-to-end
-  // coverage of the CRC computation: if the returned CRC is correct, the CRCs
-  // of the fields must have been corrects.
+  // which support CRCs (e.g. SecretData), the data of the field is not
+  // considered when computing the overall CRC. Instead, only the CRC of the
+  // field is used to compute the result. This enables end-to-end coverage of
+  // the CRC computation: if the returned CRC is correct, the CRCs of the fields
+  // must have been corrects.
   absl::StatusOr<SecretDataWithCrc> SerializeIntoSecretDataWithCrc(
       const Struct& s) const;
 
@@ -207,16 +203,6 @@ class ProtoParserBuilder {
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(absl::make_unique<proto_parsing::SecretDataField<Struct>>(
         tag, value, options));
-    return *this;
-  }
-
-  // Adds a SecretData field together with a corresponding CRC. If this function
-  // is used, the CRC methods of the parser must be used.
-  ProtoParserBuilder& AddBytesSecretDataWithCrcField(
-      int tag, SecretDataWithCrc Struct::*data) {
-    fields_.push_back(
-        absl::make_unique<proto_parsing::SecretDataWithCrcField<Struct>>(tag,
-                                                                         data));
     return *this;
   }
 

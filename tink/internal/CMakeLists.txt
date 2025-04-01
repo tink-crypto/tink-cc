@@ -2020,3 +2020,40 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME proto_parser_repeated_secret_data_field
+  SRCS
+    proto_parser_repeated_secret_data_field.h
+  DEPS
+    tink::internal::call_with_core_dump_protection
+    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
+    tink::internal::safe_stringops
+    absl::crc32c
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME proto_parser_repeated_secret_data_field_test
+  SRCS
+    proto_parser_repeated_secret_data_field_test.cc
+  DEPS
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_repeated_secret_data_field
+    tink::internal::proto_parser_state
+    gmock
+    absl::crc32c
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+)

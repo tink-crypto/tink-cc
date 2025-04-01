@@ -1,4 +1,4 @@
-// Copyright 2013 Google Inc. All Rights Reserved.
+// Copyright 2013 Google LLC. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 #ifndef TINK_UTIL_STATUSOR_H_
 #define TINK_UTIL_STATUSOR_H_
 
-#include "absl/base/macros.h"
 #include "absl/status/statusor.h"
 #include "tink/util/status.h"
 
@@ -27,10 +26,10 @@ namespace crypto {
 namespace tink {
 namespace util {
 
-// StatusOr can be inlined to make user code cleaner. We currently do not plan
-// to remove it.
+// A legacy alias for absl::StatusOr<T>. StatusOr can be inlined to make user
+// code cleaner. We currently do not plan to remove it.
 template <typename T>
-using StatusOr ABSL_DEPRECATE_AND_INLINE() = absl::StatusOr<T>;
+using StatusOr = absl::StatusOr<T>;
 
 }  // namespace util
 }  // namespace tink

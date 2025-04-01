@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@
 #ifndef TINK_UTIL_STATUS_H_
 #define TINK_UTIL_STATUS_H_
 
-#include "absl/base/macros.h"
 #include "absl/status/status.h"
 
 #define TINK_USE_ABSL_STATUS
@@ -29,14 +28,13 @@ namespace crypto {
 namespace tink {
 namespace util {
 
-// Status can be inlined to make user code cleaner. We currently do not plan
-// to remove it.
-using Status ABSL_DEPRECATE_AND_INLINE() = absl::Status;
+// A legacy alias for absl::Status. Status can be inlined to make user code
+// cleaner. We currently do not plan to remove it.
+using Status = absl::Status;
 
-// Returns an OK status, equivalent to a default constructed instance.
-// OkStatus can be inlined to make user code cleaner. We currently do not plan
-// to remove OkStatus.
-ABSL_DEPRECATE_AND_INLINE()
+// A legacy alias for absl::OkStatus(). Returns an OK status, equivalent to a
+// default constructed instance. OkStatus can be inlined to make user code
+// cleaner. We currently do not plan to remove OkStatus.
 inline absl::Status OkStatus() { return absl::OkStatus(); }
 
 }  // namespace util

@@ -19,21 +19,21 @@ syntax = "proto3";
 package crypto.tink.internal;
 
 message InnerProtoTestProto {
-  uint32 inner_proto_uint32_field_1 = 20;
-  uint32 inner_proto_uint32_field_2 = 21;
-  uint32 inner_proto_uint32_field_3 = 123456;
+  uint32 inner_proto_uint32_field1 = 20;
+  uint32 inner_proto_uint32_field2 = 21;
+  uint32 inner_proto_uint32_field3 = 123456;
 }
 
 message ProtoTestProto {
-  uint32 uint32_field_1 = 1;
-  uint32 uint32_field_2 = 2;
-  uint64 uint64_field_1 = 5;
+  uint32 uint32_field1 = 1;
+  uint32 uint32_field2 = 2;
+  uint64 uint64_field1 = 5;
 
-  bytes bytes_field_1 = 3;
-  bytes bytes_field_2 = 4;
+  bytes bytes_field1 = 3;
+  bytes bytes_field2 = 4;
 
-  InnerProtoTestProto inner_proto_field_1 = 10;
-  InnerProtoTestProto inner_proto_field_2 = 11;
+  InnerProtoTestProto inner_proto_field1 = 10;
+  InnerProtoTestProto inner_proto_field2 = 11;
 
   // Maximal tag number is 2^29 - 1 = 536870911.
   uint32 uint32_field_with_large_tag = 536870911;

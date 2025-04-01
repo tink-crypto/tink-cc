@@ -121,7 +121,7 @@ TEST(ProtoParserTest, Uint32DefaultValueWorks) {
 
 TEST(ProtoParserTest, SingleUint32Works) {
   ProtoTestProto proto;
-  proto.set_uint32_field_1(123);
+  proto.set_uint32_field1(123);
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -169,7 +169,7 @@ TEST(ProtoParserTest, OptionalUint32NonZeroWorks) {
 
 TEST(ProtoParserTest, SingleUint64Works) {
   ProtoTestProto proto;
-  proto.set_uint64_field_1(0xffffffffff);
+  proto.set_uint64_field1(0xffffffffff);
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -184,7 +184,7 @@ TEST(ProtoParserTest, SingleUint64Works) {
 
 TEST(ProtoParserTest, SingleEnumWorks) {
   ProtoTestProto proto;
-  proto.set_uint32_field_1(1);
+  proto.set_uint32_field1(1);
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -229,7 +229,7 @@ TEST(ProtoParserTest, EnumAlwaysSerializeWorks) {
 
 TEST(ProtoParserTest, SingleBytesFieldStringWorks) {
   ProtoTestProto proto;
-  proto.set_bytes_field_1("some bytes field");
+  proto.set_bytes_field1("some bytes field");
 
   std::string value;
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
@@ -245,7 +245,7 @@ TEST(ProtoParserTest, SingleBytesFieldStringWorks) {
 
 TEST(ProtoParserTest, SingleBytesFieldSecretDataWorks) {
   ProtoTestProto proto;
-  proto.set_bytes_field_1("some bytes field");
+  proto.set_bytes_field1("some bytes field");
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -262,7 +262,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWorks) {
 
 TEST(ProtoParserTest, SingleBytesFieldStringLongDataFails) {
   ProtoTestProto proto;
-  proto.set_bytes_field_1("some bytes field");
+  proto.set_bytes_field1("some bytes field");
   std::string serialized_proto = proto.SerializeAsString();
   serialized_proto.resize(serialized_proto.size() - 1);
 
@@ -278,7 +278,7 @@ TEST(ProtoParserTest, SingleBytesFieldStringLongDataFails) {
 
 TEST(ProtoParserTest, SingleBytesFieldSecretDataTooLongDataFails) {
   ProtoTestProto proto;
-  proto.set_bytes_field_1("some bytes field");
+  proto.set_bytes_field1("some bytes field");
   std::string serialized_proto = proto.SerializeAsString();
   serialized_proto.resize(serialized_proto.size() - 1);
 
@@ -294,8 +294,8 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataTooLongDataFails) {
 
 TEST(ProtoParserTest, MultipleBytesFieldSecretDataWorks) {
   ProtoTestProto proto;
-  proto.set_bytes_field_1("some bytes field");
-  proto.set_bytes_field_2("another bytes field");
+  proto.set_bytes_field1("some bytes field");
+  proto.set_bytes_field2("another bytes field");
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -317,8 +317,8 @@ TEST(ProtoParserTest, MultipleBytesFieldSecretDataWorks) {
 
 TEST(ProtoParserTest, MultipleUint32Work) {
   ProtoTestProto proto;
-  proto.set_uint32_field_1(0xfe84becc);
-  proto.set_uint32_field_2(445533);
+  proto.set_uint32_field1(0xfe84becc);
+  proto.set_uint32_field2(445533);
 
   absl::StatusOr<ProtoParser<ParsedStruct>> parser =
       ProtoParserBuilder<ParsedStruct>()
@@ -336,10 +336,10 @@ TEST(ProtoParserTest, MultipleUint32Work) {
 
 TEST(ProtoParserTest, MultipleUint32OrderIsIgnored) {
   ProtoTestProto proto1;
-  proto1.set_uint32_field_1(1);
+  proto1.set_uint32_field1(1);
 
   ProtoTestProto proto2;
-  proto2.set_uint32_field_2(2);
+  proto2.set_uint32_field2(2);
 
   std::string serialized =
       absl::StrCat(proto2.SerializeAsString(), proto1.SerializeAsString());
@@ -358,7 +358,7 @@ TEST(ProtoParserTest, MultipleUint32OrderIsIgnored) {
 
 TEST(ProtoParserTest, ParseMessageField) {
   ProtoTestProto proto;
-  proto.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_3(123);
+  proto.mutable_inner_proto_field1()->set_inner_proto_uint32_field3(123);
 
   absl::StatusOr<ProtoParser<InnerStruct>> inner_parser =
       ProtoParserBuilder<InnerStruct>()
@@ -381,7 +381,7 @@ TEST(ProtoParserTest, ParseMessageField) {
 
 TEST(ProtoParserTest, ParseMessageFieldWithPresence) {
   ProtoTestProto proto;
-  proto.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_3(123);
+  proto.mutable_inner_proto_field1()->set_inner_proto_uint32_field3(123);
 
   absl::StatusOr<ProtoParser<InnerStruct>> inner_parser1 =
       ProtoParserBuilder<InnerStruct>()
@@ -510,7 +510,7 @@ TEST(ProtoParserTest, VarintUint32Parsing) {
        std::vector<uint32_t>({0, 0x01, 0x7f, 0xff, 0x3a22, 0xb084bbbe,
                               0x7fffffff, 0x80000000, 0xffffffff})) {
     SCOPED_TRACE(v);
-    proto.set_uint32_field_1(v);
+    proto.set_uint32_field1(v);
     absl::StatusOr<ParsedStruct> parsed =
         parser->Parse(proto.SerializeAsString());
     ASSERT_THAT(parsed, IsOk());
@@ -593,11 +593,11 @@ TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessages) {
   ASSERT_THAT(parser.status(), IsOk());
 
   ProtoTestProto proto1;
-  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_1(77);
-  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(66);
+  proto1.mutable_inner_proto_field1()->set_inner_proto_uint32_field1(77);
+  proto1.mutable_inner_proto_field1()->set_inner_proto_uint32_field2(66);
 
   ProtoTestProto proto2;
-  proto2.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(55);
+  proto2.mutable_inner_proto_field1()->set_inner_proto_uint32_field2(55);
 
   std::string serialized =
       absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString());
@@ -605,10 +605,10 @@ TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessages) {
   ProtoTestProto parsed_proto;
   ASSERT_THAT(parsed_proto.ParseFromString(serialized), IsTrue());
   // The 77 from the first instance stays
-  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_1(),
+  EXPECT_THAT(parsed_proto.inner_proto_field1().inner_proto_uint32_field1(),
               Eq(77));
   // The 55 is overwritten
-  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_2(),
+  EXPECT_THAT(parsed_proto.inner_proto_field1().inner_proto_uint32_field2(),
               Eq(55));
 
   absl::StatusOr<ParsedStruct> parsed = parser->Parse(serialized);
@@ -634,11 +634,11 @@ TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessagesWithPresence) {
   ASSERT_THAT(parser.status(), IsOk());
 
   ProtoTestProto proto1;
-  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_1(77);
-  proto1.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(66);
+  proto1.mutable_inner_proto_field1()->set_inner_proto_uint32_field1(77);
+  proto1.mutable_inner_proto_field1()->set_inner_proto_uint32_field2(66);
 
   ProtoTestProto proto2;
-  proto2.mutable_inner_proto_field_1()->set_inner_proto_uint32_field_2(55);
+  proto2.mutable_inner_proto_field1()->set_inner_proto_uint32_field2(55);
 
   std::string serialized =
       absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString());
@@ -646,10 +646,10 @@ TEST(ProtoParserTest, SubfieldsAreNotClearedOnDoubleMessagesWithPresence) {
   ProtoTestProto parsed_proto;
   ASSERT_THAT(parsed_proto.ParseFromString(serialized), IsTrue());
   // The 77 from the first instance stays
-  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_1(),
+  EXPECT_THAT(parsed_proto.inner_proto_field1().inner_proto_uint32_field1(),
               Eq(77));
   // The 55 is overwritten
-  EXPECT_THAT(parsed_proto.inner_proto_field_1().inner_proto_uint32_field_2(),
+  EXPECT_THAT(parsed_proto.inner_proto_field1().inner_proto_uint32_field2(),
               Eq(55));
 
   absl::StatusOr<ParsedStruct> parsed = parser->Parse(serialized);
@@ -666,13 +666,13 @@ TEST(ProtoParserTest, SkipUnknownFields) {
           .BuildOrDie();
 
   ProtoTestProto proto1;
-  proto1.set_uint32_field_1(123);
+  proto1.set_uint32_field1(123);
   // Unknown field
   ProtoTestProto proto2;
-  proto2.set_uint32_field_2(555);
+  proto2.set_uint32_field2(555);
 
   ProtoTestProto proto3;
-  proto3.set_bytes_field_1("foo");
+  proto3.set_bytes_field1("foo");
 
   std::string serialized =
       absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString(),
@@ -1360,7 +1360,7 @@ TEST(ProtoParserTest, VarintInTagSuccess) {
     std::string serialization =
         absl::StrCat(EncodeVarintWeirdly(field_num_wiretype, t), field_value);
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsTrue());
-    EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(1));
+    EXPECT_THAT(proto_test_proto.uint32_field1(), Eq(1));
 
     absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialization);
     ASSERT_THAT(parsed, IsOk());
@@ -1407,7 +1407,7 @@ TEST(ProtoParserTest, VarintAsValueNormal) {
     std::string serialization =
         absl::StrCat(wirtype_and_fieldnum, EncodeVarintWeirdly(value, t));
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsTrue());
-    EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(value));
+    EXPECT_THAT(proto_test_proto.uint32_field1(), Eq(value));
 
     absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialization);
     ASSERT_THAT(parsed.status(), IsOk());
@@ -1454,7 +1454,7 @@ TEST(ProtoParserTest, VarintAsLength) {
         wirtype_and_fieldnum, EncodeVarintWeirdly(length, t), contents);
 
     EXPECT_THAT(proto_test_proto.ParseFromString(serialization), IsTrue());
-    EXPECT_THAT(proto_test_proto.bytes_field_1(), Eq(contents));
+    EXPECT_THAT(proto_test_proto.bytes_field1(), Eq(contents));
 
     absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialization);
     ASSERT_THAT(parsed, IsOk());
@@ -1543,7 +1543,7 @@ TEST(ProtoParserTest, FieldsInGroupAreIgnored) {
   std::string empty_with_group = HexDecodeOrDie("3b08083c");
 
   EXPECT_TRUE(proto_test_proto.ParseFromString(empty_with_group));
-  EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(0));
+  EXPECT_THAT(proto_test_proto.uint32_field1(), Eq(0));
 
   absl::StatusOr<ParsedStruct> parsed_struct = parser.Parse(empty_with_group);
   ASSERT_THAT(parsed_struct.status(), IsOk());
@@ -1596,7 +1596,7 @@ TEST(ProtoParserTest, GroupSkipTestParseAfter) {
   std::string group_then_varintfield1_is5 = HexDecodeOrDie("3b3c0805");
 
   EXPECT_TRUE(proto_test_proto.ParseFromString(group_then_varintfield1_is5));
-  EXPECT_THAT(proto_test_proto.uint32_field_1(), Eq(5));
+  EXPECT_THAT(proto_test_proto.uint32_field1(), Eq(5));
 
   absl::StatusOr<ParsedStruct> parsed_struct =
       parser.Parse(group_then_varintfield1_is5);

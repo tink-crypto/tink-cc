@@ -72,8 +72,8 @@ TEST(LowLevelParserTest, ClearAllFields) {
 
 TEST(LowLevelParserTest, ConsumeIntoFieldsBasic) {
   ProtoTestProto proto;
-  proto.set_uint32_field_1(123);
-  proto.set_bytes_field_1("foo");
+  proto.set_uint32_field1(123);
+  proto.set_bytes_field1("foo");
 
   LowLevelParser<ParsedStruct> parser(MakeFields());
   ParsedStruct s;
@@ -189,13 +189,13 @@ TEST(LowLevelParserTest, SkipUnknownField) {
                         3, &ParsedStruct::string_member_1)});
 
   ProtoTestProto proto1;
-  proto1.set_uint32_field_1(123);
+  proto1.set_uint32_field1(123);
   // Unknown field
   ProtoTestProto proto2;
-  proto2.set_uint32_field_2(555);
+  proto2.set_uint32_field2(555);
 
   ProtoTestProto proto3;
-  proto3.set_bytes_field_1("foo");
+  proto3.set_bytes_field1("foo");
 
   LowLevelParser<ParsedStruct> parser(std::move(fields));
   ParsedStruct s;

@@ -57,6 +57,7 @@ using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Optional;
+using ::testing::SizeIs;
 using ::testing::Test;
 
 constexpr int32_t kUint32Field1Tag = 1;
@@ -78,6 +79,8 @@ struct InnerStruct {
   uint32_t uint32_member_2;
   SecretData secret_data_member_1;
   SecretData secret_data_member_2;
+  std::vector<SecretData> repeated_secret_data_member1;
+  std::vector<SecretData> repeated_secret_data_member2;
 };
 
 struct ParsedStruct {
@@ -755,6 +758,70 @@ TEST(ProtoParserTest, MultipleBytesFieldSecretDataWithCrcParsingWorks) {
 }
 #endif  // not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 
+TEST(ProtoParserTest, RepatedSecretDataWorks) {
+  std::string text110 = "this is for field 1, subfield 1, the first string";
+  std::string text111 = "this is for field 1, subfield 1, the second string";
+  std::string text112 = "this is for field 1, subfield 1, the third string";
+  std::string text120 = "this is for field 1, subfield 2, the only string";
+  std::string text210 = "this is for field 2, subfield 1.";
+
+  std::string serialization = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(text110),
+                                       FieldWithNumber(1).IsString(text111),
+                                       FieldWithNumber(2).IsString(text120)}),
+      FieldWithNumber(2).IsSubMessage({FieldWithNumber(1).IsString(text210)}),
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsString(text112)}));
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField(
+              1, &ParsedStruct::inner_member_1,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddRepeatedBytesSecretDataField(
+                      1, &InnerStruct::repeated_secret_data_member1)
+                  .AddRepeatedBytesSecretDataField(
+                      2, &InnerStruct::repeated_secret_data_member2)
+                  .BuildOrDie())
+          .AddMessageField(
+              2, &ParsedStruct::inner_member_2,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddRepeatedBytesSecretDataField(
+                      1, &InnerStruct::repeated_secret_data_member1)
+                  .AddRepeatedBytesSecretDataField(
+                      2, &InnerStruct::repeated_secret_data_member2)
+                  .BuildOrDie())
+          .BuildOrDie();
+  absl::StatusOr<ParsedStruct> parsed_struct = parser.Parse(serialization);
+  ASSERT_THAT(parsed_struct, IsOk());
+  EXPECT_THAT(parsed_struct->inner_member_1.repeated_secret_data_member1,
+              SizeIs(3));
+  EXPECT_THAT(parsed_struct->inner_member_1.repeated_secret_data_member2,
+              SizeIs(1));
+  EXPECT_THAT(parsed_struct->inner_member_2.repeated_secret_data_member1,
+              SizeIs(1));
+  EXPECT_THAT(parsed_struct->inner_member_2.repeated_secret_data_member2,
+              SizeIs(0));
+  EXPECT_THAT(
+      SecretDataAsStringView(
+          parsed_struct->inner_member_1.repeated_secret_data_member1[0]),
+      Eq(text110));
+  EXPECT_THAT(
+      SecretDataAsStringView(
+          parsed_struct->inner_member_1.repeated_secret_data_member1[1]),
+      Eq(text111));
+  EXPECT_THAT(
+      SecretDataAsStringView(
+          parsed_struct->inner_member_1.repeated_secret_data_member1[2]),
+      Eq(text112));
+  EXPECT_THAT(
+      SecretDataAsStringView(
+          parsed_struct->inner_member_1.repeated_secret_data_member2[0]),
+      Eq(text120));
+  EXPECT_THAT(
+      SecretDataAsStringView(
+          parsed_struct->inner_member_2.repeated_secret_data_member1[0]),
+      Eq(text210));
+}
+
 // Found by a prototype fuzzer.
 TEST(ProtoParserTest, Regression1) {
   std::string serialization = HexDecodeOrDie("a20080808080808080808000");
@@ -1226,6 +1293,59 @@ TEST(ProtoParserTest, SerializeEmpty) {
   ASSERT_THAT(serialized, IsOk());
   EXPECT_THAT(*serialized, Eq(""));
 }
+
+TEST(ProtoParserTest, SerializeRepatedSecretDataWorks) {
+  std::string text110 = "this is for field 1, subfield 1, the first string";
+  std::string text111 = "this is for field 1, subfield 1, the second string";
+  std::string text112 = "this is for field 1, subfield 1, the third string";
+  std::string text120 = "this is for field 1, subfield 2, the only string";
+  std::string text210 = "this is for field 2, subfield 1.";
+
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddMessageField(
+              1, &ParsedStruct::inner_member_1,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddRepeatedBytesSecretDataField(
+                      1, &InnerStruct::repeated_secret_data_member1)
+                  .AddRepeatedBytesSecretDataField(
+                      2, &InnerStruct::repeated_secret_data_member2)
+                  .BuildOrDie())
+          .AddMessageField(
+              2, &ParsedStruct::inner_member_2,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddRepeatedBytesSecretDataField(
+                      1, &InnerStruct::repeated_secret_data_member1)
+                  .AddRepeatedBytesSecretDataField(
+                      2, &InnerStruct::repeated_secret_data_member2)
+                  .BuildOrDie())
+          .BuildOrDie();
+
+  ParsedStruct struct_to_serialize;
+  struct_to_serialize.inner_member_1.repeated_secret_data_member1.push_back(
+      util::SecretDataFromStringView(text110));
+  struct_to_serialize.inner_member_1.repeated_secret_data_member1.push_back(
+      util::SecretDataFromStringView(text111));
+  struct_to_serialize.inner_member_1.repeated_secret_data_member1.push_back(
+      util::SecretDataFromStringView(text112));
+  struct_to_serialize.inner_member_1.repeated_secret_data_member2.push_back(
+      util::SecretDataFromStringView(text120));
+  struct_to_serialize.inner_member_2.repeated_secret_data_member1.push_back(
+      util::SecretDataFromStringView(text210));
+
+  absl::StatusOr<SecretData> serialized =
+      parser.SerializeIntoSecretData(struct_to_serialize);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(SecretDataAsStringView(*serialized),
+              Eq(absl::StrCat(FieldWithNumber(1).IsSubMessage(
+                                  {FieldWithNumber(1).IsString(text110),
+                                   FieldWithNumber(1).IsString(text111),
+                                   FieldWithNumber(1).IsString(text112),
+                                   FieldWithNumber(2).IsString(text120)}),
+                              FieldWithNumber(2).IsSubMessage(
+                                  {FieldWithNumber(1).IsString(text210)}))));
+}
+
 // Various String field variants ===============================================
 
 struct VariousFieldStruct {

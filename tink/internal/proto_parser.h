@@ -40,6 +40,7 @@
 #include "tink/internal/proto_parser_message_field_with_presence.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_presence_fields.h"
+#include "tink/internal/proto_parser_repeated_secret_data_field.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parser_uint64_field.h"
@@ -203,6 +204,14 @@ class ProtoParserBuilder {
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(absl::make_unique<proto_parsing::SecretDataField<Struct>>(
         tag, value, options));
+    return *this;
+  }
+
+  ProtoParserBuilder& AddRepeatedBytesSecretDataField(
+      int tag, std::vector<crypto::tink::util::SecretData> Struct::* value) {
+    fields_.push_back(
+        absl::make_unique<proto_parsing::RepeatedSecretDataField<Struct>>(
+            tag, value));
     return *this;
   }
 

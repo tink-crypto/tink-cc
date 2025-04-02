@@ -334,7 +334,7 @@ TEST(EciesParametersTest, BuildWithoutVariantFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(Ed25519ParametersTest, CopyConstructor) {
+TEST(EciesParametersTest, CopyConstructor) {
   absl::StatusOr<EciesParameters> parameters =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)
@@ -358,7 +358,7 @@ TEST(Ed25519ParametersTest, CopyConstructor) {
   EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
 }
 
-TEST(Ed25519ParametersTest, CopyAssignment) {
+TEST(EciesParametersTest, CopyAssignment) {
   absl::StatusOr<EciesParameters> parameters =
       EciesParameters::Builder()
           .SetCurveType(EciesParameters::CurveType::kNistP256)

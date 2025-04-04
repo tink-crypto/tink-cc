@@ -13,8 +13,8 @@
 // limitations under the License.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef TINK_MONITORING_MONITORING_H_
-#define TINK_MONITORING_MONITORING_H_
+#ifndef TINK_INTERNAL_MONITORING_H_
+#define TINK_INTERNAL_MONITORING_H_
 
 #include <cstdint>
 #include <memory>
@@ -29,6 +29,7 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Immutable representation of a KeySet in a certain point in time for the
 // purpose of monitoring operations involving cryptographic keys.
@@ -146,11 +147,12 @@ class MonitoringClientFactory {
   virtual ~MonitoringClientFactory() = default;
   // Create a new monitoring client that logs events related to the given
   // `context`.
-  virtual absl::StatusOr<std::unique_ptr<MonitoringClient>> New(
+  virtual absl::StatusOr<std::unique_ptr<internal::MonitoringClient>> New(
       const MonitoringContext& context) = 0;
 };
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_MONITORING_MONITORING_H_
+#endif  // TINK_INTERNAL_MONITORING_H_

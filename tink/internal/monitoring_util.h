@@ -23,8 +23,8 @@
 #include "absl/status/status.h"
 #include "absl/strings/strip.h"
 #include "tink/internal/key_status_util.h"
+#include "tink/internal/monitoring.h"
 #include "tink/key_status.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -39,8 +39,8 @@ constexpr char kKeyTypePrefix[] = "type.googleapis.com/google.crypto.";
 // Constructs a MonitoringKeySetInfo object from a PrimitiveSet `primitive_set`
 // for a given primitive P.
 template <class P>
-absl::StatusOr<MonitoringKeySetInfo> MonitoringKeySetInfoFromPrimitiveSet(
-    const PrimitiveSet<P>& primitive_set) {
+absl::StatusOr<internal::MonitoringKeySetInfo>
+MonitoringKeySetInfoFromPrimitiveSet(const PrimitiveSet<P>& primitive_set) {
   const std::vector<typename PrimitiveSet<P>::template Entry<P>*>
       primitive_set_entries = primitive_set.get_all();
   if (primitive_set_entries.empty()) {

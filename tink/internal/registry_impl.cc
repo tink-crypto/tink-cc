@@ -27,8 +27,8 @@
 #include "tink/input_stream.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/monitoring.h"
 #include "tink/key_manager.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/util/errors.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -38,7 +38,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-using ::crypto::tink::MonitoringClientFactory;
+using ::crypto::tink::internal::MonitoringClientFactory;
 using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 
@@ -123,7 +123,8 @@ void RegistryImpl::Reset() {
   }
   {
     absl::MutexLock lock(&monitoring_factory_mutex_);
-    MonitoringClientFactory* factory = monitoring_factory_.exchange(nullptr);
+    internal::MonitoringClientFactory* factory =
+        monitoring_factory_.exchange(nullptr);
     delete factory;
   }
 }

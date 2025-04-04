@@ -28,9 +28,9 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
-#include "tink/monitoring/monitoring.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/public_key_sign.h"
 #include "tink/public_key_verify.h"
@@ -224,16 +224,16 @@ class PublicKeySignSetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<MockMonitoringClientFactory>();
+        absl::make_unique<internal::MockMonitoringClientFactory>();
     auto sign_monitoring_client =
-        absl::make_unique<StrictMock<MockMonitoringClient>>();
+        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
     sign_monitoring_client_ = sign_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
-    // corresponding MockMonitoringClients.
+    // corresponding internal::MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(sign_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -248,7 +248,7 @@ class PublicKeySignSetWrapperWithMonitoringTest : public Test {
   // Cleanup the registry to avoid mock leaks.
   ~PublicKeySignSetWrapperWithMonitoringTest() override { Registry::Reset(); }
 
-  MockMonitoringClient* sign_monitoring_client_;
+  internal::MockMonitoringClient* sign_monitoring_client_;
 };
 
 // Test that successful sign operations are logged.

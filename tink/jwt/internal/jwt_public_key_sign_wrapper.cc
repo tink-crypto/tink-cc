@@ -24,13 +24,13 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/jwt_format.h"
 #include "tink/jwt/internal/jwt_public_key_sign_internal.h"
 #include "tink/jwt/jwt_public_key_sign.h"
 #include "tink/jwt/raw_jwt.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "proto/tink.pb.h"
 
@@ -50,7 +50,8 @@ class JwtPublicKeySignSetWrapper : public JwtPublicKeySign {
  public:
   explicit JwtPublicKeySignSetWrapper(
       std::unique_ptr<PrimitiveSet<JwtPublicKeySignInternal>> jwt_sign_set,
-      std::unique_ptr<MonitoringClient> monitoring_sign_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_sign_client =
+          nullptr)
       : jwt_sign_set_(std::move(jwt_sign_set)),
         monitoring_sign_client_(std::move(monitoring_sign_client)) {}
 
@@ -61,7 +62,7 @@ class JwtPublicKeySignSetWrapper : public JwtPublicKeySign {
 
  private:
   std::unique_ptr<PrimitiveSet<JwtPublicKeySignInternal>> jwt_sign_set_;
-  std::unique_ptr<MonitoringClient> monitoring_sign_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_sign_client_;
 };
 
 absl::Status Validate(PrimitiveSet<JwtPublicKeySignInternal>* jwt_sign_set) {
@@ -111,7 +112,7 @@ absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
   absl::Status status = Validate(jwt_sign_set.get());
   if (!status.ok()) return status;
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -120,15 +121,15 @@ absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> JwtPublicKeySignWrapper::Wrap(
         absl::make_unique<JwtPublicKeySignSetWrapper>(std::move(jwt_sign_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*jwt_sign_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_sign_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kSignApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_sign_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kSignApi, *keyset_info));
   if (!monitoring_sign_client.ok()) {
     return monitoring_sign_client.status();
   }

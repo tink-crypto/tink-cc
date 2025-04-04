@@ -24,10 +24,10 @@
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/public_key_sign.h"
 #include "tink/util/status.h"
@@ -60,7 +60,8 @@ class PublicKeySignSetWrapper : public PublicKeySign {
  public:
   explicit PublicKeySignSetWrapper(
       std::unique_ptr<PrimitiveSet<PublicKeySign>> public_key_sign_set,
-      std::unique_ptr<MonitoringClient> monitoring_sign_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_sign_client =
+          nullptr)
       : public_key_sign_set_(std::move(public_key_sign_set)),
         monitoring_sign_client_(std::move(monitoring_sign_client)) {}
 
@@ -70,7 +71,7 @@ class PublicKeySignSetWrapper : public PublicKeySign {
 
  private:
   std::unique_ptr<PrimitiveSet<PublicKeySign>> public_key_sign_set_;
-  std::unique_ptr<MonitoringClient> monitoring_sign_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_sign_client_;
 };
 
 absl::StatusOr<std::string> PublicKeySignSetWrapper::Sign(
@@ -108,7 +109,7 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -117,15 +118,15 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> PublicKeySignWrapper::Wrap(
         absl::make_unique<PublicKeySignSetWrapper>(std::move(primitive_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_sign_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kSignApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_sign_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kSignApi, *keyset_info));
   if (!monitoring_sign_client.ok()) {
     return monitoring_sign_client.status();
   }

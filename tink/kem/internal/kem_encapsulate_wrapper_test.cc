@@ -34,10 +34,10 @@
 #include "tink/experimental/pqcrypto/kem/internal/ml_kem_test_util.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_parameters.h"
 #include "tink/experimental/pqcrypto/kem/ml_kem_private_key.h"
+#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/kem/kem_encapsulate.h"
-#include "tink/monitoring/monitoring.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/statusor.h"
@@ -269,16 +269,16 @@ class KemEncapsulateWrapperTestWithMonitoring
     KemEncapsulateWrapperTest::SetUp();
 
     auto monitoring_client_factory =
-        absl::make_unique<MockMonitoringClientFactory>();
+        absl::make_unique<internal::MockMonitoringClientFactory>();
 
     auto encapsulation_monitoring_client =
-        absl::make_unique<StrictMock<MockMonitoringClient>>();
+        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
     encapsulation_monitoring_client_ptr_ =
         encapsulation_monitoring_client.get();
 
     EXPECT_CALL(*monitoring_client_factory, New(_))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(encapsulation_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -293,7 +293,7 @@ class KemEncapsulateWrapperTestWithMonitoring
   // Cleanup the registry to avoid mock leaks.
   void TearDown() override { Registry::Reset(); }
 
-  MockMonitoringClient* encapsulation_monitoring_client_ptr_;
+  internal::MockMonitoringClient* encapsulation_monitoring_client_ptr_;
 };
 
 TEST_F(KemEncapsulateWrapperTestWithMonitoring, Encapsulate) {

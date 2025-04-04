@@ -25,10 +25,10 @@
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
 #include "tink/hybrid_encrypt.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -60,7 +60,8 @@ class HybridEncryptSetWrapper : public HybridEncrypt {
  public:
   explicit HybridEncryptSetWrapper(
       std::unique_ptr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_set,
-      std::unique_ptr<MonitoringClient> monitoring_encryption_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client =
+          nullptr)
       : hybrid_encrypt_set_(std::move(hybrid_encrypt_set)),
         monitoring_encryption_client_(std::move(monitoring_encryption_client)) {
   }
@@ -73,7 +74,7 @@ class HybridEncryptSetWrapper : public HybridEncrypt {
 
  private:
   std::unique_ptr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_set_;
-  std::unique_ptr<MonitoringClient> monitoring_encryption_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client_;
 };
 
 absl::StatusOr<std::string> HybridEncryptSetWrapper::Encrypt(
@@ -107,7 +108,7 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> HybridEncryptWrapper::Wrap(
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -116,15 +117,15 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> HybridEncryptWrapper::Wrap(
         absl::make_unique<HybridEncryptSetWrapper>(std::move(primitive_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
       monitoring_encryption_client = monitoring_factory->New(
-          MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
+          internal::MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
   if (!monitoring_encryption_client.ok()) {
     return monitoring_encryption_client.status();
   }

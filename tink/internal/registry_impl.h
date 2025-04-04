@@ -39,9 +39,9 @@
 #include "tink/internal/key_type_info_store.h"
 #include "tink/internal/keyset_wrapper.h"
 #include "tink/internal/keyset_wrapper_store.h"
+#include "tink/internal/monitoring.h"
 #include "tink/key.h"
 #include "tink/key_manager.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/util/status.h"
@@ -136,12 +136,13 @@ class RegistryImpl {
   // Registers a `monitoring_factory`. Only one factory can be registered,
   // subsequent calls to this method will return a kAlreadyExists error.
   absl::Status RegisterMonitoringClientFactory(
-      std::unique_ptr<crypto::tink::MonitoringClientFactory> monitoring_factory)
-      ABSL_LOCKS_EXCLUDED(monitoring_factory_mutex_);
+      std::unique_ptr<crypto::tink::internal::MonitoringClientFactory>
+          monitoring_factory) ABSL_LOCKS_EXCLUDED(monitoring_factory_mutex_);
 
   // Returns a pointer to the registered monitoring factory if any, and nullptr
   // otherwise.
-  crypto::tink::MonitoringClientFactory* GetMonitoringClientFactory() const {
+  crypto::tink::internal::MonitoringClientFactory* GetMonitoringClientFactory()
+      const {
     return monitoring_factory_.load(std::memory_order_acquire);
   }
 
@@ -167,8 +168,8 @@ class RegistryImpl {
   // Mutex to protect writes to `monitoring_factory_`.
   mutable absl::Mutex monitoring_factory_mutex_;
   // Owned.
-  std::atomic<crypto::tink::MonitoringClientFactory*> monitoring_factory_{
-      nullptr};
+  std::atomic<crypto::tink::internal::MonitoringClientFactory*>
+      monitoring_factory_{nullptr};
 };
 
 template <class P>
@@ -239,8 +240,7 @@ absl::Status RegistryImpl::RegisterPrimitiveWrapper(
         return this->GetPrimitive<P>(key_data);
       };
 
-  absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
-      const Key& key) const>
+  absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(const Key& key) const>
       always_failing_primitive_getter = [](const Key& key) {
         return absl::Status(
             absl::StatusCode::kNotFound,
@@ -254,8 +254,8 @@ absl::Status RegistryImpl::RegisterPrimitiveWrapper(
 
 // TODO: b/284059638 - Remove this and upstream functions from the public API.
 template <class P>
-absl::StatusOr<const KeyManager<P>*>
-RegistryImpl::get_key_manager(absl::string_view type_url) const {
+absl::StatusOr<const KeyManager<P>*> RegistryImpl::get_key_manager(
+    absl::string_view type_url) const {
   absl::StatusOr<const crypto::tink::internal::KeyTypeInfoStore::Info*> info =
       get_key_type_info(type_url);
   if (!info.ok()) {
@@ -302,8 +302,8 @@ absl::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
   const KeysetWrapper<P>* keyset_wrapper = nullptr;
   {
     absl::MutexLock lock(&maps_mutex_);
-    absl::StatusOr<const KeysetWrapper<P>*>
-        keyset_wrapper_status = keyset_wrapper_store_.Get<P>();
+    absl::StatusOr<const KeysetWrapper<P>*> keyset_wrapper_status =
+        keyset_wrapper_store_.Get<P>();
     if (!keyset_wrapper_status.ok()) {
       return keyset_wrapper_status.status();
     }

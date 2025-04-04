@@ -224,13 +224,13 @@ tink_cc_library(
     absl::optional
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring
     tink::internal::monitoring_util
     tink::internal::registry_impl
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::monitoring::monitoring
     tink::proto::tink_cc_proto
 )
 
@@ -257,14 +257,14 @@ tink_cc_test(
     tink::core::primitive_set
     tink::core::registry
     tink::config::global_registry
+    tink::internal::monitoring
+    tink::internal::monitoring_client_mocks
     tink::internal::registry_impl
     tink::jwt::jwt_mac
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
     tink::mac::failing_mac
-    tink::monitoring::monitoring
-    tink::monitoring::monitoring_client_mocks
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::jwt_hmac_cc_proto
@@ -723,11 +723,11 @@ tink_cc_library(
     absl::string_view
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring
     tink::internal::monitoring_util
     tink::internal::registry_impl
     tink::jwt::jwt_public_key_sign
     tink::jwt::raw_jwt
-    tink::monitoring::monitoring
     tink::proto::tink_cc_proto
 )
 
@@ -746,12 +746,12 @@ tink_cc_library(
     absl::optional
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring
     tink::internal::monitoring_util
     tink::internal::registry_impl
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_validator
     tink::jwt::verified_jwt
-    tink::monitoring::monitoring
     tink::proto::tink_cc_proto
 )
 
@@ -781,14 +781,14 @@ tink_cc_test(
     tink::core::primitive_set
     tink::core::registry
     tink::config::global_registry
+    tink::internal::monitoring
+    tink::internal::monitoring_client_mocks
     tink::internal::registry_impl
     tink::jwt::jwt_public_key_sign
     tink::jwt::jwt_public_key_verify
     tink::jwt::jwt_validator
     tink::jwt::raw_jwt
     tink::jwt::verified_jwt
-    tink::monitoring::monitoring
-    tink::monitoring::monitoring_client_mocks
     tink::signature::failing_signature
     tink::util::test_matchers
     tink::util::test_util

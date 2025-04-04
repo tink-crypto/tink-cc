@@ -34,6 +34,8 @@
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
+#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/internal/jwt_format.h"
@@ -46,8 +48,6 @@
 #include "tink/jwt/verified_jwt.h"
 #include "tink/keyset_manager.h"
 #include "tink/mac/failing_mac.h"
-#include "tink/monitoring/monitoring.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/test_matchers.h"
@@ -389,22 +389,22 @@ class JwtMacSetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<MockMonitoringClientFactory>();
+        absl::make_unique<internal::MockMonitoringClientFactory>();
     auto compute_monitoring_client =
-        absl::make_unique<NiceMock<MockMonitoringClient>>();
+        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
     compute_monitoring_client_ = compute_monitoring_client.get();
     auto verify_monitoring_client =
-        absl::make_unique<NiceMock<MockMonitoringClient>>();
+        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
     verify_monitoring_client_ = verify_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
-    // corresponding MockMonitoringClients.
+    // corresponding internal::MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(compute_monitoring_client)))))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(verify_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -419,8 +419,8 @@ class JwtMacSetWrapperWithMonitoringTest : public Test {
   // Cleanup the registry to avoid mock leaks.
   ~JwtMacSetWrapperWithMonitoringTest() override { Registry::Reset(); }
 
-  MockMonitoringClient* compute_monitoring_client_;
-  MockMonitoringClient* verify_monitoring_client_;
+  internal::MockMonitoringClient* compute_monitoring_client_;
+  internal::MockMonitoringClient* verify_monitoring_client_;
 };
 
 // Tests that successful ComputeMac operations are logged.

@@ -26,10 +26,10 @@
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -59,8 +59,10 @@ class AeadSetWrapper : public Aead {
  public:
   explicit AeadSetWrapper(
       std::unique_ptr<PrimitiveSet<Aead>> aead_set,
-      std::unique_ptr<MonitoringClient> monitoring_encryption_client = nullptr,
-      std::unique_ptr<MonitoringClient> monitoring_decryption_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client =
+          nullptr,
+      std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client =
+          nullptr)
       : aead_set_(std::move(aead_set)),
         monitoring_encryption_client_(std::move(monitoring_encryption_client)),
         monitoring_decryption_client_(std::move(monitoring_decryption_client)) {
@@ -76,8 +78,8 @@ class AeadSetWrapper : public Aead {
 
  private:
   std::unique_ptr<PrimitiveSet<Aead>> aead_set_;
-  std::unique_ptr<MonitoringClient> monitoring_encryption_client_;
-  std::unique_ptr<MonitoringClient> monitoring_decryption_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client_;
 };
 
 absl::StatusOr<std::string> AeadSetWrapper::Encrypt(
@@ -163,7 +165,7 @@ absl::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
     return status;
   }
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -171,22 +173,22 @@ absl::StatusOr<std::unique_ptr<Aead>> AeadWrapper::Wrap(
     return {absl::make_unique<AeadSetWrapper>(std::move(aead_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*aead_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
       monitoring_encryption_client = monitoring_factory->New(
-          MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
+          internal::MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
   if (!monitoring_encryption_client.ok()) {
     return monitoring_encryption_client.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
       monitoring_decryption_client = monitoring_factory->New(
-          MonitoringContext(kPrimitive, kDecryptApi, *keyset_info));
+          internal::MonitoringContext(kPrimitive, kDecryptApi, *keyset_info));
   if (!monitoring_decryption_client.ok()) {
     return monitoring_decryption_client.status();
   }

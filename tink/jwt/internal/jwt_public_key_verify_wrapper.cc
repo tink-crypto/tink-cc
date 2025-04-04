@@ -25,6 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/jwt_format.h"
@@ -32,7 +33,6 @@
 #include "tink/jwt/jwt_public_key_verify.h"
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/verified_jwt.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "proto/tink.pb.h"
 
@@ -52,7 +52,8 @@ class JwtPublicKeyVerifySetWrapper : public JwtPublicKeyVerify {
  public:
   explicit JwtPublicKeyVerifySetWrapper(
       std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set,
-      std::unique_ptr<MonitoringClient> monitoring_verify_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_verify_client =
+          nullptr)
       : jwt_verify_set_(std::move(jwt_verify_set)),
         monitoring_verify_client_(std::move(monitoring_verify_client)) {}
 
@@ -64,7 +65,7 @@ class JwtPublicKeyVerifySetWrapper : public JwtPublicKeyVerify {
 
  private:
   std::unique_ptr<PrimitiveSet<JwtPublicKeyVerifyInternal>> jwt_verify_set_;
-  std::unique_ptr<MonitoringClient> monitoring_verify_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_verify_client_;
 };
 
 absl::Status Validate(
@@ -123,7 +124,7 @@ JwtPublicKeyVerifyWrapper::Wrap(
     const {
   absl::Status status = Validate(jwt_verify_set.get());
   if (!status.ok()) return status;
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -132,15 +133,15 @@ JwtPublicKeyVerifyWrapper::Wrap(
         std::move(jwt_verify_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*jwt_verify_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_verify_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
   if (!monitoring_verify_client.ok()) {
     return monitoring_verify_client.status();
   }

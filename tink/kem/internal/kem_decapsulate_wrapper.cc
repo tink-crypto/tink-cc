@@ -26,11 +26,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/kem/kem_decapsulate.h"
 #include "tink/keyset_handle.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -76,8 +76,8 @@ class KemDecapsulateSetWrapper : public KemDecapsulate {
  public:
   explicit KemDecapsulateSetWrapper(
       std::unique_ptr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set,
-      std::unique_ptr<MonitoringClient> monitoring_decapsulation_client =
-          nullptr)
+      std::unique_ptr<internal::MonitoringClient>
+          monitoring_decapsulation_client = nullptr)
       : kem_decapsulate_set_(std::move(kem_decapsulate_set)),
         monitoring_decapsulation_client_(
             std::move(monitoring_decapsulation_client)) {}
@@ -89,7 +89,7 @@ class KemDecapsulateSetWrapper : public KemDecapsulate {
 
  private:
   std::unique_ptr<PrimitiveSet<KemDecapsulate>> kem_decapsulate_set_;
-  std::unique_ptr<MonitoringClient> monitoring_decapsulation_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_decapsulation_client_;
 };
 
 absl::StatusOr<KeysetHandle> KemDecapsulateSetWrapper::Decapsulate(
@@ -154,7 +154,7 @@ absl::StatusOr<std::unique_ptr<KemDecapsulate>> KemDecapsulateWrapper::Wrap(
     return status;
   }
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -163,15 +163,16 @@ absl::StatusOr<std::unique_ptr<KemDecapsulate>> KemDecapsulateWrapper::Wrap(
         absl::make_unique<KemDecapsulateSetWrapper>(std::move(primitive_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>>
-      monitoring_decapsulation_client = monitoring_factory->New(
-          MonitoringContext(kPrimitive, kDecapsulateApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_decapsulation_client =
+          monitoring_factory->New(internal::MonitoringContext(
+              kPrimitive, kDecapsulateApi, *keyset_info));
   if (!monitoring_decapsulation_client.ok()) {
     return monitoring_decapsulation_client.status();
   }

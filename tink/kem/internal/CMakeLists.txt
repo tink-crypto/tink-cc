@@ -32,10 +32,10 @@ tink_cc_library(
     tink::core::keyset_handle
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring
     tink::internal::monitoring_util
     tink::internal::registry_impl
     tink::kem::kem_decapsulate
-    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -67,11 +67,11 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_decapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    tink::internal::monitoring
+    tink::internal::monitoring_client_mocks
     tink::internal::registry_impl
     tink::kem::kem_decapsulate
     tink::kem::kem_encapsulate
-    tink::monitoring::monitoring
-    tink::monitoring::monitoring_client_mocks
     tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
@@ -89,10 +89,10 @@ tink_cc_library(
     absl::string_view
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring
     tink::internal::monitoring_util
     tink::internal::registry_impl
     tink::kem::kem_encapsulate
-    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -118,10 +118,10 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_private_key
     tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
+    tink::internal::monitoring
+    tink::internal::monitoring_client_mocks
     tink::internal::registry_impl
     tink::kem::kem_encapsulate
-    tink::monitoring::monitoring
-    tink::monitoring::monitoring_client_mocks
     tink::util::statusor
     tink::util::test_matchers
 )

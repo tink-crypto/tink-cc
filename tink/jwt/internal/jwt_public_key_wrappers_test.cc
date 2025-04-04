@@ -31,6 +31,8 @@
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/config/global_registry.h"
+#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/internal/jwt_ecdsa_sign_key_manager.h"
@@ -48,8 +50,6 @@
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
 #include "tink/keyset_manager.h"
-#include "tink/monitoring/monitoring.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/signature/failing_signature.h"
@@ -462,16 +462,16 @@ class JwtPublicKeySetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<MockMonitoringClientFactory>();
+        absl::make_unique<internal::MockMonitoringClientFactory>();
     auto monitoring_client =
-        absl::make_unique<StrictMock<MockMonitoringClient>>();
+        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
     monitoring_client_ = monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
-    // corresponding MockMonitoringClients.
+    // corresponding internal::MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -486,7 +486,7 @@ class JwtPublicKeySetWrapperWithMonitoringTest : public Test {
   // Cleanup the registry to avoid mock leaks.
   ~JwtPublicKeySetWrapperWithMonitoringTest() override { Registry::Reset(); }
 
-  MockMonitoringClient* monitoring_client_;
+  internal::MockMonitoringClient *monitoring_client_;
 };
 
 // Test that successful sign operations are logged.

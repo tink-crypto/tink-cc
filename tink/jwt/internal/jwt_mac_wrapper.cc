@@ -25,6 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/jwt/internal/jwt_format.h"
@@ -33,7 +34,6 @@
 #include "tink/jwt/jwt_validator.h"
 #include "tink/jwt/raw_jwt.h"
 #include "tink/jwt/verified_jwt.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "proto/tink.pb.h"
 
@@ -55,8 +55,10 @@ class JwtMacSetWrapper : public JwtMac {
  public:
   explicit JwtMacSetWrapper(
       std::unique_ptr<PrimitiveSet<JwtMacInternal>> jwt_mac_set,
-      std::unique_ptr<MonitoringClient> monitoring_compute_client = nullptr,
-      std::unique_ptr<MonitoringClient> monitoring_verify_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_compute_client =
+          nullptr,
+      std::unique_ptr<internal::MonitoringClient> monitoring_verify_client =
+          nullptr)
       : jwt_mac_set_(std::move(jwt_mac_set)),
         monitoring_compute_client_(std::move(monitoring_compute_client)),
         monitoring_verify_client_(std::move(monitoring_verify_client)) {}
@@ -72,8 +74,8 @@ class JwtMacSetWrapper : public JwtMac {
 
  private:
   std::unique_ptr<PrimitiveSet<JwtMacInternal>> jwt_mac_set_;
-  std::unique_ptr<MonitoringClient> monitoring_compute_client_;
-  std::unique_ptr<MonitoringClient> monitoring_verify_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_compute_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_verify_client_;
 };
 
 absl::Status Validate(PrimitiveSet<JwtMacInternal>* jwt_mac_set) {
@@ -154,7 +156,7 @@ absl::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
   absl::Status status = Validate(jwt_mac_set.get());
   if (!status.ok()) return status;
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -162,22 +164,22 @@ absl::StatusOr<std::unique_ptr<JwtMac>> JwtMacWrapper::Wrap(
     return {absl::make_unique<JwtMacSetWrapper>(std::move(jwt_mac_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*jwt_mac_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_compute_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_compute_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
   if (!monitoring_compute_client.ok()) {
     return monitoring_compute_client.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_verify_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
   if (!monitoring_verify_client.ok()) {
     return monitoring_verify_client.status();
   }

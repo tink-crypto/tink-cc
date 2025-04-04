@@ -28,8 +28,8 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/monitoring.h"
 #include "tink/key_status.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -41,7 +41,7 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::MonitoringKeySetInfo;
+using ::crypto::tink::internal::MonitoringKeySetInfo;
 using ::crypto::tink::test::IsOk;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::KeyStatusType;
@@ -134,7 +134,7 @@ TEST(MonitoringUtilTest, MonitoringKeySetInfoFromPrimitiveSetValid) {
                                            primitive_2.key_info);
   ASSERT_THAT(added_entry, IsOk());
 
-  absl::StatusOr<MonitoringKeySetInfo> monitoring_keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> monitoring_keyset_info =
       MonitoringKeySetInfoFromPrimitiveSet(primitive_set);
   ASSERT_THAT(monitoring_keyset_info, IsOk());
   EXPECT_EQ(monitoring_keyset_info->GetPrimaryKeyId(), 1);

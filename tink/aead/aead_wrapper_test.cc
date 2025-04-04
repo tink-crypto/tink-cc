@@ -33,9 +33,9 @@
 #include "tink/aead.h"
 #include "tink/aead/mock_aead.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
-#include "tink/monitoring/monitoring.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
@@ -205,21 +205,21 @@ class AeadSetWrapperTestWithMonitoring : public Test {
   void SetUp() override {
     Registry::Reset();
     auto monitoring_client_factory =
-        absl::make_unique<MockMonitoringClientFactory>();
+        absl::make_unique<internal::MockMonitoringClientFactory>();
 
     auto encryption_monitoring_client =
-        absl::make_unique<StrictMock<MockMonitoringClient>>();
+        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
     encryption_monitoring_client_ptr_ = encryption_monitoring_client.get();
     auto decryption_monitoring_client =
-        absl::make_unique<StrictMock<MockMonitoringClient>>();
+        absl::make_unique<StrictMock<internal::MockMonitoringClient>>();
     decryption_monitoring_client_ptr_ = decryption_monitoring_client.get();
 
     EXPECT_CALL(*monitoring_client_factory, New(_))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(encryption_monitoring_client)))))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(decryption_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -234,8 +234,8 @@ class AeadSetWrapperTestWithMonitoring : public Test {
   // Cleanup the registry to avoid mock leaks.
   void TearDown() override { Registry::Reset(); }
 
-  MockMonitoringClient* encryption_monitoring_client_ptr_;
-  MockMonitoringClient* decryption_monitoring_client_ptr_;
+  internal::MockMonitoringClient *encryption_monitoring_client_ptr_;
+  internal::MockMonitoringClient *decryption_monitoring_client_ptr_;
 };
 
 // Test that successful encrypt/decrypt operations are logged.

@@ -29,9 +29,9 @@
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/failing_hybrid.h"
 #include "tink/hybrid_encrypt.h"
+#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
-#include "tink/monitoring/monitoring.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
 #include "tink/util/status.h"
@@ -185,16 +185,16 @@ class HybridEncryptSetWrapperWithMonitoringTest : public Test {
 
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<MockMonitoringClientFactory>();
+        absl::make_unique<internal::MockMonitoringClientFactory>();
     auto encryption_monitoring_client =
-        absl::make_unique<NiceMock<MockMonitoringClient>>();
+        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
     encryption_monitoring_client_ = encryption_monitoring_client.get();
 
     // Monitoring tests expect that the client factory will create the
-    // corresponding MockMonitoringClients.
+    // corresponding internal::MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(encryption_monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -209,7 +209,7 @@ class HybridEncryptSetWrapperWithMonitoringTest : public Test {
   // Cleanup the registry to avoid mock leaks.
   ~HybridEncryptSetWrapperWithMonitoringTest() override { Registry::Reset(); }
 
-  MockMonitoringClient* encryption_monitoring_client_;
+  internal::MockMonitoringClient* encryption_monitoring_client_;
 };
 
 // Test that successful encrypt operations are logged.

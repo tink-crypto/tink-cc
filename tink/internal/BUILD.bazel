@@ -103,6 +103,7 @@ cc_library(
         ":key_type_info_store",
         ":keyset_wrapper",
         ":keyset_wrapper_store",
+        ":monitoring",
         "//proto:tink_cc_proto",
         "//tink:core/key_type_manager",
         "//tink:core/private_key_type_manager",
@@ -111,7 +112,6 @@ cc_library(
         "//tink:key_manager",
         "//tink:primitive_set",
         "//tink:primitive_wrapper",
-        "//tink/monitoring",
         "//tink/util:errors",
         "//tink/util:status",
         "//tink/util:statusor",
@@ -318,6 +318,7 @@ cc_test(
     tags = ["fips"],
     deps = [
         ":fips_utils",
+        ":monitoring_client_mocks",
         ":registry_impl",
         "//proto:aes_ctr_hmac_aead_cc_proto",
         "//proto:aes_gcm_cc_proto",
@@ -342,7 +343,6 @@ cc_test(
         "//tink/aead:aes_gcm_key_manager",
         "//tink/hybrid:ecies_aead_hkdf_private_key_manager",
         "//tink/hybrid:ecies_aead_hkdf_public_key_manager",
-        "//tink/monitoring:monitoring_client_mocks",
         "//tink/subtle:aes_gcm_boringssl",
         "//tink/subtle:random",
         "//tink/util:input_stream_util",
@@ -518,10 +518,10 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":key_status_util",
+        ":monitoring",
         "//proto:tink_cc_proto",
         "//tink:key_status",
         "//tink:primitive_set",
-        "//tink/monitoring",
         "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/container:flat_hash_map",
@@ -534,11 +534,11 @@ cc_test(
     name = "monitoring_util_test",
     srcs = ["monitoring_util_test.cc"],
     deps = [
+        ":monitoring",
         ":monitoring_util",
         "//proto:tink_cc_proto",
         "//tink:key_status",
         "//tink:primitive_set",
-        "//tink/monitoring",
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
@@ -2107,5 +2107,30 @@ cc_test(
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "monitoring",
+    hdrs = ["monitoring.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":key_status_util",
+        "//tink:key_status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_library(
+    name = "monitoring_client_mocks",
+    testonly = 1,
+    hdrs = ["monitoring_client_mocks.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":monitoring",
+        "//tink/util:statusor",
+        "@com_google_googletest//:gtest",
     ],
 )

@@ -45,9 +45,9 @@
 #include "tink/hybrid_decrypt.h"
 #include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/key_manager.h"
 #include "tink/mac.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/primitive_set.h"
 #include "tink/primitive_wrapper.h"
 #include "tink/registry.h"
@@ -2000,7 +2000,7 @@ TEST_F(RegistryImplTest, FipsFailsIfNotEmpty) {
 
 TEST_F(RegistryImplTest, CanRegisterOnlyOneMonitoringFactory) {
   auto monitoring_client_factory =
-      absl::make_unique<MockMonitoringClientFactory>();
+      absl::make_unique<internal::MockMonitoringClientFactory>();
 
   RegistryImpl registry_impl;
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(
@@ -2008,7 +2008,7 @@ TEST_F(RegistryImplTest, CanRegisterOnlyOneMonitoringFactory) {
               IsOk());
   ASSERT_THAT(registry_impl.GetMonitoringClientFactory(), Not(IsNull()));
   auto another_monitoring_client_factory =
-      absl::make_unique<MockMonitoringClientFactory>();
+      absl::make_unique<internal::MockMonitoringClientFactory>();
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(
                   std::move(another_monitoring_client_factory)),
               StatusIs(absl::StatusCode::kAlreadyExists));
@@ -2019,7 +2019,7 @@ TEST_F(RegistryImplTest, CannotRegisterNullFactory) {
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(nullptr),
               StatusIs(absl::StatusCode::kInvalidArgument));
   auto monitoring_client_factory =
-      absl::make_unique<MockMonitoringClientFactory>();
+      absl::make_unique<internal::MockMonitoringClientFactory>();
   EXPECT_THAT(registry_impl.RegisterMonitoringClientFactory(
                   std::move(monitoring_client_factory)),
               IsOk());

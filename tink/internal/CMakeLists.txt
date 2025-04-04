@@ -108,6 +108,7 @@ tink_cc_library(
     tink::internal::key_type_info_store
     tink::internal::keyset_wrapper
     tink::internal::keyset_wrapper_store
+    tink::internal::monitoring
     absl::core_headers
     absl::flat_hash_map
     absl::any_invocable
@@ -123,7 +124,6 @@ tink_cc_library(
     tink::core::key_manager
     tink::core::primitive_set
     tink::core::primitive_wrapper
-    tink::monitoring::monitoring
     tink::util::errors
     tink::util::status
     tink::util::statusor
@@ -281,6 +281,7 @@ tink_cc_test(
     registry_impl_test.cc
   DEPS
     tink::internal::fips_utils
+    tink::internal::monitoring_client_mocks
     tink::internal::registry_impl
     gmock
     absl::memory
@@ -305,7 +306,6 @@ tink_cc_test(
     tink::aead::aes_gcm_key_manager
     tink::hybrid::ecies_aead_hkdf_private_key_manager
     tink::hybrid::ecies_aead_hkdf_public_key_manager
-    tink::monitoring::monitoring_client_mocks
     tink::subtle::aes_gcm_boringssl
     tink::subtle::random
     tink::util::input_stream_util
@@ -487,12 +487,12 @@ tink_cc_library(
     monitoring_util.h
   DEPS
     tink::internal::key_status_util
+    tink::internal::monitoring
     absl::flat_hash_map
     absl::status
     absl::strings
     tink::core::key_status
     tink::core::primitive_set
-    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -503,6 +503,7 @@ tink_cc_test(
   SRCS
     monitoring_util_test.cc
   DEPS
+    tink::internal::monitoring
     tink::internal::monitoring_util
     gmock
     absl::flat_hash_map
@@ -511,7 +512,6 @@ tink_cc_test(
     absl::strings
     tink::core::key_status
     tink::core::primitive_set
-    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers
@@ -2033,4 +2033,27 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
+)
+
+tink_cc_library(
+  NAME monitoring
+  SRCS
+    monitoring.h
+  DEPS
+    tink::internal::key_status_util
+    absl::flat_hash_map
+    absl::string_view
+    tink::core::key_status
+    tink::util::statusor
+)
+
+tink_cc_library(
+  NAME monitoring_client_mocks
+  SRCS
+    monitoring_client_mocks.h
+  DEPS
+    tink::internal::monitoring
+    gmock
+    tink::util::statusor
+  TESTONLY
 )

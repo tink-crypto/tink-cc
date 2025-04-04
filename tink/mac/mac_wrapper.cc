@@ -25,11 +25,11 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
 #include "tink/mac.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -50,8 +50,10 @@ class MacSetWrapper : public Mac {
  public:
   explicit MacSetWrapper(
       std::unique_ptr<PrimitiveSet<Mac>> mac_set,
-      std::unique_ptr<MonitoringClient> monitoring_compute_client = nullptr,
-      std::unique_ptr<MonitoringClient> monitoring_verify_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_compute_client =
+          nullptr,
+      std::unique_ptr<internal::MonitoringClient> monitoring_verify_client =
+          nullptr)
       : mac_set_(std::move(mac_set)),
         monitoring_compute_client_(std::move(monitoring_compute_client)),
         monitoring_verify_client_(std::move(monitoring_verify_client)) {}
@@ -65,8 +67,8 @@ class MacSetWrapper : public Mac {
 
  private:
   std::unique_ptr<PrimitiveSet<Mac>> mac_set_;
-  std::unique_ptr<MonitoringClient> monitoring_compute_client_;
-  std::unique_ptr<MonitoringClient> monitoring_verify_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_compute_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_verify_client_;
 };
 
 absl::Status Validate(PrimitiveSet<Mac>* mac_set) {
@@ -171,7 +173,7 @@ absl::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
   absl::Status status = Validate(mac_set.get());
   if (!status.ok()) return status;
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -179,22 +181,22 @@ absl::StatusOr<std::unique_ptr<Mac>> MacWrapper::Wrap(
     return {absl::make_unique<MacSetWrapper>(std::move(mac_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*mac_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_compute_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_compute_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
   if (!monitoring_compute_client.ok()) {
     return monitoring_compute_client.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_verify_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_verify_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kVerifyApi, *keyset_info));
   if (!monitoring_verify_client.ok()) {
     return monitoring_verify_client.status();
   }

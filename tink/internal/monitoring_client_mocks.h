@@ -13,18 +13,19 @@
 // limitations under the License.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef TINK_MONITORING_MONITORING_CLIENT_MOCKS_H_
-#define TINK_MONITORING_MONITORING_CLIENT_MOCKS_H_
+#ifndef TINK_INTERNAL_MONITORING_CLIENT_MOCKS_H_
+#define TINK_INTERNAL_MONITORING_CLIENT_MOCKS_H_
 
 #include <cstdint>
 #include <memory>
 
 #include "gmock/gmock.h"
-#include "tink/monitoring/monitoring.h"
+#include "tink/internal/monitoring.h"
 #include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Mock MonitoringClientFactory class.
 class MockMonitoringClientFactory : public MonitoringClientFactory {
@@ -41,7 +42,8 @@ class MockMonitoringClient : public MonitoringClient {
   MOCK_METHOD(void, LogFailure, (), (override));
 };
 
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_MONITORING_MONITORING_CLIENT_MOCKS_H_
+#endif  // TINK_INTERNAL_MONITORING_CLIENT_MOCKS_H_

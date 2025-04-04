@@ -91,9 +91,9 @@ tink_cc_library(
     absl::string_view
     tink::core::primitive_set
     tink::core::primitive_wrapper
+    tink::internal::monitoring
     tink::internal::monitoring_util
     tink::internal::registry_impl
-    tink::monitoring::monitoring
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -393,9 +393,9 @@ tink_cc_test(
     absl::strings
     tink::core::primitive_set
     tink::core::registry
+    tink::internal::monitoring
+    tink::internal::monitoring_client_mocks
     tink::internal::registry_impl
-    tink::monitoring::monitoring
-    tink::monitoring::monitoring_client_mocks
     tink::util::status
     tink::util::statusor
     tink::util::test_matchers

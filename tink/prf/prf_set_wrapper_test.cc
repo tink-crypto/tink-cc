@@ -28,9 +28,9 @@
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_client_mocks.h"
 #include "tink/internal/registry_impl.h"
-#include "tink/monitoring/monitoring.h"
-#include "tink/monitoring/monitoring_client_mocks.h"
 #include "tink/prf/prf_set.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
@@ -156,15 +156,15 @@ class PrfSetWrapperWithMonitoringTest : public Test {
     Registry::Reset();
     // Setup mocks for catching Monitoring calls.
     auto monitoring_client_factory =
-        absl::make_unique<MockMonitoringClientFactory>();
+        absl::make_unique<internal::MockMonitoringClientFactory>();
     auto monitoring_client =
-        absl::make_unique<NiceMock<MockMonitoringClient>>();
+        absl::make_unique<NiceMock<internal::MockMonitoringClient>>();
     monitoring_client_ref_ = monitoring_client.get();
     // Monitoring tests expect that the client factory will create the
-    // corresponding MockMonitoringClients.
+    // corresponding internal::MockMonitoringClients.
     EXPECT_CALL(*monitoring_client_factory, New(_))
-        .WillOnce(
-            Return(ByMove(absl::StatusOr<std::unique_ptr<MonitoringClient>>(
+        .WillOnce(Return(
+            ByMove(absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>(
                 std::move(monitoring_client)))));
 
     ASSERT_THAT(internal::RegistryImpl::GlobalInstance()
@@ -179,7 +179,7 @@ class PrfSetWrapperWithMonitoringTest : public Test {
   // Cleanup the registry to avoid mock leaks.
   ~PrfSetWrapperWithMonitoringTest() override { Registry::Reset(); }
 
-  NiceMock<MockMonitoringClient>* monitoring_client_ref_;
+  NiceMock<internal::MockMonitoringClient>* monitoring_client_ref_;
 };
 
 class AlwaysFailingPrf : public Prf {

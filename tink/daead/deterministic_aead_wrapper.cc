@@ -25,10 +25,10 @@
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
 #include "tink/deterministic_aead.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -58,12 +58,14 @@ class  DeterministicAeadSetWrapper : public DeterministicAead {
  public:
   explicit DeterministicAeadSetWrapper(
       std::unique_ptr<PrimitiveSet<DeterministicAead>> daead_set,
-      std::unique_ptr<MonitoringClient> monitoring_encryption_client = nullptr,
-      std::unique_ptr<MonitoringClient> monitoring_decryption_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client =
+          nullptr,
+      std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client =
+          nullptr)
       : daead_set_(std::move(daead_set)),
         monitoring_encryption_client_(std::move(monitoring_encryption_client)),
-        monitoring_decryption_client_(std::move(monitoring_decryption_client))
-        {}
+        monitoring_decryption_client_(std::move(monitoring_decryption_client)) {
+  }
 
   absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
@@ -77,8 +79,8 @@ class  DeterministicAeadSetWrapper : public DeterministicAead {
 
  private:
   std::unique_ptr<PrimitiveSet<DeterministicAead>> daead_set_;
-  std::unique_ptr<MonitoringClient> monitoring_encryption_client_;
-  std::unique_ptr<MonitoringClient> monitoring_decryption_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_encryption_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_decryption_client_;
 };
 
 absl::StatusOr<std::string>
@@ -167,7 +169,7 @@ DeterministicAeadWrapper::Wrap(
   absl::Status status = Validate(primitive_set.get());
   if (!status.ok()) return status;
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
 
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
@@ -176,22 +178,22 @@ DeterministicAeadWrapper::Wrap(
         std::move(primitive_set))};
   }
 
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*primitive_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
       monitoring_encryption_client = monitoring_factory->New(
-          MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
+          internal::MonitoringContext(kPrimitive, kEncryptApi, *keyset_info));
   if (!monitoring_encryption_client.ok()) {
     return monitoring_encryption_client.status();
   }
 
-  absl::StatusOr<std::unique_ptr<MonitoringClient>>
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
       monitoring_decryption_client = monitoring_factory->New(
-          MonitoringContext(kPrimitive, kDecryptApi, *keyset_info));
+          internal::MonitoringContext(kPrimitive, kDecryptApi, *keyset_info));
   if (!monitoring_decryption_client.ok()) {
     return monitoring_decryption_client.status();
   }

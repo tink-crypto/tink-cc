@@ -27,9 +27,9 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/monitoring.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
-#include "tink/monitoring/monitoring.h"
 #include "tink/prf/prf_set.h"
 #include "tink/primitive_set.h"
 #include "tink/util/status.h"
@@ -49,7 +49,7 @@ constexpr absl::string_view kComputeApi = "compute";
 class MonitoredPrf : public Prf {
  public:
   explicit MonitoredPrf(uint32_t key_id, const Prf* prf,
-                        MonitoringClient* monitoring_client)
+                        internal::MonitoringClient* monitoring_client)
       : key_id_(key_id), prf_(prf), monitoring_client_(monitoring_client) {}
   ~MonitoredPrf() override = default;
 
@@ -78,14 +78,14 @@ class MonitoredPrf : public Prf {
  private:
   uint32_t key_id_;
   const Prf* prf_;
-  MonitoringClient* monitoring_client_;
+  internal::MonitoringClient* monitoring_client_;
 };
 
 class PrfSetPrimitiveWrapper : public PrfSet {
  public:
   explicit PrfSetPrimitiveWrapper(
       std::unique_ptr<PrimitiveSet<Prf>> prf_set,
-      std::unique_ptr<MonitoringClient> monitoring_client = nullptr)
+      std::unique_ptr<internal::MonitoringClient> monitoring_client = nullptr)
       : prf_set_(std::move(prf_set)),
         monitoring_client_(std::move(monitoring_client)) {
     wrapped_prfs_.reserve(prf_set_->get_raw_primitives().value()->size());
@@ -108,7 +108,7 @@ class PrfSetPrimitiveWrapper : public PrfSet {
 
  private:
   std::unique_ptr<PrimitiveSet<Prf>> prf_set_;
-  std::unique_ptr<MonitoringClient> monitoring_client_;
+  std::unique_ptr<internal::MonitoringClient> monitoring_client_;
   std::vector<std::unique_ptr<Prf>> wrapped_prfs_;
   std::map<uint32_t, Prf*> prfs_;
 };
@@ -138,20 +138,20 @@ absl::StatusOr<std::unique_ptr<PrfSet>> PrfSetWrapper::Wrap(
   absl::Status status = Validate(prf_set.get());
   if (!status.ok()) return status;
 
-  MonitoringClientFactory* const monitoring_factory =
+  internal::MonitoringClientFactory* const monitoring_factory =
       internal::RegistryImpl::GlobalInstance().GetMonitoringClientFactory();
   // Monitoring is not enabled. Create a wrapper without monitoring clients.
   if (monitoring_factory == nullptr) {
     return {absl::make_unique<PrfSetPrimitiveWrapper>(std::move(prf_set))};
   }
-  absl::StatusOr<MonitoringKeySetInfo> keyset_info =
+  absl::StatusOr<internal::MonitoringKeySetInfo> keyset_info =
       internal::MonitoringKeySetInfoFromPrimitiveSet(*prf_set);
   if (!keyset_info.ok()) {
     return keyset_info.status();
   }
-  absl::StatusOr<std::unique_ptr<MonitoringClient>> monitoring_client =
-      monitoring_factory->New(
-          MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
+  absl::StatusOr<std::unique_ptr<internal::MonitoringClient>>
+      monitoring_client = monitoring_factory->New(
+          internal::MonitoringContext(kPrimitive, kComputeApi, *keyset_info));
   if (!monitoring_client.ok()) {
     return monitoring_client.status();
   }

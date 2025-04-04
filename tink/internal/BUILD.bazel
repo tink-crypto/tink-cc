@@ -1774,33 +1774,7 @@ cc_library(
     name = "secret_data_with_crc",
     hdrs = ["secret_data_with_crc.h"],
     include_prefix = "tink/internal",
-    deps = [
-        ":call_with_core_dump_protection",
-        ":secret_buffer",
-        "//tink/util:secret_data",
-        "//tink/util:secret_data_internal_class",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/crc:crc32c",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
-    ],
-)
-
-cc_test(
-    name = "secret_data_with_crc_test",
-    srcs = ["secret_data_with_crc_test.cc"],
-    deps = [
-        ":secret_buffer",
-        ":secret_data_with_crc",
-        "//tink/subtle:random",
-        "//tink/util:secret_data",
-        "//tink/util:test_matchers",
-        "//tink/util:test_util",
-        "@com_google_absl//absl/crc:crc32c",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_googletest//:gtest_main",
-    ],
+    deps = ["//tink/util:secret_data_internal_class"],
 )
 
 cc_library(

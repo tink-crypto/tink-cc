@@ -23,8 +23,8 @@
 #include <string>
 #include <type_traits>
 #include <utility>
-#include <vector>  // IWYU pragma: keep
 
+#include "absl/base/macros.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "openssl/crypto.h"
@@ -32,6 +32,7 @@
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/sanitizing_allocator.h"
 #include "tink/internal/secret_buffer.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data_internal_class.h"  // IWYU pragma: export
 
 namespace crypto {
@@ -49,35 +50,12 @@ struct SanitizingDeleter {
 
 }  // namespace internal
 
-// Stores secret (sensitive) data and makes sure it's marked as such and
-// destroyed in a safe way.
-// This should be the first choice when handling key/key derived values.
-//
-// Example:
-// class MyCryptoPrimitive {
-//  public:
-//   MyCryptoPrimitive(absl::string_view key_value) :
-//     key_(SecretDataFromStringView(key_value)) {}
-//   [...]
-//  private:
-//   const util::SecretData key_;
-// }
-
-// TINK-PENDING-REMOVAL-IN-3.0.0-START
-#ifndef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-#define TINK_CPP_SECRET_DATA_IS_STD_VECTOR 1
-#endif
-// TINK-PENDING-REMOVAL-IN-3.0.0-END
-
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-using SecretData = std::vector<uint8_t, internal::SanitizingAllocator<uint8_t>>;
-#else
-using SecretData = internal::SecretDataInternalClass;
-#endif
+using SecretData ABSL_DEPRECATE_AND_INLINE() = ::crypto::tink::SecretData;
 
 // Constant-time comparison for SecretData
 // SecretDataEquals should be used instead of regular operator== in most cases.
-inline bool SecretDataEquals(const SecretData& lhs, const SecretData& rhs) {
+inline bool SecretDataEquals(const crypto::tink::SecretData& lhs,
+                             const crypto::tink::SecretData& rhs) {
   if (lhs.size() != rhs.size()) {
     return false;
   }
@@ -167,26 +145,26 @@ namespace internal {
 // This function is needed within Tink because the open source implementation
 // of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
 // SecretData(buffer);
-inline SecretData AsSecretData(
+inline crypto::tink::SecretData AsSecretData(
     const ::crypto::tink::internal::SecretBuffer& buffer) {
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
   return SecretDataFromStringView(buffer.AsStringView());
 #else
-  return SecretData(buffer);
+  return crypto::tink::SecretData(buffer);
 #endif
 }
 
 // This function is needed within Tink because the open source implementation
 // of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
 // SecretData(std::move(buffer));
-inline SecretData AsSecretData(
+inline crypto::tink::SecretData AsSecretData(
     ::crypto::tink::internal::SecretBuffer&& buffer) {
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
   // This needs to make a copy since we cannot give a vector an already
   // allocated slice.
   return SecretDataFromStringView(buffer.AsStringView());
 #else
-  return SecretData(std::move(buffer));
+  return crypto::tink::SecretData(std::move(buffer));
 #endif
 }
 
@@ -194,7 +172,7 @@ inline SecretData AsSecretData(
 // of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
 // data.AsSecretBuffer()
 inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
-    const ::crypto::tink::util::SecretData& data) {
+    const crypto::tink::SecretData& data) {
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
   return crypto::tink::internal::SecretBuffer(SecretDataAsStringView(data));
 #else
@@ -206,7 +184,7 @@ inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
 // of Tink uses TINK_CPP_SECRET_DATA_IS_STD_VECTOR. Within Google, use
 // std::move(data).AsSecretBuffer()
 inline crypto::tink::internal::SecretBuffer AsSecretBuffer(
-    ::crypto::tink::util::SecretData&& data) {
+    crypto::tink::SecretData&& data) {
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
   // This needs to make a copy since we cannot steal the data from a vector
   return crypto::tink::internal::SecretBuffer(SecretDataAsStringView(data));

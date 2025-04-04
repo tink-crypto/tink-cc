@@ -466,9 +466,11 @@ tink_cc_library(
     secret_data.h
   DEPS
     absl::check
+    absl::core_headers
     absl::string_view
     absl::span
     crypto
+    tink::core::secret_data
     tink::util::secret_data_internal_class
     tink::internal::call_with_core_dump_protection
     tink::internal::safe_stringops

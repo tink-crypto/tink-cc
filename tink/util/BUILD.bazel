@@ -31,10 +31,12 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":secret_data_internal_class",
+        "//tink:secret_data",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:safe_stringops",
         "//tink/internal:sanitizing_allocator",
         "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",

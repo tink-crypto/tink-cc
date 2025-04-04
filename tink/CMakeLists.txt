@@ -1201,7 +1201,6 @@ tink_cc_test(
     tink::core::restricted_data
     gmock
     tink::subtle::random
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1284,4 +1283,26 @@ tink_cc_test(
     tink::util::test_matchers
     tink::proto::aes_cmac_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_library(
+  NAME secret_data
+  SRCS
+    secret_data.h
+  DEPS
+    tink::internal::sanitizing_allocator
+    tink::util::secret_data_internal_class
+)
+
+tink_cc_test(
+  NAME secret_data_test
+  SRCS
+    secret_data_test.cc
+  DEPS
+    tink::core::secret_data
+    gmock
+    absl::string_view
+    benchmark::benchmark_main
+    tink::internal::secret_buffer
+    tink::util::secret_data
 )

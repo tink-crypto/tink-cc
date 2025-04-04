@@ -1280,7 +1280,6 @@ cc_test(
         ":insecure_secret_key_access_testonly",
         ":restricted_data",
         "//tink/subtle:random",
-        "//tink/util:secret_data",
         "@com_google_googletest//:gtest_main",
     ],
 )
@@ -1363,6 +1362,29 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "secret_data",
+    hdrs = ["secret_data.h"],
+    include_prefix = "tink",
+    deps = [
+        "//tink/internal:sanitizing_allocator",
+        "//tink/util:secret_data_internal_class",
+    ],
+)
+
+cc_test(
+    name = "secret_data_test",
+    srcs = ["secret_data_test.cc"],
+    deps = [
+        ":secret_data",
+        "//tink/internal:secret_buffer",
+        "//tink/util:secret_data",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_benchmark//:benchmark_main",
         "@com_google_googletest//:gtest_main",
     ],
 )

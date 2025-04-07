@@ -14,8 +14,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_INTERNAL_REPEATED_PROTO_PARSER_SECRET_DATA_FIELD_H_
-#define TINK_INTERNAL_REPEATED_PROTO_PARSER_SECRET_DATA_FIELD_H_
+#ifndef TINK_INTERNAL_PROTO_PARSER_REPEATED_SECRET_DATA_FIELD_H_
+#define TINK_INTERNAL_PROTO_PARSER_REPEATED_SECRET_DATA_FIELD_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -137,4 +137,4 @@ class RepeatedSecretDataField : public Field<Struct> {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_INTERNAL_REPEATED_PROTO_PARSER_SECRET_DATA_FIELD_H_
+#endif  // TINK_INTERNAL_PROTO_PARSER_REPEATED_SECRET_DATA_FIELD_H_

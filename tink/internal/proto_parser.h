@@ -111,16 +111,13 @@ class ProtoParser {
   ParseWithCrc(absl::string_view input) const;
 
   absl::StatusOr<std::string> SerializeIntoString(const Struct& s) const;
-  absl::StatusOr<crypto::tink::util::SecretData> SerializeIntoSecretData(
-      const Struct& s) const;
-
-  // Serializes the input and returns the the serialized value. For fields
-  // which support CRCs (e.g. SecretData), the data of the field is not
+  // Serializes the input and returns the serialized value. For fields which
+  // support CRCs (e.g. SecretDataField), the data of the field is not
   // considered when computing the overall CRC. Instead, only the CRC of the
   // field is used to compute the result. This enables end-to-end coverage of
   // the CRC computation: if the returned CRC is correct, the CRCs of the fields
   // must have been corrects.
-  absl::StatusOr<SecretDataWithCrc> SerializeIntoSecretDataWithCrc(
+  absl::StatusOr<crypto::tink::util::SecretData> SerializeIntoSecretData(
       const Struct& s) const;
 
  private:
@@ -143,7 +140,7 @@ class ProtoParserBuilder {
   ProtoParserBuilder& operator=(const ProtoParserBuilder&) = delete;
 
   ProtoParserBuilder& AddUint32Field(
-      int tag, uint32_t Struct::*value,
+      int tag, uint32_t Struct::* value,
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(absl::make_unique<proto_parsing::Uint32Field<Struct>>(
         tag, value, options));
@@ -153,7 +150,7 @@ class ProtoParserBuilder {
   // Adds a uint32_t field for which field presence can be detected. See
   // https://protobuf.dev/programming-guides/field_presence/
   ProtoParserBuilder& AddOptionalUint32Field(
-      int tag, absl::optional<uint32_t> Struct::*value) {
+      int tag, absl::optional<uint32_t> Struct::* value) {
     fields_.push_back(
         absl::make_unique<proto_parsing::Uint32FieldWithPresence<Struct>>(
             tag, value));
@@ -174,7 +171,7 @@ class ProtoParserBuilder {
   // when casting.
   template <typename T>
   ProtoParserBuilder& AddEnumField(
-      int tag, T Struct::*value,
+      int tag, T Struct::* value,
       absl::AnyInvocable<bool(uint32_t) const> is_valid,
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(absl::make_unique<proto_parsing::EnumField<Struct, T>>(
@@ -182,7 +179,7 @@ class ProtoParserBuilder {
     return *this;
   }
   ProtoParserBuilder& AddBytesStringField(
-      int tag, std::string Struct::*value,
+      int tag, std::string Struct::* value,
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(
         absl::make_unique<proto_parsing::BytesField<Struct, std::string>>(
@@ -193,12 +190,13 @@ class ProtoParserBuilder {
   // string_view field, no copy is made. Instead, the resulting string_view
   // field will point into the original string/SecretData.
   ProtoParserBuilder& AddBytesStringViewField(
-      int tag, absl::string_view Struct::*value) {
+      int tag, absl::string_view Struct::* value) {
     fields_.push_back(
         absl::make_unique<proto_parsing::BytesField<Struct, absl::string_view>>(
             tag, value));
     return *this;
   }
+
   ProtoParserBuilder& AddBytesSecretDataField(
       int tag, crypto::tink::util::SecretData Struct::* value,
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
@@ -217,7 +215,7 @@ class ProtoParserBuilder {
 
   template <typename InnerStruct>
   ProtoParserBuilder<Struct>& AddMessageField(
-      int tag, InnerStruct Struct::*value,
+      int tag, InnerStruct Struct::* value,
       ProtoParser<InnerStruct> inner_parser) {
     fields_.push_back(
         absl::make_unique<proto_parsing::MessageField<Struct, InnerStruct>>(
@@ -296,32 +294,14 @@ absl::StatusOr<std::string> ProtoParser<Struct>::SerializeIntoString(
 }
 
 template <typename Struct>
-absl::StatusOr<crypto::tink::util::SecretData>
-ProtoParser<Struct>::SerializeIntoSecretData(const Struct& s) const {
-  size_t size = low_level_parser_.GetSerializedSize(s);
-  crypto::tink::internal::SecretBuffer result(size);
-  proto_parsing::SerializationState serialization_state =
-      proto_parsing::SerializationState(absl::MakeSpan(
-          reinterpret_cast<char*>(result.data()), result.size()));
-  absl::Status status = low_level_parser_.SerializeInto(serialization_state, s);
-  if (!status.ok()) {
-    return status;
-  }
-  if (!serialization_state.GetBuffer().empty()) {
-    return absl::InternalError("Resulting buffer expected to be empty");
-  }
-  return util::internal::AsSecretData(std::move(result));
-}
-
-template <typename Struct>
-absl::StatusOr<SecretDataWithCrc>
-ProtoParser<Struct>::SerializeIntoSecretDataWithCrc(const Struct& s) const {
+absl::StatusOr<util::SecretData> ProtoParser<Struct>::SerializeIntoSecretData(
+    const Struct& s) const {
   size_t size = low_level_parser_.GetSerializedSize(s);
   crypto::tink::internal::SecretBuffer result_data;
   result_data.resize(size);
   absl::Span<char> buffer = absl::MakeSpan(
       reinterpret_cast<char*>(result_data.data()), result_data.size());
-  return CallWithCoreDumpProtection([&]() -> absl::StatusOr<SecretDataWithCrc> {
+  return CallWithCoreDumpProtection([&]() -> absl::StatusOr<util::SecretData> {
     absl::crc32c_t result_crc = absl::crc32c_t(0);
     proto_parsing::SerializationState serialization_state =
         proto_parsing::SerializationState(buffer, &result_crc);
@@ -333,7 +313,11 @@ ProtoParser<Struct>::SerializeIntoSecretDataWithCrc(const Struct& s) const {
     if (!serialization_state.GetBuffer().empty()) {
       return absl::InternalError("Resulting buffer expected to be empty");
     }
-    return SecretDataWithCrc(std::move(result_data), result_crc);
+#ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+    return util::SecretDataFromStringView(result_data.AsStringView());
+#else
+    return util::SecretData(std::move(result_data), result_crc);
+#endif
   });
 }
 

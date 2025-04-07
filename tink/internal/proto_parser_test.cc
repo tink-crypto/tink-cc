@@ -1113,8 +1113,8 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
                                    &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
-  absl::StatusOr<SecretDataWithCrc> serialized =
-      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  absl::StatusOr<SecretData> serialized =
+      parser->SerializeIntoSecretData(parsed_struct);
   ASSERT_THAT(serialized, IsOk());
 
   std::string expected_serialization =
@@ -1135,8 +1135,8 @@ TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
                                    &ParsedStruct::secret_data_member_2)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
-  absl::StatusOr<SecretDataWithCrc> serialized =
-      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  absl::StatusOr<SecretData> serialized =
+      parser->SerializeIntoSecretData(parsed_struct);
   ASSERT_THAT(serialized, IsOk());
 
   std::string expected_serialization =
@@ -1148,7 +1148,7 @@ TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
 
 // Tests that in order to compute the overall CRC, the CRC field is used (and
 // not the data).
-TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcWrongCRC) {
+TEST(ProtoParserTest, SingleBytesFieldSecretDataWrongCRC) {
   ParsedStruct parsed_struct;
   std::string text1 = "some text of arbitrary length";
   std::string text2 = "different text of same length";
@@ -1161,8 +1161,8 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcWrongCRC) {
                                    &ParsedStruct::secret_data_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
-  absl::StatusOr<SecretDataWithCrc> serialized =
-      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  absl::StatusOr<SecretData> serialized =
+      parser->SerializeIntoSecretData(parsed_struct);
   ASSERT_THAT(serialized, IsOk());
 
   std::string expected_serialization =
@@ -1198,8 +1198,8 @@ TEST(ProtoParserTest, CrcOfInnerFieldSerializationWorks) {
                                .BuildOrDie())
           .BuildOrDie();
   ASSERT_THAT(parser.status(), IsOk());
-  absl::StatusOr<SecretDataWithCrc> serialized =
-      parser->SerializeIntoSecretDataWithCrc(parsed_struct);
+  absl::StatusOr<SecretData> serialized =
+      parser->SerializeIntoSecretData(parsed_struct);
   ASSERT_THAT(serialized, IsOk());
 
   std::string expected_serialization = absl::StrCat(

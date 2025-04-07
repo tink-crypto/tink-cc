@@ -1292,6 +1292,7 @@ tink_cc_library(
   DEPS
     tink::internal::sanitizing_allocator
     tink::util::secret_data_internal_class
+  PUBLIC
 )
 
 tink_cc_test(

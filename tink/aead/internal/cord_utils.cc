@@ -98,7 +98,7 @@ void CordReader::Skip(size_t size) {
   }
 }
 
-void CordReader::ReadN(size_t size, absl::Nonnull<char*> dest) {
+void CordReader::ReadN(size_t size, char* /*absl_nonnull - not yet supported*/ dest) {
   // Cannot read more than Available().
   CHECK_LE(size, Available());
   while (size > 0) {

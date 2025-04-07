@@ -109,7 +109,7 @@ class CordReader {
   void Skip(size_t size);
 
   // Read `size` bytes into `dest`.
-  void ReadN(size_t size, absl::Nonnull<char*> dest);
+  void ReadN(size_t size, char* /*absl_nonnull - not yet supported*/ dest);
 
  private:
   absl::Cord& cord_;

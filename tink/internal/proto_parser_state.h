@@ -47,7 +47,7 @@ class ParsingState final {
   // updated with it. This is done consistently with the value of AdvanceGetCrc.
   // All the CRC calculations are done within a CallWithCoreDumpProtection.
   explicit ParsingState(absl::string_view serialization_to_parse,
-                        absl::Nonnull<absl::crc32c_t*> crc_to_update)
+                        absl::crc32c_t* /*absl_nonnull - not yet supported*/ crc_to_update)
       : remaining_view_to_parse_(serialization_to_parse),
         crc_to_update_(crc_to_update) {}
 
@@ -105,7 +105,7 @@ class ParsingState final {
 
  private:
   absl::string_view remaining_view_to_parse_;
-  absl::Nullable<absl::crc32c_t*> crc_to_update_;
+  absl::crc32c_t* /*absl_nullable - not yet supported*/ crc_to_update_;
 };
 
 // Maintains the current state when serializing a struct.
@@ -122,7 +122,7 @@ class SerializationState final {
   // updated, if not nullptr. For AdvanceWithCrc, the passed in CRC is used.
   // All the CRC calculations are done within a CallWithCoreDumpProtection.
   explicit SerializationState(absl::Span<char> output_buffer,
-                              absl::Nonnull<absl::crc32c_t*> crc_to_update)
+                              absl::crc32c_t* /*absl_nonnull - not yet supported*/ crc_to_update)
       : output_buffer_(output_buffer), crc_to_update_(crc_to_update) {}
 
   // Returns the remaining data to be parsed.
@@ -159,7 +159,7 @@ class SerializationState final {
 
  private:
   absl::Span<char> output_buffer_;
-  absl::Nullable<absl::crc32c_t*> crc_to_update_;
+  absl::crc32c_t* /*absl_nullable - not yet supported*/ crc_to_update_;
 };
 
 }  // namespace proto_parsing

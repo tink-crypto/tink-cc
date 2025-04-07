@@ -96,8 +96,8 @@ class AesEaxBoringSsl : public Aead {
                           const uint8_t y[kBlockSize]);
 
   // Encrypts a single block with AES.
-  void EncryptBlock(absl::Nonnull<Block*> block) const;
-  void EncryptBlock(absl::Nonnull<internal::SecretBuffer*> block) const;
+  void EncryptBlock(Block* /*absl_nonnull - not yet supported*/ block) const;
+  void EncryptBlock(internal::SecretBuffer* /*absl_nonnull - not yet supported*/ block) const;
 
   // Pads a partial data block of size 0 <= len <= kBlockSize.
   Block Pad(absl::Span<const uint8_t> data) const;

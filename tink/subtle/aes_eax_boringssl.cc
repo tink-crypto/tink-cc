@@ -193,11 +193,11 @@ AesEaxBoringSsl::Block AesEaxBoringSsl::Pad(
 }
 
 void AesEaxBoringSsl::EncryptBlock(
-    absl::Nonnull<internal::SecretBuffer*> block) const {
+    internal::SecretBuffer* /*absl_nonnull - not yet supported*/ block) const {
   AES_encrypt(block->data(), block->data(), aeskey_.get());
 }
 
-void AesEaxBoringSsl::EncryptBlock(absl::Nonnull<Block*> block) const {
+void AesEaxBoringSsl::EncryptBlock(Block* /*absl_nonnull - not yet supported*/ block) const {
   AES_encrypt(block->data(), block->data(), aeskey_.get());
 }
 

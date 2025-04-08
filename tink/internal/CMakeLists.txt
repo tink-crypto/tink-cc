@@ -1412,7 +1412,6 @@ tink_cc_library(
     tink::internal::proto_parser_uint64_field
     tink::internal::proto_parsing_low_level_parser
     tink::internal::secret_buffer
-    tink::internal::secret_data_with_crc
     absl::btree
     absl::crc32c
     absl::any_invocable
@@ -1434,7 +1433,6 @@ tink_cc_test(
     tink::internal::proto_parser
     tink::internal::proto_parser_options
     tink::internal::proto_test_cc_proto
-    tink::internal::secret_data_with_crc
     gmock
     absl::crc32c
     absl::status

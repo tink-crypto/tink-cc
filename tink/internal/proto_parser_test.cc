@@ -31,7 +31,6 @@
 #include "absl/types/optional.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_test_proto.pb.h"
-#include "tink/internal/secret_data_with_crc.h"
 #include "tink/internal/testing/field_with_number.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -711,7 +710,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataParsingWorks) {
   EXPECT_THAT(parsed->second.value(), Eq(absl::ComputeCrc32c(serialization)));
 }
 
-TEST(ProtoParserTest, MultipleBytesFieldSecretDataWithCrcParsingWorks) {
+TEST(ProtoParserTest, MultipleBytesFieldSecretDataParsingWorks) {
   std::string text11 = "Text for first submessage, first field";
   std::string text12 = "Text for first submessage, second field";
   std::string text21 = "Text for second submessage, first field";
@@ -1103,7 +1102,7 @@ TEST(ProtoParserTest, SerializeSecredDataFieldAlwaysSerializeWorks) {
 }
 
 #if not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
+TEST(ProtoParserTest, SingleBytesFieldSecretDataSerializingWorks) {
   ParsedStruct parsed_struct;
   parsed_struct.secret_data_member_1 = SecretData("some text");
 
@@ -1122,7 +1121,7 @@ TEST(ProtoParserTest, SingleBytesFieldSecretDataWithCrcSerializingWorks) {
   EXPECT_THAT(serialized->AsStringView(), Eq(expected_serialization));
 }
 
-TEST(ProtoParserTest, TwoBytesFieldSecretDataWithCrcSerializingWorks) {
+TEST(ProtoParserTest, TwoBytesFieldSecretDataSerializingWorks) {
   ParsedStruct parsed_struct;
   parsed_struct.secret_data_member_1 = SecretData("some text");
   parsed_struct.secret_data_member_2 = SecretData("another text");

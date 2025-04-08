@@ -46,7 +46,6 @@
 #include "tink/internal/proto_parser_uint64_field.h"
 #include "tink/internal/proto_parsing_low_level_parser.h"
 #include "tink/internal/secret_buffer.h"
-#include "tink/internal/secret_data_with_crc.h"
 #include "tink/util/secret_data.h"
 
 namespace crypto {

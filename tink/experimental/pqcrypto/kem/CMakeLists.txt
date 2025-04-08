@@ -276,28 +276,6 @@ tink_cc_library(
     tink::util::statusor
 )
 
-tink_cc_library(
-  NAME ml_kem_public_key
-  SRCS
-    ml_kem_public_key.cc
-    ml_kem_public_key.h
-  DEPS
-    tink::experimental::pqcrypto::kem::ml_kem_parameters
-    absl::core_headers
-    absl::status
-    absl::statusor
-    absl::strings
-    absl::string_view
-    absl::optional
-    crypto
-    tink::core::key
-    tink::core::partial_key_access_token
-    tink::experimental::kem::kem_public_key
-    tink::internal::output_prefix_util
-    tink::util::status
-    tink::util::statusor
-)
-
 tink_cc_test(
   NAME ml_kem_private_key_test
   SRCS
@@ -319,6 +297,28 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::statusor
     tink::util::test_matchers
+)
+
+tink_cc_library(
+  NAME ml_kem_public_key
+  SRCS
+    ml_kem_public_key.cc
+    ml_kem_public_key.h
+  DEPS
+    tink::experimental::pqcrypto::kem::ml_kem_parameters
+    absl::core_headers
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::experimental::kem::kem_public_key
+    tink::internal::output_prefix_util
+    tink::util::status
+    tink::util::statusor
 )
 
 tink_cc_test(
@@ -400,4 +400,42 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::ml_kem_cc_proto
+)
+
+tink_cc_library(
+  NAME cecpq2_parameters
+  SRCS
+    cecpq2_parameters.cc
+    cecpq2_parameters.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::aead::aes_gcm_parameters
+    tink::aead::xchacha20_poly1305_parameters
+    tink::daead::aes_siv_parameters
+    tink::hybrid::hybrid_parameters
+)
+
+tink_cc_test(
+  NAME cecpq2_parameters_test
+  SRCS
+    cecpq2_parameters_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    gmock
+    absl::check
+    absl::memory
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::aead::aes_gcm_parameters
+    tink::aead::chacha20_poly1305_parameters
+    tink::aead::xchacha20_poly1305_parameters
+    tink::daead::aes_siv_parameters
+    tink::util::test_matchers
 )

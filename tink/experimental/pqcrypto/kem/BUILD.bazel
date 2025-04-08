@@ -122,6 +122,86 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "ml_kem_parameters",
+    srcs = ["ml_kem_parameters.cc"],
+    hdrs = ["ml_kem_parameters.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem",
+    deps = [
+        "//tink:parameters",
+        "//tink/experimental/kem:kem_parameters",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@com_google_absl//absl/status",
+    ],
+)
+
+cc_library(
+    name = "ml_kem_private_key",
+    srcs = ["ml_kem_private_key.cc"],
+    hdrs = ["ml_kem_private_key.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem",
+    deps = [
+        ":ml_kem_public_key",
+        "//tink:insecure_secret_key_access",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink:restricted_data",
+        "//tink/experimental/kem:kem_private_key",
+        "//tink/util:secret_data",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_library(
+    name = "ml_kem_public_key",
+    srcs = ["ml_kem_public_key.cc"],
+    hdrs = ["ml_kem_public_key.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem",
+    deps = [
+        ":ml_kem_parameters",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink/experimental/kem:kem_public_key",
+        "//tink/internal:output_prefix_util",
+        "//tink/util:status",
+        "//tink/util:statusor",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
+cc_library(
+    name = "cecpq2_parameters",
+    srcs = ["cecpq2_parameters.cc"],
+    hdrs = ["cecpq2_parameters.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem",
+    deps = [
+        "//tink:parameters",
+        "//tink/aead:aes_gcm_parameters",
+        "//tink/aead:xchacha20_poly1305_parameters",
+        "//tink/daead:aes_siv_parameters",
+        "//tink/hybrid:hybrid_parameters",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -255,68 +335,6 @@ cc_test(
     ],
 )
 
-cc_library(
-    name = "ml_kem_parameters",
-    srcs = ["ml_kem_parameters.cc"],
-    hdrs = ["ml_kem_parameters.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem",
-    deps = [
-        "//tink:parameters",
-        "//tink/experimental/kem:kem_parameters",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@com_google_absl//absl/status",
-    ],
-)
-
-cc_library(
-    name = "ml_kem_private_key",
-    srcs = ["ml_kem_private_key.cc"],
-    hdrs = ["ml_kem_private_key.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem",
-    deps = [
-        ":ml_kem_public_key",
-        "//tink:insecure_secret_key_access",
-        "//tink:key",
-        "//tink:partial_key_access_token",
-        "//tink:restricted_data",
-        "//tink/experimental/kem:kem_private_key",
-        "//tink/util:secret_data",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@boringssl//:crypto",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-    ],
-)
-
-cc_library(
-    name = "ml_kem_public_key",
-    srcs = ["ml_kem_public_key.cc"],
-    hdrs = ["ml_kem_public_key.h"],
-    include_prefix = "tink/experimental/pqcrypto/kem",
-    deps = [
-        ":ml_kem_parameters",
-        "//tink:key",
-        "//tink:partial_key_access_token",
-        "//tink/experimental/kem:kem_public_key",
-        "//tink/internal:output_prefix_util",
-        "//tink/util:status",
-        "//tink/util:statusor",
-        "@boringssl//:crypto",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
-    ],
-)
-
 cc_test(
     name = "ml_kem_private_key_test",
     srcs = ["ml_kem_private_key_test.cc"],
@@ -416,6 +434,27 @@ cc_test(
         "//tink/util:test_util",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "cecpq2_parameters_test",
+    srcs = ["cecpq2_parameters_test.cc"],
+    deps = [
+        ":cecpq2_parameters",
+        "//tink:parameters",
+        "//tink/aead:aes_gcm_parameters",
+        "//tink/aead:chacha20_poly1305_parameters",
+        "//tink/aead:xchacha20_poly1305_parameters",
+        "//tink/daead:aes_siv_parameters",
+        "//tink/util:test_matchers",
+        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/memory",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",

@@ -1916,6 +1916,8 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::util::status
     tink::util::statusor
   TAGS

@@ -588,11 +588,14 @@ tink_cc_library(
     slh_dsa_sign_boringssl.h
   DEPS
     absl::status
+    absl::statusor
     absl::string_view
     crypto
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::signature::slh_dsa_private_key
     tink::subtle::subtle_util

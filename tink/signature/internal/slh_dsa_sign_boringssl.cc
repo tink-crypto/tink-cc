@@ -16,15 +16,19 @@
 
 #include "tink/signature/internal/slh_dsa_sign_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/slhdsa.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
@@ -59,18 +63,23 @@ absl::StatusOr<std::string> SlhDsaSignBoringSsl::Sign(
     absl::string_view data) const {
   // The signature will be prepended with the output prefix for TINK keys.
   std::string signature(private_key_.GetOutputPrefix());
-  subtle::ResizeStringUninitialized(
-      &signature,
-      SLHDSA_SHA2_128S_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
+  size_t signature_buffer_size =
+      SLHDSA_SHA2_128S_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size();
+  subtle::ResizeStringUninitialized(&signature, signature_buffer_size);
 
-  SLHDSA_SHA2_128S_sign(
-      reinterpret_cast<uint8_t *>(&signature[0] +
-                                  private_key_.GetOutputPrefix().size()),
-      private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
-          .Get(InsecureSecretKeyAccess::Get())
-          .data(),
-      reinterpret_cast<const uint8_t *>(data.data()), data.size(),
-      /* context = */ nullptr, /* context_len = */ 0);
+  internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
+                                                   signature_buffer_size);
+    SLHDSA_SHA2_128S_sign(
+        reinterpret_cast<uint8_t *>(&signature[0] +
+                                    private_key_.GetOutputPrefix().size()),
+        private_key_.GetPrivateKeyBytes(GetPartialKeyAccess())
+            .Get(InsecureSecretKeyAccess::Get())
+            .data(),
+        reinterpret_cast<const uint8_t *>(data.data()), data.size(),
+        /* context = */ nullptr, /* context_len = */ 0);
+    internal::DfsanClearLabel(&signature[0], signature_buffer_size);
+  });
 
   return signature;
 }

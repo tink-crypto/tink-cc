@@ -24,6 +24,8 @@
 #include "openssl/mem.h"
 #include "openssl/slhdsa.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
@@ -52,10 +54,19 @@ absl::StatusOr<SlhDsaPrivateKey> SlhDsaPrivateKey::Create(
   std::string public_key_bytes_regen;
   public_key_bytes_regen.resize(SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
 
-  SLHDSA_SHA2_128S_public_from_private(
-      reinterpret_cast<uint8_t*>(&public_key_bytes_regen[0]),
-      reinterpret_cast<const uint8_t*>(
-          private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get()).data()));
+  internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(
+        &public_key_bytes_regen[0], SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
+
+    SLHDSA_SHA2_128S_public_from_private(
+        reinterpret_cast<uint8_t*>(&public_key_bytes_regen[0]),
+        reinterpret_cast<const uint8_t*>(
+            private_key_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+                .data()));
+
+    internal::DfsanClearLabel(&public_key_bytes_regen[0],
+                              SLHDSA_SHA2_128S_PUBLIC_KEY_BYTES);
+  });
 
   absl::string_view expected_public_key_bytes =
       public_key.GetPublicKeyBytes(token);

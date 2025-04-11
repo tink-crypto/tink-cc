@@ -439,3 +439,44 @@ tink_cc_test(
     tink::daead::aes_siv_parameters
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME cecpq2_public_key
+  SRCS
+    cecpq2_public_key.cc
+    cecpq2_public_key.h
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::str_format
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::hybrid::hybrid_public_key
+    tink::internal::ec_util
+    tink::internal::output_prefix_util
+)
+
+tink_cc_test(
+  NAME cecpq2_public_key_test
+  SRCS
+    cecpq2_public_key_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_public_key
+    gmock
+    absl::status
+    absl::statusor
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access
+    tink::aead::xchacha20_poly1305_parameters
+    tink::internal::ec_util
+    tink::subtle::random
+    tink::util::test_matchers
+)

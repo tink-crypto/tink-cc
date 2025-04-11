@@ -202,6 +202,28 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "cecpq2_public_key",
+    srcs = ["cecpq2_public_key.cc"],
+    hdrs = ["cecpq2_public_key.h"],
+    include_prefix = "tink/experimental/pqcrypto/kem",
+    deps = [
+        ":cecpq2_parameters",
+        "//tink:key",
+        "//tink:partial_key_access_token",
+        "//tink/hybrid:hybrid_public_key",
+        "//tink/internal:ec_util",
+        "//tink/internal:output_prefix_util",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:str_format",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+    ],
+)
+
 # tests
 
 cc_test(
@@ -456,6 +478,26 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "cecpq2_public_key_test",
+    srcs = ["cecpq2_public_key_test.cc"],
+    deps = [
+        ":cecpq2_parameters",
+        ":cecpq2_public_key",
+        "//tink:key",
+        "//tink:partial_key_access",
+        "//tink/aead:xchacha20_poly1305_parameters",
+        "//tink/internal:ec_util",
+        "//tink/subtle:random",
+        "//tink/util:test_matchers",
+        "@boringssl//:crypto",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/types:optional",
         "@com_google_googletest//:gtest_main",
     ],

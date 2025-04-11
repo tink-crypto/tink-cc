@@ -154,8 +154,7 @@ absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
 
 absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
     const google::crypto::tink::HpkeParams& hpke_params,
-    const util::SecretData& recipient_private_key,
-    absl::string_view output_prefix) {
+    const SecretData& recipient_private_key, absl::string_view output_prefix) {
   HpkeKemProto kem = hpke_params.kem();
   if (kem != HpkeKemProto::DHKEM_P256_HKDF_SHA256 &&
       kem != HpkeKemProto::DHKEM_X25519_HKDF_SHA256) {

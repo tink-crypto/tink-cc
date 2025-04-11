@@ -58,7 +58,7 @@ class HpkeContextBoringSsl {
   //   `encapsulated_key`: Encapsulated key.
   //   `info`: Application-specific context for key derivation.
   static absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>> SetupRecipient(
-      const HpkeParams& params, const util::SecretData& recipient_private_key,
+      const HpkeParams& params, const SecretData& recipient_private_key,
       absl::string_view encapsulated_key, absl::string_view info);
 
   // Performs an AEAD encryption of `plaintext` with `associated_data`. Returns
@@ -74,8 +74,8 @@ class HpkeContextBoringSsl {
   // Exports `secret_length` bytes of secret material using `exporter_context`
   // for the input context.  Returns an error if export fails.  Otherwise,
   // returns a secret of the requested length.
-  absl::StatusOr<util::SecretData> Export(absl::string_view exporter_context,
-                                          int64_t secret_length);
+  absl::StatusOr<SecretData> Export(absl::string_view exporter_context,
+                                    int64_t secret_length);
 
  protected:
   explicit HpkeContextBoringSsl(SslUniquePtr<EVP_HPKE_CTX> context)

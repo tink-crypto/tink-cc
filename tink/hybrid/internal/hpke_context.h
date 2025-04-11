@@ -77,7 +77,7 @@ class HpkeContext {
   //   `encapsulated_key`: Encapsulated key.
   //   `info`: Application-specific context for key derivation.
   static absl::StatusOr<std::unique_ptr<HpkeContext>> SetupRecipient(
-      const HpkeParams& params, const util::SecretData& recipient_private_key,
+      const HpkeParams& params, const SecretData& recipient_private_key,
       absl::string_view encapsulated_key, absl::string_view info);
 
   absl::string_view EncapsulatedKey() const {
@@ -101,8 +101,8 @@ class HpkeContext {
   // Exports `secret_length` bytes of secret material using `exporter_context`
   // for the input context.  Returns an error if export fails.  Otherwise,
   // returns a secret of the requested length.
-  absl::StatusOr<util::SecretData> Export(absl::string_view exporter_context,
-                                          size_t secret_length) {
+  absl::StatusOr<SecretData> Export(absl::string_view exporter_context,
+                                    size_t secret_length) {
     return context_->Export(exporter_context, secret_length);
   }
 

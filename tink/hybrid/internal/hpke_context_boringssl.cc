@@ -79,9 +79,10 @@ absl::StatusOr<SenderHpkeContextBoringSsl> HpkeContextBoringSsl::SetupSender(
 }
 
 absl::StatusOr<std::unique_ptr<HpkeContextBoringSsl>>
-HpkeContextBoringSsl::SetupRecipient(
-    const HpkeParams &params, const util::SecretData &recipient_private_key,
-    absl::string_view encapsulated_key, absl::string_view info) {
+HpkeContextBoringSsl::SetupRecipient(const HpkeParams &params,
+                                     const SecretData &recipient_private_key,
+                                     absl::string_view encapsulated_key,
+                                     absl::string_view info) {
   absl::StatusOr<const EVP_HPKE_KEM *> kem = KemParam(params);
   if (!kem.ok()) {
     return kem.status();
@@ -174,7 +175,7 @@ absl::StatusOr<std::string> HpkeContextBoringSsl::Open(
   return plaintext;
 }
 
-absl::StatusOr<util::SecretData> HpkeContextBoringSsl::Export(
+absl::StatusOr<SecretData> HpkeContextBoringSsl::Export(
     absl::string_view exporter_context, int64_t secret_length) {
   std::string secret;
   subtle::ResizeStringUninitialized(&secret, secret_length);

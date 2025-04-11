@@ -135,7 +135,7 @@ EciesAeadHkdfDemHelper::New(const KeyTemplate& dem_key_template) {
 
 absl::StatusOr<std::unique_ptr<AeadOrDaead>>
 EciesAeadHkdfDemHelper::GetAeadOrDaead(
-    const util::SecretData& symmetric_key_value) const {
+    const SecretData& symmetric_key_value) const {
   if (symmetric_key_value.size() != key_params_.key_size_in_bytes) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Wrong length of symmetric key.");

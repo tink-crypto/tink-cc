@@ -95,7 +95,7 @@ TEST_P(HpkeContextBoringSslTest, SenderExport) {
   ASSERT_THAT(sender_hpke_context, IsOk());
 
   for (int i = 0; i < params->exported_contexts.size(); ++i) {
-    absl::StatusOr<util::SecretData> sender_secret =
+    absl::StatusOr<SecretData> sender_secret =
         sender_hpke_context->context->Export(params->exported_contexts[i], 32);
     ASSERT_THAT(sender_secret,
                 IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(
@@ -116,7 +116,7 @@ TEST_P(HpkeContextBoringSslTest, RecipientExport) {
   ASSERT_THAT(recipient_hpke_context, IsOk());
 
   for (int i = 0; i < params->exported_contexts.size(); ++i) {
-    absl::StatusOr<util::SecretData> recipient_secret =
+    absl::StatusOr<SecretData> recipient_secret =
         (*recipient_hpke_context)->Export(params->exported_contexts[i], 32);
     ASSERT_THAT(recipient_secret,
                 IsOkAndHolds(EqualsSecretData(util::SecretDataFromStringView(

@@ -307,7 +307,7 @@ std::string P384PointAsString() {
 }
 
 RestrictedData P384SecretValue() {
-  util::SecretData secret_data = util::SecretDataFromStringView(
+  SecretData secret_data = util::SecretDataFromStringView(
       HexDecodeOrDie("6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA477407"
                      "87137D896D5724E4C70A825F872C9EA60D2EDF5"));
   return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
@@ -346,7 +346,7 @@ std::string P521PointAsString() {
 }
 
 RestrictedData P521SecretValue() {
-  util::SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
+  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
       "00FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75CAA896EB"
       "32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83538"));
   return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
@@ -384,7 +384,7 @@ std::string P256PointAsString() {
 }
 
 RestrictedData P256SecretValue() {
-  util::SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
+  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
       "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721"));
   return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
 }

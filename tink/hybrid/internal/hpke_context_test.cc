@@ -117,11 +117,11 @@ TEST_P(HpkeContextTest, Export) {
     for (int secret_length : secret_lengths) {
       SCOPED_TRACE(absl::StrCat("exporter_context: '", exporter_context,
                                 "', secret_length: '", secret_length, "'"));
-      absl::StatusOr<util::SecretData> sender_secret =
+      absl::StatusOr<SecretData> sender_secret =
           (*sender_hpke_context)->Export(exporter_context, secret_length);
       ASSERT_THAT(sender_secret, IsOk());
 
-      absl::StatusOr<util::SecretData> recipient_secret =
+      absl::StatusOr<SecretData> recipient_secret =
           (*recipient_hpke_context)->Export(exporter_context, secret_length);
       ASSERT_THAT(recipient_secret, IsOk());
 

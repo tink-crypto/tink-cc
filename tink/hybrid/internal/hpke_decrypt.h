@@ -52,7 +52,7 @@ class HpkeDecrypt : public HybridDecrypt {
 
  private:
   HpkeDecrypt(const google::crypto::tink::HpkeParams& hpke_params,
-              const util::SecretData& recipient_private_key,
+              const SecretData& recipient_private_key,
               absl::string_view output_prefix)
       : hpke_params_(hpke_params),
         recipient_private_key_(recipient_private_key),
@@ -60,14 +60,13 @@ class HpkeDecrypt : public HybridDecrypt {
 
   static absl::StatusOr<std::unique_ptr<HybridDecrypt>> New(
       const google::crypto::tink::HpkeParams& hpke_params,
-      const util::SecretData& recipient_private_key,
-      absl::string_view output_prefix);
+      const SecretData& recipient_private_key, absl::string_view output_prefix);
 
   absl::StatusOr<std::string> DecryptNoPrefix(
       absl::string_view ciphertext, absl::string_view context_info) const;
 
   google::crypto::tink::HpkeParams hpke_params_;
-  util::SecretData recipient_private_key_;
+  SecretData recipient_private_key_;
   std::string output_prefix_;
 };
 

@@ -74,7 +74,7 @@ absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupSender(
 }
 
 absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupRecipient(
-    const HpkeParams& params, const util::SecretData& recipient_private_key,
+    const HpkeParams& params, const SecretData& recipient_private_key,
     absl::string_view encapsulated_key, absl::string_view info) {
   if (recipient_private_key.empty()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

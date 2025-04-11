@@ -85,7 +85,7 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeAeadKeyType) {
   ASSERT_THAT(dem_helper_or, IsOk());
   auto dem_helper = std::move(dem_helper_or.value());
 
-  util::SecretData key128 = util::SecretDataFromStringView(
+  SecretData key128 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
       dem_helper->GetAeadOrDaead(key128);
@@ -110,7 +110,7 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeDeterministicAeadKeyType) {
   ASSERT_THAT(dem_helper_or, IsOk());
   auto dem_helper = std::move(dem_helper_or.value());
 
-  util::SecretData key128 = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key128 = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f00010203"
       "0405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
   absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =

@@ -51,7 +51,7 @@ class EciesAeadHkdfDemHelper {
   // the key material given in 'symmetric_key', which must
   // be of length dem_key_size_in_bytes().
   virtual absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
-  GetAeadOrDaead(const util::SecretData& symmetric_key_value) const;
+  GetAeadOrDaead(const SecretData& symmetric_key_value) const;
 
  protected:
   enum DemKeyType {

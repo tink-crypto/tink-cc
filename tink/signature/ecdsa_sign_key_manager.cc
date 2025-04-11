@@ -100,7 +100,7 @@ absl::StatusOr<EcdsaPrivateKeyProto> EcdsaSignKeyManager::DeriveKey(
                           "Curve does not support key derivation.");
   }
 
-  absl::StatusOr<util::SecretData> randomness =
+  absl::StatusOr<SecretData> randomness =
       ReadSecretBytesFromStream(random_bytes_used, input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {

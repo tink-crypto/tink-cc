@@ -105,7 +105,7 @@ absl::StatusOr<Ed25519PrivateKeyProto> Ed25519SignKeyManager::DeriveKey(
   absl::Status status = ValidateVersion(key_format.version(), get_version());
   if (!status.ok()) return status;
 
-  absl::StatusOr<util::SecretData> randomness =
+  absl::StatusOr<SecretData> randomness =
       ReadSecretBytesFromStream(kEd25519SecretSeedSize, input_stream);
   if (!randomness.ok()) {
     if (randomness.status().code() == absl::StatusCode::kOutOfRange) {

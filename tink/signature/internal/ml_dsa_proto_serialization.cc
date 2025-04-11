@@ -116,7 +116,7 @@ struct MlDsaPublicKeyStruct {
 
 struct MlDsaPrivateKeyStruct {
   uint32_t version;
-  util::SecretData key_value;
+  SecretData key_value;
   MlDsaPublicKeyStruct public_key;
 
   static ProtoParser<MlDsaPrivateKeyStruct> CreateParser() {

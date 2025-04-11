@@ -89,7 +89,7 @@ struct Ed25519PublicKeyStruct {
 
 struct Ed25519PrivateKeyStruct {
   uint32_t version;
-  util::SecretData key_value;
+  SecretData key_value;
   Ed25519PublicKeyStruct public_key;
 
   static ProtoParser<Ed25519PrivateKeyStruct> CreateParser() {
@@ -342,7 +342,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<util::SecretData> proto_private_key_secret_data =
+  absl::StatusOr<SecretData> proto_private_key_secret_data =
       Ed25519PrivateKeyStruct::GetParser().SerializeIntoSecretData(
           proto_private_key);
   if (!proto_private_key_secret_data.ok()) {

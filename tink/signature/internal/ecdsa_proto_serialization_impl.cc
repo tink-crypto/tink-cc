@@ -598,7 +598,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
   proto_private_key.public_key.params = *params;
   proto_private_key.public_key.x = *x;
   proto_private_key.public_key.y = *y;
-  absl::StatusOr<util::SecretData> fixed_length_key =
+  absl::StatusOr<SecretData> fixed_length_key =
       GetSecretValueOfFixedLength(*restricted_input, *enc_length, *token);
   if (!fixed_length_key.ok()) {
     return fixed_length_key.status();
@@ -611,7 +611,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<util::SecretData> serialized_proto =
+  absl::StatusOr<SecretData> serialized_proto =
       EcdsaPrivateKeyStruct::GetParser().SerializeIntoSecretData(
           proto_private_key);
   if (!serialized_proto.ok()) {

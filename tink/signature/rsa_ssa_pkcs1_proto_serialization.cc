@@ -465,7 +465,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<util::SecretData> serialized =
+  absl::StatusOr<SecretData> serialized =
       GetPrivateKeyParser().SerializeIntoSecretData(proto_private_key);
   if (!serialized.ok()) {
     return serialized.status();

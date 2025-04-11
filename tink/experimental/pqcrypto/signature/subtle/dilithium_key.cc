@@ -44,7 +44,7 @@ namespace subtle {
 // static
 absl::StatusOr<DilithiumPrivateKeyPqclean>
 DilithiumPrivateKeyPqclean::NewPrivateKey(
-    util::SecretData key_data, DilithiumSeedExpansion seed_expansion) {
+    SecretData key_data, DilithiumSeedExpansion seed_expansion) {
   return DilithiumPrivateKeyPqclean(key_data, seed_expansion);
 }
 
@@ -143,8 +143,7 @@ DilithiumPrivateKeyPqclean::GenerateKeyPair(
     }
   }
 
-  util::SecretData private_key_data =
-      util::SecretDataFromStringView(private_key);
+  SecretData private_key_data = util::SecretDataFromStringView(private_key);
 
   absl::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
       DilithiumPrivateKeyPqclean::NewPrivateKey(std::move(private_key_data),
@@ -155,7 +154,7 @@ DilithiumPrivateKeyPqclean::GenerateKeyPair(
   return std::make_pair(*dilithium_private_key, *dilithium_public_key);
 }
 
-const util::SecretData& DilithiumPrivateKeyPqclean::GetKeyData() const {
+const SecretData& DilithiumPrivateKeyPqclean::GetKeyData() const {
   return key_data_;
 }
 

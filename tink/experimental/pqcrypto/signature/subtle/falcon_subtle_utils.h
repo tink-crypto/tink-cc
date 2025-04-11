@@ -48,19 +48,19 @@ class FalconPrivateKeyPqclean {
  public:
   // Creates a new FalconPrivateKeyPqclean from key_data.
   static absl::StatusOr<FalconPrivateKeyPqclean> NewPrivateKey(
-      const util::SecretData& key_data);
+      const SecretData& key_data);
 
   FalconPrivateKeyPqclean(const FalconPrivateKeyPqclean& other) = default;
   FalconPrivateKeyPqclean& operator=(const FalconPrivateKeyPqclean& other) =
       default;
 
-  const util::SecretData& GetKey() const { return key_data_; }
+  const SecretData& GetKey() const { return key_data_; }
 
  private:
-  explicit FalconPrivateKeyPqclean(const util::SecretData& key_data)
+  explicit FalconPrivateKeyPqclean(const SecretData& key_data)
       : key_data_(key_data) {}
 
-  const util::SecretData key_data_;
+  const SecretData key_data_;
 };
 
 // Representation of the Falcon public key.

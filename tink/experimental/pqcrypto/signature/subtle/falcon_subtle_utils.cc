@@ -40,7 +40,7 @@ namespace subtle {
 
 // static
 absl::StatusOr<FalconPrivateKeyPqclean> FalconPrivateKeyPqclean::NewPrivateKey(
-    const util::SecretData& key_data) {
+    const SecretData& key_data) {
   absl::Status status = ValidateFalconPrivateKeySize(key_data.size());
   if (!status.ok()) {
     return status;
@@ -94,8 +94,7 @@ absl::StatusOr<FalconKeyPair> GenerateFalconKeyPair(int32_t private_key_size) {
     }
   }
 
-  util::SecretData private_key_data =
-      util::SecretDataFromStringView(private_key);
+  SecretData private_key_data = util::SecretDataFromStringView(private_key);
 
   absl::StatusOr<FalconPrivateKeyPqclean> falcon_private_key =
       FalconPrivateKeyPqclean::NewPrivateKey(private_key_data);

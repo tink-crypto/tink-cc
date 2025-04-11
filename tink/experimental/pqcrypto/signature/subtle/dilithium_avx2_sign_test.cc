@@ -76,7 +76,7 @@ TEST(DilithiumAvx2SignTest, InvalidPrivateKeys) {
       continue;
     }
 
-    util::SecretData key_data(keysize, 'x');
+    SecretData key_data(keysize, 'x');
     EXPECT_FALSE(
         DilithiumAvx2Sign::New(
             *DilithiumPrivateKeyPqclean::NewPrivateKey(

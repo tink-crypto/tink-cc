@@ -61,8 +61,7 @@ absl::StatusOr<SphincsKeyPair> GenerateSphincsKeyPair(
     return absl::Status(absl::StatusCode::kInternal, "Key generation failed.");
   }
 
-  util::SecretData private_key_data =
-      util::SecretDataFromStringView(private_key);
+  SecretData private_key_data = util::SecretDataFromStringView(private_key);
 
   SphincsKeyPair key_pair(SphincsPrivateKeyPqclean{private_key_data, params},
                           SphincsPublicKeyPqclean{public_key, params});

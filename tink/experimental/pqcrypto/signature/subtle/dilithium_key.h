@@ -67,7 +67,7 @@ class DilithiumPrivateKeyPqclean {
   // Creates a new DilithiumPrivateKeyPqclean from key_data. Should only be
   // called with the result of a previous call to GetKeyData().
   static absl::StatusOr<DilithiumPrivateKeyPqclean> NewPrivateKey(
-      util::SecretData key_data, DilithiumSeedExpansion seed_expansion);
+      SecretData key_data, DilithiumSeedExpansion seed_expansion);
 
   DilithiumPrivateKeyPqclean(const DilithiumPrivateKeyPqclean& other) = default;
   DilithiumPrivateKeyPqclean& operator=(
@@ -82,15 +82,15 @@ class DilithiumPrivateKeyPqclean {
       std::pair<DilithiumPrivateKeyPqclean, DilithiumPublicKeyPqclean>>
   GenerateKeyPair(int32_t key_size, DilithiumSeedExpansion seed_expansion);
 
-  const util::SecretData& GetKeyData() const;
+  const SecretData& GetKeyData() const;
   const DilithiumSeedExpansion& GetSeedExpansion() const;
 
  private:
-  DilithiumPrivateKeyPqclean(util::SecretData key_data,
+  DilithiumPrivateKeyPqclean(SecretData key_data,
                              DilithiumSeedExpansion seed_expansion)
       : key_data_(std::move(key_data)), seed_expansion_(seed_expansion) {}
 
-  const util::SecretData key_data_;
+  const SecretData key_data_;
   const DilithiumSeedExpansion seed_expansion_;
 };
 

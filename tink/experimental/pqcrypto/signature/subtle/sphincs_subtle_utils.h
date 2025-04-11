@@ -70,7 +70,7 @@ struct SphincsParamsPqclean {
 // Representation of the Sphincs private key.
 class SphincsPrivateKeyPqclean {
  public:
-  explicit SphincsPrivateKeyPqclean(util::SecretData key_data,
+  explicit SphincsPrivateKeyPqclean(SecretData key_data,
                                     SphincsParamsPqclean params)
       : private_key_data_(std::move(key_data)), params_(std::move(params)) {}
 
@@ -78,11 +78,11 @@ class SphincsPrivateKeyPqclean {
   SphincsPrivateKeyPqclean& operator=(const SphincsPrivateKeyPqclean& other) =
       default;
 
-  const util::SecretData& GetKey() const { return private_key_data_; }
+  const SecretData& GetKey() const { return private_key_data_; }
   const SphincsParamsPqclean& GetParams() const { return params_; }
 
  private:
-  const util::SecretData private_key_data_;
+  const SecretData private_key_data_;
   const SphincsParamsPqclean params_;
 };
 

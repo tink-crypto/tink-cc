@@ -48,7 +48,7 @@ struct AesSivKeyFormatStruct {
 // Proto message com.google.crypto.tink.AesSivKey.
 struct AesSivKeyStruct {
   uint32_t version;
-  util::SecretData key_value;
+  SecretData key_value;
 
   inline static const ProtoParser<AesSivKeyStruct>& GetParser() {
     static const absl::NoDestructor<ProtoParser<AesSivKeyStruct>> parser(

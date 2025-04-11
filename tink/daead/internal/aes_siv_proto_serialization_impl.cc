@@ -188,7 +188,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  absl::StatusOr<util::SecretData> serialized_proto =
+  absl::StatusOr<SecretData> serialized_proto =
       AesSivKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
   if (!serialized_proto.ok()) {
     return serialized_proto.status();

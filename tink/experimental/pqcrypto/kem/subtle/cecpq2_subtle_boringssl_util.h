@@ -29,14 +29,14 @@ namespace tink {
 namespace pqc {
 
 struct HrssKeyPair {
-  crypto::tink::util::SecretData hrss_private_key_seed;
+  SecretData hrss_private_key_seed;
   std::string hrss_public_key_marshaled;
 };
 
 struct EccKeyPair {
   std::string pub_x;
   std::string pub_y;
-  util::SecretData priv;
+  SecretData priv;
 };
 
 struct Cecpq2KeyPair {
@@ -47,8 +47,7 @@ struct Cecpq2KeyPair {
 // This is an utility function that generates a new HRSS key pair from a high
 // entropy seed (hrss_key_entropy). This function is expected to be called from
 // a key manager class, which will take care of generating a high entropy seed.
-absl::StatusOr<HrssKeyPair> GenerateHrssKeyPair(
-    util::SecretData hrss_key_entropy);
+absl::StatusOr<HrssKeyPair> GenerateHrssKeyPair(SecretData hrss_key_entropy);
 
 // This method performs CECPQ2 (HRSS and X25519) key generation,
 // and HRSS public key marshaling.

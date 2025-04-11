@@ -70,18 +70,18 @@ class Cecpq2HkdfSenderKemBoringSsl {
   class KemKey {
    public:
     KemKey() = default;
-    explicit KemKey(std::string kem_bytes, util::SecretData symmetric_key)
+    explicit KemKey(std::string kem_bytes, SecretData symmetric_key)
         : kem_bytes_(std::move(kem_bytes)),
           symmetric_key_(std::move(symmetric_key)) {}
     const std::string& get_kem_bytes() const { return kem_bytes_; }
-    const util::SecretData& get_symmetric_key() const { return symmetric_key_; }
+    const SecretData& get_symmetric_key() const { return symmetric_key_; }
 
    private:
     // The kem_bytes variable stores both X25519 and HRSS kem_bytes in a
     // contiguous form. We note that for X25519, the kem_bytes consists of the
     // X25519 public key, while for HRSS it is the encrypted shared secret.
     std::string kem_bytes_;
-    util::SecretData symmetric_key_;
+    SecretData symmetric_key_;
   };
 
   // Constructs a sender CECPQ2 KEM for recipient's ECC public key, which must

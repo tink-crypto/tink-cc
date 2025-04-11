@@ -107,10 +107,10 @@ const char kExpectedPub[] =
 
 TEST(CreatesNewCecpq2KeyPairTest, GeneratesDifferentKeysEveryTime) {
   // Generating two HRSS key pairs
-  crypto::tink::util::SecretData hrss_key_entropy1 =
+  SecretData hrss_key_entropy1 =
       crypto::tink::subtle::Random::GetRandomKeyBytes(HRSS_GENERATE_KEY_BYTES);
   auto keypair1 = crypto::tink::pqc::GenerateHrssKeyPair(hrss_key_entropy1);
-  crypto::tink::util::SecretData hrss_key_entropy2 =
+  SecretData hrss_key_entropy2 =
       crypto::tink::subtle::Random::GetRandomKeyBytes(HRSS_GENERATE_KEY_BYTES);
   auto keypair2 = crypto::tink::pqc::GenerateHrssKeyPair(hrss_key_entropy2);
 
@@ -133,7 +133,7 @@ TEST(CreatesNewCecpq2KeyPairTest, SuccessfullHrssKeyGen) {
       reinterpret_cast<const char*>(
           test::HexDecodeOrDie(kHrssKeyGenEntropy).data()),
       HRSS_GENERATE_KEY_BYTES);
-  util::SecretData hrss_key_gen_entropy =
+  SecretData hrss_key_gen_entropy =
       util::SecretDataFromStringView(hrss_key_gen_entropy_str);
   auto keypair = crypto::tink::pqc::GenerateHrssKeyPair(hrss_key_gen_entropy);
 

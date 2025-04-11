@@ -132,7 +132,7 @@ TEST(Cecpq2HkdfRecipientKemBoringSslTest, TestUnknownCurve) {
   }
 
   // Creating the CECPQ2 recipient KEM using HRSS and X25519 private keys
-  util::SecretData hrss_private_key_seed =
+  SecretData hrss_private_key_seed =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHrssKeyGenEntropy));
   auto status_or_recipient_kem = Cecpq2HkdfRecipientKemBoringSsl::New(
       EllipticCurveType::UNKNOWN_CURVE,
@@ -155,7 +155,7 @@ TEST(Cecpq2HkdfRecipientKemBoringSslTest, TestUnsupportedCurve) {
   }
 
   // Creating the CECPQ2 recipient KEM using HRSS and X25519 private keys
-  util::SecretData hrss_private_key_seed =
+  SecretData hrss_private_key_seed =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHrssKeyGenEntropy));
   auto status_or_recipient_kem = Cecpq2HkdfRecipientKemBoringSsl::New(
       EllipticCurveType::NIST_P256,
@@ -180,7 +180,7 @@ TEST(Cecpq2HkdfRecipientKemBoringSslTest, TestNotPostQuantumSecureKeyLength) {
   int out_len = 31;
 
   // Creating the CECPQ2 recipient KEM using HRSS and X25519 private keys
-  util::SecretData hrss_private_key_seed =
+  SecretData hrss_private_key_seed =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHrssKeyGenEntropy));
   auto cecpq2_recipient_kem_or = Cecpq2HkdfRecipientKemBoringSsl::New(
       EllipticCurveType::CURVE25519,
@@ -207,7 +207,7 @@ TEST(Cecpq2HkdfRecipientKemBoringSslTest, TestRecipientFlowSuccess) {
   int out_len = 32;
 
   // Creating the CECPQ2 recipient KEM using HRSS and X25519 private keys
-  util::SecretData hrss_private_key_seed =
+  SecretData hrss_private_key_seed =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHrssKeyGenEntropy));
   auto cecpq2_recipient_kem_or = Cecpq2HkdfRecipientKemBoringSsl::New(
       EllipticCurveType::CURVE25519,
@@ -244,7 +244,7 @@ TEST(Cecpq2HkdfRecipientKemBoringSslTest, TestRecipientFlowFailure) {
   kem_bytes_modified[X25519_PUBLIC_VALUE_LEN + 50] ^= 0x04;
 
   // Creating the CECPQ2 recipient KEM using HRSS and X25519 private keys
-  util::SecretData hrss_private_key_seed =
+  SecretData hrss_private_key_seed =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHrssKeyGenEntropy));
   auto cecpq2_recipient_kem_or = Cecpq2HkdfRecipientKemBoringSsl::New(
       EllipticCurveType::CURVE25519,

@@ -49,8 +49,8 @@ namespace subtle {
 // static
 absl::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>>
 Cecpq2HkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
-                                     util::SecretData ec_private_key,
-                                     util::SecretData hrss_private_key_seed) {
+                                     SecretData ec_private_key,
+                                     SecretData hrss_private_key_seed) {
   switch (curve) {
     case EllipticCurveType::CURVE25519:
       return Cecpq2HkdfX25519RecipientKemBoringSsl::New(
@@ -63,9 +63,9 @@ Cecpq2HkdfRecipientKemBoringSsl::New(EllipticCurveType curve,
 
 // static
 absl::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>>
-Cecpq2HkdfX25519RecipientKemBoringSsl::New(
-    EllipticCurveType curve, util::SecretData ec_private_key,
-    util::SecretData hrss_private_key_seed) {
+Cecpq2HkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
+                                           SecretData ec_private_key,
+                                           SecretData hrss_private_key_seed) {
   auto status =
       internal::CheckFipsCompatibility<Cecpq2HkdfX25519RecipientKemBoringSsl>();
   if (!status.ok()) return status;
@@ -84,8 +84,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::New(
       std::move(ec_private_key), std::move(hrss_private_key_seed)))};
 }
 
-absl::StatusOr<util::SecretData>
-Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
+absl::StatusOr<SecretData> Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
     absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
     absl::string_view hkdf_info, uint32_t key_size_in_bytes,
     EcPointFormat point_format) const {
@@ -126,7 +125,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
              HRSS_CIPHERTEXT_BYTES);
 
   // Concatenate both shared secrets and kem_bytes
-  util::SecretData ikm = util::SecretDataFromStringView(
+  SecretData ikm = util::SecretDataFromStringView(
       absl::StrCat(kem_bytes, x25519_shared_secret.AsStringView(),
                    hrss_shared_secret.AsStringView()));
 
@@ -137,7 +136,7 @@ Cecpq2HkdfX25519RecipientKemBoringSsl::GenerateKey(
   if (!symmetric_key_or.ok()) {
     return symmetric_key_or.status();
   }
-  util::SecretData symmetric_key = symmetric_key_or.value();
+  SecretData symmetric_key = symmetric_key_or.value();
 
   return symmetric_key;
 }

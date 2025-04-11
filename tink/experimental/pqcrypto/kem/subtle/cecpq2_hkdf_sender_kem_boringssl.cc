@@ -147,7 +147,7 @@ Cecpq2HkdfX25519SenderKemBoringSsl::GenerateKey(
                             peer_marshalled_public_key_hrss_.data()));
 
   // Generate entropy to be used in encaps
-  util::SecretData encaps_entropy =
+  SecretData encaps_entropy =
       crypto::tink::subtle::Random::GetRandomKeyBytes(HRSS_ENCAP_BYTES);
 
   // Generate a random shared secret and encapsulate it using peer's HRSS public
@@ -164,8 +164,7 @@ Cecpq2HkdfX25519SenderKemBoringSsl::GenerateKey(
   std::string kem_bytes_and_shared_secrets =
       absl::StrCat(kem_bytes, x25519_shared_secret.AsStringView(),
                    hrss_shared_secret.AsStringView());
-  util::SecretData ikm =
-      util::SecretDataFromStringView(kem_bytes_and_shared_secrets);
+  SecretData ikm = util::SecretDataFromStringView(kem_bytes_and_shared_secrets);
 
   // Compute the symmetric key from the two shared secrets, kem_bytes, hkdf_salt
   // and hkdf_info using HKDF
@@ -174,7 +173,7 @@ Cecpq2HkdfX25519SenderKemBoringSsl::GenerateKey(
   if (!symmetric_key_or.ok()) {
     return symmetric_key_or.status();
   }
-  util::SecretData symmetric_key = symmetric_key_or.value();
+  SecretData symmetric_key = symmetric_key_or.value();
 
   // Return the produced pair kem_bytes and symmetric_key
   return absl::make_unique<const KemKey>(kem_bytes, symmetric_key);

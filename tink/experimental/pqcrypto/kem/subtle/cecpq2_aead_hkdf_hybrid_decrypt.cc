@@ -120,17 +120,16 @@ absl::StatusOr<std::string> Cecpq2AeadHkdfHybridDecrypt::Decrypt(
   uint32_t key_material_size = key_material_size_or.value();
 
   // Use KEM to get a symmetric key.
-  absl::StatusOr<util::SecretData> symmetric_key_result =
-      recipient_kem_->GenerateKey(
-          absl::string_view(ciphertext).substr(0, cecpq2_header_size),
-          util::Enums::ProtoToSubtle(
-              recipient_key_params_.kem_params().hkdf_hash_type()),
-          recipient_key_params_.kem_params().hkdf_salt(), context_info,
-          key_material_size,
-          util::Enums::ProtoToSubtle(
-              recipient_key_params_.kem_params().ec_point_format()));
+  absl::StatusOr<SecretData> symmetric_key_result = recipient_kem_->GenerateKey(
+      absl::string_view(ciphertext).substr(0, cecpq2_header_size),
+      util::Enums::ProtoToSubtle(
+          recipient_key_params_.kem_params().hkdf_hash_type()),
+      recipient_key_params_.kem_params().hkdf_salt(), context_info,
+      key_material_size,
+      util::Enums::ProtoToSubtle(
+          recipient_key_params_.kem_params().ec_point_format()));
   if (!symmetric_key_result.ok()) return symmetric_key_result.status();
-  util::SecretData symmetric_key = std::move(symmetric_key_result.value());
+  SecretData symmetric_key = std::move(symmetric_key_result.value());
 
   // Use the symmetric key to get an AEAD-primitive.
   absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>

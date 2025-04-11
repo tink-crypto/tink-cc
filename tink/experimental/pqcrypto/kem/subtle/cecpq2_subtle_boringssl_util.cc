@@ -33,7 +33,7 @@ namespace tink {
 namespace pqc {
 
 absl::StatusOr<crypto::tink::pqc::HrssKeyPair> GenerateHrssKeyPair(
-    util::SecretData hrss_key_entropy) {
+    SecretData hrss_key_entropy) {
   crypto::tink::pqc::HrssKeyPair hrss_key_pair;
   hrss_key_pair.hrss_private_key_seed = std::move(hrss_key_entropy);
 
@@ -71,7 +71,7 @@ absl::StatusOr<crypto::tink::pqc::Cecpq2KeyPair> GenerateCecpq2Keypair(
       util::internal::AsSecretData(std::move(priv_key_buffer));
 
   // Generating a HRSS key pair
-  util::SecretData generate_hrss_key_entropy =
+  SecretData generate_hrss_key_entropy =
       crypto::tink::subtle::Random::GetRandomKeyBytes(HRSS_GENERATE_KEY_BYTES);
   auto hrss_key_pair_or_status = GenerateHrssKeyPair(generate_hrss_key_entropy);
   cecpq2_key_pair.hrss_key_pair = std::move(hrss_key_pair_or_status.value());

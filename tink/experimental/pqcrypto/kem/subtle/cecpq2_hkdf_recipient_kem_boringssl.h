@@ -70,8 +70,8 @@ class Cecpq2HkdfRecipientKemBoringSsl {
   // private key. This method is made generic enough so that extending the ECC
   // algorithm to support other curves is trivial.
   static absl::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>> New(
-      EllipticCurveType curve, util::SecretData ec_private_key,
-      util::SecretData hrss_private_key_seed);
+      EllipticCurveType curve, SecretData ec_private_key,
+      SecretData hrss_private_key_seed);
 
   virtual ~Cecpq2HkdfRecipientKemBoringSsl() = default;
 
@@ -80,7 +80,7 @@ class Cecpq2HkdfRecipientKemBoringSsl {
   // hkdf to derive the symmetric key from the two shared secrets, hkdf info and
   // hkdf salt. This method is made generic enough so that extending the ECC
   // algorithm to support other curves is trivial.
-  virtual absl::StatusOr<util::SecretData> GenerateKey(
+  virtual absl::StatusOr<SecretData> GenerateKey(
       absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
       absl::string_view hkdf_info, uint32_t key_size_in_bytes,
       EcPointFormat point_format) const = 0;
@@ -96,14 +96,14 @@ class Cecpq2HkdfX25519RecipientKemBoringSsl
   // Constructs a recipient CECPQ2 KEM for recipient's X25519 private key,
   // which must be a big-endian byte array, and recipient's HRSS private key.
   static absl::StatusOr<std::unique_ptr<Cecpq2HkdfRecipientKemBoringSsl>> New(
-      EllipticCurveType curve, util::SecretData ec_private_key,
-      util::SecretData hrss_private_key_seed);
+      EllipticCurveType curve, SecretData ec_private_key,
+      SecretData hrss_private_key_seed);
 
   // Computes the shared secret from X25519 private key and peer's X25519
   // encoded public key, and the shared secret from the HRSS private key, then
   // uses a hkdf to derive the symmetric key from the two shared secrets, hkdf
   // info and hkdf salt.
-  absl::StatusOr<util::SecretData> GenerateKey(
+  absl::StatusOr<SecretData> GenerateKey(
       absl::string_view kem_bytes, HashType hash, absl::string_view hkdf_salt,
       absl::string_view hkdf_info, uint32_t key_size_in_bytes,
       EcPointFormat point_format) const override;
@@ -112,13 +112,13 @@ class Cecpq2HkdfX25519RecipientKemBoringSsl
   // The private constructor only takes the X25519 and HRSS private keys and
   // assign them to the class private members.
   explicit Cecpq2HkdfX25519RecipientKemBoringSsl(
-      util::SecretData ec_private_key, util::SecretData hrss_private_key_seed)
+      SecretData ec_private_key, SecretData hrss_private_key_seed)
       : private_key_x25519_(std::move(ec_private_key)),
         private_key_hrss_seed_(std::move(hrss_private_key_seed)) {}
 
   // X25519 and HRSS private key containers
-  util::SecretData private_key_x25519_;
-  util::SecretData private_key_hrss_seed_;
+  SecretData private_key_x25519_;
+  SecretData private_key_hrss_seed_;
 };
 
 }  // namespace subtle

@@ -73,7 +73,7 @@ struct HkdfPrfParamsStruct {
 struct HkdfPrfKeyStruct {
   uint32_t version;
   HkdfPrfParamsStruct params;
-  util::SecretData key_value;
+  SecretData key_value;
 
   static ProtoParser<HkdfPrfKeyStruct> CreateParser() {
     return ProtoParserBuilder<HkdfPrfKeyStruct>()

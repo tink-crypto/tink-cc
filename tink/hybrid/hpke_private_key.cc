@@ -110,7 +110,7 @@ bool IsNistKem(HpkeParameters::KemId kem_id) {
 
 absl::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
                                    absl::string_view public_key_bytes,
-                                   const util::SecretData& private_key_bytes) {
+                                   const SecretData& private_key_bytes) {
   // Construct EC_KEY from public and private key bytes.
   absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> group =
       internal::EcGroupFromCurveType(curve);
@@ -159,7 +159,7 @@ absl::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
 }
 
 absl::Status ValidateX25519KeyPair(absl::string_view public_key_bytes,
-                                   const util::SecretData& private_key_bytes) {
+                                   const SecretData& private_key_bytes) {
   absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
       internal::X25519KeyFromPrivateKey(private_key_bytes);
   if (!x25519_key.ok()) {
@@ -181,7 +181,7 @@ absl::Status ValidateKeyPair(const HpkePublicKey& public_key,
                              PartialKeyAccessToken token) {
   HpkeParameters::KemId kem_id = public_key.GetParameters().GetKemId();
   absl::string_view public_key_bytes = public_key.GetPublicKeyBytes(token);
-  const util::SecretData& secret =
+  const SecretData& secret =
       private_key_bytes.Get(InsecureSecretKeyAccess::Get());
 
   if (IsNistKem(kem_id)) {

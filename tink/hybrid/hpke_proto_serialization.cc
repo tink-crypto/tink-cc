@@ -95,7 +95,7 @@ struct HpkePublicKeyStruct {
 struct HpkePrivateKeyStruct {
   uint32_t version;
   HpkePublicKeyStruct public_key;
-  util::SecretData private_key;
+  SecretData private_key;
 };
 
 struct HpkeKeyFormatStruct {
@@ -526,7 +526,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<util::SecretData> serialized =
+  absl::StatusOr<SecretData> serialized =
       GetPrivateKeyParser().SerializeIntoSecretData(proto_key);
   if (!serialized.ok()) {
     return serialized.status();

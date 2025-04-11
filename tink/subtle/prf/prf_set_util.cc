@@ -73,8 +73,7 @@ class PrfFromStatefulMacFactory : public Prf {
     if (!status.ok()) {
       return status;
     }
-    absl::StatusOr<util::SecretData> output =
-        stateful_mac->FinalizeAsSecretData();
+    absl::StatusOr<SecretData> output = stateful_mac->FinalizeAsSecretData();
     if (!output.ok()) {
       return output.status();
     }

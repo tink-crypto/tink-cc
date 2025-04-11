@@ -52,7 +52,7 @@ using ::crypto::tink::internal::CallWithCoreDumpProtection;
 
 class HkdfInputStream : public InputStream {
  public:
-  HkdfInputStream(const EVP_MD *digest, const util::SecretData &secret,
+  HkdfInputStream(const EVP_MD *digest, const SecretData &secret,
                   absl::string_view salt, absl::string_view input)
       : input_(input) {
     stream_status_ = Init(digest, secret, salt);
@@ -86,7 +86,7 @@ class HkdfInputStream : public InputStream {
   }
 
  private:
-  absl::Status Init(const EVP_MD *digest, const util::SecretData &secret,
+  absl::Status Init(const EVP_MD *digest, const SecretData &secret,
                     absl::string_view salt) {
     // PRK as by RFC 5869, Section 2.2
     internal::SecretBuffer prk(EVP_MAX_MD_SIZE);
@@ -197,7 +197,7 @@ std::unique_ptr<InputStream> HkdfStreamingPrf::ComputePrf(
 
 // static
 absl::StatusOr<std::unique_ptr<StreamingPrf>> HkdfStreamingPrf::New(
-    HashType hash, util::SecretData secret, absl::string_view salt) {
+    HashType hash, SecretData secret, absl::string_view salt) {
   auto status = internal::CheckFipsCompatibility<HkdfStreamingPrf>();
   if (!status.ok()) return status;
 

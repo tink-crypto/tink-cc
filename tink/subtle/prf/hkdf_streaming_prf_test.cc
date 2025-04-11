@@ -80,7 +80,7 @@ TEST(HkdfStreamingPrf, EmptySalt) {
 
   crypto::tink::subtle::HashType hash_type = SHA512;
   const int hash_length = 64;
-  util::SecretData secret = util::SecretDataFromStringView("key0123456");
+  SecretData secret = util::SecretDataFromStringView("key0123456");
   absl::string_view input = "input";
   int num_bytes = 10;
 
@@ -373,7 +373,7 @@ TEST(HkdfStreamingPrf, TestVector1) {
   }
   // https://tools.ietf.org/html/rfc5869#appendix-A.1
   HashType hash = SHA256;
-  util::SecretData ikm = util::SecretDataFromStringView(
+  SecretData ikm = util::SecretDataFromStringView(
       HexDecodeOrDie("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"));
   std::string salt = HexDecodeOrDie("000102030405060708090a0b0c");
   std::string info = HexDecodeOrDie("f0f1f2f3f4f5f6f7f8f9");
@@ -392,7 +392,7 @@ TEST(HkdfStreamingPrf, TestVector1) {
 }
 
 absl::StatusOr<std::string> ComputeWithHkdfStreamingPrf(HashType hash,
-                                                        util::SecretData ikm,
+                                                        SecretData ikm,
                                                         std::string salt,
                                                         std::string info,
                                                         int length) {
@@ -411,7 +411,7 @@ TEST(HkdfStreamingPrf, TestVector2) {
   }
   // https://tools.ietf.org/html/rfc5869#appendix-A.2
   HashType hash = SHA256;
-  util::SecretData ikm = util::SecretDataFromStringView(
+  SecretData ikm = util::SecretDataFromStringView(
       HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"
                      "101112131415161718191a1b1c1d1e1f"
                      "202122232425262728292a2b2c2d2e2f"
@@ -449,7 +449,7 @@ TEST(HkdfStreamingPrf, TestVector3) {
   }
   // https://tools.ietf.org/html/rfc5869#appendix-A.3
   HashType hash = SHA256;
-  util::SecretData ikm = util::SecretDataFromStringView(
+  SecretData ikm = util::SecretDataFromStringView(
       HexDecodeOrDie("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"));
   std::string salt = HexDecodeOrDie("");
   std::string info = HexDecodeOrDie("");
@@ -470,7 +470,7 @@ TEST(HkdfStreamingPrf, TestVector4) {
   }
   // https://tools.ietf.org/html/rfc5869#appendix-A.4
   HashType hash = SHA1;
-  util::SecretData ikm =
+  SecretData ikm =
       util::SecretDataFromStringView(HexDecodeOrDie("0b0b0b0b0b0b0b0b0b0b0b"));
   std::string salt = HexDecodeOrDie("000102030405060708090a0b0c");
   std::string info = HexDecodeOrDie("f0f1f2f3f4f5f6f7f8f9");
@@ -491,7 +491,7 @@ TEST(HkdfStreamingPrf, TestVector5) {
   }
   // https://tools.ietf.org/html/rfc5869#appendix-A.5
   HashType hash = SHA1;
-  util::SecretData ikm = util::SecretDataFromStringView(
+  SecretData ikm = util::SecretDataFromStringView(
       HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"
                      "101112131415161718191a1b1c1d1e1f"
                      "202122232425262728292a2b2c2d2e2f"
@@ -529,7 +529,7 @@ TEST(HkdfStreamingPrf, TestVector6) {
   }
   // https://tools.ietf.org/html/rfc5869#appendix-A.6
   HashType hash = SHA1;
-  util::SecretData ikm = util::SecretDataFromStringView(
+  SecretData ikm = util::SecretDataFromStringView(
       HexDecodeOrDie("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"));
   std::string salt = HexDecodeOrDie("");
   std::string info = HexDecodeOrDie("");
@@ -550,7 +550,7 @@ TEST(HkdfStreamingPrf, TestVector7) {
   }
   // https://tools.ietf.org/html/rfc5869#appendix-A.7
   HashType hash = SHA1;
-  util::SecretData ikm = util::SecretDataFromStringView(
+  SecretData ikm = util::SecretDataFromStringView(
       HexDecodeOrDie("0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b"));
   // Since HMAC anyhow pads, this is the same as an absent salt.
   std::string salt = HexDecodeOrDie("");
@@ -571,7 +571,7 @@ TEST(HkdfStreamingPrf, TestAgainstHkdfUtil) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
   HashType hash = SHA1;
-  util::SecretData ikm = Random::GetRandomKeyBytes(123);
+  SecretData ikm = Random::GetRandomKeyBytes(123);
   std::string salt = Random::GetRandomBytes(234);
   std::string info = Random::GetRandomBytes(345);
 
@@ -582,8 +582,7 @@ TEST(HkdfStreamingPrf, TestAgainstHkdfUtil) {
   auto compute_hkdf_result_or = Hkdf::ComputeHkdf(hash, ikm, salt, info, 456);
   ASSERT_THAT(compute_hkdf_result_or, IsOk());
 
-  util::SecretData compute_hkdf_result =
-      std::move(compute_hkdf_result_or).value();
+  SecretData compute_hkdf_result = std::move(compute_hkdf_result_or).value();
   EXPECT_THAT(streaming_result_or.value(),
               Eq(util::SecretDataAsStringView(compute_hkdf_result)));
 }
@@ -594,7 +593,7 @@ TEST(HkdfStreamingPrf, TestFipsOnly) {
   }
 
   HashType hash = SHA1;
-  util::SecretData ikm = Random::GetRandomKeyBytes(123);
+  SecretData ikm = Random::GetRandomKeyBytes(123);
   std::string salt = Random::GetRandomBytes(234);
   std::string info = Random::GetRandomBytes(345);
 

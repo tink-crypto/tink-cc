@@ -37,7 +37,7 @@ namespace subtle {
 class HkdfStreamingPrf : public StreamingPrf {
  public:
   static absl::StatusOr<std::unique_ptr<StreamingPrf>> New(
-      HashType hash, util::SecretData secret, absl::string_view salt);
+      HashType hash, SecretData secret, absl::string_view salt);
 
   std::unique_ptr<InputStream> ComputePrf(
       absl::string_view input) const override;
@@ -46,12 +46,12 @@ class HkdfStreamingPrf : public StreamingPrf {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  HkdfStreamingPrf(const EVP_MD* hash, util::SecretData secret,
+  HkdfStreamingPrf(const EVP_MD* hash, SecretData secret,
                    absl::string_view salt)
       : hash_(hash), secret_(std::move(secret)), salt_(salt) {}
 
   const EVP_MD* hash_;
-  const util::SecretData secret_;
+  const SecretData secret_;
   const std::string salt_;
 };
 

@@ -776,18 +776,35 @@ TEST_F(SignatureConfigTest, EcdsaProtoPublicKeySerializationRegistered) {
     GTEST_SKIP() << "Test non FIPS-mode only";
   }
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(SignatureKeyTemplates::EcdsaP256(),
-                                KeyGenConfigSignatureV0());
-  ASSERT_THAT(handle, IsOk());
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-      (*handle)->GetPublicKeysetHandle(KeyGenConfigSignatureV0());
-  ASSERT_THAT(public_handle, IsOk());
+  google::crypto::tink::EcdsaParams params;
+  params.set_curve(google::crypto::tink::EllipticCurveType::NIST_P256);
+  params.set_hash_type(google::crypto::tink::HashType::SHA256);
+  params.set_encoding(google::crypto::tink::EcdsaSignatureEncoding::DER);
 
-  // Fails to parse this key type, so falls back to legacy proto key.
-  EXPECT_THAT(dynamic_cast<const internal::LegacyProtoKey *>(
-                  (*public_handle)->GetPrimary().GetKey().get()),
-              Not(IsNull()));
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::EcdsaPublicKey key_proto;
+  key_proto.set_version(0);
+  key_proto.set_x(ec_key->pub_x);
+  key_proto.set_y(ec_key->pub_y);
+  *key_proto.mutable_params() = params;
+  RestrictedData serialized_key = RestrictedData(
+      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.EcdsaPublicKey",
+          serialized_key, KeyMaterialTypeEnum::kAsymmetricPublic,
+          OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
@@ -798,8 +815,6 @@ TEST_F(SignatureConfigTest, EcdsaProtoPublicKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
   absl::StatusOr<EcdsaPublicKey> public_key =
@@ -811,7 +826,7 @@ TEST_F(SignatureConfigTest, EcdsaProtoPublicKeySerializationRegistered) {
   EXPECT_THAT(KeysetHandleBuilder()
                   .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
                       *public_key, KeyStatus::kEnabled, /*is_primary=*/true))
-                  .Build()
+                  .Build(KeyGenConfigGlobalRegistry())
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
                        HasSubstr("Failed to serialize")));
@@ -819,19 +834,16 @@ TEST_F(SignatureConfigTest, EcdsaProtoPublicKeySerializationRegistered) {
   // Register serialization.
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle2 =
-      (*handle)->GetPublicKeysetHandle(KeyGenConfigSignatureV0());
-  ASSERT_THAT(public_handle2, IsOk());
-
-  // Parsing now creates the right key type.
-  EXPECT_THAT(dynamic_cast<const EcdsaPublicKey *>(
-                  (*public_handle2)->GetPrimary().GetKey().get()),
-              Not(IsNull()));
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key2, IsOk());
 
   EXPECT_THAT(KeysetHandleBuilder()
                   .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(
                       *public_key, KeyStatus::kEnabled, /*is_primary=*/true))
-                  .Build(),
+                  .Build(KeyGenConfigGlobalRegistry())
+                  .status(),
               IsOk());
 }
 
@@ -840,15 +852,41 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
     GTEST_SKIP() << "Test non FIPS-mode only";
   }
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(SignatureKeyTemplates::EcdsaP256(),
-                                KeyGenConfigSignatureV0());
-  ASSERT_THAT(handle, IsOk());
+  google::crypto::tink::EcdsaParams params;
+  params.set_curve(google::crypto::tink::EllipticCurveType::NIST_P256);
+  params.set_hash_type(google::crypto::tink::HashType::SHA256);
+  params.set_encoding(google::crypto::tink::EcdsaSignatureEncoding::DER);
 
-  // Fails to parse this key type, so falls back to legacy proto key.
-  EXPECT_THAT(dynamic_cast<const internal::LegacyProtoKey *>(
-                  (*handle)->GetPrimary().GetKey().get()),
-              Not(IsNull()));
+  absl::StatusOr<internal::EcKey> ec_key =
+      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
+  ASSERT_THAT(ec_key, IsOk());
+
+  google::crypto::tink::EcdsaPublicKey public_key_proto;
+  public_key_proto.set_version(0);
+  public_key_proto.set_x(ec_key->pub_x);
+  public_key_proto.set_y(ec_key->pub_y);
+  *public_key_proto.mutable_params() = params;
+
+  google::crypto::tink::EcdsaPrivateKey private_key_proto;
+  private_key_proto.set_version(0);
+  *private_key_proto.mutable_public_key() = public_key_proto;
+  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
+
+  RestrictedData serialized_key = RestrictedData(
+      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<internal::ProtoKeySerialization> serialization =
+      internal::ProtoKeySerialization::Create(
+          "type.googleapis.com/google.crypto.tink.EcdsaPrivateKey",
+          serialized_key, KeyMaterialTypeEnum::kAsymmetricPrivate,
+          OutputPrefixTypeEnum::kTink,
+          /*id_requirement=*/123);
+  ASSERT_THAT(serialization, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key.status(), StatusIs(absl::StatusCode::kNotFound));
 
   absl::StatusOr<EcdsaParameters> parameters =
       EcdsaParameters::Builder()
@@ -859,8 +897,6 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
   ASSERT_THAT(ec_key, IsOk());
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
   RestrictedBigInteger private_key_value =
@@ -888,15 +924,10 @@ TEST_F(SignatureConfigTest, EcdsaProtoPrivateKeySerializationRegistered) {
   // Register serialization.
   ASSERT_THAT(SignatureConfig::Register(), IsOk());
 
-  absl::StatusOr<std::unique_ptr<KeysetHandle>> handle2 =
-      KeysetHandle::GenerateNew(SignatureKeyTemplates::EcdsaP256(),
-                                KeyGenConfigSignatureV0());
-  ASSERT_THAT(handle2, IsOk());
-
-  // Parsing now creates the right key type.
-  EXPECT_THAT(dynamic_cast<const EcdsaPrivateKey *>(
-                  (*handle2)->GetPrimary().GetKey().get()),
-              Not(IsNull()));
+  absl::StatusOr<std::unique_ptr<Key>> parsed_key2 =
+      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
+          *serialization, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(parsed_key2, IsOk());
 
   EXPECT_THAT(KeysetHandleBuilder()
                   .AddEntry(KeysetHandleBuilder::Entry::CreateFromCopyableKey(

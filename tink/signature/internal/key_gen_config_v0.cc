@@ -19,10 +19,14 @@
 #include "absl/memory/memory.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
+#include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/signature/ed25519_verify_key_manager.h"
+#include "tink/signature/rsa_ssa_pkcs1_proto_serialization.h"
+#include "tink/signature/rsa_ssa_pss_proto_serialization.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "tink/signature/internal/key_creators.h"
 #include "tink/signature/internal/ml_dsa_proto_serialization.h"
@@ -41,9 +45,17 @@ namespace tink {
 namespace internal {
 
 absl::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
-  absl::Status status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+  absl::Status status = RegisterEcdsaProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
+  status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<EcdsaSignKeyManager>(),
       absl::make_unique<EcdsaVerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = RegisterRsaSsaPssProtoSerialization();
   if (!status.ok()) {
     return status;
   }
@@ -53,9 +65,17 @@ absl::Status AddSignatureKeyGenV0(KeyGenConfiguration& config) {
   if (!status.ok()) {
     return status;
   }
+  status = RegisterRsaSsaPkcs1ProtoSerialization();
+  if (!status.ok()) {
+    return status;
+  }
   status = KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
       absl::make_unique<RsaSsaPkcs1SignKeyManager>(),
       absl::make_unique<RsaSsaPkcs1VerifyKeyManager>(), config);
+  if (!status.ok()) {
+    return status;
+  }
+  status = RegisterEd25519ProtoSerialization();
   if (!status.ok()) {
     return status;
   }

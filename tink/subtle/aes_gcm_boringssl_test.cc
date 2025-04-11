@@ -63,7 +63,7 @@ class AesGcmBoringSslTest : public Test {
                       "unavailable.";
     }
 
-    util::SecretData key =
+    SecretData key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128));
     absl::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmBoringSsl::New(key);
     ASSERT_THAT(cipher, IsOk());
@@ -216,7 +216,7 @@ TEST_F(AesGcmBoringSslTest, BothMessageAndAssociatedDataEmpty) {
 
 TEST_F(AesGcmBoringSslTest, InvalidKeySizes) {
   for (int keysize = 0; keysize < 65; keysize++) {
-    util::SecretData key(keysize, 'x');
+    SecretData key(keysize, 'x');
     absl::StatusOr<std::unique_ptr<crypto::tink::Aead>> cipher =
         AesGcmBoringSsl::New(key);
     if (keysize == 16 || keysize == 32) {
@@ -233,9 +233,9 @@ TEST(AesGcmBoringSslFipsTest, FipsOnly) {
         << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
   }
 
-  util::SecretData key_128 =
+  SecretData key_128 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128));
-  util::SecretData key_256 =
+  SecretData key_256 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256));
 
   EXPECT_THAT(AesGcmBoringSsl::New(key_128), IsOk());
@@ -248,9 +248,9 @@ TEST(AesGcmBoringSslFipsTest, FipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::SecretData key_128 =
+  SecretData key_128 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128));
-  util::SecretData key_256 =
+  SecretData key_256 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256));
 
   EXPECT_THAT(AesGcmBoringSsl::New(key_128).status(),
@@ -279,7 +279,7 @@ class AesGcmBoringSslWycheproofTest
 
 TEST_P(AesGcmBoringSslWycheproofTest, Decrypt) {
   internal::WycheproofTestVector test_vector = GetParam();
-  util::SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = util::SecretDataFromStringView(test_vector.key);
   absl::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());
   std::string ciphertext =

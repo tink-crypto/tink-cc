@@ -46,7 +46,7 @@ namespace subtle {
 
 absl::StatusOr<std::unique_ptr<Mac>> HmacBoringSsl::New(HashType hash_type,
                                                         uint32_t tag_size,
-                                                        util::SecretData key) {
+                                                        SecretData key) {
   auto status = internal::CheckFipsCompatibility<HmacBoringSsl>();
   if (!status.ok()) return status;
 

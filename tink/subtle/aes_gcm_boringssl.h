@@ -39,7 +39,7 @@ class AesGcmBoringSsl {
     return AesGcmBoringSsl::New(util::SecretDataFromStringView(key_value));
   }
 
-  static absl::StatusOr<std::unique_ptr<Aead>> New(const util::SecretData& key);
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const SecretData& key);
 
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kRequiresBoringCrypto;

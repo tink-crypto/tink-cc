@@ -44,7 +44,7 @@ constexpr int kIvSizeInBytes = 12;
 constexpr int kTagSizeInBytes = 16;
 
 absl::StatusOr<std::unique_ptr<Aead>> AesGcmSivBoringSsl::New(
-    const util::SecretData& key) {
+    const SecretData& key) {
   auto status = internal::CheckFipsCompatibility<AesGcmSivBoringSsl>();
   if (!status.ok()) {
     return status;

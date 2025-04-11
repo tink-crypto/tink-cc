@@ -46,7 +46,7 @@ class AesEaxBoringSsl : public Aead {
   // Currently supported key sizes are 128 and 256 bits.
   // Currently supported nonce sizes are 12 and 16 bytes.
   // The tag size is fixed to 16 bytes.
-  static absl::StatusOr<std::unique_ptr<Aead>> New(const util::SecretData& key,
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const SecretData& key,
                                                    size_t nonce_size_in_bytes);
 
   absl::StatusOr<std::string> Encrypt(
@@ -73,9 +73,9 @@ class AesEaxBoringSsl : public Aead {
         P_(ComputeP()) {}
 
   // Precomputes block B. Requires aeskey_ to be initialized.
-  util::SecretData ComputeB() const;
+  SecretData ComputeB() const;
   // Precomputes block P. Requires aeskey_ and B_ to be initialized.
-  util::SecretData ComputeP() const;
+  SecretData ComputeP() const;
 
   // Returns whether key_size_in_bytes is a supported key size.
   static bool IsValidKeySize(size_t key_size_in_bytes);
@@ -120,8 +120,8 @@ class AesEaxBoringSsl : public Aead {
 
   const util::SecretUniquePtr<AES_KEY> aeskey_;
   const size_t nonce_size_;
-  const util::SecretData B_;
-  const util::SecretData P_;
+  const SecretData B_;
+  const SecretData P_;
 };
 
 }  // namespace subtle

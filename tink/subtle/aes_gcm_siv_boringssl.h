@@ -51,7 +51,7 @@ namespace subtle {
 // https://eprint.iacr.org/2017/702.pdf
 class AesGcmSivBoringSsl : public Aead {
  public:
-  static absl::StatusOr<std::unique_ptr<Aead>> New(const util::SecretData& key);
+  static absl::StatusOr<std::unique_ptr<Aead>> New(const SecretData& key);
 
   absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,

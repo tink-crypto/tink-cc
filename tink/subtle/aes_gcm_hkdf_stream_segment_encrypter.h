@@ -74,7 +74,7 @@ class AesGcmHkdfStreamSegmentEncrypter : public StreamSegmentEncrypter {
   static constexpr int kTagSizeInBytes = 16;
 
   struct Params {
-    util::SecretData key;
+    SecretData key;
     std::string salt;
     int ciphertext_offset;
     int ciphertext_segment_size;

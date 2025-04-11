@@ -462,7 +462,7 @@ PemParser::ParseEcPrivateKey(absl::string_view pem_serialized_key) {
                                   y_coordinate.get(), nullptr);
 
   const BIGNUM* priv_key = EC_KEY_get0_private_key(bssl_ecdsa_key);
-  absl::StatusOr<util::SecretData> priv =
+  absl::StatusOr<SecretData> priv =
       internal::BignumToSecretData(priv_key, ScalarSizeInBytes(ec_group));
   if (!priv.ok()) {
     return priv.status();

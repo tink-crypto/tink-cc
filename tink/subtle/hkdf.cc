@@ -90,11 +90,11 @@ absl::Status SslHkdf(const EVP_MD *evp_md, absl::string_view ikm,
 
 }  // namespace
 
-absl::StatusOr<util::SecretData> Hkdf::ComputeHkdf(HashType hash,
-                                                   const util::SecretData &ikm,
-                                                   absl::string_view salt,
-                                                   absl::string_view info,
-                                                   size_t out_len) {
+absl::StatusOr<SecretData> Hkdf::ComputeHkdf(HashType hash,
+                                             const SecretData &ikm,
+                                             absl::string_view salt,
+                                             absl::string_view info,
+                                             size_t out_len) {
   absl::StatusOr<const EVP_MD *> evp_md = internal::EvpHashFromHashType(hash);
   if (!evp_md.ok()) {
     return evp_md.status();
@@ -131,10 +131,9 @@ absl::StatusOr<std::string> Hkdf::ComputeHkdf(HashType hash,
   return out_key;
 }
 
-absl::StatusOr<util::SecretData> Hkdf::ComputeEciesHkdfSymmetricKey(
-    HashType hash, absl::string_view kem_bytes,
-    const util::SecretData &shared_secret, absl::string_view salt,
-    absl::string_view info, size_t out_len) {
+absl::StatusOr<SecretData> Hkdf::ComputeEciesHkdfSymmetricKey(
+    HashType hash, absl::string_view kem_bytes, const SecretData &shared_secret,
+    absl::string_view salt, absl::string_view info, size_t out_len) {
   internal::SecretBuffer ikm(kem_bytes.size() + shared_secret.size());
   internal::SafeMemCopy(ikm.data(), kem_bytes.data(), kem_bytes.size());
   internal::SafeMemCopy(ikm.data() + kem_bytes.size(), shared_secret.data(),

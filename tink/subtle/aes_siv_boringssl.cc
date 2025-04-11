@@ -68,7 +68,7 @@ absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitializeAesKey(
 
 // static
 absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
-    const util::SecretData& key) {
+    const SecretData& key) {
   auto status = internal::CheckFipsCompatibility<AesSivBoringSsl>();
   if (!status.ok()) return status;
 
@@ -89,7 +89,7 @@ absl::StatusOr<std::unique_ptr<DeterministicAead>> AesSivBoringSsl::New(
   return {absl::WrapUnique(new AesSivBoringSsl(std::move(k1), std::move(k2)))};
 }
 
-util::SecretData AesSivBoringSsl::ComputeCmacK1() const {
+SecretData AesSivBoringSsl::ComputeCmacK1() const {
   internal::SecretBuffer cmac_k1(kBlockSize, 0);
   CallWithCoreDumpProtection([&]() {
     EncryptBlock(cmac_k1.data(), cmac_k1.data());
@@ -98,7 +98,7 @@ util::SecretData AesSivBoringSsl::ComputeCmacK1() const {
   return util::internal::AsSecretData(std::move(cmac_k1));
 }
 
-util::SecretData AesSivBoringSsl::ComputeCmacK2() const {
+SecretData AesSivBoringSsl::ComputeCmacK2() const {
   internal::SecretBuffer cmac_k2 = util::internal::AsSecretBuffer(cmac_k1_);
   CallWithCoreDumpProtection([&]() { MultiplyByX(cmac_k2.data()); });
   return util::internal::AsSecretData(cmac_k2);

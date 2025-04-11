@@ -62,7 +62,7 @@ namespace subtle {
 class AesSivBoringSsl : public DeterministicAead {
  public:
   static absl::StatusOr<std::unique_ptr<DeterministicAead>> New(
-      const util::SecretData& key);
+      const SecretData& key);
 
   absl::StatusOr<std::string> EncryptDeterministically(
       absl::string_view plaintext,
@@ -88,9 +88,9 @@ class AesSivBoringSsl : public DeterministicAead {
         cmac_k2_(ComputeCmacK2()) {}
 
   // Precomputes cmac_k1
-  util::SecretData ComputeCmacK1() const;
+  SecretData ComputeCmacK1() const;
   // Precomputes cmac_k2
-  util::SecretData ComputeCmacK2() const;
+  SecretData ComputeCmacK2() const;
 
   // Encrypts a single block using k2_.
   // This is used for CMACs.
@@ -125,8 +125,8 @@ class AesSivBoringSsl : public DeterministicAead {
 
   const util::SecretUniquePtr<AES_KEY> k1_;
   const util::SecretUniquePtr<AES_KEY> k2_;
-  const util::SecretData cmac_k1_;
-  const util::SecretData cmac_k2_;
+  const SecretData cmac_k1_;
+  const SecretData cmac_k2_;
 };
 
 }  // namespace subtle

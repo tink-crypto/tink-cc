@@ -58,7 +58,7 @@ TEST(AesCmacBoringSslTest, Basic) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kTagSize);
@@ -85,7 +85,7 @@ TEST(AesCmacBoringSslTest, Modification) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kTagSize);
@@ -108,7 +108,7 @@ TEST(AesCmacBoringSslTest, Truncation) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kTagSize);
@@ -129,7 +129,7 @@ TEST(AesCmacBoringSslTest, BasicSmallTag) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kSmallTagSize);
@@ -157,7 +157,7 @@ TEST(AesCmacBoringSslTest, ModificationSmallTag) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kSmallTagSize);
@@ -181,7 +181,7 @@ TEST(AesCmacBoringSslTest, TruncationOrAdditionSmallTag) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kSmallTagSize);
@@ -209,7 +209,7 @@ TEST(AesCmacBoringSslTest, InvalidKeySizes) {
   }
 
   for (int keysize = 0; keysize < 65; keysize++) {
-    util::SecretData key(keysize, 'x');
+    SecretData key(keysize, 'x');
     absl::StatusOr<std::unique_ptr<Mac>> cmac =
         AesCmacBoringSsl::New(key, kTagSize);
     if (keysize == 16 || keysize == 32) {
@@ -226,7 +226,7 @@ TEST(AesCmacBoringSslTest, InvalidTagSizes) {
   }
 
   for (int tagsize = 0; tagsize < 65; tagsize++) {
-    util::SecretData key(32, 'x');
+    SecretData key(32, 'x');
     absl::StatusOr<std::unique_ptr<Mac>> cmac =
         AesCmacBoringSsl::New(key, tagsize);
     if (tagsize <= 16) {
@@ -244,7 +244,7 @@ class AesCmacBoringSslTestVectorTest
   // hexadecimal.
   void ExpectCmacVerifyHex(absl::string_view key_hex, absl::string_view tag_hex,
                            absl::string_view data_hex) {
-    util::SecretData key =
+    SecretData key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(key_hex));
     std::string tag = test::HexDecodeOrDie(tag_hex);
     std::string data = test::HexDecodeOrDie(data_hex);
@@ -280,9 +280,9 @@ TEST(AesCmacBoringSslTest, TestFipsOnly) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
-  util::SecretData key128 = util::SecretDataFromStringView(
+  SecretData key128 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  util::SecretData key256 =
+  SecretData key256 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
 
   EXPECT_THAT(subtle::AesCmacBoringSsl::New(key128, kTagSize).status(),

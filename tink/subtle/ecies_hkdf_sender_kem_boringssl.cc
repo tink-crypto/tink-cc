@@ -117,13 +117,13 @@ EciesHkdfNistPCurveSendKemBoringSsl::GenerateKey(
   if (!status_or_string_shared_secret.ok()) {
     return status_or_string_shared_secret.status();
   }
-  util::SecretData shared_secret = status_or_string_shared_secret.value();
+  SecretData shared_secret = status_or_string_shared_secret.value();
   auto symmetric_key_or = Hkdf::ComputeEciesHkdfSymmetricKey(
       hash, kem_bytes, shared_secret, hkdf_salt, hkdf_info, key_size_in_bytes);
   if (!symmetric_key_or.ok()) {
     return symmetric_key_or.status();
   }
-  util::SecretData symmetric_key = symmetric_key_or.value();
+  SecretData symmetric_key = symmetric_key_or.value();
   return absl::make_unique<const KemKey>(std::move(kem_bytes),
                                          std::move(symmetric_key));
 }
@@ -190,7 +190,7 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
                         "EVP_PKEY_new_raw_private_key failed");
   }
 
-  absl::StatusOr<util::SecretData> shared_secret =
+  absl::StatusOr<SecretData> shared_secret =
       internal::ComputeX25519SharedSecret(ssl_priv_key.get(),
                                           peer_public_key_.get());
 
@@ -198,10 +198,9 @@ EciesHkdfX25519SendKemBoringSsl::GenerateKey(
       reinterpret_cast<const char*>((*ephemeral_key)->public_value),
       internal::X25519KeyPubKeySize());
 
-  absl::StatusOr<util::SecretData> symmetric_key =
-      Hkdf::ComputeEciesHkdfSymmetricKey(hash, public_key, *shared_secret,
-                                         hkdf_salt, hkdf_info,
-                                         key_size_in_bytes);
+  absl::StatusOr<SecretData> symmetric_key = Hkdf::ComputeEciesHkdfSymmetricKey(
+      hash, public_key, *shared_secret, hkdf_salt, hkdf_info,
+      key_size_in_bytes);
   if (!symmetric_key.ok()) {
     return symmetric_key.status();
   }

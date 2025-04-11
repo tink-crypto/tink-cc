@@ -42,17 +42,17 @@ class EciesHkdfSenderKemBoringSsl {
   class KemKey {
    public:
     KemKey() = default;
-    explicit KemKey(std::string kem_bytes, util::SecretData symmetric_key)
+    explicit KemKey(std::string kem_bytes, SecretData symmetric_key)
         : kem_bytes_(std::move(kem_bytes)),
           symmetric_key_(std::move(symmetric_key)) {}
 
     const std::string& get_kem_bytes() const { return kem_bytes_; }
 
-    const util::SecretData& get_symmetric_key() const { return symmetric_key_; }
+    const SecretData& get_symmetric_key() const { return symmetric_key_; }
 
    private:
     std::string kem_bytes_;
-    util::SecretData symmetric_key_;
+    SecretData symmetric_key_;
   };
 
   // Constructs a sender KEM for the specified curve and recipient's

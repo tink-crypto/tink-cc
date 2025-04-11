@@ -60,7 +60,7 @@ class Ed25519SignBoringSslTest : public ::testing::Test {};
 
 struct Ed25519KeyPair {
   std::string public_key;
-  util::SecretData private_key;
+  SecretData private_key;
 };
 
 absl::StatusOr<Ed25519KeyPair> NewKeyPair() {
@@ -139,7 +139,7 @@ TEST_F(Ed25519SignBoringSslTest, testInvalidPrivateKeys) {
       // Valid key size.
       continue;
     }
-    util::SecretData key(keysize, 'x');
+    SecretData key(keysize, 'x');
     EXPECT_FALSE(Ed25519SignBoringSsl::New(key).ok());
   }
 }
@@ -330,7 +330,7 @@ TEST_F(Ed25519SignBoringSslTest, testWithTestVectors) {
   for (const TestVector &v : ed25519_vectors) {
     // Add the public as a suffix to the private key. This is needed by the
     // boringssl API.
-    util::SecretData private_key = util::SecretDataFromStringView(
+    SecretData private_key = util::SecretDataFromStringView(
         absl::StrCat(v.private_key, v.public_key));
 
     // Create a new signer.

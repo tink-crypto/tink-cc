@@ -55,7 +55,7 @@ constexpr int kEd25519SignatureLenInBytes = 64;
 
 // static
 absl::StatusOr<std::unique_ptr<PublicKeySign>> Ed25519SignBoringSsl::New(
-    util::SecretData private_key, absl::string_view output_prefix,
+    SecretData private_key, absl::string_view output_prefix,
     absl::string_view message_suffix) {
   auto status = internal::CheckFipsCompatibility<Ed25519SignBoringSsl>();
   if (!status.ok()) return status;

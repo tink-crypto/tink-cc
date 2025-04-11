@@ -62,7 +62,7 @@ TEST(AesGcmSivBoringSslTest, EncryptDecrypt) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   if (!internal::IsBoringSsl()) {
     EXPECT_THAT(AesGcmSivBoringSsl::New(key).status(),
@@ -91,7 +91,7 @@ TEST(AesGcmSivBoringSslTest, DecryptFailsIfCiphertextTooSmall) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Aead>> aead = AesGcmSivBoringSsl::New(key);
   ASSERT_THAT(aead, IsOk());
@@ -112,9 +112,9 @@ TEST(AesGcmSivBoringSslTest, TestFipsOnly) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
-  util::SecretData key128 = util::SecretDataFromStringView(
+  SecretData key128 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  util::SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
 
   EXPECT_THAT(AesGcmSivBoringSsl::New(key128).status(),
@@ -146,7 +146,7 @@ class AesGcmSivBoringSslWycheproofTest
 
 TEST_P(AesGcmSivBoringSslWycheproofTest, Decrypt) {
   internal::WycheproofTestVector test_vector = GetParam();
-  util::SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = util::SecretDataFromStringView(test_vector.key);
   absl::StatusOr<std::unique_ptr<Aead>> cipher = AesGcmSivBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());
   std::string ciphertext =

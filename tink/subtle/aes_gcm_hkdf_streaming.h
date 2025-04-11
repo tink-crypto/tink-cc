@@ -36,7 +36,7 @@ namespace subtle {
 class AesGcmHkdfStreaming : public NonceBasedStreamingAead {
  public:
   struct Params {
-    util::SecretData ikm;
+    SecretData ikm;
     HashType hkdf_hash;
     int derived_key_size;
     int ciphertext_segment_size;
@@ -64,7 +64,7 @@ class AesGcmHkdfStreaming : public NonceBasedStreamingAead {
         ciphertext_segment_size_(params.ciphertext_segment_size),
         ciphertext_offset_(params.ciphertext_offset) {}
 
-  const util::SecretData ikm_;
+  const SecretData ikm_;
   const HashType hkdf_hash_;
   const int derived_key_size_;
   const int ciphertext_segment_size_;

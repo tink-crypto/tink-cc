@@ -140,7 +140,7 @@ absl::Status AesGcmHkdfStreamSegmentDecrypter::Init(
                nonce_prefix_.begin());
 
   // Derive symmetric key.
-  absl::StatusOr<util::SecretData> key = Hkdf::ComputeHkdf(
+  absl::StatusOr<SecretData> key = Hkdf::ComputeHkdf(
       hkdf_hash_, ikm_,
       absl::string_view(reinterpret_cast<const char*>(salt_.data()),
                         derived_key_size_),

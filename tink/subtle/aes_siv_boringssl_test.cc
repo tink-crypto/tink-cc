@@ -64,7 +64,7 @@ TEST(AesSivBoringSslTest, testEncryptDecrypt) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
@@ -83,7 +83,7 @@ TEST(AesSivBoringSslTest, testNullPtrStringView) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
@@ -123,7 +123,7 @@ TEST(AesSivBoringSslTest, testEncryptDecryptKeySizes) {
       "abc900bba11400187984719827431246bbab1231eb4145215ff7141436616beb"
       "9817298148712fed3aab61000ff123313e");
   for (int keysize = 0; keysize < keymaterial.size(); ++keysize) {
-    util::SecretData key = util::SecretDataFromStringView(
+    SecretData key = util::SecretDataFromStringView(
         absl::string_view(keymaterial).substr(0, keysize));
     auto cipher = AesSivBoringSsl::New(key);
     if (keysize == 64) {
@@ -139,7 +139,7 @@ TEST(AesSivBoringSslTest, testEncryptDecryptMessageSize) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
@@ -169,7 +169,7 @@ TEST(AesSivBoringSslTest, testEncryptDecryptAssociatedDataSize) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
@@ -190,7 +190,7 @@ TEST(AesSivBoringSslTest, testDecryptModification) {
   if (IsFipsModeEnabled()) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
-  util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
       "00112233445566778899aabbccddeefff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff"));
   auto res = AesSivBoringSsl::New(key);
@@ -233,7 +233,7 @@ void WycheproofTest(const google::protobuf::Struct& parsed_input,
          test_group.struct_value().fields().at("tests").list_value().values()) {
       auto test_fields = test.struct_value().fields();
       std::string comment = test_fields.at("comment").string_value();
-      util::SecretData key = util::SecretDataFromStringView(
+      SecretData key = util::SecretDataFromStringView(
           GetBytesFromHexValue(test_fields.at("key")));
       std::string msg = GetBytesFromHexValue(test_fields.at("msg"));
       std::string ct = GetBytesFromHexValue(test_fields.at("ct"));
@@ -289,9 +289,9 @@ TEST(AesSivBoringSslTest, TestFipsOnly) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
-  util::SecretData key128 = util::SecretDataFromStringView(
+  SecretData key128 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  util::SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
 
   EXPECT_THAT(subtle::AesSivBoringSsl::New(key128).status(),

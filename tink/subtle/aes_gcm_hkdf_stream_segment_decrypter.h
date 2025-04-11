@@ -62,7 +62,7 @@ class AesGcmHkdfStreamSegmentDecrypter : public StreamSegmentDecrypter {
  public:
   // All sizes are in bytes.
   struct Params {
-    util::SecretData ikm;
+    SecretData ikm;
     HashType hkdf_hash;
     int derived_key_size;
     int ciphertext_offset;
@@ -97,7 +97,7 @@ class AesGcmHkdfStreamSegmentDecrypter : public StreamSegmentDecrypter {
 
   // Parameters set upon decrypter creation.
   // All sizes are in bytes.
-  const util::SecretData ikm_;
+  const SecretData ikm_;
   const HashType hkdf_hash_;
   const int derived_key_size_;
   const int ciphertext_offset_;

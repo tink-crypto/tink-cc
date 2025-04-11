@@ -135,7 +135,7 @@ TEST_F(HkdfTest, ComputeEciesHkdfSecretData) {
   for (const TestVector& test : test_vector) {
     std::string ikm = test::HexDecodeOrDie(test.ikm_hex);
     std::string kem_bytes = ikm.substr(0, ikm.size() / 2);
-    util::SecretData shared_secret = util::SecretDataFromStringView(
+    SecretData shared_secret = util::SecretDataFromStringView(
         absl::string_view(ikm).substr(ikm.size() / 2));
     auto hkdf_or = Hkdf::ComputeEciesHkdfSymmetricKey(
         test.hash_type, kem_bytes, shared_secret,

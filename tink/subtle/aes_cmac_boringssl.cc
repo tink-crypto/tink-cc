@@ -58,7 +58,7 @@ namespace {
 
 // Computes the CMAC of `data` using `key` and writes the result to
 // `tag_ptr[0..kMaxTagSize-1]`.
-bool ComputeMacInternal(const util::SecretData& key, uint8_t* tag_ptr,
+bool ComputeMacInternal(const SecretData& key, uint8_t* tag_ptr,
                         absl::string_view data) {
   internal::SslUniquePtr<CMAC_CTX> context(CMAC_CTX_new());
   absl::StatusOr<const EVP_CIPHER*> cipher =
@@ -82,7 +82,7 @@ bool ComputeMacInternal(const util::SecretData& key, uint8_t* tag_ptr,
 }  // namespace
 
 // static
-absl::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(util::SecretData key,
+absl::StatusOr<std::unique_ptr<Mac>> AesCmacBoringSsl::New(SecretData key,
                                                            uint32_t tag_size) {
   auto status = internal::CheckFipsCompatibility<AesCmacBoringSsl>();
   if (!status.ok()) return status;

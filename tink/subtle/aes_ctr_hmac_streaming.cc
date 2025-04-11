@@ -64,17 +64,17 @@ static std::string NonceForSegment(absl::string_view nonce_prefix,
       std::string(4, '\x00'));
 }
 
-static absl::Status DeriveKeys(const util::SecretData& ikm, HashType hkdf_algo,
+static absl::Status DeriveKeys(const SecretData& ikm, HashType hkdf_algo,
                                absl::string_view salt,
                                absl::string_view associated_data, int key_size,
-                               util::SecretData* key_value,
-                               util::SecretData* hmac_key_value) {
+                               SecretData* key_value,
+                               SecretData* hmac_key_value) {
   int derived_key_material_size =
       key_size + AesCtrHmacStreaming::kHmacKeySizeInBytes;
   auto hkdf_result = Hkdf::ComputeHkdf(hkdf_algo, ikm, salt, associated_data,
                                        derived_key_material_size);
   if (!hkdf_result.ok()) return hkdf_result.status();
-  util::SecretData key_material = std::move(hkdf_result.value());
+  SecretData key_material = std::move(hkdf_result.value());
   absl::string_view key_material_view =
       util::SecretDataAsStringView(key_material);
   *hmac_key_value =
@@ -173,8 +173,8 @@ AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
       Random::GetRandomBytes(AesCtrHmacStreaming::kNoncePrefixSizeInBytes);
   std::string header = MakeHeader(salt, nonce_prefix);
 
-  util::SecretData key_value;
-  util::SecretData hmac_key_value;
+  SecretData key_value;
+  SecretData hmac_key_value;
   status = DeriveKeys(params.ikm, params.hkdf_algo, salt, associated_data,
                       params.key_size, &key_value, &hmac_key_value);
   if (!status.ok()) return status;
@@ -198,8 +198,8 @@ AesCtrHmacStreamSegmentEncrypter::New(const AesCtrHmacStreaming::Params& params,
 
 namespace {
 
-absl::Status EncryptSensitive(const util::SecretData& key,
-                              const EVP_CIPHER& cipher, absl::string_view nonce,
+absl::Status EncryptSensitive(const SecretData& key, const EVP_CIPHER& cipher,
+                              absl::string_view nonce,
                               absl::string_view plaintext,
                               absl::Span<char> ciphertext) {
   internal::SslUniquePtr<EVP_CIPHER_CTX> ctx(EVP_CIPHER_CTX_new());
@@ -230,7 +230,7 @@ absl::Status EncryptSensitive(const util::SecretData& key,
   return absl::OkStatus();
 }
 
-absl::Status Encrypt(const util::SecretData& key, const EVP_CIPHER& cipher,
+absl::Status Encrypt(const SecretData& key, const EVP_CIPHER& cipher,
                      absl::string_view nonce, absl::string_view plaintext,
                      absl::Span<char> ciphertext) {
   // The ciphertext will be fine to leak. This assumes that BoringSSL does not
@@ -340,7 +340,7 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::Init(
       std::string(reinterpret_cast<const char*>(header.data() + 1 + key_size_),
                   AesCtrHmacStreaming::kNoncePrefixSizeInBytes);
 
-  util::SecretData hmac_key_value;
+  SecretData hmac_key_value;
   auto status = DeriveKeys(ikm_, hkdf_algo_, salt, associated_data_, key_size_,
                            &key_value_, &hmac_key_value);
   if (!status.ok()) return status;
@@ -364,8 +364,8 @@ absl::Status AesCtrHmacStreamSegmentDecrypter::Init(
 
 namespace {
 
-absl::Status DecryptSensitive(const util::SecretData& key,
-                              const EVP_CIPHER& cipher, absl::string_view nonce,
+absl::Status DecryptSensitive(const SecretData& key, const EVP_CIPHER& cipher,
+                              absl::string_view nonce,
                               absl::string_view ciphertext,
                               absl::Span<char> plaintext) {
   // Decrypt.

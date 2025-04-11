@@ -91,7 +91,7 @@ void BigEndianStore64(uint64_t val, uint8_t dst[8]) {
 }
 
 absl::StatusOr<util::SecretUniquePtr<AES_KEY>> InitAesKey(
-    const util::SecretData& key) {
+    const SecretData& key) {
   auto aeskey = util::MakeSecretUniquePtr<AES_KEY>();
   int status = AES_set_encrypt_key(key.data(), key.size() * 8, aeskey.get());
   // status != 0 happens if key_value is invalid.
@@ -139,21 +139,21 @@ bool AesEaxBoringSsl::IsValidNonceSize(size_t nonce_size_in_bytes) {
   return nonce_size_in_bytes == 12 || nonce_size_in_bytes == 16;
 }
 
-util::SecretData AesEaxBoringSsl::ComputeB() const {
+SecretData AesEaxBoringSsl::ComputeB() const {
   internal::SecretBuffer block(kBlockSize, 0);
   EncryptBlock(&block);
   MultiplyByX(block.data(), block.data());
   return util::internal::AsSecretData(std::move(block));
 }
 
-util::SecretData AesEaxBoringSsl::ComputeP() const {
+SecretData AesEaxBoringSsl::ComputeP() const {
   internal::SecretBuffer rv(kBlockSize, 0);
   MultiplyByX(B_.data(), rv.data());
   return util::internal::AsSecretData(std::move(rv));
 }
 
 absl::StatusOr<std::unique_ptr<Aead>> AesEaxBoringSsl::New(
-    const util::SecretData& key, size_t nonce_size_in_bytes) {
+    const SecretData& key, size_t nonce_size_in_bytes) {
   auto status = internal::CheckFipsCompatibility<AesEaxBoringSsl>();
   if (!status.ok()) return status;
 

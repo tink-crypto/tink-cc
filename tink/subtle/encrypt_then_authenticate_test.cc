@@ -91,9 +91,11 @@ constexpr TestVector test_vectors[] = {
      HashType::SHA512, 16, 32},
 };
 
-absl::StatusOr<std::unique_ptr<Aead>> createAead2(
-    util::SecretData encryption_key, int iv_size, util::SecretData mac_key,
-    uint8_t tag_size, HashType hash_type) {
+absl::StatusOr<std::unique_ptr<Aead>> createAead2(SecretData encryption_key,
+                                                  int iv_size,
+                                                  SecretData mac_key,
+                                                  uint8_t tag_size,
+                                                  HashType hash_type) {
   auto ind_cipher_res =
       AesCtrBoringSsl::New(std::move(encryption_key), iv_size);
   if (!ind_cipher_res.ok()) {
@@ -116,18 +118,17 @@ absl::StatusOr<std::unique_ptr<Aead>> createAead(int encryption_key_size,
                                                  int iv_size, int mac_key_size,
                                                  int tag_size,
                                                  HashType hash_type) {
-  util::SecretData encryption_key =
-      Random::GetRandomKeyBytes(encryption_key_size);
-  util::SecretData mac_key = Random::GetRandomKeyBytes(mac_key_size);
+  SecretData encryption_key = Random::GetRandomKeyBytes(encryption_key_size);
+  SecretData mac_key = Random::GetRandomKeyBytes(mac_key_size);
   return createAead2(std::move(encryption_key), iv_size, std::move(mac_key),
                      tag_size, hash_type);
 }
 
 TEST(AesGcmBoringSslTest, testRfcVectors) {
   for (const TestVector& test : test_vectors) {
-    util::SecretData mac_key =
+    SecretData mac_key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(test.mac_key));
-    util::SecretData enc_key =
+    SecretData enc_key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(test.enc_key));
     std::string ct = test::HexDecodeOrDie(test.ciphertext);
     std::string associated_data = test::HexDecodeOrDie(test.associated_data);

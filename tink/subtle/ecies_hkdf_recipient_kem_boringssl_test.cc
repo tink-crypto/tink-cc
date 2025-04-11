@@ -211,7 +211,7 @@ TEST_F(EciesHkdfNistPCurveRecipientKemBoringSslTest, TestFipsOnly) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
-  util::SecretData private_key = util::SecretDataFromStringView(
+  SecretData private_key = util::SecretDataFromStringView(
       test::HexDecodeOrDie(kNistP256PrivateKeyHex));
   EXPECT_THAT(EciesHkdfRecipientKemBoringSsl::New(EllipticCurveType::NIST_P256,
                                                   private_key)
@@ -223,7 +223,7 @@ TEST_F(EciesHkdfX25519RecipientKemBoringSslTest, TestFipsOnly) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
-  util::SecretData private_key = util::SecretDataFromStringView(
+  SecretData private_key = util::SecretDataFromStringView(
       test::HexDecodeOrDie(kX25519PrivateKeyHex));
   EXPECT_THAT(EciesHkdfX25519RecipientKemBoringSsl::New(
                   EllipticCurveType::CURVE25519, private_key)

@@ -46,7 +46,7 @@ namespace subtle {
 using ::crypto::tink::internal::ScopedAssumeRegionCoreDumpSafe;
 
 absl::StatusOr<std::unique_ptr<IndCpaCipher>> AesCtrBoringSsl::New(
-    util::SecretData key, int iv_size) {
+    SecretData key, int iv_size) {
   auto status = internal::CheckFipsCompatibility<AesCtrBoringSsl>();
   if (!status.ok()) return status;
 

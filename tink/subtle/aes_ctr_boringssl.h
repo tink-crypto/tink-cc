@@ -34,7 +34,7 @@ namespace subtle {
 
 class AesCtrBoringSsl : public IndCpaCipher {
  public:
-  static absl::StatusOr<std::unique_ptr<IndCpaCipher>> New(util::SecretData key,
+  static absl::StatusOr<std::unique_ptr<IndCpaCipher>> New(SecretData key,
                                                            int iv_size);
 
   absl::StatusOr<std::string> Encrypt(
@@ -50,10 +50,10 @@ class AesCtrBoringSsl : public IndCpaCipher {
   static constexpr int kMinIvSizeInBytes = 12;
   static constexpr int kBlockSize = 16;
 
-  AesCtrBoringSsl(util::SecretData key, int iv_size, const EVP_CIPHER* cipher)
+  AesCtrBoringSsl(SecretData key, int iv_size, const EVP_CIPHER* cipher)
       : key_(std::move(key)), iv_size_(iv_size), cipher_(cipher) {}
 
-  const util::SecretData key_;
+  const SecretData key_;
   const int iv_size_;
   // cipher_ is a singleton owned by BoringSsl.
   const EVP_CIPHER *cipher_;

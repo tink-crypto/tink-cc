@@ -55,7 +55,7 @@ class HmacBoringSslTest : public ::testing::Test {
   bool HmacVerifyHex(HashType hash, uint32_t tag_size,
                      const std::string &key_hex, const std::string &tag_hex,
                      const std::string &data_hex) {
-    util::SecretData key =
+    SecretData key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(key_hex));
     std::string tag = test::HexDecodeOrDie(tag_hex);
     std::string data = test::HexDecodeOrDie(data_hex);
@@ -73,7 +73,7 @@ TEST_F(HmacBoringSslTest, testBasic) {
         << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
   }
 
-  util::SecretData key = util::SecretDataFromStringView(
+  SecretData key = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   size_t tag_size = 16;
   auto hmac_result = HmacBoringSsl::New(HashType::SHA1, tag_size, key);
@@ -109,7 +109,7 @@ TEST_F(HmacBoringSslTest, testModification) {
         << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
   }
 
-  util::SecretData key = util::SecretDataFromStringView(
+  SecretData key = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   auto hmac_result = HmacBoringSsl::New(HashType::SHA1, 16, key);
   EXPECT_TRUE(hmac_result.ok()) << hmac_result.status();
@@ -134,7 +134,7 @@ TEST_F(HmacBoringSslTest, testTruncation) {
         << "Test should not run in FIPS mode when BoringCrypto is unavailable.";
   }
 
-  util::SecretData key = util::SecretDataFromStringView(
+  SecretData key = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   auto hmac_result = HmacBoringSsl::New(HashType::SHA1, 20, key);
   EXPECT_TRUE(hmac_result.ok()) << hmac_result.status();
@@ -160,7 +160,7 @@ TEST_F(HmacBoringSslTest, testInvalidKeySizes) {
   size_t tag_size = 16;
 
   for (int keysize = 0; keysize < 65; keysize++) {
-    util::SecretData key(keysize, 'x');
+    SecretData key(keysize, 'x');
     auto hmac_result = HmacBoringSsl::New(HashType::SHA1, tag_size, key);
     if (keysize >= 16) {
       EXPECT_TRUE(hmac_result.ok());
@@ -176,9 +176,9 @@ TEST_F(HmacBoringSslTest, TestFipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::SecretData key128 = util::SecretDataFromStringView(
+  SecretData key128 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  util::SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key256 = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "000102030405060708090a0b0c0d0e0f000102030405060708090a0b0c0d0e0f"));
 
   EXPECT_THAT(subtle::HmacBoringSsl::New(HashType::SHA1, 16, key128).status(),

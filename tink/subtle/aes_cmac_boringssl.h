@@ -35,7 +35,7 @@ namespace subtle {
 
 class AesCmacBoringSsl : public Mac {
  public:
-  static absl::StatusOr<std::unique_ptr<Mac>> New(util::SecretData key,
+  static absl::StatusOr<std::unique_ptr<Mac>> New(SecretData key,
                                                   uint32_t tag_size);
 
   // Computes and returns the CMAC for 'data'.
@@ -50,10 +50,10 @@ class AesCmacBoringSsl : public Mac {
       crypto::tink::internal::FipsCompatibility::kNotFips;
 
  private:
-  AesCmacBoringSsl(util::SecretData key, uint32_t tag_size)
+  AesCmacBoringSsl(SecretData key, uint32_t tag_size)
       : key_(std::move(key)), tag_size_(tag_size) {}
 
-  const util::SecretData key_;
+  const SecretData key_;
   const uint32_t tag_size_;
 };
 

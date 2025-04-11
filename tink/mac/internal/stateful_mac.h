@@ -47,7 +47,7 @@ class StatefulMac {
 
   virtual absl::Status Update(absl::string_view data) = 0;
 
-  virtual absl::StatusOr<util::SecretData> FinalizeAsSecretData() = 0;
+  virtual absl::StatusOr<SecretData> FinalizeAsSecretData() = 0;
 };
 
 class StatefulMacFactory {

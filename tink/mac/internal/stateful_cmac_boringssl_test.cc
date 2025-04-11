@@ -65,8 +65,7 @@ using ::testing::TestWithParam;
 using ::testing::ValuesIn;
 
 TEST(StatefulCmacBoringSslTest, CmacEmptyInputRegularTagSize) {
-  util::SecretData key =
-      util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
+  SecretData key = util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kTagSize, key);
   ASSERT_THAT(cmac, IsOk());
@@ -77,8 +76,7 @@ TEST(StatefulCmacBoringSslTest, CmacEmptyInputRegularTagSize) {
 }
 
 TEST(StatefulCmacBoringSslTest, CmacEmptyInputSmallTag) {
-  util::SecretData key =
-      util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
+  SecretData key = util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kSmallTagSize, key);
   ASSERT_THAT(cmac, IsOk());
@@ -89,8 +87,7 @@ TEST(StatefulCmacBoringSslTest, CmacEmptyInputSmallTag) {
 }
 
 TEST(StatefulCmacBoringSslTest, CmacSomeDataRegularTagSize) {
-  util::SecretData key =
-      util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
+  SecretData key = util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kTagSize, key);
   ASSERT_THAT(cmac, IsOk());
@@ -102,8 +99,7 @@ TEST(StatefulCmacBoringSslTest, CmacSomeDataRegularTagSize) {
 }
 
 TEST(StatefulCmacBoringSslTest, CmacSomeDataSmallTag) {
-  util::SecretData key =
-      util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
+  SecretData key = util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kSmallTagSize, key);
   ASSERT_THAT(cmac, IsOk());
@@ -116,8 +112,7 @@ TEST(StatefulCmacBoringSslTest, CmacSomeDataSmallTag) {
 
 TEST(StatefulCmacBoringSslTest,
      CmacMultipleUpdatesSameAsOneForWholeInputRegularTagSize) {
-  util::SecretData key =
-      util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
+  SecretData key = util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kTagSize, key);
   ASSERT_THAT(cmac, IsOk());
@@ -132,8 +127,7 @@ TEST(StatefulCmacBoringSslTest,
 
 TEST(StatefulCmacBoringSslTest,
      CmacMultipleUpdatesSameAsOneForWholeInputSmallTagSize) {
-  util::SecretData key =
-      util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
+  SecretData key = util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(kSmallTagSize, key);
   ASSERT_THAT(cmac, IsOk());
@@ -206,8 +200,7 @@ using StatefulCmacBoringSslWycheproofTest =
 TEST_P(StatefulCmacBoringSslWycheproofTest, WycheproofTest) {
   StatefulCmacTestVector test_vector = GetParam();
 
-  util::SecretData key =
-      util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
+  SecretData key = util::SecretDataFromStringView(HexDecodeOrDie(kKeyHex));
   absl::StatusOr<std::unique_ptr<StatefulMac>> cmac =
       StatefulCmacBoringSsl::New(
           test_vector.tag.length(),

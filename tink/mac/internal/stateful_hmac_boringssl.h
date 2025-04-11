@@ -42,9 +42,9 @@ class StatefulHmacBoringSsl : public StatefulMac {
  public:
   static absl::StatusOr<std::unique_ptr<StatefulMac>> New(
       subtle::HashType hash_type, uint32_t tag_size,
-      const util::SecretData& key_value);
+      const SecretData& key_value);
   absl::Status Update(absl::string_view data) override;
-  absl::StatusOr<util::SecretData> FinalizeAsSecretData() override;
+  absl::StatusOr<SecretData> FinalizeAsSecretData() override;
 
  private:
   // Minimum HMAC key size in bytes.
@@ -60,13 +60,13 @@ class StatefulHmacBoringSsl : public StatefulMac {
 class StatefulHmacBoringSslFactory : public StatefulMacFactory {
  public:
   StatefulHmacBoringSslFactory(subtle::HashType hash_type, uint32_t tag_size,
-                               const util::SecretData& key_value);
+                               const SecretData& key_value);
   absl::StatusOr<std::unique_ptr<StatefulMac>> Create() const override;
 
  private:
   const subtle::HashType hash_type_;
   const uint32_t tag_size_;
-  const util::SecretData key_value_;
+  const SecretData key_value_;
 };
 
 }  // namespace internal

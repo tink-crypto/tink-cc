@@ -119,8 +119,7 @@ absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedCmac(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid key: missing parameters.");
   }
-  util::SecretData secret_key_data =
-      util::SecretDataFromStringView(key.key_value());
+  SecretData secret_key_data = util::SecretDataFromStringView(key.key_value());
   auto stateful_mac_factory = absl::make_unique<StatefulCmacBoringSslFactory>(
       key.params().tag_size(), secret_key_data);
   return std::unique_ptr<ChunkedMac>(
@@ -134,8 +133,7 @@ absl::StatusOr<std::unique_ptr<ChunkedMac>> NewChunkedHmac(
                         "Invalid key: missing paramaters.");
   }
   subtle::HashType hash_type = util::Enums::ProtoToSubtle(key.params().hash());
-  util::SecretData secret_key_data =
-      util::SecretDataFromStringView(key.key_value());
+  SecretData secret_key_data = util::SecretDataFromStringView(key.key_value());
   auto stateful_mac_factory =
       absl::make_unique<internal::StatefulHmacBoringSslFactory>(
           hash_type, key.params().tag_size(), secret_key_data);

@@ -44,7 +44,7 @@ using ::crypto::tink::util::SecretData;
 
 absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
     subtle::HashType hash_type, uint32_t tag_size,
-    const util::SecretData& key_value) {
+    const SecretData& key_value) {
   absl::StatusOr<const EVP_MD*> md = internal::EvpHashFromHashType(hash_type);
   if (!md.ok()) {
     return md.status();
@@ -102,8 +102,7 @@ absl::StatusOr<SecretData> StatefulHmacBoringSsl::FinalizeAsSecretData() {
 }
 
 StatefulHmacBoringSslFactory::StatefulHmacBoringSslFactory(
-    subtle::HashType hash_type, uint32_t tag_size,
-    const util::SecretData& key_value)
+    subtle::HashType hash_type, uint32_t tag_size, const SecretData& key_value)
     : hash_type_(hash_type), tag_size_(tag_size), key_value_(key_value) {}
 
 absl::StatusOr<std::unique_ptr<StatefulMac>>

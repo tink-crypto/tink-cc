@@ -43,7 +43,7 @@ namespace internal {
 using ::crypto::tink::util::SecretData;
 
 absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
-    uint32_t tag_size, const util::SecretData& key_value) {
+    uint32_t tag_size, const SecretData& key_value) {
   absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesCbcCipherForKeySize(key_value.size());
   if (!cipher.ok()) {
@@ -100,7 +100,7 @@ absl::StatusOr<SecretData> StatefulCmacBoringSsl::FinalizeAsSecretData() {
 }
 
 StatefulCmacBoringSslFactory::StatefulCmacBoringSslFactory(
-    uint32_t tag_size, const util::SecretData& key_value)
+    uint32_t tag_size, const SecretData& key_value)
     : tag_size_(tag_size), key_value_(key_value) {}
 
 absl::StatusOr<std::unique_ptr<StatefulMac>>

@@ -102,7 +102,7 @@ ComputeMacOutputStream::CloseStreamAndComputeResult() {
   WriteIntoMac();
   status_ =
       absl::Status(absl::StatusCode::kFailedPrecondition, "Stream Closed");
-  absl::StatusOr<util::SecretData> result = mac_->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> result = mac_->FinalizeAsSecretData();
   if (!result.ok()) {
     return result.status();
   }
@@ -177,7 +177,7 @@ absl::Status VerifyMacOutputStream::CloseStreamAndComputeResult() {
   WriteIntoMac();
   status_ =
       absl::Status(absl::StatusCode::kFailedPrecondition, "Stream Closed");
-  absl::StatusOr<util::SecretData> mac_actual = mac_->FinalizeAsSecretData();
+  absl::StatusOr<SecretData> mac_actual = mac_->FinalizeAsSecretData();
   if (!mac_actual.ok()) {
     return mac_actual.status();
   }

@@ -63,7 +63,7 @@ TEST(XChacha20Poly1305BoringSslTest, EncryptDecrypt) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   if (!internal::IsBoringSsl()) {
     EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key).status(),
@@ -112,7 +112,7 @@ TEST(XChacha20Poly1305BoringSslTest, SimpleDecrypt) {
   std::string tag = test::HexDecodeOrDie("c0875924c1c7987947deafd8780acf49");
   std::string associated_data =
       test::HexDecodeOrDie("50515253c0c1c2c3c4c5c6c7");
-  util::SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
+  SecretData key = util::SecretDataFromStringView(test::HexDecodeOrDie(
       "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"));
 
   absl::StatusOr<std::unique_ptr<Aead>> aead =
@@ -133,7 +133,7 @@ TEST(XChacha20Poly1305BoringSslTest, DecryptFailsIfCiphertextTooSmall) {
     GTEST_SKIP() << "Not supported in FIPS-only mode";
   }
 
-  util::SecretData key =
+  SecretData key =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       XChacha20Poly1305BoringSsl::New(key);
@@ -155,7 +155,7 @@ TEST(XChacha20Poly1305BoringSslTest, FailisOnFipsOnlyMode) {
     GTEST_SKIP() << "Only ran in in FIPS-only mode";
   }
 
-  util::SecretData key256 =
+  SecretData key256 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
 
   EXPECT_THAT(XChacha20Poly1305BoringSsl::New(key256).status(),
@@ -185,7 +185,7 @@ class XChacha20Poly1305BoringSslWycheproofTest
 
 TEST_P(XChacha20Poly1305BoringSslWycheproofTest, Decrypt) {
   internal::WycheproofTestVector test_vector = GetParam();
-  util::SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = util::SecretDataFromStringView(test_vector.key);
   absl::StatusOr<std::unique_ptr<Aead>> cipher =
       XChacha20Poly1305BoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());

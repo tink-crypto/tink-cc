@@ -81,8 +81,8 @@ class SubtleUtilBoringSSL {
 
   // Returns a string of size 'len' that holds BIGNUM 'bn'.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline absl::StatusOr<util::SecretData> BignumToSecretData(
-      const BIGNUM *bn, size_t len) {
+  static inline absl::StatusOr<SecretData> BignumToSecretData(const BIGNUM *bn,
+                                                              size_t len) {
     return internal::BignumToSecretData(bn, len);
   }
 
@@ -134,7 +134,7 @@ class SubtleUtilBoringSSL {
   // Returns a new EC key for the specified curve derived from a seed.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline absl::StatusOr<EcKey> GetNewEcKeyFromSeed(
-      EllipticCurveType curve_type, const util::SecretData &secret_seed) {
+      EllipticCurveType curve_type, const SecretData &secret_seed) {
     return internal::NewEcKey(curve_type, secret_seed);
   }
 
@@ -156,7 +156,7 @@ class SubtleUtilBoringSSL {
   // Returns a new ED25519 key generated from a 32-byte secret seed.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline std::unique_ptr<Ed25519Key> GetNewEd25519KeyFromSeed(
-      const util::SecretData &secret_seed) {
+      const SecretData &secret_seed) {
     absl::StatusOr<std::unique_ptr<internal::Ed25519Key>> key =
         internal::NewEd25519Key(secret_seed);
     if (!key.ok()) {
@@ -197,7 +197,7 @@ class SubtleUtilBoringSSL {
   // Returns the ECDH's shared secret based on our private key and peer's public
   // key. Returns error if the public key is not on private key's curve.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
-  static inline absl::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
+  static inline absl::StatusOr<SecretData> ComputeEcdhSharedSecret(
       EllipticCurveType curve, const BIGNUM *priv_key,
       const EC_POINT *pub_key) {
     return internal::ComputeEcdhSharedSecret(curve, priv_key, pub_key);

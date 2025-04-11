@@ -68,7 +68,7 @@ TEST(RandomTest, MultipleGeneratedSecretDataAreUnique) {
   constexpr int kNumRandomItems = 32;
   absl::flat_hash_set<std::string> random_keys;
   for (int i = 0; i < kNumRandomItems; i++) {
-    util::SecretData key = Random::GetRandomKeyBytes(16);
+    SecretData key = Random::GetRandomKeyBytes(16);
     EXPECT_THAT(key, SizeIs(16));
     // Convert and store as string to avoid SecretData equality and hashing.
     random_keys.insert(std::string(util::SecretDataAsStringView(key)));
@@ -80,7 +80,7 @@ TEST(RandomTest, KeyBytesRandomGenerationIsUniform) {
   constexpr int kKeyLengthInBytes = 32;
   std::vector<int> bit_counts(8 * kKeyLengthInBytes);
   for (int i = 0; i < kTests; ++i) {
-    util::SecretData random = Random::GetRandomKeyBytes(kKeyLengthInBytes);
+    SecretData random = Random::GetRandomKeyBytes(kKeyLengthInBytes);
     for (int bit = 0; bit < 8 * kKeyLengthInBytes; ++bit) {
       if (random[bit / 8] & (1 << (bit % 8))) {
         ++bit_counts[bit];

@@ -40,7 +40,7 @@ class Random {
   static uint16_t GetRandomUInt16();
   static uint8_t GetRandomUInt8();
   // Returns length bytes of random data stored in specialized key container.
-  static util::SecretData GetRandomKeyBytes(size_t length);
+  static SecretData GetRandomKeyBytes(size_t length);
 };
 
 }  // namespace subtle

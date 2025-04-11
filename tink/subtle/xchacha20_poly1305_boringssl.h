@@ -39,7 +39,7 @@ class XChacha20Poly1305BoringSsl : public Aead {
   // Currently supported key size is 256 bits.
   // Currently supported nonce size is 24 bytes.
   // The tag size is fixed to 16 bytes.
-  static absl::StatusOr<std::unique_ptr<Aead>> New(util::SecretData key);
+  static absl::StatusOr<std::unique_ptr<Aead>> New(SecretData key);
 
   absl::StatusOr<std::string> Encrypt(
       absl::string_view plaintext,

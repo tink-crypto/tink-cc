@@ -47,7 +47,7 @@ constexpr int kNonceSizeInBytes = 24;
 constexpr int kTagSizeInBytes = 16;
 
 absl::StatusOr<std::unique_ptr<Aead>> XChacha20Poly1305BoringSsl::New(
-    util::SecretData key) {
+    SecretData key) {
   auto status = internal::CheckFipsCompatibility<XChacha20Poly1305BoringSsl>();
   if (!status.ok()) {
     return status;

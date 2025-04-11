@@ -81,7 +81,7 @@ uint32_t Random::GetRandomUInt32() { return GetRandomUint<uint32_t>(); }
 uint16_t Random::GetRandomUInt16() { return GetRandomUint<uint16_t>(); }
 uint8_t Random::GetRandomUInt8() { return GetRandomUint<uint8_t>(); }
 
-util::SecretData Random::GetRandomKeyBytes(size_t length) {
+SecretData Random::GetRandomKeyBytes(size_t length) {
   internal::SecretBuffer buf(length, 0);
   GetRandomBytes(
       absl::MakeSpan(reinterpret_cast<char *>(buf.data()), buf.size()))

@@ -54,7 +54,7 @@ std::string P256PointAsString() {
 }
 
 RestrictedData P256SecretValue() {
-  util::SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
+  SecretData secret_data = SecretDataFromStringView(HexDecodeOrDie(
       "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721"));
   return RestrictedData(secret_data, InsecureSecretKeyAccess::Get());
 }

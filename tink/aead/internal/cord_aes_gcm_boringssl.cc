@@ -187,7 +187,7 @@ bool DoCryptAndConsume(absl::Cord& input, size_t bytes_to_crypt,
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<CordAead>> CordAesGcmBoringSsl::New(
-    const util::SecretData& key_value) {
+    const SecretData& key_value) {
   absl::StatusOr<const EVP_CIPHER*> cipher =
       internal::GetAesGcmCipherForKeySize(key_value.size());
   if (!cipher.ok()) {

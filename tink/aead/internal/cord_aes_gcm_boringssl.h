@@ -34,7 +34,7 @@ namespace internal {
 class CordAesGcmBoringSsl : public CordAead {
  public:
   static absl::StatusOr<std::unique_ptr<CordAead>> New(
-      const util::SecretData& key_value);
+      const SecretData& key_value);
 
   absl::StatusOr<absl::Cord> Encrypt(absl::Cord plaintext,
                                      absl::Cord associated_data) const override;
@@ -45,13 +45,13 @@ class CordAesGcmBoringSsl : public CordAead {
  private:
   explicit CordAesGcmBoringSsl(
       internal::SslUniquePtr<EVP_CIPHER_CTX> partial_context,
-      const util::SecretData& key)
+      const SecretData& key)
       : partial_context_(std::move(partial_context)), key_(key) {}
 
   // Partially-initialized EVP_CIPHER_CTX context that is copied for every
   // Encrypt/Decrypt operation.
   internal::SslUniquePtr<EVP_CIPHER_CTX> partial_context_;
-  util::SecretData key_;
+  SecretData key_;
 };
 
 }  // namespace internal

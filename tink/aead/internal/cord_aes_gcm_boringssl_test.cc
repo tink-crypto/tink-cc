@@ -65,7 +65,7 @@ class CordAesGcmBoringSslTest : public Test {
     cipher_ = std::move(*res);
   }
 
-  util::SecretData key_;
+  SecretData key_;
   std::unique_ptr<CordAead> cipher_;
 };
 

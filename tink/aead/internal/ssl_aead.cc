@@ -87,7 +87,7 @@ absl::StatusOr<int64_t> UpdateCipher(EVP_CIPHER_CTX *context,
 
 class OpenSslOneShotAeadImpl : public SslOneShotAead {
  public:
-  explicit OpenSslOneShotAeadImpl(const util::SecretData &key,
+  explicit OpenSslOneShotAeadImpl(const SecretData &key,
                                   const EVP_CIPHER *cipher, size_t tag_size)
       : key_(key), cipher_(cipher), tag_size_(tag_size) {}
 
@@ -314,7 +314,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
     return std::move(context);
   }
 
-  const util::SecretData key_;
+  const SecretData key_;
   const EVP_CIPHER *cipher_;
   const size_t tag_size_;
 };
@@ -495,7 +495,7 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
 }  // namespace
 
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
-    const util::SecretData &key) {
+    const SecretData &key) {
 #ifdef OPENSSL_IS_BORINGSSL
   absl::StatusOr<const EVP_AEAD *> aead_cipher =
       GetAesGcmAeadForKeySize(key.size());
@@ -528,7 +528,7 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
 }
 
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
-    const util::SecretData &key) {
+    const SecretData &key) {
 #ifdef OPENSSL_IS_BORINGSSL
   absl::StatusOr<const EVP_AEAD *> aead_cipher =
       GetAesGcmSivAeadCipherForKeySize(key.size());
@@ -554,7 +554,7 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
 }
 
 absl::StatusOr<std::unique_ptr<SslOneShotAead>>
-CreateXchacha20Poly1305OneShotCrypter(const util::SecretData &key) {
+CreateXchacha20Poly1305OneShotCrypter(const SecretData &key) {
 #ifdef OPENSSL_IS_BORINGSSL
   if (key.size() != 32) {
     return absl::Status(

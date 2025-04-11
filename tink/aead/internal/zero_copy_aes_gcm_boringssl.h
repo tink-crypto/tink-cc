@@ -36,7 +36,7 @@ namespace internal {
 class ZeroCopyAesGcmBoringSsl : public ZeroCopyAead {
  public:
   static absl::StatusOr<std::unique_ptr<ZeroCopyAead>> New(
-      const util::SecretData &key);
+      const SecretData &key);
 
   int64_t MaxEncryptionSize(int64_t plaintext_size) const override;
 

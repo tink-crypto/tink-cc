@@ -63,7 +63,7 @@ struct XAesGcmKeyFormatStruct {
 struct XAesGcmKeyStruct {
   uint32_t version;
   XAesGcmParamsStruct params;
-  util::SecretData key_value;
+  SecretData key_value;
 };
 
 ProtoParser<XAesGcmParamsStruct> CreateParamsParser() {
@@ -245,7 +245,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-  absl::StatusOr<util::SecretData> serialized_key =
+  absl::StatusOr<SecretData> serialized_key =
       GetKeyParser().SerializeIntoSecretData(proto_key);
   if (!serialized_key.ok()) {
     return serialized_key.status();

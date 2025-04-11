@@ -81,7 +81,7 @@ struct SslOneShotAeadTestParams {
 
 // Returns a SslOneShotAead from `cipher_name` and `key`.
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
-    CipherType cipher, const util::SecretData& key) {
+    CipherType cipher, const SecretData& key) {
   switch (cipher) {
     case CipherType::kAesGcm: {
       return CreateAesGcmOneShotCrypter(key);
@@ -455,7 +455,7 @@ TEST(SslOneShotAeadTest, AesGcmTestInvalidKeySizes) {
   }
 
   for (int keysize = 0; keysize < 65; keysize++) {
-    util::SecretData key(keysize, 'x');
+    SecretData key(keysize, 'x');
     absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
         CreateAesGcmOneShotCrypter(key);
     if (keysize == 16 || keysize == 32) {
@@ -475,7 +475,7 @@ TEST(SslOneShotAeadTest, AesGcmSivTestInvalidKeySizes) {
   }
 
   for (int keysize = 0; keysize < 65; keysize++) {
-    util::SecretData key(keysize, 'x');
+    SecretData key(keysize, 'x');
     absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
         CreateAesGcmSivOneShotCrypter(key);
     if (keysize == 16 || keysize == 32) {
@@ -495,7 +495,7 @@ TEST(SslOneShotAeadTest, Xchacha20Poly1305TestInvalidKeySizes) {
   }
 
   for (int keysize = 0; keysize < 65; keysize++) {
-    util::SecretData key(keysize, 'x');
+    SecretData key(keysize, 'x');
     absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
         CreateXchacha20Poly1305OneShotCrypter(key);
     if (keysize == 32) {
@@ -526,9 +526,9 @@ TEST(SslOneShotAeadTest, AesGcmTestFipsOnly) {
                     "unavailable.";
   }
 
-  util::SecretData key_128 =
+  SecretData key_128 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(k128Key));
-  util::SecretData key_256 =
+  SecretData key_256 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key));
 
   EXPECT_THAT(CreateAesGcmOneShotCrypter(key_128), IsOk());
@@ -541,9 +541,9 @@ TEST(SslOneShotAeadTest, AesGcmTestTestFipsFailWithoutBoringCrypto) {
         << "Test assumes kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
-  util::SecretData key_128 =
+  SecretData key_128 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(k128Key));
-  util::SecretData key_256 =
+  SecretData key_256 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key));
 
   EXPECT_THAT(CreateAesGcmOneShotCrypter(key_128).status(),
@@ -557,9 +557,9 @@ TEST(AesGcmSivBoringSslTest, AesGcmTestSivTestFipsOnly) {
     GTEST_SKIP() << "Only supported in FIPS-only mode";
   }
 
-  util::SecretData key_128 =
+  SecretData key_128 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(k128Key));
-  util::SecretData key_256 =
+  SecretData key_256 =
       util::SecretDataFromStringView(test::HexDecodeOrDie(k256Key));
 
   EXPECT_THAT(CreateAesGcmSivOneShotCrypter(key_128).status(),
@@ -602,7 +602,7 @@ class SslOneShotAeadWycheproofTest
 TEST_P(SslOneShotAeadWycheproofTest, Encrypt) {
   SslOneShotAeadWycheproofTestParams params = GetParam();
   const WycheproofTestVector& test_vector = params.test_vector;
-  util::SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = util::SecretDataFromStringView(test_vector.key);
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CipherFromName(params.cipher, key);
   ASSERT_THAT(aead, IsOk());
@@ -637,7 +637,7 @@ TEST_P(SslOneShotAeadWycheproofTest, Encrypt) {
 TEST_P(SslOneShotAeadWycheproofTest, Decrypt) {
   SslOneShotAeadWycheproofTestParams params = GetParam();
   const WycheproofTestVector& test_vector = params.test_vector;
-  util::SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = util::SecretDataFromStringView(test_vector.key);
   absl::StatusOr<std::unique_ptr<SslOneShotAead>> aead =
       CipherFromName(params.cipher, key);
   ASSERT_THAT(aead, IsOk());

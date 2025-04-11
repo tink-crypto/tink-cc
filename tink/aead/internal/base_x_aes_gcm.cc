@@ -164,8 +164,7 @@ int BaseXAesGcm::min_ct_size() const {
   return salt_size_ + kAesGcmIvSize + kTagSize;
 }
 
-
-absl::StatusOr<util::SecretData> BaseXAesGcm::DerivePerMessageKey(
+absl::StatusOr<SecretData> BaseXAesGcm::DerivePerMessageKey(
     absl::string_view salt) const {
   return CallWithCoreDumpProtection(
       [&] { return DerivePerMessageKeyImpl(*cmac_ctx_, salt); });

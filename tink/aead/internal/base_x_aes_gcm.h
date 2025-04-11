@@ -47,8 +47,7 @@ class BaseXAesGcm {
 
   static constexpr int kMaxSaltSize = 12;
 
-  absl::StatusOr<crypto::tink::util::SecretData> DerivePerMessageKey(
-      absl::string_view salt) const;
+  absl::StatusOr<SecretData> DerivePerMessageKey(absl::string_view salt) const;
 
   int salt_size() const { return salt_size_; }
 

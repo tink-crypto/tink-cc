@@ -74,7 +74,7 @@ constexpr absl::string_view kEncodedCiphertext =
 class ZeroCopyAesGcmBoringSslTest : public testing::Test {
  protected:
   void SetUp() override {
-    util::SecretData key =
+    SecretData key =
         util::SecretDataFromStringView(test::HexDecodeOrDie(kKey128Hex));
     absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
         ZeroCopyAesGcmBoringSsl::New(key);
@@ -190,7 +190,7 @@ class ZeroCopyAesGcmBoringSslWycheproofTest
 
 TEST_P(ZeroCopyAesGcmBoringSslWycheproofTest, Decrypt) {
   WycheproofTestVector test_vector = GetParam();
-  util::SecretData key = util::SecretDataFromStringView(test_vector.key);
+  SecretData key = util::SecretDataFromStringView(test_vector.key);
   absl::StatusOr<std::unique_ptr<ZeroCopyAead>> cipher =
       ZeroCopyAesGcmBoringSsl::New(key);
   ASSERT_THAT(cipher, IsOk());

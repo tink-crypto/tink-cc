@@ -68,11 +68,11 @@ class SslOneShotAead {
 
 // Create one-shot crypters for the supported algorithms.
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmOneShotCrypter(
-    const util::SecretData &key);
+    const SecretData &key);
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CreateAesGcmSivOneShotCrypter(
-    const util::SecretData &key);
+    const SecretData &key);
 absl::StatusOr<std::unique_ptr<SslOneShotAead>>
-CreateXchacha20Poly1305OneShotCrypter(const util::SecretData &key);
+CreateXchacha20Poly1305OneShotCrypter(const SecretData &key);
 
 }  // namespace internal
 }  // namespace tink

@@ -44,7 +44,7 @@ constexpr int kIvSizeInBytes = 12;
 constexpr int kTagSizeInBytes = 16;
 
 absl::StatusOr<std::unique_ptr<ZeroCopyAead>> ZeroCopyAesGcmBoringSsl::New(
-    const util::SecretData &key) {
+    const SecretData &key) {
   absl::StatusOr<std::unique_ptr<internal::SslOneShotAead>> aead =
       internal::CreateAesGcmOneShotCrypter(key);
   if (!aead.ok()) {

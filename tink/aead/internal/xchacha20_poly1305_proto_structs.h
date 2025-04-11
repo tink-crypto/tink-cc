@@ -46,7 +46,7 @@ struct XChaCha20Poly1305KeyFormatStruct {
 
 struct XChaCha20Poly1305KeyStruct {
   uint32_t version = 0;
-  crypto::tink::util::SecretData key_value = {};
+  SecretData key_value = {};
 
   inline static const crypto::tink::internal::ProtoParser<
       XChaCha20Poly1305KeyStruct>&

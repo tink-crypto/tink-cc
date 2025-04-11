@@ -77,7 +77,7 @@ struct ChaCha20Poly1305KeyFormatStruct {
 
 struct ChaCha20Poly1305KeyStruct {
   uint32_t version;
-  util::SecretData key_value;
+  SecretData key_value;
 
   static const ProtoParser<ChaCha20Poly1305KeyStruct>& GetParser() {
     static const absl::NoDestructor<ProtoParser<ChaCha20Poly1305KeyStruct>>

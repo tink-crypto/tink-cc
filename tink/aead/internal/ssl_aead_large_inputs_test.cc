@@ -66,7 +66,7 @@ struct TestParams {
 
 // Returns a SslOneShotAead from `cipher_name` and `key`.
 absl::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
-    absl::string_view cipher, const util::SecretData& key) {
+    absl::string_view cipher, const SecretData& key) {
   if (cipher == "aes_gcm") {
     return CreateAesGcmOneShotCrypter(key);
   }

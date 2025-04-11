@@ -55,13 +55,13 @@ struct AesCtrHmacAeadKeyFormatStruct {
 struct AesCtrKeyStruct {
   uint32_t version = 0;
   AesCtrParamsStruct params = {};
-  crypto::tink::util::SecretData key_value = {};
+  SecretData key_value = {};
 };
 
 struct HmacKeyStruct {
   uint32_t version = 0;
   HmacParamsStruct params = {};
-  crypto::tink::util::SecretData key_value = {};
+  SecretData key_value = {};
 };
 
 struct AesCtrHmacAeadKeyStruct {

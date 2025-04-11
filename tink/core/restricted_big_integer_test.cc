@@ -83,7 +83,7 @@ TEST(RestrictedBigIntegerTest, CreateAndGetSecretPadded) {
 }
 
 TEST(RestrictedBigIntegerTest, CreateFromSecretData) {
-  const util::SecretData secret_bytes =
+  const SecretData secret_bytes =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHexBigInt));
   RestrictedBigInteger restricted_big_integer(secret_bytes,
                                               InsecureSecretKeyAccess::Get());
@@ -94,9 +94,9 @@ TEST(RestrictedBigIntegerTest, CreateFromSecretData) {
 }
 
 TEST(RestrictedBigIntegerTest, CreateFromPaddedSecretData) {
-  const util::SecretData secret_bytes =
+  const SecretData secret_bytes =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHexBigInt));
-  const util::SecretData padded_secret_bytes =
+  const SecretData padded_secret_bytes =
       util::SecretDataFromStringView(test::HexDecodeOrDie(kHexBigIntPadded));
   RestrictedBigInteger from_padded_big_integer(padded_secret_bytes,
                                                InsecureSecretKeyAccess::Get());

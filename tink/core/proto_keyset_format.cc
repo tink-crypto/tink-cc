@@ -68,7 +68,7 @@ absl::StatusOr<KeysetHandle> ParseKeysetFromProtoKeysetFormat(
   return KeysetHandle(std::move(keyset_proto), *std::move(entries));
 }
 
-absl::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
+absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
     const KeysetHandle& keyset_handle, SecretKeyAccessToken token) {
   const google::crypto::tink::Keyset& keyset =
       CleartextKeysetHandle::GetKeyset(keyset_handle);

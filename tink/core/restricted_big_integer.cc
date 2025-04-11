@@ -41,7 +41,7 @@ RestrictedBigInteger::RestrictedBigInteger(absl::string_view secret_big_integer,
   });
 }
 
-RestrictedBigInteger::RestrictedBigInteger(util::SecretData secret_big_integer,
+RestrictedBigInteger::RestrictedBigInteger(SecretData secret_big_integer,
                                            SecretKeyAccessToken token) {
   internal::CallWithCoreDumpProtection([&] {
     absl::string_view big_integer =

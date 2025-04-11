@@ -154,7 +154,7 @@ TEST_F(BinaryKeysetWriterTest, EncryptedKeysetOverhead) {
                                 KeyGenConfigGlobalRegistry());
   ASSERT_THAT(handle, IsOk());
 
-  absl::StatusOr<util::SecretData> serialized_keyset =
+  absl::StatusOr<SecretData> serialized_keyset =
       SerializeKeysetToProtoKeysetFormat(**handle,
                                          InsecureSecretKeyAccess::Get());
   ASSERT_THAT(serialized_keyset, IsOk());

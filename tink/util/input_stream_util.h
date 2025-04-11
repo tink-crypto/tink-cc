@@ -32,8 +32,8 @@ namespace tink {
 absl::StatusOr<std::string> ReadBytesFromStream(int num_bytes,
                                                 InputStream* input_stream);
 // A SecretData variant of ReadBytesFromStream
-absl::StatusOr<util::SecretData> ReadSecretBytesFromStream(
-    int num_bytes, InputStream* input_stream);
+absl::StatusOr<SecretData> ReadSecretBytesFromStream(int num_bytes,
+                                                     InputStream* input_stream);
 
 }  // namespace tink
 }  // namespace crypto

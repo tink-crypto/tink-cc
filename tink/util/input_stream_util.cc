@@ -68,7 +68,7 @@ absl::StatusOr<std::string> ReadBytesFromStream(int num_bytes,
   return ReadBytesFromStreamImpl<std::string>(num_bytes, input_stream);
 }
 
-absl::StatusOr<util::SecretData> ReadSecretBytesFromStream(
+absl::StatusOr<SecretData> ReadSecretBytesFromStream(
     int num_bytes, InputStream* input_stream) {
   absl::StatusOr<SecretBuffer> result =
       ReadBytesFromStreamImpl<SecretBuffer>(num_bytes, input_stream);

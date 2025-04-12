@@ -68,8 +68,7 @@ absl::StatusOr<FalconPrivateKey> FalconSignKeyManager::CreateKey(
 absl::StatusOr<std::unique_ptr<PublicKeySign>>
 FalconSignKeyManager::PublicKeySignFactory::Create(
     const FalconPrivateKey& private_key) const {
-  util::SecretData sk_data =
-      util::SecretDataFromStringView(private_key.key_value());
+  SecretData sk_data = util::SecretDataFromStringView(private_key.key_value());
 
   absl::StatusOr<FalconPrivateKeyPqclean> falcon_private_key =
       FalconPrivateKeyPqclean::NewPrivateKey(sk_data);

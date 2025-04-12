@@ -81,8 +81,7 @@ absl::StatusOr<DilithiumPrivateKey> DilithiumSignKeyManager::CreateKey(
 absl::StatusOr<std::unique_ptr<PublicKeySign>>
 DilithiumSignKeyManager::PublicKeySignFactory::Create(
     const DilithiumPrivateKey& private_key) const {
-  util::SecretData sk_data =
-      util::SecretDataFromStringView(private_key.key_value());
+  SecretData sk_data = util::SecretDataFromStringView(private_key.key_value());
 
   absl::StatusOr<DilithiumPrivateKeyPqclean> dilithium_private_key =
       DilithiumPrivateKeyPqclean::NewPrivateKey(

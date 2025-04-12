@@ -81,8 +81,7 @@ absl::StatusOr<SphincsPrivateKey> SphincsSignKeyManager::CreateKey(
 absl::StatusOr<std::unique_ptr<PublicKeySign>>
 SphincsSignKeyManager::PublicKeySignFactory::Create(
     const SphincsPrivateKey& private_key) const {
-  util::SecretData sk_data =
-      util::SecretDataFromStringView(private_key.key_value());
+  SecretData sk_data = util::SecretDataFromStringView(private_key.key_value());
   SphincsParamsPqclean sphincs_params_pqclean = {
       .hash_type = EnumsPqcrypto::ProtoToSubtle(
           private_key.public_key().params().hash_type()),

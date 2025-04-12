@@ -81,7 +81,7 @@ enum class JwtHmacAlgorithmEnum : uint32_t {
 struct JwtHmacKeyStruct {
   uint32_t version;
   JwtHmacAlgorithmEnum algorithm;
-  util::SecretData key_value;
+  SecretData key_value;
   absl::optional<CustomKidStruct> custom_kid;
 
   static const ProtoParser<JwtHmacKeyStruct>& GetParser() {
@@ -321,7 +321,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     key_struct.custom_kid = CustomKidStruct{key.GetKid().value()};
   }
 
-  absl::StatusOr<util::SecretData> serialized_key =
+  absl::StatusOr<SecretData> serialized_key =
       JwtHmacKeyStruct::GetParser().SerializeIntoSecretData(key_struct);
   if (!serialized_key.ok()) {
     return serialized_key.status();

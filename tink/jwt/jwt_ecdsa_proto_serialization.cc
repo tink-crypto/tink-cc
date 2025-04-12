@@ -103,7 +103,7 @@ struct JwtEcdsaPublicKeyStruct {
 struct JwtEcdsaPrivateKeyStruct {
   uint32_t version;
   JwtEcdsaPublicKeyStruct public_key;
-  util::SecretData key_value;
+  SecretData key_value;
 
   static const ProtoParser<JwtEcdsaPrivateKeyStruct>& GetParser() {
     static absl::NoDestructor<ProtoParser<JwtEcdsaPrivateKeyStruct>> parser{
@@ -495,7 +495,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<util::SecretData> serialized_proto_private_key =
+  absl::StatusOr<SecretData> serialized_proto_private_key =
       JwtEcdsaPrivateKeyStruct::GetParser().SerializeIntoSecretData(
           private_key_struct);
   if (!serialized_proto_private_key.ok()) {

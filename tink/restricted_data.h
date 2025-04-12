@@ -53,7 +53,7 @@ class RestrictedData {
 
   // Creates a new RestrictedData object that wraps `secret`. Note that creating
   // a `token` requires access to `InsecureSecretKeyAccess::Get()`.
-  explicit RestrictedData(util::SecretData secret, SecretKeyAccessToken token)
+  explicit RestrictedData(SecretData secret, SecretKeyAccessToken token)
       : secret_(std::move(secret)) {}
 
   // Creates a new RestrictedData object that wraps a secret containing
@@ -66,9 +66,7 @@ class RestrictedData {
   absl::string_view GetSecret(SecretKeyAccessToken token) const {
     return util::SecretDataAsStringView(secret_);
   }
-  const util::SecretData& Get(SecretKeyAccessToken token) const {
-    return secret_;
-  }
+  const SecretData& Get(SecretKeyAccessToken token) const { return secret_; }
 
   int64_t size() const { return secret_.size(); }
 
@@ -81,7 +79,7 @@ class RestrictedData {
   }
 
  private:
-  util::SecretData secret_;
+  SecretData secret_;
 };
 
 }  // namespace tink

@@ -49,7 +49,7 @@ class RestrictedBigInteger {
   // Creates a new RestrictedBigInteger object that wraps `secret_big_integer`,
   // after removing the leading zeros. Note that creating a `token` requires
   // access to InsecureSecretKeyAccess::Get().
-  explicit RestrictedBigInteger(util::SecretData secret_big_integer,
+  explicit RestrictedBigInteger(SecretData secret_big_integer,
                                 SecretKeyAccessToken token);
 
   // Returns the value of this RestrictedBigInteger object.
@@ -58,7 +58,7 @@ class RestrictedBigInteger {
   }
 
   // Returns the secret data of this RestrictedBigInteger object.
-  const util::SecretData& GetSecretData(SecretKeyAccessToken token) const {
+  const SecretData& GetSecretData(SecretKeyAccessToken token) const {
     return secret_;
   }
 
@@ -70,7 +70,7 @@ class RestrictedBigInteger {
   }
 
  private:
-  util::SecretData secret_;
+  SecretData secret_;
 };
 
 }  // namespace tink

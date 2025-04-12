@@ -31,7 +31,7 @@ namespace tink {
 
 // Serializes a keyset into a binary string in "ProtoKeysetFormat".
 // This function can serialize both keyset with or without secret key material.
-absl::StatusOr<util::SecretData> SerializeKeysetToProtoKeysetFormat(
+absl::StatusOr<SecretData> SerializeKeysetToProtoKeysetFormat(
     const KeysetHandle& keyset_handle, SecretKeyAccessToken token);
 
 // Parses a keyset from a binary string in "ProtoKeysetFormat".

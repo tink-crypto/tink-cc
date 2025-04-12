@@ -183,7 +183,7 @@ absl::StatusOr<std::unique_ptr<AesSivKey>> DeriveAesSivKey(
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesSivParameters.");
   }
-  absl::StatusOr<util::SecretData> randomness_str =
+  absl::StatusOr<SecretData> randomness_str =
       ReadSecretBytesFromStream(params->KeySizeInBytes(), randomness);
   if (!randomness_str.ok()) {
     return randomness_str.status();
@@ -247,7 +247,7 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "ECDSA curve does not support key derivation.");
   }
-  absl::StatusOr<util::SecretData> secret_seed =
+  absl::StatusOr<SecretData> secret_seed =
       ReadSecretBytesFromStream(num_rand_bytes, randomness);
   if (!secret_seed.ok()) {
     return secret_seed.status();
@@ -286,7 +286,7 @@ absl::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
                         "Parameters is not Ed25519Parameters.");
   }
 
-  absl::StatusOr<util::SecretData> secret_seed =
+  absl::StatusOr<SecretData> secret_seed =
       ReadSecretBytesFromStream(kEd25519PrivKeyLen, randomness);
   if (!secret_seed.ok()) {
     return secret_seed.status();

@@ -42,7 +42,7 @@ class Cecpq2AeadHkdfDemHelper {
   // Creates and returns a new AeadOrDaead object that uses
   // a 32-bytes or greater high-entropy seed to generate a key.
   virtual absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
-  GetAeadOrDaead(const util::SecretData& seed) const = 0;
+  GetAeadOrDaead(const SecretData& seed) const = 0;
 
   // Return the key material size.
   virtual absl::StatusOr<uint32_t> GetKeyMaterialSize() const = 0;

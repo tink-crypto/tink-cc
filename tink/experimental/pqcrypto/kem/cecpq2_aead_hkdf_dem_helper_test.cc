@@ -92,7 +92,7 @@ TEST(Cecpq2AeadHkdfDemHelperTest, DemHelperWithAesGcmKeyType) {
   ASSERT_THAT(dem_helper_or, IsOk());
   auto dem_helper = std::move(dem_helper_or.value());
 
-  util::SecretData seed_32_bytes = util::SecretDataFromStringView(
+  SecretData seed_32_bytes = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"));
   absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =
@@ -120,7 +120,7 @@ TEST(Cecpq2AeadHkdfDemHelperTest, DemHelperWithAesSivKeyType) {
   ASSERT_THAT(dem_helper_or, IsOk());
   auto dem_helper = std::move(dem_helper_or.value());
 
-  util::SecretData seed_64_bytes = util::SecretDataFromStringView(
+  SecretData seed_64_bytes = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"
@@ -149,7 +149,7 @@ TEST(Cecpq2AeadHkdfDemHelperTest, DemHelperWithXchacha20Poly1305KeyType) {
   ASSERT_THAT(dem_helper_or, IsOk());
   auto dem_helper = std::move(dem_helper_or.value());
 
-  util::SecretData seed_32_bytes = util::SecretDataFromStringView(
+  SecretData seed_32_bytes = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"
                            "000102030405060708090a0b0c0d0e0f"));
   absl::StatusOr<std::unique_ptr<AeadOrDaead>> aead_or_daead_result_or =

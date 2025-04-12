@@ -56,7 +56,7 @@ class Cecpq2AeadHkdfDemHelperImpl : public Cecpq2AeadHkdfDemHelper {
       : key_template_(key_template) {}
 
   absl::StatusOr<std::unique_ptr<crypto::tink::subtle::AeadOrDaead>>
-  GetAeadOrDaead(const util::SecretData& seed) const override {
+  GetAeadOrDaead(const SecretData& seed) const override {
     if (seed.size() < 32) {
       return absl::Status(absl::StatusCode::kInternal,
                           "Seed length is smaller than 32 bytes "

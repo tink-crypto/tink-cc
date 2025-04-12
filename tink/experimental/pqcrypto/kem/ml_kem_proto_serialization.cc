@@ -102,7 +102,7 @@ struct MlKemPublicKeyStruct {
 
 struct MlKemPrivateKeyStruct {
   uint32_t version = 0;
-  util::SecretData key_value = {};
+  SecretData key_value = {};
   MlKemPublicKeyStruct public_key = {};
 
   inline static internal::ProtoParser<MlKemPrivateKeyStruct>& GetParser() {
@@ -389,7 +389,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
   proto_private_key.key_value = restricted_input->Get(*token);
 
-  absl::StatusOr<util::SecretData> serialized =
+  absl::StatusOr<SecretData> serialized =
       MlKemPrivateKeyStruct::GetParser().SerializeIntoSecretData(
           proto_private_key);
   if (!serialized.ok()) {

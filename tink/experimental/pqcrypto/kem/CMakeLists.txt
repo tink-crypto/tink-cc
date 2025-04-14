@@ -480,3 +480,49 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME cecpq2_private_key
+  SRCS
+    cecpq2_private_key.cc
+    cecpq2_private_key.h
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_public_key
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::key
+    tink::core::partial_key_access_token
+    tink::core::restricted_data
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_subtle_boringssl_util
+    tink::hybrid::hybrid_private_key
+    tink::internal::ec_util
+    tink::internal::internal_insecure_secret_key_access
+)
+
+tink_cc_test(
+  NAME cecpq2_private_key_test
+  SRCS
+    cecpq2_private_key_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_private_key
+    tink::experimental::pqcrypto::kem::cecpq2_public_key
+    gmock
+    absl::status
+    absl::statusor
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::xchacha20_poly1305_parameters
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_subtle_boringssl_util
+    tink::internal::ec_util
+    tink::subtle::common_enums
+    tink::subtle::random
+    tink::util::test_matchers
+)

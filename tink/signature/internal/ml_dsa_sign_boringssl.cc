@@ -16,6 +16,7 @@
 
 #include "tink/signature/internal/ml_dsa_sign_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -23,9 +24,12 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/mldsa.h"
 #include "tink/insecure_secret_key_access.h"
+#include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/dfsan_forwarders.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/partial_key_access.h"
 #include "tink/public_key_sign.h"
@@ -33,8 +37,6 @@
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -64,7 +66,7 @@ class MlDsaSignBoringSsl : public PublicKeySign {
 
 absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsaSignBoringSsl::New(
     const MlDsaPrivateKey& private_key) {
-  auto status = internal::CheckFipsCompatibility<MlDsaSignBoringSsl>();
+  absl::Status status = internal::CheckFipsCompatibility<MlDsaSignBoringSsl>();
   if (!status.ok()) {
     return status;
   }
@@ -75,17 +77,22 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsaSignBoringSsl::New(
                         "Only ML-DSA-65 is supported");
   }
 
-  absl::string_view private_seed_bytes =
-      private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
-          .GetSecret(InsecureSecretKeyAccess::Get());
-
   auto boringssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
-  if (!MLDSA65_private_key_from_seed(
-          boringssl_private_key.get(),
-          reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
-          private_seed_bytes.size())) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Failed to expand ML-DSA private key from seed.");
+  status = internal::CallWithCoreDumpProtection([&]() {
+    absl::string_view private_seed_bytes =
+        private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
+            .GetSecret(InsecureSecretKeyAccess::Get());
+    if (!MLDSA65_private_key_from_seed(
+            boringssl_private_key.get(),
+            reinterpret_cast<const uint8_t*>(private_seed_bytes.data()),
+            private_seed_bytes.size())) {
+      return absl::Status(absl::StatusCode::kInternal,
+                          "Failed to expand ML-DSA private key from seed.");
+    }
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
   }
 
   return absl::make_unique<MlDsaSignBoringSsl>(
@@ -95,18 +102,27 @@ absl::StatusOr<std::unique_ptr<PublicKeySign>> MlDsaSignBoringSsl::New(
 absl::StatusOr<std::string> MlDsaSignBoringSsl::Sign(
     absl::string_view data) const {
   std::string signature(private_key_.GetOutputPrefix());
-  subtle::ResizeStringUninitialized(
-      &signature,
-      MLDSA65_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size());
+  size_t signature_buffer_size =
+      MLDSA65_SIGNATURE_BYTES + private_key_.GetOutputPrefix().size();
+  subtle::ResizeStringUninitialized(&signature, signature_buffer_size);
 
-  if (!MLDSA65_sign(
-          reinterpret_cast<uint8_t*>(&signature[0] +
-                                     private_key_.GetOutputPrefix().size()),
-          boringssl_private_key_.get(),
-          reinterpret_cast<const uint8_t*>(data.data()), data.size(),
-          /* context = */ nullptr, /* context_len = */ 0)) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Failed to generate ML-DSA signature.");
+  absl::Status status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&signature[0],
+                                                   signature_buffer_size);
+    if (!MLDSA65_sign(
+            reinterpret_cast<uint8_t*>(&signature[0] +
+                                       private_key_.GetOutputPrefix().size()),
+            boringssl_private_key_.get(),
+            reinterpret_cast<const uint8_t*>(data.data()), data.size(),
+            /* context = */ nullptr, /* context_len = */ 0)) {
+      return absl::Status(absl::StatusCode::kInternal,
+                          "Failed to generate ML-DSA signature.");
+    }
+    internal::DfsanClearLabel(&signature[0], signature_buffer_size);
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
   }
 
   return signature;

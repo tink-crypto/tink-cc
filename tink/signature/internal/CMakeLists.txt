@@ -368,17 +368,19 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     crypto
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::internal::call_with_core_dump_protection
+    tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::subtle::subtle_util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
   TAGS
     exclude_if_openssl

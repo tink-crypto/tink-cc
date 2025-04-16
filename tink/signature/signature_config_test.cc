@@ -97,7 +97,6 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::HashType;
 using ::testing::HasSubstr;
-using ::testing::IsNull;
 using ::testing::Not;
 
 class SignatureConfigTest : public ::testing::Test {

@@ -16,10 +16,10 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pss_public_key.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
-#include "absl/base/internal/endian.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -27,6 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
+#include "tink/internal/endian.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -34,8 +35,7 @@
 namespace crypto {
 namespace tink {
 
-JwtRsaSsaPssPublicKey::Builder&
-JwtRsaSsaPssPublicKey::Builder::SetParameters(
+JwtRsaSsaPssPublicKey::Builder& JwtRsaSsaPssPublicKey::Builder::SetParameters(
     const JwtRsaSsaPssParameters& parameters) {
   parameters_ = parameters;
   return *this;
@@ -53,8 +53,8 @@ JwtRsaSsaPssPublicKey::Builder::SetIdRequirement(int id_requirement) {
   return *this;
 }
 
-JwtRsaSsaPssPublicKey::Builder&
-JwtRsaSsaPssPublicKey::Builder::SetCustomKid(absl::string_view custom_kid) {
+JwtRsaSsaPssPublicKey::Builder& JwtRsaSsaPssPublicKey::Builder::SetCustomKid(
+    absl::string_view custom_kid) {
   custom_kid_ = custom_kid.data();
   return *this;
 }
@@ -70,7 +70,8 @@ JwtRsaSsaPssPublicKey::Builder::ComputeKid() {
     }
     std::string base64_kid;
     char buffer[4];
-    absl::big_endian::Store32(buffer, *id_requirement_);
+    crypto::tink::internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(buffer),
+                                             *id_requirement_);
     absl::WebSafeBase64Escape(absl::string_view(buffer, 4), &base64_kid);
     return base64_kid;
   }
@@ -131,7 +132,7 @@ absl::StatusOr<JwtRsaSsaPssPublicKey> JwtRsaSsaPssPublicKey::Builder::Build(
     return kid.status();
   }
   return JwtRsaSsaPssPublicKey(*parameters_, *modulus_, id_requirement_,
-                                 std::move(*kid));
+                               std::move(*kid));
 }
 
 bool JwtRsaSsaPssPublicKey::operator==(const Key& other) const {

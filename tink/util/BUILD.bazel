@@ -626,9 +626,9 @@ cc_library(
     include_prefix = "tink/util",
     deps = [
         "//tink/internal:call_with_core_dump_protection",
+        "//tink/internal:endian",
         "//tink/internal:safe_stringops",
         "//tink/internal:secret_buffer",
-        "@com_google_absl//absl/base:endian",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",

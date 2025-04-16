@@ -16,16 +16,17 @@
 
 #include "tink/jwt/jwt_ecdsa_public_key.h"
 
+#include <cstdint>
 #include <string>
 #include <utility>
 
-#include "absl/base/internal/endian.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/endian.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -121,7 +122,8 @@ JwtEcdsaPublicKey::Builder::ComputeKid() {
     }
     std::string base64_kid;
     char buffer[4];
-    absl::big_endian::Store32(buffer, *id_requirement_);
+    internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(buffer),
+                               *id_requirement_);
     absl::WebSafeBase64Escape(absl::string_view(buffer, 4), &base64_kid);
     return base64_kid;
   }

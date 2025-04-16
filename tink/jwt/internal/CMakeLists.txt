@@ -58,11 +58,11 @@ tink_cc_library(
   DEPS
     tink::jwt::internal::json_util
     protobuf::libprotobuf
-    absl::endian
     absl::status
     absl::statusor
     absl::strings
     absl::optional
+    tink::internal::endian
     tink::jwt::raw_jwt
     tink::proto::tink_cc_proto
 )

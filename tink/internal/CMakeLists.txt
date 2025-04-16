@@ -2055,3 +2055,18 @@ tink_cc_library(
     tink::util::statusor
   TESTONLY
 )
+
+tink_cc_library(
+  NAME endian
+  SRCS
+    endian.h
+)
+
+tink_cc_test(
+  NAME endian_test
+  SRCS
+    endian_test.cc
+  DEPS
+    tink::internal::endian
+    gmock
+)

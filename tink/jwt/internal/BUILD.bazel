@@ -85,8 +85,8 @@ cc_library(
     deps = [
         ":json_util",
         "//proto:tink_cc_proto",
+        "//tink/internal:endian",
         "//tink/jwt:raw_jwt",
-        "@com_google_absl//absl/base:endian",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",

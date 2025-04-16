@@ -17,49 +17,31 @@
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_decrypter.h"
 
 #include <cstdint>
-#include <cstring>
 #include <limits>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "absl/base/config.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/ssl_aead.h"
-#include "tink/internal/err_util.h"
+#include "tink/internal/endian.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_encrypter.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hkdf.h"
-#include "tink/subtle/random.h"
 #include "tink/subtle/stream_segment_decrypter.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace subtle {
 
 namespace {
-
-uint32_t ByteSwap(uint32_t val) {
-  return ((val & 0xff000000) >> 24) | ((val & 0x00ff0000) >> 8) |
-         ((val & 0x0000ff00) << 8) | ((val & 0x000000ff) << 24);
-}
-
-void BigEndianStore32(uint8_t dst[4], uint32_t val) {
-#if defined(ABSL_IS_LITTLE_ENDIAN)
-  val = ByteSwap(val);
-#elif !defined(ABSL_IS_BIG_ENDIAN)
-#error Unknown endianness
-#endif
-  std::memcpy(dst, &val, sizeof(val));
-}
 
 absl::Status Validate(const AesGcmHkdfStreamSegmentDecrypter::Params& params) {
   if (!(params.hkdf_hash == SHA1 || params.hkdf_hash == SHA256 ||
@@ -197,7 +179,7 @@ absl::Status AesGcmHkdfStreamSegmentDecrypter::DecryptSegment(
   // Construct IV.
   std::vector<uint8_t> iv(AesGcmHkdfStreamSegmentEncrypter::kNonceSizeInBytes);
   absl::c_copy(nonce_prefix_, iv.begin());
-  BigEndianStore32(
+  internal::StoreBigEndian32(
       iv.data() + AesGcmHkdfStreamSegmentEncrypter::kNoncePrefixSizeInBytes,
       static_cast<uint32_t>(segment_number));
   iv.back() = is_last_segment ? 1 : 0;

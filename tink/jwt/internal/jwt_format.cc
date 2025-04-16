@@ -19,12 +19,12 @@
 #include <cstdint>
 #include <string>
 
-#include "absl/base/internal/endian.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/endian.h"
 #include "tink/jwt/internal/json_util.h"
 #include "tink/jwt/raw_jwt.h"
 #include "proto/tink.pb.h"
@@ -80,7 +80,7 @@ absl::optional<std::string> GetKid(uint32_t key_id,
     return absl::nullopt;
   }
   char buffer[4];
-  absl::big_endian::Store32(buffer, key_id);
+  internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(buffer), key_id);
   return absl::WebSafeBase64Escape(absl::string_view(buffer, 4));
 }
 
@@ -93,7 +93,8 @@ absl::optional<uint32_t> GetKeyId(absl::string_view kid) {
     return absl::nullopt;
   }
 
-  return absl::big_endian::Load32(decoded_kid.data());
+  return internal::LoadBigEndian32(
+      reinterpret_cast<const uint8_t*>(decoded_kid.data()));
 }
 
 absl::StatusOr<std::string> CreateHeader(

@@ -422,16 +422,16 @@ tink_cc_library(
     tink::subtle::aes_gcm_hkdf_stream_segment_encrypter
     tink::subtle::common_enums
     tink::subtle::hkdf
-    tink::subtle::random
     tink::subtle::stream_segment_decrypter
     absl::algorithm_container
-    absl::config
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
+    tink::core::secret_data
     tink::aead::internal::ssl_aead
-    tink::internal::err_util
+    tink::internal::endian
     tink::util::secret_data
     tink::util::status
     tink::util::statusor
@@ -447,13 +447,12 @@ tink_cc_library(
     tink::subtle::stream_segment_encrypter
     tink::subtle::subtle_util
     absl::algorithm_container
-    absl::config
     absl::memory
     absl::status
     absl::strings
     absl::span
     tink::aead::internal::ssl_aead
-    tink::internal::err_util
+    tink::internal::endian
     tink::util::secret_data
     tink::util::status
     tink::util::statusor

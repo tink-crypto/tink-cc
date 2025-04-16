@@ -25,21 +25,20 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/base/internal/endian.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
 #include "tink/aead/aead_key_templates.h"
 #include "tink/config/global_registry.h"
+#include "tink/internal/endian.h"
 #include "tink/internal/ssl_util.h"
 #include "tink/keyset_handle.h"
 #include "tink/mac/mac_key_templates.h"
 #include "tink/registry.h"
 #include "tink/util/fake_kms_client.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/aes_gcm.pb.h"
@@ -141,7 +140,7 @@ TEST_F(KmsEnvelopeAeadTest, DecryptFailsWithInvalidCiphertextOrAad) {
       StatusIs(absl::StatusCode::kInvalidArgument, HasSubstr("too short")));
 
   // Ciphertext is smaller than the size of the key.
-  const int dek_encrypted_key_size = absl::big_endian::Load32(
+  const int dek_encrypted_key_size = internal::LoadBigEndian32(
       reinterpret_cast<const uint8_t*>(ciphertext.data()));
   // We leave only key size and key truncated by one.
   EXPECT_THAT(
@@ -185,7 +184,7 @@ TEST_F(KmsEnvelopeAeadTest, DekMaintainsCorrectKeyFormat) {
 
   // Recover DEK from ciphertext (see
   // https://developers.google.com/tink/wire-format#envelope_encryption).
-  auto enc_dek_size = absl::big_endian::Load32(
+  auto enc_dek_size = internal::LoadBigEndian32(
       reinterpret_cast<const uint8_t*>(ciphertext->data()));
   DummyAead remote_aead = DummyAead(kRemoteAeadName);
   absl::string_view encrypted_dek =
@@ -219,7 +218,7 @@ TEST_F(KmsEnvelopeAeadTest, MultipleEncryptionsProduceDifferentDeks) {
     absl::StatusOr<std::string> ciphertext = (*aead)->Encrypt(message, aad);
     ASSERT_THAT(ciphertext, IsOk());
 
-    auto enc_dek_size = absl::big_endian::Load32(
+    auto enc_dek_size = internal::LoadBigEndian32(
         reinterpret_cast<const uint8_t*>(ciphertext->data()));
     DummyAead remote_aead = DummyAead(kRemoteAeadName);
     absl::StatusOr<std::string> dek_proto_bytes = remote_aead.Decrypt(

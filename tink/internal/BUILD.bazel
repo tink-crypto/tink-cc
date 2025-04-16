@@ -2132,3 +2132,18 @@ cc_library(
         "@com_google_googletest//:gtest",
     ],
 )
+
+cc_library(
+    name = "endian",
+    hdrs = ["endian.h"],
+    include_prefix = "tink/internal",
+)
+
+cc_test(
+    name = "endian_test",
+    srcs = ["endian_test.cc"],
+    deps = [
+        ":endian",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

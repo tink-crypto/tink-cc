@@ -358,9 +358,9 @@ tink_cc_library(
     crypto_format.h
   DEPS
     absl::status
+    absl::statusor
     absl::string_view
-    tink::util::errors
-    tink::util::status
+    tink::internal::endian
     tink::util::statusor
     tink::proto::tink_cc_proto
 )

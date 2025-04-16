@@ -24,12 +24,12 @@
 #include <limits>
 #include <utility>
 
-#include "absl/base/internal/endian.h"
 #include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/endian.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/secret_buffer.h"
 
@@ -92,7 +92,8 @@ class SecretDataInternalClass {
     if (!buffer_.empty()) {
       crypto::tink::internal::CallWithCoreDumpProtection([this] {
         absl::crc32c_t crc = absl::ComputeCrc32c(AsStringView());
-        absl::big_endian::Store32(crc32c_data(), static_cast<uint32_t>(crc));
+        crypto::tink::internal::StoreBigEndian32(crc32c_data(),
+                                                 static_cast<uint32_t>(crc));
       });
     }
   }
@@ -170,7 +171,8 @@ class SecretDataInternalClass {
     if (crc32c_data() == nullptr) {
       return absl::crc32c_t(0);
     }
-    return absl::crc32c_t(absl::big_endian::Load32(crc32c_data()));
+    return absl::crc32c_t(
+        crypto::tink::internal::LoadBigEndian32(crc32c_data()));
   }
 
   absl::Status ValidateCrc32c() const {

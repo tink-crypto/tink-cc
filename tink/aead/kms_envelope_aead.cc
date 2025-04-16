@@ -22,16 +22,15 @@
 #include <string>
 #include <utility>
 
-#include "absl/base/internal/endian.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/aead/internal/aead_util.h"
+#include "tink/internal/endian.h"
 #include "tink/registry.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -51,7 +50,7 @@ const char* kEmptyAssociatedData = "";
 std::string GetEnvelopeCiphertext(absl::string_view encrypted_dek,
                                   absl::string_view encrypted_plaintext) {
   uint8_t enc_dek_size[kEncryptedDekPrefixSize];
-  absl::big_endian::Store32(enc_dek_size, encrypted_dek.size());
+  internal::StoreBigEndian32(enc_dek_size, encrypted_dek.size());
   return absl::StrCat(std::string(reinterpret_cast<const char*>(enc_dek_size),
                                   kEncryptedDekPrefixSize),
                       encrypted_dek, encrypted_plaintext);
@@ -112,7 +111,7 @@ absl::StatusOr<std::string> KmsEnvelopeAead::Decrypt(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
-  uint32_t enc_dek_size = absl::big_endian::Load32(
+  uint32_t enc_dek_size = internal::LoadBigEndian32(
       reinterpret_cast<const uint8_t*>(ciphertext.data()));
   if (enc_dek_size < 0 || enc_dek_size > kMaxEncryptedDekSize ||
       enc_dek_size > ciphertext.size() - kEncryptedDekPrefixSize) {

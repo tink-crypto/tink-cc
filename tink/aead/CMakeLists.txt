@@ -275,13 +275,14 @@ tink_cc_library(
     kms_envelope_aead.cc
     kms_envelope_aead.h
   DEPS
-    absl::endian
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::aead
     tink::core::registry
     tink::aead::internal::aead_util
+    tink::internal::endian
     tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
@@ -1117,19 +1118,18 @@ tink_cc_test(
     tink::aead::aead_key_templates
     tink::aead::kms_envelope_aead
     gmock
-    absl::endian
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::aead
     tink::core::keyset_handle
     tink::core::registry
     tink::config::global_registry
+    tink::internal::endian
     tink::internal::ssl_util
     tink::mac::mac_key_templates
     tink::util::fake_kms_client
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::aes_gcm_cc_proto

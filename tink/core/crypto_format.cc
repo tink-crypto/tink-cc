@@ -20,28 +20,15 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/util/errors.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/internal/endian.h"
 #include "proto/tink.pb.h"
 
 using google::crypto::tink::OutputPrefixType;
 
 namespace crypto {
 namespace tink {
-
-namespace {
-// Writes bytes of 'value' in Big Endian order to 'buf'.
-// 'buf' must have at least 4 bytes allocated.
-void uint32_as_big_endian(uint32_t value, char* buf) {
-  buf[0] = 0xff & (value >> 24);
-  buf[1] = 0xff & (value >> 16);
-  buf[2] = 0xff & (value >> 8);
-  buf[3] = 0xff & (value >> 0);
-}
-
-}  // anonymous namespace
 
 const int CryptoFormat::kNonRawPrefixSize;
 const int CryptoFormat::kLegacyPrefixSize;
@@ -56,13 +43,14 @@ const absl::string_view CryptoFormat::kRawPrefix = "";
 // static
 absl::StatusOr<std::string> CryptoFormat::GetOutputPrefix(
     const google::crypto::tink::KeysetInfo::KeyInfo& key_info) {
-  static_assert(sizeof(key_info.key_id() == sizeof(uint32_t )), "");
+  static_assert(sizeof(key_info.key_id() == sizeof(uint32_t)), "");
   switch (key_info.output_prefix_type()) {
     case OutputPrefixType::TINK: {
       static_assert(kTinkPrefixSize == 1 + sizeof(uint32_t), "");
       std::string prefix(kTinkPrefixSize, '\0');
       prefix[0] = kTinkStartByte;
-      uint32_as_big_endian(key_info.key_id(), &prefix[1]);
+      internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(&prefix[1]),
+                                 key_info.key_id());
       return prefix;
     }
     case OutputPrefixType::CRUNCHY:
@@ -71,7 +59,8 @@ absl::StatusOr<std::string> CryptoFormat::GetOutputPrefix(
       static_assert(kLegacyPrefixSize == 1 + sizeof(uint32_t), "");
       std::string prefix(kLegacyPrefixSize, '\0');
       prefix[0] = kLegacyStartByte;
-      uint32_as_big_endian(key_info.key_id(), &prefix[1]);
+      internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(&prefix[1]),
+                                 key_info.key_id());
       return prefix;
     }
     case OutputPrefixType::RAW:

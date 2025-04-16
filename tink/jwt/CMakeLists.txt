@@ -200,7 +200,6 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_hmac_parameters
     tink::jwt::jwt_mac_key
-    absl::endian
     absl::status
     absl::statusor
     absl::strings
@@ -209,6 +208,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::core::restricted_data
+    tink::internal::endian
 )
 
 tink_cc_library(
@@ -289,7 +289,6 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_ecdsa_parameters
     tink::jwt::jwt_signature_public_key
-    absl::endian
     absl::status
     absl::statusor
     absl::strings
@@ -300,6 +299,7 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::ec_util
+    tink::internal::endian
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
 )
@@ -393,7 +393,6 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_rsa_ssa_pkcs1_parameters
     tink::jwt::jwt_signature_public_key
-    absl::endian
     absl::status
     absl::statusor
     absl::strings
@@ -403,6 +402,7 @@ tink_cc_library(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access_token
+    tink::internal::endian
 )
 
 tink_cc_library(
@@ -487,7 +487,6 @@ tink_cc_library(
   DEPS
     tink::jwt::jwt_rsa_ssa_pss_parameters
     tink::jwt::jwt_signature_public_key
-    absl::endian
     absl::status
     absl::statusor
     absl::strings
@@ -497,6 +496,7 @@ tink_cc_library(
     tink::core::big_integer
     tink::core::key
     tink::core::partial_key_access_token
+    tink::internal::endian
 )
 
 tink_cc_library(

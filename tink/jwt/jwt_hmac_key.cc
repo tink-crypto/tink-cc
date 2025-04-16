@@ -16,14 +16,15 @@
 
 #include "tink/jwt/jwt_hmac_key.h"
 
+#include <cstdint>
 #include <string>
 
-#include "absl/base/internal/endian.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
+#include "tink/internal/endian.h"
 #include "tink/jwt/jwt_hmac_parameters.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
@@ -65,7 +66,8 @@ absl::StatusOr<absl::optional<std::string>> JwtHmacKey::Builder::ComputeKid() {
       }
       std::string base64_kid;
       char buffer[4];
-      absl::big_endian::Store32(buffer, *id_requirement_);
+      internal::StoreBigEndian32(reinterpret_cast<uint8_t*>(buffer),
+                                 *id_requirement_);
       absl::WebSafeBase64Escape(absl::string_view(buffer, 4), &base64_kid);
       return base64_kid;
     }

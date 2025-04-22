@@ -233,3 +233,53 @@ tink_cc_test(
     tink::util::statusor
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME cecpq2_proto_serialization_impl
+  SRCS
+    cecpq2_proto_serialization_impl.cc
+    cecpq2_proto_serialization_impl.h
+  DEPS
+    absl::no_destructor
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::internal::common_proto_enums
+    tink::internal::global_serialization_registry
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME cecpq2_proto_serialization_impl_test
+  SRCS
+    cecpq2_proto_serialization_impl_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::internal::cecpq2_proto_serialization_impl
+    gmock
+    absl::check
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::parameters
+    tink::aead::xchacha20_poly1305_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::util::test_matchers
+    tink::proto::common_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)

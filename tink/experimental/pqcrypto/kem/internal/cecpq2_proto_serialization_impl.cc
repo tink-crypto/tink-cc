@@ -29,8 +29,10 @@
 #include "tink/internal/global_serialization_registry.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/parameters_parser.h"
+#include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
+#include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
@@ -43,6 +45,8 @@ namespace {
 
 using Cecpq2ProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, Cecpq2Parameters>;
+using Cecpq2ProtoParametersSerializerImpl =
+    ParametersSerializerImpl<Cecpq2Parameters, ProtoParametersSerialization>;
 
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.Cecpq2AeadHkdfPrivateKey";
@@ -60,6 +64,19 @@ absl::StatusOr<Cecpq2Parameters::Variant> ToVariant(
   }
 }
 
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
+    Cecpq2Parameters::Variant variant) {
+  switch (variant) {
+    case Cecpq2Parameters::Variant::kNoPrefix:
+      return OutputPrefixTypeEnum::kRaw;
+    case Cecpq2Parameters::Variant::kTink:
+      return OutputPrefixTypeEnum::kTink;
+    default:
+      return absl::InvalidArgumentError(
+          "Could not determine output prefix type");
+  }
+}
+
 absl::StatusOr<std::unique_ptr<Parameters>> DemParametersFromKeyTemplate(
     const KeyTemplateStruct& key_template) {
   absl::StatusOr<ProtoParametersSerialization> proto_params_serialization =
@@ -69,6 +86,24 @@ absl::StatusOr<std::unique_ptr<Parameters>> DemParametersFromKeyTemplate(
   }
   return GlobalSerializationRegistry().ParseParameters(
       *proto_params_serialization);
+}
+
+absl::StatusOr<KeyTemplateStruct> DemParametersToKeyTemplate(
+    const Parameters& parameters) {
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      GlobalSerializationRegistry()
+          .SerializeParameters<ProtoParametersSerialization>(parameters);
+  if (!serialization.ok()) {
+    return serialization.status();
+  }
+
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  if (proto_serialization == nullptr) {
+    return absl::InternalError("Failed to serialize proto parameters.");
+  }
+
+  return proto_serialization->GetKeyTemplateStruct();
 }
 
 struct Cecpq2HkdfKemParamsStruct {
@@ -158,6 +193,26 @@ absl::StatusOr<Cecpq2Parameters> ToParameters(
   return Cecpq2Parameters::Create(**dem_parameters, salt, *variant);
 }
 
+absl::StatusOr<Cecpq2AeadHkdfParamsStruct> FromParameters(
+    const Cecpq2Parameters& parameters) {
+  absl::StatusOr<KeyTemplateStruct> dem_key_template =
+      DemParametersToKeyTemplate(parameters.GetDemParameters());
+  if (!dem_key_template.ok()) {
+    return dem_key_template.status();
+  }
+
+  Cecpq2AeadHkdfParamsStruct params;
+  params.kem_params.curve_type = EllipticCurveTypeEnum::kCurve25519;
+  params.kem_params.ec_point_format = EcPointFormatEnum::kCompressed;
+  params.kem_params.hkdf_hash_type = HashTypeEnum::kSha256;
+  if (parameters.GetSalt().has_value()) {
+    params.kem_params.hkdf_salt = *parameters.GetSalt();
+  }
+  params.dem_params.aead_dem = *dem_key_template;
+
+  return params;
+}
+
 absl::StatusOr<Cecpq2Parameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplateStruct().type_url != kPrivateTypeUrl) {
@@ -176,22 +231,70 @@ absl::StatusOr<Cecpq2Parameters> ParseParameters(
                       serialization.GetKeyTemplateStruct().output_prefix_type);
 }
 
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
+    const Cecpq2Parameters& parameters) {
+  absl::StatusOr<Cecpq2AeadHkdfParamsStruct> proto_params =
+      FromParameters(parameters);
+  if (!proto_params.ok()) {
+    return proto_params.status();
+  }
+
+  Cecpq2AeadHkdfKeyFormatStruct proto_key_format;
+  proto_key_format.params = *proto_params;
+
+  absl::StatusOr<std::string> proto_params_serialization =
+      Cecpq2AeadHkdfKeyFormatStruct::GetParser().SerializeIntoString(
+          proto_key_format);
+  if (!proto_params_serialization.ok()) {
+    return proto_params_serialization.status();
+  }
+
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
+      ToOutputPrefixType(parameters.GetVariant());
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
+
+  return ProtoParametersSerialization::Create(
+      kPrivateTypeUrl, *output_prefix_type, *proto_params_serialization);
+}
+
 Cecpq2ProtoParametersParserImpl* Cecpq2ProtoParametersParser() {
   static auto* parser =
       new Cecpq2ProtoParametersParserImpl(kPrivateTypeUrl, ParseParameters);
   return parser;
 }
 
+Cecpq2ProtoParametersSerializerImpl* Cecpq2ProtoParametersSerializer() {
+  static auto* serializer = new Cecpq2ProtoParametersSerializerImpl(
+      kPrivateTypeUrl, SerializeParameters);
+  return serializer;
+}
+
 }  // namespace
 
 absl::Status RegisterCecpq2ProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
-  return registry.RegisterParametersParser(Cecpq2ProtoParametersParser());
+  absl::Status status =
+      registry.RegisterParametersParser(Cecpq2ProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return registry.RegisterParametersSerializer(
+      Cecpq2ProtoParametersSerializer());
 }
 
 absl::Status RegisterCecpq2ProtoSerializationWithRegistryBuilder(
     SerializationRegistry::Builder& builder) {
-  return builder.RegisterParametersParser(Cecpq2ProtoParametersParser());
+  absl::Status status =
+      builder.RegisterParametersParser(Cecpq2ProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterParametersSerializer(
+      Cecpq2ProtoParametersSerializer());
 }
 
 }  // namespace internal

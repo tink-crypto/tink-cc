@@ -31,6 +31,7 @@
 #include "tink/experimental/pqcrypto/kem/cecpq2_parameters.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
@@ -258,6 +259,103 @@ TEST_F(Cecpq2ProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
       params.status(),
       StatusIs(absl::StatusCode::kInvalidArgument,
                HasSubstr("Could not determine Cecpq2Parameters::Variant")));
+}
+
+TEST_P(Cecpq2ProtoSerializationTest, SerializeParametersWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterCecpq2ProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  absl::StatusOr<Cecpq2Parameters> parameters =
+      Cecpq2Parameters::Create(GetXChaCha20Poly1305NoPrefixParameters(),
+                               test_case.salt, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
+
+  Cecpq2AeadHkdfKeyFormat key_format;
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(key_format.has_params(), IsTrue());
+  ASSERT_THAT(key_format.params().has_dem_params(), IsTrue());
+  ASSERT_THAT(key_format.params().dem_params().has_aead_dem(), IsTrue());
+  EXPECT_THAT(key_format.params().dem_params().aead_dem().type_url(),
+              Eq(GetXChaCha20Poly1305RawKeyTemplate().type_url()));
+  ASSERT_THAT(key_format.params().has_kem_params(), IsTrue());
+  EXPECT_THAT(key_format.params().kem_params().curve_type(),
+              Eq(EllipticCurveType::CURVE25519));
+  EXPECT_THAT(key_format.params().kem_params().ec_point_format(),
+              Eq(EcPointFormat::COMPRESSED));
+  EXPECT_THAT(key_format.params().kem_params().hkdf_hash_type(),
+              Eq(HashType::SHA256));
+  if (parameters->GetSalt().has_value()) {
+    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(),
+                Eq(test_case.salt));
+  } else {
+    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(), Eq(""));
+  }
+}
+
+TEST_P(Cecpq2ProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder builder;
+  ASSERT_THAT(RegisterCecpq2ProtoSerializationWithRegistryBuilder(builder),
+              IsOk());
+  SerializationRegistry registry = std::move(builder).Build();
+
+  absl::StatusOr<Cecpq2Parameters> parameters =
+      Cecpq2Parameters::Create(GetXChaCha20Poly1305NoPrefixParameters(),
+                               test_case.salt, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeParameters<ProtoParametersSerialization>(*parameters);
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  const internal::KeyTemplateStruct& key_template =
+      proto_serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type,
+              Eq(static_cast<internal::OutputPrefixTypeEnum>(
+                  test_case.output_prefix_type)));
+
+  Cecpq2AeadHkdfKeyFormat key_format;
+  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(key_format.has_params(), IsTrue());
+  ASSERT_THAT(key_format.params().has_dem_params(), IsTrue());
+  ASSERT_THAT(key_format.params().dem_params().has_aead_dem(), IsTrue());
+  EXPECT_THAT(key_format.params().dem_params().aead_dem().type_url(),
+              Eq(GetXChaCha20Poly1305RawKeyTemplate().type_url()));
+  ASSERT_THAT(key_format.params().has_kem_params(), IsTrue());
+  EXPECT_THAT(key_format.params().kem_params().curve_type(),
+              Eq(EllipticCurveType::CURVE25519));
+  EXPECT_THAT(key_format.params().kem_params().ec_point_format(),
+              Eq(EcPointFormat::COMPRESSED));
+  EXPECT_THAT(key_format.params().kem_params().hkdf_hash_type(),
+              Eq(HashType::SHA256));
+  if (parameters->GetSalt().has_value()) {
+    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(),
+                Eq(test_case.salt));
+  } else {
+    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(), Eq(""));
+  }
 }
 
 }  // namespace

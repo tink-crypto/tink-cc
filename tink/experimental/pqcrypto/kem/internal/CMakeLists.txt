@@ -251,8 +251,10 @@ tink_cc_library(
     tink::internal::global_serialization_registry
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
+    tink::internal::parameters_serializer
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
+    tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::proto::tink_cc_proto
@@ -275,6 +277,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::cecpq2_parameters
     tink::internal::mutable_serialization_registry
     tink::internal::proto_parameters_serialization
+    tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::test_matchers

@@ -16,6 +16,7 @@
 
 #include "tink/experimental/pqcrypto/kem/internal/cecpq2_proto_serialization_impl.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
@@ -25,17 +26,24 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/experimental/pqcrypto/kem/cecpq2_parameters.h"
+#include "tink/experimental/pqcrypto/kem/cecpq2_public_key.h"
+#include "tink/insecure_secret_key_access.h"
 #include "tink/internal/common_proto_enums.h"
 #include "tink/internal/global_serialization_registry.h"
+#include "tink/internal/key_parser.h"
 #include "tink/internal/mutable_serialization_registry.h"
 #include "tink/internal/parameters_parser.h"
 #include "tink/internal/parameters_serializer.h"
+#include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/parameters.h"
+#include "tink/partial_key_access.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_key_access_token.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -47,9 +55,13 @@ using Cecpq2ProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, Cecpq2Parameters>;
 using Cecpq2ProtoParametersSerializerImpl =
     ParametersSerializerImpl<Cecpq2Parameters, ProtoParametersSerialization>;
+using Cecpq2ProtoPublicKeyParserImpl =
+    KeyParserImpl<ProtoKeySerialization, Cecpq2PublicKey>;
 
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.Cecpq2AeadHkdfPrivateKey";
+const absl::string_view kPublicTypeUrl =
+    "type.googleapis.com/google.crypto.tink.Cecpq2AeadHkdfPublicKey";
 
 absl::StatusOr<Cecpq2Parameters::Variant> ToVariant(
     OutputPrefixTypeEnum output_prefix_type) {
@@ -167,6 +179,34 @@ struct Cecpq2AeadHkdfKeyFormatStruct {
   }
 };
 
+struct Cecpq2AeadHkdfPublicKeyStruct {
+  uint32_t version;
+  Cecpq2AeadHkdfParamsStruct params;
+  std::string x25519_public_key_x;
+  std::string x25519_public_key_y;
+  std::string hrss_public_key_marshalled;
+
+  static ProtoParser<Cecpq2AeadHkdfPublicKeyStruct> CreateParser() {
+    return ProtoParserBuilder<Cecpq2AeadHkdfPublicKeyStruct>()
+        .AddUint32Field(1, &Cecpq2AeadHkdfPublicKeyStruct::version)
+        .AddMessageField(2, &Cecpq2AeadHkdfPublicKeyStruct::params,
+                         Cecpq2AeadHkdfParamsStruct::CreateParser())
+        .AddBytesStringField(
+            3, &Cecpq2AeadHkdfPublicKeyStruct::x25519_public_key_x)
+        .AddBytesStringField(
+            4, &Cecpq2AeadHkdfPublicKeyStruct::x25519_public_key_y)
+        .AddBytesStringField(
+            5, &Cecpq2AeadHkdfPublicKeyStruct::hrss_public_key_marshalled)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<Cecpq2AeadHkdfPublicKeyStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<Cecpq2AeadHkdfPublicKeyStruct>>
+        parser{CreateParser()};
+    return *parser;
+  }
+};
+
 absl::StatusOr<Cecpq2Parameters> ToParameters(
     Cecpq2AeadHkdfParamsStruct& params,
     OutputPrefixTypeEnum output_prefix_type) {
@@ -211,6 +251,26 @@ absl::StatusOr<Cecpq2AeadHkdfParamsStruct> FromParameters(
   params.dem_params.aead_dem = *dem_key_template;
 
   return params;
+}
+
+absl::StatusOr<Cecpq2PublicKey> ToPublicKey(
+    const Cecpq2Parameters& parameters,
+    const Cecpq2AeadHkdfPublicKeyStruct& proto_key,
+    absl::optional<int> id_requirement) {
+  if (!proto_key.x25519_public_key_y.empty()) {
+    return absl::InvalidArgumentError(
+        "Cecpq2AeadHkdfPublicKey.x25519_public_key_y must be empty.");
+  }
+
+  Cecpq2PublicKey::Builder builder =
+      Cecpq2PublicKey::Builder()
+          .SetParameters(parameters)
+          .SetX25519PublicKeyBytes(proto_key.x25519_public_key_x)
+          .SetHrssPublicKeyBytes(proto_key.hrss_public_key_marshalled);
+  if (id_requirement.has_value()) {
+    builder.SetIdRequirement(*id_requirement);
+  }
+  return builder.Build(GetPartialKeyAccess());
 }
 
 absl::StatusOr<Cecpq2Parameters> ParseParameters(
@@ -259,6 +319,35 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
       kPrivateTypeUrl, *output_prefix_type, *proto_params_serialization);
 }
 
+absl::StatusOr<Cecpq2PublicKey> ParsePublicKey(
+    const internal::ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (serialization.TypeUrl() != kPublicTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing Cecpq2PublicKey.");
+  }
+
+  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
+  absl::StatusOr<Cecpq2AeadHkdfPublicKeyStruct> proto_key =
+      Cecpq2AeadHkdfPublicKeyStruct::GetParser().Parse(
+          restricted_data.GetSecret(InsecureSecretKeyAccess::Get()));
+  if (!proto_key.ok()) {
+    return proto_key.status();
+  }
+  if (proto_key->version != 0) {
+    return absl::InvalidArgumentError(
+        "Only version 0 keys are accepted for Cecpq2AeadHkdfPublicKey proto.");
+  }
+
+  absl::StatusOr<Cecpq2Parameters> parameters =
+      ToParameters(proto_key->params, serialization.GetOutputPrefixTypeEnum());
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  return ToPublicKey(*parameters, *proto_key, serialization.IdRequirement());
+}
+
 Cecpq2ProtoParametersParserImpl* Cecpq2ProtoParametersParser() {
   static auto* parser =
       new Cecpq2ProtoParametersParserImpl(kPrivateTypeUrl, ParseParameters);
@@ -271,6 +360,12 @@ Cecpq2ProtoParametersSerializerImpl* Cecpq2ProtoParametersSerializer() {
   return serializer;
 }
 
+Cecpq2ProtoPublicKeyParserImpl* Cecpq2ProtoPublicKeyParser() {
+  static auto* parser =
+      new Cecpq2ProtoPublicKeyParserImpl(kPublicTypeUrl, ParsePublicKey);
+  return parser;
+}
+
 }  // namespace
 
 absl::Status RegisterCecpq2ProtoSerializationWithMutableRegistry(
@@ -281,8 +376,13 @@ absl::Status RegisterCecpq2ProtoSerializationWithMutableRegistry(
     return status;
   }
 
-  return registry.RegisterParametersSerializer(
-      Cecpq2ProtoParametersSerializer());
+  status =
+      registry.RegisterParametersSerializer(Cecpq2ProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return registry.RegisterKeyParser(Cecpq2ProtoPublicKeyParser());
 }
 
 absl::Status RegisterCecpq2ProtoSerializationWithRegistryBuilder(
@@ -293,8 +393,13 @@ absl::Status RegisterCecpq2ProtoSerializationWithRegistryBuilder(
     return status;
   }
 
-  return builder.RegisterParametersSerializer(
-      Cecpq2ProtoParametersSerializer());
+  status =
+      builder.RegisterParametersSerializer(Cecpq2ProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeyParser(Cecpq2ProtoPublicKeyParser());
 }
 
 }  // namespace internal

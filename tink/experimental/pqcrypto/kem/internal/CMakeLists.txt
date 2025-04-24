@@ -245,13 +245,20 @@ tink_cc_library(
     absl::statusor
     absl::string_view
     absl::optional
+    tink::core::insecure_secret_key_access
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_key_access_token
     tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_public_key
     tink::internal::common_proto_enums
     tink::internal::global_serialization_registry
+    tink::internal::key_parser
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
     tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::serialization
@@ -272,14 +279,23 @@ tink_cc_test(
     absl::statusor
     absl::string_view
     absl::optional
+    crypto
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
     tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
     tink::aead::xchacha20_poly1305_parameters
     tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_public_key
+    tink::internal::ec_util
     tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::subtle::random
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::tink_cc_proto

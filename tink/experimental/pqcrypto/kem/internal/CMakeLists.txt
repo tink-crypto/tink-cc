@@ -255,6 +255,7 @@ tink_cc_library(
     tink::internal::common_proto_enums
     tink::internal::global_serialization_registry
     tink::internal::key_parser
+    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
     tink::internal::parameters_parser
     tink::internal::parameters_serializer

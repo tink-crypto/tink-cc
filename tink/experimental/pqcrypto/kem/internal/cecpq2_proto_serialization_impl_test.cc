@@ -125,6 +125,41 @@ Cecpq2AeadHkdfKeyFormat CreateKeyFormatProto(
   return key_format_proto;
 }
 
+void ValidateExpectedProtoParams(
+    Cecpq2AeadHkdfParams params,
+    absl::optional<absl::string_view> expected_salt) {
+  ASSERT_THAT(params.has_dem_params(), IsTrue());
+  ASSERT_THAT(params.dem_params().has_aead_dem(), IsTrue());
+  EXPECT_THAT(params.dem_params().aead_dem().type_url(),
+              Eq(GetXChaCha20Poly1305RawKeyTemplate().type_url()));
+  ASSERT_THAT(params.has_kem_params(), IsTrue());
+  EXPECT_THAT(params.kem_params().curve_type(),
+              Eq(EllipticCurveType::CURVE25519));
+  EXPECT_THAT(params.kem_params().ec_point_format(),
+              Eq(EcPointFormat::COMPRESSED));
+  EXPECT_THAT(params.kem_params().hkdf_hash_type(), Eq(HashType::SHA256));
+  if (expected_salt.has_value()) {
+    EXPECT_THAT(params.kem_params().hkdf_salt(), Eq(*expected_salt));
+  } else {
+    EXPECT_THAT(params.kem_params().hkdf_salt(), Eq(""));
+  }
+}
+
+void ValidateExpectedProtoPublicKey(
+    Cecpq2AeadHkdfPublicKey public_key,
+    absl::optional<absl::string_view> expected_salt,
+    absl::string_view expected_x25519_public_key_bytes,
+    absl::string_view expected_hrss_public_key_bytes) {
+  ASSERT_THAT(public_key.has_params(), IsTrue());
+  ValidateExpectedProtoParams(public_key.params(), expected_salt);
+  EXPECT_THAT(public_key.version(), Eq(0));
+  EXPECT_THAT(public_key.x25519_public_key_x(),
+              Eq(expected_x25519_public_key_bytes));
+  EXPECT_THAT(public_key.x25519_public_key_y(), Eq(""));
+  EXPECT_THAT(public_key.hrss_public_key_marshalled(),
+              Eq(expected_hrss_public_key_bytes));
+}
+
 struct TestCase {
   Cecpq2Parameters::Variant variant;
   absl::optional<std::string> salt;
@@ -310,23 +345,7 @@ TEST_P(Cecpq2ProtoSerializationTest, SerializeParametersWithMutableRegistry) {
   Cecpq2AeadHkdfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
   ASSERT_THAT(key_format.has_params(), IsTrue());
-  ASSERT_THAT(key_format.params().has_dem_params(), IsTrue());
-  ASSERT_THAT(key_format.params().dem_params().has_aead_dem(), IsTrue());
-  EXPECT_THAT(key_format.params().dem_params().aead_dem().type_url(),
-              Eq(GetXChaCha20Poly1305RawKeyTemplate().type_url()));
-  ASSERT_THAT(key_format.params().has_kem_params(), IsTrue());
-  EXPECT_THAT(key_format.params().kem_params().curve_type(),
-              Eq(EllipticCurveType::CURVE25519));
-  EXPECT_THAT(key_format.params().kem_params().ec_point_format(),
-              Eq(EcPointFormat::COMPRESSED));
-  EXPECT_THAT(key_format.params().kem_params().hkdf_hash_type(),
-              Eq(HashType::SHA256));
-  if (parameters->GetSalt().has_value()) {
-    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(),
-                Eq(test_case.salt));
-  } else {
-    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(), Eq(""));
-  }
+  ValidateExpectedProtoParams(key_format.params(), test_case.salt);
 }
 
 TEST_P(Cecpq2ProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
@@ -359,23 +378,7 @@ TEST_P(Cecpq2ProtoSerializationTest, SerializeParametersWithRegistryBuilder) {
   Cecpq2AeadHkdfKeyFormat key_format;
   ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
   ASSERT_THAT(key_format.has_params(), IsTrue());
-  ASSERT_THAT(key_format.params().has_dem_params(), IsTrue());
-  ASSERT_THAT(key_format.params().dem_params().has_aead_dem(), IsTrue());
-  EXPECT_THAT(key_format.params().dem_params().aead_dem().type_url(),
-              Eq(GetXChaCha20Poly1305RawKeyTemplate().type_url()));
-  ASSERT_THAT(key_format.params().has_kem_params(), IsTrue());
-  EXPECT_THAT(key_format.params().kem_params().curve_type(),
-              Eq(EllipticCurveType::CURVE25519));
-  EXPECT_THAT(key_format.params().kem_params().ec_point_format(),
-              Eq(EcPointFormat::COMPRESSED));
-  EXPECT_THAT(key_format.params().kem_params().hkdf_hash_type(),
-              Eq(HashType::SHA256));
-  if (parameters->GetSalt().has_value()) {
-    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(),
-                Eq(test_case.salt));
-  } else {
-    EXPECT_THAT(key_format.params().kem_params().hkdf_salt(), Eq(""));
-  }
+  ValidateExpectedProtoParams(key_format.params(), test_case.salt);
 }
 
 TEST_P(Cecpq2ProtoSerializationTest, ParsePublicKeyWithMutableRegistry) {
@@ -630,27 +633,9 @@ TEST_P(Cecpq2ProtoSerializationTest, SerializePublicKeyWithMutableRegistry) {
                   proto_serialization->SerializedKeyProto().GetSecret(
                       InsecureSecretKeyAccess::Get())),
               IsTrue());
-  EXPECT_THAT(public_key_proto.version(), Eq(0));
-  EXPECT_THAT(public_key_proto.params().dem_params().aead_dem().type_url(),
-              Eq(GetXChaCha20Poly1305RawKeyTemplate().type_url()));
-  ASSERT_THAT(public_key_proto.params().has_kem_params(), IsTrue());
-  EXPECT_THAT(public_key_proto.params().kem_params().curve_type(),
-              Eq(EllipticCurveType::CURVE25519));
-  EXPECT_THAT(public_key_proto.params().kem_params().ec_point_format(),
-              Eq(EcPointFormat::COMPRESSED));
-  EXPECT_THAT(public_key_proto.params().kem_params().hkdf_hash_type(),
-              Eq(HashType::SHA256));
-  if (parameters->GetSalt().has_value()) {
-    EXPECT_THAT(public_key_proto.params().kem_params().hkdf_salt(),
-                Eq(test_case.salt));
-  } else {
-    EXPECT_THAT(public_key_proto.params().kem_params().hkdf_salt(), Eq(""));
-  }
-  EXPECT_THAT(public_key_proto.x25519_public_key_x(),
-              Eq(x25519_public_key_bytes));
-  EXPECT_THAT(public_key_proto.x25519_public_key_y(), Eq(""));
-  EXPECT_THAT(public_key_proto.hrss_public_key_marshalled(),
-              Eq(hrss_public_key_bytes));
+  ValidateExpectedProtoPublicKey(public_key_proto, test_case.salt,
+                                 x25519_public_key_bytes,
+                                 hrss_public_key_bytes);
 }
 
 TEST_P(Cecpq2ProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
@@ -705,27 +690,9 @@ TEST_P(Cecpq2ProtoSerializationTest, SerializePublicKeyWithRegistryBuilder) {
                   proto_serialization->SerializedKeyProto().GetSecret(
                       InsecureSecretKeyAccess::Get())),
               IsTrue());
-  EXPECT_THAT(public_key_proto.version(), Eq(0));
-  EXPECT_THAT(public_key_proto.params().dem_params().aead_dem().type_url(),
-              Eq(GetXChaCha20Poly1305RawKeyTemplate().type_url()));
-  ASSERT_THAT(public_key_proto.params().has_kem_params(), IsTrue());
-  EXPECT_THAT(public_key_proto.params().kem_params().curve_type(),
-              Eq(EllipticCurveType::CURVE25519));
-  EXPECT_THAT(public_key_proto.params().kem_params().ec_point_format(),
-              Eq(EcPointFormat::COMPRESSED));
-  EXPECT_THAT(public_key_proto.params().kem_params().hkdf_hash_type(),
-              Eq(HashType::SHA256));
-  if (parameters->GetSalt().has_value()) {
-    EXPECT_THAT(public_key_proto.params().kem_params().hkdf_salt(),
-                Eq(test_case.salt));
-  } else {
-    EXPECT_THAT(public_key_proto.params().kem_params().hkdf_salt(), Eq(""));
-  }
-  EXPECT_THAT(public_key_proto.x25519_public_key_x(),
-              Eq(x25519_public_key_bytes));
-  EXPECT_THAT(public_key_proto.x25519_public_key_y(), Eq(""));
-  EXPECT_THAT(public_key_proto.hrss_public_key_marshalled(),
-              Eq(hrss_public_key_bytes));
+  ValidateExpectedProtoPublicKey(public_key_proto, test_case.salt,
+                                 x25519_public_key_bytes,
+                                 hrss_public_key_bytes);
 }
 
 TEST_P(Cecpq2ProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {

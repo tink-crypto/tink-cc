@@ -241,7 +241,7 @@ TEST(SecretBufferTest, AppendStringViewWithEmpty2) {
 
 TEST(SecretBufferTest, AppendWithSecretData) {
   SecretBuffer buffer1("some data;");
-  util::SecretData data = util::SecretDataFromStringView("some other data;");
+  SecretData data = util::SecretDataFromStringView("some other data;");
   buffer1.append(data);
   EXPECT_THAT(buffer1, Eq(SecretBuffer("some data;some other data;")));
 }

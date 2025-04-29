@@ -41,8 +41,7 @@ namespace proto_parsing {
 template <typename Struct>
 class SecretDataField : public Field<Struct> {
  public:
-  explicit SecretDataField(int field_number,
-                           crypto::tink::util::SecretData Struct::* data,
+  explicit SecretDataField(int field_number, SecretData Struct::* data,
                            ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : data_(data), field_number_(field_number), options_(options) {}
   // Not copyable and movable.
@@ -51,9 +50,7 @@ class SecretDataField : public Field<Struct> {
   SecretDataField(SecretDataField&&) noexcept = delete;
   SecretDataField& operator=(SecretDataField&&) noexcept = delete;
 
-  void ClearMember(Struct& s) const override {
-    s.*data_ = crypto::tink::util::SecretData();
-  }
+  void ClearMember(Struct& s) const override { s.*data_ = SecretData(); }
 
   absl::Status ConsumeIntoMember(ParsingState& parsing_state,
                                  Struct& s) const override {
@@ -73,7 +70,7 @@ class SecretDataField : public Field<Struct> {
 #else
     CallWithCoreDumpProtection([&]() {
       absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(*length);
-      s.*data_ = crypto::tink::util::SecretData(data, crc);
+      s.*data_ = SecretData(data, crc);
     });
 #endif
     return absl::OkStatus();
@@ -130,7 +127,7 @@ class SecretDataField : public Field<Struct> {
            options_ == ProtoFieldOptions::kAlwaysSerialize;
   }
 
-  crypto::tink::util::SecretData Struct::* data_;
+  SecretData Struct::* data_;
   int field_number_;
   ProtoFieldOptions options_;
 };

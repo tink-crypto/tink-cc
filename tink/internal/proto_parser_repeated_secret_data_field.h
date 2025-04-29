@@ -42,9 +42,8 @@ namespace proto_parsing {
 template <typename Struct>
 class RepeatedSecretDataField : public Field<Struct> {
  public:
-  explicit RepeatedSecretDataField(
-      int field_number,
-      std::vector<crypto::tink::util::SecretData> Struct::* data)
+  explicit RepeatedSecretDataField(int field_number,
+                                   std::vector<SecretData> Struct::* data)
       : data_(data), field_number_(field_number) {}
   // Not copyable and movable.
   RepeatedSecretDataField(const RepeatedSecretDataField&) = delete;
@@ -75,7 +74,7 @@ class RepeatedSecretDataField : public Field<Struct> {
 #else
     CallWithCoreDumpProtection([&]() {
       absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(*length);
-      (s.*data_).push_back(crypto::tink::util::SecretData(data, crc));
+      (s.*data_).push_back(SecretData(data, crc));
     });
 #endif
     return absl::OkStatus();
@@ -86,7 +85,7 @@ class RepeatedSecretDataField : public Field<Struct> {
 
   absl::Status SerializeWithTagInto(SerializationState& serialization_state,
                                     const Struct& values) const override {
-    for (const crypto::tink::util::SecretData& secret_data : values.*data_) {
+    for (const SecretData& secret_data : values.*data_) {
       absl::Status status = SerializeWireTypeAndFieldNumber(
           GetWireType(), GetFieldNumber(), serialization_state);
       if (!status.ok()) {
@@ -118,7 +117,7 @@ class RepeatedSecretDataField : public Field<Struct> {
 
   size_t GetSerializedSizeIncludingTag(const Struct& values) const override {
     size_t total_size = 0;
-    for (const crypto::tink::util::SecretData& secret_data : values.*data_) {
+    for (const SecretData& secret_data : values.*data_) {
       size_t cur_size = secret_data.size();
       total_size +=
           WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
@@ -128,7 +127,7 @@ class RepeatedSecretDataField : public Field<Struct> {
   }
 
  private:
-  std::vector<crypto::tink::util::SecretData> Struct::* data_;
+  std::vector<SecretData> Struct::* data_;
   int field_number_;
 };
 

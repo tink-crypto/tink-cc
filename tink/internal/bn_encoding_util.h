@@ -36,7 +36,7 @@ namespace internal {
 absl::StatusOr<std::string> GetValueOfFixedLength(
     absl::string_view big_integer_encoding, int length);
 
-absl::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
+absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
     const RestrictedBigInteger& big_integer, int length,
     SecretKeyAccessToken token);
 

@@ -102,7 +102,7 @@ TEST(TinkProtoStructsTest, SerializeKeyDataStruct) {
   key_data_struct.type_url = "type_url";
   key_data_struct.value = util::SecretDataFromStringView("value");
   key_data_struct.key_material_type = KeyMaterialTypeEnum::kSymmetric;
-  absl::StatusOr<util::SecretData> serialized_key_data =
+  absl::StatusOr<SecretData> serialized_key_data =
       KeyDataStruct::GetParser().SerializeIntoSecretData(key_data_struct);
   ASSERT_THAT(serialized_key_data, IsOk());
 

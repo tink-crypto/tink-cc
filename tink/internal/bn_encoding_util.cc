@@ -52,7 +52,7 @@ absl::StatusOr<std::string> GetValueOfFixedLength(
   return absl::StrCat(padded_string, big_integer_encoding);
 }
 
-absl::StatusOr<util::SecretData> GetSecretValueOfFixedLength(
+absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
     const RestrictedBigInteger& big_integer, int length,
     SecretKeyAccessToken token) {
   if (big_integer.SizeInBytes() == length) {

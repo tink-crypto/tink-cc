@@ -116,8 +116,7 @@ class ProtoParser {
   // field is used to compute the result. This enables end-to-end coverage of
   // the CRC computation: if the returned CRC is correct, the CRCs of the fields
   // must have been corrects.
-  absl::StatusOr<crypto::tink::util::SecretData> SerializeIntoSecretData(
-      const Struct& s) const;
+  absl::StatusOr<SecretData> SerializeIntoSecretData(const Struct& s) const;
 
  private:
   template <typename AnyStruct>
@@ -197,7 +196,7 @@ class ProtoParserBuilder {
   }
 
   ProtoParserBuilder& AddBytesSecretDataField(
-      int tag, crypto::tink::util::SecretData Struct::* value,
+      int tag, SecretData Struct::* value,
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(absl::make_unique<proto_parsing::SecretDataField<Struct>>(
         tag, value, options));
@@ -205,7 +204,7 @@ class ProtoParserBuilder {
   }
 
   ProtoParserBuilder& AddRepeatedBytesSecretDataField(
-      int tag, std::vector<crypto::tink::util::SecretData> Struct::* value) {
+      int tag, std::vector<SecretData> Struct::* value) {
     fields_.push_back(
         absl::make_unique<proto_parsing::RepeatedSecretDataField<Struct>>(
             tag, value));
@@ -293,14 +292,14 @@ absl::StatusOr<std::string> ProtoParser<Struct>::SerializeIntoString(
 }
 
 template <typename Struct>
-absl::StatusOr<util::SecretData> ProtoParser<Struct>::SerializeIntoSecretData(
+absl::StatusOr<SecretData> ProtoParser<Struct>::SerializeIntoSecretData(
     const Struct& s) const {
   size_t size = low_level_parser_.GetSerializedSize(s);
   crypto::tink::internal::SecretBuffer result_data;
   result_data.resize(size);
   absl::Span<char> buffer = absl::MakeSpan(
       reinterpret_cast<char*>(result_data.data()), result_data.size());
-  return CallWithCoreDumpProtection([&]() -> absl::StatusOr<util::SecretData> {
+  return CallWithCoreDumpProtection([&]() -> absl::StatusOr<SecretData> {
     absl::crc32c_t result_crc = absl::crc32c_t(0);
     proto_parsing::SerializationState serialization_state =
         proto_parsing::SerializationState(buffer, &result_crc);
@@ -315,7 +314,7 @@ absl::StatusOr<util::SecretData> ProtoParser<Struct>::SerializeIntoSecretData(
 #ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
     return util::SecretDataFromStringView(result_data.AsStringView());
 #else
-    return util::SecretData(std::move(result_data), result_crc);
+    return SecretData(std::move(result_data), result_crc);
 #endif
   });
 }

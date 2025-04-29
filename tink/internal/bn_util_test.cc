@@ -191,7 +191,7 @@ TEST(BnUtil, BignumToSecretData) {
     ASSERT_THAT(expected_bn, IsOk());
 
     const std::string bn_bytes = test::HexDecodeOrDie(s);
-    absl::StatusOr<util::SecretData> result =
+    absl::StatusOr<SecretData> result =
         BignumToSecretData(expected_bn->get(), bn_bytes.size());
     ASSERT_THAT(result, IsOk());
     EXPECT_EQ(absl::string_view(bn_bytes),
@@ -240,7 +240,7 @@ TEST(BnUtil, BufferToSmall) {
       EXPECT_THAT(result, Not(IsOk()));
     }
     {
-      absl::StatusOr<util::SecretData> result =
+      absl::StatusOr<SecretData> result =
           BignumToSecretData(expected_bn->get(), buffer_size);
       EXPECT_THAT(result, Not(IsOk()));
     }

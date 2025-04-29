@@ -73,22 +73,22 @@ struct RsaPrivateKey {
   std::string e;
   // Private exponent.
   // Unsigned big integer in bigendian representation.
-  util::SecretData d;
+  SecretData d;
 
   // The prime factor p of n.
   // Unsigned big integer in bigendian representation.
-  util::SecretData p;
+  SecretData p;
   // The prime factor q of n.
   // Unsigned big integer in bigendian representation.
-  util::SecretData q;
+  SecretData q;
   // d mod (p - 1).
-  util::SecretData dp;
+  SecretData dp;
   // d mod (q - 1).
   // Unsigned big integer in bigendian representation.
-  util::SecretData dq;
+  SecretData dq;
   // Chinese Remainder Theorem coefficient q^(-1) mod p.
   // Unsigned big integer in bigendian representation.
-  util::SecretData crt;
+  SecretData crt;
 };
 
 // Validates whether 'modulus_size' is at least 2048-bit.

@@ -952,8 +952,7 @@ TEST(ProtoParserTest, SerializeIntoSecretData) {
           .AddUint32Field(1, &ParsedStruct::uint32_member_1)
           .Build();
   ASSERT_THAT(parser.status(), IsOk());
-  absl::StatusOr<crypto::tink::util::SecretData> serialized =
-      parser->SerializeIntoSecretData(s);
+  absl::StatusOr<SecretData> serialized = parser->SerializeIntoSecretData(s);
   ASSERT_THAT(serialized, IsOk());
   EXPECT_THAT(SecretDataAsStringView(*serialized), Eq(HexDecodeOrDie("087a")));
 }

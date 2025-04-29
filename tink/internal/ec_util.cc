@@ -317,7 +317,7 @@ absl::StatusOr<EcKey> EcKeyFromSslEcKey(EllipticCurveType curve,
   if (!pub_y_str.ok()) {
     return pub_y_str.status();
   }
-  absl::StatusOr<util::SecretData> priv_key_data =
+  absl::StatusOr<SecretData> priv_key_data =
       BignumToSecretData(priv_key, ScalarSizeInBytes(group->get()));
   if (!priv_key_data.ok()) {
     return priv_key_data.status();
@@ -396,7 +396,7 @@ absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type) {
 }
 
 absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type,
-                               const util::SecretData &secret_seed) {
+                               const SecretData &secret_seed) {
   // EC_KEY_derive_from_secret() is neither defined in the version of BoringSSL
   // used when FIPS-only mode is enabled at compile time, nor currently
   // implemented for OpenSSL.
@@ -467,13 +467,12 @@ EcKey EcKeyFromX25519Key(const X25519Key *x25519_key) {
 }
 
 absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key() {
-  util::SecretData seed =
-      subtle::Random::GetRandomKeyBytes(Ed25519KeyPrivKeySize());
+  SecretData seed = subtle::Random::GetRandomKeyBytes(Ed25519KeyPrivKeySize());
   return NewEd25519Key(seed);
 }
 
 absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
-    const util::SecretData &secret_seed) {
+    const SecretData &secret_seed) {
   if (secret_seed.size() != Ed25519KeyPrivKeySize()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -535,7 +534,7 @@ absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
   return std::move(x25519_key);
 }
 
-absl::StatusOr<util::SecretData> ComputeX25519SharedSecret(
+absl::StatusOr<SecretData> ComputeX25519SharedSecret(
     EVP_PKEY *private_key, EVP_PKEY *peer_public_key) {
   // Make sure the keys are actually X25519 keys.
   if (EVP_PKEY_id(private_key) != SslEvpPkeyType::kX25519Key) {
@@ -564,7 +563,7 @@ absl::StatusOr<util::SecretData> ComputeX25519SharedSecret(
 }
 
 absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
-    const util::SecretData &private_key) {
+    const SecretData &private_key) {
   if (private_key.size() != X25519KeyPrivKeySize()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid length for private key");
@@ -724,8 +723,9 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(EllipticCurveType curve,
   return SslGetEcPointFromCoordinates(group->get(), pubx, puby);
 }
 
-absl::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
-    EllipticCurveType curve, const BIGNUM *priv_key, const EC_POINT *pub_key) {
+absl::StatusOr<SecretData> ComputeEcdhSharedSecret(EllipticCurveType curve,
+                                                   const BIGNUM *priv_key,
+                                                   const EC_POINT *pub_key) {
   absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> priv_group =
       internal::EcGroupFromCurveType(curve);
   if (!priv_group.ok()) {

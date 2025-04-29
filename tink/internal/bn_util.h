@@ -74,11 +74,10 @@ absl::StatusOr<std::string> BignumToString(const BIGNUM* bn, size_t len);
 
 // Retuns a SecretData object that encodes `bn` in big-endian form of size `len`
 // with leading zeroes.
-absl::StatusOr<crypto::tink::util::SecretData> BignumToSecretData(
-    const BIGNUM* bn, size_t len);
+absl::StatusOr<SecretData> BignumToSecretData(const BIGNUM* bn, size_t len);
 
 absl::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
-    const util::SecretData& bigendian_bn_str);
+    const SecretData& bigendian_bn_str);
 
 // Returns an OpenSSL/BoringSSL BIGNUM constructed from a bigendian string
 // representation `bigendian_bn_str`.

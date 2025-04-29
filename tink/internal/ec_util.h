@@ -45,18 +45,17 @@ struct EcKey {
   std::string pub_x;
   std::string pub_y;
   // Big integer in bigendian representation.
-  crypto::tink::util::SecretData priv;
+  SecretData priv;
 };
 
 struct X25519Key {
   uint8_t public_value[X25519KeyPubKeySize()];
-  crypto::tink::util::SecretData private_key =
-      crypto::tink::util::SecretData(X25519KeyPrivKeySize());
+  SecretData private_key = SecretData(X25519KeyPrivKeySize());
 };
 
 struct Ed25519Key {
   std::string public_key;
-  util::SecretData private_key;
+  SecretData private_key;
 };
 
 // EcKey.
@@ -68,7 +67,7 @@ absl::StatusOr<EcKey> NewEcKey(
 // Returns a new EC key for the specified curve derived from a secret seed.
 absl::StatusOr<EcKey> NewEcKey(
     crypto::tink::subtle::EllipticCurveType curve_type,
-    const crypto::tink::util::SecretData &secret_seed);
+    const SecretData &secret_seed);
 
 // X25519Key Utils.
 
@@ -90,12 +89,12 @@ absl::StatusOr<EcKey> EcKeyFromSslEcKey(
 
 // Generates a shared secret using `private_key` and `peer_public_key`; keys
 // must be X25519 keys otherwise an error is returned.
-absl::StatusOr<util::SecretData> ComputeX25519SharedSecret(
-    EVP_PKEY *private_key, EVP_PKEY *peer_public_key);
+absl::StatusOr<SecretData> ComputeX25519SharedSecret(EVP_PKEY *private_key,
+                                                     EVP_PKEY *peer_public_key);
 
 // Computes the corresponding public+private key for the supplied private key.
 absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
-    const crypto::tink::util::SecretData &private_key);
+    const SecretData &private_key);
 
 // Ed25519Key Utils.
 
@@ -104,7 +103,7 @@ absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key();
 
 // Returns a new ED25519 key generated from a 32-byte secret seed.
 absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
-    const crypto::tink::util::SecretData &secret_seed);
+    const SecretData &secret_seed);
 
 // EC_POINT Encode/Decode.
 
@@ -172,7 +171,7 @@ absl::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP *group,
 // Returns the ECDH's shared secret between two peers A and B using A's private
 // key `priv_key` and B's public key `pub_key`. Returns error if `pub_key`
 // is not on `priv_key`'s curve `curve`.
-absl::StatusOr<util::SecretData> ComputeEcdhSharedSecret(
+absl::StatusOr<SecretData> ComputeEcdhSharedSecret(
     crypto::tink::subtle::EllipticCurveType curve, const BIGNUM *priv_key,
     const EC_POINT *pub_key);
 

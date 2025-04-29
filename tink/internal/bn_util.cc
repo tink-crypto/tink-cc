@@ -71,8 +71,7 @@ absl::StatusOr<std::string> BignumToString(const BIGNUM *bn, size_t len) {
   return buffer;
 }
 
-absl::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
-                                                    size_t len) {
+absl::StatusOr<SecretData> BignumToSecretData(const BIGNUM *bn, size_t len) {
   if (bn == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument, "BIGNUM is NULL");
   }
@@ -90,7 +89,7 @@ absl::StatusOr<util::SecretData> BignumToSecretData(const BIGNUM *bn,
 }
 
 absl::StatusOr<internal::SslUniquePtr<BIGNUM>> SecretDataToBignum(
-    const util::SecretData &bigendian_bn_str) {
+    const SecretData &bigendian_bn_str) {
   internal::SslUniquePtr<BIGNUM> bn(internal::CallWithCoreDumpProtection([&] {
     return BN_bin2bn(
         reinterpret_cast<const unsigned char *>(bigendian_bn_str.data()),

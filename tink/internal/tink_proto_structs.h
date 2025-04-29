@@ -63,7 +63,7 @@ struct KeyTemplateStruct {
 
 struct KeyDataStruct {
   std::string type_url;
-  util::SecretData value;
+  SecretData value;
   KeyMaterialTypeEnum key_material_type;
 
   static ProtoParser<KeyDataStruct> CreateParser();

@@ -254,8 +254,8 @@ void ExpectBignumEquals(const BIGNUM* bn, absl::string_view data) {
 }
 
 // Checks if a BIGNUM is equal to a SecretData value.
-void ExpectBignumEquals(const BIGNUM* bn, const util::SecretData& data) {
-  absl::StatusOr<util::SecretData> converted =
+void ExpectBignumEquals(const BIGNUM* bn, const SecretData& data) {
+  absl::StatusOr<SecretData> converted =
       internal::BignumToSecretData(bn, BN_num_bytes(bn));
   ASSERT_THAT(converted, IsOk());
   EXPECT_TRUE(util::SecretDataEquals(*converted, data));

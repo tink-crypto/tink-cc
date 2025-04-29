@@ -152,7 +152,7 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   if (!e_str.ok()) {
     return e_str.status();
   }
-  absl::StatusOr<util::SecretData> d_str =
+  absl::StatusOr<SecretData> d_str =
       internal::BignumToSecretData(d_bn, BN_num_bytes(d_bn));
   if (!d_str.ok()) {
     return d_str.status();
@@ -166,12 +166,12 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   // Save factors.
   const BIGNUM *p_bn, *q_bn;
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
-  absl::StatusOr<util::SecretData> p_str =
+  absl::StatusOr<SecretData> p_str =
       internal::BignumToSecretData(p_bn, BN_num_bytes(p_bn));
   if (!p_str.ok()) {
     return p_str.status();
   }
-  absl::StatusOr<util::SecretData> q_str =
+  absl::StatusOr<SecretData> q_str =
       internal::BignumToSecretData(q_bn, BN_num_bytes(q_bn));
   if (!q_str.ok()) {
     return q_str.status();
@@ -182,17 +182,17 @@ absl::Status NewRsaKeyPair(int modulus_size_in_bits, const BIGNUM *e,
   // Save CRT parameters.
   const BIGNUM *dp_bn, *dq_bn, *crt_bn;
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &crt_bn);
-  absl::StatusOr<util::SecretData> dp_str =
+  absl::StatusOr<SecretData> dp_str =
       internal::BignumToSecretData(dp_bn, BN_num_bytes(dp_bn));
   if (!dp_str.ok()) {
     return dp_str.status();
   }
-  absl::StatusOr<util::SecretData> dq_str =
+  absl::StatusOr<SecretData> dq_str =
       internal::BignumToSecretData(dq_bn, BN_num_bytes(dq_bn));
   if (!dq_str.ok()) {
     return dq_str.status();
   }
-  absl::StatusOr<util::SecretData> crt_str =
+  absl::StatusOr<SecretData> crt_str =
       internal::BignumToSecretData(crt_bn, BN_num_bytes(crt_bn));
   if (!crt_str.ok()) {
     return crt_str.status();

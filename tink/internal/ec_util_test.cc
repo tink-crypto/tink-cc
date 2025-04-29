@@ -93,7 +93,7 @@ TEST(EcUtilTest, NewEd25519KeyWithWycheproofTestVectors) {
        test_groups.list_value().values()) {
     const google::protobuf::Value& key_value =
         test_group.struct_value().fields().at("key");
-    util::SecretData private_key = util::SecretDataFromStringView(
+    SecretData private_key = util::SecretDataFromStringView(
         GetBytesFromHexValue(key_value.struct_value().fields().at("sk")));
     std::string public_key =
         GetBytesFromHexValue(key_value.struct_value().fields().at("pk"));
@@ -155,9 +155,9 @@ TEST_P(EcUtilNewEcKeyWithSeed, KeysFromDifferentSeedAreDifferent) {
     GTEST_SKIP() << "NewEcKey with seed is not supported with OpenSSL";
   }
 
-  util::SecretData seed1 = util::SecretDataFromStringView(
+  SecretData seed1 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
-  util::SecretData seed2 = util::SecretDataFromStringView(
+  SecretData seed2 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("0f0e0d0c0b0a09080706050403020100"));
   subtle::EllipticCurveType curve = GetParam();
 
@@ -176,7 +176,7 @@ TEST_P(EcUtilNewEcKeyWithSeed, SameSeedGivesSameKey) {
     GTEST_SKIP() << "NewEcKey with seed is not supported with OpenSSL";
   }
 
-  util::SecretData seed1 = util::SecretDataFromStringView(
+  SecretData seed1 = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   subtle::EllipticCurveType curve = GetParam();
 
@@ -198,7 +198,7 @@ TEST(EcUtilTest, GenerationWithSeedFailsWithWrongCurve) {
   if (!IsBoringSsl()) {
     GTEST_SKIP() << "NewEcKey with seed is not supported with OpenSSL";
   }
-  util::SecretData seed = util::SecretDataFromStringView(
+  SecretData seed = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   absl::StatusOr<EcKey> keypair =
       NewEcKey(subtle::EllipticCurveType::CURVE25519, seed);
@@ -213,7 +213,7 @@ TEST(EcUtilTest, NewEcKeyFromSeedUnimplementedIfOpenSsl) {
     GTEST_SKIP()
         << "OpenSSL-only test; skipping because BoringSSL is being used";
   }
-  util::SecretData seed = util::SecretDataFromStringView(
+  SecretData seed = util::SecretDataFromStringView(
       test::HexDecodeOrDie("000102030405060708090a0b0c0d0e0f"));
   absl::StatusOr<EcKey> keypair =
       NewEcKey(subtle::EllipticCurveType::CURVE25519, seed);
@@ -870,7 +870,7 @@ TEST_P(EcUtilComputeEcdhSharedSecretTest, ComputeEcdhSharedSecretWycheproof) {
       StringToBignum(params.priv_bytes);
   ASSERT_THAT(priv_key, IsOk());
 
-  absl::StatusOr<util::SecretData> shared_secret =
+  absl::StatusOr<SecretData> shared_secret =
       ComputeEcdhSharedSecret(params.curve, priv_key->get(), pub_key->get());
 
   if (params.result == "invalid") {

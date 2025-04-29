@@ -26,6 +26,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/experimental/pqcrypto/kem/cecpq2_parameters.h"
+#include "tink/experimental/pqcrypto/kem/cecpq2_private_key.h"
 #include "tink/experimental/pqcrypto/kem/cecpq2_public_key.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/common_proto_enums.h"
@@ -44,6 +45,7 @@
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "proto/tink.pb.h"
 
@@ -60,6 +62,8 @@ using Cecpq2ProtoPublicKeyParserImpl =
     KeyParserImpl<ProtoKeySerialization, Cecpq2PublicKey>;
 using Cecpq2ProtoPublicKeySerializerImpl =
     KeySerializerImpl<Cecpq2PublicKey, ProtoKeySerialization>;
+using Cecpq2ProtoPrivateKeyParserImpl =
+    KeyParserImpl<ProtoKeySerialization, Cecpq2PrivateKey>;
 
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.Cecpq2AeadHkdfPrivateKey";
@@ -210,6 +214,31 @@ struct Cecpq2AeadHkdfPublicKeyStruct {
   }
 };
 
+struct Cecpq2AeadHkdfPrivateKeyStruct {
+  uint32_t version;
+  Cecpq2AeadHkdfPublicKeyStruct public_key;
+  SecretData x25519_private_key;
+  SecretData hrss_private_key_seed;
+
+  static ProtoParser<Cecpq2AeadHkdfPrivateKeyStruct> CreateParser() {
+    return ProtoParserBuilder<Cecpq2AeadHkdfPrivateKeyStruct>()
+        .AddUint32Field(1, &Cecpq2AeadHkdfPrivateKeyStruct::version)
+        .AddMessageField(2, &Cecpq2AeadHkdfPrivateKeyStruct::public_key,
+                         Cecpq2AeadHkdfPublicKeyStruct::CreateParser())
+        .AddBytesSecretDataField(
+            3, &Cecpq2AeadHkdfPrivateKeyStruct::x25519_private_key)
+        .AddBytesSecretDataField(
+            4, &Cecpq2AeadHkdfPrivateKeyStruct::hrss_private_key_seed)
+        .BuildOrDie();
+  }
+
+  static const ProtoParser<Cecpq2AeadHkdfPrivateKeyStruct>& GetParser() {
+    static absl::NoDestructor<ProtoParser<Cecpq2AeadHkdfPrivateKeyStruct>>
+        parser{CreateParser()};
+    return *parser;
+  }
+};
+
 absl::StatusOr<Cecpq2Parameters> ToParameters(
     Cecpq2AeadHkdfParamsStruct& params,
     OutputPrefixTypeEnum output_prefix_type) {
@@ -288,6 +317,19 @@ absl::StatusOr<Cecpq2AeadHkdfPublicKeyStruct> FromPublicKey(
       public_key.GetHrssPublicKeyBytes(GetPartialKeyAccess());
 
   return proto_public_key;
+}
+
+absl::StatusOr<Cecpq2PrivateKey> ToPrivateKey(
+    const Cecpq2PublicKey& public_key,
+    const Cecpq2AeadHkdfPrivateKeyStruct& proto_private_key) {
+  return Cecpq2PrivateKey::Builder()
+      .SetPublicKey(public_key)
+      .SetX25519PrivateKeyBytes(RestrictedData(
+          proto_private_key.x25519_private_key, InsecureSecretKeyAccess::Get()))
+      .SetHrssPrivateKeySeed(
+          RestrictedData(proto_private_key.hrss_private_key_seed,
+                         InsecureSecretKeyAccess::Get()))
+      .Build(GetPartialKeyAccess());
 }
 
 absl::StatusOr<Cecpq2Parameters> ParseParameters(
@@ -399,6 +441,49 @@ absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
       *output_prefix_type, public_key.GetIdRequirement());
 }
 
+absl::StatusOr<Cecpq2PrivateKey> ParsePrivateKey(
+    const ProtoKeySerialization& serialization,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError(
+        "Parsing private key requires secret key access.");
+  }
+  if (serialization.TypeUrl() != kPrivateTypeUrl) {
+    return absl::InvalidArgumentError(
+        "Wrong type URL when parsing Cecpq2PrivateKey.");
+  }
+
+  const RestrictedData& restricted_data = serialization.SerializedKeyProto();
+  absl::StatusOr<Cecpq2AeadHkdfPrivateKeyStruct> proto_key =
+      Cecpq2AeadHkdfPrivateKeyStruct::GetParser().Parse(
+          restricted_data.GetSecret(*token));
+  if (!proto_key.ok()) {
+    return proto_key.status();
+  }
+  if (proto_key->public_key.version != 0) {
+    return absl::InvalidArgumentError(
+        "Only version 0 keys are accepted for Cecpq2AeadHkdfPublicKey proto.");
+  }
+  if (proto_key->version != 0) {
+    return absl::InvalidArgumentError(
+        "Only version 0 keys are accepted for Cecpq2AeadHkdfPrivateKey proto.");
+  }
+
+  absl::StatusOr<Cecpq2Parameters> parameters = ToParameters(
+      proto_key->public_key.params, serialization.GetOutputPrefixTypeEnum());
+  if (!parameters.ok()) {
+    return parameters.status();
+  }
+
+  absl::StatusOr<Cecpq2PublicKey> public_key = ToPublicKey(
+      *parameters, proto_key->public_key, serialization.IdRequirement());
+  if (!public_key.ok()) {
+    return public_key.status();
+  }
+
+  return ToPrivateKey(*public_key, *proto_key);
+}
+
 Cecpq2ProtoParametersParserImpl* Cecpq2ProtoParametersParser() {
   static auto* parser =
       new Cecpq2ProtoParametersParserImpl(kPrivateTypeUrl, ParseParameters);
@@ -423,6 +508,12 @@ Cecpq2ProtoPublicKeySerializerImpl* Cecpq2ProtoPublicKeySerializer() {
   return serializer;
 }
 
+Cecpq2ProtoPrivateKeyParserImpl* Cecpq2ProtoPrivateKeyParser() {
+  static auto* parser =
+      new Cecpq2ProtoPrivateKeyParserImpl(kPrivateTypeUrl, ParsePrivateKey);
+  return parser;
+}
+
 }  // namespace
 
 absl::Status RegisterCecpq2ProtoSerializationWithMutableRegistry(
@@ -444,7 +535,12 @@ absl::Status RegisterCecpq2ProtoSerializationWithMutableRegistry(
     return status;
   }
 
-  return registry.RegisterKeySerializer(Cecpq2ProtoPublicKeySerializer());
+  status = registry.RegisterKeySerializer(Cecpq2ProtoPublicKeySerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return registry.RegisterKeyParser(Cecpq2ProtoPrivateKeyParser());
 }
 
 absl::Status RegisterCecpq2ProtoSerializationWithRegistryBuilder(
@@ -466,7 +562,12 @@ absl::Status RegisterCecpq2ProtoSerializationWithRegistryBuilder(
     return status;
   }
 
-  return builder.RegisterKeySerializer(Cecpq2ProtoPublicKeySerializer());
+  status = builder.RegisterKeySerializer(Cecpq2ProtoPublicKeySerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeyParser(Cecpq2ProtoPrivateKeyParser());
 }
 
 }  // namespace internal

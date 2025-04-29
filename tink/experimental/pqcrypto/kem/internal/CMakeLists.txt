@@ -249,8 +249,10 @@ tink_cc_library(
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_private_key
     tink::experimental::pqcrypto::kem::cecpq2_public_key
     tink::internal::common_proto_enums
     tink::internal::global_serialization_registry
@@ -288,7 +290,9 @@ tink_cc_test(
     tink::core::restricted_data
     tink::aead::xchacha20_poly1305_parameters
     tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_private_key
     tink::experimental::pqcrypto::kem::cecpq2_public_key
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_subtle_boringssl_util
     tink::internal::ec_util
     tink::internal::mutable_serialization_registry
     tink::internal::proto_key_serialization
@@ -296,7 +300,9 @@ tink_cc_test(
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::subtle::common_enums
     tink::subtle::random
+    tink::util::secret_data
     tink::util::test_matchers
     tink::proto::common_cc_proto
     tink::proto::tink_cc_proto

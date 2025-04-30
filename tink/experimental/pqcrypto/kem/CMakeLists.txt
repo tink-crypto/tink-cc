@@ -526,3 +526,51 @@ tink_cc_test(
     tink::subtle::random
     tink::util::test_matchers
 )
+
+tink_cc_library(
+  NAME cecpq2_proto_serialization
+  SRCS
+    cecpq2_proto_serialization.h
+  DEPS
+    absl::status
+    tink::experimental::pqcrypto::kem::internal::cecpq2_proto_serialization_impl
+    tink::internal::mutable_serialization_registry
+)
+
+tink_cc_test(
+  NAME cecpq2_proto_serialization_test
+  SRCS
+    cecpq2_proto_serialization_test.cc
+  DEPS
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_private_key
+    tink::experimental::pqcrypto::kem::cecpq2_proto_serialization
+    tink::experimental::pqcrypto::kem::cecpq2_public_key
+    gmock
+    absl::check
+    absl::statusor
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::aead::xchacha20_poly1305_parameters
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_subtle_boringssl_util
+    tink::internal::ec_util
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::tink_proto_structs
+    tink::subtle::common_enums
+    tink::subtle::random
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::proto::common_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
+)

@@ -64,6 +64,8 @@ using Cecpq2ProtoPublicKeySerializerImpl =
     KeySerializerImpl<Cecpq2PublicKey, ProtoKeySerialization>;
 using Cecpq2ProtoPrivateKeyParserImpl =
     KeyParserImpl<ProtoKeySerialization, Cecpq2PrivateKey>;
+using Cecpq2ProtoPrivateKeySerializerImpl =
+    KeySerializerImpl<Cecpq2PrivateKey, ProtoKeySerialization>;
 
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.Cecpq2AeadHkdfPrivateKey";
@@ -332,6 +334,22 @@ absl::StatusOr<Cecpq2PrivateKey> ToPrivateKey(
       .Build(GetPartialKeyAccess());
 }
 
+absl::StatusOr<Cecpq2AeadHkdfPrivateKeyStruct> FromPrivateKey(
+    const Cecpq2AeadHkdfPublicKeyStruct& proto_public_key,
+    const Cecpq2PrivateKey& private_key) {
+  Cecpq2AeadHkdfPrivateKeyStruct proto_private_key;
+  proto_private_key.version = 0;
+  proto_private_key.public_key = proto_public_key;
+  proto_private_key.x25519_private_key =
+      private_key.GetX25519PrivateKeyBytes(GetPartialKeyAccess())
+          .Get(InsecureSecretKeyAccess::Get());
+  proto_private_key.hrss_private_key_seed =
+      private_key.GetHrssPrivateKeySeed(GetPartialKeyAccess())
+          .Get(InsecureSecretKeyAccess::Get());
+
+  return proto_private_key;
+}
+
 absl::StatusOr<Cecpq2Parameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   if (serialization.GetKeyTemplateStruct().type_url != kPrivateTypeUrl) {
@@ -484,6 +502,51 @@ absl::StatusOr<Cecpq2PrivateKey> ParsePrivateKey(
   return ToPrivateKey(*public_key, *proto_key);
 }
 
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
+    const Cecpq2PrivateKey& private_key,
+    absl::optional<SecretKeyAccessToken> token) {
+  if (!token.has_value()) {
+    return absl::PermissionDeniedError(
+        "Parsing private key requires secret key access.");
+  }
+  absl::StatusOr<Cecpq2AeadHkdfParamsStruct> proto_params =
+      FromParameters(private_key.GetPublicKey().GetParameters());
+  if (!proto_params.ok()) {
+    return proto_params.status();
+  }
+
+  absl::StatusOr<Cecpq2AeadHkdfPublicKeyStruct> proto_public_key =
+      FromPublicKey(*proto_params, private_key.GetPublicKey());
+  if (!proto_public_key.ok()) {
+    return proto_public_key.status();
+  }
+
+  absl::StatusOr<Cecpq2AeadHkdfPrivateKeyStruct> proto_private_key =
+      FromPrivateKey(*proto_public_key, private_key);
+  if (!proto_private_key.ok()) {
+    return proto_private_key.status();
+  }
+
+  absl::StatusOr<SecretData> serialized_proto_key =
+      Cecpq2AeadHkdfPrivateKeyStruct::GetParser().SerializeIntoSecretData(
+          *proto_private_key);
+  if (!serialized_proto_key.ok()) {
+    return serialized_proto_key.status();
+  }
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type = ToOutputPrefixType(
+      private_key.GetPublicKey().GetParameters().GetVariant());
+  if (!output_prefix_type.ok()) {
+    return output_prefix_type.status();
+  }
+
+  RestrictedData restricted_output =
+      RestrictedData(*serialized_proto_key, *token);
+  return ProtoKeySerialization::Create(
+      kPrivateTypeUrl, restricted_output,
+      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      private_key.GetPublicKey().GetIdRequirement());
+}
+
 Cecpq2ProtoParametersParserImpl* Cecpq2ProtoParametersParser() {
   static auto* parser =
       new Cecpq2ProtoParametersParserImpl(kPrivateTypeUrl, ParseParameters);
@@ -514,6 +577,12 @@ Cecpq2ProtoPrivateKeyParserImpl* Cecpq2ProtoPrivateKeyParser() {
   return parser;
 }
 
+Cecpq2ProtoPrivateKeySerializerImpl* Cecpq2ProtoPrivateKeySerializer() {
+  static auto* serializer =
+      new Cecpq2ProtoPrivateKeySerializerImpl(SerializePrivateKey);
+  return serializer;
+}
+
 }  // namespace
 
 absl::Status RegisterCecpq2ProtoSerializationWithMutableRegistry(
@@ -540,7 +609,12 @@ absl::Status RegisterCecpq2ProtoSerializationWithMutableRegistry(
     return status;
   }
 
-  return registry.RegisterKeyParser(Cecpq2ProtoPrivateKeyParser());
+  status = registry.RegisterKeyParser(Cecpq2ProtoPrivateKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return registry.RegisterKeySerializer(Cecpq2ProtoPrivateKeySerializer());
 }
 
 absl::Status RegisterCecpq2ProtoSerializationWithRegistryBuilder(
@@ -567,7 +641,12 @@ absl::Status RegisterCecpq2ProtoSerializationWithRegistryBuilder(
     return status;
   }
 
-  return builder.RegisterKeyParser(Cecpq2ProtoPrivateKeyParser());
+  status = builder.RegisterKeyParser(Cecpq2ProtoPrivateKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(Cecpq2ProtoPrivateKeySerializer());
 }
 
 }  // namespace internal

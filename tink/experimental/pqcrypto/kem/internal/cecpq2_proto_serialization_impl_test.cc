@@ -126,7 +126,7 @@ Cecpq2AeadHkdfKeyFormat CreateKeyFormatProto(
 }
 
 void ValidateExpectedProtoParams(
-    Cecpq2AeadHkdfParams params,
+    const Cecpq2AeadHkdfParams& params,
     absl::optional<absl::string_view> expected_salt) {
   ASSERT_THAT(params.has_dem_params(), IsTrue());
   ASSERT_THAT(params.dem_params().has_aead_dem(), IsTrue());
@@ -146,7 +146,7 @@ void ValidateExpectedProtoParams(
 }
 
 void ValidateExpectedProtoPublicKey(
-    Cecpq2AeadHkdfPublicKey public_key,
+    const Cecpq2AeadHkdfPublicKey& public_key,
     absl::optional<absl::string_view> expected_salt,
     absl::string_view expected_x25519_public_key_bytes,
     absl::string_view expected_hrss_public_key_bytes) {
@@ -158,6 +158,24 @@ void ValidateExpectedProtoPublicKey(
   EXPECT_THAT(public_key.x25519_public_key_y(), Eq(""));
   EXPECT_THAT(public_key.hrss_public_key_marshalled(),
               Eq(expected_hrss_public_key_bytes));
+}
+
+void ValidateExpectedProtoPrivateKey(
+    const Cecpq2AeadHkdfPrivateKey& private_key,
+    absl::optional<absl::string_view> expected_salt,
+    absl::string_view expected_x25519_public_key_bytes,
+    absl::string_view expected_hrss_public_key_bytes,
+    absl::string_view expected_x25519_private_key_bytes,
+    absl::string_view expected_hrss_private_key_bytes) {
+  ASSERT_THAT(private_key.has_public_key(), IsTrue());
+  ValidateExpectedProtoPublicKey(private_key.public_key(), expected_salt,
+                                 expected_x25519_public_key_bytes,
+                                 expected_hrss_public_key_bytes);
+  EXPECT_THAT(private_key.version(), Eq(0));
+  EXPECT_THAT(private_key.x25519_private_key(),
+              Eq(expected_x25519_private_key_bytes));
+  EXPECT_THAT(private_key.hrss_private_key_seed(),
+              Eq(expected_hrss_private_key_bytes));
 }
 
 struct TestCase {
@@ -1022,6 +1040,192 @@ TEST_F(Cecpq2ProtoSerializationTest, ParsePrivateKeyWithNoSecretKeyAcess) {
   absl::StatusOr<std::unique_ptr<Key>> key =
       registry.ParseKey(*serialization, /*token=*/absl::nullopt);
   EXPECT_THAT(key, StatusIs(absl::StatusCode::kPermissionDenied));
+}
+
+TEST_P(Cecpq2ProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
+  TestCase test_case = GetParam();
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterCecpq2ProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  absl::StatusOr<Cecpq2Parameters> parameters =
+      Cecpq2Parameters::Create(GetXChaCha20Poly1305NoPrefixParameters(),
+                               test_case.salt, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<crypto::tink::pqc::Cecpq2KeyPair> cecpq2_key_pair =
+      pqc::GenerateCecpq2Keypair(subtle::EllipticCurveType::CURVE25519);
+  ASSERT_THAT(cecpq2_key_pair, IsOk());
+
+  Cecpq2PublicKey::Builder builder =
+      Cecpq2PublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetX25519PublicKeyBytes(cecpq2_key_pair->x25519_key_pair.pub_x)
+          .SetHrssPublicKeyBytes(
+              cecpq2_key_pair->hrss_key_pair.hrss_public_key_marshaled);
+  if (test_case.id_requirement.has_value()) {
+    builder.SetIdRequirement(*test_case.id_requirement);
+  }
+  absl::StatusOr<Cecpq2PublicKey> public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData x25519_private_key_bytes(cecpq2_key_pair->x25519_key_pair.priv,
+                                          InsecureSecretKeyAccess::Get());
+  RestrictedData hrss_private_key_seed(
+      cecpq2_key_pair->hrss_key_pair.hrss_private_key_seed,
+      InsecureSecretKeyAccess::Get());
+  absl::StatusOr<Cecpq2PrivateKey> private_key =
+      Cecpq2PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetX25519PrivateKeyBytes(x25519_private_key_bytes)
+          .SetHrssPrivateKeySeed(hrss_private_key_seed)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(
+          *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(proto_serialization->IdRequirement(),
+              Eq(test_case.id_requirement));
+
+  Cecpq2AeadHkdfPrivateKey private_key_proto;
+  ASSERT_THAT(private_key_proto.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  ValidateExpectedProtoPrivateKey(
+      private_key_proto, test_case.salt, cecpq2_key_pair->x25519_key_pair.pub_x,
+      cecpq2_key_pair->hrss_key_pair.hrss_public_key_marshaled,
+      util::SecretDataAsStringView(cecpq2_key_pair->x25519_key_pair.priv),
+      util::SecretDataAsStringView(
+          cecpq2_key_pair->hrss_key_pair.hrss_private_key_seed));
+}
+
+TEST_P(Cecpq2ProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
+  TestCase test_case = GetParam();
+  SerializationRegistry::Builder registry_builder;
+  ASSERT_THAT(
+      RegisterCecpq2ProtoSerializationWithRegistryBuilder(registry_builder),
+      IsOk());
+  SerializationRegistry registry = std::move(registry_builder).Build();
+
+  absl::StatusOr<Cecpq2Parameters> parameters =
+      Cecpq2Parameters::Create(GetXChaCha20Poly1305NoPrefixParameters(),
+                               test_case.salt, test_case.variant);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<crypto::tink::pqc::Cecpq2KeyPair> cecpq2_key_pair =
+      pqc::GenerateCecpq2Keypair(subtle::EllipticCurveType::CURVE25519);
+  ASSERT_THAT(cecpq2_key_pair, IsOk());
+
+  Cecpq2PublicKey::Builder builder =
+      Cecpq2PublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetX25519PublicKeyBytes(cecpq2_key_pair->x25519_key_pair.pub_x)
+          .SetHrssPublicKeyBytes(
+              cecpq2_key_pair->hrss_key_pair.hrss_public_key_marshaled);
+  if (test_case.id_requirement.has_value()) {
+    builder.SetIdRequirement(*test_case.id_requirement);
+  }
+  absl::StatusOr<Cecpq2PublicKey> public_key =
+      builder.Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData x25519_private_key_bytes(cecpq2_key_pair->x25519_key_pair.priv,
+                                          InsecureSecretKeyAccess::Get());
+  RestrictedData hrss_private_key_seed(
+      cecpq2_key_pair->hrss_key_pair.hrss_private_key_seed,
+      InsecureSecretKeyAccess::Get());
+  absl::StatusOr<Cecpq2PrivateKey> private_key =
+      Cecpq2PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetX25519PrivateKeyBytes(x25519_private_key_bytes)
+          .SetHrssPrivateKeySeed(hrss_private_key_seed)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(
+          *private_key, InsecureSecretKeyAccess::Get());
+  ASSERT_THAT(serialization, IsOk());
+  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
+
+  const ProtoKeySerialization* proto_serialization =
+      dynamic_cast<const ProtoKeySerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
+              Eq(test_case.output_prefix_type));
+  EXPECT_THAT(proto_serialization->IdRequirement(),
+              Eq(test_case.id_requirement));
+
+  Cecpq2AeadHkdfPrivateKey private_key_proto;
+  ASSERT_THAT(private_key_proto.ParseFromString(
+                  proto_serialization->SerializedKeyProto().GetSecret(
+                      InsecureSecretKeyAccess::Get())),
+              IsTrue());
+  ValidateExpectedProtoPrivateKey(
+      private_key_proto, test_case.salt, cecpq2_key_pair->x25519_key_pair.pub_x,
+      cecpq2_key_pair->hrss_key_pair.hrss_public_key_marshaled,
+      util::SecretDataAsStringView(cecpq2_key_pair->x25519_key_pair.priv),
+      util::SecretDataAsStringView(
+          cecpq2_key_pair->hrss_key_pair.hrss_private_key_seed));
+}
+
+TEST_F(Cecpq2ProtoSerializationTest, SerializePrivateKeyWithNoSecreKeytAcess) {
+  MutableSerializationRegistry registry;
+  ASSERT_THAT(RegisterCecpq2ProtoSerializationWithMutableRegistry(registry),
+              IsOk());
+
+  absl::StatusOr<Cecpq2Parameters> parameters =
+      Cecpq2Parameters::Create(GetXChaCha20Poly1305NoPrefixParameters(), "salt",
+                               Cecpq2Parameters::Variant::kNoPrefix);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<crypto::tink::pqc::Cecpq2KeyPair> cecpq2_key_pair =
+      pqc::GenerateCecpq2Keypair(subtle::EllipticCurveType::CURVE25519);
+  ASSERT_THAT(cecpq2_key_pair, IsOk());
+
+  absl::StatusOr<Cecpq2PublicKey> public_key =
+      Cecpq2PublicKey::Builder()
+          .SetParameters(*parameters)
+          .SetX25519PublicKeyBytes(cecpq2_key_pair->x25519_key_pair.pub_x)
+          .SetHrssPublicKeyBytes(
+              cecpq2_key_pair->hrss_key_pair.hrss_public_key_marshaled)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData x25519_private_key_bytes(cecpq2_key_pair->x25519_key_pair.priv,
+                                          InsecureSecretKeyAccess::Get());
+  RestrictedData hrss_private_key_seed(
+      cecpq2_key_pair->hrss_key_pair.hrss_private_key_seed,
+      InsecureSecretKeyAccess::Get());
+  absl::StatusOr<Cecpq2PrivateKey> private_key =
+      Cecpq2PrivateKey::Builder()
+          .SetPublicKey(*public_key)
+          .SetX25519PrivateKeyBytes(x25519_private_key_bytes)
+          .SetHrssPrivateKeySeed(hrss_private_key_seed)
+          .Build(GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      registry.SerializeKey<ProtoKeySerialization>(*private_key,
+                                                   /*token=*/absl::nullopt);
+  EXPECT_THAT(serialization, StatusIs(absl::StatusCode::kPermissionDenied));
 }
 
 }  // namespace

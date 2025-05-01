@@ -21,11 +21,11 @@ module(
 
 bazel_dep(
     name = "rules_cc",
-    version = "0.0.9",
+    version = "0.1.1",
 )
 bazel_dep(
     name = "rules_proto",
-    version = "6.0.2",
+    version = "7.1.0",
 )
 bazel_dep(
     name = "rules_license",
@@ -33,7 +33,7 @@ bazel_dep(
 )
 bazel_dep(
     name = "platforms",
-    version = "0.0.10",
+    version = "0.0.11",
 )
 bazel_dep(
     name = "bazel_skylib",
@@ -41,21 +41,21 @@ bazel_dep(
 )
 bazel_dep(
     name = "googletest",
-    version = "1.15.2",
+    version = "1.16.0",
     repo_name = "com_google_googletest",
 )
 bazel_dep(
     name = "protobuf",
-    version = "27.3",
+    version = "29.3",
     repo_name = "com_google_protobuf",
 )
 bazel_dep(
     name = "boringssl",
-    version = "0.20240930.0",
+    version = "0.20250415.0",
 )
 bazel_dep(
     name = "abseil-cpp",
-    version = "20240722.0",
+    version = "20250127.1",
     repo_name = "com_google_absl",
 )
 

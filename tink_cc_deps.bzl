@@ -50,27 +50,25 @@ def tink_cc_deps():
     # -------------------------------------------------------------------------
     # Abseil.
     # -------------------------------------------------------------------------
-    # Release from 2024-04-08.
     maybe(
         http_archive,
         name = "com_google_absl",
-        sha256 = "f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3",
-        strip_prefix = "abseil-cpp-20240722.0",
+        sha256 = "b396401fd29e2e679cace77867481d388c807671dc2acc602a0259eeb79b7811",
+        strip_prefix = "abseil-cpp-20250127.1",
         urls = [
-            "https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz",
+            "https://github.com/abseil/abseil-cpp/releases/download/20250127.1/abseil-cpp-20250127.1.tar.gz",
         ],
     )
 
     # -------------------------------------------------------------------------
     # BoringSSL.
     # -------------------------------------------------------------------------
-    # Release from 2024-10-03.
     maybe(
         http_archive,
         name = "boringssl",
-        sha256 = "812f77dd57fef845c4ed630430f1f8efc7e255c4d572fa58b71e6e3ce1692a4a",
-        strip_prefix = "boringssl-0.20240930.0/",
-        url = "https://github.com/google/boringssl/releases/download/0.20240930.0/boringssl-0.20240930.0.tar.gz",
+        sha256 = "b2d64c4d52c505d60b0fb86833568dc4762445910d7a7757ff9b172e5556cb01",
+        strip_prefix = "boringssl-0.20250415.0/",
+        url = "https://github.com/google/boringssl/releases/download/0.20250415.0/boringssl-0.20250415.0.tar.gz",
     )
 
     # -------------------------------------------------------------------------
@@ -106,9 +104,9 @@ def tink_cc_testonly_deps():
     maybe(
         http_archive,
         name = "com_google_googletest",
-        sha256 = "7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926",
-        strip_prefix = "googletest-1.15.2",
-        url = "https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz",
+        sha256 = "78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399",
+        strip_prefix = "googletest-1.16.0",
+        url = "https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz",
     )
 
     # -------------------------------------------------------------------------

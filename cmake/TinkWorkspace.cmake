@@ -61,8 +61,8 @@ if (TINK_BUILD_TESTS)
   else()
     http_archive(
       NAME googletest
-      URL https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz
-      SHA256 7b42b4d6ed48810c5362c265a17faebe90dc2373c885e5216439d37927f02926
+      URL https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz
+      SHA256 78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399
     )
   endif()
 
@@ -87,11 +87,10 @@ if (TINK_BUILD_TESTS)
 endif()
 
 if (NOT TINK_USE_INSTALLED_ABSEIL)
-  # Release from 2024-01-22.
   http_archive(
     NAME abseil
-    URL https://github.com/abseil/abseil-cpp/releases/download/20240722.0/abseil-cpp-20240722.0.tar.gz
-    SHA256 f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3
+    URL https://github.com/abseil/abseil-cpp/releases/download/20250127.1/abseil-cpp-20250127.1.tar.gz
+    SHA256 b396401fd29e2e679cace77867481d388c807671dc2acc602a0259eeb79b7811
   )
 else()
   # This is everything that needs to be done here. Abseil already defines its
@@ -106,8 +105,8 @@ if (NOT TARGET crypto)
     # Release from 2024-10-03.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/releases/download/0.20240930.0/boringssl-0.20240930.0.tar.gz
-      SHA256 812f77dd57fef845c4ed630430f1f8efc7e255c4d572fa58b71e6e3ce1692a4a
+      URL https://github.com/google/boringssl/releases/download/0.20250415.0/boringssl-0.20250415.0.tar.gz
+      SHA256 b2d64c4d52c505d60b0fb86833568dc4762445910d7a7757ff9b172e5556cb01
     )
     # BoringSSL targets do not carry include directory info, this fixes it.
     target_include_directories(crypto PUBLIC
@@ -130,8 +129,8 @@ if (NOT TINK_USE_INSTALLED_PROTOBUF)
 
   http_archive(
     NAME com_google_protobuf
-    URL https://github.com/protocolbuffers/protobuf/releases/download/v27.4/protobuf-27.4.tar.gz
-    SHA256 023e2bb164b234af644c5049c6dac1d9c9f6dd2acb133b960d9009105b4226bd
+    URL https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protobuf-29.3.zip
+    SHA256 e9b9ac1910b1041065839850603caf36e29d3d3d230ddf52bd13778dd31b9046
   )
 else()
   find_package(Protobuf REQUIRED CONFIG)

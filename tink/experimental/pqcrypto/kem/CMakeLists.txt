@@ -163,8 +163,10 @@ tink_cc_library(
   DEPS
     tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_private_key_manager
     tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
+    tink::experimental::pqcrypto::kem::cecpq2_proto_serialization
     absl::core_headers
     absl::memory
+    absl::status
     tink::core::registry
     tink::aead::aead_config
     tink::config::tink_fips
@@ -182,21 +184,45 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::cecpq2_aead_hkdf_public_key_manager
     tink::experimental::pqcrypto::kem::cecpq2_hybrid_config
     tink::experimental::pqcrypto::kem::cecpq2_hybrid_key_templates
+    tink::experimental::pqcrypto::kem::cecpq2_parameters
+    tink::experimental::pqcrypto::kem::cecpq2_private_key
+    tink::experimental::pqcrypto::kem::cecpq2_public_key
     gmock
+    absl::check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
+    absl::optional
+    crypto
     tink::core::crypto_format
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
-    tink::core::keyset_handle
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
     tink::core::primitive_set
     tink::core::registry
+    tink::core::restricted_data
+    tink::aead::xchacha20_poly1305_parameters
     tink::config::tink_fips
-    tink::util::status
+    tink::experimental::pqcrypto::kem::subtle::cecpq2_subtle_boringssl_util
+    tink::internal::ec_util
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::tink_proto_structs
+    tink::subtle::common_enums
+    tink::subtle::random
+    tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
+    tink::proto::common_cc_proto
     tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+    tink::proto::cecpq2_aead_hkdf_cc_proto
 )
 
 tink_cc_library(

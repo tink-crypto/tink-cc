@@ -21,7 +21,7 @@
 
 #include "absl/base/no_destructor.h"
 #include "tink/internal/proto_parser.h"
-#include "tink/util/secret_data.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -29,7 +29,6 @@ namespace internal {
 
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
 
 struct AesGcmKeyFormatStruct {
   uint32_t key_size = 0;

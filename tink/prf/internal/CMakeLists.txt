@@ -44,6 +44,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::key_parser
     tink::internal::key_serializer
@@ -57,7 +58,6 @@ tink_cc_library(
     tink::internal::tink_proto_structs
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_parameters
-    tink::util::secret_data
 )
 
 tink_cc_library(
@@ -73,6 +73,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::common_proto_enums
     tink::internal::key_parser
@@ -87,7 +88,6 @@ tink_cc_library(
     tink::internal::tink_proto_structs
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
-    tink::util::secret_data
 )
 
 tink_cc_library(
@@ -103,6 +103,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::common_proto_enums
     tink::internal::key_parser

@@ -29,6 +29,7 @@
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -42,7 +43,6 @@ namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::SecretData;
 using ::testing::Eq;
 using ::testing::Not;
 using ::testing::Optional;

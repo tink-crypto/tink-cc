@@ -519,6 +519,7 @@ cc_library(
         "//tink:partial_key_access",
         "//tink:restricted_big_integer",
         "//tink:restricted_data",
+        "//tink:secret_data",
         "//tink:secret_key_access_token",
         "//tink/aead/internal:aes_ctr_hmac_proto_structs",
         "//tink/aead/internal:aes_gcm_proto_structs",

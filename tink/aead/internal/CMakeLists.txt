@@ -446,6 +446,7 @@ tink_cc_library(
     absl::str_format
     absl::string_view
     crypto
+    tink::core::secret_data
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key
     tink::subtle::random
@@ -492,6 +493,7 @@ tink_cc_library(
     crypto
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::x_aes_gcm_key
     tink::internal::call_with_core_dump_protection
@@ -538,10 +540,9 @@ tink_cc_library(
     absl::strings
     absl::string_view
     absl::span
+    tink::core::secret_data
     tink::aead::x_aes_gcm_key
     tink::subtle::random
-    tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 
@@ -583,6 +584,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
@@ -595,7 +597,6 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -641,6 +642,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::chacha20_poly1305_key
     tink::aead::chacha20_poly1305_parameters
@@ -654,7 +656,6 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -698,6 +699,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
@@ -871,6 +873,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::aes_gcm_siv_key
     tink::aead::aes_gcm_siv_parameters
@@ -884,7 +887,6 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::secret_data
     tink::util::status
 )
 
@@ -931,6 +933,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
@@ -945,7 +948,6 @@ tink_cc_library(
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::mac::internal::hmac_proto_structs
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1106,8 +1108,8 @@ tink_cc_library(
     aes_gcm_proto_structs.h
   DEPS
     absl::no_destructor
+    tink::core::secret_data
     tink::internal::proto_parser
-    tink::util::secret_data
 )
 
 tink_cc_test(

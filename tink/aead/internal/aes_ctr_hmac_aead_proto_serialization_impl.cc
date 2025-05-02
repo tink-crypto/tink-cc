@@ -42,15 +42,13 @@
 #include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
-
-using ::crypto::tink::util::SecretData;
 
 using AesCtrHmacAeadProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization,

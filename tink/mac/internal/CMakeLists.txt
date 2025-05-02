@@ -105,8 +105,10 @@ tink_cc_library(
     tink::mac::internal::stateful_mac
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     crypto
+    tink::core::secret_data
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
     tink::internal::secret_buffer

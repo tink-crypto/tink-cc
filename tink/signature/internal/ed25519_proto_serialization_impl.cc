@@ -38,6 +38,7 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
@@ -51,7 +52,6 @@ namespace {
 
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
 
 struct Ed25519KeyFormatStruct {
   uint32_t version;

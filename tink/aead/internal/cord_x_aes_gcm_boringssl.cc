@@ -32,6 +32,7 @@
 #include "tink/aead/internal/cord_utils.h"
 #include "tink/aead/x_aes_gcm_key.h"
 #include "tink/subtle/random.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 
@@ -42,7 +43,6 @@ namespace {
 
 using ::crypto::tink::CordAead;
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::util::SecretData;
 
 class CordXAesGcmBoringSsl : public CordAead {
  public:

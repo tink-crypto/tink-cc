@@ -30,10 +30,8 @@
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/aead/internal/zero_copy_aes_gcm_boringssl.h"
 #include "tink/aead/x_aes_gcm_key.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -41,7 +39,6 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::subtle::Random;
-using ::crypto::tink::util::SecretData;
 
 class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
  public:

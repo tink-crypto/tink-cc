@@ -36,6 +36,7 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
@@ -48,7 +49,6 @@ namespace {
 
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
 
 bool MlDsaInstanceEnumValid(int c) { return c >= 0 && c <= 1; }
 

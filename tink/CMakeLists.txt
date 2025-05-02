@@ -1218,15 +1218,16 @@ tink_cc_test(
     tink::core::keyset_reader
     tink::core::mac
     tink::core::proto_keyset_format
+    tink::core::secret_data
     gmock
     absl::memory
+    absl::statusor
     tink::aead::aes_gcm_parameters
     tink::config::global_registry
     tink::config::tink_config
     tink::mac::aes_cmac_parameters
     tink::signature::ed25519_parameters
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

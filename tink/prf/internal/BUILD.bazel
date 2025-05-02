@@ -43,6 +43,7 @@ cc_library(
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink:secret_data",
         "//tink:secret_key_access_token",
         "//tink/internal:key_parser",
         "//tink/internal:key_serializer",
@@ -56,7 +57,6 @@ cc_library(
         "//tink/internal:tink_proto_structs",
         "//tink/prf:aes_cmac_prf_key",
         "//tink/prf:aes_cmac_prf_parameters",
-        "//tink/util:secret_data",
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -73,6 +73,7 @@ cc_library(
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink:secret_data",
         "//tink:secret_key_access_token",
         "//tink/internal:common_proto_enums",
         "//tink/internal:key_parser",
@@ -87,7 +88,6 @@ cc_library(
         "//tink/internal:tink_proto_structs",
         "//tink/prf:hkdf_prf_key",
         "//tink/prf:hkdf_prf_parameters",
-        "//tink/util:secret_data",
         "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -104,6 +104,7 @@ cc_library(
     deps = [
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink:secret_data",
         "//tink:secret_key_access_token",
         "//tink/internal:common_proto_enums",
         "//tink/internal:key_parser",

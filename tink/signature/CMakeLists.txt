@@ -663,6 +663,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::common_proto_enums
     tink::internal::key_parser
@@ -762,6 +763,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::common_proto_enums
     tink::internal::key_parser

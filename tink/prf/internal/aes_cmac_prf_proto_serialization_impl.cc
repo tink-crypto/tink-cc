@@ -39,8 +39,8 @@
 #include "tink/prf/aes_cmac_prf_key.h"
 #include "tink/prf/aes_cmac_prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {

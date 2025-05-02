@@ -35,6 +35,7 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/partial_key_access.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
@@ -44,7 +45,6 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::internal::CallWithCoreDumpProtection;
-using ::crypto::tink::util::SecretData;
 
 constexpr int kAesBlockSize = 16;
 constexpr int kAesKeySize = 32;

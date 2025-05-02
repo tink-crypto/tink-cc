@@ -481,6 +481,7 @@ cc_library(
         "//tink:partial_key_access",
         "//tink:restricted_big_integer",
         "//tink:restricted_data",
+        "//tink:secret_data",
         "//tink:secret_key_access_token",
         "//tink/internal:key_parser",
         "//tink/internal:key_serializer",

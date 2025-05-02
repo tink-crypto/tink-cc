@@ -1385,12 +1385,12 @@ tink_cc_test(
     tink::internal::bn_encoding_util
     gmock
     absl::status
+    absl::statusor
     absl::strings
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::restricted_big_integer
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -1518,6 +1518,7 @@ tink_cc_test(
     absl::span
     tink::core::big_integer
     tink::core::insecure_secret_key_access
+    tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
@@ -1655,6 +1656,7 @@ tink_cc_test(
     absl::string_view
     absl::optional
     absl::span
+    tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
@@ -1991,6 +1993,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::span
+    tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
@@ -2028,6 +2031,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::span
+    tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util

@@ -40,6 +40,7 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
@@ -48,8 +49,6 @@
 namespace crypto {
 namespace tink {
 namespace {
-
-using ::crypto::tink::util::SecretData;
 
 struct HmacParamsStruct {
   internal::HashTypeEnum hash;

@@ -24,6 +24,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/internal/aes_util.h"
@@ -33,14 +34,11 @@
 #include "tink/internal/util.h"
 #include "tink/mac/internal/stateful_mac.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
-
-using ::crypto::tink::util::SecretData;
 
 absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulCmacBoringSsl::New(
     uint32_t tag_size, const SecretData& key_value) {

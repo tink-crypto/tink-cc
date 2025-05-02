@@ -110,6 +110,7 @@ cc_library(
     include_prefix = "tink/mac/internal",
     deps = [
         ":stateful_mac",
+        "//tink:secret_data",
         "//tink/internal:aes_util",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/internal:secret_buffer",
@@ -122,6 +123,7 @@ cc_library(
         "@boringssl//:crypto",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
     ],
 )

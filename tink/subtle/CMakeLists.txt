@@ -1575,10 +1575,9 @@ tink_cc_test(
     absl::strings
     absl::string_view
     tink::core::output_stream_with_result
+    tink::core::secret_data
     tink::mac::internal::stateful_mac
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
 )
 

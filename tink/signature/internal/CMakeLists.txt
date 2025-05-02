@@ -473,6 +473,7 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::key_parser
     tink::internal::key_serializer
@@ -698,6 +699,7 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::key_parser
     tink::internal::key_serializer

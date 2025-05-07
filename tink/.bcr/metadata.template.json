@@ -1,0 +1,32 @@
+{
+  "homepage": "https://github.com/tink-crypto/tink-cc",
+  "maintainers": [
+    {
+      "email": "ambrosin@google.com",
+      "github": "morambro",
+      "name": "Moreno Ambrosin",
+      "github_user_id": 1968379
+    },
+    {
+      "email": "wconner@google.com",
+      "github": "willinois",
+      "name": "William Conner",
+      "github_user_id": 22015340
+    },
+    {
+      "email": "tholenst@google.com",
+      "github": "tholenst",
+      "name": "Thomas Holenstein",
+      "github_user_id": 4568264
+    },
+    {
+      "email": "juerg@google.com",
+      "github": "juergw",
+      "name": "Juerg Wullschleger",
+      "github_user_id": 52660988
+    }
+  ],
+  "repository": ["github:tink-crypto/tink-cc"],
+  "versions": [],
+  "yanked_versions": {}
+}

@@ -11,9 +11,11 @@ tink_cc_library(
     tink::mac::internal::stateful_mac
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::chunked_mac
+    tink::core::secret_data
     tink::internal::dfsan_forwarders
     tink::internal::safe_stringops
     tink::subtle::common_enums
@@ -85,6 +87,7 @@ tink_cc_library(
     absl::status
     absl::string_view
     crypto
+    tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::md_util
     tink::internal::secret_buffer
@@ -144,6 +147,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::key_parser
     tink::internal::key_serializer
@@ -172,11 +176,11 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::chunked_mac
+    tink::core::secret_data
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::aes_cmac_cc_proto
     tink::proto::common_cc_proto
@@ -194,12 +198,12 @@ tink_cc_test(
     gmock
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::chunked_mac
     tink::core::primitive_set
+    tink::core::secret_data
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
@@ -265,6 +269,7 @@ tink_cc_test(
     absl::status
     absl::strings
     absl::string_view
+    tink::core::secret_data
     tink::internal::testing::wycheproof_util
     tink::subtle::common_enums
     tink::subtle::random
@@ -286,11 +291,12 @@ tink_cc_test(
     gmock
     absl::check
     absl::memory
+    absl::statusor
     absl::strings
     absl::string_view
+    tink::core::secret_data
     tink::internal::testing::wycheproof_util
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -341,6 +347,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::common_proto_enums
     tink::internal::key_parser
@@ -355,7 +362,6 @@ tink_cc_library(
     tink::internal::tink_proto_structs
     tink::mac::hmac_key
     tink::mac::hmac_parameters
-    tink::util::secret_data
 )
 
 tink_cc_test(

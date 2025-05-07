@@ -540,6 +540,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::key_parser
     tink::internal::key_serializer
@@ -550,7 +551,6 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
     tink::internal::tink_proto_structs
-    tink::util::secret_data
 )
 
 tink_cc_library(

@@ -32,6 +32,7 @@
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_test_proto.pb.h"
 #include "tink/internal/testing/field_with_number.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -46,7 +47,6 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretValue;
 using ::testing::Eq;

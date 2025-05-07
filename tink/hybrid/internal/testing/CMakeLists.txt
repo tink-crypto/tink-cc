@@ -18,15 +18,16 @@ tink_cc_library(
   DEPS
     tink::hybrid::internal::testing::hybrid_test_vectors
     absl::check
+    absl::statusor
     absl::strings
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
 )

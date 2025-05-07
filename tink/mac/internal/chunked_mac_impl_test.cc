@@ -24,12 +24,12 @@
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/chunked_mac.h"
 #include "tink/mac/internal/stateful_mac.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/aes_cmac.pb.h"
 #include "proto/common.pb.h"
@@ -43,7 +43,6 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
 using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
 using ::google::crypto::tink::AesCmacParams;

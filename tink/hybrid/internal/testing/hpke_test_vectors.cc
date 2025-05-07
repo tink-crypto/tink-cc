@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "absl/log/check.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/hybrid/hpke_parameters.h"
 #include "tink/hybrid/hpke_private_key.h"
@@ -29,8 +30,8 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -40,7 +41,6 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataFromStringView;
 
 // Taken from https://datatracker.ietf.org/doc/html/rfc6979.html#appendix-A.2.5

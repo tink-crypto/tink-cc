@@ -1439,6 +1439,7 @@ tink_cc_test(
     absl::statusor
     absl::strings
     absl::optional
+    tink::core::secret_data
     tink::internal::testing::field_with_number
     tink::util::secret_data
     tink::util::test_matchers
@@ -1478,6 +1479,7 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::span
+    tink::core::secret_data
     tink::util::test_matchers
     tink::util::test_util
 )

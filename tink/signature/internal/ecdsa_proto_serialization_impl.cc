@@ -42,6 +42,7 @@
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -55,7 +56,6 @@ namespace {
 
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 
 bool EcdsaSignatureEncodingValid(uint32_t c) { return 0 <= c && c <= 2; }

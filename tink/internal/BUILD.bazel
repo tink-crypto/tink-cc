@@ -1496,6 +1496,7 @@ cc_test(
         ":proto_parser",
         ":proto_parser_options",
         ":proto_test_cc_proto",
+        "//tink:secret_data",
         "//tink/internal/testing:field_with_number",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
@@ -1531,6 +1532,7 @@ cc_test(
     deps = [
         ":proto_parser_state",
         ":proto_parsing_helpers",
+        "//tink:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@com_google_absl//absl/status",

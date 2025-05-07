@@ -293,12 +293,14 @@ tink_cc_library(
     absl::check
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::global_serialization_registry
     tink::internal::key_parser
@@ -316,9 +318,7 @@ tink_cc_library(
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::prf_key
     tink::prf::prf_parameters
-    tink::util::secret_data
     tink::util::status
-    tink::util::statusor
     tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto
 )

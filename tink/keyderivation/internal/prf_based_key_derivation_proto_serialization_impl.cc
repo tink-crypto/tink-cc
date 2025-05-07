@@ -24,6 +24,7 @@
 #include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/global_serialization_registry.h"
@@ -46,10 +47,8 @@
 #include "tink/prf/prf_key.h"
 #include "tink/prf/prf_parameters.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/prf_based_deriver.pb.h"
 #include "proto/tink.pb.h"
 
@@ -62,7 +61,6 @@ using ::crypto::tink::internal::KeyDataStruct;
 using ::crypto::tink::internal::KeyTemplateStruct;
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
 
 struct PrfBasedDeriverParamsStruct {
   KeyTemplateStruct derived_key_template;

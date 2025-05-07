@@ -208,6 +208,7 @@ tink_cc_library(
     absl::optional
     tink::core::parameters
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::aead_parameters
     tink::aead::aes_ctr_hmac_aead_parameters
@@ -230,7 +231,6 @@ tink_cc_library(
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -469,12 +469,12 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::aead::cord_aead
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
     tink::subtle::random
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -516,11 +516,11 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
     tink::subtle::random
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -551,9 +551,11 @@ tink_cc_test(
   SRCS
     zero_copy_x_aes_gcm_boringssl_test.cc
   DEPS
+    tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_x_aes_gcm_boringssl
     gmock
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -561,11 +563,11 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::aead::x_aes_gcm_key
     tink::aead::x_aes_gcm_parameters
     tink::subtle::random
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -757,6 +759,7 @@ tink_cc_library(
     absl::string_view
     absl::optional
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::legacy_kms_aead_key
     tink::aead::legacy_kms_aead_parameters
@@ -998,6 +1001,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::aes_eax_key
     tink::aead::aes_eax_parameters
@@ -1011,9 +1015,7 @@ tink_cc_library(
     tink::internal::proto_parser
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::secret_data
     tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(

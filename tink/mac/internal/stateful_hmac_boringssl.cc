@@ -31,16 +31,13 @@
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
 #include "tink/mac/internal/stateful_mac.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
-
-using ::crypto::tink::util::SecretData;
 
 absl::StatusOr<std::unique_ptr<StatefulMac>> StatefulHmacBoringSsl::New(
     subtle::HashType hash_type, uint32_t tag_size,

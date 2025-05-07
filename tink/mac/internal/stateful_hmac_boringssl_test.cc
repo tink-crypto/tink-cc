@@ -34,6 +34,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/testing/wycheproof_util.h"
 #include "tink/mac/internal/stateful_mac.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
@@ -51,7 +52,6 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
-using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;

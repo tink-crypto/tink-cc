@@ -122,11 +122,10 @@ tink_cc_test(
     absl::status
     absl::strings
     tink::core::input_stream
+    tink::core::secret_data
     tink::mac::internal::stateful_mac
     tink::prf::prf_set
     tink::util::istream_input_stream
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
 )

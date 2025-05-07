@@ -33,9 +33,8 @@
 #include "tink/subtle/prf/streaming_prf.h"
 #include "tink/util/istream_input_stream.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -43,7 +42,6 @@ namespace subtle {
 namespace {
 
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::SecretData;
 using ::testing::_;
 using ::testing::AnyNumber;
 using ::testing::DefaultValue;

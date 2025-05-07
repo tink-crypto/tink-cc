@@ -36,11 +36,11 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -48,7 +48,6 @@ namespace {
 
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
 
 bool IsSlhDsaHashTypeValid(uint32_t c) { return 0 <= c && c <= 2; }
 

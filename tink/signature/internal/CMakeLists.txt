@@ -538,6 +538,7 @@ tink_cc_library(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::key_parser
     tink::internal::key_serializer
@@ -551,7 +552,6 @@ tink_cc_library(
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
     tink::signature::slh_dsa_public_key
-    tink::util::secret_data
   TAGS
     exclude_if_openssl
 )
@@ -824,6 +824,7 @@ tink_cc_library(
     tink::core::partial_key_access
     tink::core::restricted_big_integer
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::internal::bn_encoding_util
     tink::internal::common_proto_enums

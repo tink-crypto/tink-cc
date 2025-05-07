@@ -49,7 +49,6 @@ namespace {
 
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
-using ::crypto::tink::util::SecretData;
 
 struct AesCmacPrfKeyFormatStruct {
   uint32_t key_size;

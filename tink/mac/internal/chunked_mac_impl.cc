@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
 #include "tink/chunked_mac.h"
@@ -30,11 +31,10 @@
 #include "tink/mac/internal/stateful_cmac_boringssl.h"
 #include "tink/mac/internal/stateful_hmac_boringssl.h"
 #include "tink/mac/internal/stateful_mac.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/aes_cmac.pb.h"
 #include "proto/hmac.pb.h"
 
@@ -45,7 +45,6 @@ namespace internal {
 using AesCmacKeyProto = ::google::crypto::tink::AesCmacKey;
 using HmacKeyProto = ::google::crypto::tink::HmacKey;
 
-using ::crypto::tink::util::SecretData;
 using ::crypto::tink::util::SecretDataAsStringView;
 
 absl::Status ChunkedMacComputationImpl::Update(absl::string_view data) {

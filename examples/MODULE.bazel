@@ -16,12 +16,12 @@ local_path_override(
 
 bazel_dep(
     name = "googletest",
-    version = "1.15.2",
+    version = "1.16.0",
     repo_name = "com_google_googletest",
 )
 
 bazel_dep(
     name = "abseil-cpp",
-    version = "20240722.0",
+    version = "20250127.0",
     repo_name = "com_google_absl",
 )

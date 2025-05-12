@@ -123,11 +123,13 @@ SecretUniquePtr<T> MakeSecretUniquePtr(Args&&... args) {
 }
 
 // Convenience conversion functions
-inline absl::string_view SecretDataAsStringView(const SecretData& secret) {
+inline absl::string_view SecretDataAsStringView(
+    const ::crypto::tink::SecretData& secret) {
   return {reinterpret_cast<const char*>(secret.data()), secret.size()};
 }
 
-inline SecretData SecretDataFromStringView(absl::string_view secret) {
+inline ::crypto::tink::SecretData SecretDataFromStringView(
+    absl::string_view secret) {
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
   return {secret.begin(), secret.end()};
 #else
@@ -135,7 +137,8 @@ inline SecretData SecretDataFromStringView(absl::string_view secret) {
 #endif
 }
 
-inline SecretData SecretDataFromSpan(absl::Span<const uint8_t> span) {
+inline ::crypto::tink::SecretData SecretDataFromSpan(
+    absl::Span<const uint8_t> span) {
   return SecretDataFromStringView(absl::string_view(
       reinterpret_cast<const char*>(span.data()), span.size()));
 }

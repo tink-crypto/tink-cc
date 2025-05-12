@@ -23,7 +23,9 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "tink/internal/secret_buffer.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "proto/test_proto.pb.h"
@@ -141,7 +143,7 @@ TYPED_TEST(SecretProtoTest, FromSecretData) {
   SecretBuffer buffer;
   buffer.resize(proto.ByteSizeLong());
   ASSERT_TRUE(proto.SerializeToArray(buffer.data(), buffer.size()));
-  SecretData data = AsSecretData(buffer);
+  crypto::tink::SecretData data = AsSecretData(buffer);
   StatusOr<SecretProto<TypeParam>> secret_proto =
       SecretProto<TypeParam>::ParseFromSecretData(data);
   ASSERT_TRUE(secret_proto.ok()) << secret_proto.status();
@@ -152,7 +154,7 @@ TYPED_TEST(SecretProtoTest, AsSecretData) {
   TypeParam proto = CreateProto<TypeParam>();
   std::string serialized = proto.SerializeAsString();
   SecretProto<TypeParam> secret_proto(proto);
-  absl::StatusOr<SecretData> secret_serialized =
+  absl::StatusOr<crypto::tink::SecretData> secret_serialized =
       secret_proto.SerializeAsSecretData();
   ASSERT_TRUE(secret_serialized.ok()) << secret_serialized.status();
   EXPECT_EQ(serialized, SecretDataAsStringView(*secret_serialized));

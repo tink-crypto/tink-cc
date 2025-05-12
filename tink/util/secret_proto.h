@@ -24,8 +24,10 @@
 #include "google/protobuf/arena.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/secret_buffer.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/status.h"
 #include "tink/util/statusor.h"
@@ -57,7 +59,8 @@ inline google::protobuf::ArenaOptions SecretArenaOptions() {
 template <typename T>
 class SecretProto {
  public:
-  static StatusOr<SecretProto<T>> ParseFromSecretData(const SecretData& data) {
+  static StatusOr<SecretProto<T>> ParseFromSecretData(
+      const ::crypto::tink::SecretData& data) {
     SecretProto<T> proto;
     bool parsed = crypto::tink::internal::CallWithCoreDumpProtection([&] {
       return proto->ParseFromArray(data.data(), data.size());
@@ -99,7 +102,7 @@ class SecretProto {
   inline T& operator*() { return *value_; }
   inline const T& operator*() const { return *value_; }
 
-  absl::StatusOr<SecretData> SerializeAsSecretData() const {
+  absl::StatusOr<::crypto::tink::SecretData> SerializeAsSecretData() const {
     crypto::tink::internal::SecretBuffer buffer(value_->ByteSizeLong());
     bool serialized = crypto::tink::internal::CallWithCoreDumpProtection(
         [&] { return value_->SerializeToArray(buffer.data(), buffer.size()); });

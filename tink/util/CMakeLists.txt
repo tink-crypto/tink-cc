@@ -495,8 +495,6 @@ tink_cc_library(
     secret_proto.h
   DEPS
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     protobuf::libprotobuf
     absl::memory
     absl::status

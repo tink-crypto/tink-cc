@@ -29,8 +29,6 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -51,15 +49,14 @@ inline google::protobuf::ArenaOptions SecretArenaOptions() {
 
 }  // namespace internal
 
-// Stores secret (sensitive) protobuf and makes sure it's marked as such and
-// destroyed in a safe way.
-//
+// A wrapper class for a protobuf struct, ensuring that the sanitizing allocator
+// is used as arena allocator.
 // Note: Currently does not protect fields of type "string" and "bytes"
 // (depends on https://github.com/protocolbuffers/protobuf/issues/1896).
 template <typename T>
 class SecretProto {
  public:
-  static StatusOr<SecretProto<T>> ParseFromSecretData(
+  static absl::StatusOr<SecretProto<T>> ParseFromSecretData(
       const ::crypto::tink::SecretData& data) {
     SecretProto<T> proto;
     bool parsed = crypto::tink::internal::CallWithCoreDumpProtection([&] {

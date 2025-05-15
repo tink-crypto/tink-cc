@@ -36,6 +36,7 @@
 #include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
 #include "tink/signature/internal/ecdsa_proto_serialization_impl.h"
 #include "tink/signature/internal/ed25519_proto_serialization_impl.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 
 namespace crypto {
 namespace tink {
@@ -82,6 +83,8 @@ const SerializationRegistry& GlobalSerializationRegistry() {
     CHECK_OK(RegisterEd25519ProtoSerializationWithRegistryBuilder(builder));
 
     // Streaming AEAD
+    CHECK_OK(RegisterAesGcmHkdfStreamingProtoSerializationWithRegistryBuilder(
+        builder));
 
     static SerializationRegistry* registry =
         new SerializationRegistry(std::move(builder).Build());

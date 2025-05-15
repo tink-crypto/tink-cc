@@ -60,3 +60,65 @@ tink_cc_library(
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::util::status
 )
+
+tink_cc_library(
+  NAME aes_gcm_hkdf_streaming_proto_serialization_impl
+  SRCS
+    aes_gcm_hkdf_streaming_proto_serialization_impl.cc
+    aes_gcm_hkdf_streaming_proto_serialization_impl.h
+  DEPS
+    absl::no_destructor
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::core::secret_key_access_token
+    tink::internal::common_proto_enums
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::streamingaead::aes_gcm_hkdf_streaming_key
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME aes_gcm_hkdf_streaming_proto_serialization_impl_test
+  SRCS
+    aes_gcm_hkdf_streaming_proto_serialization_impl_test.cc
+  DEPS
+    tink::streamingaead::internal::aes_gcm_hkdf_streaming_proto_serialization_impl
+    gmock
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::streamingaead::aes_gcm_hkdf_streaming_key
+    tink::streamingaead::aes_gcm_hkdf_streaming_parameters
+    tink::subtle::random
+    tink::util::test_matchers
+    tink::proto::aes_gcm_hkdf_streaming_cc_proto
+    tink::proto::common_cc_proto
+)

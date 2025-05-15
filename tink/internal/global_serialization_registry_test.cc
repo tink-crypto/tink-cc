@@ -66,6 +66,8 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
@@ -369,6 +371,23 @@ std::unique_ptr<const XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key() {
   return absl::make_unique<const XChaCha20Poly1305Key>(*key);
 }
 
+std::unique_ptr<const AesGcmHkdfStreamingKey> CreateAesGcmHkdfStreamingKey() {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .SetKeySizeInBytes(32)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+          .Build();
+  CHECK_OK(parameters);
+
+  absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
+      *parameters, RestrictedData(/*num_random_bytes=*/32),
+      GetPartialKeyAccess());
+  CHECK_OK(key);
+  return absl::make_unique<const AesGcmHkdfStreamingKey>(*key);
+}
+
 using GlobalSerializationRegistryTest = TestWithParam<KeyTestVector>;
 
 INSTANTIATE_TEST_SUITE_P(
@@ -376,8 +395,7 @@ INSTANTIATE_TEST_SUITE_P(
     Values(KeyTestVector{CreateAesCmacKey()},
            KeyTestVector{CreateAesCmacPrfKey()},
            KeyTestVector{CreateAesCtrHmacAeadKey()},
-           KeyTestVector{CreateAesEaxKey()},
-           KeyTestVector{CreateAesGcmKey()},
+           KeyTestVector{CreateAesEaxKey()}, KeyTestVector{CreateAesGcmKey()},
            KeyTestVector{CreateAesGcmSivKey()},
            KeyTestVector{CreateAesSivKey()},
            KeyTestVector{CreateChaCha20Poly1305Key()},
@@ -385,12 +403,12 @@ INSTANTIATE_TEST_SUITE_P(
            KeyTestVector{CreateEcdsaPublicKey()},
            KeyTestVector{CreateEd25519PrivateKey()},
            KeyTestVector{CreateEd25519PublicKey()},
-           KeyTestVector{CreateHkdfPrfKey()},
-           KeyTestVector{CreateHmacKey()},
+           KeyTestVector{CreateHkdfPrfKey()}, KeyTestVector{CreateHmacKey()},
            KeyTestVector{CreateHmacPrfKey()},
            KeyTestVector{CreateLegacyKmsAeadKey()},
            KeyTestVector{CreateXAesGcmKey()},
-           KeyTestVector{CreateXChaCha20Poly1305Key()}));
+           KeyTestVector{CreateXChaCha20Poly1305Key()},
+           KeyTestVector{CreateAesGcmHkdfStreamingKey()}));
 
 TEST_P(GlobalSerializationRegistryTest, SerializeAndParse) {
   const KeyTestVector& test_case = GetParam();

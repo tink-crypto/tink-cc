@@ -17,14 +17,23 @@
 #ifndef TINK_STREAMINGAEAD_AES_GCM_HKDF_STREAMING_PROTO_SERIALIZATION_H_
 #define TINK_STREAMINGAEAD_AES_GCM_HKDF_STREAMING_PROTO_SERIALIZATION_H_
 
-#include "tink/util/status.h"
+#include "absl/status/status.h"
+#include "tink/internal/mutable_serialization_registry.h"
+#include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 
 namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for AES-GCM-HKDF Streaming parameters
 // and keys.
-absl::Status RegisterAesGcmHkdfStreamingProtoSerialization();
+inline absl::Status RegisterAesGcmHkdfStreamingProtoSerialization() {
+  // b/418010195: Key Derivation code currently uses
+  // GlobalSerializationRegistry(), not
+  // MutableSerializationRegistry::GlobalInstance().
+  return internal::
+      RegisterAesGcmHkdfStreamingProtoSerializationWithMutableRegistry(
+          internal::MutableSerializationRegistry::GlobalInstance());
+}
 
 }  // namespace tink
 }  // namespace crypto

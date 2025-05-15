@@ -51,8 +51,8 @@ readonly CMAKE_ARGS=(
   -DTINK_USE_INSTALLED_PROTOBUF=ON
 )
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_cmake_tests.sh . "${CMAKE_ARGS[@]}"
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_cmake_tests.sh "examples" "${CMAKE_ARGS[@]}"

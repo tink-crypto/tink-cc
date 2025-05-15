@@ -51,11 +51,11 @@ if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
 fi
 readonly CACHE_FLAGS
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_bazel_tests.sh  -b "--enable_bzlmod" \
   -t "--enable_bzlmod" "${CACHE_FLAGS[@]}" .
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_bazel_tests.sh  -b "--enable_bzlmod" \
   -t "--enable_bzlmod" "${CACHE_FLAGS[@]}" examples
 

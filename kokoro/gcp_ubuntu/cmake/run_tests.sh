@@ -104,8 +104,8 @@ EOF
 chmod +x _build_and_test_tink.sh
 
 readonly RUN_COMMAND_ARGS
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./_build_and_test_tink.sh
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_cmake_tests.sh "examples"

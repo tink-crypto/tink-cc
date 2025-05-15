@@ -86,7 +86,7 @@ EOF
 
 chmod +x _run.sh
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" ./_run.sh
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" ./_run.sh
 
 if [[ "${IS_KOKORO}" == "true" ]]; then
   readonly REMOTE_CACHE_URL="gs://${TINK_REMOTE_CACHE_GCS_BUCKET}/cmake/${TINK_CC_CMAKE_IMAGE_HASH}"

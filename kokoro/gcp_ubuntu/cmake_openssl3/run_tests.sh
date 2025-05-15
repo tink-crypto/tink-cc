@@ -42,8 +42,8 @@ if [[ -n "${CONTAINER_IMAGE:-}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_cmake_tests.sh . -DTINK_USE_SYSTEM_OPENSSL=ON
 
-./kokoro/testutils/run_command.sh "${RUN_COMMAND_ARGS[@]}" \
+./kokoro/testutils/docker_execute.sh "${RUN_COMMAND_ARGS[@]}" \
   ./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_USE_SYSTEM_OPENSSL=ON

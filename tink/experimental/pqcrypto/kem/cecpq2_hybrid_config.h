@@ -17,8 +17,7 @@
 #ifndef TINK_EXPERIMENTAL_PQCRYPTO_KEM_CECPQ2_HYBRID_CONFIG_H_
 #define TINK_EXPERIMENTAL_PQCRYPTO_KEM_CECPQ2_HYBRID_CONFIG_H_
 
-#include "absl/base/macros.h"
-#include "tink/util/status.h"
+#include "absl/status/status.h"
 
 namespace crypto {
 namespace tink {
@@ -36,6 +35,8 @@ namespace tink {
 
 // Registers HybridEncrypt and HybridDecrypt primitive wrappers, and key
 // managers for all implementations of CECPQ2 HybridEncrypt and HybridDecrypt
+//
+// Note: CECPQ2 keys are currently not protected against leaking in core dumps.
 absl::Status Cecpq2HybridConfigRegister();
 
 }  // namespace tink

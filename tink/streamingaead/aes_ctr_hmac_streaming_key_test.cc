@@ -17,10 +17,12 @@
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
@@ -37,6 +39,7 @@ using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
+using ::testing::Not;
 
 TEST(AesCtrHmacStreamingKeyTest, CreateSucceeds) {
   absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
@@ -212,6 +215,119 @@ TEST(AesCtrHmacStreamingKeyTest, Clone) {
   std::unique_ptr<Key> cloned_key = key->Clone();
 
   ASSERT_THAT(*cloned_key, Eq(*key));
+}
+
+TEST(AesCtrHmacStreamingKeyTest, CopyConstructor) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData initial_key_material =
+      RestrictedData(parameters->KeySizeInBytes());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesCtrHmacStreamingKey copy(*key);
+
+  EXPECT_THAT(copy, Eq(*key));
+}
+
+TEST(AesCtrHmacStreamingKeyTest, CopyAssignment) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData initial_key_material =
+      RestrictedData(parameters->KeySizeInBytes());
+  RestrictedData other_initial_key_material =
+      RestrictedData(parameters->KeySizeInBytes());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> copy = AesCtrHmacStreamingKey::Create(
+      *parameters, other_initial_key_material, GetPartialKeyAccess());
+  ASSERT_THAT(copy, IsOk());
+  ASSERT_THAT(*copy, Not(Eq(*key)));
+
+  *copy = *key;
+
+  EXPECT_THAT(*copy, Eq(*key));
+}
+
+TEST(AesCtrHmacStreamingKeyTest, MoveConstructor) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData initial_key_material =
+      RestrictedData(parameters->KeySizeInBytes());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesCtrHmacStreamingKey move(std::move(*key));
+
+  EXPECT_THAT(move.GetParameters(), Eq(*parameters));
+  EXPECT_THAT(move.GetInitialKeyMaterial(GetPartialKeyAccess()),
+              Eq(initial_key_material));
+}
+
+TEST(AesCtrHmacStreamingKeyTest, MoveAssignment) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RestrictedData initial_key_material =
+      RestrictedData(parameters->KeySizeInBytes());
+  RestrictedData other_initial_key_material =
+      RestrictedData(parameters->KeySizeInBytes());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, initial_key_material, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingKey> move = AesCtrHmacStreamingKey::Create(
+      *parameters, other_initial_key_material, GetPartialKeyAccess());
+  ASSERT_THAT(move, IsOk());
+  ASSERT_THAT(*move, Not(Eq(*key)));
+
+  *move = std::move(*key);
+
+  EXPECT_THAT(move->GetInitialKeyMaterial(GetPartialKeyAccess()),
+              Eq(initial_key_material));
 }
 
 }  // namespace

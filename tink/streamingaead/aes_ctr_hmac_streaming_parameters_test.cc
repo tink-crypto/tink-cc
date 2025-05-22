@@ -17,10 +17,12 @@
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -383,16 +385,86 @@ TEST(AesCtrHmacStreamingParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  AesCtrHmacStreamingParameters copy = *parameters;
+  absl::StatusOr<AesCtrHmacStreamingParameters> copy =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(24)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha1)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(35));
-  EXPECT_THAT(copy.DerivedKeySizeInBytes(), Eq(32));
-  EXPECT_THAT(copy.HkdfHashType(),
+  *copy = *parameters;
+
+  EXPECT_THAT(copy->KeySizeInBytes(), Eq(35));
+  EXPECT_THAT(copy->DerivedKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(copy->HkdfHashType(),
               Eq(AesCtrHmacStreamingParameters::HashType::kSha512));
-  EXPECT_THAT(copy.HmacHashType(),
+  EXPECT_THAT(copy->HmacHashType(),
               Eq(AesCtrHmacStreamingParameters::HashType::kSha256));
-  EXPECT_THAT(copy.HmacTagSizeInBytes(), Eq(16));
-  EXPECT_THAT(copy.CiphertextSegmentSizeInBytes(), Eq(1024));
+  EXPECT_THAT(copy->HmacTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(copy->CiphertextSegmentSizeInBytes(), Eq(1024));
+}
+
+TEST(AesCtrHmacStreamingParametersTest, MoveConstructor) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  AesCtrHmacStreamingParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.KeySizeInBytes(), Eq(35));
+  EXPECT_THAT(move.DerivedKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move.HkdfHashType(),
+              Eq(AesCtrHmacStreamingParameters::HashType::kSha512));
+  EXPECT_THAT(move.HmacHashType(),
+              Eq(AesCtrHmacStreamingParameters::HashType::kSha256));
+  EXPECT_THAT(move.HmacTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move.CiphertextSegmentSizeInBytes(), Eq(1024));
+}
+
+TEST(AesCtrHmacStreamingParametersTest, MoveAssignment) {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesCtrHmacStreamingParameters> move =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(24)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha1)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(move, IsOk());
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->KeySizeInBytes(), Eq(35));
+  EXPECT_THAT(move->DerivedKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move->HkdfHashType(),
+              Eq(AesCtrHmacStreamingParameters::HashType::kSha512));
+  EXPECT_THAT(move->HmacHashType(),
+              Eq(AesCtrHmacStreamingParameters::HashType::kSha256));
+  EXPECT_THAT(move->HmacTagSizeInBytes(), Eq(16));
+  EXPECT_THAT(move->CiphertextSegmentSizeInBytes(), Eq(1024));
 }
 
 TEST_P(AesCtrHmacStreamingParametersTest, ParametersEquals) {

@@ -17,10 +17,12 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -34,6 +36,7 @@ using ::crypto::tink::test::StatusIs;
 using ::testing::Eq;
 using ::testing::HasSubstr;
 using ::testing::IsFalse;
+using ::testing::Not;
 using ::testing::TestWithParam;
 using ::testing::Values;
 
@@ -225,11 +228,7 @@ TEST(AesGcmHkdfStreamingParametersTest, CopyConstructor) {
 
   AesGcmHkdfStreamingParameters copy(*parameters);
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(35));
-  EXPECT_THAT(copy.DerivedKeySizeInBytes(), Eq(32));
-  EXPECT_THAT(copy.GetHashType(),
-              Eq(AesGcmHkdfStreamingParameters::HashType::kSha512));
-  EXPECT_THAT(copy.CiphertextSegmentSizeInBytes(), Eq(1024));
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(AesGcmHkdfStreamingParametersTest, CopyAssignment) {
@@ -242,13 +241,67 @@ TEST(AesGcmHkdfStreamingParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  AesGcmHkdfStreamingParameters copy = *parameters;
+  absl::StatusOr<AesGcmHkdfStreamingParameters> copy =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(19)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(copy, IsOk());
+  ASSERT_THAT(*copy, Not(Eq(*parameters)));
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(35));
-  EXPECT_THAT(copy.DerivedKeySizeInBytes(), Eq(32));
-  EXPECT_THAT(copy.GetHashType(),
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(AesGcmHkdfStreamingParametersTest, MoveConstructor) {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  AesGcmHkdfStreamingParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move.KeySizeInBytes(), Eq(35));
+  EXPECT_THAT(move.DerivedKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move.GetHashType(),
               Eq(AesGcmHkdfStreamingParameters::HashType::kSha512));
-  EXPECT_THAT(copy.CiphertextSegmentSizeInBytes(), Eq(1024));
+  EXPECT_THAT(move.CiphertextSegmentSizeInBytes(), Eq(1024));
+}
+
+TEST(AesGcmHkdfStreamingParametersTest, MoveAssignment) {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha512)
+          .SetCiphertextSegmentSizeInBytes(1024)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesGcmHkdfStreamingParameters> move =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(19)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+          .SetCiphertextSegmentSizeInBytes(512)
+          .Build();
+  ASSERT_THAT(move, IsOk());
+  ASSERT_THAT(*move, Not(Eq(*parameters)));
+
+  *move = std::move(*parameters);
+
+  EXPECT_THAT(move->KeySizeInBytes(), Eq(35));
+  EXPECT_THAT(move->DerivedKeySizeInBytes(), Eq(32));
+  EXPECT_THAT(move->GetHashType(),
+              Eq(AesGcmHkdfStreamingParameters::HashType::kSha512));
+  EXPECT_THAT(move->CiphertextSegmentSizeInBytes(), Eq(1024));
 }
 
 TEST_P(AesGcmHkdfStreamingParametersTest, ParametersEquals) {

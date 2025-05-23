@@ -705,6 +705,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     gmock
     absl::status
+    absl::statusor
     tink::core::parameters
     tink::util::statusor
     tink::util::test_matchers
@@ -719,6 +720,7 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     gmock
     absl::status
+    absl::statusor
     absl::optional
     tink::core::key
     tink::core::partial_key_access

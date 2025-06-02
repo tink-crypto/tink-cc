@@ -247,7 +247,7 @@ absl::StatusOr<AesEaxKey> ParseKey(const ProtoKeySerialization& serialization,
   if (!parameters.ok()) return parameters.status();
 
   return AesEaxKey::Create(
-      *parameters, RestrictedData(key_struct->key_value, *token),
+      *parameters, RestrictedData(std::move(key_struct->key_value), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

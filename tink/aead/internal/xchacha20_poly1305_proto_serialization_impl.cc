@@ -172,7 +172,8 @@ absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
   if (!parameters.ok()) return parameters.status();
 
   return XChaCha20Poly1305Key::Create(
-      parameters->GetVariant(), RestrictedData(key->key_value, *token),
+      parameters->GetVariant(),
+      RestrictedData(std::move(key->key_value), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

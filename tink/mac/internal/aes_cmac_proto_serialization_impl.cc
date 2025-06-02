@@ -213,7 +213,7 @@ absl::StatusOr<AesCmacKey> ParseKey(
   if (!parameters.ok()) return parameters.status();
 
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
-      *parameters, RestrictedData(proto_key->key_value, *token),
+      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!key.ok()) return key.status();
 

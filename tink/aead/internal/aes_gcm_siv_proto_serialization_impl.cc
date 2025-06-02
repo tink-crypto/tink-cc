@@ -205,7 +205,7 @@ absl::StatusOr<AesGcmSivKey> ParseKey(
   }
 
   return AesGcmSivKey::Create(
-      *parameters, RestrictedData(key_struct->key_value, *token),
+      *parameters, RestrictedData(std::move(key_struct->key_value), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

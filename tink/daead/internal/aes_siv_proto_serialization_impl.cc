@@ -166,7 +166,7 @@ absl::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
   if (!parameters.ok()) return parameters.status();
 
   return AesSivKey::Create(
-      *parameters, RestrictedData(proto_key->key_value, *token),
+      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

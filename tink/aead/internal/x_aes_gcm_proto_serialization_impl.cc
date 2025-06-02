@@ -219,7 +219,7 @@ absl::StatusOr<XAesGcmKey> ParseKey(
     return parameters.status();
   }
   return XAesGcmKey::Create(
-      *parameters, RestrictedData(proto_key->key_value, *token),
+      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 

@@ -267,9 +267,9 @@ absl::StatusOr<HkdfPrfKey> ParseKey(
     return parameters.status();
   }
 
-  return HkdfPrfKey::Create(*parameters,
-                            RestrictedData(proto_key->key_value, *token),
-                            GetPartialKeyAccess());
+  return HkdfPrfKey::Create(
+      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
+      GetPartialKeyAccess());
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(

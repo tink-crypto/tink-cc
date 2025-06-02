@@ -241,9 +241,9 @@ absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
                              proto_key->params.tag_size, *hash_type, *variant);
   if (!parameters.ok()) return parameters.status();
 
-  return HmacKey::Create(*parameters,
-                         RestrictedData(proto_key->key_value, *token),
-                         serialization.IdRequirement(), GetPartialKeyAccess());
+  return HmacKey::Create(
+      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
+      serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(

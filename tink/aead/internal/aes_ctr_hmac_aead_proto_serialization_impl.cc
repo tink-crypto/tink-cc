@@ -289,7 +289,8 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
 
   return AesCtrHmacAeadKey::Builder()
       .SetParameters(*parameters)
-      .SetAesKeyBytes(RestrictedData(key_struct->aes_ctr_key.key_value, *token))
+      .SetAesKeyBytes(
+          RestrictedData(std::move(key_struct->aes_ctr_key.key_value), *token))
       .SetHmacKeyBytes(RestrictedData(key_struct->hmac_key.key_value, *token))
       .SetIdRequirement(serialization.IdRequirement())
       .Build(GetPartialKeyAccess());

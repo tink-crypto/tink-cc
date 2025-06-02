@@ -248,9 +248,9 @@ absl::StatusOr<HmacPrfKey> ParseKey(
     return parameters.status();
   }
 
-  return HmacPrfKey::Create(*parameters,
-                            RestrictedData(proto_key->key_value, *token),
-                            GetPartialKeyAccess());
+  return HmacPrfKey::Create(
+      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
+      GetPartialKeyAccess());
 }
 
 absl::StatusOr<ProtoKeySerialization> SerializeKey(

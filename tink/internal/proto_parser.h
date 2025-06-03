@@ -248,10 +248,9 @@ absl::StatusOr<Struct> ProtoParser<Struct>::Parse(
   low_level_parser_.ClearAllFields(result);
   proto_parsing::ParsingState parsing_state =
       proto_parsing::ParsingState(input);
-  absl::Status status =
-      low_level_parser_.ConsumeIntoAllFields(parsing_state, result);
-  if (!status.ok()) {
-    return status;
+  bool parsed = low_level_parser_.ConsumeIntoAllFields(parsing_state, result);
+  if (!parsed) {
+    return absl::InvalidArgumentError("Parsing input failed");
   }
   return result;
 }
@@ -265,10 +264,10 @@ ProtoParser<Struct>::ParseWithCrc(absl::string_view input) const {
   low_level_parser_.ClearAllFields(result.first);
   proto_parsing::ParsingState parsing_state =
       proto_parsing::ParsingState(input, &result.second.value());
-  absl::Status status =
+  bool parsed =
       low_level_parser_.ConsumeIntoAllFields(parsing_state, result.first);
-  if (!status.ok()) {
-    return status;
+  if (!parsed) {
+    return absl::InvalidArgumentError("Parsing input failed");
   }
   return result;
 }

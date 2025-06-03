@@ -45,6 +45,8 @@ using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Test;
 
@@ -91,7 +93,7 @@ TEST(MessageField, ConsumeIntoMemberSuccessCases) {
                    /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
                    "remaining_data");
   ParsingState parsing_state = ParsingState(bytes);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
   EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(0x23));
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0x7a));
@@ -111,7 +113,7 @@ TEST(MessageField, ConsumeIntoMemberWithCrcSuccessCases) {
                    "remaining_data");
   absl::crc32c_t crc{};
   ParsingState parsing_state = ParsingState(bytes, &crc);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
   EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(bytes.substr(0, 5))));
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(0x23));
@@ -129,7 +131,7 @@ TEST(MessageField, ConsumeIntoMemberEmptyString) {
   ParsingState parsing_state = ParsingState(bytes);
   // This does not clear the fields because if there are multiple blocks
   // for the same field we merge them.
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(0));
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0));
 }
@@ -147,7 +149,7 @@ TEST(MessageField, ConsumeIntoMemberDoesNotClear) {
   ParsingState parsing_state = ParsingState(bytes);
   // This does not clear uint32_member_1 because if there are multiple blocks
   // for the same field we merge them.
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
   EXPECT_THAT(s.inner_member.uint32_member_1, Eq(10));
   EXPECT_THAT(s.inner_member.uint32_member_2, Eq(0x7a));
 }
@@ -161,7 +163,7 @@ TEST(MessageField, ConsumeIntoMemberVarintTooLong) {
 
   std::string bytes = /* LengthDelimetedLength: */ HexDecodeOrDie("01");
   ParsingState parsing_state = ParsingState(bytes);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(MessageField, EmptyWithoutVarint) {
@@ -171,7 +173,7 @@ TEST(MessageField, EmptyWithoutVarint) {
 
   std::string bytes = "";
   ParsingState parsing_state = ParsingState(bytes);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(MessageField, InvalidVarint) {
@@ -181,7 +183,7 @@ TEST(MessageField, InvalidVarint) {
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   ParsingState parsing_state = ParsingState(bytes);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(MessageField, SerializeEmpty) {

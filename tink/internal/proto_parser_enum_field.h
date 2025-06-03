@@ -64,18 +64,16 @@ class EnumField : public Field<Struct> {
     s.*value_ = {};
   }
 
-  absl::Status ConsumeIntoMember(ParsingState& serialized,
-                                 Struct& s) const override {
+  bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
     absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
     if (!result.ok()) {
-      return result.status();
+      return false;
     }
     if (!is_valid_(result.value())) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Invalid value for enum: ", *result));
+      return false;
     }
     s.*value_ = static_cast<Enum>(*result);
-    return absl::OkStatus();
+    return true;
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }

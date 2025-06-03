@@ -332,7 +332,7 @@ TEST_F(HkdfPrfProtoSerializationTest, ParseKeyWithInvalidSerializationFails) {
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Not enough data to read kFixed64")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST_P(HkdfPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {

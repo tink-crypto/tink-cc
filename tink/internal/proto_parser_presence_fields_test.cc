@@ -44,6 +44,8 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Optional;
 using ::testing::Test;
@@ -69,7 +71,7 @@ TEST(Uint32FieldWithPresence, ConsumeIntoMemberSuccessCases) {
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
   ParsingState parsing_state = ParsingState(serialized);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
   EXPECT_THAT(s.uint32_member_1, Optional(128));
   EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
 }
@@ -85,7 +87,7 @@ TEST(Uint32FieldWithPresence, ConsumeIntoMemberFailureCases) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
     ParsingState parsing_state = ParsingState(serialized);
-    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
   }
 }
 

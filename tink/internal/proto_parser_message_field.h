@@ -57,16 +57,14 @@ class MessageField : public Field<OuterStruct> {
     low_level_parser_.ClearAllFields(s.*value_);
   }
 
-  absl::Status ConsumeIntoMember(ParsingState& serialized,
-                                 OuterStruct& s) const override {
+  bool ConsumeIntoMember(ParsingState& serialized,
+                         OuterStruct& s) const override {
     absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
     if (!length.ok()) {
-      return length.status();
+      return false;
     }
     if (*length > serialized.RemainingData().size()) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Length ", *length, " exceeds remaining input size ",
-                       serialized.RemainingData().size()));
+      return false;
     }
     ParsingState submessage_parsing_state =
         serialized.SplitOffSubmessageState(*length);

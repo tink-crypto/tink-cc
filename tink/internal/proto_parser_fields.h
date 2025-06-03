@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -89,8 +90,11 @@ class Field {
   // type is kLengthDelimited, "serialized" contains only the data of the
   // field. Otherwise, it contains all the data of the remaining serialized
   // message. The processed data needs to be removed.
-  virtual absl::Status ConsumeIntoMember(ParsingState& serialized,
-                                         Struct& values) const = 0;
+  //
+  // Returns true on success.
+  ABSL_MUST_USE_RESULT
+  virtual bool ConsumeIntoMember(ParsingState& serialized,
+                                 Struct& values) const = 0;
 
   // Serializes the member into out, and removes the part which was written
   // on from out. Includes the tag of the field (the encoded wiretype/field
@@ -121,14 +125,13 @@ class Uint32Field : public Field<Struct> {
 
   void ClearMember(Struct& s) const override { s.*value_ = 0; }
 
-  absl::Status ConsumeIntoMember(ParsingState& serialized,
-                                 Struct& s) const override {
+  bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
     absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
     if (!result.ok()) {
-      return result.status();
+      return false;
     }
     s.*value_ = *result;
-    return absl::OkStatus();
+    return true;
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }
@@ -182,15 +185,14 @@ class BytesField : public Field<Struct> {
     ClearStringLikeValue(s.*value_);
   }
 
-  absl::Status ConsumeIntoMember(ParsingState& serialized,
-                                 Struct& s) const override {
+  bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
     absl::StatusOr<absl::string_view> result =
         ConsumeBytesReturnStringView(serialized);
     if (!result.ok()) {
-      return result.status();
+      return false;
     }
     CopyIntoStringLikeValue(*result, s.*value_);
-    return absl::OkStatus();
+    return true;
   }
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }

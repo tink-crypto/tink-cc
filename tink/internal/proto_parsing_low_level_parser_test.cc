@@ -59,6 +59,7 @@ using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::IsTrue;
 
 TEST(LowLevelParserTest, ClearAllFields) {
   LowLevelParser<ParsedStruct> parser(MakeFields());
@@ -80,7 +81,7 @@ TEST(LowLevelParserTest, ConsumeIntoFieldsBasic) {
   parser.ClearAllFields(s);
   std::string serialized = proto.SerializeAsString();
   ParsingState parsing_state = ParsingState(serialized);
-  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsOk());
+  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsTrue());
   ASSERT_THAT(parsing_state.RemainingData(), IsEmpty());
   EXPECT_THAT(s.uint32_member_1, Eq(123));
   EXPECT_THAT(s.string_member_1, Eq("foo"));
@@ -93,7 +94,7 @@ TEST(LowLevelParserTest, ConsumeIntoFieldsWrongWiretypeIgnored) {
   std::string serialized = HexDecodeOrDie(
       absl::StrCat(/*Wiretype: kVarint, Tag 3*/ "18", /* Varint: 1*/ "08"));
   ParsingState parsing_state = ParsingState(serialized);
-  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsOk());
+  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsTrue());
   ASSERT_THAT(parsing_state.RemainingData(), IsEmpty());
   EXPECT_THAT(s.string_member_1, Eq(""));
 }
@@ -205,7 +206,7 @@ TEST(LowLevelParserTest, SkipUnknownField) {
       absl::StrCat(proto1.SerializeAsString(), proto2.SerializeAsString(),
                    proto3.SerializeAsString());
   ParsingState parsing_state = ParsingState(serialized);
-  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsOk());
+  ASSERT_THAT(parser.ConsumeIntoAllFields(parsing_state, s), IsTrue());
   ASSERT_THAT(parsing_state.RemainingData(), IsEmpty());
   EXPECT_THAT(s.uint32_member_1, Eq(123));
   EXPECT_THAT(s.string_member_1, Eq("foo"));

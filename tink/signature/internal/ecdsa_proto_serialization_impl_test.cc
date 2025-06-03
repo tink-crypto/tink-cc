@@ -286,7 +286,7 @@ TEST_F(EcdsaProtoSerializationTest,
       registry.ParseParameters(*serialization);
   EXPECT_THAT(parameters.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Invalid value for enum: 3")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST_F(EcdsaProtoSerializationTest,

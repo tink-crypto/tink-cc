@@ -1494,6 +1494,7 @@ tink_cc_library(
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::safe_stringops
+    absl::core_headers
     absl::status
     absl::statusor
     absl::strings

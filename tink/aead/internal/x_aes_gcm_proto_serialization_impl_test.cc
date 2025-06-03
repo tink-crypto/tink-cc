@@ -176,7 +176,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithInvalidSerialization) {
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Not enough data to read kFixed64")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST_F(XAesGcmProtoSerializationTest, ParseParametersWithUnkownOutputPrefix) {
@@ -376,7 +376,7 @@ TEST_F(XAesGcmProtoSerializationTest, ParseKeyWithInvalidSerialization) {
       registry.ParseKey(*serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Not enough data to read kFixed64")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST_F(XAesGcmProtoSerializationTest, ParseKeyNoSecretKeyAccess) {

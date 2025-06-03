@@ -49,14 +49,13 @@ class Uint64Field : public Field<Struct> {
 
   void ClearMember(Struct& s) const override { s.*value_ = 0; }
 
-  absl::Status ConsumeIntoMember(ParsingState& serialized,
-                                 Struct& s) const override {
+  bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
     absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
     if (!result.ok()) {
-      return result.status();
+      return false;
     }
     s.*value_ = *result;
-    return absl::OkStatus();
+    return true;
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }

@@ -45,6 +45,8 @@ using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::SizeIs;
 using ::testing::Test;
@@ -83,7 +85,7 @@ TEST(RepeatedSecretDataBytesField, ConsumeIntoMemberOneElementWorks) {
   absl::crc32c_t crc_to_maintain = absl::ComputeCrc32c("Previously parsed");
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
   // The existing member stays, we added a new one.
   EXPECT_THAT(s.secret_data_vector, SizeIs(2));
   EXPECT_THAT(SecretDataAsStringView(s.secret_data_vector[0]), Eq("hello"));
@@ -106,7 +108,7 @@ TEST(RepeatedSecretDataBytesField, ConsumeIntoMemberVarintSaysTooLong) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(RepeatedSecretDataBytesField, EmptyWithoutVarint) {
@@ -120,7 +122,7 @@ TEST(RepeatedSecretDataBytesField, EmptyWithoutVarint) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(RepeatedSecretDataBytesField, InvalidVarint) {
@@ -134,7 +136,7 @@ TEST(RepeatedSecretDataBytesField, InvalidVarint) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(RepeatedSecretDataBytesField, SerializeEmptyWithoutCrcDoesntSerialize) {

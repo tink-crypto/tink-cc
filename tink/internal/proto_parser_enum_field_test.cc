@@ -43,6 +43,8 @@ using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 
 enum class MyEnum : uint32_t {
@@ -80,7 +82,7 @@ TEST(EnumField, ConsumeIntoMemberSuccessCases) {
     SCOPED_TRACE(test_case.first);
     std::string serialized = HexDecodeOrDie(test_case.first);
     ParsingState parsing_state = ParsingState(serialized);
-    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
     EXPECT_THAT(s.enum_field, Eq(static_cast<MyEnum>(test_case.second)));
     EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
   }
@@ -94,7 +96,7 @@ TEST(EnumField, ConsumeIntoMemberLeavesRemainingData) {
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
   ParsingState parsing_state = ParsingState(serialized);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
   EXPECT_THAT(s.enum_field, Eq(static_cast<MyEnum>(128)));
   EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
 }
@@ -109,7 +111,7 @@ TEST(EnumField, ConsumeIntoMemberFailureCases) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
     ParsingState parsing_state = ParsingState(serialized);
-    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
   }
 }
 
@@ -119,7 +121,7 @@ TEST(EnumField, ConsumeIntoMemberInvalidFails) {
   ExampleStruct s;
   std::string serialized = HexDecodeOrDie(/* 128 as varint */"8001");
   ParsingState parsing_state = ParsingState(serialized);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(EnumField, SerializeVarintSuccessCases) {

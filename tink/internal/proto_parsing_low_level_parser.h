@@ -64,13 +64,13 @@ class LowLevelParser {
   }
 
   // Parses the serialized message and populates the corresponding fields.
-  absl::Status ConsumeIntoAllFields(ParsingState& serialized,
+  bool ConsumeIntoAllFields(ParsingState& serialized,
                                     Struct& values) const {
     while (!serialized.ParsingDone()) {
       absl::StatusOr<std::pair<WireType, int>> wiretype_and_field_number =
           ConsumeIntoWireTypeAndFieldNumber(serialized);
       if (!wiretype_and_field_number.ok()) {
-        return wiretype_and_field_number.status();
+        return false;
       }
       auto it = fields_.find(wiretype_and_field_number->second);
       if (it == fields_.end() ||
@@ -82,16 +82,16 @@ class LowLevelParser {
           s = SkipField(wiretype_and_field_number->first, serialized);
         }
         if (!s.ok()) {
-          return s;
+          return false;
         }
         continue;
       }
-      absl::Status status = it->second->ConsumeIntoMember(serialized, values);
-      if (!status.ok()) {
-        return status;
+      bool res = it->second->ConsumeIntoMember(serialized, values);
+      if (!res) {
+        return res;
       }
     }
-    return absl::OkStatus();
+    return true;
   }
 
   // Returns true if any field needs to be serialized (i.e. is not the default).

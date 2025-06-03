@@ -52,16 +52,14 @@ class SecretDataField : public Field<Struct> {
 
   void ClearMember(Struct& s) const override { s.*data_ = SecretData(); }
 
-  absl::Status ConsumeIntoMember(ParsingState& parsing_state,
-                                 Struct& s) const override {
+  bool ConsumeIntoMember(ParsingState& parsing_state,
+                         Struct& s) const override {
     absl::StatusOr<uint32_t> length = ConsumeVarintForSize(parsing_state);
     if (!length.ok()) {
-      return length.status();
+      return false;
     }
     if (*length > parsing_state.RemainingData().size()) {
-      return absl::InvalidArgumentError(
-          absl::StrCat("Length ", *length, " exceeds remaining input size ",
-                       parsing_state.RemainingData().size()));
+      return false;
     }
     absl::string_view data = parsing_state.RemainingData().substr(0, *length);
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
@@ -73,7 +71,7 @@ class SecretDataField : public Field<Struct> {
       s.*data_ = SecretData(data, crc);
     });
 #endif
-    return absl::OkStatus();
+    return true;
   }
 
   WireType GetWireType() const override { return WireType::kLengthDelimited; }

@@ -257,7 +257,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       registry.ParseParameters(*serialization);
   EXPECT_THAT(params.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Not enough data to read kFixed64")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
@@ -550,7 +550,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Not enough data to read kFixed64")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,

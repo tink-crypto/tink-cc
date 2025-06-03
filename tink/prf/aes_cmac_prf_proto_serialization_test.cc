@@ -117,7 +117,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
           *serialization);
   EXPECT_THAT(params.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Not enough data to read kFixed64")));
+                       HasSubstr("Parsing input failed")));
 }
 
 using AesCmacPrfParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
@@ -258,7 +258,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Not enough data to read kFixed64")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST_P(AesCmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {

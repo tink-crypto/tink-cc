@@ -43,6 +43,8 @@ using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::IsEmpty;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Test;
 
@@ -77,7 +79,7 @@ TEST(SecretDataBytesField, ConsumeIntoMemberWithCrcSuccessCases) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
 
   EXPECT_THAT(SecretDataAsStringView(s.secret_data), Eq("1234567890"));
   EXPECT_THAT(GetCrc32c(s.secret_data), Eq(absl::ComputeCrc32c("1234567890")));
@@ -94,7 +96,7 @@ TEST(SecretDataBytesField, ConsumeIntoMemberWithoutCrc) {
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
   ParsingState parsing_state = ParsingState(bytes);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
 
   EXPECT_THAT(SecretDataAsStringView(s.secret_data), Eq("1234567890"));
   EXPECT_THAT(GetCrc32c(s.secret_data), Eq(absl::ComputeCrc32c("1234567890")));
@@ -111,7 +113,7 @@ TEST(SecretDataBytesField, ConsumeIntoMemberVarintSaysTooLong) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(SecretDataBytesField, ConsumeIntoMemberWithoutCrcEmptyString) {
@@ -122,7 +124,7 @@ TEST(SecretDataBytesField, ConsumeIntoMemberWithoutCrcEmptyString) {
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
   ParsingState parsing_state = ParsingState(bytes);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
 
   EXPECT_THAT(SecretDataAsStringView(s.secret_data), Eq(""));
   EXPECT_THAT(parsing_state.RemainingData(), Eq("abcde"));
@@ -137,7 +139,7 @@ TEST(SecretDataBytesField, ConsumeIntoMemberWithCrcEmptyString) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
 
   EXPECT_THAT(SecretDataAsStringView(s.secret_data), Eq(""));
   EXPECT_THAT(GetCrc32c(s.secret_data), Eq(absl::crc32c_t{0}));
@@ -154,7 +156,7 @@ TEST(SecretDataBytesField, EmptyWithoutVarint) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 TEST(SecretDataBytesField, InvalidVarint) {
@@ -166,7 +168,7 @@ TEST(SecretDataBytesField, InvalidVarint) {
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), Not(IsOk()));
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
 }
 
 // Tests that if the CRC is already populated, the field will just extend this.
@@ -180,7 +182,7 @@ TEST(SecretDataBytesField, ExistingCRCIsExtendedWhenParsing) {
   absl::crc32c_t crc_to_maintain = absl::ComputeCrc32c("Existing");
   ParsingState parsing_state = ParsingState(bytes, &crc_to_maintain);
 
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsOk());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
 
   EXPECT_THAT(SecretDataAsStringView(s.secret_data), Eq("1234567890"));
   EXPECT_THAT(GetCrc32c(s.secret_data), Eq(absl::ComputeCrc32c("1234567890")));

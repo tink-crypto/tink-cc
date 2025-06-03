@@ -275,7 +275,7 @@ TEST(ProtoParserTest, SingleBytesFieldStringLongDataFails) {
   ASSERT_THAT(parser.status(), IsOk());
   EXPECT_THAT(parser->Parse(serialized_proto).status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("exceeds remaining input")));
+                       HasSubstr("Parsing input failed")));
 }
 
 TEST(ProtoParserTest, SingleBytesFieldSecretDataTooLongDataFails) {

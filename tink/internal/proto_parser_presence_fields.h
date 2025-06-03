@@ -50,14 +50,13 @@ class Uint32FieldWithPresence : public Field<Struct> {
 
   void ClearMember(Struct& s) const override { (s.*value_).reset(); }
 
-  absl::Status ConsumeIntoMember(ParsingState& serialized,
-                                 Struct& s) const override {
+  bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
     absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
     if (!result.ok()) {
-      return result.status();
+      return false;
     }
     s.*value_ = *result;
-    return absl::OkStatus();
+    return true;
   }
 
   WireType GetWireType() const override { return WireType::kVarint; }

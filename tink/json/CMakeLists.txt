@@ -35,6 +35,29 @@ tink_cc_library(
     tink::proto::tink_cc_proto
 )
 
+tink_cc_library(
+  NAME json_proto_keyset_format
+  SRCS
+    json_proto_keyset_format.cc
+    json_proto_keyset_format.h
+  DEPS
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    protobuf::libprotobuf
+    tink::core::cleartext_keyset_handle
+    tink::core::keyset_handle
+    tink::core::proto_keyset_format
+    tink::core::secret_data
+    tink::core::secret_key_access_token
+    tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
+    tink::json::internal::tink_type_resolver
+    tink::util::secret_data
+    tink::proto::tink_cc_proto
+)
+
 tink_cc_test(
   NAME json_keyset_reader_test
   SRCS
@@ -78,4 +101,29 @@ tink_cc_test(
     tink::proto::aes_gcm_siv_cc_proto
     tink::proto::ecdsa_cc_proto
     tink::proto::tink_cc_proto
+)
+
+tink_cc_test(
+  NAME json_proto_keyset_format_test
+  SRCS
+    json_proto_keyset_format_test.cc
+  DEPS
+    tink::json::json_proto_keyset_format
+    gmock
+    absl::status
+    absl::statusor
+    protobuf::libprotobuf
+    tink::core::insecure_secret_key_access
+    tink::core::key_status
+    tink::core::keyset_handle
+    tink::core::mac
+    tink::core::secret_data
+    tink::config::global_registry
+    tink::config::tink_config
+    tink::json::internal::tink_type_resolver
+    tink::mac::aes_cmac_parameters
+    tink::signature::ed25519_parameters
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
 )

@@ -35,6 +35,31 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "json_proto_keyset_format",
+    srcs = ["json_proto_keyset_format.cc"],
+    hdrs = ["json_proto_keyset_format.h"],
+    include_prefix = "tink/json",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//proto:tink_cc_proto",
+        "//tink:cleartext_keyset_handle",
+        "//tink:keyset_handle",
+        "//tink:proto_keyset_format",
+        "//tink:secret_data",
+        "//tink:secret_key_access_token",
+        "//tink/internal:call_with_core_dump_protection",
+        "//tink/internal:secret_buffer",
+        "//tink/json/internal:tink_type_resolver",
+        "//tink/util:secret_data",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:optional",
+        "@com_google_protobuf//:protobuf",
+    ],
+)
+
 cc_test(
     name = "json_keyset_reader_test",
     srcs = ["json_keyset_reader_test.cc"],
@@ -77,5 +102,30 @@ cc_test(
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "json_proto_keyset_format_test",
+    srcs = ["json_proto_keyset_format_test.cc"],
+    deps = [
+        ":json_proto_keyset_format",
+        "//tink:insecure_secret_key_access",
+        "//tink:key_status",
+        "//tink:keyset_handle",
+        "//tink:mac",
+        "//tink:secret_data",
+        "//tink/config:global_registry",
+        "//tink/config:tink_config",
+        "//tink/json/internal:tink_type_resolver",
+        "//tink/mac:aes_cmac_parameters",
+        "//tink/signature:ed25519_parameters",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_googletest//:gtest_main",
+        "@com_google_protobuf//:protobuf",
     ],
 )

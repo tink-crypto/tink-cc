@@ -472,7 +472,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> JwkSetToPublicKeysetHandle(
 void AddStringEntry(Struct* key, absl::string_view name,
                     absl::string_view value) {
   auto val = key->mutable_fields()->insert({std::string(name), Value()});
-  val.first->second.set_string_value(std::string(value));
+  val.first->second.set_string_value(value);
 }
 
 void AddKeyOpsVerifyEntry(Struct* key) {

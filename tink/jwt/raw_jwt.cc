@@ -490,7 +490,7 @@ RawJwtBuilder& RawJwtBuilder::SetTypeHeader(absl::string_view type_header) {
 RawJwtBuilder& RawJwtBuilder::SetIssuer(absl::string_view issuer) {
   auto fields = json_proto_.mutable_fields();
   Value value;
-  value.set_string_value(std::string(issuer));
+  value.set_string_value(issuer);
   (*fields)[std::string(kJwtClaimIssuer)] = value;
   return *this;
 }
@@ -498,7 +498,7 @@ RawJwtBuilder& RawJwtBuilder::SetIssuer(absl::string_view issuer) {
 RawJwtBuilder& RawJwtBuilder::SetSubject(absl::string_view subject) {
   auto fields = json_proto_.mutable_fields();
   Value value;
-  value.set_string_value(std::string(subject));
+  value.set_string_value(subject);
   (*fields)[std::string(kJwtClaimSubject)] = value;
   return *this;
 }
@@ -514,7 +514,7 @@ RawJwtBuilder& RawJwtBuilder::SetAudience(absl::string_view audience) {
   }
   auto fields = json_proto_.mutable_fields();
   Value value;
-  value.set_string_value(std::string(audience));
+  value.set_string_value(audience);
   (*fields)[std::string(kJwtClaimAudience)] = value;
   return *this;
 }
@@ -549,14 +549,14 @@ RawJwtBuilder& RawJwtBuilder::AddAudience(absl::string_view audience) {
       fields->insert({std::string(kJwtClaimAudience), Value()});
   google::protobuf::ListValue* list_value =
       insertion_result.first->second.mutable_list_value();
-  list_value->add_values()->set_string_value(std::string(audience));
+  list_value->add_values()->set_string_value(audience);
   return *this;
 }
 
 RawJwtBuilder& RawJwtBuilder::SetJwtId(absl::string_view jwid) {
   auto fields = json_proto_.mutable_fields();
   Value value;
-  value.set_string_value(std::string(jwid));
+  value.set_string_value(jwid);
   (*fields)[std::string(kJwtClaimJwtId)] = value;
   return *this;
 }
@@ -656,7 +656,7 @@ RawJwtBuilder& RawJwtBuilder::AddStringClaim(absl::string_view name,
   }
   auto fields = json_proto_.mutable_fields();
   Value value;
-  value.set_string_value(std::string(string_value));
+  value.set_string_value(string_value);
   (*fields)[std::string(name)] = value;
   return *this;
 }

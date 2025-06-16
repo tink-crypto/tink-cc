@@ -64,7 +64,7 @@ SecretProto<Keyset::Key> ToKeysetKey(
       static_cast<google::crypto::tink::OutputPrefixType>(
           serialization.GetOutputPrefixTypeEnum()));
   KeyData* key_data = key->mutable_key_data();
-  key_data->set_type_url(std::string(serialization.TypeUrl()));
+  key_data->set_type_url(serialization.TypeUrl());
   internal::CallWithCoreDumpProtection([&]() {
     key_data->set_value(serialization.SerializedKeyProto().GetSecret(
         InsecureSecretKeyAccess::Get()));

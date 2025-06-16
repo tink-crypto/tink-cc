@@ -151,7 +151,7 @@ absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveFromXChaCha20Poly1305Key(
 
 google::crypto::tink::KeyData OnlyTypeUrlKeyData(absl::string_view type_url) {
   google::crypto::tink::KeyData result;
-  result.set_type_url(std::string(type_url));
+  result.set_type_url(type_url);
   return result;
 }
 

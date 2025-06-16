@@ -189,7 +189,7 @@ SecretProto<Keyset::Key> ToKeysetKey(
   key->set_output_prefix_type(
       static_cast<OutputPrefixType>(serialization.GetOutputPrefixTypeEnum()));
   KeyData* key_data = key->mutable_key_data();
-  key_data->set_type_url(std::string(serialization.TypeUrl()));
+  key_data->set_type_url(serialization.TypeUrl());
   internal::CallWithCoreDumpProtection([&]() {
     key_data->set_value(serialization.SerializedKeyProto().GetSecret(
         InsecureSecretKeyAccess::Get()));

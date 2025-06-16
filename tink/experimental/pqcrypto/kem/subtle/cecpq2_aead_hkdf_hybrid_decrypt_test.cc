@@ -187,11 +187,10 @@ google::crypto::tink::Cecpq2AeadHkdfPrivateKey CreateValidKey() {
                             subtle::EllipticCurveType::CURVE25519)
                             .value();
 
-  recipient_key.set_x25519_private_key(std::string(
-      util::SecretDataAsStringView(cecp2_key_pair.x25519_key_pair.priv)));
-  recipient_key.set_hrss_private_key_seed(
-      std::string(util::SecretDataAsStringView(
-          cecp2_key_pair.hrss_key_pair.hrss_private_key_seed)));
+  recipient_key.set_x25519_private_key(
+      util::SecretDataAsStringView(cecp2_key_pair.x25519_key_pair.priv));
+  recipient_key.set_hrss_private_key_seed(util::SecretDataAsStringView(
+      cecp2_key_pair.hrss_key_pair.hrss_private_key_seed));
 
   recipient_key.mutable_public_key()->set_x25519_public_key_x(
       cecp2_key_pair.x25519_key_pair.pub_x);
@@ -329,11 +328,10 @@ TEST_F(Cecpq2AeadHkdfHybridDecryptTest, AesGcmHybridDecryption) {
           pqc::GenerateCecpq2Keypair(key_params.ec_curve);
       auto cecpq2_key_pair = std::move(cecpq2_key_pair_or_status.value());
       google::crypto::tink::Cecpq2AeadHkdfPrivateKey cecpq2_key;
-      cecpq2_key.set_hrss_private_key_seed(
-          std::string(util::SecretDataAsStringView(
-              cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed)));
-      cecpq2_key.set_x25519_private_key(std::string(
-          util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv)));
+      cecpq2_key.set_hrss_private_key_seed(util::SecretDataAsStringView(
+          cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed));
+      cecpq2_key.set_x25519_private_key(
+          util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv));
       cecpq2_key.mutable_public_key()->set_hrss_public_key_marshalled(
           cecpq2_key_pair.hrss_key_pair.hrss_public_key_marshaled);
       cecpq2_key.mutable_public_key()->set_x25519_public_key_x(
@@ -387,11 +385,10 @@ TEST_F(Cecpq2AeadHkdfHybridDecryptTest, XChaCha20Poly1305HybridDecryption) {
         pqc::GenerateCecpq2Keypair(key_params.ec_curve);
     auto cecpq2_key_pair = std::move(cecpq2_key_pair_or_status.value());
     google::crypto::tink::Cecpq2AeadHkdfPrivateKey cecpq2_key;
-    cecpq2_key.set_hrss_private_key_seed(
-        std::string(util::SecretDataAsStringView(
-            cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed)));
-    cecpq2_key.set_x25519_private_key(std::string(
-        util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv)));
+    cecpq2_key.set_hrss_private_key_seed(util::SecretDataAsStringView(
+        cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed));
+    cecpq2_key.set_x25519_private_key(
+        util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv));
     cecpq2_key.mutable_public_key()->set_hrss_public_key_marshalled(
         cecpq2_key_pair.hrss_key_pair.hrss_public_key_marshaled);
     cecpq2_key.mutable_public_key()->set_x25519_public_key_x(
@@ -441,11 +438,10 @@ TEST_F(Cecpq2AeadHkdfHybridDecryptTest, AesSivHybridDecryption) {
         pqc::GenerateCecpq2Keypair(key_params.ec_curve);
     auto cecpq2_key_pair = std::move(cecpq2_key_pair_or_status.value());
     google::crypto::tink::Cecpq2AeadHkdfPrivateKey cecpq2_key;
-    cecpq2_key.set_hrss_private_key_seed(
-        std::string(util::SecretDataAsStringView(
-            cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed)));
-    cecpq2_key.set_x25519_private_key(std::string(
-        util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv)));
+    cecpq2_key.set_hrss_private_key_seed(util::SecretDataAsStringView(
+        cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed));
+    cecpq2_key.set_x25519_private_key(
+        util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv));
     cecpq2_key.mutable_public_key()->set_hrss_public_key_marshalled(
         cecpq2_key_pair.hrss_key_pair.hrss_public_key_marshaled);
     cecpq2_key.mutable_public_key()->set_x25519_public_key_x(

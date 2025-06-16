@@ -242,7 +242,7 @@ KeyTemplate AeadKeyTemplates::KmsEnvelopeAead(absl::string_view kek_uri,
       "type.googleapis.com/google.crypto.tink.KmsEnvelopeAeadKey");
   key_template.set_output_prefix_type(OutputPrefixType::RAW);
   KmsEnvelopeAeadKeyFormat key_format;
-  key_format.set_kek_uri(std::string(kek_uri));
+  key_format.set_kek_uri(kek_uri);
   key_format.mutable_dek_template()->MergeFrom(dek_template);
   key_format.SerializeToString(key_template.mutable_value());
   return key_template;

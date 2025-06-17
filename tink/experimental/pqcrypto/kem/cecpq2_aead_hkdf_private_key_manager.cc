@@ -66,11 +66,10 @@ Cecpq2AeadHkdfPrivateKeyManager::CreateKey(
   // Build Cecpq2AeadHkdfPrivateKey
   Cecpq2AeadHkdfPrivateKey cecpq2_private_key;
   cecpq2_private_key.set_version(get_version());
-  cecpq2_private_key.set_x25519_private_key(std::string(
-      util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv)));
-  cecpq2_private_key.set_hrss_private_key_seed(
-      std::string(util::SecretDataAsStringView(
-          cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed)));
+  cecpq2_private_key.set_x25519_private_key(
+      util::SecretDataAsStringView(cecpq2_key_pair.x25519_key_pair.priv));
+  cecpq2_private_key.set_hrss_private_key_seed(util::SecretDataAsStringView(
+      cecpq2_key_pair.hrss_key_pair.hrss_private_key_seed));
 
   auto cecpq2_public_key = cecpq2_private_key.mutable_public_key();
   cecpq2_public_key->set_version(get_version());

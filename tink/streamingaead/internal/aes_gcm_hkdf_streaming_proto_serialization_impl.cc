@@ -255,7 +255,7 @@ absl::StatusOr<AesGcmHkdfStreamingKey> ParseKey(
   }
 
   return AesGcmHkdfStreamingKey::Create(
-      *parameters, RestrictedData(parsed_key->key_value, *token),
+      *parameters, RestrictedData(std::move(parsed_key->key_value), *token),
       GetPartialKeyAccess());
 }
 

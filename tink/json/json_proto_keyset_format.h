@@ -53,4 +53,4 @@ ParseKeysetWithoutSecretFromJsonProtoKeysetFormat(
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_JSON_PROTO_KEYSET_FORMAT_H_
+#endif  // TINK_JSON_JSON_PROTO_KEYSET_FORMAT_H_

@@ -1,5 +1,4 @@
-# NOTE: With MSVC versions before 3.18 may not set /std:c11 consistently.
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.22)
 
 project(Tink VERSION 2.4.0 LANGUAGES CXX)
 

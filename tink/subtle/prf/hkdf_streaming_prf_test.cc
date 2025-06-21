@@ -97,8 +97,8 @@ TEST(HkdfStreamingPrf, EmptySalt) {
   {
     uint8_t zeroedSalt[hash_length];
     std::fill(std::begin(zeroedSalt), std::end(zeroedSalt), 0);
-    auto streaming_prf = HkdfStreamingPrf::New(hash_type, secret,
-                                               std::string((char*)zeroedSalt));
+    auto streaming_prf =
+        HkdfStreamingPrf::New(hash_type, secret, (char*)zeroedSalt);
     ASSERT_THAT(streaming_prf, IsOk());
     std::unique_ptr<InputStream> stream = (*streaming_prf)->ComputePrf(input);
     auto result = ReadBytesFromStream(num_bytes, stream.get());

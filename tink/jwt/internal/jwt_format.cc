@@ -103,12 +103,12 @@ absl::StatusOr<std::string> CreateHeader(
   google::protobuf::Struct header;
   auto fields = header.mutable_fields();
   if (kid.has_value()) {
-    (*fields)["kid"].set_string_value(std::string(kid.value()));
+    (*fields)["kid"].set_string_value(kid.value());
   }
   if (type_header.has_value()) {
-    (*fields)["typ"].set_string_value(std::string(type_header.value()));
+    (*fields)["typ"].set_string_value(type_header.value());
   }
-  (*fields)["alg"].set_string_value(std::string(algorithm));
+  (*fields)["alg"].set_string_value(algorithm);
   absl::StatusOr<std::string> json_header =
       jwt_internal::ProtoStructToJsonString(header);
   if (!json_header.ok()) {

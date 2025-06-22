@@ -54,13 +54,12 @@ std::unique_ptr<JwtRsaSsaPssPrivateKey> RsaPrivateKeySubtleToProto(
     const internal::RsaPrivateKey& private_key) {
   auto key_proto = absl::make_unique<JwtRsaSsaPssPrivateKey>();
   key_proto->set_version(RawJwtRsaSsaPssSignKeyManager().get_version());
-  key_proto->set_d(std::string(util::SecretDataAsStringView(private_key.d)));
-  key_proto->set_p(std::string(util::SecretDataAsStringView(private_key.p)));
-  key_proto->set_q(std::string(util::SecretDataAsStringView(private_key.q)));
-  key_proto->set_dp(std::string(util::SecretDataAsStringView(private_key.dp)));
-  key_proto->set_dq(std::string(util::SecretDataAsStringView(private_key.dq)));
-  key_proto->set_crt(
-      std::string(util::SecretDataAsStringView(private_key.crt)));
+  key_proto->set_d(util::SecretDataAsStringView(private_key.d));
+  key_proto->set_p(util::SecretDataAsStringView(private_key.p));
+  key_proto->set_q(util::SecretDataAsStringView(private_key.q));
+  key_proto->set_dp(util::SecretDataAsStringView(private_key.dp));
+  key_proto->set_dq(util::SecretDataAsStringView(private_key.dq));
+  key_proto->set_crt(util::SecretDataAsStringView(private_key.crt));
   JwtRsaSsaPssPublicKey* public_key_proto = key_proto->mutable_public_key();
   public_key_proto->set_version(RawJwtRsaSsaPssSignKeyManager().get_version());
   public_key_proto->set_n(private_key.n);

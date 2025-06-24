@@ -112,7 +112,7 @@ TEST(UtilTest, IsNotPrintableAscii) {
   EXPECT_THAT(IsPrintableAscii("\n"), IsFalse());
   EXPECT_THAT(IsPrintableAscii("\t"), IsFalse());
   EXPECT_THAT(IsPrintableAscii(" "), IsFalse());
-  EXPECT_THAT(IsPrintableAscii(std::string("\x7f", 1)), IsFalse());
+  EXPECT_THAT(IsPrintableAscii("\x7f"), IsFalse());
   EXPECT_THAT(IsPrintableAscii("ö"), IsFalse());
 }
 

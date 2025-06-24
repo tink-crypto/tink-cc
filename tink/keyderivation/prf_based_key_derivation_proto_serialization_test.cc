@@ -99,7 +99,7 @@ KeyTemplate GetAesCmacPrfKeyTemplate() {
 KeyData GetAesCmacPrfKeyData() {
   google::crypto::tink::AesCmacPrfKey key;
   key.set_version(0);
-  key.set_key_value(std::string("0123456789abcdef"));
+  key.set_key_value("0123456789abcdef");
   KeyData key_data;
   key_data.set_type_url(kPrfKeyTypeUrl);
   key_data.set_value(key.SerializeAsString());

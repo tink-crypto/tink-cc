@@ -117,10 +117,10 @@ TEST(ZTests, CrossCorrelationUniformString) {
 TEST(ZTests, AutocorrelationUniformString) {
   EXPECT_THAT(ZTestAutocorrelationUniformString(std::string(32, 0xaa)),
               Not(IsOk()));
-  EXPECT_THAT(ZTestAutocorrelationUniformString(std::string(
+  EXPECT_THAT(ZTestAutocorrelationUniformString(
                   "This is a text that is only ascii characters and therefore "
                   "not random. It needs quite a few characters before it has "
-                  "enough to find a pattern, though, as it is text.")),
+                  "enough to find a pattern, though, as it is text."),
               Not(IsOk()));
   EXPECT_THAT(
       ZTestAutocorrelationUniformString(subtle::Random::GetRandomBytes(32)),

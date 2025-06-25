@@ -60,7 +60,7 @@ KeyTemplate* NewEciesAeadHkdfKeyTemplate(
   auto kem_params = key_format.mutable_params()->mutable_kem_params();
   kem_params->set_curve_type(curve_type);
   kem_params->set_hkdf_hash_type(hkdf_hash_type);
-  kem_params->set_hkdf_salt(std::string(hkdf_salt));
+  kem_params->set_hkdf_salt(hkdf_salt);
   key_format.SerializeToString(key_template->mutable_value());
   return key_template;
 }

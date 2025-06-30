@@ -72,14 +72,14 @@ class SubtleUtilBoringSSL {
     return internal::StringToBignum(s);
   }
 
-  // Returns a SecretData of size 'len' that holds BIGNUM 'bn'.
+  // Returns a string of size 'len' that holds BIGNUM 'bn'.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline absl::StatusOr<std::string> bn2str(const BIGNUM *bn,
                                                    size_t len) {
     return internal::BignumToString(bn, len);
   }
 
-  // Returns a string of size 'len' that holds BIGNUM 'bn'.
+  // Returns a SecretData of size 'len' that holds BIGNUM 'bn'.
   ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline absl::StatusOr<SecretData> BignumToSecretData(const BIGNUM *bn,
                                                               size_t len) {

@@ -26,6 +26,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -37,6 +38,7 @@
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_parameters.h"
+#include "tink/aead/internal/key_gen_config_v0.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/binary_keyset_reader.h"
@@ -64,6 +66,7 @@
 #include "tink/primitive_wrapper.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
+#include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ecdsa_verify_key_manager.h"
 #include "tink/signature/signature_key_templates.h"
@@ -229,6 +232,21 @@ absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveForXChaCha20Poly1305Key(
   return subtle::XChacha20Poly1305BoringSsl::New(
       (key.GetKeyBytes(GetPartialKeyAccess())
            .Get(InsecureSecretKeyAccess::Get())));
+}
+
+// NOTE: Avoid adding key types that are only available via OpenSSL.
+const KeyGenConfiguration& TestKeyGenConfig() {
+  static const KeyGenConfiguration* instance = [] {
+    static KeyGenConfiguration* config = new KeyGenConfiguration();
+    CHECK_OK(internal::AddAeadKeyGenV0(*config));
+    CHECK_OK(RegisterEcdsaProtoSerialization());
+    CHECK_OK(internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+        absl::make_unique<EcdsaSignKeyManager>(),
+        absl::make_unique<EcdsaVerifyKeyManager>(), *config));
+
+    return config;
+  }();
+  return *instance;
 }
 
 TEST_F(KeysetHandleTest, DefaultCtor) {
@@ -572,11 +590,9 @@ TEST_F(KeysetHandleTest, GenerateNew) {
       &AeadKeyTemplates::Aes256CtrHmacSha256(),
   };
   for (auto templ : templates) {
-    EXPECT_THAT(KeysetHandle::GenerateNew(*templ, KeyGenConfigGlobalRegistry())
-                    .status(),
+    EXPECT_THAT(KeysetHandle::GenerateNew(*templ, TestKeyGenConfig()).status(),
                 IsOk());
-    EXPECT_THAT(KeysetHandle::GenerateNew(*templ, KeyGenConfigGlobalRegistry())
-                    .status(),
+    EXPECT_THAT(KeysetHandle::GenerateNew(*templ, TestKeyGenConfig()).status(),
                 IsOk());
   }
 }
@@ -654,8 +670,7 @@ TEST_F(KeysetHandleTest, GenerateNewInvalidKeyTemplateFails) {
   templ.set_type_url("type.googleapis.com/some.unknown.KeyType");
   templ.set_output_prefix_type(OutputPrefixType::TINK);
 
-  auto handle_result =
-      KeysetHandle::GenerateNew(templ, KeyGenConfigGlobalRegistry());
+  auto handle_result = KeysetHandle::GenerateNew(templ, TestKeyGenConfig());
   EXPECT_FALSE(handle_result.ok());
   EXPECT_EQ(absl::StatusCode::kNotFound, handle_result.status().code());
 }
@@ -768,7 +783,7 @@ TEST_F(KeysetHandleTest, GenerateNewWithUnknownPrefixFails) {
   KeyTemplate key_template(AeadKeyTemplates::Aes128Gcm());
   key_template.set_output_prefix_type(OutputPrefixType::UNKNOWN_PREFIX);
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
+      KeysetHandle::GenerateNew(key_template, TestKeyGenConfig());
   EXPECT_THAT(handle, StatusIs(absl::StatusCode::kInvalidArgument,
                                HasSubstr("key template has UNKNOWN prefix")));
 }
@@ -777,7 +792,7 @@ TEST_F(KeysetHandleTest, GenerateNewWithIdRequirementFails) {
   KeyTemplate key_template(AeadKeyTemplates::Aes128Gcm());
   key_template.set_output_prefix_type(OutputPrefixType::WITH_ID_REQUIREMENT);
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
-      KeysetHandle::GenerateNew(key_template, KeyGenConfigGlobalRegistry());
+      KeysetHandle::GenerateNew(key_template, TestKeyGenConfig());
   EXPECT_THAT(
       handle,
       StatusIs(absl::StatusCode::kInvalidArgument,
@@ -830,11 +845,11 @@ absl::StatusOr<const Keyset> CreateEcdsaMultiKeyset() {
 TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
   {  // A keyset with a single key.
     auto handle_result = KeysetHandle::GenerateNew(
-        SignatureKeyTemplates::EcdsaP256(), KeyGenConfigGlobalRegistry());
+        SignatureKeyTemplates::EcdsaP256(), TestKeyGenConfig());
     ASSERT_TRUE(handle_result.ok()) << handle_result.status();
     auto handle = std::move(handle_result.value());
     auto public_handle_result =
-        handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+        handle->GetPublicKeysetHandle(TestKeyGenConfig());
     ASSERT_TRUE(public_handle_result.ok()) << public_handle_result.status();
     auto keyset = TestKeysetHandle::GetKeyset(*handle);
     auto public_keyset =
@@ -851,7 +866,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
     std::unique_ptr<KeysetHandle> handle =
         TestKeysetHandle::GetKeysetHandle(*keyset);
     absl::StatusOr<std::unique_ptr<KeysetHandle>> public_handle =
-        handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+        handle->GetPublicKeysetHandle(TestKeyGenConfig());
     ASSERT_THAT(public_handle, IsOk());
     EXPECT_THAT((*public_handle)->size(), Eq(3));
 
@@ -869,11 +884,11 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
 TEST_F(KeysetHandleTest, GetPublicKeysetHandleErrors) {
   {  // A keyset with a single key.
     auto handle_result = KeysetHandle::GenerateNew(
-        AeadKeyTemplates::Aes128Eax(), KeyGenConfigGlobalRegistry());
+        AeadKeyTemplates::Aes128Eax(), TestKeyGenConfig());
     ASSERT_TRUE(handle_result.ok()) << handle_result.status();
     auto handle = std::move(handle_result.value());
     auto public_handle_result =
-        handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+        handle->GetPublicKeysetHandle(TestKeyGenConfig());
     ASSERT_FALSE(public_handle_result.ok());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "ASYMMETRIC_PRIVATE",
                         std::string(public_handle_result.status().message()));
@@ -899,7 +914,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleErrors) {
     keyset.set_primary_key_id(42);
     auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
     auto public_handle_result =
-        handle->GetPublicKeysetHandle(KeyGenConfigGlobalRegistry());
+        handle->GetPublicKeysetHandle(TestKeyGenConfig());
     ASSERT_FALSE(public_handle_result.ok());
     EXPECT_PRED_FORMAT2(testing::IsSubstring, "PrivateKeyFactory",
                         std::string(public_handle_result.status().message()));
@@ -1386,7 +1401,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveCustomKeyManager) {
 // Compile time check: ensures that the KeysetHandle can be copied.
 TEST_F(KeysetHandleTest, Copiable) {
   auto handle_result = KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Eax(),
-                                                 KeyGenConfigGlobalRegistry());
+                                                 TestKeyGenConfig());
   ASSERT_TRUE(handle_result.ok()) << handle_result.status();
   std::unique_ptr<KeysetHandle> handle = std::move(handle_result.value());
   KeysetHandle handle_copy = *handle;

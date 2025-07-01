@@ -924,6 +924,7 @@ tink_cc_test(
     tink::core::restricted_data
     gmock
     absl::flat_hash_map
+    absl::check
     absl::memory
     absl::status
     absl::strings
@@ -935,6 +936,7 @@ tink_cc_test(
     tink::aead::aes_gcm_parameters
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
+    tink::aead::internal::key_gen_config_v0
     tink::config::fips_140_2
     tink::config::global_registry
     tink::config::key_gen_fips_140_2
@@ -944,6 +946,7 @@ tink_cc_test(
     tink::internal::key_gen_configuration_impl
     tink::internal::mutable_serialization_registry
     tink::internal::ssl_util
+    tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ecdsa_verify_key_manager
     tink::signature::signature_key_templates

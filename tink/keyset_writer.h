@@ -17,7 +17,7 @@
 #ifndef TINK_KEYSET_WRITER_H_
 #define TINK_KEYSET_WRITER_H_
 
-#include "tink/util/status.h"
+#include "absl/status/status.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {

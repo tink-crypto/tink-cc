@@ -299,7 +299,7 @@ tink_cc_library(
   SRCS
     keyset_writer.h
   DEPS
-    tink::util::status
+    absl::status
     tink::proto::tink_cc_proto
 )
 

@@ -333,7 +333,7 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//proto:tink_cc_proto",
-        "//tink/util:status",
+        "@com_google_absl//absl/status",
     ],
 )
 

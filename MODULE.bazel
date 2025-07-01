@@ -60,7 +60,7 @@ bazel_dep(
 )
 
 bazel_dep(
-    name = "benchmark",
+    name = "google_benchmark",
     version = "1.9.1",
     dev_dependency = True,
     repo_name = "com_google_benchmark",

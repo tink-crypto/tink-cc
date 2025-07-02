@@ -18,6 +18,7 @@
 #define TINK_UTIL_SECRET_PROTO_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <utility>
 
@@ -98,6 +99,15 @@ class SecretProto {
 
   inline T& operator*() { return *value_; }
   inline const T& operator*() const { return *value_; }
+
+  // Frees all storage allocated by the underlying Arena and clears the proto.
+  // It also returns the total space used by the arena which is the sums of the
+  // sizes of the allocated blocks. This method is not thread-safe.
+  int64_t FreeAndClear() {
+    int64_t space_used = arena_->Reset();
+    value_ = google::protobuf::Arena::Create<T>(arena_.get());
+    return space_used;
+  }
 
   absl::StatusOr<::crypto::tink::SecretData> SerializeAsSecretData() const {
     crypto::tink::internal::SecretBuffer buffer(value_->ByteSizeLong());

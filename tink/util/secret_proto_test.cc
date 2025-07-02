@@ -160,6 +160,18 @@ TYPED_TEST(SecretProtoTest, AsSecretData) {
   EXPECT_EQ(serialized, SecretDataAsStringView(*secret_serialized));
 }
 
+TYPED_TEST(SecretProtoTest, FreeAndClear) {
+  NestedTestProto proto = CreateProto<NestedTestProto>();
+  SecretProto<NestedTestProto> secret_proto(proto);
+  secret_proto.FreeAndClear();
+  secret_proto->set_num(1000);
+  secret_proto->mutable_a()->set_str("my string");
+  NestedTestProto expected_proto;
+  expected_proto.set_num(1000);
+  expected_proto.mutable_a()->set_str("my string");
+  EXPECT_TRUE(MessageDifferencer::Equals(*secret_proto, expected_proto));
+}
+
 }  // namespace
 }  // namespace util
 }  // namespace tink

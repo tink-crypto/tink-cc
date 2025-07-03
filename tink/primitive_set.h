@@ -267,12 +267,12 @@ class PrimitiveSet {
   ABSL_DEPRECATED(
       "Constructing PrimitiveSet using constructors is deprecated. Use "
       "PrimitiveSet<>::Builder instead.")
-  PrimitiveSet<P>() = default;
+  PrimitiveSet() = default;
   // Constructs an empty PrimitiveSet with `annotations`.
   ABSL_DEPRECATED(
       "Constructing PrimitiveSet using constructors is deprecated. Use "
       "PrimitiveSet<>::Builder instead.")
-  explicit PrimitiveSet<P>(
+  explicit PrimitiveSet(
       const absl::flat_hash_map<std::string, std::string>& annotations)
       : annotations_(annotations) {}
 

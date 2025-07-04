@@ -39,12 +39,23 @@ def tink_cc_deps():
     #   * @com_google_protobuf//:java_toolchain
     # This statement defines the @com_google_protobuf repo.
     # Release X.29.3 from 2025-01-08.
+
+    maybe(
+        http_archive,
+        name = "rules_java",
+        urls = [
+            "https://github.com/bazelbuild/rules_java/releases/download/8.6.3/rules_java-8.6.3.tar.gz",
+        ],
+        sha256 = "6d8c6d5cd86fed031ee48424f238fa35f33abc9921fd97dd4ae1119a29fc807f",
+    )
+
     maybe(
         http_archive,
         name = "com_google_protobuf",
-        sha256 = "e9b9ac1910b1041065839850603caf36e29d3d3d230ddf52bd13778dd31b9046",
-        strip_prefix = "protobuf-29.3",
-        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v29.3/protobuf-29.3.zip"],
+        sha256 = "6544e5ceec7f29d00397193360435ca8b3c4e843de3cf5698a99d36b72d65342",
+        strip_prefix = "protobuf-30.2",
+        urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v30.2/protobuf-30.2.zip"],
+        repo_mapping = {"@abseil-cpp": "@com_google_absl"},
     )
 
     # -------------------------------------------------------------------------

@@ -14,6 +14,17 @@ option(USE_ONLY_FIPS "Enables the FIPS only mode in Tink" OFF)
 set(CPACK_GENERATOR TGZ)
 set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 
+# For MSCV, force the static runtime.
+# Currently, both absl and cmake allow to override this. In order to make things
+# more likely to be built correctly we currently only allow static runtimes.
+# We need to do this before "include(TinkWorkspace)" since we need to do it
+# before loading absl/proto.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(ABSL_MSVC_STATIC_RUNTIME ON)
+  set(protobuf_MSVC_STATIC_RUNTIME ON)
+  set(CMAKE_MSVC_RUNTIME_LIBRARY MultiThreaded$<$<CONFIG:Debug>:Debug>)
+endif()
+
 include(CPack)
 include(TinkWorkspace)
 include(TinkBuildRules)

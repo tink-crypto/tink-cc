@@ -42,6 +42,10 @@ class MonitoringKeySetInfo {
           key_id_(key_id),
           key_type_(key_type),
           key_prefix_(key_prefix) {}
+    Entry(const Entry& other) = default;
+    Entry& operator=(const Entry& other) = default;
+    Entry(Entry&& other) = default;
+    Entry& operator=(Entry&& other) = default;
 
     // Returns the status of this entry.
     std::string GetStatus() const { return internal::ToKeyStatusName(status_); }
@@ -53,13 +57,14 @@ class MonitoringKeySetInfo {
     std::string GetKeyPrefix() const { return key_prefix_; }
 
    private:
-    const KeyStatus status_;
+    // Status of this entry.
+    KeyStatus status_;
     // Identifies a key within a keyset.
-    const uint32_t key_id_;
+    uint32_t key_id_;
     // This field stores the key type.
-    const std::string key_type_;
+    std::string key_type_;
     // Stores the key output prefix.
-    const std::string key_prefix_;
+    std::string key_prefix_;
   };
 
   // Constructs a MonitoringKeySetInfo object with the given
@@ -70,6 +75,11 @@ class MonitoringKeySetInfo {
       : keyset_annotations_(keyset_annotations),
         keyset_entries_(keyset_entries),
         primary_key_id_(primary_key_id) {}
+
+  MonitoringKeySetInfo(MonitoringKeySetInfo&& other) = default;
+  MonitoringKeySetInfo& operator=(MonitoringKeySetInfo&& other) = default;
+  MonitoringKeySetInfo(const MonitoringKeySetInfo& other) = default;
+  MonitoringKeySetInfo& operator=(const MonitoringKeySetInfo& other) = default;
 
   // Returns a const reference to the annotations of this keyset.
   const absl::flat_hash_map<std::string, std::string>& GetAnnotations() const {
@@ -82,9 +92,9 @@ class MonitoringKeySetInfo {
 
  private:
   // Annotations of this keyset in the form 'key' -> 'value'.
-  const absl::flat_hash_map<std::string, std::string> keyset_annotations_;
-  const std::vector<Entry> keyset_entries_;
-  const uint32_t primary_key_id_;
+  absl::flat_hash_map<std::string, std::string> keyset_annotations_;
+  std::vector<Entry> keyset_entries_;
+  uint32_t primary_key_id_;
 };
 
 }  // namespace crypto::tink::internal

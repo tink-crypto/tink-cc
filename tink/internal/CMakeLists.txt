@@ -2097,3 +2097,13 @@ tink_cc_library(
     absl::string_view
     tink::core::key_status
 )
+
+tink_cc_test(
+  NAME monitoring_key_set_info_test
+  SRCS
+    monitoring_key_set_info_test.cc
+  DEPS
+    tink::internal::monitoring_key_set_info
+    gmock
+    tink::core::key_status
+)

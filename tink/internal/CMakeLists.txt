@@ -2048,11 +2048,8 @@ tink_cc_library(
   SRCS
     monitoring.h
   DEPS
-    tink::internal::key_status_util
-    absl::flat_hash_map
-    absl::string_view
-    tink::core::key_status
-    tink::util::statusor
+    tink::internal::monitoring_context
+    absl::statusor
 )
 
 tink_cc_library(
@@ -2079,4 +2076,24 @@ tink_cc_test(
   DEPS
     tink::internal::endian
     gmock
+)
+
+tink_cc_library(
+  NAME monitoring_context
+  SRCS
+    monitoring_context.h
+  DEPS
+    tink::internal::monitoring_key_set_info
+    absl::string_view
+)
+
+tink_cc_library(
+  NAME monitoring_key_set_info
+  SRCS
+    monitoring_key_set_info.h
+  DEPS
+    tink::internal::key_status_util
+    absl::flat_hash_map
+    absl::string_view
+    tink::core::key_status
 )

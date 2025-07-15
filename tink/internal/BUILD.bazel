@@ -2123,10 +2123,17 @@ cc_library(
     hdrs = ["monitoring.h"],
     include_prefix = "tink/internal",
     deps = [
-        ":key_status_util",
-        "//tink:key_status",
-        "//tink/util:statusor",
-        "@com_google_absl//absl/container:flat_hash_map",
+        ":monitoring_context",
+        "@com_google_absl//absl/status:statusor",
+    ],
+)
+
+cc_library(
+    name = "monitoring_context",
+    hdrs = ["monitoring_context.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":monitoring_key_set_info",
         "@com_google_absl//absl/strings:string_view",
     ],
 )
@@ -2140,6 +2147,18 @@ cc_library(
         ":monitoring",
         "//tink/util:statusor",
         "@com_google_googletest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "monitoring_key_set_info",
+    hdrs = ["monitoring_key_set_info.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":key_status_util",
+        "//tink:key_status",
+        "@com_google_absl//absl/container:flat_hash_map",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )
 

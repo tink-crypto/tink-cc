@@ -77,7 +77,8 @@ absl::StatusOr<std::string> AlgorithmName(
   }
 }
 
-absl::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwHmacInternal(
+// Only used by the KeysetDeriver primitive.
+absl::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwtHmacInternal(
     const JwtHmacKey& key) {
   const JwtHmacParameters& jwt_hmac_params = key.GetParameters();
   absl::StatusOr<HashAndTagSize> hash_and_tag_size =
@@ -109,8 +110,8 @@ absl::StatusOr<std::unique_ptr<JwtMacInternal>> NewJwHmacInternal(
                                           key.GetKid().value());
     }
     case JwtHmacParameters::KidStrategy::kBase64EncodedKeyId: {
-      // NOTE: This currently cannot be tested using Tink public APIs: the
-      // keyset wrapper always deals with "RAW" keys.
+      // NOTE: Only used by the KeysetDeriver primitive. Currently not testable
+      // via Tink public APIs as the keyset wrapper always derives RAW keys.
       // https://github.com/tink-crypto/tink-cc/blob/ed2008a7b9f09b726a9fff4d96bb9b18093e71c3/tink/internal/keyset_wrapper_impl.h#L83
       return JwtMacImpl::WithKid(*std::move(raw_mac), *algorithm_name,
                                  key.GetKid().value());
@@ -131,7 +132,7 @@ absl::Status AddJwtMacV0(Configuration& config) {
   }
   status = internal::ConfigurationImpl::AddPrimitiveGetter<JwtMacInternal,
                                                            JwtHmacKey>(
-      NewJwHmacInternal, config);
+      NewJwtHmacInternal, config);
   if (!status.ok()) {
     return status;
   }

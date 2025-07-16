@@ -186,22 +186,6 @@ class SecretDataInternalClass {
     });
   }
 
-  // Compares the first `size()` bytes + the CRC32C. Ignores the capacity of the
-  // buffers.
-  bool operator==(const SecretDataInternalClass& other) const {
-    if (empty() && other.empty()) {
-      return true;
-    }
-    if (size() != other.size()) {
-      return false;
-    }
-    return crypto::tink::internal::SafeCryptoMemEquals(
-        data(), other.data(), size() + sizeof(uint32_t));
-  }
-  bool operator!=(const SecretDataInternalClass& other) const {
-    return !(*this == other);
-  }
-
   friend void swap(SecretDataInternalClass& lhs,
                    SecretDataInternalClass& rhs) noexcept {
     lhs.swap(rhs);
@@ -226,6 +210,24 @@ class SecretDataInternalClass {
 
   crypto::tink::internal::SecretBuffer buffer_;
 };
+
+// Compares the first `size()` bytes + the CRC32C. Ignores the capacity of the
+// buffers.
+inline bool operator==(const SecretDataInternalClass& lhs,
+                       const SecretDataInternalClass& rhs) {
+  if (lhs.empty() && rhs.empty()) {
+    return true;
+  }
+  if (lhs.size() != rhs.size()) {
+    return false;
+  }
+  return crypto::tink::internal::SafeCryptoMemEquals(
+      lhs.data(), rhs.data(), lhs.size() + sizeof(uint32_t));
+}
+inline bool operator!=(const SecretDataInternalClass& lhs,
+                       const SecretDataInternalClass& rhs) {
+  return !(lhs == rhs);
+}
 
 inline SecretDataInternalClass SecretDataInternalClassFromStringView(
     absl::string_view secret) {

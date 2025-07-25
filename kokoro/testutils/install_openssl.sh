@@ -46,7 +46,7 @@ ${openssl_tmpdir}..."
   (
     cd "${openssl_tmpdir}"
     curl -OLsS "${openssl_url}"
-    echo "${openssl_sha256} ${openssl_archive}" | sha256sum -c
+    echo "${openssl_sha256} ${openssl_archive}" | sha256sum -c -
 
     tar xzf "${openssl_archive}"
     cd "${openssl_name}"

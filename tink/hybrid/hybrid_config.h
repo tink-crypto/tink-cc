@@ -43,7 +43,7 @@ class HybridConfig {
   static absl::Status Register();
 
  private:
-  HybridConfig() {}
+  HybridConfig() = default;
 };
 
 }  // namespace tink

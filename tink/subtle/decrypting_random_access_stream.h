@@ -61,7 +61,7 @@ class DecryptingRandomAccessStream : public crypto::tink::RandomAccessStream {
   absl::StatusOr<int64_t> size() override;
 
  private:
-  DecryptingRandomAccessStream() {}
+  DecryptingRandomAccessStream() = default;
   absl::Status PReadAndDecrypt(int64_t position, int count,
                                crypto::tink::util::Buffer* dest_buffer);
   // Reads the specified ciphertext segment from ct_source_, decrypts it,

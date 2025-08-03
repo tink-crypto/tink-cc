@@ -49,7 +49,7 @@ class StreamingAeadEncryptingStream : public OutputStream {
   int64_t Position() const override;
 
  private:
-  StreamingAeadEncryptingStream() {}
+  StreamingAeadEncryptingStream() = default;
   std::unique_ptr<StreamSegmentEncrypter> segment_encrypter_;
   std::unique_ptr<crypto::tink::OutputStream> ct_destination_;
   std::vector<uint8_t> pt_buffer_;  // plaintext buffer

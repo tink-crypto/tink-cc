@@ -49,7 +49,7 @@ class StreamingAeadDecryptingStream : public InputStream {
   int64_t Position() const override;
 
  private:
-  StreamingAeadDecryptingStream() {}
+  StreamingAeadDecryptingStream() = default;
   std::unique_ptr<StreamSegmentDecrypter> segment_decrypter_;
   std::unique_ptr<crypto::tink::InputStream> ct_source_;
   std::vector<uint8_t> ct_buffer_;  // ciphertext buffer

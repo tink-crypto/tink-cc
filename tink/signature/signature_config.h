@@ -43,7 +43,7 @@ class SignatureConfig {
   static absl::Status Register();
 
  private:
-  SignatureConfig() {}
+  SignatureConfig() = default;
 };
 
 }  // namespace tink

@@ -59,7 +59,7 @@ class KmsClients {
   }
 
  private:
-  KmsClients() {}
+  KmsClients() = default;
 
   // Per-instance API, to be used by GlobalInstance();
   absl::Status LocalAdd(std::unique_ptr<KmsClient> kms_client);

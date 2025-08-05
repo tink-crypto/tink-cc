@@ -56,7 +56,7 @@ class DecryptingInputStream : public crypto::tink::InputStream {
   int64_t Position() const override;
 
  private:
-  DecryptingInputStream() {}
+  DecryptingInputStream() = default;
   std::shared_ptr<
       crypto::tink::PrimitiveSet<crypto::tink::StreamingAead>> primitives_;
   std::shared_ptr<BufferedInputStream> buffered_ct_source_;

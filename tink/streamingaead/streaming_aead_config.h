@@ -40,7 +40,7 @@ class StreamingAeadConfig {
   static absl::Status Register();
 
  private:
-  StreamingAeadConfig() {}
+  StreamingAeadConfig() = default;
 };
 
 }  // namespace tink

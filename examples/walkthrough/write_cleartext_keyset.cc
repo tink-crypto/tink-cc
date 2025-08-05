@@ -35,7 +35,7 @@ using ::crypto::tink::JsonKeysetWriter;
 //
 // Warning: Storing keys in cleartext is not recommended. We recommend using a
 // Key Management Service to protect your keys. See
-// https://github.com/google/tink/blob/master/cc/examples/walkthrough/write_keyset.cc
+// https://github.com/tink-crypto/tink-cc/blob/main/examples/walkthrough/write_keyset.cc
 // for an example, and
 // https://developers.google.com/tink/key-management-overview for more info on
 // how to use a KMS with Tink.

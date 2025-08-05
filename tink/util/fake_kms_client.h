@@ -68,7 +68,7 @@ class FakeKmsClient : public crypto::tink::KmsClient {
       absl::string_view key_uri) const override;
 
  private:
-  FakeKmsClient() {}
+  FakeKmsClient() = default;
   std::string encoded_keyset_;
 };
 

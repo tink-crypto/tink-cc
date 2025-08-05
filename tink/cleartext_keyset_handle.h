@@ -59,7 +59,7 @@ class CleartextKeysetHandle {
       const KeysetHandle& keyset_handle);
 
  private:
-  CleartextKeysetHandle() {}
+  CleartextKeysetHandle() = default;
 };
 
 }  // namespace tink

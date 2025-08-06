@@ -45,7 +45,7 @@ class TinkConfig {
   static absl::Status Register();
 
  private:
-  TinkConfig() {}
+  TinkConfig() = default;
 };
 
 }  // namespace tink

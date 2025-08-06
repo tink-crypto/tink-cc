@@ -40,7 +40,7 @@ class DeterministicAeadConfig {
   static absl::Status Register();
 
  private:
-  DeterministicAeadConfig() {}
+  DeterministicAeadConfig() = default;
 };
 
 }  // namespace tink

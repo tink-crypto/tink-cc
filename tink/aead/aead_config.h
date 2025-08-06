@@ -39,7 +39,7 @@ class AeadConfig {
   static absl::Status Register();
 
  private:
-  AeadConfig() {}
+  AeadConfig() = default;
 };
 
 }  // namespace tink

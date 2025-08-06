@@ -39,7 +39,7 @@ class MacConfig {
   static absl::Status Register();
 
  private:
-  MacConfig() {}
+  MacConfig() = default;
 };
 
 }  // namespace tink

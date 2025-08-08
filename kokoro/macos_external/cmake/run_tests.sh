@@ -21,5 +21,7 @@ if [[ -n "${KOKORO_ROOT:-}" ]]; then
   cd "${TINK_BASE_DIR}/tink_cc"
 fi
 
+cmake --version || brew install cmake
+
 ./kokoro/testutils/run_cmake_tests.sh .
 ./kokoro/testutils/run_cmake_tests.sh "examples" -DTINK_BUILD_TESTS=OFF

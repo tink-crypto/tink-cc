@@ -35,6 +35,7 @@ if [[ "${OS_VERSION}" -ge 15 ]]; then
   # This isn't needed anymore on Sequoia and later.
   # TODO (b/428261485): Remove this in the file.
   sed -i .bak 'sXbuild:macos --copt=-isystem/usr/local/includeXXg' .bazelrc
+  sed -i .bak 'sXbuild:macos --copt=-isystem/usr/local/includeXXg' examples/.bazelrc
 fi
 cat .bazelrc
 

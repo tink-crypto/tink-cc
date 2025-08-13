@@ -10,8 +10,6 @@ common --noenable_bzlmod
 build:linux --cxxopt='-std=c++17' --host_cxxopt='-std=c++17'
 build:macos --cxxopt='-std=c++17' --host_cxxopt='-std=c++17'
 
-# See https://github.com/bazelbuild/bazel/issues/10472
-build:macos --copt=-isystem/usr/local/include
 build:windows --cxxopt='/std:c++17' --host_cxxopt='/std:c++17'
 
 # Silence all C/C++ warnings in external code.

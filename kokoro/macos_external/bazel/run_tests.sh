@@ -29,16 +29,6 @@ if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
 fi
 readonly CACHE_FLAGS
 
-OS_VERSION=$(sw_vers -productVersion | cut -d'.' -f1)
-if [[ "${OS_VERSION}" -ge 15 ]]; then
-  # Remove the line build:macos --copt=-isystem/usr/local/include from .bazelrc.
-  # This isn't needed anymore on Sequoia and later.
-  # TODO (b/428261485): Remove this in the file.
-  sed -i .bak 'sXbuild:macos --copt=-isystem/usr/local/includeXXg' .bazelrc
-  sed -i .bak 'sXbuild:macos --copt=-isystem/usr/local/includeXXg' examples/.bazelrc
-fi
-cat .bazelrc
-
 echo "=========================================================== BUILDING MAIN"
 bazelisk
 

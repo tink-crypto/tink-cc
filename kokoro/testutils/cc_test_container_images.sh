@@ -23,7 +23,7 @@ _image_prefix() {
 
 # Linux container images for Tink C++ libraries.
 readonly TINK_CC_BASE_IMAGE_NAME="linux-tink-cc-base"
-readonly TINK_CC_BASE_IMAGE_HASH="edbed5df7677c77a4be9700bc3eff2c3176d4cbbe53c06e5b2507fafb71073dd"
+readonly TINK_CC_BASE_IMAGE_HASH="c024b7c9db2387f4d28ced61e27e14aa078074e688779391bfdfbee724e1b3c7"
 readonly TINK_CC_BASE_IMAGE="$(_image_prefix)/${TINK_CC_BASE_IMAGE_NAME}@sha256:${TINK_CC_BASE_IMAGE_HASH}"
 
 readonly TINK_CC_CMAKE_IMAGE_NAME="linux-tink-cc-cmake"

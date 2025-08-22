@@ -27,7 +27,12 @@
 #
 #   CONTAINER_IMAGE="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images/linux-tink-cc-cmake-installed-deps:latest" \
 #     sh ./kokoro/gcp_ubuntu/cmake_installed_deps/run_tests.sh
-#
+
+# Generated with openssl rand -hex 10
+echo "==========================================================================="
+echo "Tink Script ID: 63f3a67d823c1fd5c010 (to quickly find the script from logs)"
+echo "==========================================================================="
+
 set -euo pipefail
 
 RUN_COMMAND_ARGS=()

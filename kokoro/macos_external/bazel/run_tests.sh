@@ -14,6 +14,11 @@
 # limitations under the License.
 ################################################################################
 
+# Generated with openssl rand -hex 10
+echo "==========================================================================="
+echo "Tink Script ID: 41fa20f4161078ed5a2f (to quickly find the script from logs)"
+echo "==========================================================================="
+
 set -euo pipefail
 
 # If we are running on Kokoro cd into the repository.

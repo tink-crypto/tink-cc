@@ -14,6 +14,12 @@
 # limitations under the License.
 ################################################################################
 
+# Generated with openssl rand -hex 10
+echo "==========================================================================="
+echo "Tink Script ID: 98fe051eb8c78e2cc0ff (to quickly find the script from logs)"
+echo "==========================================================================="
+
+
 set -euo pipefail
 
 if [[ -n "${KOKORO_ROOT:-}" ]]; then

@@ -25,7 +25,12 @@
 #
 #   CONTAINER_IMAGE="us-docker.pkg.dev/tink-test-infrastructure/tink-ci-images/linux-tink-cc-base:latest" \
 #     sh ./kokoro/gcp_ubuntu/bazel/run_tests.sh
-#
+
+# Generated with openssl rand -hex 10
+echo "==========================================================================="
+echo "Tink Script ID: da28ed6351698809c712 (to quickly find the script from logs)"
+echo "==========================================================================="
+
 set -euo pipefail
 
 RUN_COMMAND_ARGS=()

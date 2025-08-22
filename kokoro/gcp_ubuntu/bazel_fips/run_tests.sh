@@ -14,6 +14,11 @@
 # limitations under the License.
 ################################################################################
 
+# Generated with openssl rand -hex 10
+echo "==========================================================================="
+echo "Tink Script ID: 73c0ab1d9e2aa29cc120 (to quickly find the script from logs)"
+echo "==========================================================================="
+
 set -eEuo pipefail
 
 # By default when run locally this script runs the command below directly on the

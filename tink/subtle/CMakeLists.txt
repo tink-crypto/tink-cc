@@ -264,6 +264,7 @@ tink_cc_library(
     tink::subtle::common_enums
     tink::subtle::subtle_util_boringssl
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::partial_key_access

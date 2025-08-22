@@ -153,8 +153,8 @@ tink_cc_library(
   SRCS
     input_stream.h
   DEPS
-    tink::util::status
-    tink::util::statusor
+    absl::status
+    absl::statusor
 )
 
 tink_cc_library(
@@ -162,8 +162,8 @@ tink_cc_library(
   SRCS
     output_stream.h
   DEPS
-    tink::util::status
-    tink::util::statusor
+    absl::status
+    absl::statusor
 )
 
 tink_cc_library(
@@ -184,8 +184,6 @@ tink_cc_library(
     tink::core::output_stream
     absl::status
     absl::statusor
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -193,8 +191,8 @@ tink_cc_library(
   SRCS
     aead.h
   DEPS
+    absl::statusor
     absl::strings
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -202,8 +200,9 @@ tink_cc_library(
   SRCS
     deterministic_aead.h
   DEPS
+    absl::status
+    absl::statusor
     absl::strings
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -214,8 +213,8 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::output_stream
     tink::core::random_access_stream
+    absl::statusor
     absl::strings
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -224,9 +223,9 @@ tink_cc_library(
     streaming_mac.h
   DEPS
     tink::core::output_stream_with_result
+    absl::status
+    absl::statusor
     absl::strings
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -244,8 +243,8 @@ tink_cc_library(
   SRCS
     hybrid_decrypt.h
   DEPS
+    absl::statusor
     absl::strings
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -253,8 +252,8 @@ tink_cc_library(
   SRCS
     hybrid_encrypt.h
   DEPS
+    absl::statusor
     absl::strings
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -262,9 +261,9 @@ tink_cc_library(
   SRCS
     mac.h
   DEPS
+    absl::status
+    absl::statusor
     absl::strings
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -272,8 +271,8 @@ tink_cc_library(
   SRCS
     public_key_sign.h
   DEPS
+    absl::statusor
     absl::strings
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -281,8 +280,8 @@ tink_cc_library(
   SRCS
     public_key_verify.h
   DEPS
+    absl::status
     absl::strings
-    tink::util::status
 )
 
 tink_cc_library(
@@ -290,7 +289,7 @@ tink_cc_library(
   SRCS
     keyset_reader.h
   DEPS
-    tink::util::statusor
+    absl::statusor
     tink::proto::tink_cc_proto
 )
 
@@ -312,6 +311,7 @@ tink_cc_library(
     tink::core::keyset_reader
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::util::errors
     tink::util::status
@@ -328,6 +328,7 @@ tink_cc_library(
     tink::core::keyset_writer
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::util::protobuf_helper
     tink::util::status
@@ -380,8 +381,6 @@ tink_cc_library(
     absl::string_view
     absl::synchronization
     tink::util::errors
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 
@@ -392,7 +391,6 @@ tink_cc_library(
   DEPS
     tink::core::primitive_set
     absl::statusor
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -406,8 +404,6 @@ tink_cc_library(
     absl::statusor
     absl::strings
     tink::internal::registry_impl
-    tink::util::status
-    tink::util::statusor
     tink::proto::tink_cc_proto
 )
 
@@ -497,6 +493,7 @@ tink_cc_library(
     absl::flat_hash_map
     absl::memory
     absl::status
+    absl::statusor
     tink::util::errors
     tink::util::secret_proto
     tink::util::status
@@ -760,9 +757,9 @@ tink_cc_library(
     tink::core::parameters
     absl::flat_hash_map
     absl::any_invocable
+    absl::statusor
     absl::optional
     tink::internal::key_type_info_store
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -826,9 +823,11 @@ tink_cc_library(
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
     tink::core::keyset_reader
+    tink::core::secret_data
     tink::core::secret_key_access_token
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::internal::call_with_core_dump_protection
     tink::internal::secret_buffer

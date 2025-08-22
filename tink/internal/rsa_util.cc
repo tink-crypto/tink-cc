@@ -36,8 +36,6 @@
 #include "tink/internal/ssl_util.h"
 #include "tink/util/errors.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

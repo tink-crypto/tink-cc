@@ -20,14 +20,14 @@
 
 #include <string>
 
+#include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

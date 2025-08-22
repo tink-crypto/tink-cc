@@ -19,12 +19,12 @@
 
 #include <string>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
 #include "tink/keyset_handle.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {

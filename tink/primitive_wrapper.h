@@ -21,7 +21,6 @@
 
 #include "absl/status/statusor.h"
 #include "tink/primitive_set.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

@@ -171,6 +171,7 @@ tink_cc_library(
     absl::core_headers
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::cord
     absl::synchronization

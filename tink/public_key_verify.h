@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 #ifndef TINK_PUBLIC_KEY_VERIFY_H_
 #define TINK_PUBLIC_KEY_VERIFY_H_
 
+#include "absl/status/status.h"
 #include "absl/strings/string_view.h"
-#include "tink/util/status.h"
 
 namespace crypto {
 namespace tink {

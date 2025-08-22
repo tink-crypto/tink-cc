@@ -80,9 +80,8 @@ cc_library(
     include_prefix = "tink/prf",
     visibility = ["//visibility:public"],
     deps = [
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
     ],
 )

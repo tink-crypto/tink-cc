@@ -160,15 +160,15 @@ tink_cc_library(
     absl::log
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     crypto
+    tink::core::secret_data
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::subtle_util
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -206,12 +206,11 @@ tink_cc_library(
     absl::statusor
     absl::strings
     crypto
+    tink::core::secret_data
     tink::config::tink_fips
     tink::subtle::common_enums
     tink::util::errors
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(

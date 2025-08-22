@@ -22,8 +22,8 @@
 #include <map>
 #include <string>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

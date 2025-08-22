@@ -22,11 +22,11 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_type_info_store.h"
 #include "tink/key.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

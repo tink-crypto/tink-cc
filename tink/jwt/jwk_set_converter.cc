@@ -39,7 +39,6 @@
 #include "tink/keyset_handle.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/keyset_util.h"
-#include "proto/ed25519.pb.h"
 #include "proto/jwt_ecdsa.pb.h"
 #include "proto/jwt_rsa_ssa_pkcs1.pb.h"
 #include "proto/jwt_rsa_ssa_pss.pb.h"
@@ -48,7 +47,6 @@
 namespace crypto {
 namespace tink {
 
-using ::google::crypto::tink::Ed25519PublicKey;
 using ::google::crypto::tink::JwtEcdsaAlgorithm;
 using ::google::crypto::tink::JwtEcdsaPublicKey;
 using ::google::crypto::tink::JwtRsaSsaPkcs1Algorithm;
@@ -615,28 +613,6 @@ absl::StatusOr<Struct> PsPublicKeyToKeyStruct(const Keyset_Key& key) {
   return output_key;
 }
 
-absl::StatusOr<Struct> Ed25519PublicKeyToKeyStruct(const Keyset_Key& key) {
-  Ed25519PublicKey public_key;
-  if (!public_key.ParseFromString(key.key_data().value())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "parse Ed25519PublicKey failed");
-  }
-  Struct output_key;
-  AddStringEntry(&output_key, "kty", "OKP");
-  AddStringEntry(&output_key, "x",
-                 absl::WebSafeBase64Escape(public_key.key_value()));
-  absl::optional<std::string> kid =
-      jwt_internal::GetKid(key.key_id(), key.output_prefix_type());
-  if (kid.has_value()) {
-    AddStringEntry(&output_key, "kid", kid.value());
-  }
-  AddStringEntry(&output_key, "crv", "Ed25519");
-  AddStringEntry(&output_key, "alg", "EdDSA");
-  AddStringEntry(&output_key, "use", "sig");
-  AddKeyOpsVerifyEntry(&output_key);
-  return output_key;
-}
-
 absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
     const KeysetHandle& keyset_handle) {
   std::stringbuf keyset_buf;
@@ -692,14 +668,6 @@ absl::StatusOr<std::string> JwkSetFromPublicKeysetHandle(
                "type.googleapis.com/"
                "google.crypto.tink.JwtRsaSsaPssPublicKey") {
       absl::StatusOr<Struct> output_key = PsPublicKeyToKeyStruct(key);
-      if (!output_key.ok()) {
-        return output_key.status();
-      }
-      *keys_list->add_values()->mutable_struct_value() = *output_key;
-    } else if (key.key_data().type_url() ==
-               "type.googleapis.com/"
-               "google.crypto.tink.Ed25519PublicKey") {
-      absl::StatusOr<Struct> output_key = Ed25519PublicKeyToKeyStruct(key);
       if (!output_key.ok()) {
         return output_key.status();
       }

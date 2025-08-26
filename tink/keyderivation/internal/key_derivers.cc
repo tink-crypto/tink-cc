@@ -65,8 +65,6 @@
 #include "tink/subtle/common_enums.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
 

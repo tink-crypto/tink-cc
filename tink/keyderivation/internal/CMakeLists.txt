@@ -130,6 +130,7 @@ tink_cc_library(
     absl::check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -169,8 +170,6 @@ tink_cc_library(
     tink::subtle::common_enums
     tink::util::input_stream_util
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::proto::aes_gcm_cc_proto
     tink::proto::tink_cc_proto
 )

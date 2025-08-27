@@ -160,6 +160,9 @@ tink_cc_library(
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     tink::mac::hmac_proto_serialization
+    tink::prf::aes_cmac_prf_key
+    tink::prf::aes_cmac_prf_parameters
+    tink::prf::aes_cmac_prf_proto_serialization
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     tink::prf::hkdf_prf_proto_serialization
@@ -226,6 +229,9 @@ tink_cc_test(
     tink::mac::hmac_key_manager
     tink::mac::hmac_parameters
     tink::mac::hmac_proto_serialization
+    tink::prf::aes_cmac_prf_key
+    tink::prf::aes_cmac_prf_key_manager
+    tink::prf::aes_cmac_prf_parameters
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_key_manager
     tink::prf::hkdf_prf_parameters
@@ -245,6 +251,7 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
+    tink::proto::aes_cmac_prf_cc_proto
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
     tink::proto::aes_gcm_cc_proto

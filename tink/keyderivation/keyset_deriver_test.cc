@@ -60,6 +60,8 @@
 #include "tink/mac/hmac_proto_serialization.h"
 #include "tink/partial_key_access.h"
 #include "tink/partial_key_access_token.h"
+#include "tink/prf/aes_cmac_prf_key.h"
+#include "tink/prf/aes_cmac_prf_proto_serialization.h"
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/prf/hkdf_prf_proto_serialization.h"
@@ -217,6 +219,14 @@ std::unique_ptr<HmacKey> CreateHmacKey(int key_size, int cryptographic_tag_size,
           .value());
 }
 
+std::unique_ptr<AesCmacPrfKey> CreateAesCmacPrfKey(absl::string_view secret) {
+  return std::make_unique<AesCmacPrfKey>(
+      AesCmacPrfKey::Create(RestrictedData(test::HexDecodeOrDie(secret),
+                                           InsecureSecretKeyAccess::Get()),
+                            GetPartialKeyAccess())
+          .value());
+}
+
 std::unique_ptr<HkdfPrfKey> CreateHkdfPrfKey(
     int key_size_in_bytes, HkdfPrfParameters::HashType hash_type,
     absl::optional<absl::string_view> salt, absl::string_view secret) {
@@ -352,6 +362,8 @@ std::vector<std::shared_ptr<Key>> MacTestVector() {
 
 std::vector<std::shared_ptr<Key>> PrfTestVector() {
   return {
+      CreateAesCmacPrfKey(kOkmFromRfc.substr(0, 32)),
+      CreateAesCmacPrfKey(kOkmFromRfc.substr(0, 64)),
       CreateHkdfPrfKey(
           /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha1,
           /*salt=*/test::HexDecodeOrDie("de"), kOkmFromRfc.substr(0, 32)),
@@ -502,9 +514,10 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesSivProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHkdfPrfProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
-  ASSERT_THAT(RegisterHkdfPrfProtoSerialization(), IsOk());
 
   // Create primitive.
   absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =

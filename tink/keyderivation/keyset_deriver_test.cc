@@ -62,6 +62,7 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
+#include "tink/prf/hkdf_prf_proto_serialization.h"
 #include "tink/registry.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
@@ -268,6 +269,19 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
           .value());
 }
 
+std::unique_ptr<HkdfPrfKey> CreateHkdfPrfKey(
+    int key_size_in_bytes, HkdfPrfParameters::HashType hash_type,
+    absl::optional<absl::string_view> salt, absl::string_view secret) {
+  HkdfPrfParameters params =
+      HkdfPrfParameters::Create(key_size_in_bytes, hash_type, salt).value();
+  return std::make_unique<HkdfPrfKey>(
+      HkdfPrfKey::Create(params,
+                         RestrictedData(test::HexDecodeOrDie(secret),
+                                        InsecureSecretKeyAccess::Get()),
+                         GetPartialKeyAccess())
+          .value());
+}
+
 // TODO: b/314831964 - Add Variant:kLegacy test cases.
 std::vector<std::shared_ptr<Key>> AeadTestVector() {
   return {
@@ -386,12 +400,33 @@ std::vector<std::shared_ptr<Key>> EcdsaTestVector() {
   };
 }
 
+std::vector<std::shared_ptr<Key>> PrfTestVector() {
+  return {
+      CreateHkdfPrfKey(
+          /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha1,
+          /*salt=*/test::HexDecodeOrDie("de"), kOkmFromRfc.substr(0, 32)),
+      CreateHkdfPrfKey(/*key_size_in_bytes=*/16,
+                       HkdfPrfParameters::HashType::kSha224,
+                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 32)),
+      CreateHkdfPrfKey(
+          /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
+          /*salt=*/test::HexDecodeOrDie("ad"), kOkmFromRfc.substr(0, 32)),
+      CreateHkdfPrfKey(/*key_size_in_bytes=*/32,
+                       HkdfPrfParameters::HashType::kSha384,
+                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 64)),
+      CreateHkdfPrfKey(
+          /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
+          /*salt=*/test::HexDecodeOrDie("beef"), kOkmFromRfc.substr(0, 64)),
+  };
+}
+
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   std::vector<std::vector<std::shared_ptr<Key>>> vectors;
   vectors.push_back(AeadTestVector());
   vectors.push_back(DaeadTestVector());
   vectors.push_back(Ed25519TestVector());
   vectors.push_back(MacTestVector());
+  vectors.push_back(PrfTestVector());
 
   // Deriving EC keys with secret seed is not implemented in OpenSSL.
   if (internal::IsBoringSsl()) {
@@ -469,6 +504,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHkdfPrfProtoSerialization(), IsOk());
 
   // Create primitive.
   absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =

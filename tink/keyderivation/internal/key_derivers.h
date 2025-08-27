@@ -35,11 +35,12 @@ namespace internal {
 // - AEAD: AES-CTR-HMAC, AES-GCM, XChaCha20-Poly1305
 // - Deterministic AEAD: AES-SIV
 // - MAC: HMAC
+// - PRF: HKDF PRF
 // - Signature: ECDSA, Ed25519
 //
 // The following key types are pending support:
 // - JWT: JWT HMAC
-// - PRF: AES-CMAC PRF, HKDF PRF, HMAC PRF
+// - PRF: AES-CMAC PRF, HMAC PRF
 // - Streaming AEAD: AES-CTR-HMAC, AES-GCM-HKDF
 //
 // TODO: b/314831964 - Add support for remaining key types.

@@ -52,8 +52,12 @@
 #include "tink/mac/hmac_proto_serialization.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
+#include "tink/prf/hkdf_prf_key.h"
+#include "tink/prf/hkdf_prf_parameters.h"
+#include "tink/prf/hkdf_prf_proto_serialization.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_proto_serialization.h"
@@ -217,6 +221,28 @@ absl::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
   return absl::make_unique<HmacKey>(*key);
 }
 
+absl::StatusOr<std::unique_ptr<HkdfPrfKey>> DeriveHkdfPrfKey(
+    const Parameters& generic_params, InputStream* randomness) {
+  const HkdfPrfParameters* params =
+      dynamic_cast<const HkdfPrfParameters*>(&generic_params);
+  if (params == nullptr) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Parameters is not HkdfPrfParameters.");
+  }
+  absl::StatusOr<std::string> randomness_str =
+      ReadBytesFromStream(params->KeySizeInBytes(), randomness);
+  if (!randomness_str.ok()) {
+    return randomness_str.status();
+  }
+  absl::StatusOr<HkdfPrfKey> key = HkdfPrfKey::Create(
+      *params, RestrictedData(*randomness_str, InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<HkdfPrfKey>(*key);
+}
+
 absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
     const Parameters& generic_params, InputStream* randomness) {
   const EcdsaParameters* params =
@@ -333,6 +359,10 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     // MAC.
     CHECK_OK(RegisterHmacProtoSerialization());
     m->insert({std::type_index(typeid(HmacParameters)), DeriveHmacKey});
+
+    // PRF.
+    CHECK_OK(RegisterHkdfPrfProtoSerialization());
+    m->insert({std::type_index(typeid(HkdfPrfParameters)), DeriveHkdfPrfKey});
 
     // Signature.
     CHECK_OK(RegisterEcdsaProtoSerialization());

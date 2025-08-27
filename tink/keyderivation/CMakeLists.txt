@@ -229,22 +229,26 @@ tink_cc_test(
   DEPS
     tink::keyderivation::keyset_deriver
     tink::keyderivation::keyset_deriver_wrapper
+    tink::keyderivation::prf_based_key_derivation_key
+    tink::keyderivation::prf_based_key_derivation_parameters
+    tink::keyderivation::prf_based_key_derivation_proto_serialization
     gmock
     absl::memory
-    absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::key
+    tink::core::key_status
     tink::core::keyset_handle
     tink::core::partial_key_access
     tink::core::partial_key_access_token
     tink::core::registry
     tink::core::restricted_big_integer
     tink::core::restricted_data
-    tink::aead::aead_config
+    tink::core::secret_key_access_token
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
     tink::aead::aes_ctr_hmac_aead_proto_serialization
@@ -255,19 +259,19 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_parameters
     tink::aead::xchacha20_poly1305_proto_serialization
     tink::config::global_registry
+    tink::config::tink_config
     tink::daead::aes_siv_key
     tink::daead::aes_siv_parameters
     tink::daead::aes_siv_proto_serialization
     tink::internal::ec_util
     tink::internal::mutable_serialization_registry
-    tink::internal::proto_parameters_serialization
-    tink::internal::serialization
     tink::internal::ssl_util
-    tink::internal::tink_proto_structs
     tink::keyderivation::internal::prf_based_deriver_key_manager
     tink::mac::hmac_key
     tink::mac::hmac_parameters
     tink::mac::hmac_proto_serialization
+    tink::prf::hkdf_prf_key
+    tink::prf::hkdf_prf_parameters
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_proto_serialization
@@ -278,14 +282,8 @@ tink_cc_test(
     tink::signature::ed25519_public_key
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
-    tink::util::test_keyset_handle
     tink::util::test_matchers
     tink::util::test_util
-    tink::proto::hkdf_prf_cc_proto
-    tink::proto::prf_based_deriver_cc_proto
-    tink::proto::tink_cc_proto
 )
 
 tink_cc_test(

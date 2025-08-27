@@ -45,7 +45,7 @@ namespace internal {
 // TODO: b/314831964 - Add support for remaining key types.
 absl::StatusOr<std::unique_ptr<crypto::tink::Key>> DeriveKey(
     const crypto::tink::Parameters& params,
-    crypto::tink::InputStream* randomness);
+    crypto::tink::InputStream* rand_stream);
 
 }  // namespace internal
 }  // namespace tink

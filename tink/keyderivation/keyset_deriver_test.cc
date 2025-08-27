@@ -200,26 +200,6 @@ std::unique_ptr<AesSivKey> CreateAesSivKey(int key_size,
           .value());
 }
 
-std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
-    Ed25519Parameters::Variant variant, absl::string_view secret_seed,
-    absl::optional<int> id_requirement) {
-  std::unique_ptr<internal::Ed25519Key> key_pair =
-      internal::NewEd25519Key(
-          util::SecretDataFromStringView(test::HexDecodeOrDie(secret_seed)))
-          .value();
-  Ed25519PublicKey public_key =
-      Ed25519PublicKey::Create(Ed25519Parameters::Create(variant).value(),
-                               key_pair->public_key, id_requirement,
-                               GetPartialKeyAccess())
-          .value();
-  RestrictedData private_key_bytes =
-      RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get());
-  return absl::make_unique<Ed25519PrivateKey>(
-      Ed25519PrivateKey::Create(public_key, private_key_bytes,
-                                GetPartialKeyAccess())
-          .value());
-}
-
 std::unique_ptr<HmacKey> CreateHmacKey(int key_size, int cryptographic_tag_size,
                                        HmacParameters::HashType hash_type,
                                        HmacParameters::Variant variant,
@@ -234,6 +214,19 @@ std::unique_ptr<HmacKey> CreateHmacKey(int key_size, int cryptographic_tag_size,
                       RestrictedData(test::HexDecodeOrDie(secret),
                                      InsecureSecretKeyAccess::Get()),
                       id_requirement, GetPartialKeyAccess())
+          .value());
+}
+
+std::unique_ptr<HkdfPrfKey> CreateHkdfPrfKey(
+    int key_size_in_bytes, HkdfPrfParameters::HashType hash_type,
+    absl::optional<absl::string_view> salt, absl::string_view secret) {
+  HkdfPrfParameters params =
+      HkdfPrfParameters::Create(key_size_in_bytes, hash_type, salt).value();
+  return std::make_unique<HkdfPrfKey>(
+      HkdfPrfKey::Create(params,
+                         RestrictedData(test::HexDecodeOrDie(secret),
+                                        InsecureSecretKeyAccess::Get()),
+                         GetPartialKeyAccess())
           .value());
 }
 
@@ -269,16 +262,23 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
           .value());
 }
 
-std::unique_ptr<HkdfPrfKey> CreateHkdfPrfKey(
-    int key_size_in_bytes, HkdfPrfParameters::HashType hash_type,
-    absl::optional<absl::string_view> salt, absl::string_view secret) {
-  HkdfPrfParameters params =
-      HkdfPrfParameters::Create(key_size_in_bytes, hash_type, salt).value();
-  return std::make_unique<HkdfPrfKey>(
-      HkdfPrfKey::Create(params,
-                         RestrictedData(test::HexDecodeOrDie(secret),
-                                        InsecureSecretKeyAccess::Get()),
-                         GetPartialKeyAccess())
+std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
+    Ed25519Parameters::Variant variant, absl::string_view secret_seed,
+    absl::optional<int> id_requirement) {
+  std::unique_ptr<internal::Ed25519Key> key_pair =
+      internal::NewEd25519Key(
+          util::SecretDataFromStringView(test::HexDecodeOrDie(secret_seed)))
+          .value();
+  Ed25519PublicKey public_key =
+      Ed25519PublicKey::Create(Ed25519Parameters::Create(variant).value(),
+                               key_pair->public_key, id_requirement,
+                               GetPartialKeyAccess())
+          .value();
+  RestrictedData private_key_bytes =
+      RestrictedData(key_pair->private_key, InsecureSecretKeyAccess::Get());
+  return absl::make_unique<Ed25519PrivateKey>(
+      Ed25519PrivateKey::Create(public_key, private_key_bytes,
+                                GetPartialKeyAccess())
           .value());
 }
 
@@ -333,23 +333,6 @@ std::vector<std::shared_ptr<Key>> DaeadTestVector() {
   };
 }
 
-std::vector<std::shared_ptr<Key>> Ed25519TestVector() {
-  return {
-      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kTink,
-                              kOkmFromRfc.substr(0, 64),
-                              /*id_requirement=*/1010101),
-      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kCrunchy,
-                              kOkmFromRfc.substr(0, 64),
-                              /*id_requirement=*/2020202),
-      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kLegacy,
-                              kOkmFromRfc.substr(0, 64),
-                              /*id_requirement=*/3030303),
-      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kNoPrefix,
-                              kOkmFromRfc.substr(0, 64),
-                              /*id_requirement=*/absl::nullopt),
-  };
-}
-
 std::vector<std::shared_ptr<Key>> MacTestVector() {
   return {
       CreateHmacKey(/*key_size=*/16, /*cryptographic_tag_size=*/10,
@@ -367,7 +350,27 @@ std::vector<std::shared_ptr<Key>> MacTestVector() {
   };
 }
 
-std::vector<std::shared_ptr<Key>> EcdsaTestVector() {
+std::vector<std::shared_ptr<Key>> PrfTestVector() {
+  return {
+      CreateHkdfPrfKey(
+          /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha1,
+          /*salt=*/test::HexDecodeOrDie("de"), kOkmFromRfc.substr(0, 32)),
+      CreateHkdfPrfKey(/*key_size_in_bytes=*/16,
+                       HkdfPrfParameters::HashType::kSha224,
+                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 32)),
+      CreateHkdfPrfKey(
+          /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
+          /*salt=*/test::HexDecodeOrDie("ad"), kOkmFromRfc.substr(0, 32)),
+      CreateHkdfPrfKey(/*key_size_in_bytes=*/32,
+                       HkdfPrfParameters::HashType::kSha384,
+                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 64)),
+      CreateHkdfPrfKey(
+          /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
+          /*salt=*/test::HexDecodeOrDie("beef"), kOkmFromRfc.substr(0, 64)),
+  };
+}
+
+std::vector<std::shared_ptr<Key>> SignatureEcdsaTestVector() {
   return {
       CreateEcdsaPrivateKey(subtle::EllipticCurveType::NIST_P256,
                             EcdsaParameters::CurveType::kNistP256,
@@ -400,23 +403,20 @@ std::vector<std::shared_ptr<Key>> EcdsaTestVector() {
   };
 }
 
-std::vector<std::shared_ptr<Key>> PrfTestVector() {
+std::vector<std::shared_ptr<Key>> SignatureEd25519TestVector() {
   return {
-      CreateHkdfPrfKey(
-          /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha1,
-          /*salt=*/test::HexDecodeOrDie("de"), kOkmFromRfc.substr(0, 32)),
-      CreateHkdfPrfKey(/*key_size_in_bytes=*/16,
-                       HkdfPrfParameters::HashType::kSha224,
-                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 32)),
-      CreateHkdfPrfKey(
-          /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
-          /*salt=*/test::HexDecodeOrDie("ad"), kOkmFromRfc.substr(0, 32)),
-      CreateHkdfPrfKey(/*key_size_in_bytes=*/32,
-                       HkdfPrfParameters::HashType::kSha384,
-                       /*salt=*/absl::nullopt, kOkmFromRfc.substr(0, 64)),
-      CreateHkdfPrfKey(
-          /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
-          /*salt=*/test::HexDecodeOrDie("beef"), kOkmFromRfc.substr(0, 64)),
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kTink,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/1010101),
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kCrunchy,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/2020202),
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kLegacy,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/3030303),
+      CreateEd25519PrivateKey(Ed25519Parameters::Variant::kNoPrefix,
+                              kOkmFromRfc.substr(0, 64),
+                              /*id_requirement=*/absl::nullopt),
   };
 }
 
@@ -424,13 +424,13 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   std::vector<std::vector<std::shared_ptr<Key>>> vectors;
   vectors.push_back(AeadTestVector());
   vectors.push_back(DaeadTestVector());
-  vectors.push_back(Ed25519TestVector());
   vectors.push_back(MacTestVector());
   vectors.push_back(PrfTestVector());
+  vectors.push_back(SignatureEd25519TestVector());
 
   // Deriving EC keys with secret seed is not implemented in OpenSSL.
   if (internal::IsBoringSsl()) {
-    vectors.push_back(EcdsaTestVector());
+    vectors.push_back(SignatureEcdsaTestVector());
   }
 
   return vectors;

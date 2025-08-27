@@ -300,7 +300,7 @@ class KeyDeriversRfcVectorTest : public Test {
       "1d87";
 };
 
-TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacAeadKey) {
+TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac) {
   // Derive key with Parameters map.
   absl::StatusOr<AesCtrHmacAeadParameters> params =
       AesCtrHmacAeadParameters::Builder()

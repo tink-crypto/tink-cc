@@ -25,7 +25,6 @@
 #include "absl/status/statusor.h"
 #include "tink/core/key_type_manager.h"
 #include "tink/core/template_util.h"
-#include "tink/input_stream.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/jwt/internal/jwt_mac_internal.h"
 #include "tink/jwt/internal/raw_jwt_hmac_key_manager.h"
@@ -62,10 +61,6 @@ class JwtHmacKeyManager
 
   absl::StatusOr<google::crypto::tink::JwtHmacKey> CreateKey(
       const google::crypto::tink::JwtHmacKeyFormat& key_format) const override;
-
-  absl::StatusOr<google::crypto::tink::JwtHmacKey> DeriveKey(
-      const google::crypto::tink::JwtHmacKeyFormat& key_format,
-      InputStream* input_stream) const override;
 
   internal::FipsCompatibility FipsStatus() const override {
     return internal::FipsCompatibility::kRequiresBoringCrypto;

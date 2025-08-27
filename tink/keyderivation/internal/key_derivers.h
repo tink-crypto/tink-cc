@@ -39,7 +39,6 @@ namespace internal {
 // - Signature: ECDSA, Ed25519
 //
 // The following key types are pending support:
-// - JWT: JWT HMAC
 // - PRF: AES-CMAC PRF, HMAC PRF
 // - Streaming AEAD: AES-CTR-HMAC, AES-GCM-HKDF
 //

@@ -12,7 +12,6 @@ tink_cc_library(
     absl::strings
     tink::core::key_type_manager
     tink::core::template_util
-    tink::core::input_stream
     tink::core::mac
     tink::internal::fips_utils
     tink::subtle::hmac_boringssl

@@ -105,12 +105,6 @@ absl::StatusOr<JwtHmacKey> JwtHmacKeyManager::CreateKey(
   return raw_key_manager_.CreateKey(jwt_hmac_key_format);
 }
 
-absl::StatusOr<JwtHmacKey> JwtHmacKeyManager::DeriveKey(
-    const JwtHmacKeyFormat& jwt_hmac_key_format,
-    InputStream* input_stream) const {
-  return raw_key_manager_.DeriveKey(jwt_hmac_key_format, input_stream);
-}
-
 absl::Status JwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
   return raw_key_manager_.ValidateKey(key);
 }

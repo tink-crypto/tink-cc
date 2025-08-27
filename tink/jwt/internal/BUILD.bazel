@@ -14,7 +14,6 @@ cc_library(
         "//proto:tink_cc_proto",
         "//tink:core/key_type_manager",
         "//tink:core/template_util",
-        "//tink:input_stream",
         "//tink:mac",
         "//tink/internal:fips_utils",
         "//tink/subtle:hmac_boringssl",

@@ -20,7 +20,6 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/input_stream.h"
 #include "tink/subtle/random.h"
 #include "tink/util/validation.h"
 #include "proto/common.pb.h"
@@ -61,13 +60,6 @@ absl::StatusOr<JwtHmacKey> RawJwtHmacKeyManager::CreateKey(
   jwt_hmac_key.set_key_value(
       subtle::Random::GetRandomBytes(jwt_hmac_key_format.key_size()));
   return jwt_hmac_key;
-}
-
-absl::StatusOr<JwtHmacKey> RawJwtHmacKeyManager::DeriveKey(
-    const JwtHmacKeyFormat& jwt_hmac_key_format,
-    InputStream* input_stream) const {
-  return absl::Status(absl::StatusCode::kUnimplemented,
-                      "RawJwtHmacKeyManager::DeriveKey is not implemented");
 }
 
 absl::Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {

@@ -17,7 +17,6 @@
 #include "tink/keyderivation/internal/key_derivers.h"
 
 #include <memory>
-#include <string>
 #include <typeindex>
 #include <utility>
 
@@ -112,13 +111,13 @@ absl::StatusOr<std::unique_ptr<AesCtrHmacAeadKey>> DeriveAesCtrHmacAeadKey(
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesCtrHmacAeadParameters.");
   }
-  absl::StatusOr<std::string> aes_key_bytes =
-      ReadBytesFromStream(params->GetAesKeySizeInBytes(), rand_stream);
+  absl::StatusOr<SecretData> aes_key_bytes =
+      ReadSecretBytesFromStream(params->GetAesKeySizeInBytes(), rand_stream);
   if (!aes_key_bytes.ok()) {
     return aes_key_bytes.status();
   }
-  absl::StatusOr<std::string> hmac_key_bytes =
-      ReadBytesFromStream(params->GetHmacKeySizeInBytes(), rand_stream);
+  absl::StatusOr<SecretData> hmac_key_bytes =
+      ReadSecretBytesFromStream(params->GetHmacKeySizeInBytes(), rand_stream);
   if (!hmac_key_bytes.ok()) {
     return hmac_key_bytes.status();
   }
@@ -145,8 +144,8 @@ absl::StatusOr<std::unique_ptr<AesGcmKey>> DeriveAesGcmKey(
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesGcmParameters.");
   }
-  absl::StatusOr<std::string> rand =
-      ReadBytesFromStream(params->KeySizeInBytes(), rand_stream);
+  absl::StatusOr<SecretData> rand =
+      ReadSecretBytesFromStream(params->KeySizeInBytes(), rand_stream);
   if (!rand.ok()) {
     return rand.status();
   }
@@ -168,8 +167,8 @@ DeriveXChaCha20Poly1305Key(const Parameters& generic_params,
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not XChaCha20Poly1305Parameters.");
   }
-  absl::StatusOr<std::string> rand =
-      ReadBytesFromStream(kXChaCha20Poly1305KeyLen, rand_stream);
+  absl::StatusOr<SecretData> rand =
+      ReadSecretBytesFromStream(kXChaCha20Poly1305KeyLen, rand_stream);
   if (!rand.ok()) {
     return rand.status();
   }
@@ -213,8 +212,8 @@ absl::StatusOr<std::unique_ptr<HmacKey>> DeriveHmacKey(
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not HmacParameters.");
   }
-  absl::StatusOr<std::string> rand =
-      ReadBytesFromStream(params->KeySizeInBytes(), rand_stream);
+  absl::StatusOr<SecretData> rand =
+      ReadSecretBytesFromStream(params->KeySizeInBytes(), rand_stream);
   if (!rand.ok()) {
     return rand.status();
   }
@@ -235,8 +234,8 @@ absl::StatusOr<std::unique_ptr<AesCmacPrfKey>> DeriveAesCmacPrfKey(
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not AesCmacPrfParameters.");
   }
-  absl::StatusOr<std::string> rand =
-      ReadBytesFromStream(params->KeySizeInBytes(), rand_stream);
+  absl::StatusOr<SecretData> rand =
+      ReadSecretBytesFromStream(params->KeySizeInBytes(), rand_stream);
   if (!rand.ok()) {
     return rand.status();
   }
@@ -257,8 +256,8 @@ absl::StatusOr<std::unique_ptr<HkdfPrfKey>> DeriveHkdfPrfKey(
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not HkdfPrfParameters.");
   }
-  absl::StatusOr<std::string> rand =
-      ReadBytesFromStream(params->KeySizeInBytes(), rand_stream);
+  absl::StatusOr<SecretData> rand =
+      ReadSecretBytesFromStream(params->KeySizeInBytes(), rand_stream);
   if (!rand.ok()) {
     return rand.status();
   }
@@ -279,8 +278,8 @@ absl::StatusOr<std::unique_ptr<HmacPrfKey>> DeriveHmacPrfKey(
     return absl::Status(absl::StatusCode::kInternal,
                         "Parameters is not HmacPrfParameters.");
   }
-  absl::StatusOr<std::string> rand =
-      ReadBytesFromStream(params->KeySizeInBytes(), rand_stream);
+  absl::StatusOr<SecretData> rand =
+      ReadSecretBytesFromStream(params->KeySizeInBytes(), rand_stream);
   if (!rand.ok()) {
     return rand.status();
   }

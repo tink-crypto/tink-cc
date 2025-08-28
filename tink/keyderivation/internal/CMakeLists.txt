@@ -166,6 +166,9 @@ tink_cc_library(
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_parameters
     tink::prf::hkdf_prf_proto_serialization
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_parameters
+    tink::prf::hmac_prf_proto_serialization
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_proto_serialization
@@ -235,6 +238,9 @@ tink_cc_test(
     tink::prf::hkdf_prf_key
     tink::prf::hkdf_prf_key_manager
     tink::prf::hkdf_prf_parameters
+    tink::prf::hmac_prf_key
+    tink::prf::hmac_prf_key_manager
+    tink::prf::hmac_prf_parameters
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_proto_serialization
@@ -261,6 +267,7 @@ tink_cc_test(
     tink::proto::ed25519_cc_proto
     tink::proto::hkdf_prf_cc_proto
     tink::proto::hmac_cc_proto
+    tink::proto::hmac_prf_cc_proto
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )

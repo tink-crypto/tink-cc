@@ -68,6 +68,9 @@
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_key_manager.h"
 #include "tink/prf/hkdf_prf_parameters.h"
+#include "tink/prf/hmac_prf_key.h"
+#include "tink/prf/hmac_prf_key_manager.h"
+#include "tink/prf/hmac_prf_parameters.h"
 #include "tink/registry.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
@@ -97,6 +100,7 @@
 #include "proto/ed25519.pb.h"
 #include "proto/hkdf_prf.pb.h"
 #include "proto/hmac.pb.h"
+#include "proto/hmac_prf.pb.h"
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
 
@@ -171,6 +175,10 @@ INSTANTIATE_TEST_SUITE_P(
             HkdfPrfParameters::Create(
                 /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha256,
                 /*salt=*/test::HexDecodeOrDie("2025"))
+                .value()),
+        std::make_unique<HmacPrfParameters>(
+            HmacPrfParameters::Create(
+                /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256)
                 .value()),
         // Signature.
         std::make_unique<Ed25519Parameters>(
@@ -579,6 +587,42 @@ TEST_F(KeyDeriversRfcVectorTest, HkdfPrf) {
               IsTrue());
   absl::StatusOr<google::crypto::tink::HkdfPrfKey> proto_key =
       HkdfPrfKeyManager().DeriveKey(key_format,
+                                    same_randomness_from_rfc_vector_.get());
+  ASSERT_THAT(proto_key, IsOk());
+  EXPECT_THAT(test::HexEncode(proto_key->key_value()), Eq(key_bytes));
+}
+
+TEST_F(KeyDeriversRfcVectorTest, HmacPrf) {
+  // Derive key with hard-coded map.
+  absl::StatusOr<HmacPrfParameters> params = HmacPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
+  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
+      DeriveKey(*params, randomness_from_rfc_vector_.get());
+  ASSERT_THAT(generic_key, IsOk());
+  const HmacPrfKey* key =
+      dynamic_cast<const HmacPrfKey*>(&**std::move(generic_key));
+  ASSERT_THAT(key, NotNull());
+  std::string key_bytes =
+      test::HexEncode(key->GetKeyBytes(GetPartialKeyAccess())
+                          .GetSecret(InsecureSecretKeyAccess::Get()));
+  ASSERT_THAT(key_bytes,
+              Eq(derived_key_value_.substr(0, 2 * params->KeySizeInBytes())));
+
+  // Derive key with HmacPrfKeyManager.
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      MutableSerializationRegistry::GlobalInstance()
+          .SerializeParameters<ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialization, IsOk());
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  google::crypto::tink::HmacPrfKeyFormat key_format;
+  ASSERT_THAT(key_format.ParseFromString(
+                  proto_serialization->GetKeyTemplateStruct().value),
+              IsTrue());
+  absl::StatusOr<google::crypto::tink::HmacPrfKey> proto_key =
+      HmacPrfKeyManager().DeriveKey(key_format,
                                     same_randomness_from_rfc_vector_.get());
   ASSERT_THAT(proto_key, IsOk());
   EXPECT_THAT(test::HexEncode(proto_key->key_value()), Eq(key_bytes));

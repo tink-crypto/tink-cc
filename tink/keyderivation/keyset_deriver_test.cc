@@ -65,6 +65,9 @@
 #include "tink/prf/hkdf_prf_key.h"
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/prf/hkdf_prf_proto_serialization.h"
+#include "tink/prf/hmac_prf_key.h"
+#include "tink/prf/hmac_prf_parameters.h"
+#include "tink/prf/hmac_prf_proto_serialization.h"
 #include "tink/registry.h"
 #include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
@@ -240,6 +243,19 @@ std::unique_ptr<HkdfPrfKey> CreateHkdfPrfKey(
           .value());
 }
 
+std::unique_ptr<HmacPrfKey> CreateHmacPrfKey(
+    int key_size_in_bytes, HmacPrfParameters::HashType hash_type,
+    absl::string_view secret) {
+  HmacPrfParameters params =
+      HmacPrfParameters::Create(key_size_in_bytes, hash_type).value();
+  return std::make_unique<HmacPrfKey>(
+      HmacPrfKey::Create(params,
+                         RestrictedData(test::HexDecodeOrDie(secret),
+                                        InsecureSecretKeyAccess::Get()),
+                         GetPartialKeyAccess())
+          .value());
+}
+
 std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
     crypto::tink::subtle::EllipticCurveType proto_curve_type,
     EcdsaParameters::CurveType curve_type, EcdsaParameters::HashType hash_type,
@@ -379,6 +395,21 @@ std::vector<std::shared_ptr<Key>> PrfTestVector() {
       CreateHkdfPrfKey(
           /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
           /*salt=*/test::HexDecodeOrDie("beef"), kOkmFromRfc.substr(0, 64)),
+      CreateHmacPrfKey(
+          /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha1,
+          kOkmFromRfc.substr(0, 32)),
+      CreateHmacPrfKey(/*key_size_in_bytes=*/16,
+                       HmacPrfParameters::HashType::kSha224,
+                       kOkmFromRfc.substr(0, 32)),
+      CreateHmacPrfKey(
+          /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256,
+          kOkmFromRfc.substr(0, 32)),
+      CreateHmacPrfKey(/*key_size_in_bytes=*/32,
+                       HmacPrfParameters::HashType::kSha384,
+                       kOkmFromRfc.substr(0, 64)),
+      CreateHmacPrfKey(
+          /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha512,
+          kOkmFromRfc.substr(0, 64)),
   };
 }
 
@@ -516,6 +547,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesCmacPrfProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterHkdfPrfProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
 

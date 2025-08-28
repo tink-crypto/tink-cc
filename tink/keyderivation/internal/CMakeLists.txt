@@ -209,29 +209,24 @@ tink_cc_test(
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::aead::aes_ctr_hmac_aead_parameters
-    tink::aead::aes_ctr_hmac_aead_proto_serialization
     tink::aead::aes_eax_parameters
     tink::aead::aes_eax_proto_serialization
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_key_manager
     tink::aead::aes_gcm_parameters
-    tink::aead::aes_gcm_proto_serialization
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_key_manager
     tink::aead::xchacha20_poly1305_parameters
-    tink::aead::xchacha20_poly1305_proto_serialization
     tink::daead::aes_siv_key
     tink::daead::aes_siv_key_manager
     tink::daead::aes_siv_parameters
-    tink::daead::aes_siv_proto_serialization
-    tink::internal::mutable_serialization_registry
+    tink::internal::global_serialization_registry
     tink::internal::proto_parameters_serialization
     tink::internal::serialization
     tink::internal::ssl_util
     tink::mac::hmac_key
     tink::mac::hmac_key_manager
     tink::mac::hmac_parameters
-    tink::mac::hmac_proto_serialization
     tink::prf::aes_cmac_prf_key
     tink::prf::aes_cmac_prf_key_manager
     tink::prf::aes_cmac_prf_parameters
@@ -243,11 +238,9 @@ tink_cc_test(
     tink::prf::hmac_prf_parameters
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
-    tink::signature::ecdsa_proto_serialization
     tink::signature::ecdsa_sign_key_manager
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
-    tink::signature::ed25519_proto_serialization
     tink::signature::ed25519_sign_key_manager
     tink::subtle::common_enums
     tink::subtle::random

@@ -32,24 +32,20 @@
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
-#include "tink/aead/aes_ctr_hmac_aead_proto_serialization.h"
 #include "tink/aead/aes_eax_parameters.h"
 #include "tink/aead/aes_eax_proto_serialization.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/aead/aes_gcm_parameters.h"
-#include "tink/aead/aes_gcm_proto_serialization.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_key_manager.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
-#include "tink/aead/xchacha20_poly1305_proto_serialization.h"
 #include "tink/daead/aes_siv_key.h"
 #include "tink/daead/aes_siv_key_manager.h"
 #include "tink/daead/aes_siv_parameters.h"
-#include "tink/daead/aes_siv_proto_serialization.h"
 #include "tink/input_stream.h"
 #include "tink/insecure_secret_key_access.h"
-#include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/global_serialization_registry.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/ssl_util.h"
@@ -59,7 +55,6 @@
 #include "tink/mac/hmac_key.h"
 #include "tink/mac/hmac_key_manager.h"
 #include "tink/mac/hmac_parameters.h"
-#include "tink/mac/hmac_proto_serialization.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
 #include "tink/prf/aes_cmac_prf_key.h"
@@ -76,11 +71,9 @@
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
-#include "tink/signature/ecdsa_proto_serialization.h"
 #include "tink/signature/ecdsa_sign_key_manager.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
-#include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/prf/hkdf_streaming_prf.h"
@@ -344,7 +337,6 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac) {
 }
 
 TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac_GlobalRegistry) {
-  ASSERT_THAT(RegisterAesCtrHmacAeadProtoSerialization(), IsOk());
   absl::StatusOr<AesCtrHmacAeadParameters> params =
       AesCtrHmacAeadParameters::Builder()
           .SetAesKeySizeInBytes(16)
@@ -356,7 +348,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac_GlobalRegistry) {
           .Build();
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -404,7 +396,6 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm) {
 }
 
 TEST_F(KeyDeriversRfcVectorTest, AesGcm_GlobalRegistry) {
-  ASSERT_THAT(RegisterAesGcmProtoSerialization(), IsOk());
   absl::StatusOr<AesGcmParameters> params =
       AesGcmParameters::Builder()
           .SetKeySizeInBytes(32)
@@ -414,7 +405,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm_GlobalRegistry) {
           .Build();
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -451,13 +442,12 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305) {
 }
 
 TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305_GlobalRegistry) {
-  ASSERT_THAT(RegisterXChaCha20Poly1305ProtoSerialization(), IsOk());
   absl::StatusOr<XChaCha20Poly1305Parameters> params =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -494,12 +484,11 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv) {
 }
 
 TEST_F(KeyDeriversRfcVectorTest, AesSiv_GlobalRegistry) {
-  ASSERT_THAT(RegisterAesSivProtoSerialization(), IsOk());
   absl::StatusOr<AesSivParameters> params = AesSivParameters::Create(
       /*key_size_in_bytes=*/64, AesSivParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -537,13 +526,12 @@ TEST_F(KeyDeriversRfcVectorTest, Hmac) {
 }
 
 TEST_F(KeyDeriversRfcVectorTest, Hmac_GlobalRegistry) {
-  ASSERT_THAT(RegisterHmacProtoSerialization(), IsOk());
   absl::StatusOr<HmacParameters> params = HmacParameters::Create(
       /*key_size_in_bytes=*/16, /*cryptographic_tag_size_in_bytes=*/10,
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kNoPrefix);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -585,7 +573,7 @@ TEST_F(KeyDeriversRfcVectorTest, AesCmacPrf_GlobalRegistry) {
       /*key_size_in_bytes=*/32);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -629,7 +617,7 @@ TEST_F(KeyDeriversRfcVectorTest, HkdfPrf_GlobalRegistry) {
       /*salt=*/test::HexDecodeOrDie("2025"));
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -670,7 +658,7 @@ TEST_F(KeyDeriversRfcVectorTest, HmacPrf_GlobalRegistry) {
       /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(params, IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -716,9 +704,8 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
                           .GetSecret(InsecureSecretKeyAccess::Get()));
 
   // Derive with EcdsaSignKeyManager in global registry.
-  ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =
@@ -754,9 +741,8 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
                           .GetSecret(InsecureSecretKeyAccess::Get()));
 
   // Derive key with Ed25519SignKeyManager in global registry.
-  ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      MutableSerializationRegistry::GlobalInstance()
+      GlobalSerializationRegistry()
           .SerializeParameters<ProtoParametersSerialization>(*params);
   ASSERT_THAT(serialization, IsOk());
   const ProtoParametersSerialization* proto_serialization =

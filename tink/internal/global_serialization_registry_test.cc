@@ -66,12 +66,13 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -371,6 +372,25 @@ std::unique_ptr<const XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key() {
   return absl::make_unique<const XChaCha20Poly1305Key>(*key);
 }
 
+std::unique_ptr<const AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey() {
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(35)
+          .SetDerivedKeySizeInBytes(32)
+          .SetHkdfHashType(AesCtrHmacStreamingParameters::HashType::kSha512)
+          .SetHmacHashType(AesCtrHmacStreamingParameters::HashType::kSha256)
+          .SetHmacTagSizeInBytes(16)
+          .SetCiphertextSegmentSizeInBytes(3 * 1024 * 1024)
+          .Build();
+  CHECK_OK(parameters);
+
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *parameters, RestrictedData(/*num_random_bytes=*/35),
+      GetPartialKeyAccess());
+  CHECK_OK(key);
+  return absl::make_unique<const AesCtrHmacStreamingKey>(*key);
+}
+
 std::unique_ptr<const AesGcmHkdfStreamingKey> CreateAesGcmHkdfStreamingKey() {
   absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
       AesGcmHkdfStreamingParameters::Builder()
@@ -408,6 +428,7 @@ INSTANTIATE_TEST_SUITE_P(
            KeyTestVector{CreateLegacyKmsAeadKey()},
            KeyTestVector{CreateXAesGcmKey()},
            KeyTestVector{CreateXChaCha20Poly1305Key()},
+           KeyTestVector{CreateAesCtrHmacStreamingKey()},
            KeyTestVector{CreateAesGcmHkdfStreamingKey()}));
 
 TEST_P(GlobalSerializationRegistryTest, SerializeAndParse) {

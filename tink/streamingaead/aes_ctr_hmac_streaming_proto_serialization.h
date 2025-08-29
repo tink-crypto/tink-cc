@@ -17,14 +17,20 @@
 #ifndef TINK_STREAMINGAEAD_AES_CTR_HMAC_STREAMING_PROTO_SERIALIZATION_H_
 #define TINK_STREAMINGAEAD_AES_CTR_HMAC_STREAMING_PROTO_SERIALIZATION_H_
 
-#include "tink/util/status.h"
+#include "absl/status/status.h"
+#include "tink/internal/mutable_serialization_registry.h"
+#include "tink/streamingaead/internal/aes_ctr_hmac_streaming_proto_serialization_impl.h"
 
 namespace crypto {
 namespace tink {
 
 // Registers proto parsers and serializers for AES-CTR-HMAC Streaming parameters
 // and keys.
-absl::Status RegisterAesCtrHmacStreamingProtoSerialization();
+inline absl::Status RegisterAesCtrHmacStreamingProtoSerialization() {
+  return internal::
+      RegisterAesCtrHmacStreamingProtoSerializationWithMutableRegistry(
+          internal::MutableSerializationRegistry::GlobalInstance());
+}
 
 }  // namespace tink
 }  // namespace crypto

@@ -275,33 +275,11 @@ tink_cc_library(
 tink_cc_library(
   NAME aes_ctr_hmac_streaming_proto_serialization
   SRCS
-    aes_ctr_hmac_streaming_proto_serialization.cc
     aes_ctr_hmac_streaming_proto_serialization.h
   DEPS
-    tink::streamingaead::aes_ctr_hmac_streaming_key
-    tink::streamingaead::aes_ctr_hmac_streaming_parameters
-    absl::no_destructor
     absl::status
-    absl::statusor
-    absl::strings
-    absl::string_view
-    absl::optional
-    tink::core::partial_key_access
-    tink::core::restricted_data
-    tink::core::secret_data
-    tink::core::secret_key_access_token
-    tink::internal::common_proto_enums
-    tink::internal::key_parser
-    tink::internal::key_serializer
     tink::internal::mutable_serialization_registry
-    tink::internal::parameters_parser
-    tink::internal::parameters_serializer
-    tink::internal::proto_key_serialization
-    tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
-    tink::internal::tink_proto_structs
-    tink::util::secret_data
-    tink::util::status
+    tink::streamingaead::internal::aes_ctr_hmac_streaming_proto_serialization_impl
 )
 
 tink_cc_library(

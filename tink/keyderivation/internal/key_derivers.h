@@ -37,9 +37,10 @@ namespace internal {
 // - MAC: HMAC
 // - PRF: AES-CMAC-PRF, HKDF-PRF, HMAC-PRF
 // - Signature: ECDSA, Ed25519
+// - Streaming AEAD: AES-GCM-HKDF
 //
 // The following key types are pending support:
-// - Streaming AEAD: AES-CTR-HMAC, AES-GCM-HKDF
+// - Streaming AEAD: AES-CTR-HMAC
 //
 // TODO: b/314831964 - Add support for remaining key types.
 absl::StatusOr<std::unique_ptr<crypto::tink::Key>> DeriveKey(

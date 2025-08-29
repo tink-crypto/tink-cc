@@ -75,6 +75,9 @@
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_sign_key_manager.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key_manager.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/prf/hkdf_streaming_prf.h"
 #include "tink/subtle/prf/streaming_prf.h"
@@ -87,6 +90,7 @@
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
+#include "proto/aes_gcm_hkdf_streaming.pb.h"
 #include "proto/aes_siv.pb.h"
 #include "proto/common.pb.h"
 #include "proto/ecdsa.pb.h"
@@ -176,6 +180,15 @@ INSTANTIATE_TEST_SUITE_P(
         // Signature.
         std::make_unique<Ed25519Parameters>(
             Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix)
+                .value()),
+        // Streaming AEAD.
+        std::make_unique<AesGcmHkdfStreamingParameters>(
+            AesGcmHkdfStreamingParameters::Builder()
+                .SetKeySizeInBytes(19)
+                .SetDerivedKeySizeInBytes(16)
+                .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+                .SetCiphertextSegmentSizeInBytes(1024 * 1024)
+                .Build()
                 .value()),
     }));
 
@@ -759,6 +772,60 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
   ASSERT_THAT(proto_key, IsOk());
   EXPECT_THAT(test::HexEncode(proto_key->key_value()),
               Eq(locally_derived_key_value));
+}
+
+TEST_F(KeyDeriversRfcVectorTest, AesGcmHkdfStreaming) {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> params =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(19)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+          .SetCiphertextSegmentSizeInBytes(1024 * 1024)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<std::unique_ptr<Key>> generic_key =
+      DeriveKey(*params, randomness_from_rfc_vector_.get());
+  ASSERT_THAT(generic_key, IsOk());
+  const AesGcmHkdfStreamingKey* key =
+      dynamic_cast<const AesGcmHkdfStreamingKey*>(&**std::move(generic_key));
+  ASSERT_THAT(key, NotNull());
+
+  std::string key_bytes =
+      test::HexEncode(key->GetInitialKeyMaterial(GetPartialKeyAccess())
+                          .GetSecret(InsecureSecretKeyAccess::Get()));
+  ASSERT_THAT(key_bytes,
+              Eq(derived_key_value_.substr(0, 2 * params->KeySizeInBytes())));
+}
+
+TEST_F(KeyDeriversRfcVectorTest, AesGcmHkdfStreaming_GlobalRegistry) {
+  absl::StatusOr<AesGcmHkdfStreamingParameters> params =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(19)
+          .SetDerivedKeySizeInBytes(16)
+          .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
+          .SetCiphertextSegmentSizeInBytes(1024 * 1024)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
+      GlobalSerializationRegistry()
+          .SerializeParameters<ProtoParametersSerialization>(*params);
+  ASSERT_THAT(serialization, IsOk());
+  const ProtoParametersSerialization* proto_serialization =
+      dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
+  ASSERT_THAT(proto_serialization, NotNull());
+  google::crypto::tink::AesGcmHkdfStreamingKeyFormat key_format;
+  ASSERT_THAT(key_format.ParseFromString(
+                  proto_serialization->GetKeyTemplateStruct().value),
+              IsTrue());
+
+  absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey> proto_key =
+      AesGcmHkdfStreamingKeyManager().DeriveKey(
+          key_format, same_randomness_from_rfc_vector_.get());
+  ASSERT_THAT(proto_key, IsOk());
+
+  EXPECT_THAT(test::HexEncode(proto_key->key_value()),
+              Eq(derived_key_value_.substr(0, 2 * params->KeySizeInBytes())));
 }
 
 }  // namespace

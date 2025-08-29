@@ -80,6 +80,9 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
@@ -308,6 +311,27 @@ std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
           .value());
 }
 
+std::unique_ptr<AesGcmHkdfStreamingKey> CreateAesGcmHkdfStreamingKey(
+    int key_size_in_bytes, int derived_key_size_in_bytes,
+    AesGcmHkdfStreamingParameters::HashType hash_type,
+    int ciphertext_segment_size_in_bytes, absl::string_view secret) {
+  AesGcmHkdfStreamingParameters params =
+      AesGcmHkdfStreamingParameters::Builder()
+          .SetKeySizeInBytes(key_size_in_bytes)
+          .SetDerivedKeySizeInBytes(derived_key_size_in_bytes)
+          .SetHashType(hash_type)
+          .SetCiphertextSegmentSizeInBytes(ciphertext_segment_size_in_bytes)
+          .Build()
+          .value();
+  return std::make_unique<AesGcmHkdfStreamingKey>(
+      AesGcmHkdfStreamingKey::Create(
+          params,
+          RestrictedData(test::HexDecodeOrDie(secret),
+                         InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess())
+          .value());
+}
+
 // TODO: b/314831964 - Add Variant:kLegacy test cases.
 std::vector<std::shared_ptr<Key>> AeadTestVector() {
   return {
@@ -463,6 +487,30 @@ std::vector<std::shared_ptr<Key>> SignatureEd25519TestVector() {
   };
 }
 
+std::vector<std::shared_ptr<Key>> StreamingAeadTestVector() {
+  return {
+      CreateAesGcmHkdfStreamingKey(
+          /*key_size_in_bytes=*/19, /*derived_key_size_in_bytes=*/16,
+          AesGcmHkdfStreamingParameters::HashType::kSha1,
+          /*ciphertext_segment_size_in_bytes=*/1024, kOkmFromRfc.substr(0, 38)),
+      CreateAesGcmHkdfStreamingKey(
+          /*key_size_in_bytes=*/19, /*derived_key_size_in_bytes=*/16,
+          AesGcmHkdfStreamingParameters::HashType::kSha256,
+          /*ciphertext_segment_size_in_bytes=*/1024 * 1024,
+          kOkmFromRfc.substr(0, 38)),
+      CreateAesGcmHkdfStreamingKey(
+          /*key_size_in_bytes=*/35, /*derived_key_size_in_bytes=*/32,
+          AesGcmHkdfStreamingParameters::HashType::kSha512,
+          /*ciphertext_segment_size_in_bytes=*/3 * 1024 * 1024,
+          kOkmFromRfc.substr(0, 70)),
+      CreateAesGcmHkdfStreamingKey(
+          /*key_size_in_bytes=*/35, /*derived_key_size_in_bytes=*/32,
+          AesGcmHkdfStreamingParameters::HashType::kSha512,
+          /*ciphertext_segment_size_in_bytes=*/4 * 1024 * 1024,
+          kOkmFromRfc.substr(0, 70)),
+  };
+}
+
 std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   std::vector<std::vector<std::shared_ptr<Key>>> vectors;
   vectors.push_back(AeadTestVector());
@@ -470,6 +518,7 @@ std::vector<std::vector<std::shared_ptr<Key>>> TestVectors() {
   vectors.push_back(MacTestVector());
   vectors.push_back(PrfTestVector());
   vectors.push_back(SignatureEd25519TestVector());
+  vectors.push_back(StreamingAeadTestVector());
 
   // Deriving EC keys with secret seed is not implemented in OpenSSL.
   if (internal::IsBoringSsl()) {
@@ -550,6 +599,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
   // Create primitive.
   absl::StatusOr<std::unique_ptr<KeysetDeriver>> deriver =

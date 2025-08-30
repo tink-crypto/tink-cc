@@ -71,6 +71,9 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
@@ -390,6 +393,29 @@ absl::StatusOr<std::unique_ptr<Ed25519PrivateKey>> DeriveEd25519PrivateKey(
   return absl::make_unique<Ed25519PrivateKey>(*private_key);
 }
 
+absl::StatusOr<std::unique_ptr<AesCtrHmacStreamingKey>>
+DeriveAesCtrHmacStreamingKey(const Parameters& generic_params,
+                             InputStream* rand_stream) {
+  const AesCtrHmacStreamingParameters* params =
+      dynamic_cast<const AesCtrHmacStreamingParameters*>(&generic_params);
+  if (params == nullptr) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Parameters is not AesCtrHmacStreamingParameters.");
+  }
+  absl::StatusOr<SecretData> rand =
+      ReadSecretBytesFromStream(params->KeySizeInBytes(), rand_stream);
+  if (!rand.ok()) {
+    return rand.status();
+  }
+  absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
+      *params, RestrictedData(*rand, InsecureSecretKeyAccess::Get()),
+      GetPartialKeyAccess());
+  if (!key.ok()) {
+    return key.status();
+  }
+  return absl::make_unique<AesCtrHmacStreamingKey>(*key);
+}
+
 absl::StatusOr<std::unique_ptr<AesGcmHkdfStreamingKey>>
 DeriveAesGcmHkdfStreamingKey(const Parameters& generic_params,
                              InputStream* rand_stream) {
@@ -453,6 +479,9 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
         {std::type_index(typeid(Ed25519Parameters)), DeriveEd25519PrivateKey});
 
     // Streaming AEAD.
+    CHECK_OK(RegisterAesCtrHmacStreamingProtoSerialization());
+    m->insert({std::type_index(typeid(AesCtrHmacStreamingParameters)),
+               DeriveAesCtrHmacStreamingKey});
     CHECK_OK(RegisterAesGcmHkdfStreamingProtoSerialization());
     m->insert({std::type_index(typeid(AesGcmHkdfStreamingParameters)),
                DeriveAesGcmHkdfStreamingKey});

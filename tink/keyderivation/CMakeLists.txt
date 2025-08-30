@@ -286,6 +286,9 @@ tink_cc_test(
     tink::signature::ed25519_private_key
     tink::signature::ed25519_proto_serialization
     tink::signature::ed25519_public_key
+    tink::streamingaead::aes_ctr_hmac_streaming_key
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
+    tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_proto_serialization

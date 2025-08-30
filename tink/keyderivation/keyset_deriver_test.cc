@@ -80,6 +80,9 @@
 #include "tink/signature/ed25519_private_key.h"
 #include "tink/signature/ed25519_proto_serialization.h"
 #include "tink/signature/ed25519_public_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
+#include "tink/streamingaead/aes_ctr_hmac_streaming_proto_serialization.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
@@ -311,6 +314,31 @@ std::unique_ptr<Ed25519PrivateKey> CreateEd25519PrivateKey(
           .value());
 }
 
+std::unique_ptr<AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey(
+    int key_size_in_bytes, int derived_key_size_in_bytes,
+    AesCtrHmacStreamingParameters::HashType hkdf_hash_type,
+    AesCtrHmacStreamingParameters::HashType hmac_hash_type,
+    int hmac_tag_size_in_bytes, int ciphertext_segment_size_in_bytes,
+    absl::string_view secret) {
+  AesCtrHmacStreamingParameters params =
+      AesCtrHmacStreamingParameters::Builder()
+          .SetKeySizeInBytes(key_size_in_bytes)
+          .SetDerivedKeySizeInBytes(derived_key_size_in_bytes)
+          .SetHkdfHashType(hkdf_hash_type)
+          .SetHmacHashType(hmac_hash_type)
+          .SetHmacTagSizeInBytes(hmac_tag_size_in_bytes)
+          .SetCiphertextSegmentSizeInBytes(ciphertext_segment_size_in_bytes)
+          .Build()
+          .value();
+  return std::make_unique<AesCtrHmacStreamingKey>(
+      AesCtrHmacStreamingKey::Create(
+          params,
+          RestrictedData(test::HexDecodeOrDie(secret),
+                         InsecureSecretKeyAccess::Get()),
+          GetPartialKeyAccess())
+          .value());
+}
+
 std::unique_ptr<AesGcmHkdfStreamingKey> CreateAesGcmHkdfStreamingKey(
     int key_size_in_bytes, int derived_key_size_in_bytes,
     AesGcmHkdfStreamingParameters::HashType hash_type,
@@ -489,6 +517,33 @@ std::vector<std::shared_ptr<Key>> SignatureEd25519TestVector() {
 
 std::vector<std::shared_ptr<Key>> StreamingAeadTestVector() {
   return {
+      CreateAesCtrHmacStreamingKey(
+          /*key_size_in_bytes=*/19, /*derived_key_size_in_bytes=*/16,
+          /*hkdf_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha1,
+          /*hmac_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha1,
+          /*hmac_tag_size_in_bytes'clang=*/10,
+          /*ciphertext_segment_size_in_bytes=*/1024, kOkmFromRfc.substr(0, 38)),
+      CreateAesCtrHmacStreamingKey(
+          /*key_size_in_bytes=*/19, /*derived_key_size_in_bytes=*/16,
+          /*hkdf_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha256,
+          /*hmac_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha1,
+          /*hmac_tag_size_in_bytes'clang=*/14,
+          /*ciphertext_segment_size_in_bytes=*/1024 * 1024,
+          kOkmFromRfc.substr(0, 38)),
+      CreateAesCtrHmacStreamingKey(
+          /*key_size_in_bytes=*/35, /*derived_key_size_in_bytes=*/32,
+          /*hkdf_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha512,
+          /*hmac_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha256,
+          /*hmac_tag_size_in_bytes'clang=*/16,
+          /*ciphertext_segment_size_in_bytes=*/3 * 1024 * 1024,
+          kOkmFromRfc.substr(0, 70)),
+      CreateAesCtrHmacStreamingKey(
+          /*key_size_in_bytes=*/35, /*derived_key_size_in_bytes=*/32,
+          /*hkdf_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha512,
+          /*hmac_hash_type=*/AesCtrHmacStreamingParameters::HashType::kSha512,
+          /*hmac_tag_size_in_bytes'clang=*/64,
+          /*ciphertext_segment_size_in_bytes=*/4 * 1024 * 1024,
+          kOkmFromRfc.substr(0, 70)),
       CreateAesGcmHkdfStreamingKey(
           /*key_size_in_bytes=*/19, /*derived_key_size_in_bytes=*/16,
           AesGcmHkdfStreamingParameters::HashType::kSha1,
@@ -599,6 +654,7 @@ TEST_P(KeysetDeriverTest, PrfBasedDeriveKeyset) {
   ASSERT_THAT(RegisterHmacPrfProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEcdsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterEd25519ProtoSerialization(), IsOk());
+  ASSERT_THAT(RegisterAesCtrHmacStreamingProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterAesGcmHkdfStreamingProtoSerialization(), IsOk());
 
   // Create primitive.

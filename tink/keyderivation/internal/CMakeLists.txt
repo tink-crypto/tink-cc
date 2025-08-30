@@ -177,6 +177,9 @@ tink_cc_library(
     tink::signature::ed25519_private_key
     tink::signature::ed25519_proto_serialization
     tink::signature::ed25519_public_key
+    tink::streamingaead::aes_ctr_hmac_streaming_key
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
+    tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::streamingaead::aes_gcm_hkdf_streaming_proto_serialization
@@ -245,6 +248,10 @@ tink_cc_test(
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_sign_key_manager
+    tink::streamingaead::aes_ctr_hmac_streaming_key
+    tink::streamingaead::aes_ctr_hmac_streaming_key_manager
+    tink::streamingaead::aes_ctr_hmac_streaming_parameters
+    tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
     tink::streamingaead::aes_gcm_hkdf_streaming_key
     tink::streamingaead::aes_gcm_hkdf_streaming_key_manager
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
@@ -259,6 +266,7 @@ tink_cc_test(
     tink::proto::aes_cmac_prf_cc_proto
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto
+    tink::proto::aes_ctr_hmac_streaming_cc_proto
     tink::proto::aes_gcm_cc_proto
     tink::proto::aes_gcm_hkdf_streaming_cc_proto
     tink::proto::aes_siv_cc_proto
@@ -337,6 +345,7 @@ tink_cc_library(
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::prf_key
     tink::prf::prf_parameters
+    tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
     tink::util::status
     tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto

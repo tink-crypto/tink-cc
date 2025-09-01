@@ -47,7 +47,7 @@ class ParsingState final {
   // updated with it. This is done consistently with the value of AdvanceGetCrc.
   // All the CRC calculations are done within a CallWithCoreDumpProtection.
   explicit ParsingState(absl::string_view serialization_to_parse,
-                        absl::crc32c_t* /*absl_nonnull - not yet supported*/ crc_to_update)
+                        absl::crc32c_t* /*absl_nullable - not yet supported*/ crc_to_update)
       : remaining_view_to_parse_(serialization_to_parse),
         crc_to_update_(crc_to_update) {}
 

@@ -19,8 +19,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
-#include "tink/experimental/pqcrypto/signature/dilithium_sign_key_manager.h"
-#include "tink/experimental/pqcrypto/signature/dilithium_verify_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/falcon_sign_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/falcon_verify_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/sphincs_sign_key_manager.h"
@@ -43,30 +41,6 @@ class PcqSignatureConfigTest : public ::testing::Test {
  protected:
   void SetUp() override { Registry::Reset(); }
 };
-
-TEST_F(PcqSignatureConfigTest, CheckDilithium) {
-  if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
-    GTEST_SKIP() << "Not supported if FIPS-mode is used";
-  }
-
-  EXPECT_THAT(Registry::get_key_manager<PublicKeySign>(
-                  DilithiumSignKeyManager().get_key_type())
-                  .status(),
-              StatusIs(absl::StatusCode::kNotFound));
-  EXPECT_THAT(Registry::get_key_manager<PublicKeyVerify>(
-                  DilithiumVerifyKeyManager().get_key_type())
-                  .status(),
-              StatusIs(absl::StatusCode::kNotFound));
-  EXPECT_THAT(PqSignatureConfigRegister(), IsOk());
-  EXPECT_THAT(Registry::get_key_manager<PublicKeySign>(
-                  DilithiumSignKeyManager().get_key_type())
-                  .status(),
-              IsOk());
-  EXPECT_THAT(Registry::get_key_manager<PublicKeyVerify>(
-                  DilithiumVerifyKeyManager().get_key_type())
-                  .status(),
-              IsOk());
-}
 
 TEST_F(PcqSignatureConfigTest, CheckSphincs) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {

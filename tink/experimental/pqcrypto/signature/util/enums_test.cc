@@ -17,9 +17,7 @@
 #include "tink/experimental/pqcrypto/signature/util/enums.h"
 
 #include "gtest/gtest.h"
-#include "tink/experimental/pqcrypto/signature/subtle/dilithium_key.h"
 #include "tink/experimental/pqcrypto/signature/subtle/sphincs_subtle_utils.h"
-#include "proto/experimental/pqcrypto/dilithium.pb.h"
 #include "proto/experimental/pqcrypto/sphincs.pb.h"
 
 namespace crypto {
@@ -31,42 +29,7 @@ using crypto::tink::util::EnumsPqcrypto;
 
 class EnumsTest : public ::testing::Test {};
 
-TEST_F(EnumsTest, DilithiumSeedExpansion) {
-  EXPECT_EQ(pb::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE,
-            EnumsPqcrypto::SubtleToProto(
-                subtle::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE));
-  EXPECT_EQ(pb::DilithiumSeedExpansion::SEED_EXPANSION_AES,
-            EnumsPqcrypto::SubtleToProto(
-                subtle::DilithiumSeedExpansion::SEED_EXPANSION_AES));
-  EXPECT_EQ(pb::DilithiumSeedExpansion::SEED_EXPANSION_UNKNOWN,
-            EnumsPqcrypto::SubtleToProto(
-                subtle::DilithiumSeedExpansion::SEED_EXPANSION_UNKNOWN));
 
-  EXPECT_EQ(subtle::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE,
-            EnumsPqcrypto::ProtoToSubtle(
-                pb::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE));
-  EXPECT_EQ(subtle::DilithiumSeedExpansion::SEED_EXPANSION_AES,
-            EnumsPqcrypto::ProtoToSubtle(
-                pb::DilithiumSeedExpansion::SEED_EXPANSION_AES));
-  EXPECT_EQ(subtle::DilithiumSeedExpansion::SEED_EXPANSION_UNKNOWN,
-            EnumsPqcrypto::ProtoToSubtle(
-                pb::DilithiumSeedExpansion::SEED_EXPANSION_UNKNOWN));
-
-  // Check that enum conversion covers the entire range of the proto-enum.
-  int count = 0;
-  for (int int_type = static_cast<int>(pb::DilithiumSeedExpansion_MIN);
-       int_type <= static_cast<int>(pb::DilithiumSeedExpansion_MAX);
-       int_type++) {
-    if (pb::DilithiumSeedExpansion_IsValid(int_type)) {
-      pb::DilithiumSeedExpansion type =
-          static_cast<pb::DilithiumSeedExpansion>(int_type);
-      EXPECT_EQ(type, EnumsPqcrypto::SubtleToProto(
-                          EnumsPqcrypto::ProtoToSubtle(type)));
-      count++;
-    }
-  }
-  EXPECT_EQ(3, count);
-}
 
 TEST_F(EnumsTest, SphincsHashType) {
   EXPECT_EQ(pb::SphincsHashType::HARAKA,

@@ -16,7 +16,6 @@
 
 #include "tink/experimental/pqcrypto/signature/util/enums.h"
 
-#include "tink/experimental/pqcrypto/signature/subtle/dilithium_key.h"
 #include "tink/experimental/pqcrypto/signature/subtle/sphincs_subtle_utils.h"
 
 namespace crypto {
@@ -25,31 +24,7 @@ namespace util {
 
 namespace pb = google::crypto::tink;
 
-// static
-pb::DilithiumSeedExpansion EnumsPqcrypto::SubtleToProto(
-    subtle::DilithiumSeedExpansion expansion) {
-  switch (expansion) {
-    case subtle::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE:
-      return pb::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE;
-    case subtle::DilithiumSeedExpansion::SEED_EXPANSION_AES:
-      return pb::DilithiumSeedExpansion::SEED_EXPANSION_AES;
-    default:
-      return pb::DilithiumSeedExpansion::SEED_EXPANSION_UNKNOWN;
-  }
-}
 
-// static
-subtle::DilithiumSeedExpansion EnumsPqcrypto::ProtoToSubtle(
-    pb::DilithiumSeedExpansion expansion) {
-  switch (expansion) {
-    case pb::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE:
-      return subtle::DilithiumSeedExpansion::SEED_EXPANSION_SHAKE;
-    case pb::DilithiumSeedExpansion::SEED_EXPANSION_AES:
-      return subtle::DilithiumSeedExpansion::SEED_EXPANSION_AES;
-    default:
-      return subtle::DilithiumSeedExpansion::SEED_EXPANSION_UNKNOWN;
-  }
-}
 
 // static
 pb::SphincsHashType EnumsPqcrypto::SubtleToProto(subtle::SphincsHashType type) {

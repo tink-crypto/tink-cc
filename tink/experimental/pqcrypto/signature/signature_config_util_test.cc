@@ -23,8 +23,6 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "tink/crypto_format.h"
-#include "tink/experimental/pqcrypto/signature/dilithium_sign_key_manager.h"
-#include "tink/experimental/pqcrypto/signature/dilithium_verify_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/signature_config.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/primitive_set.h"
@@ -127,7 +125,6 @@ TEST_F(PcqSignatureConfigTest, PublicKeyVerifyWrapperRegistered) {
   ASSERT_THAT((*wrapped)->Verify(absl::StrCat(*prefix, *signature), "message"),
               IsOk());
 }
-
 
 }  // namespace
 }  // namespace tink

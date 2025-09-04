@@ -19,8 +19,6 @@
 #include "absl/memory/memory.h"
 #include "tink/config/config_util.h"
 #include "tink/config/tink_fips.h"
-#include "tink/experimental/pqcrypto/signature/dilithium_sign_key_manager.h"
-#include "tink/experimental/pqcrypto/signature/dilithium_verify_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/falcon_sign_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/falcon_verify_key_manager.h"
 #include "tink/experimental/pqcrypto/signature/sphincs_sign_key_manager.h"
@@ -46,11 +44,6 @@ absl::Status PqSignatureConfigRegister() {
   if (IsFipsModeEnabled()) {
     return absl::OkStatus();
   }
-
-  // Dilithium
-  status = Registry::RegisterAsymmetricKeyManagers(
-      absl::make_unique<DilithiumSignKeyManager>(),
-      absl::make_unique<DilithiumVerifyKeyManager>(), true);
 
   // Sphincs
   status = Registry::RegisterAsymmetricKeyManagers(

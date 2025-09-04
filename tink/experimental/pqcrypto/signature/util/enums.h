@@ -18,10 +18,8 @@
 #define TINK_EXPERIMENTAL_PQCRYPTO_SIGNATURE_UTIL_ENUMS_H_
 
 #include "absl/strings/string_view.h"
-#include "tink/experimental/pqcrypto/signature/subtle/dilithium_key.h"
 #include "tink/experimental/pqcrypto/signature/subtle/sphincs_subtle_utils.h"
 #include "tink/util/statusor.h"
-#include "proto/experimental/pqcrypto/dilithium.pb.h"
 #include "proto/experimental/pqcrypto/sphincs.pb.h"
 #include "proto/tink.pb.h"
 
@@ -33,13 +31,6 @@ namespace util {
 // their string representation, and pqcrypto enums used in subtle.
 class EnumsPqcrypto {
  public:
-  // DilithiumSeedExpansion.
-  static google::crypto::tink::DilithiumSeedExpansion SubtleToProto(
-      crypto::tink::subtle::DilithiumSeedExpansion expansion);
-
-  static crypto::tink::subtle::DilithiumSeedExpansion ProtoToSubtle(
-      google::crypto::tink::DilithiumSeedExpansion expansion);
-
   // SphincsHashType.
   static google::crypto::tink::SphincsHashType SubtleToProto(
       crypto::tink::subtle::SphincsHashType type);

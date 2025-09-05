@@ -40,6 +40,12 @@ namespace proto_parsing {
 // class OuterStruct {
 //   InnerStruct inner_struct;
 // };
+//
+// Note that users of the Tink parser cannot forward declare InnerStruct here.
+// This implies that the messages will form a tree, it isn't possible that
+// a struct appears as a submessage anywhere when parsing. This is important,
+// since this is the only way the Tink parser avoids stack overflow from
+// carefully crafted serializations.
 template <typename OuterStruct, typename InnerStruct>
 class MessageField : public Field<OuterStruct> {
  public:

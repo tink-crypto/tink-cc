@@ -17,7 +17,6 @@
 // A command-line utility for testing Tink AEAD.
 #include <iostream>
 #include <memory>
-#include <ostream>
 #include <string>
 
 #include "absl/flags/flag.h"
@@ -27,8 +26,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
-#include "tink/aead/aead_config.h"
-#include "tink/config/global_registry.h"
+#include "tink/aead/config_v0.h"
 #include "util/util.h"
 #include "tink/keyset_handle.h"
 
@@ -42,7 +40,6 @@ ABSL_FLAG(std::string, associated_data, "",
 namespace {
 
 using ::crypto::tink::Aead;
-using ::crypto::tink::AeadConfig;
 using ::crypto::tink::KeysetHandle;
 
 constexpr absl::string_view kEncrypt = "encrypt";
@@ -71,9 +68,6 @@ absl::Status AeadCli(absl::string_view mode, const std::string& keyset_filename,
                      const std::string& input_filename,
                      const std::string& output_filename,
                      absl::string_view associated_data) {
-  absl::Status result = AeadConfig::Register();
-  if (!result.ok()) return result;
-
   // Read the keyset from file.
   absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
@@ -82,8 +76,7 @@ absl::Status AeadCli(absl::string_view mode, const std::string& keyset_filename,
   // Get the primitive.
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       (*keyset_handle)
-          ->GetPrimitive<crypto::tink::Aead>(
-              crypto::tink::ConfigGlobalRegistry());
+          ->GetPrimitive<crypto::tink::Aead>(crypto::tink::ConfigAeadV0());
   if (!aead.ok()) return aead.status();
 
   // Read the input.

@@ -114,7 +114,9 @@ tink_cc_library(
     tink::aead::aead_config
     tink::aead::aead_factory
     tink::aead::aead_key_templates
+    tink::aead::config_v0
     tink::config::tink_config
+    tink::daead::config_v0
     tink::daead::deterministic_aead_config
     tink::daead::deterministic_aead_factory
     tink::daead::deterministic_aead_key_templates

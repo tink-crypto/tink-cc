@@ -26,12 +26,10 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "tink/config/global_registry.h"
-#include "tink/daead/deterministic_aead_config.h"
+#include "tink/daead/config_v0.h"
 #include "tink/deterministic_aead.h"
 #include "util/util.h"
 #include "tink/keyset_handle.h"
-#include "tink/util/status.h"
 
 ABSL_FLAG(std::string, keyset_filename, "", "Keyset file in JSON format");
 ABSL_FLAG(std::string, mode, "", "Mode of operation {encrypt|decrypt}");
@@ -43,7 +41,6 @@ ABSL_FLAG(std::string, associated_data, "",
 namespace {
 
 using ::crypto::tink::DeterministicAead;
-using ::crypto::tink::DeterministicAeadConfig;
 using ::crypto::tink::KeysetHandle;
 
 constexpr absl::string_view kEncrypt = "encrypt";
@@ -73,9 +70,6 @@ absl::Status DeterministicAeadCli(absl::string_view mode,
                                   const std::string& input_filename,
                                   const std::string& output_filename,
                                   absl::string_view associated_data) {
-  absl::Status result = DeterministicAeadConfig::Register();
-  if (!result.ok()) return result;
-
   // Read keyset from file.
   absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
       ReadJsonCleartextKeyset(keyset_filename);
@@ -85,7 +79,7 @@ absl::Status DeterministicAeadCli(absl::string_view mode,
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
       (*keyset_handle)
           ->GetPrimitive<crypto::tink::DeterministicAead>(
-              crypto::tink::ConfigGlobalRegistry());
+              crypto::tink::ConfigDeterministicAeadV0());
   if (!daead.ok()) return daead.status();
 
   // Read the input.

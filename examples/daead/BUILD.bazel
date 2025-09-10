@@ -10,17 +10,18 @@ filegroup(
 cc_binary(
     name = "deterministic_aead_cli",
     srcs = ["deterministic_aead_cli.cc"],
+    data = [":deterministic_aead_test_keyset"],
     deps = [
         "//util",
         "@com_google_absl//absl/flags:flag",
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@tink_cc//tink:deterministic_aead",
         "@tink_cc//tink:keyset_handle",
-        "@tink_cc//tink:keyset_reader",
-        "@tink_cc//tink/config:tink_config",
-        "@tink_cc//tink/daead:deterministic_aead_config",
+        "@tink_cc//tink/daead:config_v0",
         "@tink_cc//tink/util:status",
     ],
 )

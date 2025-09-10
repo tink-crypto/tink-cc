@@ -10,6 +10,7 @@ filegroup(
 cc_binary(
     name = "aead_cli",
     srcs = ["aead_cli.cc"],
+    data = [":aead_test_keyset"],
     deps = [
         "//util",
         "@com_google_absl//absl/flags:flag",
@@ -20,9 +21,7 @@ cc_binary(
         "@com_google_absl//absl/strings",
         "@tink_cc//tink:aead",
         "@tink_cc//tink:keyset_handle",
-        "@tink_cc//tink:keyset_reader",
-        "@tink_cc//tink/aead:aead_config",
-        "@tink_cc//tink/config:tink_config",
+        "@tink_cc//tink/aead:config_v0",
     ],
 )
 

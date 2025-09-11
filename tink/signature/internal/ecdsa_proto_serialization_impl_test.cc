@@ -154,6 +154,16 @@ INSTANTIATE_TEST_SUITE_P(
                     HashType::SHA512, EcdsaSignatureEncoding::IEEE_P1363,
                     subtle::EllipticCurveType::NIST_P521,
                     /*id_requirement=*/absl::nullopt,
+                    /*output_prefix=*/""},
+           TestCase{EcdsaParameters::Variant::kNoPrefixWithPrehashId,
+                    EcdsaParameters::CurveType::kNistP256,
+                    EcdsaParameters::HashType::kSha256,
+                    EcdsaParameters::SignatureEncoding::kDer,
+                    OutputPrefixTypeEnum::kWithIdRequirement,
+                    EllipticCurveType::NIST_P256, HashType::SHA256,
+                    EcdsaSignatureEncoding::DER,
+                    subtle::EllipticCurveType::NIST_P256,
+                    /*id_requirement=*/0x123,
                     /*output_prefix=*/""}));
 
 TEST_P(EcdsaProtoSerializationTest, ParseParametersWithMutableRegistry) {

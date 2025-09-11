@@ -18,10 +18,9 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -126,7 +125,8 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
 
   // Validate variant.
   static constexpr Variant kSupportedVariants[] = {
-      Variant::kTink, Variant::kCrunchy, Variant::kLegacy, Variant::kNoPrefix};
+      Variant::kTink, Variant::kCrunchy, Variant::kLegacy, Variant::kNoPrefix,
+      Variant::kNoPrefixWithPrehashId};
   if (!absl::c_linear_search(kSupportedVariants, *variant_)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create Ecdsa parameters with unknown Variant.");

@@ -20,6 +20,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -37,8 +38,6 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -88,6 +87,8 @@ absl::StatusOr<std::string> ComputeOutputPrefix(
     const EcdsaParameters& parameters, absl::optional<int> id_requirement) {
   switch (parameters.GetVariant()) {
     case EcdsaParameters::Variant::kNoPrefix:
+      ABSL_FALLTHROUGH_INTENDED;
+    case EcdsaParameters::Variant::kNoPrefixWithPrehashId:
       return std::string("");  // Empty prefix.
     case EcdsaParameters::Variant::kLegacy:
       ABSL_FALLTHROUGH_INTENDED;

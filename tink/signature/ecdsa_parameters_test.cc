@@ -21,8 +21,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -68,7 +68,12 @@ INSTANTIATE_TEST_SUITE_P(
                     EcdsaParameters::HashType::kSha512,
                     EcdsaParameters::SignatureEncoding::kIeeeP1363,
                     EcdsaParameters::Variant::kNoPrefix,
-                    /*has_id_requirement=*/false}));
+                    /*has_id_requirement=*/false},
+           TestCase{EcdsaParameters::CurveType::kNistP256,
+                    EcdsaParameters::HashType::kSha256,
+                    EcdsaParameters::SignatureEncoding::kDer,
+                    EcdsaParameters::Variant::kNoPrefixWithPrehashId,
+                    /*has_id_requirement=*/true}));
 
 TEST_P(EcdsaParametersTest, BuildWorks) {
   TestCase test_case = GetParam();

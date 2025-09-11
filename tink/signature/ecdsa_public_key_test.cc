@@ -98,6 +98,13 @@ INSTANTIATE_TEST_SUITE_P(
                     EcdsaParameters::SignatureEncoding::kIeeeP1363,
                     EcdsaParameters::Variant::kNoPrefix,
                     /*id_requirement=*/absl::nullopt,
+                    /*output_prefix=*/""},
+           TestCase{subtle::EllipticCurveType::NIST_P256,
+                    EcdsaParameters::CurveType::kNistP256,
+                    EcdsaParameters::HashType::kSha256,
+                    EcdsaParameters::SignatureEncoding::kDer,
+                    EcdsaParameters::Variant::kNoPrefixWithPrehashId,
+                    /*id_requirement=*/0x123,
                     /*output_prefix=*/""}));
 
 TEST_P(EcdsaPublicKeyTest, CreatePublicKeyWorks) {

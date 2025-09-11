@@ -787,6 +787,7 @@ tink_cc_library(
     tink::signature::signature_parameters
     absl::algorithm_container
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::parameters
@@ -804,6 +805,7 @@ tink_cc_library(
     tink::signature::signature_public_key
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -815,7 +817,6 @@ tink_cc_library(
     tink::internal::output_prefix_util
     tink::internal::ssl_unique_ptr
     tink::subtle::common_enums
-    tink::util::status
     tink::util::statusor
 )
 
@@ -1665,8 +1666,8 @@ tink_cc_test(
     tink::signature::ecdsa_parameters
     gmock
     absl::status
+    absl::statusor
     tink::core::parameters
-    tink::util::statusor
     tink::util::test_matchers
 )
 
@@ -1703,6 +1704,7 @@ tink_cc_test(
     tink::signature::ecdsa_public_key
     gmock
     absl::status
+    absl::statusor
     absl::optional
     crypto
     tink::core::big_integer
@@ -1714,7 +1716,6 @@ tink_cc_test(
     tink::internal::ec_util
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
 )
 

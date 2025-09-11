@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -38,7 +39,6 @@
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -93,6 +93,13 @@ INSTANTIATE_TEST_SUITE_P(
                     EcdsaParameters::SignatureEncoding::kIeeeP1363,
                     EcdsaParameters::Variant::kNoPrefix,
                     /*id_requirement=*/absl::nullopt,
+                    /*output_prefix=*/""},
+           TestCase{subtle::EllipticCurveType::NIST_P256,
+                    EcdsaParameters::CurveType::kNistP256,
+                    EcdsaParameters::HashType::kSha256,
+                    EcdsaParameters::SignatureEncoding::kDer,
+                    EcdsaParameters::Variant::kNoPrefixWithPrehashId,
+                    /*id_requirement=*/0x123,
                     /*output_prefix=*/""}));
 
 TEST_P(EcdsaPrivateKeyTest, CreatePrivateKeyWorks) {

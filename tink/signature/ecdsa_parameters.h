@@ -19,10 +19,10 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -40,6 +40,9 @@ class EcdsaParameters : public SignatureParameters {
     kLegacy = 3,
     // Does not prepend any prefix (i.e., keys must have no ID requirement).
     kNoPrefix = 4,
+    // Does not prepend any prefix to the signature, but still prepends
+    // '0xff<big endian key id>' to the pre-hash (i.e., keys must have an ID).
+    kNoPrefixWithPrehashId = 5,
     // Added to guard from failures that may be caused by future expansions.
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };

@@ -181,6 +181,8 @@ absl::StatusOr<EcdsaParameters::Variant> ToVariant(
       return EcdsaParameters::Variant::kNoPrefix;
     case OutputPrefixTypeEnum::kTink:
       return EcdsaParameters::Variant::kTink;
+    case OutputPrefixTypeEnum::kWithIdRequirement:
+      return EcdsaParameters::Variant::kNoPrefixWithPrehashId;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -198,6 +200,8 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
       return OutputPrefixTypeEnum::kRaw;
     case EcdsaParameters::Variant::kTink:
       return OutputPrefixTypeEnum::kTink;
+    case EcdsaParameters::Variant::kNoPrefixWithPrehashId:
+      return OutputPrefixTypeEnum::kWithIdRequirement;
     default:
       return absl::InvalidArgumentError(
           "Could not determine EcdsaParameters::Variant");

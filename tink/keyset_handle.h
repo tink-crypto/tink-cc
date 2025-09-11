@@ -62,6 +62,9 @@ namespace tink {
 // KeysetHandle provides abstracted access to Keysets, to limit
 // the exposure of actual protocol buffers that hold sensitive
 // key material.
+//
+// KeysetHandle is thread-safe (can be shared between threads and used
+// concurrently) and promises to remain so.
 class KeysetHandle {
  public:
   // Represents a single entry in a `KeysetHandle`. Some current behavior will

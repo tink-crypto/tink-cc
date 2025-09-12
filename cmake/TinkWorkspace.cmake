@@ -105,8 +105,8 @@ if (NOT TARGET crypto)
     # Release from 2024-10-03.
     http_archive(
       NAME boringssl
-      URL https://github.com/google/boringssl/releases/download/0.20250415.0/boringssl-0.20250415.0.tar.gz
-      SHA256 b2d64c4d52c505d60b0fb86833568dc4762445910d7a7757ff9b172e5556cb01
+      URL https://github.com/google/boringssl/releases/download/0.20250818.0/boringssl-0.20250818.0.tar.gz
+      SHA256 64529449ef458381346b163302523a1fb876e5b667bec4a4bd38d0d2fff8b42b
     )
     # BoringSSL targets do not carry include directory info, this fixes it.
     target_include_directories(crypto PUBLIC

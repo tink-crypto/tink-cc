@@ -77,9 +77,9 @@ def tink_cc_deps():
     maybe(
         http_archive,
         name = "boringssl",
-        sha256 = "b2d64c4d52c505d60b0fb86833568dc4762445910d7a7757ff9b172e5556cb01",
-        strip_prefix = "boringssl-0.20250415.0/",
-        url = "https://github.com/google/boringssl/releases/download/0.20250415.0/boringssl-0.20250415.0.tar.gz",
+        sha256 = "64529449ef458381346b163302523a1fb876e5b667bec4a4bd38d0d2fff8b42b",
+        strip_prefix = "boringssl-0.20250818.0/",
+        url = "https://github.com/google/boringssl/releases/download/0.20250818.0/boringssl-0.20250818.0.tar.gz",
     )
 
     # -------------------------------------------------------------------------
@@ -115,9 +115,9 @@ def tink_cc_testonly_deps():
     maybe(
         http_archive,
         name = "com_google_googletest",
-        sha256 = "78c676fc63881529bf97bf9d45948d905a66833fbfa5318ea2cd7478cb98f399",
-        strip_prefix = "googletest-1.16.0",
-        url = "https://github.com/google/googletest/releases/download/v1.16.0/googletest-1.16.0.tar.gz",
+        sha256 = "65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c",
+        strip_prefix = "googletest-1.17.0",
+        url = "https://github.com/google/googletest/releases/download/v1.17.0/googletest-1.17.0.tar.gz",
     )
 
     # -------------------------------------------------------------------------

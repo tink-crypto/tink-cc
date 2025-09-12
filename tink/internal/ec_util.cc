@@ -65,7 +65,7 @@ using ::crypto::tink::subtle::EllipticCurveType;
 
 // Encodes the given `point` to string, according to a `conversion_form`.
 absl::StatusOr<std::string> SslEcPointEncode(
-    EC_GROUP *group, const EC_POINT *point,
+    EC_GROUP* group, const EC_POINT* point,
     point_conversion_form_t conversion_form) {
   // Get the buffer size first passing a NULL buffer.
   size_t buffer_size =
@@ -80,7 +80,7 @@ absl::StatusOr<std::string> SslEcPointEncode(
   subtle::ResizeStringUninitialized(&encoded_point, buffer_size);
   size_t size =
       EC_POINT_point2oct(group, point, conversion_form,
-                         reinterpret_cast<uint8_t *>(&encoded_point[0]),
+                         reinterpret_cast<uint8_t*>(&encoded_point[0]),
                          buffer_size, /*ctx=*/nullptr);
   if (size == 0) {
     return absl::Status(absl::StatusCode::kInternal,
@@ -92,7 +92,7 @@ absl::StatusOr<std::string> SslEcPointEncode(
 // Returns an EC_POINT from `group`, and encoded (bigendian string
 // representation of BIGNUMs) point coordinates `pubx`, `puby`.
 absl::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromCoordinates(
-    const EC_GROUP *group, absl::string_view pubx, absl::string_view puby) {
+    const EC_GROUP* group, absl::string_view pubx, absl::string_view puby) {
   absl::StatusOr<SslUniquePtr<BIGNUM>> bn_x = StringToBignum(pubx);
   if (!bn_x.ok()) {
     return bn_x.status();
@@ -154,7 +154,7 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> SslGetEcPointFromEncoded(
 
   SslUniquePtr<EC_POINT> point(EC_POINT_new(group->get()));
   if (EC_POINT_oct2point(group->get(), point.get(),
-                         reinterpret_cast<const uint8_t *>(encoded.data()),
+                         reinterpret_cast<const uint8_t*>(encoded.data()),
                          encoded.size(), nullptr) != 1) {
     return absl::Status(absl::StatusCode::kInternal,
                         "EC_POINT_toc2point failed");
@@ -176,7 +176,7 @@ struct EcPointCoordinates {
 // Returns a given `point` as a pair of BIGNUMs. Precondition: `group` and
 // `point` are not null.
 absl::StatusOr<EcPointCoordinates> SslGetEcPointCoordinates(
-    const EC_GROUP *group, const EC_POINT *point) {
+    const EC_GROUP* group, const EC_POINT* point) {
   EcPointCoordinates coordinates = {
       SslUniquePtr<BIGNUM>(BN_new()),
       SslUniquePtr<BIGNUM>(BN_new()),
@@ -196,11 +196,11 @@ absl::StatusOr<EcPointCoordinates> SslGetEcPointCoordinates(
   return std::move(coordinates);
 }
 
-size_t ScalarSizeInBytes(const EC_GROUP *group) {
+size_t ScalarSizeInBytes(const EC_GROUP* group) {
   return BN_num_bytes(EC_GROUP_get0_order(group));
 }
 
-size_t SslEcFieldSizeInBytes(const EC_GROUP *group) {
+size_t SslEcFieldSizeInBytes(const EC_GROUP* group) {
   unsigned degree_bits = EC_GROUP_get_degree(group);
   return (degree_bits + 7) / 8;
 }
@@ -212,7 +212,7 @@ enum SslEvpPkeyType {
 
 // Returns a new EVP_PKEY key from the given `key_type`.
 absl::StatusOr<SslUniquePtr<EVP_PKEY>> SslNewEvpKey(SslEvpPkeyType key_type) {
-  EVP_PKEY *private_key = nullptr;
+  EVP_PKEY* private_key = nullptr;
   SslUniquePtr<EVP_PKEY_CTX> pctx(EVP_PKEY_CTX_new_id(key_type, /*e=*/nullptr));
   if (pctx == nullptr) {
     return absl::Status(
@@ -234,7 +234,7 @@ namespace {
 // Given a private EVP_PKEY `evp_key` of key type `key_type` fills `priv_key`
 // and `pub_key` with raw private and public keys, respectively.
 absl::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
-                                    const EVP_PKEY &evp_key,
+                                    const EVP_PKEY& evp_key,
                                     absl::Span<uint8_t> priv_key,
                                     absl::Span<uint8_t> pub_key) {
   size_t len = priv_key.size();
@@ -272,17 +272,17 @@ absl::Status SslNewKeyPairFromEcKey(SslEvpPkeyType key_type,
 }  // namespace
 
 absl::StatusOr<std::string> SslEcdsaSignatureToBytes(
-    const ECDSA_SIG *ecdsa_signature) {
+    const ECDSA_SIG* ecdsa_signature) {
   if (ecdsa_signature == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ECDSA signature is null");
   }
-  uint8_t *der = nullptr;
+  uint8_t* der = nullptr;
   int der_len = i2d_ECDSA_SIG(ecdsa_signature, &der);
   if (der_len <= 0) {
     return absl::Status(absl::StatusCode::kInternal, "i2d_ECDSA_SIG failed");
   }
-  auto result = std::string(reinterpret_cast<char *>(der), der_len);
+  auto result = std::string(reinterpret_cast<char*>(der), der_len);
   OPENSSL_free(der);
   return result;
 }
@@ -290,13 +290,13 @@ absl::StatusOr<std::string> SslEcdsaSignatureToBytes(
 }  // namespace
 
 absl::StatusOr<EcKey> EcKeyFromSslEcKey(EllipticCurveType curve,
-                                        const EC_KEY &key) {
+                                        const EC_KEY& key) {
   absl::StatusOr<SslUniquePtr<EC_GROUP>> group = EcGroupFromCurveType(curve);
   if (!group.ok()) {
     return group.status();
   }
-  const BIGNUM *priv_key = EC_KEY_get0_private_key(&key);
-  const EC_POINT *pub_key = EC_KEY_get0_public_key(&key);
+  const BIGNUM* priv_key = EC_KEY_get0_private_key(&key);
+  const EC_POINT* pub_key = EC_KEY_get0_public_key(&key);
 
   absl::StatusOr<EcPointCoordinates> pub_key_bns =
       SslGetEcPointCoordinates(group->get(), pub_key);
@@ -371,6 +371,21 @@ absl::StatusOr<int32_t> EcPointEncodingSizeInBytes(EllipticCurveType curve_type,
   }
 }
 
+namespace {
+
+EcKey EcKeyFromX25519Key(const X25519Key* x25519_key) {
+  EcKey ec_key;
+  ec_key.curve = subtle::EllipticCurveType::CURVE25519;
+  // Curve25519 public key is x, not (x,y).
+  ec_key.pub_x =
+      std::string(reinterpret_cast<const char*>(x25519_key->public_value),
+                  X25519KeyPubKeySize());
+  ec_key.priv = x25519_key->private_key;
+  return ec_key;
+}
+
+}  // namespace
+
 absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type) {
   if (curve_type == EllipticCurveType::CURVE25519) {
     absl::StatusOr<std::unique_ptr<X25519Key>> key = NewX25519Key();
@@ -395,7 +410,7 @@ absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type) {
 }
 
 absl::StatusOr<EcKey> NewEcKey(EllipticCurveType curve_type,
-                               const SecretData &secret_seed) {
+                               const SecretData& secret_seed) {
   // EC_KEY_derive_from_secret() is neither defined in the version of BoringSSL
   // used when FIPS-only mode is enabled at compile time, nor currently
   // implemented for OpenSSL.
@@ -454,24 +469,13 @@ absl::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key() {
   return std::move(key);
 }
 
-EcKey EcKeyFromX25519Key(const X25519Key *x25519_key) {
-  EcKey ec_key;
-  ec_key.curve = subtle::EllipticCurveType::CURVE25519;
-  // Curve25519 public key is x, not (x,y).
-  ec_key.pub_x =
-      std::string(reinterpret_cast<const char *>(x25519_key->public_value),
-                  X25519KeyPubKeySize());
-  ec_key.priv = x25519_key->private_key;
-  return ec_key;
-}
-
 absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key() {
   SecretData seed = subtle::Random::GetRandomKeyBytes(Ed25519KeyPrivKeySize());
   return NewEd25519Key(seed);
 }
 
 absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
-    const SecretData &secret_seed) {
+    const SecretData& secret_seed) {
   if (secret_seed.size() != Ed25519KeyPrivKeySize()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
@@ -485,8 +489,8 @@ absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   auto key = absl::make_unique<Ed25519Key>();
   internal::SecretBuffer priv_key_buffer(Ed25519KeyPrivKeySize());
   subtle::ResizeStringUninitialized(&key->public_key, Ed25519KeyPubKeySize());
-  uint8_t *priv_key_ptr = priv_key_buffer.data();
-  uint8_t *pub_key_ptr = reinterpret_cast<uint8_t *>(&key->public_key[0]);
+  uint8_t* priv_key_ptr = priv_key_buffer.data();
+  uint8_t* pub_key_ptr = reinterpret_cast<uint8_t*>(&key->public_key[0]);
 
   absl::Status res = internal::CallWithCoreDumpProtection([&]() {
     SslUniquePtr<EVP_PKEY> priv_key =
@@ -513,28 +517,8 @@ absl::StatusOr<std::unique_ptr<Ed25519Key>> NewEd25519Key(
   return std::move(key);
 }
 
-absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
-    const EcKey &ec_key) {
-  auto x25519_key = absl::make_unique<X25519Key>();
-  if (ec_key.curve != subtle::EllipticCurveType::CURVE25519) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "This key is not on curve 25519");
-  }
-  if (!ec_key.pub_y.empty()) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid X25519 key. pub_y is unexpectedly set.");
-  }
-  // Curve25519 public key is x, not (x,y).
-  std::copy_n(ec_key.pub_x.begin(), X25519KeyPubKeySize(),
-              std::begin(x25519_key->public_value));
-  SecretBuffer buffer(X25519KeyPrivKeySize());
-  SafeMemCopy(buffer.data(), ec_key.priv.data(), X25519KeyPrivKeySize());
-  x25519_key->private_key = util::internal::AsSecretData(std::move(buffer));
-  return std::move(x25519_key);
-}
-
 absl::StatusOr<SecretData> ComputeX25519SharedSecret(
-    EVP_PKEY *private_key, EVP_PKEY *peer_public_key) {
+    EVP_PKEY* private_key, EVP_PKEY* peer_public_key) {
   // Make sure the keys are actually X25519 keys.
   if (EVP_PKEY_id(private_key) != SslEvpPkeyType::kX25519Key) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -562,7 +546,7 @@ absl::StatusOr<SecretData> ComputeX25519SharedSecret(
 }
 
 absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
-    const SecretData &private_key) {
+    const SecretData& private_key) {
   if (private_key.size() != X25519KeyPrivKeySize()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Invalid length for private key");
@@ -587,7 +571,7 @@ absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromPrivateKey(
 
 absl::StatusOr<std::string> EcPointEncode(EllipticCurveType curve,
                                           EcPointFormat format,
-                                          const EC_POINT *point) {
+                                          const EC_POINT* point) {
   absl::StatusOr<SslUniquePtr<EC_GROUP>> group = EcGroupFromCurveType(curve);
   if (!group.ok()) {
     return group.status();
@@ -669,7 +653,7 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> EcPointDecode(
 
 absl::StatusOr<SslUniquePtr<EC_GROUP>> EcGroupFromCurveType(
     EllipticCurveType curve_type) {
-  EC_GROUP *ec_group = nullptr;
+  EC_GROUP* ec_group = nullptr;
   switch (curve_type) {
     case EllipticCurveType::NIST_P256: {
       ec_group = EC_GROUP_new_by_curve_name(NID_X9_62_prime256v1);
@@ -694,7 +678,7 @@ absl::StatusOr<SslUniquePtr<EC_GROUP>> EcGroupFromCurveType(
   return {SslUniquePtr<EC_GROUP>(ec_group)};
 }
 
-absl::StatusOr<EllipticCurveType> CurveTypeFromEcGroup(const EC_GROUP *group) {
+absl::StatusOr<EllipticCurveType> CurveTypeFromEcGroup(const EC_GROUP* group) {
   if (group == nullptr) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Null group provided");
@@ -723,8 +707,8 @@ absl::StatusOr<SslUniquePtr<EC_POINT>> GetEcPoint(EllipticCurveType curve,
 }
 
 absl::StatusOr<SecretData> ComputeEcdhSharedSecret(EllipticCurveType curve,
-                                                   const BIGNUM *priv_key,
-                                                   const EC_POINT *pub_key) {
+                                                   const BIGNUM* priv_key,
+                                                   const EC_POINT* pub_key) {
   absl::StatusOr<internal::SslUniquePtr<EC_GROUP>> priv_group =
       internal::EcGroupFromCurveType(curve);
   if (!priv_group.ok()) {
@@ -770,7 +754,7 @@ absl::StatusOr<SecretData> ComputeEcdhSharedSecret(EllipticCurveType curve,
                                       SslEcFieldSizeInBytes(priv_group->get()));
 }
 
-absl::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP *group,
+absl::StatusOr<std::string> EcSignatureIeeeToDer(const EC_GROUP* group,
                                                  absl::string_view ieee_sig) {
   const size_t kFieldSizeInBytes = SslEcFieldSizeInBytes(group);
   if (ieee_sig.size() != kFieldSizeInBytes * 2) {

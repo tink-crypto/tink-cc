@@ -235,23 +235,6 @@ TEST(EcUtilTest, NewX25519KeyGeneratesNewKeyEveryTime) {
   EXPECT_THAT(pub_key1, Not(ElementsAreArray(pub_key2)));
 }
 
-TEST(EcUtilTest, X25519KeyToEcKeyAndBack) {
-  absl::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
-  ASSERT_THAT(x25519_key, IsOk());
-  EcKey ec_key = EcKeyFromX25519Key(x25519_key->get());
-  ASSERT_EQ(ec_key.curve, EllipticCurveType::CURVE25519);
-
-  absl::StatusOr<std::unique_ptr<X25519Key>> roundtrip_key =
-      X25519KeyFromEcKey(ec_key);
-  ASSERT_THAT(roundtrip_key, IsOk());
-  EXPECT_THAT((*x25519_key)->private_key,
-              EqualsSecretData((*roundtrip_key)->private_key));
-  EXPECT_THAT(
-      absl::MakeSpan((*x25519_key)->public_value, X25519KeyPubKeySize()),
-      ElementsAreArray(absl::MakeSpan((*roundtrip_key)->public_value,
-                                      X25519KeyPubKeySize())));
-}
-
 TEST(EcUtilTest, X25519KeyFromRandomPrivateKey) {
   absl::StatusOr<std::unique_ptr<X25519Key>> x25519_key = NewX25519Key();
   ASSERT_THAT(x25519_key, IsOk());

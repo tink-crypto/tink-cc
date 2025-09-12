@@ -75,13 +75,6 @@ absl::StatusOr<EcKey> NewEcKey(
 // OpenSSL/BoringSSL APIs fail.
 absl::StatusOr<std::unique_ptr<X25519Key>> NewX25519Key();
 
-// Returns a X25519Key matching the specified EcKey.
-absl::StatusOr<std::unique_ptr<X25519Key>> X25519KeyFromEcKey(
-    const EcKey &ec_key);
-
-// Returns an EcKey matching the specified X25519Key.
-EcKey EcKeyFromX25519Key(const X25519Key *x25519_key);
-
 // Given an OpenSSL/BoringSSL key EC_KEY `key` and curve type `curve` return an
 // EcKey.
 absl::StatusOr<EcKey> EcKeyFromSslEcKey(

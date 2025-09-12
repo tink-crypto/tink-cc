@@ -194,6 +194,8 @@ class KeysetHandle {
   GenerateNewFromParameters(const P& parameters,
                             const crypto::tink::KeyGenConfiguration& config);
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   // Returns a KeysetHandle containing one new key generated according to
   // `key_template` using the global registry. When specified, the keyset is
   //  annotated for monitoring with `monitoring_annotations`.
@@ -210,6 +212,8 @@ class KeysetHandle {
     return GenerateNew(key_template,
                        crypto::tink::KeyGenConfigGlobalRegistry());
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   // Encrypts the underlying keyset with the provided `master_key_aead`
   // and writes the resulting EncryptedKeyset to the given `writer`,
@@ -241,6 +245,8 @@ class KeysetHandle {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> GetPublicKeysetHandle(
       const KeyGenConfiguration& config) const;
 
+  // NOLINTBEGIN(whitespace/line_length) (Formatted when commented in)
+  // TINK-PENDING-REMOVAL-IN-3.0.0-START
   // Returns a new KeysetHandle containing public keys corresponding to the
   // private keys in this handle. Relies on key type managers stored in the
   // global registry to do so. Returns an error if this handle contains keys
@@ -249,6 +255,8 @@ class KeysetHandle {
   absl::StatusOr<std::unique_ptr<KeysetHandle>> GetPublicKeysetHandle() const {
     return GetPublicKeysetHandle(crypto::tink::KeyGenConfigGlobalRegistry());
   }
+  // TINK-PENDING-REMOVAL-IN-3.0.0-END
+  // NOLINTEND(whitespace/line_length)
 
   // Creates a wrapped primitive using this keyset handle and config, which
   // stores necessary primitive wrappers and key type managers.

@@ -2108,3 +2108,36 @@ tink_cc_test(
     gmock
     tink::core::key_status
 )
+
+tink_cc_library(
+  NAME xwing_util
+  SRCS
+    xwing_util.cc
+    xwing_util.h
+  DEPS
+    tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
+    absl::log
+    absl::status
+    absl::statusor
+    crypto
+    tink::core::secret_data
+    tink::util::secret_data
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME xwing_util_test
+  SRCS
+    xwing_util_test.cc
+  DEPS
+    tink::internal::xwing_util
+    gmock
+    absl::statusor
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)

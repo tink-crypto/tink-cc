@@ -1,0 +1,54 @@
+// Copyright 2025 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+///////////////////////////////////////////////////////////////////////////////
+
+#ifndef TINK_INTERNAL_XWING_UTIL_H_
+#define TINK_INTERNAL_XWING_UTIL_H_
+
+#include <stdint.h>
+
+#include <array>
+#include <memory>
+
+#include "absl/status/statusor.h"
+#include "tink/secret_data.h"
+
+namespace crypto {
+namespace tink {
+namespace internal {
+
+inline constexpr int64_t kXWingKeyPubKeySize = 1216;
+inline constexpr int64_t kXWingKeyPrivKeySize = 32;
+
+struct XWingKey {
+  std::array<uint8_t, kXWingKeyPubKeySize> public_key;
+  SecretData private_key = SecretData(kXWingKeyPrivKeySize);
+};
+
+// Returns a new XWingKey key. It returns a kInternal error status if the
+// OpenSSL/BoringSSL APIs fail.
+absl::StatusOr<XWingKey> NewXWingKey();
+
+// Returns a XWingKey matching the specified private key. It returns a kInternal
+// error status if the OpenSSL/BoringSSL APIs fail or if the private key is
+// invalid.
+absl::StatusOr<XWingKey> XWingKeyFromPrivateKey(
+    const SecretData& private_key);
+
+}  // namespace internal
+}  // namespace tink
+}  // namespace crypto
+
+#endif  // TINK_INTERNAL_XWING_UTIL_H_

@@ -30,6 +30,8 @@ tink_cc_library(
     tink::util::secret_data
     tink::util::test_util
   TESTONLY
+  TAGS
+    exclude_if_openssl
 )
 
 tink_cc_library(

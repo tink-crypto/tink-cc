@@ -22,6 +22,7 @@ cc_library(
     srcs = ["hpke_test_vectors.cc"],
     hdrs = ["hpke_test_vectors.h"],
     include_prefix = "tink/hybrid/internal/testing",
+    tags = ["requires_boringcrypto_update"],
     deps = [
         ":hybrid_test_vectors",
         "//tink:insecure_secret_key_access",

@@ -48,7 +48,8 @@ HpkeParameters::Builder& HpkeParameters::Builder::SetVariant(Variant variant) {
 absl::StatusOr<HpkeParameters> HpkeParameters::Builder::Build() {
   static const std::set<KemId>* supported_kem_ids = new std::set<KemId>(
       {KemId::kDhkemP256HkdfSha256, KemId::kDhkemP384HkdfSha384,
-       KemId::kDhkemP521HkdfSha512, KemId::kDhkemX25519HkdfSha256});
+       KemId::kDhkemP521HkdfSha512, KemId::kDhkemX25519HkdfSha256,
+       KemId::kXWing});
   if (supported_kem_ids->find(kem_id_) == supported_kem_ids->end()) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Cannot create HPKE parameters with unknown KEM ID.");

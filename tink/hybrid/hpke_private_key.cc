@@ -20,12 +20,13 @@
 
 #include "absl/log/log.h"
 #include "absl/status/status.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/xwing_util.h"
+#include "tink/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -42,9 +43,6 @@
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -83,6 +81,11 @@ absl::Status ValidatePrivateKeyLength(HpkeParameters::KemId kem_id,
       expected_length = 66;
       break;
     case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
+      expected_length = 32;
+      break;
+    // Key length from
+    // https://www.ietf.org/archive/id/draft-connolly-cfrg-xwing-kem-09.html#name-encoding-and-sizes
+    case HpkeParameters::KemId::kXWing:
       expected_length = 32;
       break;
     default:
@@ -158,6 +161,10 @@ absl::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
   return absl::OkStatus();
 }
 
+bool IsX25519Kem(HpkeParameters::KemId kem_id) {
+  return kem_id == HpkeParameters::KemId::kDhkemX25519HkdfSha256;
+}
+
 absl::Status ValidateX25519KeyPair(absl::string_view public_key_bytes,
                                    const SecretData& private_key_bytes) {
   absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
@@ -172,6 +179,24 @@ absl::Status ValidateX25519KeyPair(absl::string_view public_key_bytes,
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "X25519 private key does not match the specified X25519 public key.");
+  }
+  return absl::OkStatus();
+}
+
+absl::Status ValidateXWingKeyPair(absl::string_view public_key_bytes,
+                                  const SecretData& private_key_bytes) {
+  absl::StatusOr<internal::XWingKey> xwing_key =
+      internal::XWingKeyFromPrivateKey(private_key_bytes);
+  if (!xwing_key.ok()) {
+    return xwing_key.status();
+  }
+  auto public_key_bytes_from_private = absl::string_view(
+      reinterpret_cast<const char*>(xwing_key->public_key.data()),
+      xwing_key->public_key.size());
+  if (public_key_bytes != public_key_bytes_from_private) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "XWing private key does not match the specified XWing public key.");
   }
   return absl::OkStatus();
 }
@@ -191,8 +216,10 @@ absl::Status ValidateKeyPair(const HpkePublicKey& public_key,
       return curve.status();
     }
     return ValidateNistEcKeyPair(*curve, public_key_bytes, secret);
+  } else if (IsX25519Kem(kem_id)) {
+    return ValidateX25519KeyPair(public_key_bytes, secret);
   }
-  return ValidateX25519KeyPair(public_key_bytes, secret);
+  return ValidateXWingKeyPair(public_key_bytes, secret);
 }
 
 }  // namespace

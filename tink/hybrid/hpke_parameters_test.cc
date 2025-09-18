@@ -22,8 +22,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -52,7 +52,8 @@ INSTANTIATE_TEST_SUITE_P(
     Combine(Values(HpkeParameters::KemId::kDhkemP256HkdfSha256,
                    HpkeParameters::KemId::kDhkemP384HkdfSha384,
                    HpkeParameters::KemId::kDhkemP521HkdfSha512,
-                   HpkeParameters::KemId::kDhkemX25519HkdfSha256),
+                   HpkeParameters::KemId::kDhkemX25519HkdfSha256,
+                   HpkeParameters::KemId::kXWing),
             Values(HpkeParameters::KdfId::kHkdfSha256,
                    HpkeParameters::KdfId::kHkdfSha384,
                    HpkeParameters::KdfId::kHkdfSha512),

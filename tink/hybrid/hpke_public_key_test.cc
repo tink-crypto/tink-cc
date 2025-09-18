@@ -23,6 +23,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -34,7 +35,6 @@
 #include "tink/partial_key_access.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -140,6 +140,30 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
               Eq(public_key_bytes));
 }
 
+TEST(HpkePublicKeyTest, CreateXWingPublicKey) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kXWing)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(1216);
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  EXPECT_THAT(public_key->GetParameters(), Eq(*params));
+  EXPECT_THAT(public_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(public_key->GetOutputPrefix(), Eq(""));
+  EXPECT_THAT(public_key->GetPublicKeyBytes(GetPartialKeyAccess()),
+              Eq(public_key_bytes));
+}
+
 TEST_P(HpkePublicKeyTest, CreateNistCurvePublicKeyWithInvalidLength) {
   TestCase test_case = GetParam();
 
@@ -178,6 +202,25 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKeyWithInvalidLength) {
   ASSERT_THAT(params, IsOk());
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  EXPECT_THAT(public_key.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(HpkePublicKeyTest, CreateXWingPublicKeyWithInvalidLength) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kXWing)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(1216);
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes.substr(0, public_key_bytes.size() - 1),
@@ -301,6 +344,34 @@ TEST(HpkePublicKeyTest, X25519PublicKeyEquals) {
   ASSERT_THAT(params, IsOk());
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkePublicKey> other_public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(other_public_key, IsOk());
+
+  EXPECT_TRUE(*public_key == *other_public_key);
+  EXPECT_TRUE(*other_public_key == *public_key);
+  EXPECT_FALSE(*public_key != *other_public_key);
+  EXPECT_FALSE(*other_public_key != *public_key);
+}
+
+TEST(HpkePublicKeyTest, XWingPublicKeyEquals) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kXWing)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(1216);
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,

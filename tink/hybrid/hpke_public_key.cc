@@ -19,6 +19,7 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
@@ -29,8 +30,6 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -59,6 +58,12 @@ absl::Status ValidatePublicKey(HpkeParameters::KemId kem_id,
       curve = subtle::EllipticCurveType::CURVE25519;
       expected_length = 32;
       break;
+    // Key length from
+    // https://www.ietf.org/archive/id/draft-connolly-cfrg-xwing-kem-09.html#name-encoding-and-sizes
+    case HpkeParameters::KemId::kXWing:
+      curve = subtle::EllipticCurveType::UNKNOWN_CURVE;
+      expected_length = 1216;
+      break;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unknown KEM ID: ", kem_id));
@@ -77,7 +82,8 @@ absl::Status ValidatePublicKey(HpkeParameters::KemId kem_id,
   //
   // NOTE: `EcPointDecode()` verifies that the point is on the curve via
   // `SslGetEcPointFromEncoded()` for the uncompressed point format.
-  if (curve != subtle::EllipticCurveType::CURVE25519) {
+  if (curve != subtle::EllipticCurveType::UNKNOWN_CURVE &&
+      curve != subtle::EllipticCurveType::CURVE25519) {
     absl::Status decode_status =
         internal::EcPointDecode(curve, subtle::EcPointFormat::UNCOMPRESSED,
                                 public_key_bytes)

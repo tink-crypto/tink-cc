@@ -39,6 +39,7 @@
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
@@ -49,7 +50,7 @@ namespace {
 using ::crypto::tink::internal::ProtoParser;
 using ::crypto::tink::internal::ProtoParserBuilder;
 
-bool HpkeKemEnumIsValid(int value) { return value >= 0 && value <= 4; }
+bool HpkeKemEnumIsValid(int value) { return value >= 0 && value <= 5; }
 
 // Proto enum com.google.crypto.tink.HpkeKem.
 enum class HpkeKemEnum : uint32_t {
@@ -58,6 +59,7 @@ enum class HpkeKemEnum : uint32_t {
   kDhkemP256HkdfSha256,
   kDhkemP384HkdfSha384,
   kDhkemP521HkdfSha512,
+  kXWing,
 };
 
 bool HpkeKdfEnumIsValid(int value) { return value >= 0 && value <= 3; }
@@ -214,6 +216,8 @@ absl::StatusOr<HpkeParameters::KemId> ToKemId(HpkeKemEnum kem) {
       return HpkeParameters::KemId::kDhkemP521HkdfSha512;
     case HpkeKemEnum::kDhkemX25519HkdfSha256:
       return HpkeParameters::KemId::kDhkemX25519HkdfSha256;
+    case HpkeKemEnum::kXWing:
+      return HpkeParameters::KemId::kXWing;
     default:
       return absl::InvalidArgumentError("Could not determine KEM.");
   }
@@ -229,6 +233,8 @@ absl::StatusOr<HpkeKemEnum> FromKemId(HpkeParameters::KemId kem_id) {
       return HpkeKemEnum::kDhkemP521HkdfSha512;
     case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
       return HpkeKemEnum::kDhkemX25519HkdfSha256;
+    case HpkeParameters::KemId::kXWing:
+      return HpkeKemEnum::kXWing;
     default:
       return absl::InvalidArgumentError("Could not determine KEM.");
   }

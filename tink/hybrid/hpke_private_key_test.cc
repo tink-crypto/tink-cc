@@ -18,10 +18,12 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -35,13 +37,13 @@
 #include "tink/insecure_secret_key_access.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/xwing_util.h"
 #include "tink/key.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -131,7 +133,7 @@ TEST_P(HpkePrivateKeyTest, CreateNistCurvePrivateKey) {
               Eq(private_key_bytes));
 }
 
-TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
+TEST(HpkePrivateKeyTest, CreateX25519PrivateKey) {
   absl::StatusOr<HpkeParameters> params =
       HpkeParameters::Builder()
           .SetVariant(HpkeParameters::Variant::kNoPrefix)
@@ -150,6 +152,42 @@ TEST(HpkePublicKeyTest, CreateX25519PublicKey) {
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
       (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_THAT(private_key->GetParameters(), Eq(*params));
+  EXPECT_THAT(private_key->GetIdRequirement(), Eq(absl::nullopt));
+  EXPECT_THAT(private_key->GetPublicKey(), Eq(*public_key));
+  EXPECT_THAT(private_key->GetOutputPrefix(), Eq(""));
+  EXPECT_THAT(private_key->GetPrivateKeyBytes(GetPartialKeyAccess()),
+              Eq(private_key_bytes));
+}
+
+TEST(HpkePrivateKeyTest, CreateXWingPrivateKey) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kXWing)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<internal::XWingKey> xwing_key = internal::NewXWingKey();
+  ASSERT_THAT(xwing_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>(xwing_key->public_key.data()),
+                  xwing_key->public_key.size());
+  RestrictedData private_key_bytes =
+      RestrictedData(xwing_key->private_key, InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
@@ -216,6 +254,31 @@ TEST(HpkePrivateKeyTest, CreateMismatchedX25519KeyPairFails) {
   ASSERT_THAT(params, IsOk());
 
   std::string public_key_bytes = subtle::Random::GetRandomBytes(32);
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  RestrictedData private_key_bytes = RestrictedData(
+      subtle::Random::GetRandomBytes(32), InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(HpkePrivateKey::Create(*public_key, private_key_bytes,
+                                     GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(HpkePrivateKeyTest, CreateMismatchedXWingKeyPairFails) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kXWing)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  std::string public_key_bytes = subtle::Random::GetRandomBytes(1216);
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
@@ -301,6 +364,38 @@ TEST(HpkePrivateKeyTest, CreateX25519PrivateKeyWithInvalidKeyLengthFails) {
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
+TEST(HpkePrivateKeyTest, CreateXWingPrivateKeyWithInvalidKeyLengthFails) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kXWing)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<internal::XWingKey> xwing_key = internal::NewXWingKey();
+  ASSERT_THAT(xwing_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>(xwing_key->public_key.data()),
+                  xwing_key->public_key.size());
+  RestrictedData expanded_private_key_bytes = RestrictedData(
+      absl::StrCat(test::HexDecodeOrDie("00"),
+                   util::SecretDataAsStringView(xwing_key->private_key)),
+      InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes, /*id_requirement=*/absl::nullopt,
+      GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  EXPECT_THAT(HpkePrivateKey::Create(*public_key, expanded_private_key_bytes,
+                                     GetPartialKeyAccess())
+                  .status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
 TEST_P(HpkePrivateKeyTest, NistCurvePrivateKeyEquals) {
   TestCase test_case = GetParam();
 
@@ -362,6 +457,44 @@ TEST(HpkePrivateKeyTest, X25519PrivateKeyEquals) {
                   internal::X25519KeyPubKeySize());
   RestrictedData private_key_bytes = RestrictedData(
       (*x25519_key)->private_key, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
+      *params, public_key_bytes,
+      /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
+  ASSERT_THAT(public_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  absl::StatusOr<HpkePrivateKey> other_private_key = HpkePrivateKey::Create(
+      *public_key, private_key_bytes, GetPartialKeyAccess());
+  ASSERT_THAT(private_key, IsOk());
+
+  EXPECT_TRUE(*private_key == *other_private_key);
+  EXPECT_TRUE(*other_private_key == *private_key);
+  EXPECT_FALSE(*private_key != *other_private_key);
+  EXPECT_FALSE(*other_private_key != *private_key);
+}
+
+TEST(HpkePrivateKeyTest, XWingPrivateKeyEquals) {
+  absl::StatusOr<HpkeParameters> params =
+      HpkeParameters::Builder()
+          .SetVariant(HpkeParameters::Variant::kNoPrefix)
+          .SetKemId(HpkeParameters::KemId::kXWing)
+          .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
+          .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
+          .Build();
+  ASSERT_THAT(params, IsOk());
+
+  absl::StatusOr<internal::XWingKey> xwing_key = internal::NewXWingKey();
+  ASSERT_THAT(xwing_key, IsOk());
+
+  std::string public_key_bytes =
+      std::string(reinterpret_cast<const char*>(xwing_key->public_key.data()),
+                  xwing_key->public_key.size());
+  RestrictedData private_key_bytes =
+      RestrictedData(xwing_key->private_key, InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *params, public_key_bytes,

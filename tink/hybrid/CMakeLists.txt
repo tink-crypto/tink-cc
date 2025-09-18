@@ -281,9 +281,8 @@ tink_cc_library(
   DEPS
     tink::hybrid::hybrid_parameters
     absl::status
+    absl::statusor
     tink::core::parameters
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(

@@ -20,13 +20,12 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "openssl/base.h"
 #include "openssl/hpke.h"
 #include "tink/hybrid/internal/hpke_test_util.h"
 #include "tink/hybrid/internal/hpke_util.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -54,7 +53,9 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeKem::kP256HkdfSha256, EVP_HPKE_DHKEM_P256_HKDF_SHA256},
            TestCase{google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256,
                     HpkeKem::kX25519HkdfSha256,
-                    EVP_HPKE_DHKEM_X25519_HKDF_SHA256}));
+                    EVP_HPKE_DHKEM_X25519_HKDF_SHA256},
+           TestCase{google::crypto::tink::HpkeKem::X_WING, HpkeKem::kXWing,
+                    EVP_HPKE_XWING}));
 
 TEST_P(HpkeUtilBoringSslTest, ValidParamsFromProto) {
   TestCase test_case = GetParam();

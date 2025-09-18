@@ -22,21 +22,22 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/internal/hpke_context_boringssl.h"
 #include "tink/hybrid/internal/hpke_util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-// Nenc value in https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1.
+// Nenc values in https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1
+// and https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
 constexpr int kP256KemEncodingLengthInBytes = 65;
 constexpr int kX25519KemEncodingLengthInBytes = 32;
+constexpr int kXWingKemEncodingLengthInBytes = 1120;
 
 std::string ConcatenatePayload(absl::string_view encapsulated_key,
                                absl::string_view ciphertext) {
@@ -51,6 +52,9 @@ absl::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
   } else if (kem == HpkeKem::kX25519HkdfSha256) {
     return HpkePayloadView(payload.substr(0, kX25519KemEncodingLengthInBytes),
                            payload.substr(kX25519KemEncodingLengthInBytes));
+  } else if (kem == HpkeKem::kXWing) {
+    return HpkePayloadView(payload.substr(0, kXWingKemEncodingLengthInBytes),
+                           payload.substr(kXWingKemEncodingLengthInBytes));
   }
   return absl::Status(
       absl::StatusCode::kInvalidArgument,

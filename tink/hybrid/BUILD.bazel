@@ -304,9 +304,8 @@ cc_library(
     deps = [
         ":hybrid_parameters",
         "//tink:parameters",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
     ],
 )
 

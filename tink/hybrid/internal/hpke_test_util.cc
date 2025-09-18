@@ -19,11 +19,10 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/internal/hpke_util.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -163,6 +162,91 @@ const absl::string_view kTestP256HkdfSha256Aes256Gcm[] = {
     "",                  // Missing exporter_values[2]
 };
 
+// Test vector from BoringSSL (hpke_test_vectors.txt).
+// X-Wing, HKDF-SHA256, AES-128-GCM
+const absl::string_view kTestXWingHkdfSha256Aes128Gcm[] = {
+    "e2236b35a8c24b39b10aa1323a96a919a2ced88400633a7b07131713fc14b2b5b19cfc3da5"
+    "fa1a92c49f25513e0fd30d6b1611c9ab9635d7086727a4b7d21d34244e66969cf15b3b2a78"
+    "5329f61b096b277ea037383479a6b556de7231fe4b7fa9c9ac24c0699a0018a5253401bacf"
+    "a905ca816573e56a2d2e067e9b7287533ba13a937dedb31fa44baced40769923610034ae31"
+    "e619a170245199b3c5c39864859fe1b4c9717a07c30495bdfb98a0a002ccf56c1286cef504"
+    "1dede3c44cf16bf562c7448518026b3d8b9940680abd38a1575fd27b58da063bfac32c39c3"
+    "0869374c05c1aeb1898b6b303cc68be455346ee0af699636224a148ca2aea10463111c709f"
+    "69b69c70ce8538746698c4c60a9aef0030c7924ceec42a5d36816f545eae13293460b3acb3"
+    "7ea0e13d70e4aa78686da398a8397c08eaf96882113fe4f7bad4da40b0501e1c753efe7305"
+    "3c87014e8661c33099afe8bede414a5b1aa27d8392b3e131e9a70c1055878240cad0f40d5f"
+    "e3cdf85236ead97e2a97448363b2808caafd516cd25052c5c362543c2517e4acd0e60ec071"
+    "63009b6425fc32277acee71c24bab53ed9f29e74c66a0a3564955998d76b96a9a8b50d1635"
+    "a4d7a67eb42df5644d330457293a8042f53cc7a69288f17ed55827e82b28e82665a86a14fb"
+    "d96645eca8172c044f83bc0d8c0b4c8626985631ca87af829068f1358963cb333664ca4827"
+    "63ba3b3bb208577f9ba6ac62c25f76592743b64be519317714cb4102cb7b2f9a25b2b4f061"
+    "5de31decd9ca55026d6da0b65111b16fe52feed8a487e144462a6dba93728f500b6ffc49e5"
+    "15569ef25fed17aff520507368253525860f58be3be61c964604a6ac814e6935596402a520"
+    "a4670b3d284318866593d15a4bb01c35e3e587ee0c67d2880d6f2407fb7a70712b838deb96"
+    "c5d7bf2b44bcf6038ccbe33fbcf51a54a584fe90083c91c7a6d43d4fb15f48c60c2fd66e0a"
+    "8aad4ad64e5c42bb8877c0ebec2b5e387c8a988fdc23beb9e16c8757781e0a1499c61e138c"
+    "21f216c29d076979871caa6942bafc090544bee99b54b16cb9a9a364d6246d9f42cce53c66"
+    "b59c45c8f9ae9299a75d15180c3c952151a91b7a10772429dc4cbae6fcc622fa8018c63439"
+    "f890630b9928db6bb7f9438ae4065ed34d73d486f3f52f90f0807dc88dfdd8c728e954f1ac"
+    "35c06c000ce41a0582580e3bb57b672972890ac5e7988e7850657116f1b57d0809aaedec0b"
+    "ede1ae148148311c6f7e317346e5189fb8cd635b986f8c0bdd27641c584b778b3a911a80be"
+    "1c9692ab8e1bbb12839573cce19df183b45835bbb55052f9fc66a1678ef2a36dea78411e6c"
+    "8d60501b4e60592d13698a943b509185db912e2ea10be06171236b327c71716094c964a68b"
+    "03377f513a05bcd99c1f346583bb052977a10a12adfc758034e5617da4c1276585e5774e1f"
+    "3b9978b09d0e9c44d3bc86151c43aad185712717340223ac381d21150a04294e97bb13bbda"
+    "21b5a182b6da969e19a7fd072737fa8e880a53c2428e3d049b7d2197405296ddb361912a7b"
+    "cf4827ced611d0c7a7da104dde4322095339f64a61d5bb108ff0bf4d780cae509fb22c2569"
+    "14193ff7349042581237d522828824ee3bdfd07fb03f1f942d2ea179fe722f06cc03de5b69"
+    "859edb06eff389b27dce59844570216223593d4ba32d9abac8cd049040ef6534",  // pkRm
+    "7268600d403fce431561aef583ee1613527cff655c1343f29812e66706df32347268600d40"
+    "3fce431561aef583ee1613527cff655c1343f29812e66706df3234",      // skEm
+    "4f6465206f6e2061204772656369616e2055726e",                    // info
+    "4265617574792069732074727574682c20747275746820626561757479",  // pt
+    "436f756e742d30",                                              // aad
+    "a96ea59259a2893265d79052bfa8e976f6a9aaf9fb0cce901449f23c18a9e9b238e29161c2"
+    "d94b5b6fefa046af",                                                  // ct
+    "7f9c2ba4e88f827d616045507605853ed73b8093f6efbc88eb1a6eacfa66ef26",  // skRm
+    "3829125bd65c4e3612e520ff3cd77938d11c7fa6445fe440a77ee7354b178b71018427144f"
+    "b2ebcb0aab44f4456251d3885181e0bae0509793f7c160116630ecd898af82d557e5b8aa31"
+    "3672c785e40a8c4b401ecc3d13300591933fe46f7061eaac318f4ab9277174c6282b2f1cc7"
+    "b7c6dfe57e34f0a325732d58cce71a33fef826419f9c033e31001d8db456a4818563b07545"
+    "30a855cde822c38643a73c19bb0a9552df2f36c9b00020b3a32d4130dd073ed9eddcea0463"
+    "64bd25ca1ba99865e3aed169c338042fbd31dab9387ed9f5c6d6117bd320b6e3f7092fbab7"
+    "e2ddceceb81907fcbea6986444836f86004e946ed1c0236dbc760fa06c1ec191d9c92b07e9"
+    "0d243715975af3422980287fc7a57e120b604c8a598e8f1aac5d430e2b2801ff3b36da7640"
+    "fdbc1fe41fc49fd04320ec86e9dc104aa88f7e346a950c0f2dc1c423fbde5adbd360b66079"
+    "523795a9e351d17e5b2e943c6381b07c16612960aa682ddc7093e510a7f2b0f24761ab0564"
+    "c926049dc330f3ed6c4ec23a6cf0f51fd99edae518fdb7615060931c3c0b58f34a7a8aa647"
+    "368a8bed78ee7b5213bb730170320ccb218e42d7c06b4a5d9088acf3ea9d7f7633203e3a66"
+    "372c2a75de396f329b6c0d35e2505dcb0ff2ec07eb5ca7f4f44a2d38df047aaeb5761e36fc"
+    "65537a560ed302992aa03d0b0e20e96501e70545eafbc0bcb93e3d71761f814555c9407654"
+    "0632509a23f2b19d632da32e86203a5232103e13707686e1c2662e50a5f3e08a730e90d400"
+    "2aff2a85eda0b39c360e1618999100bc56d2c06e7c4cdd728f65a0e044ae2c0c94704b760b"
+    "0d2a993483cc0636dcb7f5e1ff2453aee6804297b66b314d6158360a4f7f8dfaf70e83459a"
+    "01b2a9b8e8e6b9dc69793b22940acae5ac404951358e7e31901b47ee6d12ee483e4d449bc8"
+    "d59af6d56b982b4a6134e29648c54aa47e85d5eb63a98a94f53d91773bf63902057f096971"
+    "9b28778881aa01504e3f8631b4091a19392bd1afe2554be79b6c61f125d78e16dec8dff31e"
+    "778076ef81b4a30217b321fb714511e9d9fe87f6616572ec1b2d7dab2ed1eaab1bc8bd7f03"
+    "3c2a95c6426b336a24a972a3efcdaf3614d3a570ec9bea43d2a1bcc9ca10590cd473acbdb0"
+    "ba86d7b6a5d24a2a4b0b8b192846d2da9f6b7f6b43c7b6953ca071a47b7025dca6d452d196"
+    "4106b8e640d6af37c87462e7bbd113cedbd336da61e283483624dd7551a4e62c8f4686e4e0"
+    "01930ad8820962bedf2afbdd2f7cd5c79cd392e031671c349a92b4ee40271ce08cb0b83a76"
+    "275a70dc56eca92a335f7584f7fa132171416b4eed2a8888edca372285fefbcfaf36646a7a"
+    "45f95113f3015d190ebd7961f74960672fca13f96f8f076927baecfebc742443ff916b9331"
+    "aa886718dd2a3a68703df5fb477b6d0942a55b6379e8920fede28bebdc36e7cbf56cb3d314"
+    "3d1be5ddf7deac990fe41db417dc62f297f7956e20d6fa9d2a9735b5675c256fb3c94fff37"
+    "bafa16fa15e299ba47a311263f9581298172eafc6e007b6cb01a54e73f5c4bc692d5e002e9"
+    "b423301a39155577991d",    // enc
+    "",                        // exporter_contexts[0]
+    "00",                      // exporter_contexts[1]
+    "54657374436f6e74657874",  // exporter_contexts[2]
+    // exporter_values[0]
+    "c78ebc7a3064b7274dd5c316d62bb05114a7578b0af79cd856a38d6bcdde72a9",
+    // exporter_values[1]
+    "a5d3e6562b1d9cf928620d51a1d5c141045e0ab91af77d2b5d4f9cf9d85813d9",
+    // exporter_values[2]
+    "5fd0d16475885903b6c533a789e2dbe1f8a6088b8424534f9b0922314dd2ae4e"};
+
 HpkeTestParams DefaultHpkeTestParams() {
   return HpkeTestParams(kTestX25519HkdfSha256Aes128Gcm);
 }
@@ -177,6 +261,9 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(
       break;
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       params.kem = HpkeKem::kX25519HkdfSha256;
+      break;
+    case google::crypto::tink::HpkeKem::X_WING:
+      params.kem = HpkeKem::kXWing;
       break;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -240,6 +327,16 @@ absl::StatusOr<HpkeTestParams> CreateHpkeTestParams(const HpkeParams& params) {
         return HpkeTestParams(kTestX25519HkdfSha256Aes256Gcm);
       case HpkeAead::kChaCha20Poly1305:
         return HpkeTestParams(kTestX25519HkdfSha256ChaCha20Poly1305);
+      default:
+        return absl::Status(
+            absl::StatusCode::kInvalidArgument,
+            absl::StrCat("No test parameters for specified AEAD:",
+                         params.aead));
+    }
+  } else if (params.kem == HpkeKem::kXWing) {
+    switch (params.aead) {
+      case HpkeAead::kAes128Gcm:
+        return HpkeTestParams(kTestXWingHkdfSha256Aes128Gcm);
       default:
         return absl::Status(
             absl::StatusCode::kInvalidArgument,

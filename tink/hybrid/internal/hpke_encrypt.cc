@@ -17,11 +17,11 @@
 #include "tink/hybrid/internal/hpke_encrypt.h"
 
 #include <memory>
-#include <new>
 #include <string>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/hpke_parameters.h"
@@ -30,8 +30,6 @@
 #include "tink/hybrid/internal/hpke_util.h"
 #include "tink/hybrid_encrypt.h"
 #include "tink/partial_key_access.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -55,6 +53,8 @@ absl::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
       return HpkeKemProto::DHKEM_P521_HKDF_SHA512;
     case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
       return HpkeKemProto::DHKEM_X25519_HKDF_SHA256;
+    case HpkeParameters::KemId::kXWing:
+      return HpkeKemProto::X_WING;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine KEM.");
@@ -148,7 +148,8 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
   }
   HpkeKemProto kem = recipient_public_key.params().kem();
   if (kem != HpkeKemProto::DHKEM_P256_HKDF_SHA256 &&
-      kem != HpkeKemProto::DHKEM_X25519_HKDF_SHA256) {
+      kem != HpkeKemProto::DHKEM_X25519_HKDF_SHA256 &&
+      kem != HpkeKemProto::X_WING) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key has an unsupported KEM");
   }

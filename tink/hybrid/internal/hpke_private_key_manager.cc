@@ -20,15 +20,15 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "openssl/base.h"
 #include "tink/hybrid/internal/hpke_key_manager_util.h"
 #include "tink/internal/ec_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/internal/xwing_util.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/hpke.pb.h"
 
@@ -83,6 +83,17 @@ absl::Status GenerateEcKey(HpkePublicKeyProto& public_key,
   return absl::OkStatus();
 }
 
+absl::Status GenerateXWingKey(HpkePublicKeyProto& public_key,
+                              HpkePrivateKeyProto& private_key) {
+  absl::StatusOr<XWingKey> key = NewXWingKey();
+  if (!key.ok()) {
+    return key.status();
+  }
+  public_key.set_public_key(key->public_key.data(), key->public_key.size());
+  private_key.set_private_key(util::SecretDataAsStringView(key->private_key));
+  return absl::OkStatus();
+}
+
 }  // namespace
 
 absl::Status HpkePrivateKeyManager::ValidateKeyFormat(
@@ -129,6 +140,13 @@ absl::StatusOr<HpkePrivateKeyProto> HpkePrivateKeyManager::CreateKey(
     case HpkeKem::DHKEM_P521_HKDF_SHA512: {
       absl::Status res =
           GenerateEcKey(*public_key, private_key, EllipticCurveType::NIST_P521);
+      if (!res.ok()) {
+        return res;
+      }
+      break;
+    }
+    case HpkeKem::X_WING: {
+      absl::Status res = GenerateXWingKey(*public_key, private_key);
       if (!res.ok()) {
         return res;
       }

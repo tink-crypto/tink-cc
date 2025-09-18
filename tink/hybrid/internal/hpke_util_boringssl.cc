@@ -17,12 +17,11 @@
 #include "tink/hybrid/internal/hpke_util_boringssl.h"
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "openssl/base.h"
 #include "openssl/hpke.h"
 #include "tink/hybrid/internal/hpke_util.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -35,6 +34,8 @@ absl::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
       return EVP_hpke_p256_hkdf_sha256();
     case HpkeKem::kX25519HkdfSha256:
       return EVP_hpke_x25519_hkdf_sha256();
+    case HpkeKem::kXWing:
+      return EVP_hpke_xwing();
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
@@ -49,6 +50,8 @@ absl::StatusOr<const EVP_HPKE_KEM*> KemParam(
       return EVP_hpke_p256_hkdf_sha256();
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       return EVP_hpke_x25519_hkdf_sha256();
+    case google::crypto::tink::HpkeKem::X_WING:
+      return EVP_hpke_xwing();
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,

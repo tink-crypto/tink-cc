@@ -19,18 +19,20 @@
 
 #include <cstdint>
 
-#include "tink/util/statusor.h"
+#include "absl/status/statusor.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
-// Values from https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1.
+// Values from https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1 and
+// https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
 enum class HpkeKem {
   kUnknownKem = 0x0,
   kP256HkdfSha256 = 0x10,
   kX25519HkdfSha256 = 0x20,
+  kXWing = 0x647a,
 };
 
 // Values from https://www.rfc-editor.org/rfc/rfc9180.html#section-7.2.

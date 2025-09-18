@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
 #include "tink/hybrid/hpke_parameters.h"
@@ -36,11 +37,7 @@
 #include "tink/hybrid/internal/testing/hybrid_test_vectors.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/hybrid_encrypt.h"
-#include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_data.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/hpke.pb.h"
@@ -86,8 +83,9 @@ INSTANTIATE_TEST_SUITE_P(
            CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
                             HpkeKdf::HKDF_SHA256, HpkeAead::AES_256_GCM),
            CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
-                            HpkeKdf::HKDF_SHA256,
-                            HpkeAead::CHACHA20_POLY1305)));
+                            HpkeKdf::HKDF_SHA256, HpkeAead::CHACHA20_POLY1305),
+           CreateHpkeParams(HpkeKem::X_WING, HpkeKdf::HKDF_SHA256,
+                            HpkeAead::AES_128_GCM)));
 
 TEST_P(HpkeEncryptTest, SetupSenderContextAndEncrypt) {
   HpkeParams hpke_params = GetParam();

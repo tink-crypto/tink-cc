@@ -18,16 +18,16 @@
 
 #include <memory>
 #include <string>
-#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/hybrid/internal/hpke_test_util.h"
 #include "tink/hybrid/internal/hpke_util.h"
 #include "tink/hybrid/internal/test_hpke_context_boringssl.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -52,7 +52,9 @@ INSTANTIATE_TEST_SUITE_P(
            HpkeParams{HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
                       HpkeAead::kAes128Gcm},
            HpkeParams{HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
-                      HpkeAead::kChaCha20Poly1305}));
+                      HpkeAead::kChaCha20Poly1305},
+           HpkeParams{HpkeKem::kXWing, HpkeKdf::kHkdfSha256,
+                      HpkeAead::kAes128Gcm}));
 
 TEST_P(HpkeContextBoringSslTest, Seal) {
   HpkeParams hpke_params = GetParam();

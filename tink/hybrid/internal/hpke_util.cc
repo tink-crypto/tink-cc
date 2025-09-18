@@ -19,11 +19,10 @@
 #include <cstdint>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/internal/ec_util.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/hpke.pb.h"
 
 namespace crypto {
@@ -31,12 +30,18 @@ namespace tink {
 namespace internal {
 namespace {
 
+// Encapsulated key length for XWing, see
+// https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
+constexpr int kXWingEncapsulatedKeyLength = 1120;
+
 absl::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
   switch (kem) {
     case google::crypto::tink::HpkeKem::DHKEM_X25519_HKDF_SHA256:
       return HpkeKem::kX25519HkdfSha256;
     case google::crypto::tink::HpkeKem::DHKEM_P256_HKDF_SHA256:
       return HpkeKem::kP256HkdfSha256;
+    case google::crypto::tink::HpkeKem::X_WING:
+      return HpkeKem::kXWing;
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
@@ -95,6 +100,8 @@ absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
       return internal::EcPointEncodingSizeInBytes(
           subtle::EllipticCurveType::NIST_P256,
           subtle::EcPointFormat::UNCOMPRESSED);
+    case google::crypto::tink::HpkeKem::X_WING:
+      return kXWingEncapsulatedKeyLength;
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,

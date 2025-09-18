@@ -19,9 +19,9 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/hybrid/hybrid_parameters.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -41,12 +41,14 @@ class HpkeParameters : public HybridParameters {
   };
 
   // HPKE KEM identifiers specified in
-  // https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1.
+  // https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1 and
+  // https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
   enum class KemId : int {
     kDhkemP256HkdfSha256 = 1,
     kDhkemP384HkdfSha384 = 2,
     kDhkemP521HkdfSha512 = 3,
     kDhkemX25519HkdfSha256 = 4,
+    kXWing = 5,
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };
 

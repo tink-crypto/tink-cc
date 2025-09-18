@@ -12,10 +12,9 @@ tink_cc_library(
     tink::hybrid::internal::hpke_util
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
+    tink::core::secret_data
   TAGS
     exclude_if_openssl
 )
@@ -53,15 +52,16 @@ tink_cc_library(
     tink::hybrid::internal::hpke_util
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     tink::core::hybrid_decrypt
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
+    tink::core::secret_data
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::proto::hpke_cc_proto
   TAGS
@@ -78,13 +78,13 @@ tink_cc_library(
     tink::hybrid::internal::hpke_util
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     tink::core::hybrid_encrypt
     tink::core::partial_key_access
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_public_key
-    tink::util::status
     tink::util::statusor
     tink::proto::hpke_cc_proto
   TAGS
@@ -115,6 +115,7 @@ tink_cc_library(
     tink::hybrid::internal::hpke_key_manager_util
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::key_type_manager
@@ -124,6 +125,7 @@ tink_cc_library(
     tink::core::key_manager
     tink::internal::ec_util
     tink::internal::ssl_unique_ptr
+    tink::internal::xwing_util
     tink::subtle::common_enums
     tink::util::constants
     tink::util::secret_data
@@ -169,8 +171,8 @@ tink_cc_library(
   DEPS
     tink::hybrid::internal::hpke_util
     absl::status
+    absl::statusor
     absl::strings
-    tink::util::status
     tink::util::statusor
     tink::util::test_util
     tink::proto::hpke_cc_proto
@@ -186,11 +188,10 @@ tink_cc_library(
     hpke_util.h
   DEPS
     absl::status
+    absl::statusor
     absl::strings
     tink::internal::ec_util
     tink::subtle::common_enums
-    tink::util::status
-    tink::util::statusor
     tink::proto::hpke_cc_proto
   TAGS
     exclude_if_openssl
@@ -204,9 +205,9 @@ tink_cc_library(
   DEPS
     tink::hybrid::internal::hpke_util
     absl::status
+    absl::statusor
     absl::strings
     crypto
-    tink::util::status
     tink::util::statusor
     tink::proto::hpke_cc_proto
   TAGS
@@ -326,9 +327,10 @@ tink_cc_test(
     tink::hybrid::internal::hpke_util
     gmock
     absl::status
+    absl::statusor
     absl::strings
+    tink::core::secret_data
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl
@@ -345,9 +347,10 @@ tink_cc_test(
     tink::hybrid::internal::test_hpke_context_boringssl
     gmock
     absl::status
+    absl::statusor
     crypto
+    tink::core::secret_data
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl
@@ -371,13 +374,13 @@ tink_cc_test(
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::hpke_cc_proto
@@ -396,20 +399,17 @@ tink_cc_test(
     tink::hybrid::internal::hpke_util
     gmock
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::hybrid_decrypt
     tink::core::hybrid_encrypt
-    tink::core::insecure_secret_key_access
     tink::core::partial_key_access
-    tink::core::restricted_data
     tink::hybrid::hpke_parameters
     tink::hybrid::hpke_private_key
     tink::hybrid::hpke_public_key
     tink::hybrid::internal::testing::hpke_test_vectors
     tink::hybrid::internal::testing::hybrid_test_vectors
-    tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
     tink::proto::hpke_cc_proto
@@ -473,7 +473,6 @@ tink_cc_test(
     gmock
     absl::status
     tink::util::test_matchers
-    tink::util::test_util
     tink::proto::hpke_cc_proto
     tink::proto::tink_cc_proto
   TAGS
@@ -489,10 +488,9 @@ tink_cc_test(
     tink::hybrid::internal::hpke_util
     tink::hybrid::internal::hpke_util_boringssl
     gmock
+    absl::statusor
     crypto
-    tink::util::statusor
     tink::util::test_matchers
-    tink::util::test_util
     tink::proto::hpke_cc_proto
   TAGS
     exclude_if_openssl
@@ -507,7 +505,7 @@ tink_cc_test(
     tink::hybrid::internal::hpke_util
     gmock
     absl::status
-    tink::util::statusor
+    absl::statusor
     tink::util::test_matchers
     tink::proto::hpke_cc_proto
   TAGS

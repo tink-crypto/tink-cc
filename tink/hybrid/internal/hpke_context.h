@@ -23,11 +23,11 @@
 #include <string>
 #include <utility>
 
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/internal/hpke_context_boringssl.h"
 #include "tink/hybrid/internal/hpke_util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {

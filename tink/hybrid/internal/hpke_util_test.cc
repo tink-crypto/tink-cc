@@ -19,8 +19,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/hybrid/internal/hpke_test_util.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/hpke.pb.h"
 
@@ -81,6 +81,24 @@ INSTANTIATE_TEST_SUITE_P(
                              google::crypto::tink::HKDF_SHA256,
                              google::crypto::tink::CHACHA20_POLY1305),
             HpkeParams{HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kChaCha20Poly1305}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::X_WING,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_128_GCM),
+            HpkeParams{HpkeKem::kXWing, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes128Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::X_WING,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_256_GCM),
+            HpkeParams{HpkeKem::kXWing, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes256Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::X_WING,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::CHACHA20_POLY1305),
+            HpkeParams{HpkeKem::kXWing, HpkeKdf::kHkdfSha256,
                        HpkeAead::kChaCha20Poly1305}}));
 
 TEST_P(HpkeParamsConversionTest, HpkeParamsProtoToStruct) {
@@ -116,13 +134,16 @@ TEST_P(HpkeBadParamsTest, HpkeParamsProtoToStruct) {
 
 TEST(HpkeKemEncodingSizeTest, HpkeEncapsulatedKeyLength) {
   // Encapsulated key length should match 'Nenc' column from
-  // https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1.
+  // https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1 and
+  // https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
   EXPECT_THAT(
       HpkeEncapsulatedKeyLength(google::crypto::tink::DHKEM_P256_HKDF_SHA256),
       IsOkAndHolds(65));
   EXPECT_THAT(
       HpkeEncapsulatedKeyLength(google::crypto::tink::DHKEM_X25519_HKDF_SHA256),
       IsOkAndHolds(32));
+  EXPECT_THAT(HpkeEncapsulatedKeyLength(google::crypto::tink::X_WING),
+              IsOkAndHolds(1120));
 }
 
 }  // namespace

@@ -21,7 +21,6 @@
 #include "absl/status/status.h"
 #include "tink/hybrid/internal/hpke_test_util.h"
 #include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 #include "proto/hpke.pb.h"
 #include "proto/tink.pb.h"
 
@@ -61,7 +60,8 @@ using HpkePublicKeyManagerTest = TestWithParam<HpkeKem>;
 INSTANTIATE_TEST_SUITE_P(HpkePublicKeyManagerTestSuite,
                          HpkePublicKeyManagerTest,
                          Values(HpkeKem::DHKEM_P256_HKDF_SHA256,
-                                HpkeKem::DHKEM_X25519_HKDF_SHA256));
+                                HpkeKem::DHKEM_X25519_HKDF_SHA256,
+                                HpkeKem::X_WING));
 
 TEST_P(HpkePublicKeyManagerTest, ValidateKeySucceeds) {
   HpkeKem kem = GetParam();

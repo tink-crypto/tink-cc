@@ -2141,3 +2141,39 @@ tink_cc_test(
   TAGS
     exclude_if_openssl
 )
+
+tink_cc_library(
+  NAME proto_parser_repeated_message_field
+  SRCS
+    proto_parser_repeated_message_field.h
+  DEPS
+    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
+    tink::internal::proto_parsing_low_level_parser
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+)
+
+tink_cc_test(
+  NAME proto_parser_repeated_message_field_test
+  SRCS
+    proto_parser_repeated_message_field_test.cc
+  DEPS
+    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_repeated_message_field
+    tink::internal::proto_parser_state
+    tink::internal::proto_parsing_low_level_parser
+    gmock
+    absl::btree
+    absl::crc32c
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::internal::testing::field_with_number
+    tink::util::test_matchers
+    tink::util::test_util
+)

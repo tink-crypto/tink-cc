@@ -21,9 +21,11 @@
 #include <string>
 #include <utility>
 
+#include "tink/proto_keyset_format.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/cleartext_keyset_handle.h"
 #include "tink/internal/rsa_util.h"
@@ -963,32 +965,40 @@ TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaCorrectPublicKey) {
   auto reader = builder.Build();
   ASSERT_THAT(reader, IsOk());
 
-  auto keyset_read = reader->get()->Read();
-  ASSERT_THAT(keyset_read, IsOk());
-  std::unique_ptr<Keyset> keyset = std::move(keyset_read).value();
+  // Although this keyset only contains public keys, Tink's API requires using
+  // CleartextKeysetHandle to read from a KeysetReader.
+  absl::StatusOr<std::unique_ptr<KeysetHandle>> keyset_handle =
+      CleartextKeysetHandle::Read(*std::move(reader));
+  ASSERT_THAT(keyset_handle, IsOk());
 
-  EXPECT_THAT(keyset->key(), SizeIs(1));
-  EXPECT_THAT(keyset->primary_key_id(), keyset->key(0).key_id());
+  // Create a proto Keyset object from keyset_handle
+  absl::StatusOr<std::string> serialized_keyset =
+      SerializeKeysetWithoutSecretToProtoKeysetFormat(*keyset_handle.value());
+  ASSERT_THAT(serialized_keyset, IsOk());
+  Keyset keyset;
+  keyset.ParseFromString(*serialized_keyset);
 
-  // Key manager to validate key type and key material type.
-  EcdsaVerifyKeyManager key_manager;
+  EXPECT_THAT(keyset.key(), SizeIs(1));
+  EXPECT_THAT(keyset.primary_key_id(), Eq(keyset.key(0).key_id()));
 
   // Build the expected primary key.
   Keyset::Key expected_primary;
   // ID is randomly generated, so we simply copy the primary key ID.
-  expected_primary.set_key_id(keyset->primary_key_id());
+  expected_primary.set_key_id(keyset.primary_key_id());
   expected_primary.set_status(KeyStatusType::ENABLED);
   expected_primary.set_output_prefix_type(OutputPrefixType::RAW);
 
   // Populate the expected primary key KeyData.
   KeyData* expected_primary_data = expected_primary.mutable_key_data();
-  expected_primary_data->set_type_url(key_manager.get_key_type());
-  expected_primary_data->set_key_material_type(key_manager.key_material_type());
+  expected_primary_data->set_type_url(
+      "type.googleapis.com/google.crypto.tink.EcdsaPublicKey");
+  expected_primary_data->set_key_material_type(
+      google::crypto::tink::KeyData::ASYMMETRIC_PUBLIC);
   absl::StatusOr<EcdsaPublicKeyProto> pub_key =
       GetExpectedEcdsaPublicKeyProto(test_case.ec_curve, test_case.encoding);
   ASSERT_THAT(pub_key, IsOk());
   expected_primary_data->set_value(pub_key->SerializeAsString());
-  EXPECT_THAT(keyset->key(0), EqualsKey(expected_primary));
+  EXPECT_THAT(keyset.key(0), EqualsKey(expected_primary));
 }
 
 TEST_P(EcdsaSignaturePemKeysetReaderTest, ReadEcdsaCorrectPrivateKey) {

@@ -1292,10 +1292,12 @@ tink_cc_test(
     tink::signature::signature_pem_keyset_reader
     gmock
     absl::status
+    absl::statusor
     absl::strings
     tink::core::cleartext_keyset_handle
     tink::core::keyset_handle
     tink::core::keyset_reader
+    tink::core::proto_keyset_format
     tink::core::public_key_sign
     tink::core::public_key_verify
     tink::internal::rsa_util

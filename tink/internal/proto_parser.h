@@ -40,6 +40,7 @@
 #include "tink/internal/proto_parser_message_field_with_presence.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_presence_fields.h"
+#include "tink/internal/proto_parser_repeated_message_field.h"
 #include "tink/internal/proto_parser_repeated_secret_data_field.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/proto_parser_state.h"
@@ -229,6 +230,16 @@ class ProtoParserBuilder {
         absl::make_unique<
             proto_parsing::MessageFieldWithPresence<Struct, InnerStruct>>(
             tag, value, std::move(inner_parser.low_level_parser_)));
+    return *this;
+  }
+
+  template <typename InnerStruct>
+  ProtoParserBuilder<Struct>& AddRepeatedMessageField(
+      int tag, std::vector<InnerStruct> Struct::* value,
+      ProtoParser<InnerStruct> inner_parser) {
+    fields_.push_back(absl::make_unique<
+                      proto_parsing::RepeatedMessageField<Struct, InnerStruct>>(
+        tag, value, std::move(inner_parser.low_level_parser_)));
     return *this;
   }
 

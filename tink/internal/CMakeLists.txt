@@ -1405,6 +1405,7 @@ tink_cc_library(
     tink::internal::proto_parser_message_field_with_presence
     tink::internal::proto_parser_options
     tink::internal::proto_parser_presence_fields
+    tink::internal::proto_parser_repeated_message_field
     tink::internal::proto_parser_repeated_secret_data_field
     tink::internal::proto_parser_secret_data_field
     tink::internal::proto_parser_state

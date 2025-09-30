@@ -65,6 +65,7 @@ constexpr int32_t kBytesField1Tag = 3;
 constexpr int32_t kBytesField2Tag = 4;
 constexpr int32_t kInnerMessageField = 10;
 constexpr int32_t kInnerMessageField2 = 11;
+constexpr int32_t kRepeatedInnerMessageField = 12;
 constexpr int32_t kEnumField = 111;
 constexpr int32_t kUint32FieldWithLargeTag = 536870911;
 
@@ -95,6 +96,7 @@ struct ParsedStruct {
   InnerStruct inner_member_2;
   absl::optional<InnerStruct> optional_inner_member_1;
   absl::optional<InnerStruct> optional_inner_member_2;
+  std::vector<InnerStruct> repeated_inner_member;
   MyEnum enum_member;
 };
 
@@ -821,6 +823,49 @@ TEST(ProtoParserTest, RepatedSecretDataWorks) {
       Eq(text210));
 }
 
+TEST(ProtoParserTest, ParseRepeatedMessageField) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddRepeatedMessageField(
+              kRepeatedInnerMessageField, &ParsedStruct::repeated_inner_member,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(1, &InnerStruct::uint32_member_1)
+                  .AddUint32Field(2, &InnerStruct::uint32_member_2)
+                  .BuildOrDie())
+          .BuildOrDie();
+
+  std::string serialization =
+      absl::StrCat(FieldWithNumber(kRepeatedInnerMessageField)
+                       .IsSubMessage({FieldWithNumber(1).IsVarint(10),
+                                      FieldWithNumber(2).IsVarint(20)}),
+                   FieldWithNumber(kRepeatedInnerMessageField)
+                       .IsSubMessage({FieldWithNumber(1).IsVarint(30),
+                                      FieldWithNumber(2).IsVarint(40)}));
+
+  absl::StatusOr<ParsedStruct> parsed = parser.Parse(serialization);
+  ASSERT_THAT(parsed, IsOk());
+  ASSERT_THAT(parsed->repeated_inner_member, SizeIs(2));
+  EXPECT_THAT(parsed->repeated_inner_member[0].uint32_member_1, Eq(10));
+  EXPECT_THAT(parsed->repeated_inner_member[0].uint32_member_2, Eq(20));
+  EXPECT_THAT(parsed->repeated_inner_member[1].uint32_member_1, Eq(30));
+  EXPECT_THAT(parsed->repeated_inner_member[1].uint32_member_2, Eq(40));
+}
+
+TEST(ProtoParserTest, ParseRepeatedMessageFieldEmpty) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddRepeatedMessageField(
+              kRepeatedInnerMessageField, &ParsedStruct::repeated_inner_member,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(1, &InnerStruct::uint32_member_1)
+                  .BuildOrDie())
+          .BuildOrDie();
+
+  absl::StatusOr<ParsedStruct> parsed = parser.Parse("");
+  ASSERT_THAT(parsed, IsOk());
+  EXPECT_THAT(parsed->repeated_inner_member, IsEmpty());
+}
+
 // Found by a prototype fuzzer.
 TEST(ProtoParserTest, Regression1) {
   std::string serialization = HexDecodeOrDie("a20080808080808080808000");
@@ -1342,6 +1387,57 @@ TEST(ProtoParserTest, SerializeRepatedSecretDataWorks) {
                                    FieldWithNumber(2).IsString(text120)}),
                               FieldWithNumber(2).IsSubMessage(
                                   {FieldWithNumber(1).IsString(text210)}))));
+}
+
+TEST(ProtoParserTest, SerializeRepeatedMessageField) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddRepeatedMessageField(
+              kRepeatedInnerMessageField, &ParsedStruct::repeated_inner_member,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(1, &InnerStruct::uint32_member_1)
+                  .AddUint32Field(2, &InnerStruct::uint32_member_2)
+                  .BuildOrDie())
+          .BuildOrDie();
+
+  ParsedStruct s;
+  InnerStruct inner1;
+  inner1.uint32_member_1 = 10;
+  inner1.uint32_member_2 = 20;
+  s.repeated_inner_member.push_back(inner1);
+
+  InnerStruct inner2;
+  inner2.uint32_member_1 = 30;
+  inner2.uint32_member_2 = 40;
+  s.repeated_inner_member.push_back(inner2);
+
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+
+  std::string expected_serialization =
+      absl::StrCat(FieldWithNumber(kRepeatedInnerMessageField)
+                       .IsSubMessage({FieldWithNumber(1).IsVarint(10),
+                                      FieldWithNumber(2).IsVarint(20)}),
+                   FieldWithNumber(kRepeatedInnerMessageField)
+                       .IsSubMessage({FieldWithNumber(1).IsVarint(30),
+                                      FieldWithNumber(2).IsVarint(40)}));
+  EXPECT_THAT(*serialized, Eq(expected_serialization));
+}
+
+TEST(ProtoParserTest, SerializeRepeatedMessageFieldEmpty) {
+  ProtoParser<ParsedStruct> parser =
+      ProtoParserBuilder<ParsedStruct>()
+          .AddRepeatedMessageField(
+              kRepeatedInnerMessageField, &ParsedStruct::repeated_inner_member,
+              ProtoParserBuilder<InnerStruct>()
+                  .AddUint32Field(1, &InnerStruct::uint32_member_1)
+                  .BuildOrDie())
+          .BuildOrDie();
+
+  ParsedStruct s;
+  absl::StatusOr<std::string> serialized = parser.SerializeIntoString(s);
+  ASSERT_THAT(serialized, IsOk());
+  EXPECT_THAT(*serialized, IsEmpty());
 }
 
 // Various String field variants ===============================================

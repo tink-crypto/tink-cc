@@ -81,8 +81,8 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
   }
 
   { // pk_verify_set has no primary primitive.
-    std::unique_ptr<PrimitiveSet<PublicKeyVerify>>
-        pk_verify_set(new PrimitiveSet<PublicKeyVerify>());
+    std::unique_ptr<PrimitiveSet<PublicKeyVerify>> pk_verify_set =
+        std::make_unique<PrimitiveSet<PublicKeyVerify>>();
     auto pk_verify_result =
         PublicKeyVerifyWrapper().Wrap(std::move(pk_verify_set));
     EXPECT_FALSE(pk_verify_result.ok());
@@ -117,8 +117,8 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
     std::string signature_name_0 = "signature_0";
     std::string signature_name_1 = "signature_1";
     std::string signature_name_2 = "signature_2";
-    std::unique_ptr<PrimitiveSet<PublicKeyVerify>> pk_verify_set(
-        new PrimitiveSet<PublicKeyVerify>());
+    std::unique_ptr<PrimitiveSet<PublicKeyVerify>> pk_verify_set =
+        std::make_unique<PrimitiveSet<PublicKeyVerify>>();
 
     std::unique_ptr<PublicKeyVerify> pk_verify(
         new DummyPublicKeyVerify(signature_name_0));

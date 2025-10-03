@@ -108,8 +108,8 @@ TEST(PublicKeySignSetWrapperTest, TestBasic) {
     std::string signature_name_0 = "signature_0";
     std::string signature_name_1 = "signature_1";
     std::string signature_name_2 = "signature_2";
-    std::unique_ptr<PrimitiveSet<PublicKeySign>> pk_sign_set(
-        new PrimitiveSet<PublicKeySign>());
+    std::unique_ptr<PrimitiveSet<PublicKeySign>> pk_sign_set =
+        std::make_unique<PrimitiveSet<PublicKeySign>>();
 
     std::unique_ptr<PublicKeySign> pk_sign(
         new DummyPublicKeySign(signature_name_0));
@@ -154,8 +154,8 @@ TEST(PublicKeySignSetWrapperTest, TestLegacySignatures) {
   key.set_status(KeyStatusType::ENABLED);
   std::string signature_name = "SomeLegacySignatures";
 
-  std::unique_ptr<PrimitiveSet<PublicKeySign>> pk_sign_set(
-      new PrimitiveSet<PublicKeySign>());
+  std::unique_ptr<PrimitiveSet<PublicKeySign>> pk_sign_set =
+      std::make_unique<PrimitiveSet<PublicKeySign>>();
   std::string data = "Some data to sign";
   std::unique_ptr<PublicKeySign> pk_sign(
       new DummyPublicKeySign(signature_name));

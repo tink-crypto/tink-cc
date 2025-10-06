@@ -96,7 +96,8 @@ TEST(JsonKeysetWriterTest, WriteAndReadKeyset) {
   keyset.set_primary_key_id(42);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
+  std::unique_ptr<std::ostream> destination_stream =
+      std::make_unique<std::ostream>(&buffer);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
@@ -125,7 +126,8 @@ TEST(JsonKeysetWriterTest, WriteAndReadEncryptedKeyset) {
   key_info->set_status(KeyStatusType::ENABLED);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
+  std::unique_ptr<std::ostream> destination_stream =
+      std::make_unique<std::ostream>(&buffer);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
@@ -151,7 +153,8 @@ TEST(JsonKeysetWriterTest, WriteKeysetWithDestinationStreamErrors) {
   keyset.set_primary_key_id(42);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
+  std::unique_ptr<std::ostream> destination_stream =
+      std::make_unique<std::ostream>(&buffer);
   destination_stream->setstate(std::ostream::badbit);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_TRUE(writer_result.ok()) << writer_result.status();
@@ -174,7 +177,8 @@ TEST(JsonKeysetWriterTest, WriteEncryptedKeysetWithDestinationStreamErrors) {
   key_info->set_status(KeyStatusType::ENABLED);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
+  std::unique_ptr<std::ostream> destination_stream =
+      std::make_unique<std::ostream>(&buffer);
   destination_stream->setstate(std::ostream::badbit);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_TRUE(writer_result.ok()) << writer_result.status();
@@ -194,7 +198,8 @@ TEST(JsonKeysetWriterTest, WriteLargeKeyId) {
   keyset.set_primary_key_id(4123456789);  // 4123456789 > 2^31
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream(new std::ostream(&buffer));
+  std::unique_ptr<std::ostream> destination_stream =
+      std::make_unique<std::ostream>(&buffer);
   auto writer_result = JsonKeysetWriter::New(std::move(destination_stream));
   ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());

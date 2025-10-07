@@ -82,8 +82,8 @@ TEST_F(HybridDecryptSetWrapperTest, Basic) {
   }
 
   { // hybrid_decrypt_set has no primary primitive.
-    std::unique_ptr<PrimitiveSet<HybridDecrypt>>
-        hybrid_decrypt_set(new PrimitiveSet<HybridDecrypt>());
+    std::unique_ptr<PrimitiveSet<HybridDecrypt>> hybrid_decrypt_set =
+        std::make_unique<PrimitiveSet<HybridDecrypt>>();
     auto hybrid_decrypt_result = HybridDecryptWrapper().Wrap(
         std::move(hybrid_decrypt_set));
     EXPECT_FALSE(hybrid_decrypt_result.ok());
@@ -118,8 +118,8 @@ TEST_F(HybridDecryptSetWrapperTest, Basic) {
     std::string hybrid_name_0 = "hybrid_0";
     std::string hybrid_name_1 = "hybrid_1";
     std::string hybrid_name_2 = "hybrid_2";
-    std::unique_ptr<PrimitiveSet<HybridDecrypt>> hybrid_decrypt_set(
-        new PrimitiveSet<HybridDecrypt>());
+    std::unique_ptr<PrimitiveSet<HybridDecrypt>> hybrid_decrypt_set =
+        std::make_unique<PrimitiveSet<HybridDecrypt>>();
     std::unique_ptr<HybridDecrypt> hybrid_decrypt(
         new DummyHybridDecrypt(hybrid_name_0));
     auto entry_result = hybrid_decrypt_set->AddPrimitive(

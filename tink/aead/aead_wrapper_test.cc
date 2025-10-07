@@ -156,7 +156,8 @@ TEST(AeadSetWrapperTest, DecryptNonPrimary) {
   std::string aead_name_0 = "aead0";
   std::string aead_name_1 = "aead1";
   std::string aead_name_2 = "aead2";
-  std::unique_ptr<PrimitiveSet<Aead>> aead_set(new PrimitiveSet<Aead>());
+  std::unique_ptr<PrimitiveSet<Aead>> aead_set =
+      std::make_unique<PrimitiveSet<Aead>>();
   std::unique_ptr<Aead> aead = absl::make_unique<DummyAead>(aead_name_0);
 
   // Encrypt some message with the first aead.s

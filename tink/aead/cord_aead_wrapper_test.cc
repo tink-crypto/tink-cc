@@ -76,8 +76,8 @@ std::unique_ptr<PrimitiveSet<CordAead>> setup_keyset() {
   key_info->set_key_id(key_id_0);
   key_info->set_status(KeyStatusType::ENABLED);
   std::string aead_name_0 = "aead0";
-  std::unique_ptr<PrimitiveSet<CordAead>> aead_set(
-      new PrimitiveSet<CordAead>());
+  std::unique_ptr<PrimitiveSet<CordAead>> aead_set =
+      std::make_unique<PrimitiveSet<CordAead>>();
   std::unique_ptr<CordAead> aead =
       absl::make_unique<DummyCordAead>(aead_name_0);
   auto entry_result =

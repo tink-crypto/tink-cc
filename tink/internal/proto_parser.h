@@ -244,7 +244,7 @@ class ProtoParserBuilder {
   }
 
   ProtoParserBuilder<Struct>& AddField(
-      int tag, std::unique_ptr<proto_parsing::Field<Struct>> field) {
+      std::unique_ptr<proto_parsing::Field<Struct>> field) {
     fields_.push_back(std::move(field));
     return *this;
   }

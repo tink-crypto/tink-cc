@@ -42,12 +42,14 @@ namespace proto_parsing {
 template <typename Struct, typename Enum>
 class EnumField : public Field<Struct> {
  public:
-  explicit EnumField(int field_number, Enum Struct::*value,
+  explicit EnumField(int field_number, Enum Struct::* value,
                      absl::AnyInvocable<bool(uint32_t) const> is_valid,
+                     Enum default_value = {},
                      ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : field_number_(field_number),
         value_(value),
         is_valid_(std::move(is_valid)),
+        default_value_(default_value),
         options_(options) {
     static_assert(std::numeric_limits<std::underlying_type_t<Enum>>::max() <=
                       std::numeric_limits<uint32_t>::max(),
@@ -61,7 +63,7 @@ class EnumField : public Field<Struct> {
   EnumField& operator=(EnumField&&) noexcept = delete;
 
   void ClearMember(Struct& s) const override {
-    s.*value_ = {};
+    s.*value_ = default_value_;
   }
 
   bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
@@ -103,12 +105,13 @@ class EnumField : public Field<Struct> {
  private:
   bool RequiresSerialization(const Struct& values) const {
     return (options_ == ProtoFieldOptions::kAlwaysSerialize) ||
-           values.*value_ != static_cast<Enum>(0);
+           values.*value_ != default_value_;
   }
 
   int field_number_;
   Enum Struct::*value_;
   absl::AnyInvocable<bool(uint32_t) const> is_valid_;
+  Enum default_value_;
   ProtoFieldOptions options_;
 };
 

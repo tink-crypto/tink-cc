@@ -221,6 +221,7 @@ TEST(ProtoParserTest, EnumAlwaysSerializeWorks) {
           .AddEnumField(
               kUint32Field1Tag, &ParsedStruct::enum_member,
               [](uint32_t) { return true; },
+              MyEnum::kZero,
               ProtoFieldOptions::kAlwaysSerialize)
           .BuildOrDie();
   ParsedStruct s;

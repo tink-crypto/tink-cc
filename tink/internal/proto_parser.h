@@ -172,9 +172,10 @@ class ProtoParserBuilder {
   ProtoParserBuilder& AddEnumField(
       int tag, T Struct::* value,
       absl::AnyInvocable<bool(uint32_t) const> is_valid,
+      T default_value = {},
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(absl::make_unique<proto_parsing::EnumField<Struct, T>>(
-        tag, value, std::move(is_valid), options));
+        tag, value, std::move(is_valid), default_value, options));
     return *this;
   }
   ProtoParserBuilder& AddBytesStringField(

@@ -68,6 +68,15 @@ TEST(EnumField, ClearMemberWorks) {
   EXPECT_THAT(s.enum_field, Eq(MyEnum::k0));
 }
 
+TEST(EnumField, ClearMemberOtherDefaultWorks) {
+  EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
+                                         &AlwaysValid, MyEnum::k1);
+  ExampleStruct s;
+  s.enum_field = MyEnum::k0;
+  field.ClearMember(s);
+  EXPECT_THAT(s.enum_field, Eq(MyEnum::k1));
+}
+
 std::vector<std::pair<std::string, uint32_t>> GetUint32TestCases() {
   return std::vector<std::pair<std::string, uint32_t>>{
       {"01", 1}, {"7f", 127}, {"8001", 128}, {"a274", 14882}};
@@ -161,9 +170,25 @@ TEST(Uint32Field, SerializeEmpty) {
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
+TEST(Uint32Field, SerializeEmptyDifferentDefault) {
+  EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
+                                         &AlwaysValid, MyEnum::k1);
+  std::string buffer = "abcdef";
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  ExampleStruct s;
+  s.enum_field = MyEnum::k1;
+
+  ASSERT_THAT(field.GetSerializedSizeIncludingTag(s), Eq(0));
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span, s), IsOk());
+  std::string expected = "abcdef";
+  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
+  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+}
+
 TEST(Uint32Field, SerializeEmptyAlwaysSerialize) {
   EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
-                                         &AlwaysValid,
+                                         &AlwaysValid, MyEnum::k0,
+
                                          ProtoFieldOptions::kAlwaysSerialize);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
@@ -176,6 +201,23 @@ TEST(Uint32Field, SerializeEmptyAlwaysSerialize) {
   // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
   EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+}
+
+TEST(Uint32Field, SerializeEmptyAlwaysSerializeDifferentDefault) {
+  EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
+                                         &AlwaysValid, MyEnum::k1,
+                                         ProtoFieldOptions::kAlwaysSerialize);
+  std::string buffer = "abcdef";
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  ExampleStruct s;
+  s.enum_field = MyEnum::k1;
+
+  ASSERT_THAT(field.GetSerializedSizeIncludingTag(s), Eq(2));
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span, s), IsOk());
+  std::string expected = "cdef";
+  // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
+  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0801"));
 }
 
 TEST(EnumField, SerializeVarintBufferTooSmall) {

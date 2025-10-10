@@ -133,13 +133,12 @@ absl::Status SerializeVarint(uint64_t value, SerializationState& output) {
         "Output buffer too small to contain varint of size ", size));
   }
   absl::Span<char> output_buffer = output.GetBuffer();
-  for (int i = 0; i < size; ++i) {
-    uint64_t byte = (value >> (7 * i)) & 0x7f;
-    if (i != size - 1) {
-      byte |= 0x80;
-    }
-    output_buffer[i] = byte;
+  int i = 0;
+  while (value >= 0x80) {
+    output_buffer[i++] = (static_cast<char>(value) & 0x7f) | 0x80;
+    value >>= 7;
   }
+  output_buffer[i++] = static_cast<char>(value);
   output.Advance(size);
   return absl::OkStatus();
 }

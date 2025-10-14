@@ -533,11 +533,9 @@ KeysetHandle::GetPublicKeysetHandle(const KeyGenConfiguration& config) const {
       if (!public_key.ok()) {
         return public_key.status();
       }
-      // TODO(b/370439805): Replace this with creating a new entry from the
-      // public key directly, after a way to get a dynamically allocated copy of
-      // a key object reference is implemented.
       absl::StatusOr<const Entry> public_key_entry =
-          CreateEntry(*public_key.value(), keyset_->primary_key_id());
+          Entry(private_key->GetPublicKey().Clone(), entry.GetStatus(),
+                entry.GetId(), entry.IsPrimary());
       if (!public_key_entry.ok()) {
         return public_key_entry.status();
       }

@@ -2210,3 +2210,44 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME proto_parser_message
+  SRCS
+    proto_parser_message.cc
+    proto_parser_message.h
+  DEPS
+    tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
+    tink::internal::secret_buffer
+    absl::algorithm_container
+    absl::nullability
+    absl::die_if_null
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::core::secret_data
+)
+
+tink_cc_test(
+  NAME proto_parser_message_test
+  SRCS
+    proto_parser_message_test.cc
+  DEPS
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_state
+    gmock
+    absl::crc32c
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::core::secret_data
+    tink::internal::testing::field_with_number
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+)

@@ -124,13 +124,15 @@ TEST(EnumField, ConsumeIntoMemberFailureCases) {
   }
 }
 
-TEST(EnumField, ConsumeIntoMemberInvalidFails) {
+TEST(EnumField, ConsumeIntoMemberInvalidIgnores) {
   EnumField<ExampleStruct, MyEnum> field(1, &ExampleStruct::enum_field,
                                          &IsZeroOrOne);
   ExampleStruct s;
-  std::string serialized = HexDecodeOrDie(/* 128 as varint */"8001");
+  s.enum_field = MyEnum::k1;
+  std::string serialized = HexDecodeOrDie(/* 2 as varint */"02");
   ParsingState parsing_state = ParsingState(serialized);
-  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsFalse());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state, s), IsTrue());
+  EXPECT_THAT(s.enum_field, Eq(MyEnum::k1));
 }
 
 TEST(EnumField, SerializeVarintSuccessCases) {

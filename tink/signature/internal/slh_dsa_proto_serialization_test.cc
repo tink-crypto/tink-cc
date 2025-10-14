@@ -264,9 +264,11 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidSigTypeFails) {
     absl::StatusOr<std::unique_ptr<Parameters>> parameters =
         internal::MutableSerializationRegistry::GlobalInstance()
             .ParseParameters(*serialization);
-    EXPECT_THAT(parameters.status(),
-                StatusIs(absl::StatusCode::kInvalidArgument,
-                         HasSubstr("Failed to parse SlhDsaKeyFormat proto")));
+    EXPECT_THAT(
+        parameters.status(),
+        StatusIs(
+            absl::StatusCode::kInvalidArgument,
+            HasSubstr("Could not determine SlhDsaParameters::SignatureType")));
   }
 }
 
@@ -312,9 +314,10 @@ TEST_F(SlhDsaProtoSerializationTest, ParseParametersWithInvalidHashTypeFails) {
     absl::StatusOr<std::unique_ptr<Parameters>> parameters =
         internal::MutableSerializationRegistry::GlobalInstance()
             .ParseParameters(*serialization);
-    EXPECT_THAT(parameters.status(),
-                StatusIs(absl::StatusCode::kInvalidArgument,
-                         HasSubstr("Failed to parse SlhDsaKeyFormat proto")));
+    EXPECT_THAT(
+        parameters.status(),
+        StatusIs(absl::StatusCode::kInvalidArgument,
+                 HasSubstr("not determine SlhDsaParameters::HashType")));
   }
 }
 

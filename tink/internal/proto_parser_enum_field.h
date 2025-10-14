@@ -72,7 +72,7 @@ class EnumField : public Field<Struct> {
       return false;
     }
     if (!is_valid_(result.value())) {
-      return false;
+      return true;
     }
     s.*value_ = static_cast<Enum>(*result);
     return true;

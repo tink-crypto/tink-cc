@@ -294,9 +294,10 @@ TEST_F(EcdsaProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Parameters>> parameters =
       registry.ParseParameters(*serialization);
-  EXPECT_THAT(parameters.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Parsing input failed")));
+  EXPECT_THAT(
+      parameters.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Could not determine EcdsaSignatureEncoding")));
 }
 
 TEST_F(EcdsaProtoSerializationTest,

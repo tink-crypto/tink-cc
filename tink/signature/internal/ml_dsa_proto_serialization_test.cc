@@ -260,7 +260,7 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
             .ParseParameters(*serialization);
     EXPECT_THAT(parameters.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         HasSubstr("Failed to parse MlDsaKeyFormat proto")));
+                         HasSubstr("not determine MlDsaParameters::Instance")));
   }
   {
     // Out of range instance - too small.
@@ -279,7 +279,7 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
             .ParseParameters(*serialization);
     EXPECT_THAT(parameters.status(),
                 StatusIs(absl::StatusCode::kInvalidArgument,
-                         HasSubstr("Failed to parse MlDsaKeyFormat proto")));
+                         HasSubstr("not determine MlDsaParameters::Instance")));
   }
 }
 

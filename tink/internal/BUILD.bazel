@@ -2257,3 +2257,36 @@ cc_test(
         "@com_google_googletest//:gtest_main",
     ],
 )
+
+cc_library(
+    name = "proto_parser_owning_fields",
+    hdrs = ["proto_parser_owning_fields.h"],
+    include_prefix = "tink/internal",
+    deps = [
+        ":proto_parser_fields",
+        ":proto_parser_options",
+        ":proto_parser_state",
+        ":proto_parsing_helpers",
+        "@com_google_absl//absl/base:core_headers",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings:string_view",
+    ],
+)
+
+cc_test(
+    name = "proto_parser_owning_fields_test",
+    srcs = ["proto_parser_owning_fields_test.cc"],
+    deps = [
+        ":proto_parser_options",
+        ":proto_parser_owning_fields",
+        ":proto_parser_state",
+        "//tink:secret_data",
+        "//tink/util:secret_data",
+        "//tink/util:test_matchers",
+        "//tink/util:test_util",
+        "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/strings:string_view",
+        "@com_google_absl//absl/types:span",
+        "@com_google_googletest//:gtest_main",
+    ],
+)

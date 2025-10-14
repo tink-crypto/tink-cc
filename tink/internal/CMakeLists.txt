@@ -2178,3 +2178,35 @@ tink_cc_test(
     tink::util::test_matchers
     tink::util::test_util
 )
+
+tink_cc_library(
+  NAME proto_parser_owning_fields
+  SRCS
+    proto_parser_owning_fields.h
+  DEPS
+    tink::internal::proto_parser_fields
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
+    absl::core_headers
+    absl::status
+    absl::string_view
+)
+
+tink_cc_test(
+  NAME proto_parser_owning_fields_test
+  SRCS
+    proto_parser_owning_fields_test.cc
+  DEPS
+    tink::internal::proto_parser_options
+    tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_state
+    gmock
+    absl::strings
+    absl::string_view
+    absl::span
+    tink::core::secret_data
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+)

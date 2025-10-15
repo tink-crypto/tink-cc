@@ -28,11 +28,11 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/proto_parser_fields.h"
-#include "tink/internal/proto_parser_options.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
-#include "tink/util/secret_data.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -127,6 +127,33 @@ class RepeatedSecretDataField : public Field<Struct> {
  private:
   std::vector<SecretData> Struct::* data_;
   int field_number_;
+};
+
+// OwningRepeatedSecretDataField is a Field that owns a vector of SecretData.
+// It is used to represent a repeated field of SecretData in a proto message.
+class OwningRepeatedSecretDataField : public OwningField {
+ public:
+  explicit OwningRepeatedSecretDataField(int field_number)
+      : OwningField(field_number, WireType::kLengthDelimited),
+        field_(field_number, &OwningRepeatedSecretDataField::value_) {}
+
+  void Clear() override { field_.ClearMember(*this); }
+  bool ConsumeIntoMember(ParsingState& serialized) override {
+    return field_.ConsumeIntoMember(serialized, *this);
+  }
+  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+    return field_.SerializeWithTagInto(out, *this);
+  }
+  size_t GetSerializedSizeIncludingTag() const override {
+    return field_.GetSerializedSizeIncludingTag(*this);
+  }
+
+  const std::vector<SecretData>& value() const { return value_; }
+  std::vector<SecretData>& value() { return value_; }
+
+ private:
+  std::vector<SecretData> value_;
+  RepeatedSecretDataField<OwningRepeatedSecretDataField> field_;
 };
 
 }  // namespace proto_parsing

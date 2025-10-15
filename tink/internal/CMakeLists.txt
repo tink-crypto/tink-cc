@@ -2014,7 +2014,7 @@ tink_cc_library(
   DEPS
     tink::internal::call_with_core_dump_protection
     tink::internal::proto_parser_fields
-    tink::internal::proto_parser_options
+    tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::safe_stringops
@@ -2023,7 +2023,7 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::string_view
-    tink::util::secret_data
+    tink::core::secret_data
 )
 
 tink_cc_test(
@@ -2031,7 +2031,6 @@ tink_cc_test(
   SRCS
     proto_parser_repeated_secret_data_field_test.cc
   DEPS
-    tink::internal::proto_parser_options
     tink::internal::proto_parser_repeated_secret_data_field
     tink::internal::proto_parser_state
     gmock

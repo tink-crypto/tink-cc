@@ -26,11 +26,9 @@
 #include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
@@ -62,9 +60,7 @@ class EnumField : public Field<Struct> {
   EnumField(EnumField&&) noexcept = delete;
   EnumField& operator=(EnumField&&) noexcept = delete;
 
-  void ClearMember(Struct& s) const override {
-    s.*value_ = default_value_;
-  }
+  void ClearMember(Struct& s) const override { s.*value_ = default_value_; }
 
   bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
     absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
@@ -82,7 +78,7 @@ class EnumField : public Field<Struct> {
   int GetFieldNumber() const override { return field_number_; }
 
   absl::Status SerializeWithTagInto(SerializationState& out,
-                             const Struct& values) const override {
+                                    const Struct& values) const override {
     if (!RequiresSerialization(values)) {
       return absl::OkStatus();
     }
@@ -109,10 +105,40 @@ class EnumField : public Field<Struct> {
   }
 
   int field_number_;
-  Enum Struct::*value_;
+  Enum Struct::* value_;
   absl::AnyInvocable<bool(uint32_t) const> is_valid_;
   Enum default_value_;
   ProtoFieldOptions options_;
+};
+
+template <typename Enum>
+class EnumOwningField : public OwningField {
+ public:
+  explicit EnumOwningField(int field_number,
+                           absl::AnyInvocable<bool(uint32_t) const> is_valid,
+                           Enum default_value = {},
+                           ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : OwningField(field_number, WireType::kVarint),
+        field_(field_number, &EnumOwningField::value_, std::move(is_valid),
+               default_value, options) {}
+
+  void Clear() override { field_.ClearMember(*this); }
+  bool ConsumeIntoMember(ParsingState& serialized) override {
+    return field_.ConsumeIntoMember(serialized, *this);
+  }
+  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+    return field_.SerializeWithTagInto(out, *this);
+  }
+  size_t GetSerializedSizeIncludingTag() const override {
+    return field_.GetSerializedSizeIncludingTag(*this);
+  }
+
+  const Enum& value() const { return value_; }
+  void set_value(Enum value) { value_ = value; }
+
+ private:
+  Enum value_;
+  EnumField<EnumOwningField, Enum> field_;
 };
 
 }  // namespace proto_parsing

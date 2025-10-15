@@ -73,6 +73,11 @@ std::vector<std::pair<std::string, uint32_t>> Uint32TestCasesParseOnly() {
   return result;
 }
 
+TEST(Uint32Field, UninitializedValueIsZero) {
+  Uint32OwningField field(kUint32Field1Number);
+  EXPECT_THAT(field.value(), Eq(0));
+}
+
 TEST(Uint32Field, ClearWorks) {
   Uint32OwningField field(kUint32Field1Number);
   field.set_value(123);

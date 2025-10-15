@@ -91,7 +91,7 @@ class Uint32OwningField : public OwningField {
   uint32_t value() const { return value_; }
 
  private:
-  uint32_t value_;
+  uint32_t value_ = 0;
   Uint32Field<Uint32OwningField> field_;
 };
 

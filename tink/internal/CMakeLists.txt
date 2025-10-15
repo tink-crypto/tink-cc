@@ -2230,6 +2230,7 @@ tink_cc_library(
     absl::string_view
     absl::span
     tink::core::secret_data
+    tink::subtle::subtle_util
 )
 
 tink_cc_test(

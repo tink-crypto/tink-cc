@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <utility>
 
 #include "absl/algorithm/container.h"
@@ -29,6 +30,7 @@
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/secret_data.h"
+#include "tink/subtle/subtle_util.h"
 
 namespace crypto {
 namespace tink {
@@ -76,6 +78,16 @@ SecretData Message::SerializeAsSecretData() const {
 #else
   return SecretData(std::move(out));
 #endif
+}
+
+std::string Message::SerializeAsString() const {
+  std::string out;
+  subtle::ResizeStringUninitialized(&out, ByteSizeLong());
+  if (!SerializeToSpan(
+          absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size()))) {
+    return std::string();
+  }
+  return out;
 }
 
 bool Message::Serialize(SerializationState& out) const {

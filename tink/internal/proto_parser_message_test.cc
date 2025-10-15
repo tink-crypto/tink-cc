@@ -75,6 +75,8 @@ class OuterStruct : public Message {
   const InnerStruct& inner_member() const { return inner_member_.value(); }
   InnerStruct& inner_member() { return inner_member_.value(); }
 
+  using Message::SerializeAsString;
+
  private:
   MessageOwningField<InnerStruct> inner_member_{1};
   Fields fields_{&inner_member_};
@@ -96,6 +98,17 @@ TEST(MessageTest, SerializeAsSecretDataSuccess) {
   SecretData buffer = s.SerializeAsSecretData();
   EXPECT_THAT(
       util::SecretDataAsStringView(buffer),
+      Eq(FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
+                                          FieldWithNumber(2).IsVarint(0x7a)})));
+}
+
+TEST(MessageTest, SerializeAsStringSuccess) {
+  OuterStruct s;
+  s.inner_member().set_uint32_member_1(0x23);
+  s.inner_member().set_uint32_member_2(0x7a);
+  std::string buffer = s.SerializeAsString();
+  EXPECT_THAT(
+      buffer,
       Eq(FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
                                           FieldWithNumber(2).IsVarint(0x7a)})));
 }

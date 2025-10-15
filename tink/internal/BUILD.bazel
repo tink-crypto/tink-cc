@@ -2302,6 +2302,7 @@ cc_library(
         ":proto_parsing_helpers",
         ":secret_buffer",
         "//tink:secret_data",
+        "//tink/subtle:subtle_util",
         "@com_google_absl//absl/algorithm:container",
         "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/log:die_if_null",

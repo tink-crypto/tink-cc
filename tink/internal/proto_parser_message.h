@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <initializer_list>
+#include <string>
 #include <vector>
 
 #include "absl/algorithm/container.h"
@@ -88,6 +89,9 @@ class Message {
 
   // Serializes the message as SecretData.
   SecretData SerializeAsSecretData() const;
+
+ protected:
+  std::string SerializeAsString() const;
 
  private:
   friend class MessageOwningFieldBase;

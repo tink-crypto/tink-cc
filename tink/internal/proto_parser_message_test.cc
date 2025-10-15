@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -42,6 +43,7 @@ namespace {
 using ::crypto::tink::internal::proto_testing::FieldWithNumber;
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
+using ::testing::ElementsAre;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
@@ -51,6 +53,15 @@ using ::testing::Test;
 class InnerStruct final : public Message {
  public:
   InnerStruct() : Message(&fields_) {}
+  InnerStruct(uint32_t uint32_member_1, uint32_t uint32_member_2)
+      : Message(&fields_) {
+    uint32_member_1_.set_value(uint32_member_1);
+    uint32_member_2_.set_value(uint32_member_2);
+  }
+  InnerStruct(const InnerStruct& other) : Message(&fields_) {
+    uint32_member_1_.set_value(other.uint32_member_1_.value());
+    uint32_member_2_.set_value(other.uint32_member_2_.value());
+  }
 
   uint32_t uint32_member_1() const { return uint32_member_1_.value(); }
   void set_uint32_member_1(uint32_t value) {
@@ -59,6 +70,11 @@ class InnerStruct final : public Message {
   uint32_t uint32_member_2() const { return uint32_member_2_.value(); }
   void set_uint32_member_2(uint32_t value) {
     uint32_member_2_.set_value(value);
+  }
+
+  bool operator==(const InnerStruct& other) const {
+    return uint32_member_1_.value() == other.uint32_member_1_.value() &&
+           uint32_member_2_.value() == other.uint32_member_2_.value();
   }
 
  private:
@@ -301,8 +317,162 @@ TEST(MessageOwningFieldTest, SerializeVerySmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
-}  // namespace
+// -----------------------------------------------------------------------------
+// RepeatedMessageOwningField tests.
 
+TEST(RepeatedMessageOwningField, ConsumeIntoMemberSuccessCases) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+
+  std::string bytes = absl::StrCat(
+      /* 4 bytes */ HexDecodeOrDie("04"),
+      /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
+      /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
+      /* 2 bytes */ HexDecodeOrDie("02"),
+      /* Int field, tag 1, value 0x01 */ HexDecodeOrDie("0801"),
+      "remaining_data");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
+  EXPECT_THAT(field.values(),
+              ElementsAre(InnerStruct(0x23, 0x7a), InnerStruct(0x01, 0)));
+}
+
+TEST(RepeatedMessageOwningField, ConsumeIntoMemberWithCrcSuccessCases) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+
+  std::string bytes = absl::StrCat(
+      /* 4 bytes */ HexDecodeOrDie("04"),
+      /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
+      /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
+      /* 2 bytes */ HexDecodeOrDie("02"),
+      /* Int field, tag 1, value 0x01 */ HexDecodeOrDie("0801"),
+      "remaining_data");
+  absl::crc32c_t crc{};
+  ParsingState parsing_state = ParsingState(bytes, &crc);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(bytes.substr(0, 8))));
+  EXPECT_THAT(field.values(),
+              ElementsAre(InnerStruct(0x23, 0x7a), InnerStruct(0x01, 0)));
+}
+
+TEST(RepeatedMessageOwningField, ConsumeIntoMemberEmptyString) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  std::string bytes = HexDecodeOrDie("00");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field.values(), ElementsAre(InnerStruct()));
+}
+
+TEST(RepeatedMessageOwningField, ConsumeIntoMemberAppends) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  field.values().push_back(InnerStruct(123, 456));
+  std::string bytes = absl::StrCat(
+      /* 4 bytes */ HexDecodeOrDie("04"),
+      /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
+      /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
+      "remaining_data");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
+  EXPECT_THAT(field.values(),
+              ElementsAre(InnerStruct(123, 456), InnerStruct(0x23, 0x7a)));
+}
+
+TEST(RepeatedMessageOwningField, ConsumeIntoMemberVarintTooLong) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  std::string bytes = /* LengthDelimetedLength: */ HexDecodeOrDie("01");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+}
+
+TEST(RepeatedMessageOwningField, EmptyWithoutVarint) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  std::string bytes = "";
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+}
+
+TEST(RepeatedMessageOwningField, InvalidVarint) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+}
+
+TEST(RepeatedMessageOwningField, SerializeEmpty) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  std::string buffer = "abc";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(3));
+  EXPECT_THAT(buffer, Eq("abc"));
+}
+
+TEST(RepeatedMessageOwningField, SerializeNonEmpty) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  field.values().push_back(InnerStruct(0x23, 0x7a));
+  field.values().push_back(InnerStruct());
+  field.values().back().set_uint32_member_1((0x01));
+  std::string buffer = "BUFFERBUFFERBUFFERBUFFERBUFFERBUFFER";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(10));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 10));
+  EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[10]));
+  EXPECT_THAT(buffer.substr(0, 10),
+              Eq(absl::StrCat(FieldWithNumber(1).IsSubMessage(
+                                  {FieldWithNumber(1).IsVarint(0x23),
+                                   FieldWithNumber(2).IsVarint(0x7a)}),
+                              FieldWithNumber(1).IsSubMessage(
+                                  {FieldWithNumber(1).IsVarint(0x01)}))));
+  // Rest is untouched
+  EXPECT_THAT(buffer.substr(10), Eq("ERBUFFERBUFFERBUFFERBUFFER"));
+}
+
+TEST(RepeatedMessageOwningField, SerializeNonEmptyWithEmptyInnerStruct) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  field.values().push_back(InnerStruct());
+  std::string buffer = "BUFFER";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  // Tag (1 << 3 | 2) = 0x0a, Length = 0x00. Total 2 bytes.
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 2));
+  EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[2]));
+  EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
+  // Rest is untouched
+  EXPECT_THAT(buffer.substr(2), Eq("FFER"));
+}
+
+TEST(RepeatedMessageOwningField, SerializeTooSmallBuffer) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  field.values().push_back(InnerStruct(0x23, 0x7a));
+  std::string buffer = "BUFFE";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+TEST(RepeatedMessageOwningField, SerializeSmallerBuffer) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  field.values().push_back(InnerStruct(0x23, 0x7a));
+  std::string buffer = "B";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+TEST(RepeatedMessageOwningField, SerializeVerySmallBuffer) {
+  RepeatedMessageOwningField<InnerStruct> field{1};
+  field.values().push_back(InnerStruct(0x23, 0x7a));
+  std::string buffer;
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+}  // namespace
 }  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink

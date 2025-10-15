@@ -2220,6 +2220,7 @@ tink_cc_library(
     tink::internal::secret_buffer
     absl::algorithm_container
     absl::nullability
+    absl::check
     absl::die_if_null
     absl::status
     absl::statusor

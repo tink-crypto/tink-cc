@@ -24,6 +24,7 @@
 
 #include "absl/algorithm/container.h"
 #include "absl/base/nullability.h"
+#include "absl/log/check.h"
 #include "absl/log/die_if_null.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -95,6 +96,8 @@ class Message {
 
  private:
   friend class MessageOwningFieldBase;
+  template <typename MessageT>
+  friend class RepeatedMessageOwningField;
 
   // Serializes the message into the given serialization state `out`.
   // Returns true if the serialization was successful.
@@ -168,6 +171,21 @@ class MessageOwningFieldBase : public OwningField {
   Message& message_;
 };
 
+
+// Represents a proto message that is owned by the MessageOwningField.
+//
+// Usage:
+//
+// class MyMessage : public Message {
+//  public:
+//   MyMessage() : Message(&fields_) {}
+//   ~MyMessage() = default;
+//  private:
+//   MessageOwningField<MySubMessage> some_message_{1};
+//   Fields fields_{&some_message_};
+// };
+//
+// This class is not thread-safe.
 template <typename MessageT>
 class MessageOwningField final : public MessageOwningFieldBase {
  public:
@@ -185,6 +203,90 @@ class MessageOwningField final : public MessageOwningFieldBase {
 
  private:
   MessageT value_;
+};
+
+// Represents a repeated proto message.
+//
+// Usage:
+//
+// class MyMessage : public Message {
+//  public:
+//   MyMessage() : Message(&fields_) {}
+//   ~MyMessage() = default;
+//  private:
+//   RepeatedMessageOwningField<MySubMessage> some_repeated_message_{1};
+//   Fields fields_{&some_repeated_message_};
+// };
+//
+// This class is not thread-safe.
+template <typename MessageT>
+class RepeatedMessageOwningField : public OwningField {
+ public:
+  explicit RepeatedMessageOwningField(int field_number)
+      : OwningField(field_number, WireType::kLengthDelimited) {}
+
+  void Clear() override { values_.clear(); }
+
+  bool ConsumeIntoMember(ParsingState& serialized) override {
+    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
+    if (!length.ok()) {
+      return false;
+    }
+    if (*length > serialized.RemainingData().size()) {
+      return false;
+    }
+    ParsingState submessage_parsing_state =
+        serialized.SplitOffSubmessageState(*length);
+    MessageT parsed_message;
+    if (!parsed_message.Parse(submessage_parsing_state)) {
+      return false;
+    }
+    QCHECK(submessage_parsing_state.ParsingDone());
+    values_.push_back(std::move(parsed_message));
+    return true;
+  }
+
+  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+    for (const MessageT& message : values_) {
+      if (absl::Status res = SerializeWireTypeAndFieldNumber(
+              GetWireType(), FieldNumber(), out);
+          !res.ok()) {
+        return res;
+      }
+      const size_t size = message.ByteSizeLong();
+      if (absl::Status res = SerializeVarint(size, out); !res.ok()) {
+        return res;
+      }
+      if (out.GetBuffer().size() < size) {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+      }
+      // Serialize the message.
+      if (!message.Serialize(out)) {
+        return absl::InternalError("Failed to serialize message");
+      }
+    }
+    return absl::OkStatus();
+  }
+
+  size_t GetSerializedSizeIncludingTag() const override {
+    const size_t wire_type_and_field_number_length =
+        WireTypeAndFieldNumberLength(GetWireType(), FieldNumber());
+    return absl::c_accumulate(
+        values_, 0,
+        [wire_type_and_field_number_length](size_t sum,
+                                            const MessageT& message) {
+          const size_t message_size = message.ByteSizeLong();
+          return sum + message_size + VarintLength(message_size) +
+                 wire_type_and_field_number_length;
+        });
+  }
+
+  const std::vector<MessageT>& values() const { return values_; }
+  std::vector<MessageT>& values() { return values_; }
+
+ private:
+  std::vector<MessageT> values_;
 };
 
 }  // namespace proto_parsing

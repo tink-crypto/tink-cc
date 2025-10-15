@@ -318,6 +318,29 @@ TEST(Uint32Field, GetFieldNumber) {
   ASSERT_THAT(field2.GetFieldNumber(), Eq(kUint32Field2Number));
 }
 
+TEST(Uint32Field, CopyAndMove) {
+  Uint32Field<ParsedStruct> field1(kUint32Field1Number,
+                                   &ParsedStruct::uint32_member_1);
+
+  // Test copy constructor
+  Uint32Field<ParsedStruct> field_copy(field1);
+  EXPECT_THAT(field_copy.GetFieldNumber(), Eq(kUint32Field1Number));
+
+  // Test copy assignment
+  Uint32Field<ParsedStruct> field_assign = field1;
+  EXPECT_THAT(field_assign.GetFieldNumber(), Eq(kUint32Field1Number));
+
+  // Test move constructor
+  Uint32Field<ParsedStruct> field_move(std::move(field1));
+  EXPECT_THAT(field_move.GetFieldNumber(), Eq(kUint32Field1Number));
+
+  // Test move assignment
+  Uint32Field<ParsedStruct> field_move_assign(kUint32Field2Number,
+                                              &ParsedStruct::uint32_member_2);
+  field_move_assign = std::move(field_copy);
+  EXPECT_THAT(field_move_assign.GetFieldNumber(), Eq(kUint32Field1Number));
+}
+
 // Uint64Field ==============================================================
 
 // StringBytesField ============================================================
@@ -561,6 +584,52 @@ TEST(SecretDataBytesField, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(state, s), Not(IsOk()));
+}
+
+TEST(StringBytesField, CopyAndMove) {
+  BytesField<ParsedStruct, std::string> field1(kBytesField1Number,
+                                               &ParsedStruct::string_member_1);
+
+  // Test copy constructor
+  BytesField<ParsedStruct, std::string> field_copy(field1);
+  EXPECT_THAT(field_copy.GetFieldNumber(), Eq(kBytesField1Number));
+
+  // Test copy assignment
+  BytesField<ParsedStruct, std::string> field_assign = field1;
+  EXPECT_THAT(field_assign.GetFieldNumber(), Eq(kBytesField1Number));
+
+  // Test move constructor
+  BytesField<ParsedStruct, std::string> field_move(std::move(field1));
+  EXPECT_THAT(field_move.GetFieldNumber(), Eq(kBytesField1Number));
+
+  // Test move assignment
+  BytesField<ParsedStruct, std::string> field_move_assign(
+      kUint32Field2Number, &ParsedStruct::string_member_2);
+  field_move_assign = std::move(field_copy);
+  EXPECT_THAT(field_move_assign.GetFieldNumber(), Eq(kBytesField1Number));
+}
+
+TEST(SecretDataBytesField, CopyAndMove) {
+  BytesField<ParsedStruct, SecretData> field1(
+      kBytesField1Number, &ParsedStruct::secret_data_member_1);
+
+  // Test copy constructor
+  BytesField<ParsedStruct, SecretData> field_copy(field1);
+  EXPECT_THAT(field_copy.GetFieldNumber(), Eq(kBytesField1Number));
+
+  // Test copy assignment
+  BytesField<ParsedStruct, SecretData> field_assign = field1;
+  EXPECT_THAT(field_assign.GetFieldNumber(), Eq(kBytesField1Number));
+
+  // Test move constructor
+  BytesField<ParsedStruct, SecretData> field_move(std::move(field1));
+  EXPECT_THAT(field_move.GetFieldNumber(), Eq(kBytesField1Number));
+
+  // Test move assignment
+  BytesField<ParsedStruct, SecretData> field_move_assign(
+      kUint32Field2Number, &ParsedStruct::secret_data_member_2);
+  field_move_assign = std::move(field_copy);
+  EXPECT_THAT(field_move_assign.GetFieldNumber(), Eq(kBytesField1Number));
 }
 
 }  // namespace

@@ -39,6 +39,12 @@ class OwningField {
       : field_number_(field_number), wire_type_(wire_type) {}
   virtual ~OwningField() = default;
 
+  // Copyable and movable.
+  OwningField(const OwningField&) = default;
+  OwningField& operator=(const OwningField&) = default;
+  OwningField(OwningField&&) noexcept = default;
+  OwningField& operator=(OwningField&&) noexcept = default;
+
   // Clears the field.
   virtual void Clear() = 0;
 
@@ -58,8 +64,8 @@ class OwningField {
   uint32_t FieldNumber() const { return field_number_; }
 
  private:
-  const uint32_t field_number_;
-  const WireType wire_type_;
+  uint32_t field_number_;
+  WireType wire_type_;
 };
 
 class Uint32OwningField : public OwningField {

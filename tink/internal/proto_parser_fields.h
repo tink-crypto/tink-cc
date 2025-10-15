@@ -113,15 +113,15 @@ class Field {
 template <typename Struct>
 class Uint32Field : public Field<Struct> {
  public:
-  explicit Uint32Field(int field_number, uint32_t Struct::*value,
+  explicit Uint32Field(int field_number, uint32_t Struct::* value,
                        ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : value_(value), field_number_(field_number), options_(options) {}
 
-  // Not copyable, not movable.
-  Uint32Field(const Uint32Field&) = delete;
-  Uint32Field& operator=(const Uint32Field&) = delete;
-  Uint32Field(Uint32Field&&) noexcept = delete;
-  Uint32Field& operator=(Uint32Field&&) noexcept = delete;
+  // Copyable and movable.
+  Uint32Field(const Uint32Field&) = default;
+  Uint32Field& operator=(const Uint32Field&) = default;
+  Uint32Field(Uint32Field&&) noexcept = default;
+  Uint32Field& operator=(Uint32Field&&) noexcept = default;
 
   void ClearMember(Struct& s) const override { s.*value_ = 0; }
 
@@ -164,7 +164,7 @@ class Uint32Field : public Field<Struct> {
            values.*value_ != 0;
   }
 
-  uint32_t Struct::*value_;
+  uint32_t Struct::* value_;
   int field_number_;
   ProtoFieldOptions options_;
 };
@@ -172,14 +172,15 @@ class Uint32Field : public Field<Struct> {
 template <typename Struct, typename StringLike>
 class BytesField : public Field<Struct> {
  public:
-  explicit BytesField(int tag, StringLike Struct::*value,
+  explicit BytesField(int tag, StringLike Struct::* value,
                       ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : value_(value), field_number_(tag), options_(options) {}
-  // Not copyable and movable.
-  BytesField(const BytesField&) = delete;
-  BytesField& operator=(const BytesField&) = delete;
-  BytesField(BytesField&&) noexcept = delete;
-  BytesField& operator=(BytesField&&) noexcept = delete;
+
+  // Copyable and movable.
+  BytesField(const BytesField&) = default;
+  BytesField& operator=(const BytesField&) = default;
+  BytesField(BytesField&&) noexcept = default;
+  BytesField& operator=(BytesField&&) noexcept = default;
 
   void ClearMember(Struct& s) const override {
     ClearStringLikeValue(s.*value_);
@@ -215,8 +216,7 @@ class BytesField : public Field<Struct> {
     }
     if (out.GetBuffer().size() < size) {
       return absl::InvalidArgumentError(absl::StrCat(
-          "Output buffer too small: ", out.GetBuffer().size(), " < ",
-          size));
+          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
     }
     SerializeStringLikeValue(values.*value_, out.GetBuffer());
     out.Advance(size);
@@ -238,7 +238,7 @@ class BytesField : public Field<Struct> {
            SizeOfStringLikeValue(values.*value_) != 0;
   }
 
-  StringLike Struct::*value_;
+  StringLike Struct::* value_;
   int field_number_;
   ProtoFieldOptions options_;
 };

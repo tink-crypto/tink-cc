@@ -205,6 +205,33 @@ TEST(Uint32Field, FieldNumber) {
   ASSERT_THAT(field2.FieldNumber(), Eq(kUint32Field2Number));
 }
 
+TEST(Uint32Field, CopyAndMove) {
+  Uint32OwningField field1(kUint32Field1Number);
+  field1.set_value(123);
+
+  // Test copy constructor
+  Uint32OwningField field_copy(field1);
+  EXPECT_THAT(field_copy.FieldNumber(), Eq(kUint32Field1Number));
+  EXPECT_THAT(field_copy.value(), Eq(123));
+
+  // Test copy assignment
+  Uint32OwningField field_assign(kUint32Field2Number);
+  field_assign = field1;
+  EXPECT_THAT(field_assign.FieldNumber(), Eq(kUint32Field1Number));
+  EXPECT_THAT(field_assign.value(), Eq(123));
+
+  // Test move constructor
+  Uint32OwningField field_move(std::move(field1));
+  EXPECT_THAT(field_move.FieldNumber(), Eq(kUint32Field1Number));
+  EXPECT_THAT(field_move.value(), Eq(123));
+
+  // Test move assignment
+  Uint32OwningField field_move_assign(kUint32Field2Number);
+  field_move_assign = std::move(field_copy);
+  EXPECT_THAT(field_move_assign.FieldNumber(), Eq(kUint32Field1Number));
+  EXPECT_THAT(field_move_assign.value(), Eq(123));
+}
+
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
   OwningBytesField<std::string> field(kBytesField1Number);
@@ -304,6 +331,33 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(buffer_span), Not(IsOk()));
+}
+
+TEST(StringBytesField, CopyAndMove) {
+  OwningBytesField<std::string> field1(kBytesField1Number);
+  field1.set_value("test_string");
+
+  // Test copy constructor
+  OwningBytesField<std::string> field_copy(field1);
+  EXPECT_THAT(field_copy.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(field_copy.value(), Eq("test_string"));
+
+  // Test copy assignment
+  OwningBytesField<std::string> field_assign(kUint32Field2Number);
+  field_assign = field1;
+  EXPECT_THAT(field_assign.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(field_assign.value(), Eq("test_string"));
+
+  // Test move constructor
+  OwningBytesField<std::string> field_move(std::move(field1));
+  EXPECT_THAT(field_move.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(field_move.value(), Eq("test_string"));
+
+  // Test move assignment
+  OwningBytesField<std::string> field_move_assign(kUint32Field2Number);
+  field_move_assign = std::move(field_copy);
+  EXPECT_THAT(field_move_assign.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(field_move_assign.value(), Eq("test_string"));
 }
 
 // SecretDataBytesField ========================================================
@@ -406,6 +460,34 @@ TEST(SecretDataBytesField, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+TEST(SecretDataBytesField, CopyAndMove) {
+  OwningBytesField<SecretData> field1(kBytesField1Number);
+  field1.set_value("test_secret");
+
+  // Test copy constructor
+  OwningBytesField<SecretData> field_copy(field1);
+  EXPECT_THAT(field_copy.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(SecretDataAsStringView(field_copy.value()), Eq("test_secret"));
+
+  // Test copy assignment
+  OwningBytesField<SecretData> field_assign(kUint32Field2Number);
+  field_assign = field1;
+  EXPECT_THAT(field_assign.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(SecretDataAsStringView(field_assign.value()), Eq("test_secret"));
+
+  // Test move constructor
+  OwningBytesField<SecretData> field_move(std::move(field1));
+  EXPECT_THAT(field_move.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(SecretDataAsStringView(field_move.value()), Eq("test_secret"));
+
+  // Test move assignment
+  OwningBytesField<SecretData> field_move_assign(kUint32Field2Number);
+  field_move_assign = std::move(field_copy);
+  EXPECT_THAT(field_move_assign.FieldNumber(), Eq(kBytesField1Number));
+  EXPECT_THAT(SecretDataAsStringView(field_move_assign.value()),
+              Eq("test_secret"));
 }
 
 }  // namespace

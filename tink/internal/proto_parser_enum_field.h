@@ -119,6 +119,7 @@ class EnumOwningField : public OwningField {
                            Enum default_value = {},
                            ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : OwningField(field_number, WireType::kVarint),
+        value_(default_value),
         field_(field_number, &EnumOwningField::value_, std::move(is_valid),
                default_value, options) {}
 

@@ -265,7 +265,7 @@ TEST(EnumField, GetFieldNumber) {
 
 TEST(EnumField, CopyAndMove) {
   EnumField<ExampleStruct, MyEnum> field1(1, &ExampleStruct::enum_field,
-                                         &IsZeroOrOne, MyEnum::k1);
+                                          &IsZeroOrOne, MyEnum::k1);
   ExampleStruct s;
   s.enum_field = MyEnum::k0;
 
@@ -279,8 +279,8 @@ TEST(EnumField, CopyAndMove) {
 
   // Test copy assignment
   s.enum_field = MyEnum::k0;
-  EnumField<ExampleStruct, MyEnum> field_assign(
-      2, &ExampleStruct::enum_field, &AlwaysValid, MyEnum::k0);
+  EnumField<ExampleStruct, MyEnum> field_assign(2, &ExampleStruct::enum_field,
+                                                &AlwaysValid, MyEnum::k0);
   field_assign = field1;
   serialized = HexDecodeOrDie(/* 1 as varint */ "01");
   parsing_state = ParsingState(serialized);
@@ -476,9 +476,14 @@ TEST(EnumOwningField, SerializeVarintLeavesRemainingData) {
 
 TEST(EnumOwningField, FieldNumber) {
   EnumOwningField<MyEnum> field(1, &AlwaysValid);
-  ASSERT_THAT(field.FieldNumber(), Eq(1));
+  EXPECT_THAT(field.FieldNumber(), Eq(1));
   EnumOwningField<MyEnum> field2(2, &IsZeroOrOne);
-  ASSERT_THAT(field2.FieldNumber(), Eq(2));
+  EXPECT_THAT(field2.FieldNumber(), Eq(2));
+}
+
+TEST(EnumOwningField, DefaultValueInitialization) {
+  EnumOwningField<MyEnum> field1(1, &IsZeroOrOne, MyEnum::k1);
+  EXPECT_THAT(field1.value(), Eq(MyEnum::k1));
 }
 
 TEST(EnumOwningField, CopyAndMove) {

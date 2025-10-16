@@ -1414,7 +1414,6 @@ tink_cc_library(
     tink::internal::secret_buffer
     absl::btree
     absl::crc32c
-    absl::any_invocable
     absl::check
     absl::status
     absl::statusor
@@ -2235,6 +2234,7 @@ tink_cc_test(
   SRCS
     proto_parser_message_test.cc
   DEPS
+    tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state

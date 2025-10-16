@@ -1466,7 +1466,6 @@ cc_library(
         "//tink/util:secret_data",
         "@com_google_absl//absl/container:btree",
         "@com_google_absl//absl/crc:crc32c",
-        "@com_google_absl//absl/functional:any_invocable",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -2315,6 +2314,7 @@ cc_test(
     name = "proto_parser_message_test",
     srcs = ["proto_parser_message_test.cc"],
     deps = [
+        ":proto_parser_enum_field",
         ":proto_parser_message",
         ":proto_parser_owning_fields",
         ":proto_parser_state",

@@ -15,8 +15,10 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/proto_parser_message.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "gmock/gmock.h"
@@ -25,6 +27,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
+#include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/testing/field_with_number.h"
@@ -470,6 +473,129 @@ TEST(RepeatedMessageOwningField, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+class Submessage : public Message {
+ public:
+  Submessage() : Message(&fields_) {}
+
+  uint32_t uint32_field() const { return uint32_field_.value(); }
+  void set_uint32_field(uint32_t value) { uint32_field_.set_value(value); }
+  const std::string& bytes_field() const { return bytes_field_.value(); }
+  void set_bytes_field(absl::string_view value) {
+    bytes_field_.set_value(value);
+  }
+
+  bool operator==(const Submessage& other) const {
+    return uint32_field_.value() == other.uint32_field_.value() &&
+           bytes_field_.value() == other.bytes_field_.value();
+  }
+
+ private:
+  Uint32OwningField uint32_field_{1};
+  OwningBytesField<std::string> bytes_field_{2};
+
+  Fields fields_{&uint32_field_, &bytes_field_};
+};
+
+enum class TestEnum : uint32_t {
+  kZero = 0,
+  kOne = 1,
+  kTwo = 2,
+};
+
+bool TestEnum_IsValid(uint32_t value) {
+  return value == static_cast<uint32_t>(TestEnum::kZero) ||
+         value == static_cast<uint32_t>(TestEnum::kOne) ||
+         value == static_cast<uint32_t>(TestEnum::kTwo);
+}
+
+class TestMessage : public Message {
+ public:
+  TestMessage() : Message(&fields_) {}
+
+  bool operator==(const TestMessage& other) const {
+    return uint32_field_.value() == other.uint32_field_.value() &&
+           bytes_field_.value() == other.bytes_field_.value() &&
+           sub_message_field_.value() == other.sub_message_field_.value();
+  }
+
+  uint32_t uint32_field() const { return uint32_field_.value(); }
+  void set_uint32_field(uint32_t value) { uint32_field_.set_value(value); }
+
+  const std::string& bytes_field() const { return bytes_field_.value(); }
+  void set_bytes_field(const std::string& value) {
+    bytes_field_.set_value(value);
+  }
+
+  const Submessage& sub_message_field() const {
+    return sub_message_field_.value();
+  }
+  Submessage& sub_message_field() { return sub_message_field_.value(); }
+
+ private:
+  Uint32OwningField uint32_field_{1};
+  OwningBytesField<std::string> bytes_field_{2};
+  MessageOwningField<Submessage> sub_message_field_{3};
+  EnumOwningField<TestEnum> enum_field_{4, &TestEnum_IsValid, TestEnum::kZero};
+  RepeatedMessageOwningField<Submessage> repeated_sub_message_field_{5};
+  Fields fields_{&uint32_field_, &bytes_field_, &sub_message_field_};
+};
+
+TEST(MessageOwningFieldTest, CopyConstructor) {
+  MessageOwningField<TestMessage> field(1);
+  field.value().set_uint32_field(123);
+  field.value().set_bytes_field("test");
+  field.value().sub_message_field().set_uint32_field(456);
+  field.value().sub_message_field().set_bytes_field("field");
+
+  MessageOwningField<TestMessage> field2 = field;
+  EXPECT_THAT(field2.value(), Eq(field.value()));
+}
+
+TEST(MessageOwningFieldTest, CopyAssignment) {
+  MessageOwningField<TestMessage> field(1);
+  field.value().set_uint32_field(123);
+  field.value().set_bytes_field("test");
+  field.value().sub_message_field().set_uint32_field(456);
+  field.value().sub_message_field().set_bytes_field("field");
+  MessageOwningField<TestMessage> field2(2);
+  field2.value().set_uint32_field(999);
+
+  field2 = field;
+  EXPECT_THAT(field2.value(), Eq(field.value()));
+}
+
+TEST(MessageOwningFieldTest, MoveConstructor) {
+  MessageOwningField<TestMessage> field(1);
+  field.value().set_uint32_field(123);
+  field.value().set_bytes_field("test");
+  field.value().sub_message_field().set_uint32_field(456);
+  field.value().sub_message_field().set_bytes_field("field");
+  MessageOwningField<TestMessage> field2 = std::move(field);
+
+  // Verify field2 has the correct values.
+  EXPECT_THAT(field2.value().uint32_field(), Eq(123));
+  EXPECT_THAT(field2.value().bytes_field(), Eq("test"));
+  EXPECT_THAT(field2.value().sub_message_field().uint32_field(), Eq(456));
+  EXPECT_THAT(field2.value().sub_message_field().bytes_field(), Eq("field"));
+}
+
+TEST(MessageOwningFieldTest, MoveAssignment) {
+  MessageOwningField<TestMessage> field(1);
+  field.value().set_uint32_field(123);
+  field.value().set_bytes_field("test");
+  field.value().sub_message_field().set_uint32_field(456);
+  field.value().sub_message_field().set_bytes_field("field");
+  MessageOwningField<TestMessage> field2(2);
+  field2.value().set_uint32_field(999);
+  field2 = std::move(field);
+
+  // Verify field2 has the correct values.
+  EXPECT_THAT(field2.value().uint32_field(), Eq(123));
+  EXPECT_THAT(field2.value().bytes_field(), Eq("test"));
+  EXPECT_THAT(field2.value().sub_message_field().uint32_field(), Eq(456));
+  EXPECT_THAT(field2.value().sub_message_field().bytes_field(), Eq("field"));
 }
 
 }  // namespace

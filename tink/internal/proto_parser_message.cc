@@ -49,7 +49,7 @@ OwningField* Fields::operator[](uint32_t field_number) const {
 }
 
 void Message::Clear() {
-  for (OwningField* field : fields_) {
+  for (OwningField* field : *fields_) {
     field->Clear();
   }
 }
@@ -91,7 +91,7 @@ std::string Message::SerializeAsString() const {
 }
 
 bool Message::Serialize(SerializationState& out) const {
-  for (const OwningField* field : fields_) {
+  for (const OwningField* field : *fields_) {
     if (absl::Status result = field->SerializeWithTagInto(out); !result.ok()) {
       return false;
     }
@@ -101,7 +101,7 @@ bool Message::Serialize(SerializationState& out) const {
 
 size_t Message::ByteSizeLong() const {
   size_t size = 0;
-  for (const OwningField* field : fields_) {
+  for (const OwningField* field : *fields_) {
     size += field->GetSerializedSizeIncludingTag();
   }
   return size;
@@ -116,7 +116,7 @@ bool Message::Parse(ParsingState& in) {
     }
     auto [wire_type, field_number] = *wiretype_and_field_number;
 
-    OwningField* field = fields_[field_number];
+    OwningField* field = (*fields_)[field_number];
     if (field == nullptr || field->GetWireType() != wire_type) {
       absl::Status s;
       if (wire_type == WireType::kStartGroup) {

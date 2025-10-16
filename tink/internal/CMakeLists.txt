@@ -1608,7 +1608,6 @@ tink_cc_library(
     tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
-    absl::any_invocable
     absl::check
     absl::status
 )

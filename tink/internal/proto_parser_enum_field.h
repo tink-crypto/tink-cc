@@ -19,11 +19,11 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <limits>
 #include <type_traits>
 #include <utility>
 
-#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "tink/internal/proto_parser_fields.h"
@@ -41,7 +41,7 @@ template <typename Struct, typename Enum>
 class EnumField : public Field<Struct> {
  public:
   explicit EnumField(int field_number, Enum Struct::* value,
-                     absl::AnyInvocable<bool(uint32_t) const> is_valid,
+                     std::function<bool(uint32_t)> is_valid,
                      Enum default_value = {},
                      ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : field_number_(field_number),
@@ -54,11 +54,11 @@ class EnumField : public Field<Struct> {
                   "Only sizes up to uint32_t are supported as underlying type");
   }
 
-  // Not copyable, not movable.
-  EnumField(const EnumField&) = delete;
-  EnumField& operator=(const EnumField&) = delete;
-  EnumField(EnumField&&) noexcept = delete;
-  EnumField& operator=(EnumField&&) noexcept = delete;
+  // Copyable and movable.
+  EnumField(const EnumField&) = default;
+  EnumField& operator=(const EnumField&) = default;
+  EnumField(EnumField&&) noexcept = default;
+  EnumField& operator=(EnumField&&) noexcept = default;
 
   void ClearMember(Struct& s) const override { s.*value_ = default_value_; }
 
@@ -106,7 +106,7 @@ class EnumField : public Field<Struct> {
 
   int field_number_;
   Enum Struct::* value_;
-  absl::AnyInvocable<bool(uint32_t) const> is_valid_;
+  std::function<bool(uint32_t)> is_valid_;
   Enum default_value_;
   ProtoFieldOptions options_;
 };
@@ -115,12 +115,18 @@ template <typename Enum>
 class EnumOwningField : public OwningField {
  public:
   explicit EnumOwningField(int field_number,
-                           absl::AnyInvocable<bool(uint32_t) const> is_valid,
+                           std::function<bool(uint32_t)> is_valid,
                            Enum default_value = {},
                            ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : OwningField(field_number, WireType::kVarint),
         field_(field_number, &EnumOwningField::value_, std::move(is_valid),
                default_value, options) {}
+
+  // Copyable and movable.
+  EnumOwningField(const EnumOwningField&) = default;
+  EnumOwningField& operator=(const EnumOwningField&) = default;
+  EnumOwningField(EnumOwningField&&) noexcept = default;
+  EnumOwningField& operator=(EnumOwningField&&) noexcept = default;
 
   void Clear() override { field_.ClearMember(*this); }
   bool ConsumeIntoMember(ParsingState& serialized) override {

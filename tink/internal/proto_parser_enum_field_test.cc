@@ -263,6 +263,52 @@ TEST(EnumField, GetFieldNumber) {
   ASSERT_THAT(field2.GetFieldNumber(), Eq(2));
 }
 
+TEST(EnumField, CopyAndMove) {
+  EnumField<ExampleStruct, MyEnum> field1(1, &ExampleStruct::enum_field,
+                                         &IsZeroOrOne, MyEnum::k1);
+  ExampleStruct s;
+  s.enum_field = MyEnum::k0;
+
+  // Test copy constructor
+  EnumField<ExampleStruct, MyEnum> field_copy(field1);
+  std::string serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_copy.ConsumeIntoMember(parsing_state, s), IsTrue());
+  EXPECT_THAT(s.enum_field, Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+
+  // Test copy assignment
+  s.enum_field = MyEnum::k0;
+  EnumField<ExampleStruct, MyEnum> field_assign(
+      2, &ExampleStruct::enum_field, &AlwaysValid, MyEnum::k0);
+  field_assign = field1;
+  serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_assign.ConsumeIntoMember(parsing_state, s), IsTrue());
+  EXPECT_THAT(s.enum_field, Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+
+  // Test move constructor
+  s.enum_field = MyEnum::k0;
+  EnumField<ExampleStruct, MyEnum> field_move(std::move(field1));
+  serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_move.ConsumeIntoMember(parsing_state, s), IsTrue());
+  EXPECT_THAT(s.enum_field, Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+
+  // Test move assignment
+  s.enum_field = MyEnum::k0;
+  EnumField<ExampleStruct, MyEnum> field_move_assign(
+      2, &ExampleStruct::enum_field, &AlwaysValid, MyEnum::k0);
+  field_move_assign = std::move(field_copy);
+  serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_move_assign.ConsumeIntoMember(parsing_state, s), IsTrue());
+  EXPECT_THAT(s.enum_field, Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+}
+
 // EnumOwningField -------------------------------------------------------------
 
 TEST(EnumOwningField, ClearMemberWorks) {
@@ -433,6 +479,48 @@ TEST(EnumOwningField, FieldNumber) {
   ASSERT_THAT(field.FieldNumber(), Eq(1));
   EnumOwningField<MyEnum> field2(2, &IsZeroOrOne);
   ASSERT_THAT(field2.FieldNumber(), Eq(2));
+}
+
+TEST(EnumOwningField, CopyAndMove) {
+  EnumOwningField<MyEnum> field1(1, &IsZeroOrOne, MyEnum::k1);
+  field1.set_value(MyEnum::k0);
+
+  // Test copy constructor
+  EnumOwningField<MyEnum> field_copy(field1);
+  std::string serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_copy.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field_copy.value(), Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+
+  // Test copy assignment
+  field1.set_value(MyEnum::k0);
+  EnumOwningField<MyEnum> field_assign(2, &AlwaysValid, MyEnum::k0);
+  field_assign = field1;
+  serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_assign.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field_assign.value(), Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+
+  // Test move constructor
+  field1.set_value(MyEnum::k0);
+  EnumOwningField<MyEnum> field_move(std::move(field1));
+  serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_move.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field_move.value(), Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+
+  // Test move assignment
+  field_copy.set_value(MyEnum::k0);
+  EnumOwningField<MyEnum> field_move_assign(2, &AlwaysValid, MyEnum::k0);
+  field_move_assign = std::move(field_copy);
+  serialized = HexDecodeOrDie(/* 1 as varint */ "01");
+  parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field_move_assign.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field_move_assign.value(), Eq(MyEnum::k1));
+  EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
 }
 
 }  // namespace

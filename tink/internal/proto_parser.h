@@ -19,6 +19,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -26,7 +27,6 @@
 
 #include "absl/container/btree_map.h"
 #include "absl/crc/crc32c.h"
-#include "absl/functional/any_invocable.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -170,8 +170,7 @@ class ProtoParserBuilder {
   // when casting.
   template <typename T>
   ProtoParserBuilder& AddEnumField(
-      int tag, T Struct::* value,
-      absl::AnyInvocable<bool(uint32_t) const> is_valid,
+      int tag, T Struct::* value, std::function<bool(uint32_t)> is_valid,
       T default_value = {},
       ProtoFieldOptions options = ProtoFieldOptions::kNone) {
     fields_.push_back(absl::make_unique<proto_parsing::EnumField<Struct, T>>(

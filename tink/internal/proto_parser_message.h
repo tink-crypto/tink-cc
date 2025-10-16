@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/crc/crc32c.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -84,6 +85,7 @@ class Message {
   bool ParseFromString(absl::string_view in);
   size_t ByteSizeLong() const;
 
+  // TODO: b/451894777 - Add parsing with CRC.
   // Serializes the message as SecretData.
   SecretData SerializeAsSecretData() const;
 
@@ -114,10 +116,6 @@ class Message {
   // Parses the message from the given parsing state `in`. Returns true if the
   // parsing was successful.
   bool Parse(ParsingState& in);
-
-  // Serializes the message into the given span of bytes `out`. Returns true if
-  // the serialization was successful.
-  bool SerializeToSpan(absl::Span<char> out) const;
 };
 
 template <typename Derived>
@@ -129,15 +127,6 @@ void Message<Derived>::Clear() {
 }
 
 template <typename Derived>
-bool Message<Derived>::SerializeToSpan(absl::Span<char> out) const {
-  if (out.size() < ByteSizeLong()) {
-    return false;
-  }
-  SerializationState state(out);
-  return Serialize(state);
-}
-
-template <typename Derived>
 bool Message<Derived>::ParseFromString(absl::string_view in) {
   ParsingState state(in);
   return Parse(state);
@@ -145,27 +134,29 @@ bool Message<Derived>::ParseFromString(absl::string_view in) {
 
 template <typename Derived>
 SecretData Message<Derived>::SerializeAsSecretData() const {
-  // TODO: b/451894777 - Use the CRC32C in the generated SecretData.
   SecretBuffer out(ByteSizeLong());
-  if (!SerializeToSpan(
-          absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size()))) {
-    return SecretData();
-  }
+  auto buffer = absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size());
+  return CallWithCoreDumpProtection([&]() -> SecretData {
+    absl::crc32c_t result_crc = absl::crc32c_t(0);
+    auto serialization_state = SerializationState(buffer, &result_crc);
+    QCHECK(Serialize(serialization_state));
+    QCHECK(serialization_state.GetBuffer().empty());
 #ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-  return util::SecretDataFromStringView(out.AsStringView());
+    return util::SecretDataFromStringView(out.AsStringView());
 #else
-  return SecretData(std::move(out));
+    return SecretData(std::move(out), result_crc);
 #endif
+  });
 }
 
 template <typename Derived>
 std::string Message<Derived>::SerializeAsString() const {
   std::string out;
   subtle::ResizeStringUninitialized(&out, ByteSizeLong());
-  if (!SerializeToSpan(
-          absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size()))) {
-    return std::string();
-  }
+  SerializationState serialization_state(
+      absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size()));
+  QCHECK(Serialize(serialization_state));
+  QCHECK(serialization_state.GetBuffer().empty());
   return out;
 }
 

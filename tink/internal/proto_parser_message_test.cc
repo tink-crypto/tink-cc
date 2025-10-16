@@ -16,6 +16,7 @@
 #include "tink/internal/proto_parser_message.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -24,12 +25,18 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/crc/crc32c.h"
+#include "absl/log/check.h"
+#include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_join.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
+#include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/testing/field_with_number.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -109,6 +116,107 @@ TEST(MessageTest, Clear) {
   EXPECT_THAT(s.inner_member().uint32_member_2(), Eq(0));
 }
 
+#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
+
+// Serializes a varint using a wrong CRC.
+absl::Status SerializeVarintWrongCrc(uint64_t value,
+                                     SerializationState& output) {
+  CHECK(output.HasCrc());
+  const int size = VarintLength(value);
+  CHECK_GE(size, output.GetBuffer().size());
+  absl::Span<char> output_buffer = output.GetBuffer();
+  int i = 0;
+  while (value >= 0x80) {
+    output_buffer[i++] = (static_cast<char>(value) & 0x7f) | 0x80;
+    value >>= 7;
+  }
+  output_buffer[i++] = static_cast<char>(value);
+  output.AdvanceWithCrc(size, absl::crc32c_t{0xAAAA});
+  return absl::OkStatus();
+}
+
+// A proto message with a field that serializes a varint using a wrong CRC.
+//
+// This is used to test that the CRC accumulated during serialization is used
+// for the returned SecretData.
+class Uint32OwningFieldWrongCrc : public OwningField {
+ public:
+  explicit Uint32OwningFieldWrongCrc(
+      uint32_t field_number,
+      ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : OwningField(field_number, WireType::kVarint),
+        field_(field_number, &Uint32OwningFieldWrongCrc::value_, options) {}
+
+  // Copyable and movable.
+  Uint32OwningFieldWrongCrc(const Uint32OwningFieldWrongCrc&) = default;
+  Uint32OwningFieldWrongCrc& operator=(const Uint32OwningFieldWrongCrc&) =
+      default;
+  Uint32OwningFieldWrongCrc(Uint32OwningFieldWrongCrc&&) noexcept = default;
+  Uint32OwningFieldWrongCrc& operator=(Uint32OwningFieldWrongCrc&&) noexcept =
+      default;
+
+  void Clear() override { value_ = 0; }
+  bool ConsumeIntoMember(ParsingState& serialized) override {
+    return field_.ConsumeIntoMember(serialized, *this);
+  }
+  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+    // Skip check for requires serialization.
+    absl::Status status = SerializeWireTypeAndFieldNumber(
+        GetWireType(), field_.GetFieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
+    return SerializeVarintWrongCrc(value_, out);
+  }
+  size_t GetSerializedSizeIncludingTag() const override {
+    return field_.GetSerializedSizeIncludingTag(*this);
+  }
+
+  void set_value(uint32_t value) { value_ = value; }
+  uint32_t value() const { return value_; }
+
+ private:
+  uint32_t value_ = 0;
+  Uint32Field<Uint32OwningFieldWrongCrc> field_;
+};
+
+class OuterProtoClassWithWrongCrc
+    : public Message<OuterProtoClassWithWrongCrc> {
+ public:
+  const InnerStruct& inner_member() const { return inner_member_.value(); }
+  InnerStruct& inner_member() { return inner_member_.value(); }
+  uint32_t uint32_member() const { return uint32_member_.value(); }
+  void set_uint32_member(uint32_t value) { uint32_member_.set_value(value); }
+
+  using Message::SerializeAsString;
+
+  std::array<proto_parsing::OwningField*, 2> GetFields() {
+    return std::array<OwningField*, 2>{&inner_member_, &uint32_member_};
+  }
+
+ private:
+  MessageOwningField<InnerStruct> inner_member_{1};
+  Uint32OwningFieldWrongCrc uint32_member_{2};
+};
+
+TEST(MessageTest, SerializeAsSecretDataFails) {
+  OuterProtoClassWithWrongCrc s;
+  s.inner_member().set_uint32_member_1(0x23);
+  s.inner_member().set_uint32_member_2(0x7a);
+  s.set_uint32_member(0x7a);
+  SecretData buffer = s.SerializeAsSecretData();
+  EXPECT_THAT(
+      util::SecretDataAsStringView(buffer),
+      Eq(absl::StrJoin(
+          {FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
+                                            FieldWithNumber(2).IsVarint(0x7a)}),
+           FieldWithNumber(2).IsVarint(0x7a)},
+          "")));
+  EXPECT_THAT(buffer.ValidateCrc32c(), Not(IsOk()));
+}
+
+#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
+
 TEST(MessageTest, SerializeAsSecretDataSuccess) {
   OuterStruct s;
   s.inner_member().set_uint32_member_1(0x23);
@@ -118,6 +226,11 @@ TEST(MessageTest, SerializeAsSecretDataSuccess) {
       util::SecretDataAsStringView(buffer),
       Eq(FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
                                           FieldWithNumber(2).IsVarint(0x7a)})));
+#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
+  EXPECT_THAT(buffer.ValidateCrc32c(), IsOk());
+  EXPECT_THAT(buffer.GetCrc32c(),
+              Eq(absl::ComputeCrc32c(s.SerializeAsString())));
+#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
 }
 
 TEST(MessageTest, SerializeAsStringSuccess) {
@@ -148,6 +261,11 @@ TEST(MessageTest, SerializeAndParse) {
   s.inner_member().set_uint32_member_1(0x23);
   s.inner_member().set_uint32_member_2(0x7a);
   SecretData bytes = s.SerializeAsSecretData();
+#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
+  EXPECT_THAT(bytes.ValidateCrc32c(), IsOk());
+  EXPECT_THAT(bytes.GetCrc32c(),
+              Eq(absl::ComputeCrc32c(s.SerializeAsString())));
+#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
   s.Clear();
   EXPECT_THAT(s.inner_member().uint32_member_1(), Eq(0));
   EXPECT_THAT(s.inner_member().uint32_member_2(), Eq(0));

@@ -2216,6 +2216,7 @@ tink_cc_library(
     tink::internal::proto_parsing_helpers
     tink::internal::secret_buffer
     absl::algorithm_container
+    absl::crc32c
     absl::check
     absl::status
     absl::statusor
@@ -2233,11 +2234,16 @@ tink_cc_test(
     proto_parser_message_test.cc
   DEPS
     tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
     gmock
     absl::crc32c
+    absl::check
+    absl::status
     absl::strings
     absl::string_view
     absl::span

@@ -18,15 +18,13 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <initializer_list>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 #include "absl/algorithm/container.h"
-#include "absl/base/nullability.h"
 #include "absl/log/check.h"
-#include "absl/log/die_if_null.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -35,59 +33,43 @@
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/internal/secret_buffer.h"
 #include "tink/secret_data.h"
+#include "tink/subtle/subtle_util.h"
+#include "tink/util/secret_data.h"
+
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-// Sorted list of fields by field number.
-class Fields final {
- public:
-  Fields(std::initializer_list<OwningField*> fields) : fields_(fields) {
-    absl::c_sort(fields_, [](const OwningField* a, const OwningField* b) {
-      return a->FieldNumber() < b->FieldNumber();
-    });
-  }
-
-  // Copyable and movable.
-  Fields(const Fields&) = default;
-  Fields& operator=(const Fields&) = default;
-  Fields(Fields&&) noexcept = default;
-  Fields& operator=(Fields&&) noexcept = default;
-
-  // Allows iterating over the fields.
-  auto begin() const { return fields_.begin(); }
-  auto end() const { return fields_.end(); }
-  // Returns the field with the given `field_number` or nullptr if not found.
-  OwningField* operator[](uint32_t field_number) const;
-
- private:
-  std::vector<OwningField*> fields_;
-};
-
 // Forward declaration to allow friend statement in Message.
-class MessageOwningFieldBase;
+template <typename MessageT>
+class MessageOwningField;
 
 // Represents a proto message.
 //
 // Usage:
 //
-// class MyMessage : public Message {
+// class MyMessage : public Messag<MyMessage> {
 //  public:
 //   MyMessage() : Message(&fields_) {}
 //   ~MyMessage() = default;
+//
+//   std::array<OwningField*, 2> GetFields() const {
+//     return std::array<OwningField*, 2>{&some_string_, &some_other_string_};
+//   }
+//
 //  private:
 //   OwningBytesField<std::string> some_string_{1};
 //   OwningBytesField<SecretData> some_other_string_{2};
-//   Fields fields_{&some_string_, &some_other_string_};
 // };
 //
 // This class is not thread-safe.
+template <typename Derived>
 class Message {
  public:
-  explicit Message(Fields* /*absl_nonnull - not yet supported*/ fields)
-      : fields_(ABSL_DIE_IF_NULL(fields)) {}
+  Message() = default;
   virtual ~Message() = default;
 
   // Copyable and movable.
@@ -109,9 +91,22 @@ class Message {
   std::string SerializeAsString() const;
 
  private:
-  friend class MessageOwningFieldBase;
+  template <typename MessageT>
+  friend class MessageOwningField;
   template <typename MessageT>
   friend class RepeatedMessageOwningField;
+
+  OwningField* get_field(uint32_t field_number) {
+    auto fields = static_cast<Derived*>(this)->GetFields();
+    auto it = absl::c_lower_bound(
+        fields, field_number, [](const OwningField* a, uint32_t field_number) {
+          return a->FieldNumber() < field_number;
+        });
+    if (it == fields.end() || (*it)->FieldNumber() != field_number) {
+      return nullptr;
+    }
+    return *it;
+  }
 
   // Serializes the message into the given serialization state `out`.
   // Returns true if the serialization was successful.
@@ -123,25 +118,149 @@ class Message {
   // Serializes the message into the given span of bytes `out`. Returns true if
   // the serialization was successful.
   bool SerializeToSpan(absl::Span<char> out) const;
-
-  Fields* /*absl_nonnull - not yet supported*/ fields_;
 };
 
-class MessageOwningFieldBase : public OwningField {
+template <typename Derived>
+void Message<Derived>::Clear() {
+  for (OwningField* field :
+       const_cast<Derived*>(static_cast<const Derived*>(this))->GetFields()) {
+    field->Clear();
+  }
+}
+
+template <typename Derived>
+bool Message<Derived>::SerializeToSpan(absl::Span<char> out) const {
+  if (out.size() < ByteSizeLong()) {
+    return false;
+  }
+  SerializationState state(out);
+  return Serialize(state);
+}
+
+template <typename Derived>
+bool Message<Derived>::ParseFromString(absl::string_view in) {
+  ParsingState state(in);
+  return Parse(state);
+}
+
+template <typename Derived>
+SecretData Message<Derived>::SerializeAsSecretData() const {
+  // TODO: b/451894777 - Use the CRC32C in the generated SecretData.
+  SecretBuffer out(ByteSizeLong());
+  if (!SerializeToSpan(
+          absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size()))) {
+    return SecretData();
+  }
+#ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+  return util::SecretDataFromStringView(out.AsStringView());
+#else
+  return SecretData(std::move(out));
+#endif
+}
+
+template <typename Derived>
+std::string Message<Derived>::SerializeAsString() const {
+  std::string out;
+  subtle::ResizeStringUninitialized(&out, ByteSizeLong());
+  if (!SerializeToSpan(
+          absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size()))) {
+    return std::string();
+  }
+  return out;
+}
+
+template <typename Derived>
+bool Message<Derived>::Serialize(SerializationState& out) const {
+  for (const OwningField* field :
+       const_cast<Derived*>(static_cast<const Derived*>(this))->GetFields()) {
+    if (absl::Status result = field->SerializeWithTagInto(out); !result.ok()) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template <typename Derived>
+size_t Message<Derived>::ByteSizeLong() const {
+  size_t size = 0;
+  for (const OwningField* field :
+       const_cast<Derived*>(static_cast<const Derived*>(this))->GetFields()) {
+    size += field->GetSerializedSizeIncludingTag();
+  }
+  return size;
+}
+
+template <typename Derived>
+bool Message<Derived>::Parse(ParsingState& in) {
+  while (!in.ParsingDone()) {
+    absl::StatusOr<std::pair<WireType, int>> wiretype_and_field_number =
+        ConsumeIntoWireTypeAndFieldNumber(in);
+    if (!wiretype_and_field_number.ok()) {
+      return false;
+    }
+    auto [wire_type, field_number] = *wiretype_and_field_number;
+
+    OwningField* field = get_field(field_number);
+    if (field == nullptr || field->GetWireType() != wire_type) {
+      absl::Status s;
+      if (wire_type == WireType::kStartGroup) {
+        s = SkipGroup(field_number, in);
+      } else {
+        s = SkipField(wire_type, in);
+      }
+      if (!s.ok()) {
+        return false;
+      }
+      continue;
+    }
+    if (!field->ConsumeIntoMember(in)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Represents a proto message that is owned by the MessageOwningField.
+//
+// Usage:
+//
+// class MyMessage : public Messag<MyMessage> {
+//  public:
+//   MyMessage() : Message(&fields_) {}
+//   ~MyMessage() = default;
+//
+//   std::array<OwningField*, 2> GetFields() const {
+//     return std::array<OwningField*, 2>{&some_message_, &some_other_string_};
+//   }
+//
+//  private:
+//   MessageOwningField<MySubMessage> some_message_{1};
+//   OwningBytesField<SecretData> some_other_string_{2};
+// };
+//
+// This class is not thread-safe.
+template <typename MessageT>
+class MessageOwningField : public OwningField {
  public:
-  explicit MessageOwningFieldBase(int field_number,
-                                  Message* /*absl_nonnull - not yet supported*/ message)
-      : OwningField(field_number, WireType::kLengthDelimited),
-        message_(ABSL_DIE_IF_NULL(message)) {}
+  static_assert(std::is_copy_constructible<MessageT>::value,
+                "MessageT must be copy constructible.");
+  static_assert(std::is_copy_assignable<MessageT>::value,
+                "MessageT must be copy assignable.");
+  static_assert(std::is_move_constructible<MessageT>::value,
+                "MessageT must be move constructible.");
+  static_assert(std::is_move_assignable<MessageT>::value,
+                "MessageT must be move assignable.");
+
+  explicit MessageOwningField(int field_number)
+      : OwningField(field_number, WireType::kLengthDelimited) {}
 
   // Copyable and movable.
-  MessageOwningFieldBase(const MessageOwningFieldBase&) = default;
-  MessageOwningFieldBase& operator=(const MessageOwningFieldBase&) = default;
-  MessageOwningFieldBase(MessageOwningFieldBase&&) noexcept = default;
-  MessageOwningFieldBase& operator=(MessageOwningFieldBase&&) noexcept =
-      default;
+  MessageOwningField(const MessageOwningField&) = default;
+  MessageOwningField& operator=(const MessageOwningField&) = default;
+  MessageOwningField(MessageOwningField&&) noexcept = default;
+  MessageOwningField& operator=(MessageOwningField&&) noexcept = default;
 
-  void Clear() override { message_->Clear(); }
+  void Clear() override { value_.Clear(); }
 
   bool ConsumeIntoMember(ParsingState& serialized) override {
     absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
@@ -153,11 +272,11 @@ class MessageOwningFieldBase : public OwningField {
     }
     ParsingState submessage_parsing_state =
         serialized.SplitOffSubmessageState(*length);
-    return message_->Parse(submessage_parsing_state);
+    return value_.Parse(submessage_parsing_state);
   }
 
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    const size_t size = message_->ByteSizeLong();
+    const size_t size = value_.ByteSizeLong();
     if (size == 0) {
       return absl::OkStatus();
     }
@@ -174,59 +293,20 @@ class MessageOwningFieldBase : public OwningField {
           "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
     }
     // Serialize the message.
-    if (!message_->Serialize(out)) {
+    if (!value_.Serialize(out)) {
       return absl::InternalError("Failed to serialize message");
     }
     return absl::OkStatus();
   }
 
   size_t GetSerializedSizeIncludingTag() const override {
-    const size_t message_size = message_->ByteSizeLong();
+    const size_t message_size = value_.ByteSizeLong();
     if (message_size <= 0) {
       return 0;
     }
     return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
            VarintLength(message_size) + message_size;
   }
-
- private:
-  Message* /*absl_nonnull - not yet supported*/ message_;
-};
-
-// Represents a proto message that is owned by the MessageOwningField.
-//
-// Usage:
-//
-// class MyMessage : public Message {
-//  public:
-//   MyMessage() : Message(&fields_) {}
-//   ~MyMessage() = default;
-//  private:
-//   MessageOwningField<MySubMessage> some_message_{1};
-//   Fields fields_{&some_message_};
-// };
-//
-// This class is not thread-safe.
-template <typename MessageT>
-class MessageOwningField final : public MessageOwningFieldBase {
- public:
-  static_assert(std::is_copy_constructible<MessageT>::value,
-                "MessageT must be copy constructible.");
-  static_assert(std::is_copy_assignable<MessageT>::value,
-                "MessageT must be copy assignable.");
-  static_assert(std::is_move_constructible<MessageT>::value,
-                "MessageT must be move constructible.");
-  static_assert(std::is_move_assignable<MessageT>::value,
-                "MessageT must be move assignable.");
-
-  explicit MessageOwningField(int field_number)
-      : MessageOwningFieldBase(field_number, &value_) {}
-
-  // Copyable and movable.
-  MessageOwningField(const MessageOwningField&) = default;
-  MessageOwningField& operator=(const MessageOwningField&) = default;
-  MessageOwningField(MessageOwningField&&) noexcept = default;
-  MessageOwningField& operator=(MessageOwningField&&) noexcept = default;
 
   MessageT& value() { return value_; }
   const MessageT& value() const { return value_; }

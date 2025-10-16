@@ -2209,7 +2209,6 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_parser_message
   SRCS
-    proto_parser_message.cc
     proto_parser_message.h
   DEPS
     tink::internal::proto_parser_owning_fields
@@ -2217,9 +2216,7 @@ tink_cc_library(
     tink::internal::proto_parsing_helpers
     tink::internal::secret_buffer
     absl::algorithm_container
-    absl::nullability
     absl::check
-    absl::die_if_null
     absl::status
     absl::statusor
     absl::strings
@@ -2227,6 +2224,7 @@ tink_cc_library(
     absl::span
     tink::core::secret_data
     tink::subtle::subtle_util
+    tink::util::secret_data
 )
 
 tink_cc_test(

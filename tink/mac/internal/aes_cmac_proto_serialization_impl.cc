@@ -16,6 +16,7 @@
 
 #include "tink/mac/internal/aes_cmac_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -47,30 +48,29 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::Fields;
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
 using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 // Corresponds to google.crypto.tink.AesCmacKeyFormat.
-class AesCmacParamProto : public Message {
+class AesCmacParamProto : public Message<AesCmacParamProto> {
  public:
-  AesCmacParamProto() : Message(&fields_) {}
-
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t value) { tag_size_.set_value(value); }
 
+  std::array<proto_parsing::OwningField*, 1> GetFields() {
+    return std::array<OwningField*, 1>{&tag_size_};
+  }
+
  private:
   Uint32OwningField tag_size_{1};
-  Fields fields_{&tag_size_};
 };
 
 // Corresponds to google.crypto.tink.AesCmacKey.
-class AesCmacKeyProto : public Message {
+class AesCmacKeyProto : public Message<AesCmacKeyProto> {
  public:
-  AesCmacKeyProto() : Message(&fields_) {}
-
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
@@ -80,18 +80,19 @@ class AesCmacKeyProto : public Message {
   const AesCmacParamProto& params() const { return params_.value(); }
   AesCmacParamProto* mutable_params() { return &params_.value(); }
 
+  std::array<proto_parsing::OwningField*, 3> GetFields() {
+    return std::array<OwningField*, 3>{&version_, &key_value_, &params_};
+  }
+
  private:
   Uint32OwningField version_{1};
   OwningBytesField<SecretData> key_value_{2};
   MessageOwningField<AesCmacParamProto> params_{3};
-  Fields fields_{&version_, &key_value_, &params_};
 };
 
 // Corresponds to google.crypto.tink.AesCmacKeyFormat.
-class AesCmacKeyFormatProto : public Message {
+class AesCmacKeyFormatProto : public Message<AesCmacKeyFormatProto> {
  public:
-  AesCmacKeyFormatProto() : Message(&fields_) {}
-
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
@@ -101,10 +102,13 @@ class AesCmacKeyFormatProto : public Message {
   // This is safe because format doesn't contain any secret data.
   using Message::SerializeAsString;
 
+  std::array<proto_parsing::OwningField*, 2> GetFields() {
+    return std::array<OwningField*, 2>{&key_size_, &params_};
+  }
+
  private:
   Uint32OwningField key_size_{1};
   MessageOwningField<AesCmacParamProto> params_{2};
-  Fields fields_{&key_size_, &params_};
 };
 
 using AesCmacProtoParametersParserImpl =

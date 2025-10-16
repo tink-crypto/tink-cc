@@ -2288,7 +2288,6 @@ cc_test(
 
 cc_library(
     name = "proto_parser_message",
-    srcs = ["proto_parser_message.cc"],
     hdrs = ["proto_parser_message.h"],
     include_prefix = "tink/internal",
     deps = [
@@ -2298,10 +2297,9 @@ cc_library(
         ":secret_buffer",
         "//tink:secret_data",
         "//tink/subtle:subtle_util",
+        "//tink/util:secret_data",
         "@com_google_absl//absl/algorithm:container",
-        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/log:check",
-        "@com_google_absl//absl/log:die_if_null",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",

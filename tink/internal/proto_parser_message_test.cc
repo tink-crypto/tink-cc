@@ -15,7 +15,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/proto_parser_message.h"
 
-#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -53,17 +53,13 @@ using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Test;
 
-class InnerStruct final : public Message {
+class InnerStruct final : public Message<InnerStruct> {
  public:
-  InnerStruct() : Message(&fields_) {}
-  InnerStruct(uint32_t uint32_member_1, uint32_t uint32_member_2)
-      : Message(&fields_) {
+  InnerStruct() = default;
+
+  InnerStruct(uint32_t uint32_member_1, uint32_t uint32_member_2) {
     uint32_member_1_.set_value(uint32_member_1);
     uint32_member_2_.set_value(uint32_member_2);
-  }
-  InnerStruct(const InnerStruct& other) : Message(&fields_) {
-    uint32_member_1_.set_value(other.uint32_member_1_.value());
-    uint32_member_2_.set_value(other.uint32_member_2_.value());
   }
 
   uint32_t uint32_member_1() const { return uint32_member_1_.value(); }
@@ -80,25 +76,28 @@ class InnerStruct final : public Message {
            uint32_member_2_.value() == other.uint32_member_2_.value();
   }
 
+  std::array<proto_parsing::OwningField*, 2> GetFields() {
+    return std::array<OwningField*, 2>{&uint32_member_1_, &uint32_member_2_};
+  }
+
  private:
   Uint32OwningField uint32_member_1_{1};
   Uint32OwningField uint32_member_2_{2};
-
-  Fields fields_{&uint32_member_1_, &uint32_member_2_};
 };
 
-class OuterStruct : public Message {
+class OuterStruct : public Message<OuterStruct> {
  public:
-  OuterStruct() : Message(&fields_) {}
-
   const InnerStruct& inner_member() const { return inner_member_.value(); }
   InnerStruct& inner_member() { return inner_member_.value(); }
 
   using Message::SerializeAsString;
 
+  std::array<proto_parsing::OwningField*, 1> GetFields() {
+    return std::array<OwningField*, 1>{&inner_member_};
+  }
+
  private:
   MessageOwningField<InnerStruct> inner_member_{1};
-  Fields fields_{&inner_member_};
 };
 
 TEST(MessageTest, Clear) {
@@ -475,9 +474,9 @@ TEST(RepeatedMessageOwningField, SerializeVerySmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
-class Submessage : public Message {
+class Submessage : public Message<Submessage> {
  public:
-  Submessage() : Message(&fields_) {}
+  Submessage() = default;
 
   uint32_t uint32_field() const { return uint32_field_.value(); }
   void set_uint32_field(uint32_t value) { uint32_field_.set_value(value); }
@@ -491,11 +490,16 @@ class Submessage : public Message {
            bytes_field_.value() == other.bytes_field_.value();
   }
 
+  std::array<proto_parsing::OwningField*, 2> GetFields() {
+    return std::array<OwningField*, 2>{&uint32_field_, &bytes_field_};
+  }
+
  private:
   Uint32OwningField uint32_field_{1};
+  // Arbitrary padding to make sure pasing/serializing doesn't rely on
+  // fields being contiguous in memory.
+  [[maybe_unused]] uint8_t padding_[20] = {};
   OwningBytesField<std::string> bytes_field_{2};
-
-  Fields fields_{&uint32_field_, &bytes_field_};
 };
 
 enum class TestEnum : uint32_t {
@@ -510,15 +514,9 @@ bool TestEnum_IsValid(uint32_t value) {
          value == static_cast<uint32_t>(TestEnum::kTwo);
 }
 
-class TestMessage : public Message {
+class TestMessage : public Message<TestMessage> {
  public:
-  TestMessage() : Message(&fields_) {}
-
-  bool operator==(const TestMessage& other) const {
-    return uint32_field_.value() == other.uint32_field_.value() &&
-           bytes_field_.value() == other.bytes_field_.value() &&
-           sub_message_field_.value() == other.sub_message_field_.value();
-  }
+  TestMessage() = default;
 
   uint32_t uint32_field() const { return uint32_field_.value(); }
   void set_uint32_field(uint32_t value) { uint32_field_.set_value(value); }
@@ -533,13 +531,26 @@ class TestMessage : public Message {
   }
   Submessage& sub_message_field() { return sub_message_field_.value(); }
 
+  std::array<proto_parsing::OwningField*, 4> GetFields() {
+    return std::array<OwningField*, 4>{&uint32_field_, &bytes_field_,
+                                       &sub_message_field_, &enum_field_};
+  }
+
+  TestEnum enum_field() const { return enum_field_.value(); }
+  void set_enum_field(TestEnum value) { enum_field_.set_value(value); }
+
+  bool operator==(const TestMessage& other) const {
+    return uint32_field_.value() == other.uint32_field_.value() &&
+           bytes_field_.value() == other.bytes_field_.value() &&
+           sub_message_field_.value() == other.sub_message_field_.value() &&
+           enum_field_.value() == other.enum_field_.value();
+  }
+
  private:
   Uint32OwningField uint32_field_{1};
   OwningBytesField<std::string> bytes_field_{2};
   MessageOwningField<Submessage> sub_message_field_{3};
   EnumOwningField<TestEnum> enum_field_{4, &TestEnum_IsValid, TestEnum::kZero};
-  RepeatedMessageOwningField<Submessage> repeated_sub_message_field_{5};
-  Fields fields_{&uint32_field_, &bytes_field_, &sub_message_field_};
 };
 
 TEST(MessageOwningFieldTest, CopyConstructor) {
@@ -548,9 +559,18 @@ TEST(MessageOwningFieldTest, CopyConstructor) {
   field.value().set_bytes_field("test");
   field.value().sub_message_field().set_uint32_field(456);
   field.value().sub_message_field().set_bytes_field("field");
+  field.value().set_enum_field(TestEnum::kOne);
 
   MessageOwningField<TestMessage> field2 = field;
   EXPECT_THAT(field2.value(), Eq(field.value()));
+
+  // Make changes to field to verify that field2 is not changed.
+  field.value().set_uint32_field(1234);
+  field.value().set_bytes_field("test2");
+  field.value().sub_message_field().set_uint32_field(4567);
+  field.value().sub_message_field().set_bytes_field("field2");
+  field.value().set_enum_field(TestEnum::kTwo);
+  EXPECT_THAT(field2.value(), Not(Eq(field.value())));
 }
 
 TEST(MessageOwningFieldTest, CopyAssignment) {
@@ -559,11 +579,20 @@ TEST(MessageOwningFieldTest, CopyAssignment) {
   field.value().set_bytes_field("test");
   field.value().sub_message_field().set_uint32_field(456);
   field.value().sub_message_field().set_bytes_field("field");
+  field.value().set_enum_field(TestEnum::kOne);
   MessageOwningField<TestMessage> field2(2);
   field2.value().set_uint32_field(999);
 
   field2 = field;
   EXPECT_THAT(field2.value(), Eq(field.value()));
+
+  // Make changes to field to verify that field2 is not changed.
+  field.value().set_uint32_field(1234);
+  field.value().set_bytes_field("test2");
+  field.value().sub_message_field().set_uint32_field(4567);
+  field.value().sub_message_field().set_bytes_field("field2");
+  field.value().set_enum_field(TestEnum::kTwo);
+  EXPECT_THAT(field2.value(), Not(Eq(field.value())));
 }
 
 TEST(MessageOwningFieldTest, MoveConstructor) {
@@ -572,6 +601,7 @@ TEST(MessageOwningFieldTest, MoveConstructor) {
   field.value().set_bytes_field("test");
   field.value().sub_message_field().set_uint32_field(456);
   field.value().sub_message_field().set_bytes_field("field");
+  field.value().set_enum_field(TestEnum::kTwo);
   MessageOwningField<TestMessage> field2 = std::move(field);
 
   // Verify field2 has the correct values.
@@ -587,6 +617,7 @@ TEST(MessageOwningFieldTest, MoveAssignment) {
   field.value().set_bytes_field("test");
   field.value().sub_message_field().set_uint32_field(456);
   field.value().sub_message_field().set_bytes_field("field");
+  field.value().set_enum_field(TestEnum::kTwo);
   MessageOwningField<TestMessage> field2(2);
   field2.value().set_uint32_field(999);
   field2 = std::move(field);

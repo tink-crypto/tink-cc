@@ -41,11 +41,11 @@ class Uint64Field : public Field<Struct> {
   explicit Uint64Field(int field_number, uint64_t Struct::*value)
       : value_(value), field_number_(field_number) {}
 
-  // Not copyable, not movable.
-  Uint64Field(const Uint64Field&) = delete;
-  Uint64Field& operator=(const Uint64Field&) = delete;
-  Uint64Field(Uint64Field&&) noexcept = delete;
-  Uint64Field& operator=(Uint64Field&&) noexcept = delete;
+  // Copyable and movable.
+  Uint64Field(const Uint64Field&) = default;
+  Uint64Field& operator=(const Uint64Field&) = default;
+  Uint64Field(Uint64Field&&) noexcept = default;
+  Uint64Field& operator=(Uint64Field&&) noexcept = default;
 
   void ClearMember(Struct& s) const override { s.*value_ = 0; }
 

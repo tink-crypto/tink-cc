@@ -232,6 +232,171 @@ TEST(Uint32Field, CopyAndMove) {
   EXPECT_THAT(field_move_assign.value(), Eq(123));
 }
 
+// Uint64Field ==============================================================
+
+std::vector<std::pair<std::string, uint64_t>>
+Uint64TestCasesParseAndSerialize() {
+  return std::vector<std::pair<std::string, uint64_t>>{
+      {"01", 1},
+      {"7f", 127},
+      {"8001", 128},
+      {"a274", 14882},
+      {"ffffffff0f", 0xffffffffLL},
+      {"8080808010", 0x100000000LL},
+      {"f0bdf3d589cf959a12", 0x123456789abcdef0LL},
+      {"ffffffffffffffff7f", 0x7fffffffffffffffLL},
+      {"ffffffffffffffffff01", 0xffffffffffffffffLL},
+  };
+}
+
+std::vector<std::pair<std::string, uint64_t>> Uint64TestCasesParseOnly() {
+  std::vector<std::pair<std::string, uint64_t>> result =
+      Uint64TestCasesParseAndSerialize();
+  result.push_back({"00", 0});
+  // Padded up to 10 bytes.
+  result.push_back({"8000", 0});
+  result.push_back({"80808080808080808000", 0});
+  result.push_back({"8100", 1});
+  result.push_back({"ffffffffffffffffff0f", 0xFFFFFFFFFFFFFFFFLL});
+  result.push_back({"ffffffffffffffffff7f", 0xFFFFFFFFFFFFFFFFLL});
+  return result;
+}
+
+TEST(Uint64Field, ClearMemberWorks) {
+  Uint64OwningField field{1};
+  field.set_value(123);
+  field.Clear();
+  EXPECT_THAT(field.value(), testing::Eq(0));
+}
+
+TEST(Uint64Field, ConsumeIntoMemberSuccessCases) {
+  Uint64OwningField field{1};
+  field.set_value(999);
+
+  for (std::pair<std::string, uint64_t> test_case :
+       Uint64TestCasesParseOnly()) {
+    SCOPED_TRACE(test_case.first);
+    std::string serialized = HexDecodeOrDie(test_case.first);
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+    EXPECT_THAT(field.value(), Eq(test_case.second));
+    EXPECT_THAT(parsing_state.RemainingData(), IsEmpty());
+  }
+}
+
+TEST(Uint64Field, ConsumeIntoMemberLeavesRemainingData) {
+  Uint64OwningField field{1};
+  field.set_value(999);
+  std::string serialized =
+      absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field.value(), Eq(128));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
+}
+
+TEST(Uint64Field, ConsumeIntoMemberFailureCases) {
+  Uint64OwningField field{1};
+
+  for (std::string test_case : {"", "faab"}) {
+    SCOPED_TRACE(test_case);
+    std::string serialized = HexDecodeOrDie(test_case);
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+  }
+}
+
+TEST(Uint64Field, SerializeVarintSuccessCases) {
+  Uint64OwningField field{1};
+
+  for (std::pair<std::string, uint64_t> test_case :
+       Uint64TestCasesParseAndSerialize()) {
+    SCOPED_TRACE(test_case.first);
+    std::string expected_serialization =
+        HexDecodeOrDie("08") + HexDecodeOrDie(test_case.first);
+    field.set_value(test_case.second);
+    EXPECT_THAT(field.GetSerializedSizeIncludingTag(),
+                Eq(expected_serialization.size()));
+
+    std::string buffer;
+    buffer.resize(expected_serialization.size());
+    SerializationState state = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+    EXPECT_THAT(HexEncode(buffer), Eq(HexEncode(expected_serialization)));
+    EXPECT_THAT(state.GetBuffer().size(), Eq(0));
+  }
+}
+
+TEST(Uint64Field, SerializeVarintDifferentFieldNumberSuccessCases) {
+  Uint64OwningField field{12345};
+
+  for (std::pair<std::string, uint64_t> test_case :
+       Uint64TestCasesParseAndSerialize()) {
+    SCOPED_TRACE(test_case.first);
+    std::string expected_serialization =
+        HexDecodeOrDie("c88306") + HexDecodeOrDie(test_case.first);
+    field.set_value(test_case.second);
+    EXPECT_THAT(field.GetSerializedSizeIncludingTag(),
+                Eq(expected_serialization.size()));
+
+    std::string buffer;
+    buffer.resize(expected_serialization.size());
+    SerializationState state = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+    EXPECT_THAT(HexEncode(buffer), Eq(HexEncode(expected_serialization)));
+    EXPECT_THAT(state.GetBuffer().size(), Eq(0));
+  }
+}
+
+TEST(Uint64Field, SerializeVarintBufferTooSmall) {
+  Uint64OwningField field{1};
+  for (std::pair<std::string, uint64_t> test_case :
+       Uint64TestCasesParseAndSerialize()) {
+    SCOPED_TRACE(test_case.first);
+    field.set_value(test_case.second);
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(),
+                Eq(test_case.first.size() / 2 + 1));
+
+    std::string buffer;
+    buffer.resize(test_case.first.size() / 2);
+    SerializationState state = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  }
+}
+
+TEST(Uint64Field, SerializeVarintLeavesRemainingData) {
+  Uint64OwningField field{1};
+  std::string buffer = "abcdef";
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  field.set_value(14882);
+  // Will overwrite the first two bytes with 0xa274
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+  EXPECT_THAT(HexEncode(buffer), Eq("08a274646566"));
+  std::string expected = "def";
+  // Note: absl::MakeSpan("def").size() == 4 (will add null terminator).
+  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+}
+
+TEST(Uint64Field, Empty) {
+  Uint64OwningField field{1};
+  std::string buffer = "abcdef";
+  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  field.set_value(0);
+
+  ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+  std::string expected = "abcdef";
+  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
+  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+}
+
+TEST(Uint64Field, FieldNumber) {
+  Uint64OwningField field{1};
+  ASSERT_THAT(field.FieldNumber(), Eq(1));
+  Uint64OwningField field2{123};
+  ASSERT_THAT(field2.FieldNumber(), Eq(123));
+}
+
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
   OwningBytesField<std::string> field(kBytesField1Number);

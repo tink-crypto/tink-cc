@@ -25,6 +25,7 @@
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
+#include "tink/internal/proto_parser_uint64_field.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
 namespace crypto {
@@ -99,6 +100,37 @@ class Uint32OwningField : public OwningField {
  private:
   uint32_t value_ = 0;
   Uint32Field<Uint32OwningField> field_;
+};
+
+class Uint64OwningField : public OwningField {
+ public:
+  explicit Uint64OwningField(uint64_t field_number)
+      : OwningField(field_number, WireType::kVarint),
+        field_(field_number, &Uint64OwningField::value_) {}
+
+  // Copyable and movable.
+  Uint64OwningField(const Uint64OwningField&) = default;
+  Uint64OwningField& operator=(const Uint64OwningField&) = default;
+  Uint64OwningField(Uint64OwningField&&) noexcept = default;
+  Uint64OwningField& operator=(Uint64OwningField&&) noexcept = default;
+
+  void Clear() override { field_.ClearMember(*this); }
+  bool ConsumeIntoMember(ParsingState& serialized) override {
+    return field_.ConsumeIntoMember(serialized, *this);
+  }
+  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+    return field_.SerializeWithTagInto(out, *this);
+  }
+  size_t GetSerializedSizeIncludingTag() const override {
+    return field_.GetSerializedSizeIncludingTag(*this);
+  }
+
+  void set_value(uint64_t value) { value_ = value; }
+  uint64_t value() const { return value_; }
+
+ private:
+  uint64_t value_ = 0;
+  Uint64Field<Uint64OwningField> field_;
 };
 
 template <typename StringLike>

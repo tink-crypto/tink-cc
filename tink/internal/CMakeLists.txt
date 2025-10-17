@@ -2182,6 +2182,7 @@ tink_cc_library(
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_options
     tink::internal::proto_parser_state
+    tink::internal::proto_parser_uint64_field
     tink::internal::proto_parsing_helpers
     absl::core_headers
     absl::status

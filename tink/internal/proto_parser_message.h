@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
@@ -98,7 +99,7 @@ class Message {
   template <typename MessageT>
   friend class RepeatedMessageOwningField;
 
-  OwningField* get_field(uint32_t field_number) {
+  OwningField* /*absl_nullable - not yet supported*/ get_field(uint32_t field_number) {
     auto fields = static_cast<Derived*>(this)->GetFields();
     auto it = absl::c_lower_bound(
         fields, field_number, [](const OwningField* a, uint32_t field_number) {
@@ -120,8 +121,7 @@ class Message {
 
 template <typename Derived>
 void Message<Derived>::Clear() {
-  for (OwningField* field :
-       const_cast<Derived*>(static_cast<const Derived*>(this))->GetFields()) {
+  for (OwningField* field : (static_cast<Derived*>(this))->GetFields()) {
     field->Clear();
   }
 }

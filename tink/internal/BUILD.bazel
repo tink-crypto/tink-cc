@@ -2299,6 +2299,7 @@ cc_library(
         "//tink/subtle:subtle_util",
         "//tink/util:secret_data",
         "@com_google_absl//absl/algorithm:container",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",

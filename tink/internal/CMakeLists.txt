@@ -2216,6 +2216,7 @@ tink_cc_library(
     tink::internal::proto_parsing_helpers
     tink::internal::secret_buffer
     absl::algorithm_container
+    absl::nullability
     absl::crc32c
     absl::check
     absl::status

@@ -71,15 +71,6 @@ class MessageOwningField;
 template <typename Derived>
 class Message {
  public:
-  Message() = default;
-  virtual ~Message() = default;
-
-  // Copyable and movable.
-  Message(const Message&) = default;
-  Message& operator=(const Message&) = default;
-  Message(Message&&) noexcept = default;
-  Message& operator=(Message&&) noexcept = default;
-
   // Methods taken from the proto2::Message interface.
   // Clears all fields.
   void Clear();
@@ -94,10 +85,24 @@ class Message {
   std::string SerializeAsString() const;
 
  private:
+  // We declare Derived as a friend and make constructors private. This prevents
+  // users from mistakenly giving a wrong template argument:
+  // `class AesEaxKeyProto : public Message<AesGcmKeyProto> {...};`
+  // will fail to compile.
+  friend Derived;
   template <typename MessageT>
   friend class MessageOwningField;
   template <typename MessageT>
   friend class RepeatedMessageOwningField;
+
+  Message() = default;
+  virtual ~Message() = default;
+
+  // Copyable and movable.
+  Message(const Message&) = default;
+  Message& operator=(const Message&) = default;
+  Message(Message&&) noexcept = default;
+  Message& operator=(Message&&) noexcept = default;
 
   OwningField* /*absl_nullable - not yet supported*/ get_field(uint32_t field_number) {
     auto fields = static_cast<Derived*>(this)->GetFields();

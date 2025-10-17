@@ -465,7 +465,6 @@ tink_cc_library(
     ml_dsa_proto_serialization.cc
     ml_dsa_proto_serialization.h
   DEPS
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -482,12 +481,13 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     tink::internal::tink_proto_structs
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
-    tink::util::secret_data
   TAGS
     exclude_if_openssl
 )
@@ -530,7 +530,6 @@ tink_cc_library(
     slh_dsa_proto_serialization.cc
     slh_dsa_proto_serialization.h
   DEPS
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -547,7 +546,9 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     tink::internal::tink_proto_structs
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key

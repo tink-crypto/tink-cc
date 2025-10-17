@@ -45,16 +45,14 @@ class RepeatedSecretDataField : public Field<Struct> {
   explicit RepeatedSecretDataField(int field_number,
                                    std::vector<SecretData> Struct::* data)
       : data_(data), field_number_(field_number) {}
-  // Not copyable and movable.
-  RepeatedSecretDataField(const RepeatedSecretDataField&) = delete;
-  RepeatedSecretDataField& operator=(const RepeatedSecretDataField&) = delete;
-  RepeatedSecretDataField(RepeatedSecretDataField&&) noexcept = delete;
-  RepeatedSecretDataField& operator=(
-      RepeatedSecretDataField&&) noexcept = delete;
+  // Copyable and movable.
+  RepeatedSecretDataField(const RepeatedSecretDataField&) = default;
+  RepeatedSecretDataField& operator=(const RepeatedSecretDataField&) = default;
+  RepeatedSecretDataField(RepeatedSecretDataField&&) noexcept = default;
+  RepeatedSecretDataField& operator=(RepeatedSecretDataField&&) noexcept =
+      default;
 
-  void ClearMember(Struct& s) const override {
-    (s.*data_).clear();
-  }
+  void ClearMember(Struct& s) const override { (s.*data_).clear(); }
 
   bool ConsumeIntoMember(ParsingState& parsing_state,
                          Struct& s) const override {
@@ -136,6 +134,15 @@ class OwningRepeatedSecretDataField : public OwningField {
   explicit OwningRepeatedSecretDataField(int field_number)
       : OwningField(field_number, WireType::kLengthDelimited),
         field_(field_number, &OwningRepeatedSecretDataField::value_) {}
+
+  // Copyable and movable.
+  OwningRepeatedSecretDataField(const OwningRepeatedSecretDataField&) = default;
+  OwningRepeatedSecretDataField& operator=(
+      const OwningRepeatedSecretDataField&) = default;
+  OwningRepeatedSecretDataField(OwningRepeatedSecretDataField&&) noexcept =
+      default;
+  OwningRepeatedSecretDataField& operator=(
+      OwningRepeatedSecretDataField&&) noexcept = default;
 
   void Clear() override { field_.ClearMember(*this); }
   bool ConsumeIntoMember(ParsingState& serialized) override {

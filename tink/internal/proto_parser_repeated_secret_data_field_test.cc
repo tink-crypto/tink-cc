@@ -498,6 +498,103 @@ TEST(OwningRepeatedSecretDataField, SerializeExtendsExistingCrc) {
                        "existing", HexDecodeOrDie("0a11"), text))));
 }
 
+TEST(OwningRepeatedSecretDataField, CopyConstructor) {
+  OwningRepeatedSecretDataField original(1);
+  original.value().push_back(SecretDataFromStringView("secret1"));
+  original.value().push_back(SecretDataFromStringView("secret2"));
+
+  OwningRepeatedSecretDataField copied = original;
+
+  EXPECT_THAT(copied.value(), SizeIs(2));
+  EXPECT_THAT(SecretDataAsStringView(copied.value()[0]), Eq("secret1"));
+  EXPECT_THAT(SecretDataAsStringView(copied.value()[1]), Eq("secret2"));
+  EXPECT_THAT(copied.GetSerializedSizeIncludingTag(),
+              Eq(original.GetSerializedSizeIncludingTag()));
+
+  std::string buffer(copied.GetSerializedSizeIncludingTag(), '\0');
+  SerializationState state(absl::MakeSpan(buffer));
+  ASSERT_THAT(copied.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(HexEncode(buffer),
+              Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
+                              HexEncode("secret2"))));
+
+  // Modify original and check copied is unchanged.
+  original.Clear();
+  EXPECT_THAT(copied.value(), SizeIs(2));
+  EXPECT_THAT(SecretDataAsStringView(copied.value()[0]), Eq("secret1"));
+}
+
+TEST(OwningRepeatedSecretDataField, CopyAssignment) {
+  OwningRepeatedSecretDataField original(1);
+  original.value().push_back(SecretDataFromStringView("secret1"));
+  original.value().push_back(SecretDataFromStringView("secret2"));
+
+  OwningRepeatedSecretDataField copied(2);
+  copied = original;
+
+  EXPECT_THAT(copied.value(), SizeIs(2));
+  EXPECT_THAT(SecretDataAsStringView(copied.value()[0]), Eq("secret1"));
+  EXPECT_THAT(SecretDataAsStringView(copied.value()[1]), Eq("secret2"));
+  EXPECT_THAT(copied.GetSerializedSizeIncludingTag(),
+              Eq(original.GetSerializedSizeIncludingTag()));
+
+  std::string buffer(copied.GetSerializedSizeIncludingTag(), '\0');
+  SerializationState state(absl::MakeSpan(buffer));
+  ASSERT_THAT(copied.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(HexEncode(buffer),
+              Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
+                              HexEncode("secret2"))));
+
+  // Modify original and check copied is unchanged.
+  original.Clear();
+  EXPECT_THAT(copied.value(), SizeIs(2));
+  EXPECT_THAT(SecretDataAsStringView(copied.value()[0]), Eq("secret1"));
+}
+
+TEST(OwningRepeatedSecretDataField, MoveConstructor) {
+  OwningRepeatedSecretDataField original(1);
+  original.value().push_back(SecretDataFromStringView("secret1"));
+  original.value().push_back(SecretDataFromStringView("secret2"));
+  size_t original_size = original.GetSerializedSizeIncludingTag();
+
+  OwningRepeatedSecretDataField moved = std::move(original);
+
+  EXPECT_THAT(moved.value(), SizeIs(2));
+  EXPECT_THAT(SecretDataAsStringView(moved.value()[0]), Eq("secret1"));
+  EXPECT_THAT(SecretDataAsStringView(moved.value()[1]), Eq("secret2"));
+  EXPECT_THAT(moved.GetSerializedSizeIncludingTag(), Eq(original_size));
+
+  std::string buffer(moved.GetSerializedSizeIncludingTag(), '\0');
+  SerializationState state(absl::MakeSpan(buffer));
+  ASSERT_THAT(moved.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(HexEncode(buffer),
+              Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
+                              HexEncode("secret2"))));
+}
+
+TEST(OwningRepeatedSecretDataField, MoveAssignment) {
+  OwningRepeatedSecretDataField original(1);
+  original.value().push_back(SecretDataFromStringView("secret1"));
+  original.value().push_back(SecretDataFromStringView("secret2"));
+  size_t original_size = original.GetSerializedSizeIncludingTag();
+
+  OwningRepeatedSecretDataField moved(2);
+  moved.value().push_back(SecretDataFromStringView("something_else"));
+  moved = std::move(original);
+
+  EXPECT_THAT(moved.value(), SizeIs(2));
+  EXPECT_THAT(SecretDataAsStringView(moved.value()[0]), Eq("secret1"));
+  EXPECT_THAT(SecretDataAsStringView(moved.value()[1]), Eq("secret2"));
+  EXPECT_THAT(moved.GetSerializedSizeIncludingTag(), Eq(original_size));
+
+  std::string buffer(moved.GetSerializedSizeIncludingTag(), '\0');
+  SerializationState state(absl::MakeSpan(buffer));
+  ASSERT_THAT(moved.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(HexEncode(buffer),
+              Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
+                              HexEncode("secret2"))));
+}
+
 }  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink

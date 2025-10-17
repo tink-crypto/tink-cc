@@ -2217,6 +2217,7 @@ tink_cc_library(
     tink::internal::proto_parsing_helpers
     tink::internal::secret_buffer
     absl::algorithm_container
+    absl::no_destructor
     absl::nullability
     absl::crc32c
     absl::check
@@ -2224,10 +2225,10 @@ tink_cc_library(
     absl::statusor
     absl::strings
     absl::string_view
+    absl::optional
     absl::span
     tink::core::secret_data
     tink::subtle::subtle_util
-    tink::util::secret_data
 )
 
 tink_cc_test(

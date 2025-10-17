@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -745,6 +744,207 @@ TEST(MessageOwningFieldTest, MoveAssignment) {
   EXPECT_THAT(field2.value().bytes_field(), Eq("test"));
   EXPECT_THAT(field2.value().sub_message_field().uint32_field(), Eq(456));
   EXPECT_THAT(field2.value().sub_message_field().bytes_field(), Eq("field"));
+}
+
+// -----------------------------------------------------------------------------
+// MessageOwningFieldWithPresence tests.
+
+TEST(MessageOwningFieldWithPresenceTest, ClearMemberWorks) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct(123, 456);
+  field.Clear();
+  EXPECT_THAT(field.has_value(), IsFalse());
+}
+
+TEST(MessageOwningFieldWithPresenceTest, ConsumeIntoMemberSuccessCases) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string bytes =
+      absl::StrCat(/* 4 bytes */ HexDecodeOrDie("04"),
+                   /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
+                   /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
+                   "remaining_data");
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
+  ASSERT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value().uint32_member_1(), Eq(0x23));
+  EXPECT_THAT(field.value().uint32_member_2(), Eq(0x7a));
+}
+
+TEST(MessageOwningFieldWithPresenceTest,
+ConsumeIntoMemberWithCrcSuccessCases) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string bytes =
+      absl::StrCat(/* 4 bytes */ HexDecodeOrDie("04"),
+                   /* Int field, tag 1, value 0x23 */ HexDecodeOrDie("0823"),
+                   /* Int field, tag 2, value 0x7a */ HexDecodeOrDie("107a"),
+                   "remaining_data");
+  absl::crc32c_t crc{};
+  ParsingState parsing_state = ParsingState(bytes, &crc);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining_data"));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(bytes.substr(0, 5))));
+  ASSERT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value().uint32_member_1(), Eq(0x23));
+  EXPECT_THAT(field.value().uint32_member_2(), Eq(0x7a));
+}
+
+TEST(MessageOwningFieldWithPresenceTest, ConsumeIntoMemberEmptyStringNullopt)
+{
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string bytes = HexDecodeOrDie("00");
+  ParsingState parsing_state = ParsingState(bytes);
+  ASSERT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  ASSERT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value().uint32_member_1(), Eq(0));
+  EXPECT_THAT(field.value().uint32_member_2(), Eq(0));
+}
+
+TEST(MessageOwningFieldWithPresenceTest, ConsumeIntoMemberEmptyString) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct(10, 0);
+
+  std::string bytes = HexDecodeOrDie("00");
+  ParsingState parsing_state = ParsingState(bytes);
+  // This does not clear the fields because if there are multiple blocks
+  // for the same field we merge them.
+  ASSERT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  ASSERT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value().uint32_member_1(), Eq(10));
+  EXPECT_THAT(field.value().uint32_member_2(), Eq(0));
+}
+
+TEST(MessageOwningFieldWithPresenceTest, ConsumeIntoMemberDoesNotClear) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct(10, 0);
+
+  std::string bytes =
+      absl::StrCat(/* 4 bytes */ HexDecodeOrDie("02"),
+                   /* Int field, tag 2, value 0x7a */
+                   HexDecodeOrDie("107a"));
+  ParsingState parsing_state = ParsingState(bytes);
+  // This does not clear uint32_member_1 because if there are multiple blocks
+  // for the same field we merge them.
+  ASSERT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  ASSERT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value().uint32_member_1(), Eq(10));
+  EXPECT_THAT(field.value().uint32_member_2(), Eq(0x7a));
+}
+
+TEST(MessageOwningFieldWithPresenceTest,
+     ConsumeIntoMemberWithInnerStructNullopt) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string bytes =
+      absl::StrCat(/* 4 bytes */ HexDecodeOrDie("02"),
+                   /* Int field, tag 2, value 0x7a */
+                   HexDecodeOrDie("107a"));
+  ParsingState parsing_state = ParsingState(bytes);
+  // This does not clear uint32_member_1 because if there are multiple blocks
+  // for the same field we merge them.
+  ASSERT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  ASSERT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value().uint32_member_1(), Eq(0));  // Default value.
+  EXPECT_THAT(field.value().uint32_member_2(), Eq(0x7a));
+}
+
+TEST(MessageOwningFieldWithPresenceTest, ConsumeIntoMemberVarintTooLong) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string bytes = /* LengthDelimetedLength: */ HexDecodeOrDie("01");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+}
+
+TEST(MessageOwningFieldWithPresenceTest, EmptyWithoutVarint) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string bytes = "";
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+}
+
+TEST(MessageOwningFieldWithPresenceTest, InvalidVarint) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
+  ParsingState parsing_state = ParsingState(bytes);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+}
+
+// When the optional struct is not set, we produce an empty serialization.
+TEST(MessageOwningFieldWithPresenceTest,
+     SerializeNulloptProducesEmptySerialization) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+
+  std::string buffer = "abc";
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(3));
+  EXPECT_THAT(buffer, Eq("abc"));
+}
+
+// When the optional struct is set to the default value, we produce a
+// serialization of the empty submessage.
+TEST(MessageOwningFieldWithPresenceTest,
+     SerializeInnerStructWithDefaultValuesProducesEmptySubmessage) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct{};
+
+  std::string buffer = "abc";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(1));
+  // Serialized as empty submessage.
+  EXPECT_THAT(buffer.substr(0, 2), Eq(FieldWithNumber(1).IsSubMessage({})));
+}
+
+TEST(MessageOwningFieldWithPresenceTest, SerializeNonEmpty) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct(0x23, 0x7a);
+  std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(6));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 6));
+  EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[6]));
+  EXPECT_THAT(
+      buffer.substr(0, 6),
+      Eq(FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
+                                          FieldWithNumber(2).IsVarint(0x7a)})));
+  // Rest is untouched
+  EXPECT_THAT(buffer.substr(6), Eq("BUFFERBUFFERBUFFER"));
+}
+
+TEST(MessageOwningFieldWithPresenceTest, SerializeTooSmallBuffer) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct(0x23, 0x7a);
+  std::string buffer = "BUFFE";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+// The buffer can hold the tag, but not the varint of the length.
+TEST(MessageOwningFieldWithPresenceTest, SerializeSmallerBuffer) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct(0x23, 0x7a);
+  std::string buffer = "B";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+// The buffer won't even hold the varint.
+TEST(MessageOwningFieldWithPresenceTest, SerializeVerySmallBuffer) {
+  MessageOwningFieldWithPresence<InnerStruct> field{1};
+  *field.mutable_value() = InnerStruct(0x23, 0x7a);
+  std::string buffer;
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
 }  // namespace

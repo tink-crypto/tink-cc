@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "absl/algorithm/container.h"
+#include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
 #include "absl/log/check.h"
@@ -31,6 +32,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "absl/types/optional.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
@@ -38,7 +40,6 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -94,6 +95,8 @@ class Message {
   friend class MessageOwningField;
   template <typename MessageT>
   friend class RepeatedMessageOwningField;
+  template <typename MessageT>
+  friend class MessageOwningFieldWithPresence;
 
   Message() = default;
   virtual ~Message() = default;
@@ -401,6 +404,97 @@ class RepeatedMessageOwningField : public OwningField {
 
  private:
   std::vector<MessageT> values_;
+};
+
+template <typename MessageT>
+class MessageOwningFieldWithPresence : public OwningField {
+ public:
+  explicit MessageOwningFieldWithPresence(int field_number)
+      : OwningField(field_number, WireType::kLengthDelimited) {}
+
+  // Copyable and movable.
+  MessageOwningFieldWithPresence(const MessageOwningFieldWithPresence&) =
+      default;
+  MessageOwningFieldWithPresence& operator=(
+      const MessageOwningFieldWithPresence&) = default;
+  MessageOwningFieldWithPresence(MessageOwningFieldWithPresence&&) noexcept =
+      default;
+  MessageOwningFieldWithPresence& operator=(
+      MessageOwningFieldWithPresence&&) noexcept = default;
+
+  void Clear() override { value_.reset(); }
+
+  bool ConsumeIntoMember(ParsingState& serialized) override {
+    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
+    if (!length.ok()) {
+      return false;
+    }
+    if (*length > serialized.RemainingData().size()) {
+      return false;
+    }
+    ParsingState submessage_parsing_state =
+        serialized.SplitOffSubmessageState(*length);
+    if (!value_.has_value()) {
+      value_.emplace();
+    }
+    return value_->Parse(submessage_parsing_state);
+  }
+
+  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+    if (!value_.has_value()) {
+      return absl::OkStatus();
+    }
+    if (absl::Status result =
+            SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
+        !result.ok()) {
+      return result;
+    }
+    const size_t size = value_->ByteSizeLong();
+    if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
+      return result;
+    }
+    if (out.GetBuffer().size() < size) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+    }
+    // Serialize the message.
+    if (!value_->Serialize(out)) {
+      return absl::InternalError("Failed to serialize message");
+    }
+    return absl::OkStatus();
+  }
+
+  size_t GetSerializedSizeIncludingTag() const override {
+    if (!value_.has_value()) {
+      return 0;
+    }
+    const size_t size = value_->ByteSizeLong();
+    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
+           VarintLength(size) + size;
+  }
+
+  // See https://protobuf.dev/reference/cpp/cpp-generated/#embeddedmessage.
+  bool has_value() const { return value_.has_value(); }
+  const MessageT& value() const {
+    if (value_.has_value()) {
+      return *value_;
+    }
+    return DefaultValue();
+  }
+  MessageT* mutable_value() {
+    if (!value_.has_value()) {
+      value_.emplace();
+    }
+    return &*value_;
+  }
+
+ private:
+  absl::optional<MessageT> value_ = absl::nullopt;
+
+  const MessageT& DefaultValue() const {
+    static const absl::NoDestructor<MessageT> default_value;
+    return *default_value;
+  }
 };
 
 }  // namespace proto_parsing

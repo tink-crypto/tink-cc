@@ -78,7 +78,14 @@ class Message {
   bool ParseFromString(absl::string_view in);
   size_t ByteSizeLong() const;
 
-  // TODO: b/451894777 - Add parsing with CRC.
+  // Parses `in` and returns the CRC of the input.
+  //
+  // For fields that support CRCs (e.g. SecretData), the CRC of the field is
+  // consistent with the returned CRC. This enables end-to-end coverage of
+  // the CRC computation: if the returned CRC is known to be correct, the CRCs
+  // of the individual fields must also be correct.
+  absl::StatusOr<util::SecretValue<absl::crc32c_t>> ParseFromStringWithCrc(
+      absl::string_view in);
   // Serializes the message as SecretData.
   SecretData SerializeAsSecretData() const;
 
@@ -119,6 +126,9 @@ class Message {
     return *it;
   }
 
+  bool ParseFromStringImpl(absl::string_view in,
+                           absl::crc32c_t* result_crc);
+
   // Serializes the message into the given serialization state `out`.
   // Returns true if the serialization was successful.
   bool Serialize(SerializationState& out) const;
@@ -135,9 +145,31 @@ void Message<Derived>::Clear() {
 }
 
 template <typename Derived>
+bool Message<Derived>::ParseFromStringImpl(absl::string_view in,
+                                           absl::crc32c_t* result_crc) {
+  Clear();
+  ParsingState state(in, result_crc);
+  if (!Parse(state)) {
+    return false;
+  }
+  QCHECK(state.ParsingDone());
+  QCHECK(state.RemainingData().empty());
+  return true;
+}
+
+template <typename Derived>
 bool Message<Derived>::ParseFromString(absl::string_view in) {
-  ParsingState state(in);
-  return Parse(state);
+  return ParseFromStringImpl(in, /*result_crc=*/nullptr);
+}
+
+template <typename Derived>
+absl::StatusOr<util::SecretValue<absl::crc32c_t>>
+Message<Derived>::ParseFromStringWithCrc(absl::string_view in) {
+  auto result_crc = util::SecretValue<absl::crc32c_t>(absl::crc32c_t(0));
+  if (!ParseFromStringImpl(in, &result_crc.value())) {
+    return absl::InvalidArgumentError("Failed to parse message");
+  }
+  return result_crc;
 }
 
 template <typename Derived>

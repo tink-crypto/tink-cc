@@ -255,6 +255,35 @@ TEST(MessageTest, ParseFromStringSuccess) {
   EXPECT_THAT(s.inner_member().uint32_member_2(), Eq(0x7a));
 }
 
+struct OuterMessageWithSecretData : public Message<OuterMessageWithSecretData> {
+  std::array<OwningField*, 2> GetFields() {
+    return {&inner_member_field, &secret_data_field};
+  }
+  MessageOwningField<InnerStruct> inner_member_field{1};
+  OwningBytesField<SecretData> secret_data_field{2};
+};
+
+TEST(MessageTest, ParseFromStringWithCrcSuccess) {
+  std::string bytes = absl::StrCat(
+      FieldWithNumber(1).IsSubMessage({FieldWithNumber(1).IsVarint(0x23),
+                                       FieldWithNumber(2).IsVarint(0x7a)}),
+      FieldWithNumber(2).IsString("secret_data"));
+  OuterMessageWithSecretData s;
+  absl::StatusOr<util::SecretValue<absl::crc32c_t>> result_crc =
+      s.ParseFromStringWithCrc(bytes);
+  ASSERT_THAT(result_crc, IsOk());
+  EXPECT_THAT(result_crc->value(), Eq(absl::ComputeCrc32c(bytes)));
+  EXPECT_THAT(s.inner_member_field.value().uint32_member_1(), Eq(0x23));
+  EXPECT_THAT(s.inner_member_field.value().uint32_member_2(), Eq(0x7a));
+  EXPECT_THAT(util::SecretDataAsStringView(s.secret_data_field.value()),
+              Eq("secret_data"));
+#if !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
+  EXPECT_THAT(s.secret_data_field.value().ValidateCrc32c(), IsOk());
+  EXPECT_THAT(s.secret_data_field.value().GetCrc32c(),
+              Eq(absl::ComputeCrc32c("secret_data")));
+#endif  // !defined(TINK_CPP_SECRET_DATA_IS_STD_VECTOR)
+}
+
 TEST(MessageTest, SerializeAndParse) {
   OuterStruct s;
   s.inner_member().set_uint32_member_1(0x23);

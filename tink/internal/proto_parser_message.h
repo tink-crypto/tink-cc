@@ -59,8 +59,8 @@ class MessageOwningField;
 //   MyMessage() : Message(&fields_) {}
 //   ~MyMessage() = default;
 //
-//   std::array<OwningField*, 2> GetFields() const {
-//     return std::array<OwningField*, 2>{&some_string_, &some_other_string_};
+//   std::array<const OwningField*, 2> GetFields() const {
+//     return {&some_string_, &some_other_string_};
 //   }
 //
 //  private:
@@ -260,8 +260,8 @@ bool Message<Derived>::Parse(ParsingState& in) {
 //   MyMessage() : Message(&fields_) {}
 //   ~MyMessage() = default;
 //
-//   std::array<OwningField*, 2> GetFields() const {
-//     return std::array<OwningField*, 2>{&some_message_, &some_other_string_};
+//   std::array<const OwningField*, 2> GetFields() const {
+//     return {&some_message_, &some_other_string_};
 //   }
 //
 //  private:

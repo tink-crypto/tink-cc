@@ -82,8 +82,9 @@ class InnerStruct final : public Message<InnerStruct> {
            uint32_member_2_.value() == other.uint32_member_2_.value();
   }
 
-  std::array<proto_parsing::OwningField*, 2> GetFields() {
-    return std::array<OwningField*, 2>{&uint32_member_1_, &uint32_member_2_};
+  std::array<const OwningField*, 2> GetFields() const {
+    return std::array<const OwningField*, 2>{&uint32_member_1_,
+                                             &uint32_member_2_};
   }
 
  private:
@@ -98,8 +99,8 @@ class OuterStruct : public Message<OuterStruct> {
 
   using Message::SerializeAsString;
 
-  std::array<proto_parsing::OwningField*, 1> GetFields() {
-    return std::array<OwningField*, 1>{&inner_member_};
+  std::array<const OwningField*, 1> GetFields() const {
+    return std::array<const OwningField*, 1>{&inner_member_};
   }
 
  private:
@@ -189,8 +190,8 @@ class OuterProtoClassWithWrongCrc
 
   using Message::SerializeAsString;
 
-  std::array<proto_parsing::OwningField*, 2> GetFields() {
-    return std::array<OwningField*, 2>{&inner_member_, &uint32_member_};
+  std::array<const OwningField*, 2> GetFields() const {
+    return std::array<const OwningField*, 2>{&inner_member_, &uint32_member_};
   }
 
  private:
@@ -636,8 +637,8 @@ class Submessage : public Message<Submessage> {
            bytes_field_.value() == other.bytes_field_.value();
   }
 
-  std::array<proto_parsing::OwningField*, 2> GetFields() {
-    return std::array<OwningField*, 2>{&uint32_field_, &bytes_field_};
+  std::array<const OwningField*, 2> GetFields() const {
+    return std::array<const OwningField*, 2>{&uint32_field_, &bytes_field_};
   }
 
  private:
@@ -677,9 +678,9 @@ class TestMessage : public Message<TestMessage> {
   }
   Submessage& sub_message_field() { return sub_message_field_.value(); }
 
-  std::array<proto_parsing::OwningField*, 4> GetFields() {
-    return std::array<OwningField*, 4>{&uint32_field_, &bytes_field_,
-                                       &sub_message_field_, &enum_field_};
+  std::array<const OwningField*, 4> GetFields() const {
+    return std::array<const OwningField*, 4>{&uint32_field_, &bytes_field_,
+                                             &sub_message_field_, &enum_field_};
   }
 
   TestEnum enum_field() const { return enum_field_.value(); }

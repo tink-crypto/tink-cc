@@ -60,8 +60,8 @@ class AesCmacParamProto : public Message<AesCmacParamProto> {
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t value) { tag_size_.set_value(value); }
 
-  std::array<proto_parsing::OwningField*, 1> GetFields() {
-    return std::array<OwningField*, 1>{&tag_size_};
+  std::array<const OwningField*, 1> GetFields() const {
+    return std::array<const OwningField*, 1>{&tag_size_};
   }
 
  private:
@@ -80,8 +80,8 @@ class AesCmacKeyProto : public Message<AesCmacKeyProto> {
   const AesCmacParamProto& params() const { return params_.value(); }
   AesCmacParamProto* mutable_params() { return &params_.value(); }
 
-  std::array<proto_parsing::OwningField*, 3> GetFields() {
-    return std::array<OwningField*, 3>{&version_, &key_value_, &params_};
+  std::array<const OwningField*, 3> GetFields() const {
+    return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
   }
 
  private:
@@ -102,8 +102,8 @@ class AesCmacKeyFormatProto : public Message<AesCmacKeyFormatProto> {
   // This is safe because format doesn't contain any secret data.
   using Message::SerializeAsString;
 
-  std::array<proto_parsing::OwningField*, 2> GetFields() {
-    return std::array<OwningField*, 2>{&key_size_, &params_};
+  std::array<const OwningField*, 2> GetFields() const {
+    return std::array<const OwningField*, 2>{&key_size_, &params_};
   }
 
  private:

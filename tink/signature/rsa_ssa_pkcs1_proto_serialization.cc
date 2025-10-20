@@ -65,7 +65,7 @@ class ProtoRsaSsaPkcs1Params : public Message<ProtoRsaSsaPkcs1Params> {
  public:
   ProtoRsaSsaPkcs1Params() = default;
 
-  std::array<OwningField*, 1> GetFields() { return {&hash_type_}; }
+  std::array<const OwningField*, 1> GetFields() const { return {&hash_type_}; }
 
   void set_hash_type(internal::HashTypeEnum hash_type) {
     hash_type_.set_value(hash_type);
@@ -82,7 +82,7 @@ class ProtoRsaSsaPkcs1PublicKeyMessage final
  public:
   ProtoRsaSsaPkcs1PublicKeyMessage() = default;
 
-  std::array<OwningField*, 4> GetFields() {
+  std::array<const OwningField*, 4> GetFields() const {
     return {&version_, &params_, &n_, &e_};
   }
 
@@ -110,7 +110,7 @@ class ProtoRsaSsaPkcs1PrivateKey final
  public:
   ProtoRsaSsaPkcs1PrivateKey() = default;
 
-  std::array<OwningField*, 8> GetFields() {
+  std::array<const OwningField*, 8> GetFields() const {
     return {&version_, &public_key_, &d_, &p_, &q_, &dp_, &dq_, &crt_};
   }
 
@@ -158,7 +158,7 @@ class ProtoRsaSsaPkcs1KeyFormat final
  public:
   ProtoRsaSsaPkcs1KeyFormat() = default;
 
-  std::array<OwningField*, 3> GetFields() {
+  std::array<const OwningField*, 3> GetFields() const {
     return {&params_, &modulus_size_in_bits_, &public_exponent_};
   }
 

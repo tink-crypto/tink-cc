@@ -114,7 +114,7 @@ class Message {
   Message(Message&&) noexcept = default;
   Message& operator=(Message&&) noexcept = default;
 
-  OwningField* /*absl_nullable - not yet supported*/ get_field(uint32_t field_number) {
+  const OwningField* /*absl_nullable - not yet supported*/ get_field(uint32_t field_number) {
     auto fields = static_cast<Derived*>(this)->GetFields();
     auto it = absl::c_lower_bound(
         fields, field_number, [](const OwningField* a, uint32_t field_number) {
@@ -139,8 +139,8 @@ class Message {
 
 template <typename Derived>
 void Message<Derived>::Clear() {
-  for (OwningField* field : (static_cast<Derived*>(this))->GetFields()) {
-    field->Clear();
+  for (const OwningField* field : (static_cast<Derived*>(this))->GetFields()) {
+    const_cast<OwningField*>(field)->Clear();
   }
 }
 
@@ -203,7 +203,7 @@ std::string Message<Derived>::SerializeAsString() const {
 template <typename Derived>
 bool Message<Derived>::Serialize(SerializationState& out) const {
   for (const OwningField* field :
-       const_cast<Derived*>(static_cast<const Derived*>(this))->GetFields()) {
+       static_cast<const Derived*>(this)->GetFields()) {
     if (absl::Status result = field->SerializeWithTagInto(out); !result.ok()) {
       return false;
     }
@@ -215,7 +215,7 @@ template <typename Derived>
 size_t Message<Derived>::ByteSizeLong() const {
   size_t size = 0;
   for (const OwningField* field :
-       const_cast<Derived*>(static_cast<const Derived*>(this))->GetFields()) {
+       static_cast<const Derived*>(this)->GetFields()) {
     size += field->GetSerializedSizeIncludingTag();
   }
   return size;
@@ -231,7 +231,7 @@ bool Message<Derived>::Parse(ParsingState& in) {
     }
     auto [wire_type, field_number] = *wiretype_and_field_number;
 
-    OwningField* field = get_field(field_number);
+    const OwningField* field = get_field(field_number);
     if (field == nullptr || field->GetWireType() != wire_type) {
       absl::Status s;
       if (wire_type == WireType::kStartGroup) {
@@ -244,7 +244,7 @@ bool Message<Derived>::Parse(ParsingState& in) {
       }
       continue;
     }
-    if (!field->ConsumeIntoMember(in)) {
+    if (!const_cast<OwningField*>(field)->ConsumeIntoMember(in)) {
       return false;
     }
   }

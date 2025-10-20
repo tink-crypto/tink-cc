@@ -88,8 +88,9 @@ class ProtoSlhDsaParams final : public Message<ProtoSlhDsaParams> {
     sig_type_.set_value(value);
   }
 
-  std::array<OwningField*, 3> GetFields() {
-    return std::array<OwningField*, 3>{&key_size_, &hash_type_, &sig_type_};
+  std::array<const OwningField*, 3> GetFields() const {
+    return std::array<const OwningField*, 3>{&key_size_, &hash_type_,
+                                             &sig_type_};
   }
 
  private:
@@ -112,8 +113,8 @@ class ProtoSlhDsaKeyFormat final : public Message<ProtoSlhDsaKeyFormat> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<OwningField*, 2> GetFields() {
-    return std::array<OwningField*, 2>{&version_, &params_};
+  std::array<const OwningField*, 2> GetFields() const {
+    return std::array<const OwningField*, 2>{&version_, &params_};
   }
 
  private:
@@ -134,8 +135,8 @@ class ProtoSlhDsaPublicKey final : public Message<ProtoSlhDsaPublicKey> {
   const ProtoSlhDsaParams& params() const { return params_.value(); }
   ProtoSlhDsaParams& params() { return params_.value(); }
 
-  std::array<OwningField*, 3> GetFields() {
-    return std::array<OwningField*, 3>{&version_, &key_value_, &params_};
+  std::array<const OwningField*, 3> GetFields() const {
+    return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
   }
 
  private:
@@ -157,8 +158,9 @@ class ProtoSlhDsaPrivateKey final : public Message<ProtoSlhDsaPrivateKey> {
   const ProtoSlhDsaPublicKey& public_key() const { return public_key_.value(); }
   ProtoSlhDsaPublicKey& public_key() { return public_key_.value(); }
 
-  std::array<OwningField*, 3> GetFields() {
-    return std::array<OwningField*, 3>{&version_, &key_value_, &public_key_};
+  std::array<const OwningField*, 3> GetFields() const {
+    return std::array<const OwningField*, 3>{&version_, &key_value_,
+                                             &public_key_};
   }
 
  private:

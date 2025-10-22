@@ -15,6 +15,11 @@ add_subdirectory(util)
 
 tink_module(core)
 
+# Suppress the maybe-uninitialized warning in BoringSSL's fipsmodule
+if(TARGET fipsmodule AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  target_compile_options(fipsmodule PRIVATE "-Wno-error=maybe-uninitialized")
+endif()
+
 # Configuration settings for the build.
 
 if(USE_ONLY_FIPS)

@@ -77,9 +77,9 @@ def tink_cc_deps():
     maybe(
         http_archive,
         name = "boringssl",
-        sha256 = "64529449ef458381346b163302523a1fb876e5b667bec4a4bd38d0d2fff8b42b",
-        strip_prefix = "boringssl-0.20250818.0/",
-        url = "https://github.com/google/boringssl/releases/download/0.20250818.0/boringssl-0.20250818.0.tar.gz",
+        sha256 = "f96733fc3df03d4195db656d1b7b8c174c33f95d052f811f0ecc8f4e4e3db332",
+        strip_prefix = "boringssl-0.20251002.0/",
+        url = "https://github.com/google/boringssl/releases/download/0.20251002.0/boringssl-0.20251002.0.tar.gz",
     )
 
     # -------------------------------------------------------------------------

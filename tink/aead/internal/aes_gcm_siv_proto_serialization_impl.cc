@@ -16,12 +16,11 @@
 
 #include "tink/aead/internal/aes_gcm_siv_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
-#include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -35,7 +34,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -48,9 +48,6 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
-
 using AesGcmSivProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesGcmSivParameters>;
 using AesGcmSivProtoParametersSerializerImpl =
@@ -60,32 +57,46 @@ using AesGcmSivProtoKeyParserImpl =
 using AesGcmSivProtoKeySerializerImpl =
     KeySerializerImpl<AesGcmSivKey, ProtoKeySerialization>;
 
-struct AesGcmSivKeyFormatStruct {
-  uint32_t version;
-  uint32_t key_size;
+class ProtoAesGcmSivKeyFormat
+    : public proto_parsing::Message<ProtoAesGcmSivKeyFormat> {
+ public:
+  ProtoAesGcmSivKeyFormat() = default;
 
-  static const ProtoParser<AesGcmSivKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesGcmSivKeyFormatStruct>>
-        parser{ProtoParserBuilder<AesGcmSivKeyFormatStruct>()
-                   .AddUint32Field(1, &AesGcmSivKeyFormatStruct::version)
-                   .AddUint32Field(2, &AesGcmSivKeyFormatStruct::key_size)
-                   .BuildOrDie()};
-    return *parser;
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  uint32_t key_size() const { return key_size_.value(); }
+  void set_key_size(uint32_t value) { key_size_.set_value(value); }
+
+  std::array<const proto_parsing::OwningField*, 2> GetFields() const {
+    return {&version_, &key_size_};
   }
+
+  // This is OK because this class doesn't contain secret data.
+  using Message::SerializeAsString;
+
+ private:
+  proto_parsing::Uint32OwningField version_{1};
+  proto_parsing::Uint32OwningField key_size_{2};
 };
 
-struct AesGcmSivKeyStruct {
-  uint32_t version;
-  SecretData key_value;
+class ProtoAesGcmSivKey : public proto_parsing::Message<ProtoAesGcmSivKey> {
+ public:
+  ProtoAesGcmSivKey() = default;
 
-  static const ProtoParser<AesGcmSivKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesGcmSivKeyStruct>> parser{
-        ProtoParserBuilder<AesGcmSivKeyStruct>()
-            .AddUint32Field(1, &AesGcmSivKeyStruct::version)
-            .AddBytesSecretDataField(3, &AesGcmSivKeyStruct::key_value)
-            .BuildOrDie()};
-    return *parser;
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+
+  std::array<const proto_parsing::OwningField*, 2> GetFields() const {
+    return {&version_, &key_value_};
   }
+
+ private:
+  proto_parsing::Uint32OwningField version_{1};
+  proto_parsing::OwningBytesField<SecretData> key_value_{3};
 };
 
 const absl::string_view kTypeUrl =
@@ -132,13 +143,12 @@ absl::StatusOr<AesGcmSivParameters> ParseParameters(
         "Wrong type URL when parsing AesGcmSivParameters.");
   }
 
-  absl::StatusOr<AesGcmSivKeyFormatStruct> key_format =
-      AesGcmSivKeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!key_format.ok()) {
+  ProtoAesGcmSivKeyFormat key_format;
+  if (!key_format.ParseFromString(key_template.value)) {
     return absl::InvalidArgumentError(
         "Failed to parse AesGcmSivKeyFormat proto");
   }
-  if (key_format->version != 0) {
+  if (key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -147,7 +157,7 @@ absl::StatusOr<AesGcmSivParameters> ParseParameters(
   if (!variant.ok()) {
     return variant.status();
   }
-  return AesGcmSivParameters::Create(key_format->key_size, *variant);
+  return AesGcmSivParameters::Create(key_format.key_size(), *variant);
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
@@ -158,17 +168,11 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  AesGcmSivKeyFormatStruct key_format{
-      /*version=*/0,
-      /*key_size=*/static_cast<uint32_t>(parameters.KeySizeInBytes())};
-  absl::StatusOr<std::string> serialized_key_format =
-      AesGcmSivKeyFormatStruct::GetParser().SerializeIntoString(key_format);
-  if (!serialized_key_format.ok()) {
-    return serialized_key_format.status();
-  }
-
+  ProtoAesGcmSivKeyFormat key_format;
+  key_format.set_version(0);
+  key_format.set_key_size(parameters.KeySizeInBytes());
   return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
-                                              *serialized_key_format);
+                                              key_format.SerializeAsString());
 }
 
 absl::StatusOr<AesGcmSivKey> ParseKey(
@@ -182,13 +186,12 @@ absl::StatusOr<AesGcmSivKey> ParseKey(
         "Wrong type URL when parsing AesGcmSivKey.");
   }
 
-  absl::StatusOr<AesGcmSivKeyStruct> key_struct =
-      AesGcmSivKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!key_struct.ok()) {
+  ProtoAesGcmSivKey key_struct;
+  if (!key_struct.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse AesGcmSivKey proto");
   }
-  if (key_struct->version != 0) {
+  if (key_struct.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -199,13 +202,13 @@ absl::StatusOr<AesGcmSivKey> ParseKey(
   }
 
   absl::StatusOr<AesGcmSivParameters> parameters =
-      AesGcmSivParameters::Create(key_struct->key_value.size(), *variant);
+      AesGcmSivParameters::Create(key_struct.key_value().size(), *variant);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return AesGcmSivKey::Create(
-      *parameters, RestrictedData(std::move(key_struct->key_value), *token),
+      *parameters, RestrictedData(std::move(key_struct.key_value()), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -221,16 +224,10 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return restricted_input.status();
   }
 
-  AesGcmSivKeyStruct key_struct{
-      /*version=*/0,
-      /*key_value=*/restricted_input->Get(*token),
-  };
-
-  absl::StatusOr<SecretData> serialized_key =
-      AesGcmSivKeyStruct::GetParser().SerializeIntoSecretData(key_struct);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
+  ProtoAesGcmSivKey key_struct;
+  key_struct.set_version(0);
+  key_struct.set_key_value(restricted_input->GetSecret(*token));
+  SecretData serialized_key = key_struct.SerializeAsSecretData();
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -239,7 +236,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   }
 
   RestrictedData restricted_output =
-      RestrictedData(*std::move(serialized_key), *token);
+      RestrictedData(std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
       kTypeUrl, std::move(restricted_output), KeyMaterialTypeEnum::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());

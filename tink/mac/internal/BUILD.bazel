@@ -167,6 +167,7 @@ cc_library(
         "//tink/internal:tink_proto_structs",
         "//tink/mac:aes_cmac_key",
         "//tink/mac:aes_cmac_parameters",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",

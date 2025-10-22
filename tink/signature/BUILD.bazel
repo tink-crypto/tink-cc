@@ -683,6 +683,7 @@ cc_library(
         "//tink/internal:proto_parser_owning_fields",
         "//tink/internal:tink_proto_structs",
         "//tink/util:secret_data",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",

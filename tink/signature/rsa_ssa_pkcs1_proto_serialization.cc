@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -48,6 +49,8 @@
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
 #include "tink/util/secret_data.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace crypto {
 namespace tink {
@@ -90,7 +93,7 @@ class ProtoRsaSsaPkcs1PublicKeyMessage final
   void set_version(uint32_t version) { version_.set_value(version); }
 
   const ProtoRsaSsaPkcs1Params& params() const { return params_.value(); }
-  ProtoRsaSsaPkcs1Params* mutable_params() { return &params_.value(); }
+  ProtoRsaSsaPkcs1Params* mutable_params() { return params_.mutable_value(); }
 
   const std::string& n() const { return n_.value(); }
   void set_n(absl::string_view n) { n_.set_value(n); }
@@ -121,7 +124,7 @@ class ProtoRsaSsaPkcs1PrivateKey final
     return public_key_.value();
   }
   ProtoRsaSsaPkcs1PublicKeyMessage* mutable_public_key() {
-    return &public_key_.value();
+    return public_key_.mutable_value();
   }
 
   const SecretData& d() const { return d_.value(); }
@@ -163,7 +166,7 @@ class ProtoRsaSsaPkcs1KeyFormat final
   }
 
   const ProtoRsaSsaPkcs1Params& params() const { return params_.value(); }
-  ProtoRsaSsaPkcs1Params* mutable_params() { return &params_.value(); }
+  ProtoRsaSsaPkcs1Params* mutable_params() { return params_.mutable_value(); }
 
   uint32_t modulus_size_in_bits() const {
     return modulus_size_in_bits_.value();

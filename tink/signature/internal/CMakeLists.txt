@@ -465,6 +465,7 @@ tink_cc_library(
     ml_dsa_proto_serialization.cc
     ml_dsa_proto_serialization.h
   DEPS
+    absl::nullability
     absl::status
     absl::statusor
     absl::string_view
@@ -530,6 +531,7 @@ tink_cc_library(
     slh_dsa_proto_serialization.cc
     slh_dsa_proto_serialization.h
   DEPS
+    absl::nullability
     absl::status
     absl::statusor
     absl::string_view

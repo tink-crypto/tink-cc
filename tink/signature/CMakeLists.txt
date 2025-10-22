@@ -654,6 +654,7 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
+    absl::nullability
     absl::status
     absl::statusor
     absl::string_view

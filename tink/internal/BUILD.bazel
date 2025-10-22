@@ -2328,6 +2328,7 @@ cc_test(
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@com_google_absl//absl/base:nullability",
         "@com_google_absl//absl/crc:crc32c",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",

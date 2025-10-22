@@ -141,6 +141,7 @@ tink_cc_library(
     aes_cmac_proto_serialization_impl.cc
     aes_cmac_proto_serialization_impl.h
   DEPS
+    absl::nullability
     absl::status
     absl::statusor
     absl::string_view

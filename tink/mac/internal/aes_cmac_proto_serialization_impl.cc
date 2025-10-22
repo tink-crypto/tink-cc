@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -42,6 +43,8 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace crypto {
 namespace tink {
@@ -78,7 +81,7 @@ class AesCmacKeyProto : public Message<AesCmacKeyProto> {
   void set_key_value(absl::string_view value) { key_value_.set_value(value); }
 
   const AesCmacParamProto& params() const { return params_.value(); }
-  AesCmacParamProto* mutable_params() { return &params_.value(); }
+  AesCmacParamProto* mutable_params() { return params_.mutable_value(); }
 
   std::array<const OwningField*, 3> GetFields() const {
     return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
@@ -97,7 +100,7 @@ class AesCmacKeyFormatProto : public Message<AesCmacKeyFormatProto> {
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
   const AesCmacParamProto& params() const { return params_.value(); }
-  AesCmacParamProto* mutable_params() { return &params_.value(); }
+  AesCmacParamProto* mutable_params() { return params_.mutable_value(); }
 
   // This is safe because format doesn't contain any secret data.
   using Message::SerializeAsString;

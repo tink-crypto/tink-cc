@@ -21,6 +21,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -44,6 +45,8 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace crypto {
 namespace tink {
@@ -89,7 +92,7 @@ class ProtoMlDsaKeyFormat final : public Message<ProtoMlDsaKeyFormat> {
   void set_version(uint32_t value) { version_.set_value(value); }
 
   const ProtoMlDsaParams& params() const { return params_.value(); }
-  ProtoMlDsaParams* mutable_params() { return &params_.value(); }
+  ProtoMlDsaParams* mutable_params() { return params_.mutable_value(); }
 
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
@@ -114,7 +117,7 @@ class ProtoMlDsaPublicKey final : public Message<ProtoMlDsaPublicKey> {
   void set_key_value(absl::string_view value) { key_value_.set_value(value); }
 
   const ProtoMlDsaParams& params() const { return params_.value(); }
-  ProtoMlDsaParams* mutable_params() { return &params_.value(); }
+  ProtoMlDsaParams* mutable_params() { return params_.mutable_value(); }
 
   std::array<const OwningField*, 3> GetFields() const {
     return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
@@ -137,7 +140,9 @@ class ProtoMlDsaPrivateKey final : public Message<ProtoMlDsaPrivateKey> {
   void set_key_value(absl::string_view value) { key_value_.set_value(value); }
 
   const ProtoMlDsaPublicKey& public_key() const { return public_key_.value(); }
-  ProtoMlDsaPublicKey& public_key() { return public_key_.value(); }
+  ProtoMlDsaPublicKey* mutable_public_key() {
+    return public_key_.mutable_value();
+  }
 
   std::array<const OwningField*, 3> GetFields() const {
     return std::array<const OwningField*, 3>{&version_, &key_value_,
@@ -402,9 +407,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
 
   ProtoMlDsaPrivateKey proto_private_key;
   proto_private_key.set_version(0);
-  proto_private_key.public_key().set_version(0);
-  *proto_private_key.public_key().mutable_params() = *params;
-  proto_private_key.public_key().set_key_value(
+  proto_private_key.mutable_public_key()->set_version(0);
+  *proto_private_key.mutable_public_key()->mutable_params() = *params;
+  proto_private_key.mutable_public_key()->set_key_value(
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
   proto_private_key.set_key_value(restricted_input->GetSecret(*token));
 

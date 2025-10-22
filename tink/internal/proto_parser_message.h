@@ -41,6 +41,8 @@
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 
+ABSL_POINTERS_DEFAULT_NONNULL
+
 namespace crypto {
 namespace tink {
 namespace internal {
@@ -127,7 +129,7 @@ class Message {
   }
 
   bool ParseFromStringImpl(absl::string_view in,
-                           absl::crc32c_t* result_crc);
+                           absl::crc32c_t* /*absl_nullable - not yet supported*/ result_crc);
 
   // Serializes the message into the given serialization state `out`.
   // Returns true if the serialization was successful.
@@ -145,8 +147,8 @@ void Message<Derived>::Clear() {
 }
 
 template <typename Derived>
-bool Message<Derived>::ParseFromStringImpl(absl::string_view in,
-                                           absl::crc32c_t* result_crc) {
+bool Message<Derived>::ParseFromStringImpl(
+    absl::string_view in, absl::crc32c_t* /*absl_nullable - not yet supported*/ result_crc) {
   Clear();
   ParsingState state(in, result_crc);
   if (!Parse(state)) {
@@ -339,7 +341,7 @@ class MessageOwningField : public OwningField {
            VarintLength(message_size) + message_size;
   }
 
-  MessageT& value() { return value_; }
+  MessageT* mutable_value() { return &value_; }
   const MessageT& value() const { return value_; }
 
  private:
@@ -432,7 +434,7 @@ class RepeatedMessageOwningField : public OwningField {
   }
 
   const std::vector<MessageT>& values() const { return values_; }
-  std::vector<MessageT>& values() { return values_; }
+  std::vector<MessageT>* mutable_values() { return &values_; }
 
  private:
   std::vector<MessageT> values_;

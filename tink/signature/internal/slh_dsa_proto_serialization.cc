@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/base/nullability.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -43,6 +44,8 @@
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
 #include "tink/signature/slh_dsa_public_key.h"
+
+ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace crypto {
 namespace tink {
@@ -108,7 +111,7 @@ class ProtoSlhDsaKeyFormat final : public Message<ProtoSlhDsaKeyFormat> {
   void set_version(uint32_t value) { version_.set_value(value); }
 
   const ProtoSlhDsaParams& params() const { return params_.value(); }
-  ProtoSlhDsaParams& params() { return params_.value(); }
+  ProtoSlhDsaParams* mutable_params() { return params_.mutable_value(); }
 
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
@@ -133,7 +136,7 @@ class ProtoSlhDsaPublicKey final : public Message<ProtoSlhDsaPublicKey> {
   void set_key_value(absl::string_view value) { key_value_.set_value(value); }
 
   const ProtoSlhDsaParams& params() const { return params_.value(); }
-  ProtoSlhDsaParams& params() { return params_.value(); }
+  ProtoSlhDsaParams* mutable_params() { return params_.mutable_value(); }
 
   std::array<const OwningField*, 3> GetFields() const {
     return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
@@ -156,7 +159,9 @@ class ProtoSlhDsaPrivateKey final : public Message<ProtoSlhDsaPrivateKey> {
   void set_key_value(absl::string_view value) { key_value_.set_value(value); }
 
   const ProtoSlhDsaPublicKey& public_key() const { return public_key_.value(); }
-  ProtoSlhDsaPublicKey& public_key() { return public_key_.value(); }
+  ProtoSlhDsaPublicKey* mutable_public_key() {
+    return public_key_.mutable_value();
+  }
 
   std::array<const OwningField*, 3> GetFields() const {
     return std::array<const OwningField*, 3>{&version_, &key_value_,
@@ -416,7 +421,7 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return params.status();
   }
   ProtoSlhDsaKeyFormat proto_key_format;
-  proto_key_format.params() = *params;
+  *proto_key_format.mutable_params() = *params;
   proto_key_format.set_version(0);
 
   absl::StatusOr<std::string> serialized_proto =
@@ -439,7 +444,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
 
   ProtoSlhDsaPublicKey proto_key;
   proto_key.set_version(0);
-  proto_key.params() = *params;
+  *proto_key.mutable_params() = *params;
   proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
@@ -475,9 +480,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
 
   ProtoSlhDsaPrivateKey proto_private_key;
   proto_private_key.set_version(0);
-  proto_private_key.public_key().set_version(0);
-  proto_private_key.public_key().params() = *params;
-  proto_private_key.public_key().set_key_value(
+  proto_private_key.mutable_public_key()->set_version(0);
+  *proto_private_key.mutable_public_key()->mutable_params() = *params;
+  proto_private_key.mutable_public_key()->set_key_value(
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
   proto_private_key.set_key_value(restricted_input->GetSecret(*token));
 

@@ -16,7 +16,8 @@
 
 #include "tink/aead/internal/xchacha20_poly1305_proto_serialization_impl.h"
 
-#include <string>
+#include <array>
+#include <cstdint>
 #include <utility>
 
 #include "absl/base/attributes.h"
@@ -24,7 +25,7 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "tink/aead/internal/xchacha20_poly1305_proto_structs.h"
+#include "tink/aead/internal/xchacha20_poly1305_proto_format.h"
 #include "tink/aead/xchacha20_poly1305_key.h"
 #include "tink/aead/xchacha20_poly1305_parameters.h"
 #include "tink/internal/key_parser.h"
@@ -34,6 +35,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -45,6 +48,30 @@ namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
+
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+
+class ProtoXChaCha20Poly1305Key : public Message<ProtoXChaCha20Poly1305Key> {
+ public:
+  ProtoXChaCha20Poly1305Key() = default;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&version_, &key_value_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  OwningBytesField<SecretData> key_value_{3};
+};
 
 using XChaCha20Poly1305ProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -102,13 +129,12 @@ absl::StatusOr<XChaCha20Poly1305Parameters> ParseParameters(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing XChaCha20Poly1305Parameters.");
   }
-  absl::StatusOr<XChaCha20Poly1305KeyFormatStruct> proto_key_format =
-      XChaCha20Poly1305KeyFormatStruct::GetParser().Parse(
-          template_struct.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoXChaCha20Poly1305KeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(template_struct.value)) {
+    return absl::InvalidArgumentError(
+        "Failed to parse XChaCha20Poly1305KeyFormat proto");
   }
-  if (proto_key_format->version != 0) {
+  if (proto_key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -125,18 +151,10 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  XChaCha20Poly1305KeyFormatStruct proto_key_format;
-  proto_key_format.version = 0;
-
-  absl::StatusOr<std::string> serialized_proto =
-      XChaCha20Poly1305KeyFormatStruct::GetParser().SerializeIntoString(
-          proto_key_format);
-  if (!serialized_proto.ok()) {
-    return serialized_proto.status();
-  }
-
+  ProtoXChaCha20Poly1305KeyFormat proto_key_format;
+  proto_key_format.set_version(0);
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, *serialized_proto);
+      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
@@ -150,14 +168,13 @@ absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<XChaCha20Poly1305KeyStruct> key =
-      XChaCha20Poly1305KeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!key.ok()) {
+  ProtoXChaCha20Poly1305Key key;
+  if (!key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError(
         "Failed to parse XChaCha20Poly1305Key proto");
   }
-  if (key->version != 0) {
+  if (key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -172,8 +189,7 @@ absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
   if (!parameters.ok()) return parameters.status();
 
   return XChaCha20Poly1305Key::Create(
-      parameters->GetVariant(),
-      RestrictedData(std::move(key->key_value), *token),
+      parameters->GetVariant(), RestrictedData(key.key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -187,24 +203,18 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  XChaCha20Poly1305KeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.key_value = restricted_input->Get(*token);
+  ProtoXChaCha20Poly1305Key proto_key;
+  proto_key.set_version(0);
+  proto_key.set_key_value(restricted_input->GetSecret(*token));
+  SecretData serialized_key = proto_key.SerializeAsSecretData();
+  RestrictedData restricted_output =
+      RestrictedData(std::move(serialized_key), *token);
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-
-  absl::StatusOr<SecretData> serialized_key =
-      XChaCha20Poly1305KeyStruct::GetParser().SerializeIntoSecretData(
-          proto_key);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
-  RestrictedData restricted_output =
-      RestrictedData(*std::move(serialized_key), *token);
 
   return internal::ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,

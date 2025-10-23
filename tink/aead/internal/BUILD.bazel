@@ -602,7 +602,7 @@ cc_library(
     hdrs = ["xchacha20_poly1305_proto_serialization_impl.h"],
     include_prefix = "tink/aead/internal",
     deps = [
-        ":xchacha20_poly1305_proto_structs",
+        ":xchacha20_poly1305_proto_format",
         "//tink:partial_key_access",
         "//tink:restricted_data",
         "//tink:secret_data",
@@ -616,6 +616,8 @@ cc_library(
         "//tink/internal:parameters_serializer",
         "//tink/internal:proto_key_serialization",
         "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_owning_fields",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
         "@com_google_absl//absl/base:core_headers",
@@ -1161,25 +1163,22 @@ cc_test(
 )
 
 cc_library(
-    name = "xchacha20_poly1305_proto_structs",
-    hdrs = ["xchacha20_poly1305_proto_structs.h"],
+    name = "xchacha20_poly1305_proto_format",
+    hdrs = ["xchacha20_poly1305_proto_format.h"],
     include_prefix = "tink/aead/internal",
     deps = [
-        "//tink/internal:proto_parser",
-        "//tink/util:secret_data",
-        "@com_google_absl//absl/base:no_destructor",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_owning_fields",
     ],
 )
 
 cc_test(
-    name = "xchacha20_poly1305_proto_structs_test",
-    srcs = ["xchacha20_poly1305_proto_structs_test.cc"],
+    name = "xchacha20_poly1305_proto_format_test",
+    srcs = ["xchacha20_poly1305_proto_format_test.cc"],
     deps = [
-        ":xchacha20_poly1305_proto_structs",
+        ":xchacha20_poly1305_proto_format",
+        "//tink/internal/testing:field_with_number",
         "//tink/util:secret_data",
-        "//tink/util:test_matchers",
-        "//tink/util:test_util",
-        "@com_google_absl//absl/status:statusor",
         "@com_google_googletest//:gtest_main",
     ],
 )

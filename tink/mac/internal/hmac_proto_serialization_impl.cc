@@ -16,11 +16,10 @@
 
 #include "tink/mac/internal/hmac_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
-#include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -33,7 +32,6 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/mac/hmac_key.h"
@@ -48,30 +46,6 @@ namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
-
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
-
-struct HmacKeyStruct {
-  uint32_t version;
-  HmacParamsStruct params;
-  SecretData key_value;
-
-  static ProtoParser<HmacKeyStruct> CreateParser() {
-    return ProtoParserBuilder<HmacKeyStruct>()
-        .AddUint32Field(1, &HmacKeyStruct::version)
-        .AddMessageField(2, &HmacKeyStruct::params,
-                         HmacParamsStruct::CreateParser())
-        .AddBytesSecretDataField(3, &HmacKeyStruct::key_value)
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<HmacKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<HmacKeyStruct>> parser(
-        CreateParser());
-    return *parser;
-  }
-};
 
 using HmacProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, HmacParameters>;
@@ -162,12 +136,11 @@ absl::StatusOr<HmacParameters> ParseParameters(
         "Wrong type URL when parsing HmacParameters.");
   }
 
-  absl::StatusOr<HmacKeyFormatStruct> proto_key_format =
-      HmacKeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoHmacKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError("Failed to parse HmacKeyFormat proto.");
   }
-  if (proto_key_format->version != 0) {
+  if (proto_key_format.version() != 0) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         "Parsing HmacParameters failed: only version 0 is accepted");
@@ -178,12 +151,14 @@ absl::StatusOr<HmacParameters> ParseParameters(
   if (!variant.ok()) return variant.status();
 
   absl::StatusOr<HmacParameters::HashType> hash_type =
-      ToHashType(proto_key_format->params.hash);
-  if (!hash_type.ok()) return hash_type.status();
+      ToHashType(proto_key_format.params().hash());
+  if (!hash_type.ok()) {
+    return hash_type.status();
+  }
 
-  return HmacParameters::Create(proto_key_format->key_size,
-                                proto_key_format->params.tag_size, *hash_type,
-                                *variant);
+  return HmacParameters::Create(proto_key_format.key_size(),
+                                proto_key_format.params().tag_size(),
+                                *hash_type, *variant);
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
@@ -195,20 +170,15 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
       ToProtoHashType(parameters.GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
-  HmacKeyFormatStruct proto_key_format;
-  proto_key_format.params.hash = *proto_hash_type;
-  proto_key_format.params.tag_size = parameters.CryptographicTagSizeInBytes();
-  proto_key_format.key_size = parameters.KeySizeInBytes();
-  proto_key_format.version = 0;
+  ProtoHmacKeyFormat proto_key_format;
+  proto_key_format.mutable_params()->set_hash(*proto_hash_type);
+  proto_key_format.mutable_params()->set_tag_size(
+      parameters.CryptographicTagSizeInBytes());
+  proto_key_format.set_key_size(parameters.KeySizeInBytes());
+  proto_key_format.set_version(0);
 
-  absl::StatusOr<std::string> serialized_key_format =
-      HmacKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
-  if (!serialized_key_format.ok()) {
-    return serialized_key_format.status();
-  }
-
-  return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
-                                              *serialized_key_format);
+  return ProtoParametersSerialization::Create(
+      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
@@ -220,12 +190,12 @@ absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<HmacKeyStruct> proto_key = HmacKeyStruct::GetParser().Parse(
-      serialization.SerializedKeyProto().GetSecret(*token));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoHmacKey proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError("Failed to parse HmacKey proto.");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -233,16 +203,16 @@ absl::StatusOr<HmacKey> ParseKey(const ProtoKeySerialization& serialization,
       ToVariant(serialization.GetOutputPrefixTypeEnum());
   if (!variant.ok()) return variant.status();
   absl::StatusOr<HmacParameters::HashType> hash_type =
-      ToHashType(proto_key->params.hash);
+      ToHashType(proto_key.params().hash());
   if (!hash_type.ok()) return hash_type.status();
 
-  absl::StatusOr<HmacParameters> parameters =
-      HmacParameters::Create(proto_key->key_value.size(),
-                             proto_key->params.tag_size, *hash_type, *variant);
+  absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
+      proto_key.key_value().size(), proto_key.params().tag_size(), *hash_type,
+      *variant);
   if (!parameters.ok()) return parameters.status();
 
   return HmacKey::Create(
-      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
+      *parameters, RestrictedData(std::move(proto_key.key_value()), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -258,25 +228,22 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
       ToProtoHashType(key.GetParameters().GetHashType());
   if (!proto_hash_type.ok()) return proto_hash_type.status();
 
-  HmacKeyStruct proto_key;
-  proto_key.params.hash = *proto_hash_type;
-  proto_key.params.tag_size = key.GetParameters().CryptographicTagSizeInBytes();
-  proto_key.version = 0;
-  proto_key.key_value = restricted_input->Get(*token);
+  ProtoHmacKey proto_key;
+  proto_key.mutable_params()->set_hash(*proto_hash_type);
+  proto_key.mutable_params()->set_tag_size(
+      key.GetParameters().CryptographicTagSizeInBytes());
+  proto_key.set_version(0);
+  proto_key.set_key_value(restricted_input->GetSecret(*token));
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  absl::StatusOr<SecretData> serialized_key =
-      HmacKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
+  SecretData serialized_key = proto_key.SerializeAsSecretData();
   RestrictedData restricted_output =
-      RestrictedData(*std::move(serialized_key), *token);
+      RestrictedData(std::move(serialized_key), *token);
   return ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
+      kTypeUrl, std::move(restricted_output), KeyMaterialTypeEnum::kSymmetric,
       *output_prefix_type, key.GetIdRequirement());
 }
 

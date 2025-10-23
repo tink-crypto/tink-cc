@@ -21,7 +21,10 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "tink/internal/common_proto_enums.h"
+#include "tink/internal/testing/field_with_number.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -33,7 +36,121 @@ namespace {
 using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::IsOkAndHolds;
 using ::testing::Eq;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 using ::testing::Not;
+
+TEST(ProtoHmacMessagesTest, ParseProtoHmacParams) {
+  const std::string serialized_hmac_params =
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsVarint(3),
+                   proto_testing::FieldWithNumber(2).IsVarint(16));
+
+  ProtoHmacParams params;
+  ASSERT_THAT(params.ParseFromString(serialized_hmac_params), IsTrue());
+  EXPECT_THAT(params.hash(), Eq(HashTypeEnum::kSha256));
+  EXPECT_THAT(params.tag_size(), Eq(16));
+}
+
+TEST(ProtoHmacMessagesTest, ParseProtoHmacParamsInvalid) {
+  ProtoHmacParams params;
+  EXPECT_THAT(params.ParseFromString("invalid"), IsFalse());
+}
+
+TEST(ProtoHmacMessagesTest, SerializeProtoHmacParams) {
+  ProtoHmacParams params;
+  params.set_hash(HashTypeEnum::kSha256);
+  params.set_tag_size(16);
+
+  auto serialized_hmac_params = params.SerializeAsSecretData();
+  EXPECT_THAT(util::SecretDataAsStringView(serialized_hmac_params),
+              Eq(absl::StrCat(proto_testing::FieldWithNumber(1).IsVarint(3),
+                              proto_testing::FieldWithNumber(2).IsVarint(16))));
+}
+
+TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyFormat) {
+  const std::string serialized_hmac_format =
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsSubMessage(
+                       {proto_testing::FieldWithNumber(1).IsVarint(3),
+                        proto_testing::FieldWithNumber(2).IsVarint(16)}),
+                   proto_testing::FieldWithNumber(2).IsVarint(32),  // key_size
+                   proto_testing::FieldWithNumber(3).IsVarint(1)    // version
+      );
+
+  ProtoHmacKeyFormat format;
+  ASSERT_THAT(format.ParseFromString(serialized_hmac_format), IsTrue());
+  EXPECT_THAT(format.params().hash(), Eq(HashTypeEnum::kSha256));
+  EXPECT_THAT(format.params().tag_size(), Eq(16));
+  EXPECT_THAT(format.key_size(), Eq(32));
+  EXPECT_THAT(format.version(), Eq(1));
+}
+
+TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyFormatInvalid) {
+  ProtoHmacKeyFormat format;
+  EXPECT_THAT(format.ParseFromString("invalid"), IsFalse());
+}
+
+TEST(ProtoHmacMessagesTest, SerializeProtoHmacKeyFormat) {
+  ProtoHmacKeyFormat format;
+  format.mutable_params()->set_hash(HashTypeEnum::kSha256);
+  format.mutable_params()->set_tag_size(16);
+  format.set_key_size(32);
+  format.set_version(1);
+
+  auto serialized_hmac_format = format.SerializeAsSecretData();
+  const std::string expected_serialized_hmac_format =
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsSubMessage(
+                       {proto_testing::FieldWithNumber(1).IsVarint(3),
+                        proto_testing::FieldWithNumber(2).IsVarint(16)}),
+                   proto_testing::FieldWithNumber(2).IsVarint(32),  // key_size
+                   proto_testing::FieldWithNumber(3).IsVarint(1)    // version
+      );
+  EXPECT_THAT(util::SecretDataAsStringView(serialized_hmac_format),
+              Eq(expected_serialized_hmac_format));
+}
+
+TEST(ProtoHmacMessagesTest, ParseProtoHmacKey) {
+  const std::string serialized_hmac_key =
+      absl::StrCat(proto_testing::FieldWithNumber(2).IsSubMessage(
+                       {proto_testing::FieldWithNumber(1).IsVarint(3),
+                        proto_testing::FieldWithNumber(2).IsVarint(16)}),
+                   proto_testing::FieldWithNumber(3).IsString(
+                       "01234567890123456789012345678901"),       // key_value
+                   proto_testing::FieldWithNumber(1).IsVarint(1)  // version
+      );
+
+  ProtoHmacKey key;
+  ASSERT_THAT(key.ParseFromString(serialized_hmac_key), IsTrue());
+  EXPECT_THAT(key.params().hash(), Eq(HashTypeEnum::kSha256));
+  EXPECT_THAT(key.params().tag_size(), Eq(16));
+  EXPECT_THAT(util::SecretDataAsStringView(key.key_value()),
+              Eq("01234567890123456789012345678901"));
+  EXPECT_THAT(key.version(), Eq(1));
+}
+
+TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyInvalid) {
+  ProtoHmacKey key;
+  EXPECT_THAT(key.ParseFromString("invalid"), IsFalse());
+}
+
+TEST(ProtoHmacMessagesTest, SerializeProtoHmacKey) {
+  ProtoHmacKey key;
+  key.mutable_params()->set_hash(HashTypeEnum::kSha256);
+  key.mutable_params()->set_tag_size(16);
+  key.set_key_value("01234567890123456789012345678901");
+  key.set_version(1);
+
+  auto serialized_hmac_key = key.SerializeAsSecretData();
+  const std::string expected_serialized_hmac_key =
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsVarint(1),  // version
+                   proto_testing::FieldWithNumber(2).IsSubMessage(
+                       {proto_testing::FieldWithNumber(1).IsVarint(3),
+                        proto_testing::FieldWithNumber(2).IsVarint(16)}),
+                   proto_testing::FieldWithNumber(3).IsString(
+                       "01234567890123456789012345678901")  // key_value
+      );
+  EXPECT_THAT(util::SecretDataAsStringView(serialized_hmac_key),
+              Eq(expected_serialized_hmac_key));
+}
 
 TEST(AesCtrHmacProtoStructsTest, SerializeAndParseKeyFormat) {
   HmacKeyFormatStruct key_format;

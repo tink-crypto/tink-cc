@@ -89,16 +89,6 @@ echo "---------- BUILDING EXAMPLES"
 time bazelisk build "${CACHE_FLAGS[@]}" -- ...
 echo "---------- TESTING EXAMPLES"
 time bazelisk test "${CACHE_FLAGS[@]}" -- ...
-
-echo "---------- TURNING ON BAZELMOD"
-cd ..
-sed -i "s/always --noenable_bzlmod//g" .bazelrc
-
-echo "---------- BUILDING MAIN"
-time bazelisk build "${CACHE_FLAGS[@]}" -- ...
-echo "---------- TESTING MAIN"
-time bazelisk test "${CACHE_FLAGS[@]}" -- ...
-
 EOF
 ### ======================================================= END: _do_run_test.sh
 

@@ -20,8 +20,11 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
+#include "tink/internal/testing/field_with_number.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
@@ -35,6 +38,8 @@ using ::google::crypto::tink::KeyData;
 using ::google::crypto::tink::KeyTemplate;
 using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
+using ::testing::IsFalse;
+using ::testing::IsTrue;
 
 std::string GetSerializedKeyTemplate(std::string_view type_url,
                                      std::string_view value,
@@ -54,6 +59,100 @@ std::string GetSerializedKeyData(std::string_view type_url,
   key_data.set_value(value);
   key_data.set_key_material_type(key_material_type);
   return key_data.SerializeAsString();
+}
+
+TEST(ProtoKeyTemplateTest, ParseProtoKeyTemplate) {
+  const std::string serialized_hmac_key_template =
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsString("type_url"),
+                   proto_testing::FieldWithNumber(2).IsString("value"),
+                   proto_testing::FieldWithNumber(3).IsVarint(
+                       static_cast<int>(OutputPrefixTypeEnum::kTink)));
+
+  ProtoKeyTemplate key_template;
+  ASSERT_THAT(key_template.ParseFromString(serialized_hmac_key_template),
+              IsTrue());
+  EXPECT_THAT(key_template.type_url(), Eq("type_url"));
+  EXPECT_THAT(key_template.value(), Eq("value"));
+  EXPECT_THAT(key_template.output_prefix_type(),
+              Eq(OutputPrefixTypeEnum::kTink));
+}
+
+TEST(ProtoKeyTemplateTest, ParseProtoKeyTemplateInvalid) {
+  ProtoKeyTemplate params;
+  EXPECT_THAT(params.ParseFromString("invalid"), IsFalse());
+}
+
+TEST(ProtoKeyTemplateTest, ParseProtoKeyTemplateInvalidOutputPrefixType) {
+  const std::string serialized_hmac_key_template =
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsString("type_url"),
+                   proto_testing::FieldWithNumber(2).IsString("value"),
+                   proto_testing::FieldWithNumber(3).IsVarint(6));
+  ProtoKeyTemplate params;
+  EXPECT_THAT(params.ParseFromString(serialized_hmac_key_template), IsTrue());
+  EXPECT_THAT(params.output_prefix_type(),
+              Eq(OutputPrefixTypeEnum::kUnknownPrefix));
+}
+
+TEST(ProtoKeyTemplateTest, SerializeProtoKeyTemplate) {
+  ProtoKeyTemplate key_template;
+  key_template.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
+  key_template.set_type_url("type_url");
+  key_template.set_value("value");
+
+  auto serialized_hmac_key_template = key_template.SerializeAsSecretData();
+  EXPECT_THAT(
+      util::SecretDataAsStringView(serialized_hmac_key_template),
+      Eq(absl::StrCat(proto_testing::FieldWithNumber(1).IsString("type_url"),
+                      proto_testing::FieldWithNumber(2).IsString("value"),
+                      proto_testing::FieldWithNumber(3).IsVarint(
+                          static_cast<int>(OutputPrefixTypeEnum::kTink)))));
+}
+
+TEST(ProtoKeyDataTest, ParseProtoKeyData) {
+  const std::string serialized_hmac_key_data = absl::StrCat(
+      proto_testing::FieldWithNumber(1).IsString("type_url"),
+      proto_testing::FieldWithNumber(2).IsString("key_material"),
+      proto_testing::FieldWithNumber(3).IsVarint(
+          static_cast<int>(KeyMaterialTypeEnum::kAsymmetricPrivate)));
+
+  ProtoKeyData key_data;
+  ASSERT_THAT(key_data.ParseFromString(serialized_hmac_key_data), IsTrue());
+  EXPECT_THAT(key_data.type_url(), Eq("type_url"));
+  EXPECT_THAT(util::SecretDataAsStringView(key_data.value()),
+              Eq("key_material"));
+  EXPECT_THAT(key_data.key_material_type(),
+              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
+}
+
+TEST(ProtoKeyDataTest, ParseProtoKeyDataInvalid) {
+  ProtoKeyData params;
+  EXPECT_THAT(params.ParseFromString("invalid"), IsFalse());
+}
+
+TEST(ProtoKeyDataTest, ParseProtoKeyDataInvalidKeyMaterialType) {
+  const std::string serialized_hmac_key_data =
+      absl::StrCat(proto_testing::FieldWithNumber(1).IsString("type_url"),
+                   proto_testing::FieldWithNumber(2).IsString("key_material"),
+                   proto_testing::FieldWithNumber(3).IsVarint(5));
+  ProtoKeyData params;
+  EXPECT_THAT(params.ParseFromString(serialized_hmac_key_data), IsTrue());
+  EXPECT_THAT(params.key_material_type(),
+              Eq(KeyMaterialTypeEnum::kUnknownKeyMaterial));
+}
+
+TEST(ProtoKeyDataTest, SerializeProtoKeyData) {
+  ProtoKeyData key_data;
+  key_data.set_type_url("type_url");
+  key_data.set_value("value");
+  key_data.set_key_material_type(KeyMaterialTypeEnum::kAsymmetricPrivate);
+
+  auto serialized_hmac_key_data = key_data.SerializeAsSecretData();
+  EXPECT_THAT(util::SecretDataAsStringView(serialized_hmac_key_data),
+              Eq(absl::StrCat(
+                  proto_testing::FieldWithNumber(1).IsString("type_url"),
+                  proto_testing::FieldWithNumber(2).IsString("value"),
+                  proto_testing::FieldWithNumber(3).IsVarint(static_cast<int>(
+                      KeyMaterialTypeEnum::kAsymmetricPrivate)))));
 }
 
 TEST(TinkProtoStructsTest, ParseKeyTemplateStruct) {

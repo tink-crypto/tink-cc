@@ -1915,8 +1915,12 @@ tink_cc_library(
     tink_proto_structs.h
   DEPS
     tink::internal::proto_parser
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     absl::no_destructor
-    tink::util::secret_data
+    absl::string_view
+    tink::core::secret_data
 )
 
 tink_cc_test(
@@ -1926,8 +1930,11 @@ tink_cc_test(
   DEPS
     tink::internal::tink_proto_structs
     gmock
+    absl::statusor
+    absl::strings
+    tink::core::secret_data
+    tink::internal::testing::field_with_number
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::proto::tink_cc_proto
 )

@@ -1986,8 +1986,12 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser",
-        "//tink/util:secret_data",
+        ":proto_parser_enum_field",
+        ":proto_parser_message",
+        ":proto_parser_owning_fields",
+        "//tink:secret_data",
         "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )
 
@@ -1997,9 +2001,12 @@ cc_test(
     deps = [
         ":tink_proto_structs",
         "//proto:tink_cc_proto",
+        "//tink:secret_data",
+        "//tink/internal/testing:field_with_number",
         "//tink/util:secret_data",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
+        "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )

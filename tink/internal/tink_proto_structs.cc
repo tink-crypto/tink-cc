@@ -25,13 +25,6 @@
 namespace crypto {
 namespace tink {
 namespace internal {
-namespace {
-
-bool OutputPrefixTypeValid(int c) { return c >= 0 && c <= 5; }
-
-bool KeyMaterialTypeValid(int c) { return c >= 0 && c <= 4; }
-
-}  // namespace
 
 std::string_view OutputPrefixTypeEnumName(OutputPrefixTypeEnum type) {
   static const absl::NoDestructor<std::vector<std::string_view>>

@@ -329,21 +329,22 @@ absl::StatusOr<internal::EcPointFormatEnum> ToProtoPointFormat(
 }
 
 absl::Status ValidateAesCtrHmacAeadKeyFormat(
-    const internal::AesCtrHmacAeadKeyFormatStruct& format) {
-  if (format.aes_ctr_key_format.params.iv_size != 16) {
+    const internal::ProtoAesCtrHmacAeadKeyFormat& format) {
+  if (format.aes_ctr_key_format().params().iv_size() != 16) {
     return absl::InvalidArgumentError("IV size must be 16 bytes.");
   }
-  if (format.hmac_key_format.version != 0) {
+  if (format.hmac_key_format().version() != 0) {
     return absl::InvalidArgumentError("HMAC key format version must be 0.");
   }
-  if (format.hmac_key_format.key_size != 32) {
+  if (format.hmac_key_format().key_size() != 32) {
     return absl::InvalidArgumentError("HMAC key size must be 32 bytes.");
   }
-  if (format.hmac_key_format.params.hash != internal::HashTypeEnum::kSha256) {
+  if (format.hmac_key_format().params().hash() !=
+      internal::HashTypeEnum::kSha256) {
     return absl::InvalidArgumentError("Hash type must be SHA256.");
   }
-  if (format.aes_ctr_key_format.key_size !=
-      format.hmac_key_format.params.tag_size) {
+  if (format.aes_ctr_key_format().key_size() !=
+      format.hmac_key_format().params().tag_size()) {
     return absl::InvalidArgumentError(
         "Allowed AES-CTR-HMAC DEMs must have matching key and tag sizes.");
   }
@@ -399,22 +400,21 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
   }
   if (proto_dem_params.aead_dem.type_url ==
       "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey") {
-    absl::StatusOr<internal::AesCtrHmacAeadKeyFormatStruct>
-        aes_ctr_hmac_aead_key_format =
-            internal::AesCtrHmacAeadKeyFormatStruct::GetParser().Parse(
-                proto_dem_params.aead_dem.value);
-    if (!aes_ctr_hmac_aead_key_format.ok()) {
-      return aes_ctr_hmac_aead_key_format.status();
+    internal::ProtoAesCtrHmacAeadKeyFormat aes_ctr_hmac_aead_key_format;
+    if (!aes_ctr_hmac_aead_key_format.ParseFromString(
+            proto_dem_params.aead_dem.value)) {
+      return absl::InvalidArgumentError(
+          "Could not parse AES-CTR-HMAC key format");
     }
     absl::Status format_validation =
-        ValidateAesCtrHmacAeadKeyFormat(*aes_ctr_hmac_aead_key_format);
+        ValidateAesCtrHmacAeadKeyFormat(aes_ctr_hmac_aead_key_format);
     if (!format_validation.ok()) {
       return format_validation;
     }
-    if (aes_ctr_hmac_aead_key_format->aes_ctr_key_format.key_size == 16) {
+    if (aes_ctr_hmac_aead_key_format.aes_ctr_key_format().key_size() == 16) {
       return EciesParameters::DemId::kAes128CtrHmacSha256Raw;
     }
-    if (aes_ctr_hmac_aead_key_format->aes_ctr_key_format.key_size == 32) {
+    if (aes_ctr_hmac_aead_key_format.aes_ctr_key_format().key_size() == 32) {
       return EciesParameters::DemId::kAes256CtrHmacSha256Raw;
     }
     return absl::InvalidArgumentError(
@@ -483,31 +483,18 @@ absl::StatusOr<EciesAeadDemParamsStruct> ToProtoDemParams(
         (dem_id == EciesParameters::DemId::kAes128CtrHmacSha256Raw) ? 16 : 32;
     const int tag_size = key_size;  // Allowed DEMs have matching key/tag sizes.
 
-    internal::AesCtrHmacAeadKeyFormatStruct format;
-
-    internal::AesCtrKeyFormatStruct& aes_ctr_key_format =
-        format.aes_ctr_key_format;
-    aes_ctr_key_format.key_size = key_size;
-    aes_ctr_key_format.params.iv_size = 16;
-
-    internal::HmacKeyFormatStruct& hmac_key_format = format.hmac_key_format;
-    hmac_key_format.version = 0;
-    hmac_key_format.key_size = 32;
-
-    internal::HmacParamsStruct& hmac_params = hmac_key_format.params;
-    hmac_params.tag_size = tag_size;
-    hmac_params.hash = internal::HashTypeEnum::kSha256;
-
-    absl::StatusOr<std::string> serialized_proto =
-        internal::AesCtrHmacAeadKeyFormatStruct::GetParser()
-            .SerializeIntoString(format);
-    if (!serialized_proto.ok()) {
-      return serialized_proto.status();
-    }
+    internal::ProtoAesCtrHmacAeadKeyFormat format;
+    format.mutable_aes_ctr_key_format()->set_key_size(key_size);
+    format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(16);
+    format.mutable_hmac_key_format()->set_version(0);
+    format.mutable_hmac_key_format()->set_key_size(32);
+    format.mutable_hmac_key_format()->mutable_params()->set_tag_size(tag_size);
+    format.mutable_hmac_key_format()->mutable_params()->set_hash(
+        internal::HashTypeEnum::kSha256);
 
     return CreateEciesAeadDemParamsStruct(
         "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey",
-        *serialized_proto);
+        format.SerializeAsString());
   }
   return absl::InvalidArgumentError(
       "Unable to convert DEM id to proto DEM params.");

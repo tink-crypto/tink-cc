@@ -1186,16 +1186,13 @@ cc_test(
 
 cc_library(
     name = "aes_ctr_hmac_proto_structs",
-    srcs = ["aes_ctr_hmac_proto_structs.cc"],
     hdrs = ["aes_ctr_hmac_proto_structs.h"],
     include_prefix = "tink/aead/internal",
     deps = [
         "//tink:secret_data",
-        "//tink/internal:proto_parser",
         "//tink/internal:proto_parser_message",
         "//tink/internal:proto_parser_owning_fields",
         "//tink/mac/internal:hmac_proto_structs",
-        "@com_google_absl//absl/base:no_destructor",
         "@com_google_absl//absl/strings:string_view",
     ],
 )

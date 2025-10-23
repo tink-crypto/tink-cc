@@ -21,7 +21,6 @@
 #include <cstdint>
 
 #include "absl/strings/string_view.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/mac/internal/hmac_proto_structs.h"
@@ -127,31 +126,6 @@ class ProtoAesCtrHmacAeadKey
   proto_parsing::Uint32OwningField version_{1};
   proto_parsing::MessageOwningField<ProtoAesCtrKey> aes_ctr_key_{2};
   proto_parsing::MessageOwningField<ProtoHmacKey> hmac_key_{3};
-};
-
-struct AesCtrParamsStruct {
-  uint32_t iv_size = 0;
-
-  static crypto::tink::internal::ProtoParser<AesCtrParamsStruct>
-  CreateParser() {
-    return crypto::tink::internal::ProtoParserBuilder<AesCtrParamsStruct>()
-        .AddUint32Field(1, &AesCtrParamsStruct::iv_size)
-        .BuildOrDie();
-  }
-};
-
-struct AesCtrKeyFormatStruct {
-  AesCtrParamsStruct params = {};
-  uint32_t key_size = 0;
-};
-
-struct AesCtrHmacAeadKeyFormatStruct {
-  AesCtrKeyFormatStruct aes_ctr_key_format = {};
-  HmacKeyFormatStruct hmac_key_format = {};
-
-  static const crypto::tink::internal::ProtoParser<
-      AesCtrHmacAeadKeyFormatStruct>&
-  GetParser();
 };
 
 }  // namespace internal

@@ -1154,13 +1154,10 @@ tink_cc_test(
 tink_cc_library(
   NAME aes_ctr_hmac_proto_structs
   SRCS
-    aes_ctr_hmac_proto_structs.cc
     aes_ctr_hmac_proto_structs.h
   DEPS
-    absl::no_destructor
     absl::string_view
     tink::core::secret_data
-    tink::internal::proto_parser
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
     tink::mac::internal::hmac_proto_structs

@@ -182,26 +182,23 @@ EciesAeadDemParams CreateAesCtrHmacDemParams(
     absl::optional<int> version, absl::optional<int> hmac_key_size,
     absl::optional<int> tag_size,
     absl::optional<internal::HashTypeEnum> hash_type) {
-  internal::AesCtrHmacAeadKeyFormatStruct format;
-  format.aes_ctr_key_format.key_size = aes_key_size.value_or(0);
-  format.aes_ctr_key_format.params.iv_size = iv_size.value_or(0);
+  internal::ProtoAesCtrHmacAeadKeyFormat format;
+  format.mutable_aes_ctr_key_format()->set_key_size(aes_key_size.value_or(0));
+  format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(
+      iv_size.value_or(0));
 
-  format.hmac_key_format.version = version.value_or(0);
-  format.hmac_key_format.key_size = hmac_key_size.value_or(0);
-  format.hmac_key_format.params.tag_size = tag_size.value_or(0);
-  format.hmac_key_format.params.hash =
-      hash_type.value_or(internal::HashTypeEnum::kUnknownHash);
-
-  absl::StatusOr<std::string> serialized_format =
-      internal::AesCtrHmacAeadKeyFormatStruct::GetParser().SerializeIntoString(
-          format);
-  CHECK_OK(serialized_format);
+  format.mutable_hmac_key_format()->set_version(version.value_or(0));
+  format.mutable_hmac_key_format()->set_key_size(hmac_key_size.value_or(0));
+  format.mutable_hmac_key_format()->mutable_params()->set_tag_size(
+      tag_size.value_or(0));
+  format.mutable_hmac_key_format()->mutable_params()->set_hash(
+      hash_type.value_or(internal::HashTypeEnum::kUnknownHash));
 
   KeyTemplate key_template;
   key_template.set_type_url(
       "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey");
   key_template.set_output_prefix_type(OutputPrefixType::TINK);
-  *key_template.mutable_value() = *serialized_format;
+  *key_template.mutable_value() = format.SerializeAsString();
 
   EciesAeadDemParams dem_params;
   *dem_params.mutable_aead_dem() = key_template;

@@ -249,46 +249,6 @@ TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrHmacAeadKey) {
               Eq(expected_serialized_key));
 }
 
-TEST(AesCtrHmacProtoStructsTest, SerializeAndParseKeyFormat) {
-  AesCtrHmacAeadKeyFormatStruct key_format;
-  key_format.aes_ctr_key_format.key_size = 32;
-  key_format.aes_ctr_key_format.params.iv_size = 20;
-  key_format.hmac_key_format.key_size = 32;
-  key_format.hmac_key_format.params.tag_size = 16;
-  key_format.hmac_key_format.params.hash = HashTypeEnum::kSha256;
-  key_format.hmac_key_format.version = 1;
-
-  std::string expected_serialized_hex =
-      "0a060a0208141020120a0a040803101010201801";
-  absl::StatusOr<std::string> serialized =
-      AesCtrHmacAeadKeyFormatStruct::GetParser().SerializeIntoString(
-          key_format);
-  ASSERT_THAT(serialized,
-              IsOkAndHolds(Eq(test::HexDecodeOrDie(expected_serialized_hex))));
-
-  absl::StatusOr<AesCtrHmacAeadKeyFormatStruct> parsed =
-      AesCtrHmacAeadKeyFormatStruct::GetParser().Parse(
-          test::HexDecodeOrDie(expected_serialized_hex));
-  ASSERT_THAT(parsed, IsOk());
-  EXPECT_THAT(parsed->aes_ctr_key_format.key_size,
-              Eq(key_format.aes_ctr_key_format.key_size));
-  EXPECT_THAT(parsed->aes_ctr_key_format.params.iv_size,
-              Eq(key_format.aes_ctr_key_format.params.iv_size));
-  EXPECT_THAT(parsed->hmac_key_format.key_size,
-              Eq(key_format.hmac_key_format.key_size));
-  EXPECT_THAT(parsed->hmac_key_format.params.tag_size,
-              Eq(key_format.hmac_key_format.params.tag_size));
-  EXPECT_THAT(parsed->hmac_key_format.params.hash,
-              Eq(key_format.hmac_key_format.params.hash));
-  EXPECT_THAT(parsed->hmac_key_format.version,
-              Eq(key_format.hmac_key_format.version));
-}
-
-TEST(AesCtrHmacProtoStructsTest, ParseKeyFormatFailsOnInvalidInput) {
-  EXPECT_THAT(AesCtrHmacAeadKeyFormatStruct::GetParser().Parse("1111"),
-              Not(IsOk()));
-}
-
 }  // namespace
 }  // namespace internal
 }  // namespace tink

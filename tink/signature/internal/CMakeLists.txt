@@ -694,7 +694,6 @@ tink_cc_library(
     ed25519_proto_serialization_impl.cc
     ed25519_proto_serialization_impl.h
   DEPS
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -711,13 +710,13 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::signature::ed25519_parameters
     tink::signature::ed25519_private_key
     tink::signature::ed25519_public_key
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -816,7 +815,6 @@ tink_cc_library(
     ecdsa_proto_serialization_impl.cc
     ecdsa_proto_serialization_impl.h
   DEPS
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -839,6 +837,9 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::signature::ecdsa_parameters

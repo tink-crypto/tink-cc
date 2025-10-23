@@ -16,8 +16,6 @@
 
 #include "tink/aead/internal/aes_ctr_hmac_aead_proto_serialization_impl.h"
 
-#include <cstdint>
-#include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
@@ -136,20 +134,6 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
   }
 }
 
-absl::StatusOr<HmacParamsStruct> GetHmacProtoParams(
-    const AesCtrHmacAeadParameters& parameters) {
-  absl::StatusOr<HashTypeEnum> hash_type =
-      ToProtoHashType(parameters.GetHashType());
-  if (!hash_type.ok()) {
-    return hash_type.status();
-  }
-  HmacParamsStruct hmac_params{
-      /*hash=*/*hash_type,
-      /*tag_size=*/static_cast<uint32_t>(parameters.GetTagSizeInBytes()),
-  };
-  return hmac_params;
-}
-
 absl::StatusOr<AesCtrHmacAeadParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
   const internal::KeyTemplateStruct& key_template =
@@ -160,17 +144,17 @@ absl::StatusOr<AesCtrHmacAeadParameters> ParseParameters(
                      key_template.type_url));
   }
 
-  absl::StatusOr<AesCtrHmacAeadKeyFormatStruct> key_format_struct =
-      AesCtrHmacAeadKeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!key_format_struct.ok()) {
-    return key_format_struct.status();
+  ProtoAesCtrHmacAeadKeyFormat key_format;
+  if (!key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError(
+        "Failed to parse AesCtrHmacAeadKeyFormat proto");
   }
 
-  if (key_format_struct->hmac_key_format.version != 0) {
+  if (key_format.hmac_key_format().version() != 0) {
     return absl::InvalidArgumentError(
         absl::StrCat("Failed to parse hmac key format: only version 0 "
                      "is accepted, got ",
-                     key_format_struct->hmac_key_format.version));
+                     key_format.hmac_key_format().version()));
   }
 
   absl::StatusOr<AesCtrHmacAeadParameters::Variant> variant =
@@ -180,16 +164,16 @@ absl::StatusOr<AesCtrHmacAeadParameters> ParseParameters(
   }
 
   absl::StatusOr<AesCtrHmacAeadParameters::HashType> hash_type =
-      ToHashType(key_format_struct->hmac_key_format.params.hash);
+      ToHashType(key_format.hmac_key_format().params().hash());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   return AesCtrHmacAeadParameters::Builder()
-      .SetAesKeySizeInBytes(key_format_struct->aes_ctr_key_format.key_size)
-      .SetHmacKeySizeInBytes(key_format_struct->hmac_key_format.key_size)
-      .SetIvSizeInBytes(key_format_struct->aes_ctr_key_format.params.iv_size)
-      .SetTagSizeInBytes(key_format_struct->hmac_key_format.params.tag_size)
+      .SetAesKeySizeInBytes(key_format.aes_ctr_key_format().key_size())
+      .SetHmacKeySizeInBytes(key_format.hmac_key_format().key_size())
+      .SetIvSizeInBytes(key_format.aes_ctr_key_format().params().iv_size())
+      .SetTagSizeInBytes(key_format.hmac_key_format().params().tag_size())
       .SetHashType(*hash_type)
       .SetVariant(*variant)
       .Build();
@@ -203,32 +187,26 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<HmacParamsStruct> hmac_params = GetHmacProtoParams(parameters);
-  if (!hmac_params.ok()) {
-    return hmac_params.status();
+  absl::StatusOr<HashTypeEnum> hash_type =
+      ToProtoHashType(parameters.GetHashType());
+  if (!hash_type.ok()) {
+    return hash_type.status();
   }
 
-  AesCtrHmacAeadKeyFormatStruct aes_ctr_hmac_aead_key_format;
-  // AES-CTR key format.
-  aes_ctr_hmac_aead_key_format.aes_ctr_key_format.params.iv_size =
-      parameters.GetIvSizeInBytes();
-  aes_ctr_hmac_aead_key_format.aes_ctr_key_format.key_size =
-      parameters.GetAesKeySizeInBytes();
-  // HMAC key format.
-  aes_ctr_hmac_aead_key_format.hmac_key_format.version = 0;
-  aes_ctr_hmac_aead_key_format.hmac_key_format.params = *hmac_params;
-  aes_ctr_hmac_aead_key_format.hmac_key_format.key_size =
-      parameters.GetHmacKeySizeInBytes();
-
-  absl::StatusOr<std::string> serialized_proto =
-      AesCtrHmacAeadKeyFormatStruct::GetParser().SerializeIntoString(
-          aes_ctr_hmac_aead_key_format);
-  if (!serialized_proto.ok()) {
-    return serialized_proto.status();
-  }
+  ProtoAesCtrHmacAeadKeyFormat key_format;
+  key_format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(
+      parameters.GetIvSizeInBytes());
+  key_format.mutable_aes_ctr_key_format()->set_key_size(
+      parameters.GetAesKeySizeInBytes());
+  key_format.mutable_hmac_key_format()->set_version(0);
+  key_format.mutable_hmac_key_format()->mutable_params()->set_hash(*hash_type);
+  key_format.mutable_hmac_key_format()->mutable_params()->set_tag_size(
+      parameters.GetTagSizeInBytes());
+  key_format.mutable_hmac_key_format()->set_key_size(
+      parameters.GetHmacKeySizeInBytes());
 
   return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
-                                              *serialized_proto);
+                                              key_format.SerializeAsString());
 }
 
 absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
@@ -243,21 +221,20 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
                         "SecretKeyAccess is required");
   }
 
-  absl::StatusOr<AesCtrHmacAeadKeyStruct> key_struct =
-      AesCtrHmacAeadKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!key_struct.ok()) {
+  ProtoAesCtrHmacAeadKey key;
+  if (!key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError(
         "Failed to parse AesCtrHmacAeadKey proto");
   }
-  if (key_struct->version != 0) {
+  if (key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
-  if (key_struct->aes_ctr_key.version != 0) {
+  if (key.aes_ctr_key().version() != 0) {
     return absl::InvalidArgumentError(
         "Only version 0 keys inner AES CTR keys are accepted.");
   }
-  if (key_struct->hmac_key.version != 0) {
+  if (key.hmac_key().version() != 0) {
     return absl::InvalidArgumentError(
         "Only version 0 keys inner HMAC keys are accepted.");
   }
@@ -269,17 +246,17 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
   }
 
   absl::StatusOr<AesCtrHmacAeadParameters::HashType> hash_type =
-      ToHashType(key_struct->hmac_key.params.hash);
+      ToHashType(key.hmac_key().params().hash());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   absl::StatusOr<AesCtrHmacAeadParameters> parameters =
       AesCtrHmacAeadParameters::Builder()
-          .SetAesKeySizeInBytes(key_struct->aes_ctr_key.key_value.size())
-          .SetHmacKeySizeInBytes(key_struct->hmac_key.key_value.size())
-          .SetIvSizeInBytes(key_struct->aes_ctr_key.params.iv_size)
-          .SetTagSizeInBytes(key_struct->hmac_key.params.tag_size)
+          .SetAesKeySizeInBytes(key.aes_ctr_key().key_value().size())
+          .SetHmacKeySizeInBytes(key.hmac_key().key_value().size())
+          .SetIvSizeInBytes(key.aes_ctr_key().params().iv_size())
+          .SetTagSizeInBytes(key.hmac_key().params().tag_size())
           .SetHashType(*hash_type)
           .SetVariant(*variant)
           .Build();
@@ -290,9 +267,9 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
   return AesCtrHmacAeadKey::Builder()
       .SetParameters(*parameters)
       .SetAesKeyBytes(
-          RestrictedData(std::move(key_struct->aes_ctr_key.key_value), *token))
+          RestrictedData(std::move(key.aes_ctr_key().key_value()), *token))
       .SetHmacKeyBytes(
-          RestrictedData(std::move(key_struct->hmac_key.key_value), *token))
+          RestrictedData(std::move(key.hmac_key().key_value()), *token))
       .SetIdRequirement(serialization.IdRequirement())
       .Build(GetPartialKeyAccess());
 }
@@ -316,40 +293,34 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return restricted_hmac_input.status();
   }
 
-  AesCtrHmacAeadKeyStruct key_struct;
-  key_struct.version = 0;
-
-  // AES-CTR key.
-  key_struct.aes_ctr_key.version = 0;
-  key_struct.aes_ctr_key.params.iv_size =
-      key.GetParameters().GetIvSizeInBytes();
-  key_struct.aes_ctr_key.key_value =
-      key.GetAesKeyBytes(GetPartialKeyAccess()).Get(*token);
-
-  // HMAC key.
-  absl::StatusOr<HmacParamsStruct> hmac_params =
-      GetHmacProtoParams(key.GetParameters());
-  if (!hmac_params.ok()) {
-    return hmac_params.status();
+  absl::StatusOr<HashTypeEnum> hash_type =
+      ToProtoHashType(key.GetParameters().GetHashType());
+  if (!hash_type.ok()) {
+    return hash_type.status();
   }
 
-  key_struct.hmac_key.version = 0;
-  key_struct.hmac_key.params = *hmac_params;
-  key_struct.hmac_key.key_value =
-      key.GetHmacKeyBytes(GetPartialKeyAccess()).Get(*token);
+  ProtoAesCtrHmacAeadKey proto_key;
+  proto_key.set_version(0);
+  proto_key.mutable_aes_ctr_key()->set_version(0);
+  proto_key.mutable_aes_ctr_key()->mutable_params()->set_iv_size(
+      key.GetParameters().GetIvSizeInBytes());
+  proto_key.mutable_aes_ctr_key()->set_key_value(
+      restricted_aes_input->GetSecret(*token));
 
-  absl::StatusOr<SecretData> serialized_proto =
-      AesCtrHmacAeadKeyStruct::GetParser().SerializeIntoSecretData(key_struct);
-  if (!serialized_proto.ok()) {
-    return serialized_proto.status();
-  }
+  proto_key.mutable_hmac_key()->set_version(0);
+  proto_key.mutable_hmac_key()->mutable_params()->set_hash(*hash_type);
+  proto_key.mutable_hmac_key()->mutable_params()->set_tag_size(
+      key.GetParameters().GetTagSizeInBytes());
+  proto_key.mutable_hmac_key()->set_key_value(
+      restricted_hmac_input->GetSecret(*token));
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
+  SecretData serialized_key = proto_key.SerializeAsSecretData();
   return ProtoKeySerialization::Create(
-      kTypeUrl, RestrictedData(*std::move(serialized_proto), *token),
+      kTypeUrl, RestrictedData(std::move(serialized_key), *token),
       KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }

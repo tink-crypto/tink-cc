@@ -45,33 +45,6 @@ AesCtrHmacAeadKeyFormatStruct::GetParser() {
   return *parser;
 }
 
-const internal::ProtoParser<AesCtrHmacAeadKeyStruct>&
-AesCtrHmacAeadKeyStruct::GetParser() {
-  static const absl::NoDestructor<
-      internal::ProtoParser<AesCtrHmacAeadKeyStruct>>
-      parser{
-          internal::ProtoParserBuilder<AesCtrHmacAeadKeyStruct>()
-              .AddUint32Field(1, &AesCtrHmacAeadKeyStruct::version)
-              .AddMessageField(
-                  2, &AesCtrHmacAeadKeyStruct::aes_ctr_key,
-                  internal::ProtoParserBuilder<AesCtrKeyStruct>()
-                      .AddUint32Field(1, &AesCtrKeyStruct::version)
-                      .AddMessageField(2, &AesCtrKeyStruct::params,
-                                       AesCtrParamsStruct::CreateParser())
-                      .AddBytesSecretDataField(3, &AesCtrKeyStruct::key_value)
-                      .BuildOrDie())
-              .AddMessageField(
-                  3, &AesCtrHmacAeadKeyStruct::hmac_key,
-                  internal::ProtoParserBuilder<HmacKeyStruct>()
-                      .AddUint32Field(1, &HmacKeyStruct::version)
-                      .AddMessageField(2, &HmacKeyStruct::params,
-                                       HmacParamsStruct::CreateParser())
-                      .AddBytesSecretDataField(3, &HmacKeyStruct::key_value)
-                      .BuildOrDie())
-              .BuildOrDie()};
-  return *parser;
-}
-
 }  // namespace internal
 }  // namespace tink
 }  // namespace crypto

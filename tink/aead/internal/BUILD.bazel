@@ -1190,10 +1190,13 @@ cc_library(
     hdrs = ["aes_ctr_hmac_proto_structs.h"],
     include_prefix = "tink/aead/internal",
     deps = [
+        "//tink:secret_data",
         "//tink/internal:proto_parser",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_owning_fields",
         "//tink/mac/internal:hmac_proto_structs",
-        "//tink/util:secret_data",
         "@com_google_absl//absl/base:no_destructor",
+        "@com_google_absl//absl/strings:string_view",
     ],
 )
 
@@ -1203,10 +1206,13 @@ cc_test(
     deps = [
         ":aes_ctr_hmac_proto_structs",
         "//tink/internal:common_proto_enums",
+        "//tink/internal/testing:field_with_number",
+        "//tink/mac/internal:hmac_proto_structs",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@com_google_absl//absl/status:statusor",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )

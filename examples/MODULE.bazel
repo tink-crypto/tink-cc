@@ -8,7 +8,6 @@ bazel_dep(
     name = "tink_cc",
     version = "",
 )
-
 local_path_override(
     module_name = "tink_cc",
     path = "../",
@@ -19,9 +18,8 @@ bazel_dep(
     version = "1.16.0",
     repo_name = "com_google_googletest",
 )
-
 bazel_dep(
     name = "abseil-cpp",
-    version = "20250127.0",
+    version = "20250814.1",
     repo_name = "com_google_absl",
 )

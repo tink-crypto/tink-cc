@@ -16,12 +16,12 @@
 
 #include "tink/aead/internal/chacha20_poly1305_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -35,7 +35,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -48,8 +49,10 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 using ChaCha20Poly1305ProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -64,29 +67,34 @@ using ChaCha20Poly1305ProtoKeySerializerImpl =
     internal::KeySerializerImpl<ChaCha20Poly1305Key,
                                 internal::ProtoKeySerialization>;
 
-struct ChaCha20Poly1305KeyFormatStruct {
-  static const ProtoParser<ChaCha20Poly1305KeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<
-        ProtoParser<ChaCha20Poly1305KeyFormatStruct>>
-        parser(
-            ProtoParserBuilder<ChaCha20Poly1305KeyFormatStruct>().BuildOrDie());
-    return *parser;
-  }
+class ProtoChaCha20Poly1305KeyFormat
+    : public Message<ProtoChaCha20Poly1305KeyFormat> {
+ public:
+  ProtoChaCha20Poly1305KeyFormat() = default;
+
+  std::array<const OwningField*, 0> GetFields() const { return {}; }
+
+  // This is OK because this class doesn't contain secret data.
+  using Message::SerializeAsString;
 };
 
-struct ChaCha20Poly1305KeyStruct {
-  uint32_t version;
-  SecretData key_value;
+class ProtoChaCha20Poly1305Key : public Message<ProtoChaCha20Poly1305Key> {
+ public:
+  ProtoChaCha20Poly1305Key() = default;
 
-  static const ProtoParser<ChaCha20Poly1305KeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<ChaCha20Poly1305KeyStruct>>
-        parser(ProtoParserBuilder<ChaCha20Poly1305KeyStruct>()
-                   .AddUint32Field(1, &ChaCha20Poly1305KeyStruct::version)
-                   .AddBytesSecretDataField(
-                       2, &ChaCha20Poly1305KeyStruct::key_value)
-                   .BuildOrDie());
-    return *parser;
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&version_, &key_value_};
   }
+
+ private:
+  Uint32OwningField version_{1};
+  OwningBytesField<SecretData> key_value_{2};
 };
 
 const absl::string_view kTypeUrl =
@@ -134,9 +142,8 @@ absl::StatusOr<ChaCha20Poly1305Parameters> ParseParameters(
         "Wrong type URL when parsing ChaCha20Poly1305Parameters.");
   }
 
-  absl::StatusOr<ChaCha20Poly1305KeyFormatStruct> proto_key_format =
-      ChaCha20Poly1305KeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
+  ProtoChaCha20Poly1305KeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
     return absl::InvalidArgumentError(
         "Failed to parse ChaCha20Poly1305KeyFormat proto");
   }
@@ -145,7 +152,6 @@ absl::StatusOr<ChaCha20Poly1305Parameters> ParseParameters(
   if (!variant.ok()) {
     return variant.status();
   }
-
   return ChaCha20Poly1305Parameters::Create(*variant);
 }
 
@@ -155,15 +161,10 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  absl::StatusOr<std::string> serialized_key_format =
-      ChaCha20Poly1305KeyFormatStruct::GetParser().SerializeIntoString(
-          ChaCha20Poly1305KeyFormatStruct{});
-  if (!serialized_key_format.ok()) {
-    return serialized_key_format.status();
-  }
-
+  ProtoChaCha20Poly1305KeyFormat proto_key_format;
+  std::string serialized_key_format = proto_key_format.SerializeAsString();
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, *output_prefix_type, *serialized_key_format);
+      kTypeUrl, *output_prefix_type, serialized_key_format);
 }
 
 absl::StatusOr<ChaCha20Poly1305Key> ParseKey(
@@ -177,14 +178,13 @@ absl::StatusOr<ChaCha20Poly1305Key> ParseKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<ChaCha20Poly1305KeyStruct> key =
-      ChaCha20Poly1305KeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!key.ok()) {
+  ProtoChaCha20Poly1305Key proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError(
         "Failed to parse ChaCha20Poly1305Key proto");
   }
-  if (key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
   absl::StatusOr<ChaCha20Poly1305Parameters::Variant> variant =
@@ -198,8 +198,7 @@ absl::StatusOr<ChaCha20Poly1305Key> ParseKey(
   if (!parameters.ok()) return parameters.status();
 
   return ChaCha20Poly1305Key::Create(
-      parameters->GetVariant(),
-      RestrictedData(std::move(key->key_value), *token),
+      parameters->GetVariant(), RestrictedData(proto_key.key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -213,22 +212,17 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  ChaCha20Poly1305KeyStruct key_struct;
-  key_struct.version = 0;
-  key_struct.key_value = restricted_input->Get(*token);
+  ProtoChaCha20Poly1305Key proto_key;
+  proto_key.set_version(0);
+  proto_key.set_key_value(restricted_input->GetSecret(*token));
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  absl::StatusOr<SecretData> serialized_key =
-      ChaCha20Poly1305KeyStruct::GetParser().SerializeIntoSecretData(
-          key_struct);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
+  SecretData serialized_key = proto_key.SerializeAsSecretData();
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
+      kTypeUrl, RestrictedData(std::move(serialized_key), *token),
       KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }

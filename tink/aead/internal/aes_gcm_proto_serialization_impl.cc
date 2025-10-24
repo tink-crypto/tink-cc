@@ -16,6 +16,8 @@
 
 #include "tink/aead/internal/aes_gcm_proto_serialization_impl.h"
 
+#include <array>
+#include <cstdint>
 #include <string>
 #include <utility>
 
@@ -26,7 +28,7 @@
 #include "absl/types/optional.h"
 #include "tink/aead/aes_gcm_key.h"
 #include "tink/aead/aes_gcm_parameters.h"
-#include "tink/aead/internal/aes_gcm_proto_structs.h"
+#include "tink/aead/internal/aes_gcm_proto_format.h"
 #include "tink/internal/key_parser.h"
 #include "tink/internal/key_serializer.h"
 #include "tink/internal/mutable_serialization_registry.h"
@@ -34,17 +36,43 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
+
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+
+class ProtoAesGcmKey : public Message<ProtoAesGcmKey> {
+ public:
+  ProtoAesGcmKey() = default;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&version_, &key_value_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  OwningBytesField<SecretData> key_value_{3};
+};
 
 using AesGcmProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesGcmParameters>;
@@ -113,12 +141,11 @@ absl::StatusOr<AesGcmParameters> ParseParameters(
         "Wrong type URL when parsing AesGcmParameters.");
   }
 
-  absl::StatusOr<AesGcmKeyFormatStruct> proto_key_format =
-      AesGcmKeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoAesGcmKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
   }
-  if (proto_key_format->version != 0) {
+  if (proto_key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -132,7 +159,7 @@ absl::StatusOr<AesGcmParameters> ParseParameters(
   // tags.
   return AesGcmParameters::Builder()
       .SetVariant(*variant)
-      .SetKeySizeInBytes(proto_key_format->key_size)
+      .SetKeySizeInBytes(proto_key_format.key_size())
       .SetIvSizeInBytes(12)
       .SetTagSizeInBytes(16)
       .Build();
@@ -149,17 +176,12 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  AesGcmKeyFormatStruct proto_key_format;
-  proto_key_format.key_size = parameters.KeySizeInBytes();
-  proto_key_format.version = 0;
-  absl::StatusOr<std::string> serialized_proto =
-      AesGcmKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
-  if (!serialized_proto.ok()) {
-    return serialized_proto.status();
-  }
-
+  ProtoAesGcmKeyFormat proto_key_format;
+  proto_key_format.set_key_size(parameters.KeySizeInBytes());
+  proto_key_format.set_version(0);
+  const std::string serialized_proto = proto_key_format.SerializeAsString();
   return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
-                                              *serialized_proto);
+                                              serialized_proto);
 }
 
 absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
@@ -171,13 +193,12 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<AesGcmKeyStruct> proto_key =
-      AesGcmKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoAesGcmKey proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -192,14 +213,14 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
           .SetVariant(*variant)
-          .SetKeySizeInBytes(proto_key->key_value.size())
+          .SetKeySizeInBytes(proto_key.key_value().size())
           .SetIvSizeInBytes(12)
           .SetTagSizeInBytes(16)
           .Build();
   if (!parameters.ok()) return parameters.status();
 
   return AesGcmKey::Create(
-      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
+      *parameters, RestrictedData(proto_key.key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -215,21 +236,17 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  AesGcmKeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.key_value = restricted_input->Get(*token);
+  ProtoAesGcmKey proto_key;
+  proto_key.set_version(0);
+  proto_key.set_key_value(restricted_input->GetSecret(*token));
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  absl::StatusOr<SecretData> serialized_key =
-      AesGcmKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
+  SecretData serialized_key = proto_key.SerializeAsSecretData();
   return ProtoKeySerialization::Create(
-      kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
+      kTypeUrl, RestrictedData(std::move(serialized_key), *token),
       KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
       key.GetIdRequirement());
 }

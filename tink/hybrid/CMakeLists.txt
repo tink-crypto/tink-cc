@@ -523,7 +523,7 @@ tink_cc_library(
     tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::internal::aes_ctr_hmac_proto_structs
-    tink::aead::internal::aes_gcm_proto_structs
+    tink::aead::internal::aes_gcm_proto_format
     tink::aead::internal::xchacha20_poly1305_proto_format
     tink::daead::internal::aes_siv_proto_structs
     tink::internal::bn_encoding_util

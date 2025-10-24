@@ -812,7 +812,7 @@ tink_cc_library(
     aes_gcm_proto_serialization_impl.cc
     aes_gcm_proto_serialization_impl.h
   DEPS
-    tink::aead::internal::aes_gcm_proto_structs
+    tink::aead::internal::aes_gcm_proto_format
     absl::core_headers
     absl::status
     absl::statusor
@@ -820,6 +820,7 @@ tink_cc_library(
     absl::optional
     tink::core::partial_key_access
     tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::aead::aes_gcm_key
     tink::aead::aes_gcm_parameters
@@ -830,9 +831,10 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::secret_data
     tink::util::status
 )
 
@@ -1108,26 +1110,24 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME aes_gcm_proto_structs
+  NAME aes_gcm_proto_format
   SRCS
-    aes_gcm_proto_structs.h
+    aes_gcm_proto_format.h
   DEPS
-    absl::no_destructor
-    tink::core::secret_data
-    tink::internal::proto_parser
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
 )
 
 tink_cc_test(
-  NAME aes_gcm_proto_structs_test
+  NAME aes_gcm_proto_format_test
   SRCS
-    aes_gcm_proto_structs_test.cc
+    aes_gcm_proto_format_test.cc
   DEPS
-    tink::aead::internal::aes_gcm_proto_structs
+    tink::aead::internal::aes_gcm_proto_format
     gmock
-    absl::statusor
+    absl::strings
+    tink::internal::testing::field_with_number
     tink::util::secret_data
-    tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_library(

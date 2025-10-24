@@ -27,7 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead/internal/aes_ctr_hmac_proto_structs.h"
-#include "tink/aead/internal/aes_gcm_proto_structs.h"
+#include "tink/aead/internal/aes_gcm_proto_format.h"
 #include "tink/aead/internal/xchacha20_poly1305_proto_format.h"
 #include "tink/big_integer.h"
 #include "tink/daead/internal/aes_siv_proto_structs.h"
@@ -355,21 +355,20 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
     const EciesAeadDemParamsStruct& proto_dem_params) {
   if (proto_dem_params.aead_dem.type_url ==
       "type.googleapis.com/google.crypto.tink.AesGcmKey") {
-    absl::StatusOr<internal::AesGcmKeyFormatStruct> aes_gcm_key_format =
-        internal::AesGcmKeyFormatStruct::GetParser().Parse(
-            proto_dem_params.aead_dem.value);
-    if (!aes_gcm_key_format.ok()) {
-      return aes_gcm_key_format.status();
+    internal::ProtoAesGcmKeyFormat key_format;
+    if (!key_format.ParseFromString(proto_dem_params.aead_dem.value)) {
+      return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
     }
-    if (aes_gcm_key_format->key_size == 16) {
-      return EciesParameters::DemId::kAes128GcmRaw;
+    switch (key_format.key_size()) {
+      case 16:
+        return EciesParameters::DemId::kAes128GcmRaw;
+      case 32:
+        return EciesParameters::DemId::kAes256GcmRaw;
+      default:
+        return absl::InvalidArgumentError(absl::StrFormat(
+            "Invalid AES-GCM key length for DEM: %d, want 16 or 32 bytes.",
+            key_format.key_size()));
     }
-    if (aes_gcm_key_format->key_size == 32) {
-      return EciesParameters::DemId::kAes256GcmRaw;
-    }
-    return absl::InvalidArgumentError(absl::StrFormat(
-        "Invalid AES-GCM key length for DEM: %d, want 16 or 32 bytes.",
-        aes_gcm_key_format->key_size));
   }
   if (proto_dem_params.aead_dem.type_url ==
       "type.googleapis.com/google.crypto.tink.AesSivKey") {
@@ -437,17 +436,12 @@ absl::StatusOr<EciesAeadDemParamsStruct> ToProtoDemParams(
   if (dem_id == EciesParameters::DemId::kAes128GcmRaw ||
       dem_id == EciesParameters::DemId::kAes256GcmRaw) {
     int key_size = (dem_id == EciesParameters::DemId::kAes128GcmRaw) ? 16 : 32;
-    internal::AesGcmKeyFormatStruct format;
-    format.version = 0;
-    format.key_size = key_size;
-    absl::StatusOr<std::string> serialized_proto =
-        internal::AesGcmKeyFormatStruct::GetParser().SerializeIntoString(
-            format);
-    if (!serialized_proto.ok()) {
-      return serialized_proto.status();
-    }
+    internal::ProtoAesGcmKeyFormat key_format;
+    key_format.set_version(0);
+    key_format.set_key_size(key_size);
     return CreateEciesAeadDemParamsStruct(
-        "type.googleapis.com/google.crypto.tink.AesGcmKey", *serialized_proto);
+        "type.googleapis.com/google.crypto.tink.AesGcmKey",
+        key_format.SerializeAsString());
   }
   if (dem_id == EciesParameters::DemId::kAes256SivRaw) {
     internal::AesSivKeyFormatStruct format;

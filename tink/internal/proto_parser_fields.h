@@ -78,7 +78,14 @@ void SerializeStringLikeValue(absl::string_view s, absl::Span<char> o);
 template <typename Struct>
 class Field {
  public:
+  Field() = default;
   virtual ~Field() = default;
+
+  // Copyable and movable.
+  Field(const Field&) = default;
+  Field& operator=(const Field&) = default;
+  Field(Field&&) noexcept = default;
+  Field& operator=(Field&&) noexcept = default;
 
   // Clears the field.
   virtual void ClearMember(Struct& values) const = 0;

@@ -998,7 +998,6 @@ tink_cc_library(
     aes_eax_proto_serialization_impl.h
   DEPS
     absl::core_headers
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::strings
@@ -1017,7 +1016,8 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::status

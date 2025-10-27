@@ -16,8 +16,8 @@
 
 #include "tink/aead/internal/x_aes_gcm_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
-#include <string>
 #include <utility>
 
 #include "absl/status/status.h"
@@ -33,72 +33,84 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-struct XAesGcmParamsStruct {
-  uint32_t salt_size;
+class ProtoXAesGcmParams : public Message<ProtoXAesGcmParams> {
+ public:
+  ProtoXAesGcmParams() = default;
+
+  uint32_t salt_size() const { return salt_size_.value(); }
+  void set_salt_size(uint32_t value) { salt_size_.set_value(value); }
+
+  std::array<const OwningField*, 1> GetFields() const { return {&salt_size_}; }
+
+ private:
+  Uint32OwningField salt_size_{1};
 };
 
-struct XAesGcmKeyFormatStruct {
-  uint32_t version;
+class ProtoXAesGcmKeyFormat : public Message<ProtoXAesGcmKeyFormat> {
+ public:
+  ProtoXAesGcmKeyFormat() = default;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const ProtoXAesGcmParams& params() const { return params_.value(); }
+  ProtoXAesGcmParams* mutable_params() { return params_.mutable_value(); }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&version_, &params_};
+  }
+
+  // This is OK because this class doesn't contain secret data.
+  using Message::SerializeAsString;
+
+ private:
+  Uint32OwningField version_{1};
   // reserved : 2
-  XAesGcmParamsStruct params;
+  MessageOwningField<ProtoXAesGcmParams> params_{3};
 };
 
-struct XAesGcmKeyStruct {
-  uint32_t version;
-  XAesGcmParamsStruct params;
-  SecretData key_value;
+class ProtoXAesGcmKey : public Message<ProtoXAesGcmKey> {
+ public:
+  ProtoXAesGcmKey() = default;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const ProtoXAesGcmParams& params() const { return params_.value(); }
+  ProtoXAesGcmParams* mutable_params() { return params_.mutable_value(); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &params_, &key_value_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoXAesGcmParams> params_{2};
+  OwningBytesField<SecretData> key_value_{3};
 };
-
-ProtoParser<XAesGcmParamsStruct> CreateParamsParser() {
-  return ProtoParserBuilder<XAesGcmParamsStruct>()
-      .AddUint32Field(1, &XAesGcmParamsStruct::salt_size)
-      .BuildOrDie();
-}
-
-ProtoParser<XAesGcmKeyFormatStruct> CreateKeyFormatParser() {
-  return ProtoParserBuilder<XAesGcmKeyFormatStruct>()
-      .AddUint32Field(1, &XAesGcmKeyFormatStruct::version)
-      // reserved : 2
-      .AddMessageField(3, &XAesGcmKeyFormatStruct::params, CreateParamsParser())
-      .BuildOrDie();
-}
-
-const ProtoParser<XAesGcmKeyFormatStruct>& GetKeyFormatParser() {
-  static const ProtoParser<XAesGcmKeyFormatStruct>* parser =
-      new ProtoParser<XAesGcmKeyFormatStruct>(CreateKeyFormatParser());
-  return *parser;
-}
-
-ProtoParser<XAesGcmKeyStruct> CreateKeyParser() {
-  return ProtoParserBuilder<XAesGcmKeyStruct>()
-      .AddUint32Field(1, &XAesGcmKeyStruct::version)
-      .AddMessageField(2, &XAesGcmKeyStruct::params, CreateParamsParser())
-      .AddBytesSecretDataField(3, &XAesGcmKeyStruct::key_value)
-      .BuildOrDie();
-}
-
-const ProtoParser<XAesGcmKeyStruct>& GetKeyParser() {
-  static const ProtoParser<XAesGcmKeyStruct>* parser =
-      new ProtoParser<XAesGcmKeyStruct>(CreateKeyParser());
-  return *parser;
-}
 
 using XAesGcmProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, XAesGcmParameters>;
@@ -147,12 +159,11 @@ absl::StatusOr<XAesGcmParameters> ParseParameters(
         "Wrong type URL when parsing XAesGcmParameters.");
   }
 
-  absl::StatusOr<XAesGcmKeyFormatStruct> proto_key_format =
-      GetKeyFormatParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoXAesGcmKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError("Failed to parse XAesGcmKeyFormat proto");
   }
-  if (proto_key_format->version != 0) {
+  if (proto_key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -163,7 +174,7 @@ absl::StatusOr<XAesGcmParameters> ParseParameters(
   }
 
   return XAesGcmParameters::Create(*variant,
-                                   proto_key_format->params.salt_size);
+                                   proto_key_format.params().salt_size());
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
@@ -174,18 +185,12 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  XAesGcmKeyFormatStruct proto_key_format;
-  proto_key_format.version = 0;
-  proto_key_format.params.salt_size = parameters.SaltSizeBytes();
+  ProtoXAesGcmKeyFormat proto_key_format;
+  proto_key_format.set_version(0);
+  proto_key_format.mutable_params()->set_salt_size(parameters.SaltSizeBytes());
 
-  absl::StatusOr<std::string> serialized =
-      GetKeyFormatParser().SerializeIntoString(proto_key_format);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
-
-  return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
-                                              *serialized);
+  return ProtoParametersSerialization::Create(
+      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<XAesGcmKey> ParseKey(
@@ -198,12 +203,12 @@ absl::StatusOr<XAesGcmKey> ParseKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  absl::StatusOr<XAesGcmKeyStruct> proto_key = GetKeyParser().Parse(
-      serialization.SerializedKeyProto().GetSecret(*token));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoXAesGcmKey proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError("Failed to parse XAesGcmKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
@@ -214,12 +219,12 @@ absl::StatusOr<XAesGcmKey> ParseKey(
   }
 
   absl::StatusOr<XAesGcmParameters> parameters =
-      XAesGcmParameters::Create(*variant, proto_key->params.salt_size);
+      XAesGcmParameters::Create(*variant, proto_key.params().salt_size());
   if (!parameters.ok()) {
     return parameters.status();
   }
   return XAesGcmKey::Create(
-      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
+      *parameters, RestrictedData(proto_key.key_value(), *token),
       serialization.IdRequirement(), GetPartialKeyAccess());
 }
 
@@ -234,26 +239,24 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  XAesGcmKeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.params.salt_size = key.GetParameters().SaltSizeBytes();
-  proto_key.key_value =
-      util::SecretDataFromStringView(restricted_input->GetSecret(*token));
+  ProtoXAesGcmKey proto_key;
+  proto_key.set_version(0);
+  proto_key.mutable_params()->set_salt_size(
+      key.GetParameters().SaltSizeBytes());
+  proto_key.set_key_value(restricted_input->GetSecret(*token));
+  SecretData serialized_key = proto_key.SerializeAsSecretData();
+  RestrictedData restricted_output =
+      RestrictedData(std::move(serialized_key), *token);
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-  absl::StatusOr<SecretData> serialized_key =
-      GetKeyParser().SerializeIntoSecretData(proto_key);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
+
   return ProtoKeySerialization::Create(
-      kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
-      KeyMaterialTypeEnum::kSymmetric, *output_prefix_type,
-      key.GetIdRequirement());
+      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
 XAesGcmProtoParametersParserImpl* XAesGcmProtoParametersParser() {

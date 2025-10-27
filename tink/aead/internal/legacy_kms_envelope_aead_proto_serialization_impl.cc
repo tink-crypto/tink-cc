@@ -16,11 +16,12 @@
 
 #include "tink/aead/internal/legacy_kms_envelope_aead_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -42,7 +43,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -56,8 +58,59 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+
+class ProtoKmsEnvelopeAeadKeyFormat
+    : public Message<ProtoKmsEnvelopeAeadKeyFormat> {
+ public:
+  ProtoKmsEnvelopeAeadKeyFormat() = default;
+
+  const std::string& kek_uri() const { return kek_uri_.value(); }
+  void set_kek_uri(absl::string_view value) { kek_uri_.set_value(value); }
+
+  const ProtoKeyTemplate& dek_template() const { return dek_template_.value(); }
+  ProtoKeyTemplate* mutable_dek_template() {
+    return dek_template_.mutable_value();
+  }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&kek_uri_, &dek_template_};
+  }
+
+  // This is OK because this class doesn't contain secret data.
+  using Message::SerializeAsString;
+
+ private:
+  OwningBytesField<std::string> kek_uri_{1};
+  MessageOwningField<ProtoKeyTemplate> dek_template_{2};
+};
+
+class ProtoKmsEnvelopeAeadKey : public Message<ProtoKmsEnvelopeAeadKey> {
+ public:
+  ProtoKmsEnvelopeAeadKey() = default;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const ProtoKmsEnvelopeAeadKeyFormat& params() const {
+    return params_.value();
+  }
+  ProtoKmsEnvelopeAeadKeyFormat* mutable_params() {
+    return params_.mutable_value();
+  }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&version_, &params_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoKmsEnvelopeAeadKeyFormat> params_{2};
+};
 
 using LegacyKmsEnvelopeAeadProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization,
@@ -72,41 +125,6 @@ using LegacyKmsEnvelopeAeadProtoKeySerializerImpl =
 
 const absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.KmsEnvelopeAeadKey";
-
-struct KmsEnvelopeAeadKeyFormatStruct {
-  std::string kek_uri;
-  KeyTemplateStruct dek_template;
-
-  static ProtoParser<KmsEnvelopeAeadKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<KmsEnvelopeAeadKeyFormatStruct>()
-        .AddBytesStringField(1, &KmsEnvelopeAeadKeyFormatStruct::kek_uri)
-        .AddMessageField(2, &KmsEnvelopeAeadKeyFormatStruct::dek_template,
-                         KeyTemplateStruct::CreateParser())
-        .BuildOrDie();
-  }
-
-  static const ProtoParser<KmsEnvelopeAeadKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<KmsEnvelopeAeadKeyFormatStruct>>
-        parser(CreateParser());
-    return *parser;
-  }
-};
-
-struct KmsEnvelopeAeadKeyStruct {
-  uint32_t version;
-  KmsEnvelopeAeadKeyFormatStruct params;
-
-  static const ProtoParser<KmsEnvelopeAeadKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<KmsEnvelopeAeadKeyStruct>>
-        parser(
-            ProtoParserBuilder<KmsEnvelopeAeadKeyStruct>()
-                .AddUint32Field(1, &KmsEnvelopeAeadKeyStruct::version)
-                .AddMessageField(2, &KmsEnvelopeAeadKeyStruct::params,
-                                 KmsEnvelopeAeadKeyFormatStruct::CreateParser())
-                .BuildOrDie());
-    return *parser;
-  }
-};
 
 absl::StatusOr<LegacyKmsEnvelopeAeadParameters::Variant> ToVariant(
     OutputPrefixTypeEnum output_prefix_type) {
@@ -135,7 +153,7 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 }
 
 absl::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
-    const KeyTemplateStruct& key_template) {
+    const ProtoKeyTemplate& key_template) {
   absl::StatusOr<ProtoParametersSerialization> proto_params_serialization =
       ProtoParametersSerialization::Create(key_template);
   if (!proto_params_serialization.ok()) {
@@ -162,7 +180,7 @@ absl::StatusOr<KeyTemplateStruct> ParametersToKeyTemplate(
 }
 
 absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
-    const KmsEnvelopeAeadKeyFormatStruct& proto_key_format,
+    const ProtoKmsEnvelopeAeadKeyFormat& proto_key_format,
     OutputPrefixTypeEnum output_prefix_type) {
   absl::StatusOr<LegacyKmsEnvelopeAeadParameters::Variant> variant =
       ToVariant(output_prefix_type);
@@ -170,8 +188,8 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
     return variant.status();
   }
 
-  KeyTemplateStruct raw_dek_template = proto_key_format.dek_template;
-  raw_dek_template.output_prefix_type = OutputPrefixTypeEnum::kRaw;
+  ProtoKeyTemplate raw_dek_template = proto_key_format.dek_template();
+  raw_dek_template.set_output_prefix_type(OutputPrefixTypeEnum::kRaw);
 
   absl::StatusOr<std::unique_ptr<Parameters>> dek_parameters =
       ParametersFromKeyTemplate(raw_dek_template);
@@ -209,7 +227,7 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
                          "LegacyKmsEnvelopeAeadParameters."));
   }
 
-  return LegacyKmsEnvelopeAeadParameters::Create(proto_key_format.kek_uri,
+  return LegacyKmsEnvelopeAeadParameters::Create(proto_key_format.kek_uri(),
                                                  *variant, dek_parsing_strategy,
                                                  *aead_parameters);
 }
@@ -222,13 +240,13 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> ParseParameters(
         "Wrong type URL when parsing LegacyKmsEnvelopeAeadParameters.");
   }
 
-  absl::StatusOr<KmsEnvelopeAeadKeyFormatStruct> proto_key_format =
-      KmsEnvelopeAeadKeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoKmsEnvelopeAeadKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError(
+        "Failed to parse KmsEnvelopeAeadKeyFormat proto");
   }
 
-  return GetParametersFromKeyFormat(*proto_key_format,
+  return GetParametersFromKeyFormat(proto_key_format,
                                     key_template.output_prefix_type);
 }
 
@@ -246,19 +264,16 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return dek_key_template.status();
   }
 
-  KmsEnvelopeAeadKeyFormatStruct proto_key_format;
-  proto_key_format.kek_uri = parameters.GetKeyUri();
-  proto_key_format.dek_template = *dek_key_template;
+  ProtoKmsEnvelopeAeadKeyFormat proto_key_format;
+  proto_key_format.set_kek_uri(parameters.GetKeyUri());
+  proto_key_format.mutable_dek_template()->set_output_prefix_type(
+      dek_key_template->output_prefix_type);
+  proto_key_format.mutable_dek_template()->set_value(dek_key_template->value);
+  proto_key_format.mutable_dek_template()->set_type_url(
+      dek_key_template->type_url);
 
-  absl::StatusOr<std::string> serialized_proto =
-      KmsEnvelopeAeadKeyFormatStruct::GetParser().SerializeIntoString(
-          proto_key_format);
-  if (!serialized_proto.ok()) {
-    return serialized_proto.status();
-  }
-
-  return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
-                                              *serialized_proto);
+  return ProtoParametersSerialization::Create(
+      kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<LegacyKmsEnvelopeAeadKey> ParseKey(
@@ -268,19 +283,18 @@ absl::StatusOr<LegacyKmsEnvelopeAeadKey> ParseKey(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsEnvelopeAeadKey.");
   }
-  absl::StatusOr<KmsEnvelopeAeadKeyStruct> key =
-      KmsEnvelopeAeadKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(
-              GetInsecureSecretKeyAccessInternal()));
-  if (!key.ok()) {
-    return key.status();
+  ProtoKmsEnvelopeAeadKey key;
+  if (!key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
+          GetInsecureSecretKeyAccessInternal()))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse KmsEnvelopeAeadKey proto");
   }
-  if (key->version != 0) {
+  if (key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<LegacyKmsEnvelopeAeadParameters> parameters =
-      GetParametersFromKeyFormat(key->params,
+      GetParametersFromKeyFormat(key.params(),
                                  serialization.GetOutputPrefixTypeEnum());
   if (!parameters.ok()) {
     return parameters.status();
@@ -299,25 +313,26 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return dek_key_template.status();
   }
 
-  KmsEnvelopeAeadKeyStruct key_struct;
-  key_struct.version = 0;
-  key_struct.params.kek_uri = key.GetParameters().GetKeyUri();
-  key_struct.params.dek_template = *dek_key_template;
+  ProtoKmsEnvelopeAeadKey key_proto;
+  key_proto.set_version(0);
+  key_proto.mutable_params()->set_kek_uri(key.GetParameters().GetKeyUri());
+  key_proto.mutable_params()->mutable_dek_template()->set_output_prefix_type(
+      dek_key_template->output_prefix_type);
+  key_proto.mutable_params()->mutable_dek_template()->set_value(
+      dek_key_template->value);
+  key_proto.mutable_params()->mutable_dek_template()->set_type_url(
+      dek_key_template->type_url);
+
+  SecretData serialized_key = key_proto.SerializeAsSecretData();
+
+  RestrictedData restricted_output = RestrictedData(
+      std::move(serialized_key), GetInsecureSecretKeyAccessInternal());
 
   absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-
-  absl::StatusOr<SecretData> serialized_key =
-      KmsEnvelopeAeadKeyStruct::GetParser().SerializeIntoSecretData(key_struct);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
-
-  RestrictedData restricted_output =
-      RestrictedData(*serialized_key, GetInsecureSecretKeyAccessInternal());
 
   return ProtoKeySerialization::Create(
       kTypeUrl, restricted_output, KeyMaterialTypeEnum::kRemote,

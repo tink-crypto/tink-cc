@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 
 #include <string>
+#include <utility>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -41,11 +42,11 @@ ProtoParametersSerialization::Create(absl::string_view type_url,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Non-printable ASCII character in type URL.");
   }
-  KeyTemplateStruct key_template;
-  key_template.type_url = std::string(type_url);
-  key_template.output_prefix_type = output_prefix_type;
-  key_template.value = std::string(serialized_proto);
-  return ProtoParametersSerialization(key_template);
+  KeyTemplateStruct key_template_struct;
+  key_template_struct.type_url = std::string(type_url);
+  key_template_struct.output_prefix_type = output_prefix_type;
+  key_template_struct.value = std::string(serialized_proto);
+  return ProtoParametersSerialization(std::move(key_template_struct));
 }
 
 absl::StatusOr<ProtoParametersSerialization>
@@ -59,7 +60,7 @@ ProtoParametersSerialization::Create(KeyTemplate key_template) {
   key_template_struct.output_prefix_type =
       static_cast<OutputPrefixTypeEnum>(key_template.output_prefix_type());
   key_template_struct.value = key_template.value();
-  return ProtoParametersSerialization(key_template_struct);
+  return ProtoParametersSerialization(std::move(key_template_struct));
 }
 
 absl::StatusOr<ProtoParametersSerialization>
@@ -69,6 +70,20 @@ ProtoParametersSerialization::Create(const KeyTemplateStruct& key_template) {
                         "Non-printable ASCII character in type URL.");
   }
   return ProtoParametersSerialization(key_template);
+}
+
+absl::StatusOr<ProtoParametersSerialization>
+ProtoParametersSerialization::Create(const ProtoKeyTemplate& key_template) {
+  if (!IsPrintableAscii(key_template.type_url())) {
+    return absl::Status(absl::StatusCode::kInvalidArgument,
+                        "Non-printable ASCII character in type URL.");
+  }
+  KeyTemplateStruct key_struct;
+  key_struct.type_url = key_template.type_url();
+  key_struct.output_prefix_type =
+      static_cast<OutputPrefixTypeEnum>(key_template.output_prefix_type());
+  key_struct.value = key_template.value();
+  return ProtoParametersSerialization(std::move(key_struct));
 }
 
 bool ProtoParametersSerialization::EqualsWithPotentialFalseNegatives(

@@ -144,6 +144,26 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateStruct) {
   EXPECT_THAT(parsed_proto.num(), Eq(12345));
 }
 
+TEST_F(ProtoParametersSerializationTest, CreateFromProtoKeyTemplate) {
+  TestProto test_proto;
+  test_proto.set_num(12345);
+  ProtoKeyTemplate key_template_proto;
+  key_template_proto.set_value(test_proto.SerializeAsString());
+  key_template_proto.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
+  key_template_proto.set_type_url("type_url");
+  absl::StatusOr<ProtoParametersSerialization> serialization =
+      ProtoParametersSerialization::Create(key_template_proto);
+  ASSERT_THAT(serialization.status(), IsOk());
+
+  const KeyTemplateStruct& key_template = serialization->GetKeyTemplateStruct();
+  EXPECT_THAT(key_template.type_url, "type_url");
+  EXPECT_THAT(key_template.output_prefix_type, OutputPrefixTypeEnum::kTink);
+  EXPECT_THAT(key_template.value, test_proto.SerializeAsString());
+  TestProto parsed_proto;
+  parsed_proto.ParseFromString(key_template.value);
+  EXPECT_THAT(parsed_proto.num(), Eq(12345));
+}
+
 TEST_F(ProtoParametersSerializationTest,
        CreateFromKeyTemplateStructWithNonPrintableAsciiTypeURLFails) {
   TestProto test_proto;

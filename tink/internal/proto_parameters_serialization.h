@@ -18,6 +18,7 @@
 #define TINK_INTERNAL_PROTO_PARAMETERS_SERIALIZATION_H_
 
 #include <string>
+#include <utility>
 
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -55,6 +56,11 @@ class ProtoParametersSerialization : public Serialization {
   static absl::StatusOr<ProtoParametersSerialization> Create(
       const KeyTemplateStruct& key_template);
 
+  // Creates a `ProtoParametersSerialization` object from a key template
+  // proto message.
+  static absl::StatusOr<ProtoParametersSerialization> Create(
+      const ProtoKeyTemplate& key_template);
+
   const KeyTemplateStruct& GetKeyTemplateStruct() const {
     return key_template_;
   }
@@ -70,9 +76,9 @@ class ProtoParametersSerialization : public Serialization {
   friend class LegacyProtoParameters;
   friend class LegacyProtoParametersTest;
 
-  explicit ProtoParametersSerialization(const KeyTemplateStruct& key_template)
-      : key_template_(key_template),
-        object_identifier_(key_template.type_url) {}
+  explicit ProtoParametersSerialization(KeyTemplateStruct key_template)
+      : key_template_(std::move(key_template)),
+        object_identifier_(key_template_.type_url) {}
 
   // Returns `true` if this `ProtoParametersSerialization` object is equal to
   // `other` (with the possibility of false negatives due to lack of

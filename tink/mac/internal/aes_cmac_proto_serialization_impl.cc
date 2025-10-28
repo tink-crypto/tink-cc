@@ -35,6 +35,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/mac/aes_cmac_key.h"
@@ -53,8 +54,8 @@ namespace {
 
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 // Corresponds to google.crypto.tink.AesCmacKeyFormat.
@@ -78,7 +79,9 @@ class AesCmacKeyProto : public Message<AesCmacKeyProto> {
   void set_version(uint32_t value) { version_.set_value(value); }
 
   const SecretData& key_value() const { return key_value_.value(); }
-  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+  void set_key_value(absl::string_view value) {
+    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+  }
 
   const AesCmacParamProto& params() const { return params_.value(); }
   AesCmacParamProto* mutable_params() { return params_.mutable_value(); }
@@ -89,7 +92,7 @@ class AesCmacKeyProto : public Message<AesCmacKeyProto> {
 
  private:
   Uint32OwningField version_{1};
-  OwningBytesField<SecretData> key_value_{2};
+  SecretDataOwningField key_value_{2};
   MessageOwningField<AesCmacParamProto> params_{3};
 };
 

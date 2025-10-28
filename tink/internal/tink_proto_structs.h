@@ -26,7 +26,9 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/secret_data.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -118,7 +120,9 @@ class ProtoKeyData : public proto_parsing::Message<ProtoKeyData> {
   }
 
   const SecretData& value() const { return value_.value(); }
-  void set_value(absl::string_view value) { value_.set_value(value); }
+  void set_value(absl::string_view value) {
+    *value_.mutable_value() = util::SecretDataFromStringView(value);
+  }
 
   KeyMaterialTypeEnum key_material_type() const {
     return key_material_type_.value();
@@ -133,7 +137,7 @@ class ProtoKeyData : public proto_parsing::Message<ProtoKeyData> {
 
  private:
   proto_parsing::OwningBytesField<std::string> type_url_{1};
-  proto_parsing::OwningBytesField<SecretData> value_{2};
+  proto_parsing::SecretDataOwningField value_{2};
   proto_parsing::EnumOwningField<KeyMaterialTypeEnum> key_material_type_{
       3, &KeyMaterialTypeValid};
 };

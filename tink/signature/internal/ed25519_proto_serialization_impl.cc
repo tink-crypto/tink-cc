@@ -35,6 +35,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -99,7 +100,9 @@ class ProtoEd25519PrivateKey final : public Message<ProtoEd25519PrivateKey> {
   void set_version(uint32_t value) { version_.set_value(value); }
 
   const SecretData& key_value() const { return key_value_.value(); }
-  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+  void set_key_value(absl::string_view value) {
+    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+  }
 
   const ProtoEd25519PublicKey& public_key() const {
     return public_key_.value();
@@ -114,7 +117,7 @@ class ProtoEd25519PrivateKey final : public Message<ProtoEd25519PrivateKey> {
 
  private:
   Uint32OwningField version_{1};
-  OwningBytesField<SecretData> key_value_{2};
+  proto_parsing::SecretDataOwningField key_value_{2};
   MessageOwningField<ProtoEd25519PublicKey> public_key_{3};
 };
 

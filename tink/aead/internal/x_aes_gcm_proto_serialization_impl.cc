@@ -35,6 +35,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -100,7 +101,9 @@ class ProtoXAesGcmKey : public Message<ProtoXAesGcmKey> {
   ProtoXAesGcmParams* mutable_params() { return params_.mutable_value(); }
 
   const SecretData& key_value() const { return key_value_.value(); }
-  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+  void set_key_value(absl::string_view value) {
+    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+  }
 
   std::array<const OwningField*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
@@ -109,7 +112,7 @@ class ProtoXAesGcmKey : public Message<ProtoXAesGcmKey> {
  private:
   Uint32OwningField version_{1};
   MessageOwningField<ProtoXAesGcmParams> params_{2};
-  OwningBytesField<SecretData> key_value_{3};
+  proto_parsing::SecretDataOwningField key_value_{3};
 };
 
 using XAesGcmProtoParametersParserImpl =

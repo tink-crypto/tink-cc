@@ -27,7 +27,9 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/secret_data.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -89,7 +91,9 @@ class ProtoHmacKey : public proto_parsing::Message<ProtoHmacKey> {
   ProtoHmacParams* mutable_params() { return params_.mutable_value(); }
 
   const SecretData& key_value() const { return key_value_.value(); }
-  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+  void set_key_value(absl::string_view value) {
+    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+  }
 
   std::array<const proto_parsing::OwningField*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
@@ -98,7 +102,7 @@ class ProtoHmacKey : public proto_parsing::Message<ProtoHmacKey> {
  private:
   proto_parsing::Uint32OwningField version_{1};
   proto_parsing::MessageOwningField<ProtoHmacParams> params_{2};
-  proto_parsing::OwningBytesField<SecretData> key_value_{3};
+  proto_parsing::SecretDataOwningField key_value_{3};
 };
 
 // TODO: b/451894777 - Remove these structs once the migration to the classes

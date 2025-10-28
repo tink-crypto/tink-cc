@@ -1918,9 +1918,11 @@ tink_cc_library(
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
     absl::no_destructor
     absl::string_view
     tink::core::secret_data
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -2194,6 +2196,7 @@ tink_cc_library(
     absl::core_headers
     absl::status
     absl::string_view
+    tink::core::secret_data
 )
 
 tink_cc_test(

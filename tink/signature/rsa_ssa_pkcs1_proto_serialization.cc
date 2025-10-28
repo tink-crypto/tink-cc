@@ -39,6 +39,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
@@ -61,6 +62,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
 using ::crypto::tink::internal::proto_parsing::OwningBytesField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 using ::crypto::tink::util::SecretDataAsStringView;
 
@@ -128,32 +130,44 @@ class ProtoRsaSsaPkcs1PrivateKey final
   }
 
   const SecretData& d() const { return d_.value(); }
-  void set_d(absl::string_view d) { d_.set_value(d); }
+  void set_d(absl::string_view d) {
+    *d_.mutable_value() = util::SecretDataFromStringView(d);
+  }
 
   const SecretData& p() const { return p_.value(); }
-  void set_p(absl::string_view p) { p_.set_value(p); }
+  void set_p(absl::string_view p) {
+    *p_.mutable_value() = util::SecretDataFromStringView(p);
+  }
 
   const SecretData& q() const { return q_.value(); }
-  void set_q(absl::string_view q) { q_.set_value(q); }
+  void set_q(absl::string_view q) {
+    *q_.mutable_value() = util::SecretDataFromStringView(q);
+  }
 
   const SecretData& dp() const { return dp_.value(); }
-  void set_dp(absl::string_view dp) { dp_.set_value(dp); }
+  void set_dp(absl::string_view dp) {
+    *dp_.mutable_value() = util::SecretDataFromStringView(dp);
+  }
 
   const SecretData& dq() const { return dq_.value(); }
-  void set_dq(absl::string_view dq) { dq_.set_value(dq); }
+  void set_dq(absl::string_view dq) {
+    *dq_.mutable_value() = util::SecretDataFromStringView(dq);
+  }
 
   const SecretData& crt() const { return crt_.value(); }
-  void set_crt(absl::string_view crt) { crt_.set_value(crt); }
+  void set_crt(absl::string_view crt) {
+    *crt_.mutable_value() = util::SecretDataFromStringView(crt);
+  }
 
  private:
   Uint32OwningField version_{1};
   MessageOwningField<ProtoRsaSsaPkcs1PublicKeyMessage> public_key_{2};
-  OwningBytesField<SecretData> d_{3};
-  OwningBytesField<SecretData> p_{4};
-  OwningBytesField<SecretData> q_{5};
-  OwningBytesField<SecretData> dp_{6};
-  OwningBytesField<SecretData> dq_{7};
-  OwningBytesField<SecretData> crt_{8};
+  SecretDataOwningField d_{3};
+  SecretDataOwningField p_{4};
+  SecretDataOwningField q_{5};
+  SecretDataOwningField dp_{6};
+  SecretDataOwningField dq_{7};
+  SecretDataOwningField crt_{8};
 };
 
 class ProtoRsaSsaPkcs1KeyFormat final

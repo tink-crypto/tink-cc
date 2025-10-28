@@ -37,6 +37,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -45,6 +46,7 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/ml_dsa_public_key.h"
+#include "tink/util/secret_data.h"
 
 ABSL_POINTERS_DEFAULT_NONNULL
 
@@ -57,6 +59,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
 using ::crypto::tink::internal::proto_parsing::OwningBytesField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 bool MlDsaInstanceEnumValid(int c) { return c >= 0 && c <= 1; }
@@ -137,7 +140,9 @@ class ProtoMlDsaPrivateKey final : public Message<ProtoMlDsaPrivateKey> {
   void set_version(uint32_t value) { version_.set_value(value); }
 
   const SecretData& key_value() const { return key_value_.value(); }
-  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+  void set_key_value(absl::string_view value) {
+    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+  }
 
   const ProtoMlDsaPublicKey& public_key() const { return public_key_.value(); }
   ProtoMlDsaPublicKey* mutable_public_key() {
@@ -151,7 +156,7 @@ class ProtoMlDsaPrivateKey final : public Message<ProtoMlDsaPrivateKey> {
 
  private:
   Uint32OwningField version_{1};
-  OwningBytesField<SecretData> key_value_{2};
+  SecretDataOwningField key_value_{2};
   MessageOwningField<ProtoMlDsaPublicKey> public_key_{3};
 };
 

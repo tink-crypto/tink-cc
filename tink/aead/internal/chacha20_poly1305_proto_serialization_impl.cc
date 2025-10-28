@@ -37,6 +37,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -50,8 +51,8 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 using ChaCha20Poly1305ProtoParametersParserImpl =
@@ -86,7 +87,9 @@ class ProtoChaCha20Poly1305Key : public Message<ProtoChaCha20Poly1305Key> {
   void set_version(uint32_t value) { version_.set_value(value); }
 
   const SecretData& key_value() const { return key_value_.value(); }
-  void set_key_value(absl::string_view value) { key_value_.set_value(value); }
+  void set_key_value(absl::string_view value) {
+    *key_value_.mutable_value() = util::SecretDataFromStringView(value);
+  }
 
   std::array<const OwningField*, 2> GetFields() const {
     return {&version_, &key_value_};
@@ -94,7 +97,7 @@ class ProtoChaCha20Poly1305Key : public Message<ProtoChaCha20Poly1305Key> {
 
  private:
   Uint32OwningField version_{1};
-  OwningBytesField<SecretData> key_value_{2};
+  SecretDataOwningField key_value_{2};
 };
 
 const absl::string_view kTypeUrl =

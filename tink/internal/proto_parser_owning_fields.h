@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <type_traits>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
@@ -27,6 +28,7 @@
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parser_uint64_field.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -136,6 +138,9 @@ class Uint64OwningField : public OwningField {
 template <typename StringLike>
 class OwningBytesField final : public OwningField {
  public:
+  static_assert(!std::is_same<StringLike, ::crypto::tink::SecretData>::value,
+                "Use SecretDataOwningField instead");
+
   explicit OwningBytesField(uint32_t field_number, ProtoFieldOptions options =
                                                        ProtoFieldOptions::kNone)
       : OwningField(field_number, WireType::kLengthDelimited),

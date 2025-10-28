@@ -599,8 +599,10 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -658,6 +660,7 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
 )
@@ -716,9 +719,9 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
-    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -833,8 +836,10 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::util::secret_data
     tink::util::status
 )
 
@@ -873,7 +878,6 @@ tink_cc_library(
     aes_gcm_siv_proto_serialization_impl.h
   DEPS
     absl::core_headers
-    absl::no_destructor
     absl::status
     absl::statusor
     absl::string_view
@@ -893,8 +897,10 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
+    tink::util::secret_data
     tink::util::status
 )
 
@@ -1018,6 +1024,7 @@ tink_cc_library(
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
     tink::util::status
@@ -1160,6 +1167,7 @@ tink_cc_library(
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
     tink::mac::internal::hmac_proto_structs
+    tink::util::secret_data
 )
 
 tink_cc_test(

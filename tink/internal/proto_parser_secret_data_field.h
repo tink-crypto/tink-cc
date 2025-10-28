@@ -44,11 +44,11 @@ class SecretDataField : public Field<Struct> {
   explicit SecretDataField(int field_number, SecretData Struct::* data,
                            ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : data_(data), field_number_(field_number), options_(options) {}
-  // Not copyable and movable.
-  SecretDataField(const SecretDataField&) = delete;
-  SecretDataField& operator=(const SecretDataField&) = delete;
-  SecretDataField(SecretDataField&&) noexcept = delete;
-  SecretDataField& operator=(SecretDataField&&) noexcept = delete;
+  // Copyable and movable.
+  SecretDataField(const SecretDataField&) = default;
+  SecretDataField& operator=(const SecretDataField&) = default;
+  SecretDataField(SecretDataField&&) noexcept = default;
+  SecretDataField& operator=(SecretDataField&&) noexcept = default;
 
   void ClearMember(Struct& s) const override { s.*data_ = SecretData(); }
 

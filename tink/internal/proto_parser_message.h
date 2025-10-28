@@ -67,7 +67,7 @@ class MessageOwningField;
 //
 //  private:
 //   OwningBytesField<std::string> some_string_{1};
-//   OwningBytesField<SecretData> some_other_string_{2};
+//   SecretDataOwningField some_other_string_{2};
 // };
 //
 // This class is not thread-safe.
@@ -268,7 +268,7 @@ bool Message<Derived>::Parse(ParsingState& in) {
 //
 //  private:
 //   MessageOwningField<MySubMessage> some_message_{1};
-//   OwningBytesField<SecretData> some_other_string_{2};
+//   SecretDataOwningField some_other_string_{2};
 // };
 //
 // This class is not thread-safe.

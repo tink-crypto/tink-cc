@@ -341,6 +341,37 @@ TEST(SecretDataOwningField, SerializeTooSmallBufferForSizeVarint) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
+TEST(SecretDataOwningField, CopyAndMove) {
+  SecretDataOwningField field(123);
+  *field.mutable_value() = SecretDataFromStringView("some secret data");
+
+  // Test copy constructor
+  SecretDataOwningField field_copy(field);
+  EXPECT_THAT(field_copy.FieldNumber(), Eq(123));
+  EXPECT_THAT(SecretDataAsStringView(field_copy.value()),
+              Eq("some secret data"));
+
+  // Test copy assignment
+  SecretDataOwningField field_assign(456);
+  field_assign = field;
+  EXPECT_THAT(field_assign.FieldNumber(), Eq(123));
+  EXPECT_THAT(SecretDataAsStringView(field_assign.value()),
+              Eq("some secret data"));
+
+  // Test move constructor
+  SecretDataOwningField field_move_construct(std::move(field));
+  EXPECT_THAT(field_move_construct.FieldNumber(), Eq(123));
+  EXPECT_THAT(SecretDataAsStringView(field_move_construct.value()),
+              Eq("some secret data"));
+
+  // Test move assignment
+  SecretDataOwningField field_move_assign(789);
+  field_move_assign = std::move(field_copy);
+  EXPECT_THAT(field_move_assign.FieldNumber(), Eq(123));
+  EXPECT_THAT(SecretDataAsStringView(field_move_assign.value()),
+              Eq("some secret data"));
+}
+
 }  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink

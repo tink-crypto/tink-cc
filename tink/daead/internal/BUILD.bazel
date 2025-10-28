@@ -37,9 +37,10 @@ cc_library(
     hdrs = ["aes_siv_proto_serialization_impl.h"],
     include_prefix = "tink/daead/internal",
     deps = [
-        ":aes_siv_proto_structs",
+        ":aes_siv_proto_format",
         "//tink:partial_key_access",
         "//tink:restricted_data",
+        "//tink:secret_data",
         "//tink:secret_key_access_token",
         "//tink/daead:aes_siv_key",
         "//tink/daead:aes_siv_parameters",
@@ -50,11 +51,12 @@ cc_library(
         "//tink/internal:parameters_serializer",
         "//tink/internal:proto_key_serialization",
         "//tink/internal:proto_parameters_serialization",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_owning_fields",
+        "//tink/internal:proto_parser_secret_data_owning_field",
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
-        "//tink/util:secret_data",
         "//tink/util:status",
-        "//tink/util:statusor",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -118,25 +120,24 @@ cc_test(
 )
 
 cc_library(
-    name = "aes_siv_proto_structs",
-    hdrs = ["aes_siv_proto_structs.h"],
+    name = "aes_siv_proto_format",
+    hdrs = ["aes_siv_proto_format.h"],
     include_prefix = "tink/daead/internal",
     deps = [
-        "//tink/internal:proto_parser",
+        "//tink/internal:proto_parser_message",
+        "//tink/internal:proto_parser_owning_fields",
+        "//tink/internal:proto_parser_secret_data_owning_field",
         "//tink/util:secret_data",
-        "@com_google_absl//absl/base:no_destructor",
     ],
 )
 
 cc_test(
-    name = "aes_siv_proto_structs_test",
-    srcs = ["aes_siv_proto_structs_test.cc"],
+    name = "aes_siv_proto_format_test",
+    srcs = ["aes_siv_proto_format_test.cc"],
     deps = [
-        ":aes_siv_proto_structs",
-        "//tink/util:secret_data",
-        "//tink/util:test_matchers",
-        "//tink/util:test_util",
-        "@com_google_absl//absl/status:statusor",
+        ":aes_siv_proto_format",
+        "//tink/internal/testing:field_with_number",
+        "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
     ],
 )

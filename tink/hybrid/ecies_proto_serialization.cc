@@ -30,7 +30,7 @@
 #include "tink/aead/internal/aes_gcm_proto_format.h"
 #include "tink/aead/internal/xchacha20_poly1305_proto_format.h"
 #include "tink/big_integer.h"
-#include "tink/daead/internal/aes_siv_proto_structs.h"
+#include "tink/daead/internal/aes_siv_proto_format.h"
 #include "tink/ec_point.h"
 #include "tink/hybrid/ecies_parameters.h"
 #include "tink/hybrid/ecies_private_key.h"
@@ -372,13 +372,12 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
   }
   if (proto_dem_params.aead_dem.type_url ==
       "type.googleapis.com/google.crypto.tink.AesSivKey") {
-    absl::StatusOr<internal::AesSivKeyFormatStruct> aes_siv_key_format =
-        internal::AesSivKeyFormatStruct::GetParser().Parse(
-            proto_dem_params.aead_dem.value);
-    if (!aes_siv_key_format.ok()) {
-      return aes_siv_key_format.status();
+    internal::ProtoAesSivKeyFormat aes_siv_key_format;
+    if (!aes_siv_key_format.ParseFromString(proto_dem_params.aead_dem.value)) {
+      return absl::InvalidArgumentError(
+          "Failed to parse AesSivKeyFormat proto");
     }
-    if (aes_siv_key_format->key_size == 64) {
+    if (aes_siv_key_format.key_size() == 64) {
       return EciesParameters::DemId::kAes256SivRaw;
     }
     return absl::InvalidArgumentError("Invalid AES-SIV key length for DEM.");
@@ -444,17 +443,12 @@ absl::StatusOr<EciesAeadDemParamsStruct> ToProtoDemParams(
         key_format.SerializeAsString());
   }
   if (dem_id == EciesParameters::DemId::kAes256SivRaw) {
-    internal::AesSivKeyFormatStruct format;
-    format.version = 0;
-    format.key_size = 64;
-    absl::StatusOr<std::string> serialized_proto =
-        internal::AesSivKeyFormatStruct::GetParser().SerializeIntoString(
-            format);
-    if (!serialized_proto.ok()) {
-      return serialized_proto.status();
-    }
+    internal::ProtoAesSivKeyFormat format;
+    format.set_version(0);
+    format.set_key_size(64);
     return CreateEciesAeadDemParamsStruct(
-        "type.googleapis.com/google.crypto.tink.AesSivKey", *serialized_proto);
+        "type.googleapis.com/google.crypto.tink.AesSivKey",
+        format.SerializeAsString());
   }
   if (dem_id == EciesParameters::DemId::kXChaCha20Poly1305Raw) {
     internal::ProtoXChaCha20Poly1305KeyFormat format;

@@ -525,7 +525,7 @@ tink_cc_library(
     tink::aead::internal::aes_ctr_hmac_proto_structs
     tink::aead::internal::aes_gcm_proto_format
     tink::aead::internal::xchacha20_poly1305_proto_format
-    tink::daead::internal::aes_siv_proto_structs
+    tink::daead::internal::aes_siv_proto_format
     tink::internal::bn_encoding_util
     tink::internal::common_proto_enums
     tink::internal::key_parser

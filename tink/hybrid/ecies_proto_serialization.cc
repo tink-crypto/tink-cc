@@ -16,11 +16,11 @@
 
 #include "tink/hybrid/ecies_proto_serialization.h"
 
+#include <array>
 #include <cstdint>
 #include <string>
 
 #include "absl/base/attributes.h"
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_format.h"
@@ -45,7 +45,9 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -59,114 +61,176 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::ProtoKeyTemplate;
+using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 using ::crypto::tink::util::SecretDataAsStringView;
-using ::crypto::tink::util::SecretDataFromStringView;
 
-struct EciesHkdfKemParamsStruct {
-  internal::EllipticCurveTypeEnum curve_type;
-  internal::HashTypeEnum hkdf_hash_type;
-  std::string hkdf_salt;
+class ProtoEciesHkdfKemParams : public Message<ProtoEciesHkdfKemParams> {
+ public:
+  ProtoEciesHkdfKemParams() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<EciesHkdfKemParamsStruct> CreateParser() {
-    return ProtoParserBuilder<EciesHkdfKemParamsStruct>()
-        .AddEnumField(1, &EciesHkdfKemParamsStruct::curve_type,
-                      &internal::EllipticCurveTypeEnumIsValid)
-        .AddEnumField(2, &EciesHkdfKemParamsStruct::hkdf_hash_type,
-                      &internal::HashTypeEnumIsValid)
-        .AddBytesStringField(11, &EciesHkdfKemParamsStruct::hkdf_salt)
-        .BuildOrDie();
+  internal::EllipticCurveTypeEnum curve_type() const {
+    return curve_type_.value();
   }
+  void set_curve_type(internal::EllipticCurveTypeEnum curve_type) {
+    curve_type_.set_value(curve_type);
+  }
+
+  internal::HashTypeEnum hkdf_hash_type() const {
+    return hkdf_hash_type_.value();
+  }
+  void set_hkdf_hash_type(internal::HashTypeEnum hkdf_hash_type) {
+    hkdf_hash_type_.set_value(hkdf_hash_type);
+  }
+
+  const std::string& hkdf_salt() const { return hkdf_salt_.value(); }
+  void set_hkdf_salt(absl::string_view hkdf_salt) {
+    hkdf_salt_.set_value(hkdf_salt);
+  }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&curve_type_, &hkdf_hash_type_, &hkdf_salt_};
+  }
+
+ private:
+  EnumOwningField<internal::EllipticCurveTypeEnum> curve_type_{
+      1, &internal::EllipticCurveTypeEnumIsValid};
+  EnumOwningField<internal::HashTypeEnum> hkdf_hash_type_{
+      2, &internal::HashTypeEnumIsValid};
+  OwningBytesField<std::string> hkdf_salt_{11};
 };
 
-struct EciesAeadDemParamsStruct {
-  internal::KeyTemplateStruct aead_dem;
+class ProtoEciesAeadDemParams : public Message<ProtoEciesAeadDemParams> {
+ public:
+  ProtoEciesAeadDemParams() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<EciesAeadDemParamsStruct> CreateParser() {
-    return ProtoParserBuilder<EciesAeadDemParamsStruct>()
-        .AddMessageField(2, &EciesAeadDemParamsStruct::aead_dem,
-                         internal::KeyTemplateStruct::CreateParser())
-        .BuildOrDie();
-  }
+  const ProtoKeyTemplate& aead_dem() const { return aead_dem_.value(); }
+  ProtoKeyTemplate* mutable_aead_dem() { return aead_dem_.mutable_value(); }
+
+  std::array<const OwningField*, 1> GetFields() const { return {&aead_dem_}; }
+
+ private:
+  MessageOwningField<ProtoKeyTemplate> aead_dem_{2};
 };
 
-struct EciesAeadHkdfParamsStruct {
-  EciesHkdfKemParamsStruct kem_params;
-  EciesAeadDemParamsStruct dem_params;
-  internal::EcPointFormatEnum ec_point_format;
+class ProtoEciesAeadHkdfParams : public Message<ProtoEciesAeadHkdfParams> {
+ public:
+  ProtoEciesAeadHkdfParams() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<EciesAeadHkdfParamsStruct> CreateParser() {
-    return ProtoParserBuilder<EciesAeadHkdfParamsStruct>()
-        .AddMessageField(1, &EciesAeadHkdfParamsStruct::kem_params,
-                         EciesHkdfKemParamsStruct::CreateParser())
-        .AddMessageField(2, &EciesAeadHkdfParamsStruct::dem_params,
-                         EciesAeadDemParamsStruct::CreateParser())
-        .AddEnumField(3, &EciesAeadHkdfParamsStruct::ec_point_format,
-                      &internal::EcPointFormatEnumIsValid)
-        .BuildOrDie();
+  const ProtoEciesHkdfKemParams& kem_params() const {
+    return kem_params_.value();
   }
+  ProtoEciesHkdfKemParams* mutable_kem_params() {
+    return kem_params_.mutable_value();
+  }
+
+  const ProtoEciesAeadDemParams& dem_params() const {
+    return dem_params_.value();
+  }
+  ProtoEciesAeadDemParams* mutable_dem_params() {
+    return dem_params_.mutable_value();
+  }
+
+  internal::EcPointFormatEnum ec_point_format() const {
+    return ec_point_format_.value();
+  }
+  void set_ec_point_format(internal::EcPointFormatEnum ec_point_format) {
+    ec_point_format_.set_value(ec_point_format);
+  }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&kem_params_, &dem_params_, &ec_point_format_};
+  }
+
+ private:
+  MessageOwningField<ProtoEciesHkdfKemParams> kem_params_{1};
+  MessageOwningField<ProtoEciesAeadDemParams> dem_params_{2};
+  EnumOwningField<internal::EcPointFormatEnum> ec_point_format_{
+      3, &internal::EcPointFormatEnumIsValid};
 };
 
-struct EciesAeadHkdfPublicKeyStruct {
-  uint32_t version;
-  EciesAeadHkdfParamsStruct params;
-  std::string x;
-  std::string y;
+class ProtoEciesAeadHkdfPublicKey
+    : public Message<ProtoEciesAeadHkdfPublicKey> {
+ public:
+  ProtoEciesAeadHkdfPublicKey() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<EciesAeadHkdfPublicKeyStruct> CreateParser() {
-    return ProtoParserBuilder<EciesAeadHkdfPublicKeyStruct>()
-        .AddUint32Field(1, &EciesAeadHkdfPublicKeyStruct::version)
-        .AddMessageField(2, &EciesAeadHkdfPublicKeyStruct::params,
-                         EciesAeadHkdfParamsStruct::CreateParser())
-        .AddBytesStringField(3, &EciesAeadHkdfPublicKeyStruct::x)
-        .AddBytesStringField(4, &EciesAeadHkdfPublicKeyStruct::y)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const ProtoEciesAeadHkdfParams& params() const { return params_.value(); }
+  ProtoEciesAeadHkdfParams* mutable_params() { return params_.mutable_value(); }
+
+  const std::string& x() const { return x_.value(); }
+  void set_x(absl::string_view x) { x_.set_value(x); }
+
+  const std::string& y() const { return y_.value(); }
+  void set_y(absl::string_view y) { y_.set_value(y); }
+
+  std::array<const OwningField*, 4> GetFields() const {
+    return {&version_, &params_, &x_, &y_};
   }
 
-  static const ProtoParser<EciesAeadHkdfPublicKeyStruct>& GetParser() {
-    static absl::NoDestructor<ProtoParser<EciesAeadHkdfPublicKeyStruct>> parser{
-        CreateParser()};
-    return *parser;
-  }
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoEciesAeadHkdfParams> params_{2};
+  OwningBytesField<std::string> x_{3};
+  OwningBytesField<std::string> y_{4};
 };
 
-struct EciesAeadHkdfPrivateKeyStruct {
-  uint32_t version;
-  EciesAeadHkdfPublicKeyStruct public_key;
-  SecretData key_value;
+class ProtoEciesAeadHkdfPrivateKey
+    : public Message<ProtoEciesAeadHkdfPrivateKey> {
+ public:
+  ProtoEciesAeadHkdfPrivateKey() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<EciesAeadHkdfPrivateKeyStruct> CreateParser() {
-    return ProtoParserBuilder<EciesAeadHkdfPrivateKeyStruct>()
-        .AddUint32Field(1, &EciesAeadHkdfPrivateKeyStruct::version)
-        .AddMessageField(2, &EciesAeadHkdfPrivateKeyStruct::public_key,
-                         EciesAeadHkdfPublicKeyStruct::CreateParser())
-        .AddBytesSecretDataField(3, &EciesAeadHkdfPrivateKeyStruct::key_value)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const ProtoEciesAeadHkdfPublicKey& public_key() const {
+    return public_key_.value();
+  }
+  ProtoEciesAeadHkdfPublicKey* mutable_public_key() {
+    return public_key_.mutable_value();
   }
 
-  static const ProtoParser<EciesAeadHkdfPrivateKeyStruct>& GetParser() {
-    static absl::NoDestructor<ProtoParser<EciesAeadHkdfPrivateKeyStruct>>
-        parser{CreateParser()};
-    return *parser;
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(SecretData key_value) {
+    *key_value_.mutable_value() = std::move(key_value);
   }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &public_key_, &key_value_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoEciesAeadHkdfPublicKey> public_key_{2};
+  SecretDataOwningField key_value_{3};
 };
 
-struct EciesAeadHkdfKeyFormatStruct {
-  EciesAeadHkdfParamsStruct params;
+class ProtoEciesAeadHkdfKeyFormat
+    : public Message<ProtoEciesAeadHkdfKeyFormat> {
+ public:
+  ProtoEciesAeadHkdfKeyFormat() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<EciesAeadHkdfKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<EciesAeadHkdfKeyFormatStruct>()
-        .AddMessageField(1, &EciesAeadHkdfKeyFormatStruct::params,
-                         EciesAeadHkdfParamsStruct::CreateParser())
-        .BuildOrDie();
-  }
+  const ProtoEciesAeadHkdfParams& params() const { return params_.value(); }
+  ProtoEciesAeadHkdfParams* mutable_params() { return params_.mutable_value(); }
 
-  static const ProtoParser<EciesAeadHkdfKeyFormatStruct>& GetParser() {
-    static absl::NoDestructor<ProtoParser<EciesAeadHkdfKeyFormatStruct>> parser{
-        CreateParser()};
-    return *parser;
-  }
+  std::array<const OwningField*, 1> GetFields() const { return {&params_}; }
+
+ private:
+  MessageOwningField<ProtoEciesAeadHkdfParams> params_{1};
 };
 
 using EciesProtoParametersParserImpl =
@@ -352,11 +416,11 @@ absl::Status ValidateAesCtrHmacAeadKeyFormat(
 }
 
 absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
-    const EciesAeadDemParamsStruct& proto_dem_params) {
-  if (proto_dem_params.aead_dem.type_url ==
+    const ProtoEciesAeadDemParams& proto_dem_params) {
+  if (proto_dem_params.aead_dem().type_url() ==
       "type.googleapis.com/google.crypto.tink.AesGcmKey") {
     internal::ProtoAesGcmKeyFormat key_format;
-    if (!key_format.ParseFromString(proto_dem_params.aead_dem.value)) {
+    if (!key_format.ParseFromString(proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
     }
     switch (key_format.key_size()) {
@@ -370,10 +434,11 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
             key_format.key_size()));
     }
   }
-  if (proto_dem_params.aead_dem.type_url ==
+  if (proto_dem_params.aead_dem().type_url() ==
       "type.googleapis.com/google.crypto.tink.AesSivKey") {
     internal::ProtoAesSivKeyFormat aes_siv_key_format;
-    if (!aes_siv_key_format.ParseFromString(proto_dem_params.aead_dem.value)) {
+    if (!aes_siv_key_format.ParseFromString(
+            proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError(
           "Failed to parse AesSivKeyFormat proto");
     }
@@ -382,23 +447,23 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
     }
     return absl::InvalidArgumentError("Invalid AES-SIV key length for DEM.");
   }
-  if (proto_dem_params.aead_dem.type_url ==
+  if (proto_dem_params.aead_dem().type_url() ==
           "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305Key" ||
       // TODO: b/330508549 - Remove type URL exception for an existing key.
-      proto_dem_params.aead_dem.type_url ==
+      proto_dem_params.aead_dem().type_url() ==
           "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305KeyFormat") {
     internal::ProtoXChaCha20Poly1305KeyFormat format;
-    if (!format.ParseFromString(proto_dem_params.aead_dem.value)) {
+    if (!format.ParseFromString(proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError(
           "Failed to parse XChaCha20Poly1305Key proto");
     }
     return EciesParameters::DemId::kXChaCha20Poly1305Raw;
   }
-  if (proto_dem_params.aead_dem.type_url ==
+  if (proto_dem_params.aead_dem().type_url() ==
       "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey") {
     internal::ProtoAesCtrHmacAeadKeyFormat aes_ctr_hmac_aead_key_format;
     if (!aes_ctr_hmac_aead_key_format.ParseFromString(
-            proto_dem_params.aead_dem.value)) {
+            proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError(
           "Could not parse AES-CTR-HMAC key format");
     }
@@ -420,17 +485,17 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
       "Unable to convert proto DEM params to DEM id.");
 }
 
-EciesAeadDemParamsStruct CreateEciesAeadDemParamsStruct(
+ProtoEciesAeadDemParams CreateEciesAeadDemParamsStruct(
     absl::string_view type_url, const std::string& serialized_key_format) {
-  EciesAeadDemParamsStruct dem_params;
-  dem_params.aead_dem.type_url = std::string(type_url);
-  dem_params.aead_dem.output_prefix_type =
-      internal::OutputPrefixTypeEnum::kTink;
-  dem_params.aead_dem.value = serialized_key_format;
+  ProtoEciesAeadDemParams dem_params;
+  dem_params.mutable_aead_dem()->set_type_url(type_url);
+  dem_params.mutable_aead_dem()->set_output_prefix_type(
+      internal::OutputPrefixTypeEnum::kTink);
+  dem_params.mutable_aead_dem()->set_value(serialized_key_format);
   return dem_params;
 }
 
-absl::StatusOr<EciesAeadDemParamsStruct> ToProtoDemParams(
+absl::StatusOr<ProtoEciesAeadDemParams> ToProtoDemParams(
     EciesParameters::DemId dem_id) {
   if (dem_id == EciesParameters::DemId::kAes128GcmRaw ||
       dem_id == EciesParameters::DemId::kAes256GcmRaw) {
@@ -483,7 +548,7 @@ absl::StatusOr<EciesAeadDemParamsStruct> ToProtoDemParams(
 
 absl::StatusOr<EciesParameters> ToParameters(
     internal::OutputPrefixTypeEnum output_prefix_type,
-    const EciesAeadHkdfParamsStruct& params) {
+    const ProtoEciesAeadHkdfParams& params) {
   absl::StatusOr<EciesParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -491,19 +556,19 @@ absl::StatusOr<EciesParameters> ToParameters(
   }
 
   absl::StatusOr<EciesParameters::CurveType> curve_type =
-      FromProtoCurveType(params.kem_params.curve_type);
+      FromProtoCurveType(params.kem_params().curve_type());
   if (!curve_type.ok()) {
     return curve_type.status();
   }
 
   absl::StatusOr<EciesParameters::HashType> hash_type =
-      FromProtoHashType(params.kem_params.hkdf_hash_type);
+      FromProtoHashType(params.kem_params().hkdf_hash_type());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   absl::StatusOr<EciesParameters::DemId> dem_id =
-      FromProtoDemParams(params.dem_params);
+      FromProtoDemParams(params.dem_params());
   if (!dem_id.ok()) {
     return dem_id.status();
   }
@@ -516,21 +581,21 @@ absl::StatusOr<EciesParameters> ToParameters(
 
   if (IsNistCurve(*curve_type)) {
     absl::StatusOr<EciesParameters::PointFormat> point_format =
-        FromProtoPointFormat(params.ec_point_format);
+        FromProtoPointFormat(params.ec_point_format());
     if (!point_format.ok()) {
       return point_format.status();
     }
     builder.SetNistCurvePointFormat(*point_format);
   }
 
-  if (!params.kem_params.hkdf_salt.empty()) {
-    builder.SetSalt(params.kem_params.hkdf_salt);
+  if (!params.kem_params().hkdf_salt().empty()) {
+    builder.SetSalt(params.kem_params().hkdf_salt());
   }
 
   return builder.Build();
 }
 
-absl::StatusOr<EciesAeadHkdfParamsStruct> FromParameters(
+absl::StatusOr<ProtoEciesAeadHkdfParams> FromParameters(
     const EciesParameters& parameters) {
   absl::StatusOr<internal::EllipticCurveTypeEnum> curve_type =
       ToProtoCurveType(parameters.GetCurveType());
@@ -544,18 +609,18 @@ absl::StatusOr<EciesAeadHkdfParamsStruct> FromParameters(
     return hash_type.status();
   }
 
-  absl::StatusOr<EciesAeadDemParamsStruct> dem_params =
+  absl::StatusOr<ProtoEciesAeadDemParams> dem_params =
       ToProtoDemParams(parameters.GetDemId());
   if (!dem_params.ok()) {
     return dem_params.status();
   }
 
-  EciesAeadHkdfParamsStruct params;
-  params.dem_params = *dem_params;
-  params.kem_params.curve_type = *curve_type;
-  params.kem_params.hkdf_hash_type = *hash_type;
+  ProtoEciesAeadHkdfParams params;
+  *params.mutable_dem_params() = *dem_params;
+  params.mutable_kem_params()->set_curve_type(*curve_type);
+  params.mutable_kem_params()->set_hkdf_hash_type(*hash_type);
   if (parameters.GetSalt().has_value()) {
-    params.kem_params.hkdf_salt = std::string(*parameters.GetSalt());
+    params.mutable_kem_params()->set_hkdf_salt(*parameters.GetSalt());
   }
   if (parameters.GetNistCurvePointFormat().has_value()) {
     absl::StatusOr<internal::EcPointFormatEnum> ec_point_format =
@@ -563,10 +628,10 @@ absl::StatusOr<EciesAeadHkdfParamsStruct> FromParameters(
     if (!ec_point_format.ok()) {
       return ec_point_format.status();
     }
-    params.ec_point_format = *ec_point_format;
+    params.set_ec_point_format(*ec_point_format);
   } else {
     // Must be X25519, so set to the compressed format.
-    params.ec_point_format = internal::EcPointFormatEnum::kCompressed;
+    params.set_ec_point_format(internal::EcPointFormatEnum::kCompressed);
   }
 
   return params;
@@ -574,15 +639,15 @@ absl::StatusOr<EciesAeadHkdfParamsStruct> FromParameters(
 
 absl::StatusOr<EciesPublicKey> ToPublicKey(
     const EciesParameters& parameters,
-    const EciesAeadHkdfPublicKeyStruct& proto_key,
+    const ProtoEciesAeadHkdfPublicKey& proto_key,
     absl::optional<int> id_requirement) {
   if (IsNistCurve(parameters.GetCurveType())) {
-    EcPoint point(BigInteger(proto_key.x), BigInteger(proto_key.y));
+    EcPoint point(BigInteger(proto_key.x()), BigInteger(proto_key.y()));
     return EciesPublicKey::CreateForNistCurve(parameters, point, id_requirement,
                                               GetPartialKeyAccess());
   }
   return EciesPublicKey::CreateForCurveX25519(
-      parameters, proto_key.x, id_requirement, GetPartialKeyAccess());
+      parameters, proto_key.x(), id_requirement, GetPartialKeyAccess());
 }
 
 absl::StatusOr<int> GetEncodingLength(EciesParameters::CurveType curve) {
@@ -601,11 +666,11 @@ absl::StatusOr<int> GetEncodingLength(EciesParameters::CurveType curve) {
   }
 }
 
-absl::StatusOr<EciesAeadHkdfPublicKeyStruct> FromPublicKey(
-    const EciesAeadHkdfParamsStruct& params, const EciesPublicKey& public_key) {
-  EciesAeadHkdfPublicKeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.params = params;
+absl::StatusOr<ProtoEciesAeadHkdfPublicKey> FromPublicKey(
+    const ProtoEciesAeadHkdfParams& params, const EciesPublicKey& public_key) {
+  ProtoEciesAeadHkdfPublicKey proto_key;
+  proto_key.set_version(0);
+  *proto_key.mutable_params() = params;
   if (public_key.GetNistCurvePoint(GetPartialKeyAccess()).has_value()) {
     EcPoint point = *public_key.GetNistCurvePoint(GetPartialKeyAccess());
     absl::StatusOr<int> encoding_length =
@@ -623,17 +688,17 @@ absl::StatusOr<EciesAeadHkdfPublicKeyStruct> FromPublicKey(
     if (!y.ok()) {
       return y.status();
     }
-    proto_key.x = *x;
-    proto_key.y = *y;
+    proto_key.set_x(*x);
+    proto_key.set_y(*y);
   } else {
     if (!public_key.GetX25519CurvePointBytes(GetPartialKeyAccess())
              .has_value()) {
       return absl::InvalidArgumentError(
           "X25519 public key missing point bytes.");
     }
-    proto_key.x = std::string(
+    proto_key.set_x(
         *public_key.GetX25519CurvePointBytes(GetPartialKeyAccess()));
-    proto_key.y = "";
+    proto_key.set_y("");
   }
   return proto_key;
 }
@@ -647,15 +712,14 @@ absl::StatusOr<EciesParameters> ParseParameters(
         "Wrong type URL when parsing EciesParameters.");
   }
 
-  absl::StatusOr<EciesAeadHkdfKeyFormatStruct> proto_key_format =
-      EciesAeadHkdfKeyFormatStruct::GetParser().Parse(
-          key_template_struct.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoEciesAeadHkdfKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template_struct.value)) {
+    return absl::InvalidArgumentError(
+        "Failed to parse EciesAeadHkdfKeyFormat proto");
   }
 
   return ToParameters(key_template_struct.output_prefix_type,
-                      proto_key_format->params);
+                      proto_key_format.params());
 }
 
 absl::StatusOr<EciesPublicKey> ParsePublicKey(
@@ -667,24 +731,24 @@ absl::StatusOr<EciesPublicKey> ParsePublicKey(
   }
 
   const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  absl::StatusOr<EciesAeadHkdfPublicKeyStruct> proto_key =
-      EciesAeadHkdfPublicKeyStruct::GetParser().Parse(
-          restricted_data.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoEciesAeadHkdfPublicKey proto_key;
+  if (!proto_key.ParseFromString(
+          restricted_data.GetSecret(InsecureSecretKeyAccess::Get()))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse EciesAeadHkdfPublicKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError(
         "Only version 0 keys are accepted for EciesAeadHkdfPublicKey proto.");
   }
 
   absl::StatusOr<EciesParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key->params);
+      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key.params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  return ToPublicKey(*parameters, *proto_key, serialization.IdRequirement());
+  return ToPublicKey(*parameters, proto_key, serialization.IdRequirement());
 }
 
 absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
@@ -697,18 +761,18 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EciesAeadHkdfPrivateKey.");
   }
-  absl::StatusOr<EciesAeadHkdfPrivateKeyStruct> proto_key =
-      EciesAeadHkdfPrivateKeyStruct::GetParser().Parse(SecretDataAsStringView(
-          serialization.SerializedKeyProto().Get(*token)));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoEciesAeadHkdfPrivateKey proto_key;
+  if (!proto_key.ParseFromString(SecretDataAsStringView(
+          serialization.SerializedKeyProto().Get(*token)))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse EciesAeadHkdfPrivateKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError(
         "Only version 0 keys are accepted for EciesAeadHkdfPrivateKey proto.");
   }
 
-  if (proto_key->public_key.version != 0) {
+  if (proto_key.public_key().version() != 0) {
     return absl::InvalidArgumentError(
         "Only version 0 public keys are accepted for "
         "EciesAeadHkdfPrivateKey proto.");
@@ -724,25 +788,25 @@ absl::StatusOr<EciesPrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<EciesParameters> parameters =
-      ToParameters(output_prefix_type, proto_key->public_key.params);
+      ToParameters(output_prefix_type, proto_key.public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   absl::StatusOr<EciesPublicKey> public_key = ToPublicKey(
-      *parameters, proto_key->public_key, serialization.IdRequirement());
+      *parameters, proto_key.public_key(), serialization.IdRequirement());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
   if (IsNistCurve(parameters->GetCurveType())) {
     return EciesPrivateKey::CreateForNistCurve(
-        *public_key, RestrictedBigInteger(proto_key->key_value, *token),
+        *public_key, RestrictedBigInteger(proto_key.key_value(), *token),
         GetPartialKeyAccess());
   }
 
   return EciesPrivateKey::CreateForCurveX25519(
-      *public_key, RestrictedData(proto_key->key_value, *token),
+      *public_key, RestrictedData(proto_key.key_value(), *token),
       GetPartialKeyAccess());
 }
 
@@ -754,39 +818,34 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<EciesAeadHkdfParamsStruct> params = FromParameters(parameters);
+  absl::StatusOr<ProtoEciesAeadHkdfParams> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
-  EciesAeadHkdfKeyFormatStruct proto_key_format;
-  proto_key_format.params = *params;
+  ProtoEciesAeadHkdfKeyFormat proto_key_format;
+  *proto_key_format.mutable_params() = *params;
 
-  absl::StatusOr<std::string> s =
-      EciesAeadHkdfKeyFormatStruct::GetParser().SerializeIntoString(
-          proto_key_format);
-  if (!s.ok()) {
-    return s.status();
-  }
   return internal::ProtoParametersSerialization::Create(
-      kPrivateTypeUrl, *output_prefix_type, *s);
+      kPrivateTypeUrl, *output_prefix_type,
+      proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const EciesPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  absl::StatusOr<EciesAeadHkdfParamsStruct> params =
+  absl::StatusOr<ProtoEciesAeadHkdfParams> params =
       FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  absl::StatusOr<EciesAeadHkdfPublicKeyStruct> proto_key =
+  absl::StatusOr<ProtoEciesAeadHkdfPublicKey> proto_key =
       FromPublicKey(*params, key);
   if (!proto_key.ok()) {
     return proto_key.status();
   }
 
   absl::StatusOr<std::string> serialized_proto_key =
-      EciesAeadHkdfPublicKeyStruct::GetParser().SerializeIntoString(*proto_key);
+      proto_key->SerializeAsString();
   if (!serialized_proto_key.ok()) {
     return serialized_proto_key.status();
   }
@@ -810,21 +869,21 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<EciesAeadHkdfParamsStruct> params =
+  absl::StatusOr<ProtoEciesAeadHkdfParams> params =
       FromParameters(key.GetPublicKey().GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  absl::StatusOr<EciesAeadHkdfPublicKeyStruct> proto_public_key =
+  absl::StatusOr<ProtoEciesAeadHkdfPublicKey> proto_public_key =
       FromPublicKey(*params, key.GetPublicKey());
   if (!proto_public_key.ok()) {
     return proto_public_key.status();
   }
 
-  EciesAeadHkdfPrivateKeyStruct proto_private_key;
-  proto_private_key.version = 0;
-  proto_private_key.public_key = *proto_public_key;
+  ProtoEciesAeadHkdfPrivateKey proto_private_key;
+  proto_private_key.set_version(0);
+  *proto_private_key.mutable_public_key() = *proto_public_key;
   if (IsNistCurve(key.GetPublicKey().GetParameters().GetCurveType())) {
     absl::StatusOr<int> encoding_length =
         GetEncodingLength(key.GetPublicKey().GetParameters().GetCurveType());
@@ -843,7 +902,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     if (!key_value.ok()) {
       return key_value.status();
     }
-    proto_private_key.key_value = *key_value;
+    proto_private_key.set_key_value(*key_value);
   } else {
     absl::optional<RestrictedData> secret =
         key.GetX25519PrivateKeyBytes(GetPartialKeyAccess());
@@ -851,8 +910,8 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
       return absl::InternalError(
           "X25519 private key is missing X25519 private key bytes.");
     }
-    proto_private_key.key_value = SecretDataFromStringView(
-        secret->GetSecret(InsecureSecretKeyAccess::Get()));
+    proto_private_key.set_key_value(
+        secret->Get(InsecureSecretKeyAccess::Get()));
   }
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
@@ -862,8 +921,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   }
 
   absl::StatusOr<SecretData> serialized_proto_private_key =
-      EciesAeadHkdfPrivateKeyStruct::GetParser().SerializeIntoSecretData(
-          proto_private_key);
+      proto_private_key.SerializeAsSecretData();
   if (!serialized_proto_private_key.ok()) {
     return serialized_proto_private_key.status();
   }

@@ -16,11 +16,10 @@
 
 #include "tink/prf/internal/aes_cmac_prf_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
-#include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -32,7 +31,9 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -47,43 +48,50 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-struct AesCmacPrfKeyFormatStruct {
-  uint32_t key_size;
-  uint32_t version;
+class ProtoAesCmacPrfKeyFormat : public Message<ProtoAesCmacPrfKeyFormat> {
+ public:
+  ProtoAesCmacPrfKeyFormat() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<AesCmacPrfKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<AesCmacPrfKeyFormatStruct>()
-        .AddUint32Field(1, &AesCmacPrfKeyFormatStruct::key_size)
-        .AddUint32Field(2, &AesCmacPrfKeyFormatStruct::version)
-        .BuildOrDie();
+  uint32_t key_size() const { return key_size_.value(); }
+  void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&key_size_, &version_};
   }
 
-  static const ProtoParser<AesCmacPrfKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesCmacPrfKeyFormatStruct>>
-        parser{CreateParser()};
-    return *parser;
-  }
+ private:
+  Uint32OwningField key_size_{1};
+  Uint32OwningField version_{2};
 };
 
-struct AesCmacPrfKeyStruct {
-  uint32_t version;
-  SecretData key_value;
+class ProtoAesCmacPrfKey : public Message<ProtoAesCmacPrfKey> {
+ public:
+  ProtoAesCmacPrfKey() = default;
 
-  static ProtoParser<AesCmacPrfKeyStruct> CreateParser() {
-    return ProtoParserBuilder<AesCmacPrfKeyStruct>()
-        .AddUint32Field(1, &AesCmacPrfKeyStruct::version)
-        .AddBytesSecretDataField(2, &AesCmacPrfKeyStruct::key_value)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(SecretData key_value) {
+    *key_value_.mutable_value() = std::move(key_value);
   }
 
-  static const ProtoParser<AesCmacPrfKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<AesCmacPrfKeyStruct>> parser{
-        CreateParser()};
-    return *parser;
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&version_, &key_value_};
   }
+
+ private:
+  Uint32OwningField version_{1};
+  SecretDataOwningField key_value_{2};
 };
 
 using AesCmacPrfProtoParametersParserImpl =
@@ -112,33 +120,27 @@ absl::StatusOr<AesCmacPrfParameters> ParseParameters(
         "Output prefix type must be RAW for AesCmacPrfParameters.");
   }
 
-  absl::StatusOr<AesCmacPrfKeyFormatStruct> proto_key_format =
-      AesCmacPrfKeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoAesCmacPrfKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError(
+        "Failed to parse AesCmacPrfKeyFormat proto");
   }
-  if (proto_key_format->version != 0) {
+  if (proto_key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  return AesCmacPrfParameters::Create(proto_key_format->key_size);
+  return AesCmacPrfParameters::Create(proto_key_format.key_size());
 }
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const AesCmacPrfParameters& parameters) {
-  AesCmacPrfKeyFormatStruct proto_key_format;
-  proto_key_format.key_size = parameters.KeySizeInBytes();
-  proto_key_format.version = 0;
-
-  absl::StatusOr<std::string> serialized_key_format =
-      AesCmacPrfKeyFormatStruct::GetParser().SerializeIntoString(
-          proto_key_format);
-  if (!serialized_key_format.ok()) {
-    return serialized_key_format.status();
-  }
+  ProtoAesCmacPrfKeyFormat proto_key_format;
+  proto_key_format.set_key_size(parameters.KeySizeInBytes());
+  proto_key_format.set_version(0);
 
   return internal::ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeEnum::kRaw, *serialized_key_format);
+      kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<AesCmacPrfKey> ParseKey(
@@ -156,18 +158,17 @@ absl::StatusOr<AesCmacPrfKey> ParseKey(
         "Output prefix type must be RAW for AesCmacPrfKey.");
   }
 
-  absl::StatusOr<AesCmacPrfKeyStruct> proto_key =
-      AesCmacPrfKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoAesCmacPrfKey proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError("Failed to parse AesCmacPrfKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   return AesCmacPrfKey::Create(
-      RestrictedData(std::move(proto_key->key_value), *token),
+      RestrictedData(std::move(proto_key.key_value()), *token),
       GetPartialKeyAccess());
 }
 
@@ -182,21 +183,14 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return restricted_input.status();
   }
 
-  AesCmacPrfKeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.key_value = restricted_input->Get(*token);
-
-  absl::StatusOr<SecretData> serialized_key =
-      AesCmacPrfKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
-  RestrictedData restricted_output =
-      RestrictedData(*std::move(serialized_key), *token);
+  ProtoAesCmacPrfKey proto_key;
+  proto_key.set_version(0);
+  proto_key.set_key_value(restricted_input->Get(*token));
 
   return internal::ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
-      OutputPrefixTypeEnum::kRaw, key.GetIdRequirement());
+      kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
+      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
+      key.GetIdRequirement());
 }
 
 AesCmacPrfProtoParametersParserImpl* AesCmacPrfProtoParametersParser() {

@@ -117,7 +117,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
           *serialization);
   EXPECT_THAT(params.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Parsing input failed")));
+                       HasSubstr("Failed to parse AesCmacPrfKeyFormat proto")));
 }
 
 using AesCmacPrfParsePrefixTest = TestWithParam<OutputPrefixTypeEnum>;
@@ -258,7 +258,7 @@ TEST_F(AesCmacPrfProtoSerializationTest,
           *serialization, InsecureSecretKeyAccess::Get());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Parsing input failed")));
+                       HasSubstr("Failed to parse AesCmacPrfKey proto")));
 }
 
 TEST_P(AesCmacPrfParsePrefixTest, ParseKeyWithInvalidPrefixFails) {

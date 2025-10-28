@@ -18,11 +18,10 @@
 
 #include <sys/types.h>
 
+#include <array>
 #include <cstdint>
-#include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -36,7 +35,10 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -45,84 +47,137 @@
 #include "tink/secret_key_access_token.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_key.h"
 #include "tink/streamingaead/aes_ctr_hmac_streaming_parameters.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
-struct HmacParamsStruct {
-  HashTypeEnum hash;
-  uint32_t tag_size;
+using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-  static ProtoParser<HmacParamsStruct> CreateParser() {
-    return ProtoParserBuilder<HmacParamsStruct>()
-        .AddEnumField(1, &HmacParamsStruct::hash, &HashTypeEnumIsValid)
-        .AddUint32Field(2, &HmacParamsStruct::tag_size)
-        .BuildOrDie();
+class ProtoHmacParams : public Message<ProtoHmacParams> {
+ public:
+  ProtoHmacParams() = default;
+  using Message::SerializeAsString;
+
+  HashTypeEnum hash() const { return hash_.value(); }
+  void set_hash(HashTypeEnum hash) { hash_.set_value(hash); }
+
+  uint32_t tag_size() const { return tag_size_.value(); }
+  void set_tag_size(uint32_t tag_size) { tag_size_.set_value(tag_size); }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&hash_, &tag_size_};
   }
+
+ private:
+  EnumOwningField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
+  Uint32OwningField tag_size_{2};
 };
 
-struct AesCtrHmacStreamingParamsStruct {
-  uint32_t ciphertext_segment_size;
-  uint32_t derived_key_size;
-  HashTypeEnum hkdf_hash_type;
-  HmacParamsStruct hmac_params;
+class ProtoAesCtrHmacStreamingParams
+    : public Message<ProtoAesCtrHmacStreamingParams> {
+ public:
+  ProtoAesCtrHmacStreamingParams() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<AesCtrHmacStreamingParamsStruct> CreateParser() {
-    return ProtoParserBuilder<AesCtrHmacStreamingParamsStruct>()
-        .AddUint32Field(
-            1, &AesCtrHmacStreamingParamsStruct::ciphertext_segment_size)
-        .AddUint32Field(2, &AesCtrHmacStreamingParamsStruct::derived_key_size)
-        .AddEnumField(3, &AesCtrHmacStreamingParamsStruct::hkdf_hash_type,
-                      &HashTypeEnumIsValid)
-        .AddMessageField(4, &AesCtrHmacStreamingParamsStruct::hmac_params,
-                         HmacParamsStruct::CreateParser())
-        .BuildOrDie();
+  uint32_t ciphertext_segment_size() const {
+    return ciphertext_segment_size_.value();
   }
+  void set_ciphertext_segment_size(uint32_t size) {
+    ciphertext_segment_size_.set_value(size);
+  }
+
+  uint32_t derived_key_size() const { return derived_key_size_.value(); }
+  void set_derived_key_size(uint32_t size) {
+    derived_key_size_.set_value(size);
+  }
+
+  HashTypeEnum hkdf_hash_type() const { return hkdf_hash_type_.value(); }
+  void set_hkdf_hash_type(HashTypeEnum hash_type) {
+    hkdf_hash_type_.set_value(hash_type);
+  }
+
+  const ProtoHmacParams& hmac_params() const { return hmac_params_.value(); }
+  ProtoHmacParams* mutable_hmac_params() {
+    return hmac_params_.mutable_value();
+  }
+
+  std::array<const OwningField*, 4> GetFields() const {
+    return {&ciphertext_segment_size_, &derived_key_size_, &hkdf_hash_type_,
+            &hmac_params_};
+  }
+
+ private:
+  Uint32OwningField ciphertext_segment_size_{1};
+  Uint32OwningField derived_key_size_{2};
+  EnumOwningField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
+  MessageOwningField<ProtoHmacParams> hmac_params_{4};
 };
 
-struct AesCtrHmacStreamingKeyFormatStruct {
-  uint32_t version;
-  AesCtrHmacStreamingParamsStruct params;
-  uint32_t key_size;
+class ProtoAesCtrHmacStreamingKeyFormat
+    : public Message<ProtoAesCtrHmacStreamingKeyFormat> {
+ public:
+  ProtoAesCtrHmacStreamingKeyFormat() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<AesCtrHmacStreamingKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<AesCtrHmacStreamingKeyFormatStruct>()
-        .AddUint32Field(3, &AesCtrHmacStreamingKeyFormatStruct::version)
-        .AddMessageField(1, &AesCtrHmacStreamingKeyFormatStruct::params,
-                         AesCtrHmacStreamingParamsStruct::CreateParser())
-        .AddUint32Field(2, &AesCtrHmacStreamingKeyFormatStruct::key_size)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const ProtoAesCtrHmacStreamingParams& params() const {
+    return params_.value();
+  }
+  ProtoAesCtrHmacStreamingParams* mutable_params() {
+    return params_.mutable_value();
   }
 
-  static const ProtoParser<AesCtrHmacStreamingKeyFormatStruct>& Parser() {
-    static absl::NoDestructor<ProtoParser<AesCtrHmacStreamingKeyFormatStruct>>
-        parser{AesCtrHmacStreamingKeyFormatStruct::CreateParser()};
-    return *parser;
+  uint32_t key_size() const { return key_size_.value(); }
+  void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&params_, &key_size_, &version_};
   }
+
+ private:
+  MessageOwningField<ProtoAesCtrHmacStreamingParams> params_{1};
+  Uint32OwningField key_size_{2};
+  Uint32OwningField version_{3};
 };
 
-struct AesCtrHmacStreamingKeyStruct {
-  uint32_t version;
-  AesCtrHmacStreamingParamsStruct params;
-  SecretData key_value;
+class ProtoAesCtrHmacStreamingKey
+    : public Message<ProtoAesCtrHmacStreamingKey> {
+ public:
+  ProtoAesCtrHmacStreamingKey() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<AesCtrHmacStreamingKeyStruct> CreateParser() {
-    return ProtoParserBuilder<AesCtrHmacStreamingKeyStruct>()
-        .AddUint32Field(1, &AesCtrHmacStreamingKeyStruct::version)
-        .AddMessageField(2, &AesCtrHmacStreamingKeyStruct::params,
-                         AesCtrHmacStreamingParamsStruct::CreateParser())
-        .AddBytesSecretDataField(3, &AesCtrHmacStreamingKeyStruct::key_value)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const ProtoAesCtrHmacStreamingParams& params() const {
+    return params_.value();
+  }
+  ProtoAesCtrHmacStreamingParams* mutable_params() {
+    return params_.mutable_value();
   }
 
-  static const ProtoParser<AesCtrHmacStreamingKeyStruct>& Parser() {
-    static absl::NoDestructor<ProtoParser<AesCtrHmacStreamingKeyStruct>> parser{
-        AesCtrHmacStreamingKeyStruct::CreateParser()};
-    return *parser;
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(SecretData key_value) {
+    *key_value_.mutable_value() = std::move(key_value);
   }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &params_, &key_value_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoAesCtrHmacStreamingParams> params_{2};
+  SecretDataOwningField key_value_{3};
 };
 
 using AesCtrHmacStreamingProtoParametersParserImpl =
@@ -169,29 +224,29 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 }
 
 absl::StatusOr<AesCtrHmacStreamingParameters> ToParameters(
-    const AesCtrHmacStreamingParamsStruct& params_struct, int key_size) {
+    const ProtoAesCtrHmacStreamingParams& params_proto, int key_size) {
   absl::StatusOr<AesCtrHmacStreamingParameters::HashType> hkdf_hash_type =
-      FromProtoHashType(params_struct.hkdf_hash_type);
+      FromProtoHashType(params_proto.hkdf_hash_type());
   if (!hkdf_hash_type.ok()) {
     return hkdf_hash_type.status();
   }
   absl::StatusOr<AesCtrHmacStreamingParameters::HashType> hmac_hash_type =
-      FromProtoHashType(params_struct.hmac_params.hash);
+      FromProtoHashType(params_proto.hmac_params().hash());
   if (!hmac_hash_type.ok()) {
     return hmac_hash_type.status();
   }
 
   return AesCtrHmacStreamingParameters::Builder()
       .SetKeySizeInBytes(key_size)
-      .SetDerivedKeySizeInBytes(params_struct.derived_key_size)
+      .SetDerivedKeySizeInBytes(params_proto.derived_key_size())
       .SetHkdfHashType(*hkdf_hash_type)
       .SetHmacHashType(*hmac_hash_type)
-      .SetHmacTagSizeInBytes(params_struct.hmac_params.tag_size)
-      .SetCiphertextSegmentSizeInBytes(params_struct.ciphertext_segment_size)
+      .SetHmacTagSizeInBytes(params_proto.hmac_params().tag_size())
+      .SetCiphertextSegmentSizeInBytes(params_proto.ciphertext_segment_size())
       .Build();
 }
 
-absl::StatusOr<AesCtrHmacStreamingParamsStruct> FromParameters(
+absl::StatusOr<ProtoAesCtrHmacStreamingParams> FromParameters(
     const AesCtrHmacStreamingParameters& parameters) {
   absl::StatusOr<HashTypeEnum> hkdf_hash_type =
       ToProtoHashType(parameters.HkdfHashType());
@@ -204,12 +259,12 @@ absl::StatusOr<AesCtrHmacStreamingParamsStruct> FromParameters(
     return hmac_hash_type.status();
   }
 
-  AesCtrHmacStreamingParamsStruct params;
-  params.derived_key_size = parameters.DerivedKeySizeInBytes();
-  params.hkdf_hash_type = *hkdf_hash_type;
-  params.hmac_params.hash = *hmac_hash_type;
-  params.hmac_params.tag_size = parameters.HmacTagSizeInBytes();
-  params.ciphertext_segment_size = parameters.CiphertextSegmentSizeInBytes();
+  ProtoAesCtrHmacStreamingParams params;
+  params.set_derived_key_size(parameters.DerivedKeySizeInBytes());
+  params.set_hkdf_hash_type(*hkdf_hash_type);
+  params.mutable_hmac_params()->set_hash(*hmac_hash_type);
+  params.mutable_hmac_params()->set_tag_size(parameters.HmacTagSizeInBytes());
+  params.set_ciphertext_segment_size(parameters.CiphertextSegmentSizeInBytes());
   return params;
 }
 
@@ -220,39 +275,33 @@ absl::StatusOr<AesCtrHmacStreamingParameters> ParseParameters(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesCtrHmacStreamingParameters.");
   }
-  absl::StatusOr<AesCtrHmacStreamingKeyFormatStruct> key_format_struct =
-      AesCtrHmacStreamingKeyFormatStruct::Parser().Parse(key_template.value);
-  if (!key_format_struct.ok()) {
-    return key_format_struct.status();
+  ProtoAesCtrHmacStreamingKeyFormat key_format_proto;
+  if (!key_format_proto.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError(
+        "Failed to parse AesCtrHmacStreamingKeyFormat proto");
   }
-  if (key_format_struct->version != 0) {
+  if (key_format_proto.version() != 0) {
     return absl::InvalidArgumentError(
         "Parsing AesCtrHmacStreamingKeyFormat failed: only "
         "version 0 is accepted.");
   }
-  return ToParameters(key_format_struct->params, key_format_struct->key_size);
+  return ToParameters(key_format_proto.params(), key_format_proto.key_size());
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesCtrHmacStreamingParameters& parameters) {
-  absl::StatusOr<AesCtrHmacStreamingParamsStruct> params_struct =
+  absl::StatusOr<ProtoAesCtrHmacStreamingParams> params_proto =
       FromParameters(parameters);
-  if (!params_struct.ok()) {
-    return params_struct.status();
+  if (!params_proto.ok()) {
+    return params_proto.status();
   }
-  AesCtrHmacStreamingKeyFormatStruct format;
-  format.version = 0;
-  format.key_size = parameters.KeySizeInBytes();
-  format.params = *params_struct;
-
-  absl::StatusOr<std::string> serialized_format =
-      AesCtrHmacStreamingKeyFormatStruct::Parser().SerializeIntoString(format);
-  if (!serialized_format.ok()) {
-    return serialized_format.status();
-  }
+  ProtoAesCtrHmacStreamingKeyFormat format;
+  format.set_version(0);
+  format.set_key_size(parameters.KeySizeInBytes());
+  *format.mutable_params() = *params_proto;
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeEnum::kRaw, *serialized_format);
+      kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
 }
 
 absl::StatusOr<AesCtrHmacStreamingKey> ParseKey(
@@ -266,26 +315,26 @@ absl::StatusOr<AesCtrHmacStreamingKey> ParseKey(
         "Wrong type URL when parsing AesCtrHmacStreamingKey.");
   }
 
-  absl::StatusOr<AesCtrHmacStreamingKeyStruct> parsed_key_struct =
-      AesCtrHmacStreamingKeyStruct::Parser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!parsed_key_struct.ok()) {
-    return parsed_key_struct.status();
+  ProtoAesCtrHmacStreamingKey key_proto;
+  if (!key_proto.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse AesCtrHmacStreamingKey proto");
   }
 
-  if (parsed_key_struct->version != 0) {
+  if (key_proto.version() != 0) {
     return absl::InvalidArgumentError(
         "Parsing AesCtrHmacStreamingKey failed: only version 0 is accepted.");
   }
 
-  absl::StatusOr<AesCtrHmacStreamingParameters> parameters = ToParameters(
-      parsed_key_struct->params, parsed_key_struct->key_value.size());
+  absl::StatusOr<AesCtrHmacStreamingParameters> parameters =
+      ToParameters(key_proto.params(), key_proto.key_value().size());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return AesCtrHmacStreamingKey::Create(
-      *parameters, RestrictedData(parsed_key_struct->key_value, *token),
+      *parameters, RestrictedData(key_proto.key_value(), *token),
       GetPartialKeyAccess());
 }
 
@@ -300,26 +349,19 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   if (!initial_key_material.ok()) {
     return initial_key_material.status();
   }
-  absl::StatusOr<AesCtrHmacStreamingParamsStruct> params_struct =
+  absl::StatusOr<ProtoAesCtrHmacStreamingParams> params_proto =
       FromParameters(key.GetParameters());
-  if (!params_struct.ok()) {
-    return params_struct.status();
+  if (!params_proto.ok()) {
+    return params_proto.status();
   }
 
-  AesCtrHmacStreamingKeyStruct key_struct;
-  key_struct.version = 0;
-  key_struct.params = *params_struct;
-  key_struct.key_value =
-      util::SecretDataFromStringView(initial_key_material->GetSecret(*token));
+  ProtoAesCtrHmacStreamingKey key_proto;
+  key_proto.set_version(0);
+  *key_proto.mutable_params() = *params_proto;
+  key_proto.set_key_value(initial_key_material->Get(*token));
 
-  absl::StatusOr<SecretData> serialized_key =
-      AesCtrHmacStreamingKeyStruct::Parser().SerializeIntoSecretData(
-          key_struct);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
   return ProtoKeySerialization::Create(
-      kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
+      kTypeUrl, RestrictedData(key_proto.SerializeAsSecretData(), *token),
       KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
       key.GetIdRequirement());
 }

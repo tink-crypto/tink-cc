@@ -16,11 +16,10 @@
 
 #include "tink/prf/internal/hmac_prf_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
-#include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -33,7 +32,10 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -42,72 +44,81 @@
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-struct HmacPrfParamsStruct {
-  HashTypeEnum hash;
+class ProtoHmacPrfParams : public Message<ProtoHmacPrfParams> {
+ public:
+  ProtoHmacPrfParams() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<HmacPrfParamsStruct> CreateParser() {
-    return ProtoParserBuilder<HmacPrfParamsStruct>()
-        .AddEnumField(1, &HmacPrfParamsStruct::hash, HashTypeEnumIsValid)
-        .BuildOrDie();
-  }
+  HashTypeEnum hash() const { return hash_.value(); }
+  void set_hash(HashTypeEnum hash) { hash_.set_value(hash); }
 
-  static const ProtoParser<HmacPrfParamsStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<HmacPrfParamsStruct>> parser{
-        CreateParser()};
-    return *parser;
-  }
+  std::array<const OwningField*, 1> GetFields() const { return {&hash_}; }
+
+ private:
+  EnumOwningField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
 };
 
-struct HmacPrfKeyStruct {
-  uint32_t version;
-  HmacPrfParamsStruct params;
-  SecretData key_value;
+class ProtoHmacPrfKey : public Message<ProtoHmacPrfKey> {
+ public:
+  ProtoHmacPrfKey() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<HmacPrfKeyStruct> CreateParser() {
-    return ProtoParserBuilder<HmacPrfKeyStruct>()
-        .AddUint32Field(1, &HmacPrfKeyStruct::version)
-        .AddMessageField(2, &HmacPrfKeyStruct::params,
-                         HmacPrfParamsStruct::CreateParser())
-        .AddBytesSecretDataField(3, &HmacPrfKeyStruct::key_value)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const ProtoHmacPrfParams& params() const { return params_.value(); }
+  ProtoHmacPrfParams* mutable_params() { return params_.mutable_value(); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  void set_key_value(SecretData key_value) {
+    *key_value_.mutable_value() = std::move(key_value);
   }
 
-  static const ProtoParser<HmacPrfKeyStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<HmacPrfKeyStruct>> parser{
-        CreateParser()};
-    return *parser;
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &params_, &key_value_};
   }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoHmacPrfParams> params_{2};
+  SecretDataOwningField key_value_{3};
 };
 
-struct HmacPrfKeyFormatStruct {
-  HmacPrfParamsStruct params;
-  uint32_t key_size;
-  uint32_t version;
+class ProtoHmacPrfKeyFormat : public Message<ProtoHmacPrfKeyFormat> {
+ public:
+  ProtoHmacPrfKeyFormat() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<HmacPrfKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<HmacPrfKeyFormatStruct>()
-        .AddMessageField(1, &HmacPrfKeyFormatStruct::params,
-                         HmacPrfParamsStruct::CreateParser())
-        .AddUint32Field(2, &HmacPrfKeyFormatStruct::key_size)
-        .AddUint32Field(3, &HmacPrfKeyFormatStruct::version)
-        .BuildOrDie();
+  const ProtoHmacPrfParams& params() const { return params_.value(); }
+  ProtoHmacPrfParams* mutable_params() { return params_.mutable_value(); }
+
+  uint32_t key_size() const { return key_size_.value(); }
+  void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&params_, &key_size_, &version_};
   }
 
-  static const ProtoParser<HmacPrfKeyFormatStruct>& GetParser() {
-    static const absl::NoDestructor<ProtoParser<HmacPrfKeyFormatStruct>> parser{
-        CreateParser()};
-    return *parser;
-  }
+ private:
+  MessageOwningField<ProtoHmacPrfParams> params_{1};
+  Uint32OwningField key_size_{2};
+  Uint32OwningField version_{3};
 };
 
 using HmacPrfProtoParametersParserImpl =
@@ -170,22 +181,21 @@ absl::StatusOr<HmacPrfParameters> ParseParameters(
         "Output prefix type must be RAW for HmacPrfParameters.");
   }
 
-  absl::StatusOr<HmacPrfKeyFormatStruct> proto_key_format =
-      HmacPrfKeyFormatStruct::GetParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoHmacPrfKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError("Failed to parse HmacPrfKeyFormat proto");
   }
-  if (proto_key_format->version != 0) {
+  if (proto_key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<HmacPrfParameters::HashType> hash_type =
-      ToHashType(proto_key_format->params.hash);
+      ToHashType(proto_key_format.params().hash());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
-  return HmacPrfParameters::Create(proto_key_format->key_size, *hash_type);
+  return HmacPrfParameters::Create(proto_key_format.key_size(), *hash_type);
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
@@ -196,19 +206,14 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return proto_hash_type.status();
   }
 
-  HmacPrfKeyFormatStruct proto_key_format;
-  proto_key_format.params.hash = *proto_hash_type;
-  proto_key_format.key_size = parameters.KeySizeInBytes();
-  proto_key_format.version = 0;
-
-  absl::StatusOr<std::string> serialized_key_format =
-      HmacPrfKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
-  if (!serialized_key_format.ok()) {
-    return serialized_key_format.status();
-  }
+  ProtoHmacPrfKeyFormat proto_key_format;
+  proto_key_format.mutable_params()->set_hash(*proto_hash_type);
+  proto_key_format.set_key_size(parameters.KeySizeInBytes());
+  proto_key_format.set_version(0);
 
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeEnum::kRaw, *serialized_key_format);
+      kTypeUrl, OutputPrefixTypeEnum::kRaw,
+      proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<HmacPrfKey> ParseKey(
@@ -226,30 +231,29 @@ absl::StatusOr<HmacPrfKey> ParseKey(
         "Output prefix type must be RAW for HmacPrfKey.");
   }
 
-  absl::StatusOr<HmacPrfKeyStruct> proto_key =
-      HmacPrfKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoHmacPrfKey proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError("Failed to parse HmacPrfKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<HmacPrfParameters::HashType> hash_type =
-      ToHashType(proto_key->params.hash);
+      ToHashType(proto_key.params().hash());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   absl::StatusOr<HmacPrfParameters> parameters =
-      HmacPrfParameters::Create(proto_key->key_value.size(), *hash_type);
+      HmacPrfParameters::Create(proto_key.key_value().size(), *hash_type);
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return HmacPrfKey::Create(
-      *parameters, RestrictedData(std::move(proto_key->key_value), *token),
+      *parameters, RestrictedData(std::move(proto_key.key_value()), *token),
       GetPartialKeyAccess());
 }
 
@@ -270,44 +274,37 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return proto_hash_type.status();
   }
 
-  HmacPrfKeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.params.hash = *proto_hash_type;
-  proto_key.key_value = restricted_input->Get(*token);
-
-  absl::StatusOr<SecretData> serialized_key =
-      HmacPrfKeyStruct::GetParser().SerializeIntoSecretData(proto_key);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
-  RestrictedData restricted_output =
-      RestrictedData(*std::move(serialized_key), *token);
+  ProtoHmacPrfKey proto_key;
+  proto_key.set_version(0);
+  proto_key.mutable_params()->set_hash(*proto_hash_type);
+  proto_key.set_key_value(restricted_input->Get(*token));
 
   return ProtoKeySerialization::Create(
-      kTypeUrl, restricted_output, KeyMaterialTypeEnum::kSymmetric,
-      OutputPrefixTypeEnum::kRaw, key.GetIdRequirement());
+      kTypeUrl, RestrictedData(proto_key.SerializeAsSecretData(), *token),
+      KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
+      key.GetIdRequirement());
 }
 
-HmacPrfProtoParametersParserImpl& HmacPrfProtoParametersParser() {
+HmacPrfProtoParametersParserImpl* HmacPrfProtoParametersParser() {
   static auto* parser =
       new HmacPrfProtoParametersParserImpl(kTypeUrl, ParseParameters);
-  return *parser;
+  return parser;
 }
 
-HmacPrfProtoParametersSerializerImpl& HmacPrfProtoParametersSerializer() {
+HmacPrfProtoParametersSerializerImpl* HmacPrfProtoParametersSerializer() {
   static auto* serializer =
       new HmacPrfProtoParametersSerializerImpl(kTypeUrl, SerializeParameters);
-  return *serializer;
+  return serializer;
 }
 
-HmacPrfProtoKeyParserImpl& HmacPrfProtoKeyParser() {
+HmacPrfProtoKeyParserImpl* HmacPrfProtoKeyParser() {
   static auto* parser = new HmacPrfProtoKeyParserImpl(kTypeUrl, ParseKey);
-  return *parser;
+  return parser;
 }
 
-HmacPrfProtoKeySerializerImpl& HmacPrfProtoKeySerializer() {
+HmacPrfProtoKeySerializerImpl* HmacPrfProtoKeySerializer() {
   static auto* serializer = new HmacPrfProtoKeySerializerImpl(SerializeKey);
-  return *serializer;
+  return serializer;
 }
 
 }  // namespace
@@ -315,45 +312,45 @@ HmacPrfProtoKeySerializerImpl& HmacPrfProtoKeySerializer() {
 absl::Status RegisterHmacPrfProtoSerializationWithMutableRegistry(
     MutableSerializationRegistry& registry) {
   absl::Status status =
-      registry.RegisterParametersParser(&HmacPrfProtoParametersParser());
-  if (!status.ok()) {
-    return status;
-  }
-
-  status = registry.RegisterParametersSerializer(
-      &HmacPrfProtoParametersSerializer());
-  if (!status.ok()) {
-    return status;
-  }
-
-  status = registry.RegisterKeyParser(&HmacPrfProtoKeyParser());
-  if (!status.ok()) {
-    return status;
-  }
-
-  return registry.RegisterKeySerializer(&HmacPrfProtoKeySerializer());
-}
-
-absl::Status RegisterHmacPrfProtoSerializationWithRegistryBuilder(
-    SerializationRegistry::Builder& builder) {
-  absl::Status status =
-      builder.RegisterParametersParser(&HmacPrfProtoParametersParser());
+      registry.RegisterParametersParser(HmacPrfProtoParametersParser());
   if (!status.ok()) {
     return status;
   }
 
   status =
-      builder.RegisterParametersSerializer(&HmacPrfProtoParametersSerializer());
+      registry.RegisterParametersSerializer(HmacPrfProtoParametersSerializer());
   if (!status.ok()) {
     return status;
   }
 
-  status = builder.RegisterKeyParser(&HmacPrfProtoKeyParser());
+  status = registry.RegisterKeyParser(HmacPrfProtoKeyParser());
   if (!status.ok()) {
     return status;
   }
 
-  return builder.RegisterKeySerializer(&HmacPrfProtoKeySerializer());
+  return registry.RegisterKeySerializer(HmacPrfProtoKeySerializer());
+}
+
+absl::Status RegisterHmacPrfProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  absl::Status status =
+      builder.RegisterParametersParser(HmacPrfProtoParametersParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status =
+      builder.RegisterParametersSerializer(HmacPrfProtoParametersSerializer());
+  if (!status.ok()) {
+    return status;
+  }
+
+  status = builder.RegisterKeyParser(HmacPrfProtoKeyParser());
+  if (!status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(HmacPrfProtoKeySerializer());
 }
 
 }  // namespace internal

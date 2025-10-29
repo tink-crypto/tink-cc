@@ -42,7 +42,6 @@ bazel_dep(
 bazel_dep(
     name = "googletest",
     version = "1.17.0",
-    repo_name = "com_google_googletest",
 )
 bazel_dep(
     name = "protobuf",

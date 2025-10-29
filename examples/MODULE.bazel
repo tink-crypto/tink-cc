@@ -15,8 +15,7 @@ local_path_override(
 
 bazel_dep(
     name = "googletest",
-    version = "1.16.0",
-    repo_name = "com_google_googletest",
+    version = "1.17.0",
 )
 bazel_dep(
     name = "abseil-cpp",

@@ -23,7 +23,7 @@ cc_test(
         ":tink_type_resolver",
         "//proto:tink_cc_proto",
         "//tink/util:test_matchers",
-        "@com_google_googletest//:gtest_main",
         "@com_google_protobuf//:protobuf",
+        "@googletest//:gtest_main",
     ],
 )

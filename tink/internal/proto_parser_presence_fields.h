@@ -42,12 +42,12 @@ class Uint32FieldWithPresence : public Field<Struct> {
                                    absl::optional<uint32_t> Struct::*value)
       : value_(value), field_number_(field_number) {}
 
-  // Not copyable, not movable.
-  Uint32FieldWithPresence(const Uint32FieldWithPresence&) = delete;
-  Uint32FieldWithPresence& operator=(const Uint32FieldWithPresence&) = delete;
-  Uint32FieldWithPresence(Uint32FieldWithPresence&&) noexcept = delete;
+  // Copyable and movable.
+  Uint32FieldWithPresence(const Uint32FieldWithPresence&) = default;
+  Uint32FieldWithPresence& operator=(const Uint32FieldWithPresence&) = default;
+  Uint32FieldWithPresence(Uint32FieldWithPresence&&) noexcept = default;
   Uint32FieldWithPresence& operator=(Uint32FieldWithPresence&&) noexcept =
-      delete;
+      default;
 
   void ClearMember(Struct& s) const override { (s.*value_).reset(); }
 

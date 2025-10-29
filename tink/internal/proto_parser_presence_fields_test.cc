@@ -256,6 +256,80 @@ TEST(OptionalUint32Field, SerializeWithValueTooSmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
+TEST(OptionalUint32Field, CopyConstructorWithValue) {
+  OptionalUint32Field field(1);
+  field.set_value(123);
+
+  OptionalUint32Field copied_field(field);
+
+  EXPECT_THAT(copied_field.value(), Optional(123));
+}
+
+TEST(OptionalUint32Field, CopyConstructorWithNoValue) {
+  OptionalUint32Field field(1);
+
+  OptionalUint32Field copied_field(field);
+
+  EXPECT_THAT(copied_field.value(), Eq(absl::nullopt));
+}
+
+TEST(OptionalUint32Field, MoveConstructorWithValue) {
+  OptionalUint32Field field(1);
+  field.set_value(123);
+
+  OptionalUint32Field moved_field(std::move(field));
+
+  EXPECT_THAT(moved_field.value(), Optional(123));
+}
+
+TEST(OptionalUint32Field, MoveConstructorWithNoValue) {
+  OptionalUint32Field field(1);
+
+  OptionalUint32Field moved_field(std::move(field));
+
+  EXPECT_THAT(moved_field.value(), Eq(absl::nullopt));
+}
+
+TEST(OptionalUint32Field, CopyAssignmentWithValue) {
+  OptionalUint32Field field(1);
+  field.set_value(123);
+
+  OptionalUint32Field copied_field(2);
+  copied_field = field;
+
+  EXPECT_THAT(copied_field.value(), Optional(123));
+}
+
+TEST(OptionalUint32Field, CopyAssignmentWithNoValue) {
+  OptionalUint32Field field(1);
+
+  OptionalUint32Field copied_field(2);
+  copied_field.set_value(123);
+  copied_field = field;
+
+  EXPECT_THAT(copied_field.value(), Eq(absl::nullopt));
+}
+
+TEST(OptionalUint32Field, MoveAssignmentWithValue) {
+  OptionalUint32Field field(1);
+  field.set_value(123);
+
+  OptionalUint32Field moved_field(2);
+  moved_field = std::move(field);
+
+  EXPECT_THAT(moved_field.value(), Optional(123));
+}
+
+TEST(OptionalUint32Field, MoveAssignmentWithNoValue) {
+  OptionalUint32Field field(1);
+
+  OptionalUint32Field moved_field(2);
+  moved_field.set_value(123);
+  moved_field = std::move(field);
+
+  EXPECT_THAT(moved_field.value(), Eq(absl::nullopt));
+}
+
 }  // namespace
 }  // namespace proto_parsing
 }  // namespace internal

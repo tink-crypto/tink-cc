@@ -27,6 +27,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -116,7 +117,20 @@ class Message {
   Message(Message&&) noexcept = default;
   Message& operator=(Message&&) noexcept = default;
 
+  bool FieldsAreSorted() const {
+    auto fields = static_cast<const Derived*>(this)->GetFields();
+    for (size_t i = 1; i < fields.size(); ++i) {
+      if (fields[i - 1]->FieldNumber() >= fields[i]->FieldNumber()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   const OwningField* /*absl_nullable - not yet supported*/ get_field(uint32_t field_number) {
+    ABSL_DCHECK(FieldsAreSorted())
+        << "Fields from GetFields() must be sorted in strictly increasing "
+           "order of their field number.";
     auto fields = static_cast<Derived*>(this)->GetFields();
     auto it = absl::c_lower_bound(
         fields, field_number, [](const OwningField* a, uint32_t field_number) {

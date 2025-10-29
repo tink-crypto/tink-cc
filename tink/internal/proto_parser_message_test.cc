@@ -57,6 +57,7 @@ using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::IsOk;
 using ::testing::ElementsAre;
 using ::testing::Eq;
+using ::testing::HasSubstr;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::Not;
@@ -260,7 +261,7 @@ TEST(MessageTest, ParseFromStringSuccess) {
 }
 
 struct OuterMessageWithSecretData : public Message<OuterMessageWithSecretData> {
-  std::array<OwningField*, 2> GetFields() {
+  std::array<const OwningField*, 2> GetFields() const {
     return {&inner_member_field, &secret_data_field};
   }
   MessageOwningField<InnerStruct> inner_member_field{1};
@@ -976,6 +977,30 @@ TEST(MessageOwningFieldWithPresenceTest, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
+class MessageWithBrokenFieldOrder
+    : public Message<MessageWithBrokenFieldOrder> {
+ public:
+  MessageWithBrokenFieldOrder() = default;
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return std::array<const OwningField*, 2>{&uint32_member_2_,
+                                             &uint32_member_1_};
+  }
+
+  using Message::ParseFromString;
+
+ private:
+  Uint32OwningField uint32_member_1_{1};
+  Uint32OwningField uint32_member_2_{2};
+};
+
+TEST(MessageOwningFieldWithPresenceDeathTest, DiesOnParse) {
+  MessageWithBrokenFieldOrder message;
+  EXPECT_DEBUG_DEATH(
+      { message.ParseFromString(HexDecodeOrDie("0800")); },
+      HasSubstr("GetFields() must be sorted"));
 }
 
 }  // namespace

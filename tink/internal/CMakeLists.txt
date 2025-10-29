@@ -2231,6 +2231,7 @@ tink_cc_library(
     absl::no_destructor
     absl::nullability
     absl::crc32c
+    absl::absl_check
     absl::check
     absl::status
     absl::statusor

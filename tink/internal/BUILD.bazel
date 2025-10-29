@@ -1697,6 +1697,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser_fields",
+        ":proto_parser_owning_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
         "@com_google_absl//absl/status",

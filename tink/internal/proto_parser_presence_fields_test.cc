@@ -167,6 +167,95 @@ TEST(Uint32FieldWithPresence, GetFieldNumber) {
   ASSERT_THAT(field2.GetFieldNumber(), Eq(2));
 }
 
+TEST(OptionalUint32Field, Clear) {
+  OptionalUint32Field field(1);
+  field.set_value(123);
+  field.Clear();
+  EXPECT_THAT(field.value(), Eq(absl::nullopt));
+}
+
+TEST(OptionalUint32Field, ConsumeIntoMemberSuccessCases) {
+  OptionalUint32Field field(1);
+  field.set_value(123);
+  std::string serialized =
+      absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
+  ParsingState parsing_state = ParsingState(serialized);
+  EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsTrue());
+  EXPECT_THAT(field.value(), Optional(128));
+  EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
+}
+
+TEST(OptionalUint32Field, ConsumeIntoMemberFailureCases) {
+  OptionalUint32Field field(1);
+
+  for (std::string test_case :
+       {"", "faab",
+        /* valid uint_64 encoding: */ "ffffffffffffffffffff01"}) {
+    SCOPED_TRACE(test_case);
+    std::string serialized = HexDecodeOrDie(test_case);
+    ParsingState parsing_state = ParsingState(serialized);
+    EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
+  }
+}
+
+TEST(OptionalUint32Field, GetSerializedSize) {
+  OptionalUint32Field field(1);
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  field.set_value(1);
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+  field.set_value(128);
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(3));
+}
+
+TEST(OptionalUint32Field, SerializeWithNoValue) {
+  OptionalUint32Field field(1);
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  std::string buffer;
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(0));
+}
+
+TEST(OptionalUint32Field, SerializeWithZero) {
+  OptionalUint32Field field(1);
+  field.set_value(0);
+  std::string expected_serialization = HexDecodeOrDie("0800");
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(),
+              Eq(expected_serialization.size()));
+  std::string buffer;
+  buffer.resize(expected_serialization.size());
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(buffer, Eq(expected_serialization));
+  EXPECT_THAT(state.GetBuffer().size(), Eq(0));
+}
+
+TEST(OptionalUint32Field, SerializeWithValue) {
+  OptionalUint32Field field(1);
+  field.set_value(128);
+  std::string expected_serialization = HexDecodeOrDie("088001");
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(),
+              Eq(expected_serialization.size()));
+  std::string buffer;
+  buffer.resize(expected_serialization.size());
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(buffer, Eq(expected_serialization));
+  EXPECT_THAT(state.GetBuffer().size(), Eq(0));
+}
+
+TEST(OptionalUint32Field, SerializeWithValueTooSmallBuffer) {
+  OptionalUint32Field field(1);
+  field.set_value(128);
+  std::string expected_serialization = HexDecodeOrDie("088001");
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(),
+              Eq(expected_serialization.size()));
+  std::string buffer;
+  buffer.resize(expected_serialization.size() - 1);
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+}
+
 }  // namespace
 }  // namespace proto_parsing
 }  // namespace internal

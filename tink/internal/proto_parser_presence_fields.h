@@ -26,6 +26,7 @@
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
@@ -98,6 +99,36 @@ class Uint32FieldWithPresence : public Field<Struct> {
 
   absl::optional<uint32_t> Struct::*value_;
   int field_number_;
+};
+
+class OptionalUint32Field final : public OwningField {
+ public:
+  explicit OptionalUint32Field(uint32_t field_number)
+      : OwningField(field_number, WireType::kVarint),
+        field_(field_number, &OptionalUint32Field::value_) {}
+  // Copyable and movable.
+  OptionalUint32Field(const OptionalUint32Field&) = default;
+  OptionalUint32Field& operator=(const OptionalUint32Field&) = default;
+  OptionalUint32Field(OptionalUint32Field&&) noexcept = default;
+  OptionalUint32Field& operator=(OptionalUint32Field&&) noexcept = default;
+
+  void Clear() override { field_.ClearMember(*this); }
+  bool ConsumeIntoMember(ParsingState& serialized) override {
+    return field_.ConsumeIntoMember(serialized, *this);
+  }
+  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+    return field_.SerializeWithTagInto(out, *this);
+  }
+  size_t GetSerializedSizeIncludingTag() const override {
+    return field_.GetSerializedSizeIncludingTag(*this);
+  }
+
+  absl::optional<uint32_t> value() const { return value_; }
+  void set_value(uint32_t value) { value_ = value; }
+
+ private:
+  absl::optional<uint32_t> value_;
+  Uint32FieldWithPresence<OptionalUint32Field> field_;
 };
 
 }  // namespace proto_parsing

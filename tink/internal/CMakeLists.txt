@@ -1633,6 +1633,7 @@ tink_cc_library(
     proto_parser_presence_fields.h
   DEPS
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     absl::status

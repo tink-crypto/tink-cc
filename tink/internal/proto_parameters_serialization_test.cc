@@ -67,6 +67,13 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   TestProto parsed_proto;
   parsed_proto.ParseFromString(key_template.value);
   EXPECT_THAT(parsed_proto.num(), Eq(12345));
+
+  const ProtoKeyTemplate& proto_key_template =
+      serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(proto_key_template.type_url(), "type_url");
+  EXPECT_THAT(proto_key_template.output_prefix_type(),
+              OutputPrefixTypeEnum::kRaw);
+  EXPECT_THAT(proto_key_template.value(), test_proto.SerializeAsString());
 }
 
 TEST_F(ProtoParametersSerializationTest,

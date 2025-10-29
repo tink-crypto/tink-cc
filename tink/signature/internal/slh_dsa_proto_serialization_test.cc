@@ -343,15 +343,15 @@ TEST_P(SlhDsaProtoSerializationTest,
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
 
-  const internal::KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type,
+  const internal::ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(),
               Eq(static_cast<internal::OutputPrefixTypeEnum>(
                   test_case.output_prefix_type)));
 
   SlhDsaKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
   ASSERT_TRUE(key_format.has_params());
   EXPECT_THAT(key_format.params().hash_type(), Eq(SlhDsaHashType::SHA2));
   EXPECT_THAT(key_format.params().sig_type(),

@@ -175,14 +175,14 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 
 absl::StatusOr<Ed25519Parameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateStruct key_template = serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kPrivateTypeUrl) {
+  const ProtoKeyTemplate key_template = serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing Ed25519Parameters.");
   }
 
   ProtoEd25519KeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse ProtoEd25519KeyFormat proto");
   }
@@ -191,7 +191,7 @@ absl::StatusOr<Ed25519Parameters> ParseParameters(
   }
 
   absl::StatusOr<Ed25519Parameters::Variant> variant =
-      ToVariant(key_template.output_prefix_type);
+      ToVariant(key_template.output_prefix_type());
   if (!variant.ok()) {
     return variant.status();
   }

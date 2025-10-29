@@ -176,21 +176,21 @@ absl::StatusOr<ProtoAesEaxParams> GetProtoParams(
 
 absl::StatusOr<AesEaxParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateStruct& key_template =
-      serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const internal::ProtoKeyTemplate& key_template =
+      serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         absl::StrCat("Wrong type URL when parsing AesEaxParameters: ",
-                     key_template.type_url));
+                     key_template.type_url()));
   }
 
   ProtoAesEaxKeyFormat key_format;
-  if (!key_format.ParseFromString(key_template.value)) {
+  if (!key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse AesEaxKeyFormat proto");
   }
 
   absl::StatusOr<AesEaxParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
+      ToVariant(key_template.output_prefix_type());
   if (!variant.ok()) {
     return variant.status();
   }

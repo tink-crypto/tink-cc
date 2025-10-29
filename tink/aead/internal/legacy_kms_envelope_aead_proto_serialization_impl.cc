@@ -163,7 +163,7 @@ absl::StatusOr<std::unique_ptr<Parameters>> ParametersFromKeyTemplate(
       *proto_params_serialization);
 }
 
-absl::StatusOr<KeyTemplateStruct> ParametersToKeyTemplate(
+absl::StatusOr<ProtoKeyTemplate> ParametersToKeyTemplate(
     const Parameters& parameters) {
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
       GlobalSerializationRegistry()
@@ -176,7 +176,7 @@ absl::StatusOr<KeyTemplateStruct> ParametersToKeyTemplate(
   if (proto_serialization == nullptr) {
     return absl::InternalError("Failed to serialize proto parameters.");
   }
-  return proto_serialization->GetKeyTemplateStruct();
+  return proto_serialization->GetProtoKeyTemplate();
 }
 
 absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
@@ -234,20 +234,20 @@ absl::StatusOr<LegacyKmsEnvelopeAeadParameters> GetParametersFromKeyFormat(
 
 absl::StatusOr<LegacyKmsEnvelopeAeadParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsEnvelopeAeadParameters.");
   }
 
   ProtoKmsEnvelopeAeadKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse KmsEnvelopeAeadKeyFormat proto");
   }
 
   return GetParametersFromKeyFormat(proto_key_format,
-                                    key_template.output_prefix_type);
+                                    key_template.output_prefix_type());
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
@@ -258,7 +258,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<KeyTemplateStruct> dek_key_template =
+  absl::StatusOr<ProtoKeyTemplate> dek_key_template =
       ParametersToKeyTemplate(parameters.GetDekParameters());
   if (!dek_key_template.ok()) {
     return dek_key_template.status();
@@ -267,10 +267,10 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
   ProtoKmsEnvelopeAeadKeyFormat proto_key_format;
   proto_key_format.set_kek_uri(parameters.GetKeyUri());
   proto_key_format.mutable_dek_template()->set_output_prefix_type(
-      dek_key_template->output_prefix_type);
-  proto_key_format.mutable_dek_template()->set_value(dek_key_template->value);
+      dek_key_template->output_prefix_type());
+  proto_key_format.mutable_dek_template()->set_value(dek_key_template->value());
   proto_key_format.mutable_dek_template()->set_type_url(
-      dek_key_template->type_url);
+      dek_key_template->type_url());
 
   return ProtoParametersSerialization::Create(
       kTypeUrl, *output_prefix_type, proto_key_format.SerializeAsString());
@@ -307,7 +307,7 @@ absl::StatusOr<LegacyKmsEnvelopeAeadKey> ParseKey(
 absl::StatusOr<ProtoKeySerialization> SerializeKey(
     const LegacyKmsEnvelopeAeadKey& key,
     absl::optional<SecretKeyAccessToken> token) {
-  absl::StatusOr<KeyTemplateStruct> dek_key_template =
+  absl::StatusOr<ProtoKeyTemplate> dek_key_template =
       ParametersToKeyTemplate(key.GetParameters().GetDekParameters());
   if (!dek_key_template.ok()) {
     return dek_key_template.status();
@@ -317,11 +317,11 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
   key_proto.set_version(0);
   key_proto.mutable_params()->set_kek_uri(key.GetParameters().GetKeyUri());
   key_proto.mutable_params()->mutable_dek_template()->set_output_prefix_type(
-      dek_key_template->output_prefix_type);
+      dek_key_template->output_prefix_type());
   key_proto.mutable_params()->mutable_dek_template()->set_value(
-      dek_key_template->value);
+      dek_key_template->value());
   key_proto.mutable_params()->mutable_dek_template()->set_type_url(
-      dek_key_template->type_url);
+      dek_key_template->type_url());
 
   SecretData serialized_key = key_proto.SerializeAsSecretData();
 

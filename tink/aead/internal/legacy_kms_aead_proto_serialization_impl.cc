@@ -132,17 +132,17 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 
 absl::StatusOr<LegacyKmsAeadParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const KeyTemplateStruct key_template = serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsAeadParameters.");
   }
   ProtoKmsAeadKeyFormat key_format;
-  if (!key_format.ParseFromString(key_template.value)) {
+  if (!key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse KmsAeadKeyFormat proto");
   }
   absl::StatusOr<LegacyKmsAeadParameters::Variant> variant =
-      ToVariant(key_template.output_prefix_type);
+      ToVariant(key_template.output_prefix_type());
   if (!variant.ok()) {
     return variant.status();
   }

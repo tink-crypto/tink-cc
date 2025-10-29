@@ -217,14 +217,14 @@ TEST_P(ChaCha20Poly1305ProtoSerializationTest,
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type,
+  const internal::ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));
 
   ChaCha20Poly1305KeyFormat key_format;
-  EXPECT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  EXPECT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 }
 
 TEST_P(ChaCha20Poly1305ProtoSerializationTest,
@@ -250,14 +250,14 @@ TEST_P(ChaCha20Poly1305ProtoSerializationTest,
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type,
+  const internal::ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));
 
   ChaCha20Poly1305KeyFormat key_format;
-  EXPECT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  EXPECT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 }
 
 TEST_P(ChaCha20Poly1305ProtoSerializationTest, ParseKeyWithMutableRegistry) {

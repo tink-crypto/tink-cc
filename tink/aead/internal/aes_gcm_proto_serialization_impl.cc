@@ -138,15 +138,15 @@ absl::Status ValidateParamsForProto(const AesGcmParameters& params) {
 
 absl::StatusOr<AesGcmParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateStruct& key_template =
-      serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const internal::ProtoKeyTemplate& key_template =
+      serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesGcmParameters.");
   }
 
   ProtoAesGcmKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
   }
   if (proto_key_format.version() != 0) {
@@ -154,7 +154,7 @@ absl::StatusOr<AesGcmParameters> ParseParameters(
   }
 
   absl::StatusOr<AesGcmParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
+      ToVariant(key_template.output_prefix_type());
   if (!variant.ok()) {
     return variant.status();
   }

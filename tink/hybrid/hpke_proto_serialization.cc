@@ -16,6 +16,7 @@
 
 #include "tink/hybrid/hpke_proto_serialization.h"
 
+#include <array>
 #include <cstdint>
 #include <string>
 
@@ -35,7 +36,9 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -47,8 +50,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 bool HpkeKemEnumIsValid(int value) { return value >= 0 && value <= 5; }
 
@@ -82,76 +90,97 @@ enum class HpkeAeadEnum : uint32_t {
   kChaCha20Poly1305,
 };
 
-struct HpkeParamsStruct {
-  HpkeKemEnum kem;
-  HpkeKdfEnum kdf;
-  HpkeAeadEnum aead;
+class ProtoHpkeParams : public Message<ProtoHpkeParams> {
+ public:
+  ProtoHpkeParams() = default;
+  using Message::SerializeAsString;
+
+  HpkeKemEnum kem() const { return kem_.value(); }
+  void set_kem(HpkeKemEnum kem) { kem_.set_value(kem); }
+
+  HpkeKdfEnum kdf() const { return kdf_.value(); }
+  void set_kdf(HpkeKdfEnum kdf) { kdf_.set_value(kdf); }
+
+  HpkeAeadEnum aead() const { return aead_.value(); }
+  void set_aead(HpkeAeadEnum aead) { aead_.set_value(aead); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&kem_, &kdf_, &aead_};
+  }
+
+ private:
+  EnumOwningField<HpkeKemEnum> kem_{1, &HpkeKemEnumIsValid};
+  EnumOwningField<HpkeKdfEnum> kdf_{2, &HpkeKdfEnumIsValid};
+  EnumOwningField<HpkeAeadEnum> aead_{3, &HpkeAeadEnumIsValid};
 };
 
-struct HpkePublicKeyStruct {
-  uint32_t version;
-  HpkeParamsStruct params;
-  std::string public_key;
+class ProtoHpkePublicKey : public Message<ProtoHpkePublicKey> {
+ public:
+  ProtoHpkePublicKey() = default;
+  using Message::SerializeAsString;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const ProtoHpkeParams& params() const { return params_.value(); }
+  ProtoHpkeParams* mutable_params() { return params_.mutable_value(); }
+
+  const std::string& public_key() const { return public_key_.value(); }
+  void set_public_key(absl::string_view public_key) {
+    public_key_.set_value(public_key);
+  }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &params_, &public_key_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoHpkeParams> params_{2};
+  OwningBytesField<std::string> public_key_{3};
 };
 
-struct HpkePrivateKeyStruct {
-  uint32_t version;
-  HpkePublicKeyStruct public_key;
-  SecretData private_key;
+class ProtoHpkePrivateKey : public Message<ProtoHpkePrivateKey> {
+ public:
+  ProtoHpkePrivateKey() = default;
+  using Message::SerializeAsString;
+
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const ProtoHpkePublicKey& public_key() const { return public_key_.value(); }
+  ProtoHpkePublicKey* mutable_public_key() {
+    return public_key_.mutable_value();
+  }
+
+  const SecretData& private_key() const { return private_key_.value(); }
+  void set_private_key(SecretData private_key) {
+    *private_key_.mutable_value() = private_key;
+  }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &public_key_, &private_key_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<ProtoHpkePublicKey> public_key_{2};
+  SecretDataOwningField private_key_{3};
 };
 
-struct HpkeKeyFormatStruct {
-  HpkeParamsStruct params;
+class ProtoHpkeKeyFormat : public Message<ProtoHpkeKeyFormat> {
+ public:
+  ProtoHpkeKeyFormat() = default;
+  using Message::SerializeAsString;
+
+  const ProtoHpkeParams& params() const { return params_.value(); }
+  ProtoHpkeParams* mutable_params() { return params_.mutable_value(); }
+
+  std::array<const OwningField*, 1> GetFields() const { return {&params_}; }
+
+ private:
+  MessageOwningField<ProtoHpkeParams> params_{1};
 };
-
-ProtoParser<HpkeParamsStruct> CreateParamParser() {
-  return ProtoParserBuilder<HpkeParamsStruct>()
-      .AddEnumField(1, &HpkeParamsStruct::kem, &HpkeKemEnumIsValid)
-      .AddEnumField(2, &HpkeParamsStruct::kdf, &HpkeKdfEnumIsValid)
-      .AddEnumField(3, &HpkeParamsStruct::aead, &HpkeAeadEnumIsValid)
-      .BuildOrDie();
-}
-
-ProtoParser<HpkePublicKeyStruct> CreatePublicKeyParser() {
-  return ProtoParserBuilder<HpkePublicKeyStruct>()
-      .AddUint32Field(1, &HpkePublicKeyStruct::version)
-      .AddMessageField(2, &HpkePublicKeyStruct::params, CreateParamParser())
-      .AddBytesStringField(3, &HpkePublicKeyStruct::public_key)
-      .BuildOrDie();
-}
-
-const ProtoParser<HpkePublicKeyStruct>& GetPublicKeyParser() {
-  static ProtoParser<HpkePublicKeyStruct>* parser =
-      new ProtoParser<HpkePublicKeyStruct>(CreatePublicKeyParser());
-  return *parser;
-}
-
-ProtoParser<HpkePrivateKeyStruct> CreatePrivateKeyParser() {
-  return ProtoParserBuilder<HpkePrivateKeyStruct>()
-      .AddUint32Field(1, &HpkePrivateKeyStruct::version)
-      .AddMessageField(2, &HpkePrivateKeyStruct::public_key,
-                       CreatePublicKeyParser())
-      .AddBytesSecretDataField(3, &HpkePrivateKeyStruct::private_key)
-      .BuildOrDie();
-}
-
-const ProtoParser<HpkePrivateKeyStruct>& GetPrivateKeyParser() {
-  static ProtoParser<HpkePrivateKeyStruct>* parser =
-      new ProtoParser<HpkePrivateKeyStruct>(CreatePrivateKeyParser());
-  return *parser;
-}
-
-ProtoParser<HpkeKeyFormatStruct> CreateKeyFormatParser() {
-  return ProtoParserBuilder<HpkeKeyFormatStruct>()
-      .AddMessageField(1, &HpkeKeyFormatStruct::params, CreateParamParser())
-      .BuildOrDie();
-}
-
-const ProtoParser<HpkeKeyFormatStruct>& GetKeyFormatParser() {
-  static ProtoParser<HpkeKeyFormatStruct>* parser =
-      new ProtoParser<HpkeKeyFormatStruct>(CreateKeyFormatParser());
-  return *parser;
-}
 
 using HpkeProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -294,24 +323,24 @@ absl::StatusOr<HpkeAeadEnum> FromAeadId(HpkeParameters::AeadId aead_id) {
 
 absl::StatusOr<HpkeParameters> ToParameters(
     internal::OutputPrefixTypeEnum output_prefix_type,
-    const HpkeParamsStruct& params) {
+    const ProtoHpkeParams& params) {
   absl::StatusOr<HpkeParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  absl::StatusOr<HpkeParameters::KemId> kem_id = ToKemId(params.kem);
+  absl::StatusOr<HpkeParameters::KemId> kem_id = ToKemId(params.kem());
   if (!kem_id.ok()) {
     return kem_id.status();
   }
 
-  absl::StatusOr<HpkeParameters::KdfId> kdf_id = ToKdfId(params.kdf);
+  absl::StatusOr<HpkeParameters::KdfId> kdf_id = ToKdfId(params.kdf());
   if (!kdf_id.ok()) {
     return kdf_id.status();
   }
 
-  absl::StatusOr<HpkeParameters::AeadId> aead_id = ToAeadId(params.aead);
+  absl::StatusOr<HpkeParameters::AeadId> aead_id = ToAeadId(params.aead());
   if (!aead_id.ok()) {
     return aead_id.status();
   }
@@ -324,7 +353,7 @@ absl::StatusOr<HpkeParameters> ToParameters(
       .Build();
 }
 
-absl::StatusOr<HpkeParamsStruct> FromParameters(HpkeParameters parameters) {
+absl::StatusOr<ProtoHpkeParams> FromParameters(HpkeParameters parameters) {
   absl::StatusOr<HpkeKemEnum> kem = FromKemId(parameters.GetKemId());
   if (!kem.ok()) {
     return kem.status();
@@ -340,10 +369,10 @@ absl::StatusOr<HpkeParamsStruct> FromParameters(HpkeParameters parameters) {
     return aead.status();
   }
 
-  HpkeParamsStruct params;
-  params.kem = *kem;
-  params.kdf = *kdf;
-  params.aead = *aead;
+  ProtoHpkeParams params;
+  params.set_kem(*kem);
+  params.set_kdf(*kdf);
+  params.set_aead(*aead);
 
   return params;
 }
@@ -357,14 +386,13 @@ absl::StatusOr<HpkeParameters> ParseParameters(
         "Wrong type URL when parsing HpkeParameters.");
   }
 
-  absl::StatusOr<HpkeKeyFormatStruct> proto_key_format =
-      GetKeyFormatParser().Parse(key_template.value);
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  ProtoHpkeKeyFormat proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value)) {
+    return absl::InvalidArgumentError("Failed to parse HpkeKeyFormat proto");
   }
 
   return ToParameters(key_template.output_prefix_type,
-                      proto_key_format->params);
+                      proto_key_format.params());
 }
 
 absl::StatusOr<HpkePublicKey> ParsePublicKey(
@@ -376,22 +404,22 @@ absl::StatusOr<HpkePublicKey> ParsePublicKey(
   }
 
   const RestrictedData& restricted_data = serialization.SerializedKeyProto();
-  absl::StatusOr<HpkePublicKeyStruct> proto_key = GetPublicKeyParser().Parse(
-      restricted_data.GetSecret(InsecureSecretKeyAccess::Get()));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  ProtoHpkePublicKey proto_key;
+  if (!proto_key.ParseFromString(
+          restricted_data.GetSecret(InsecureSecretKeyAccess::Get()))) {
+    return absl::InvalidArgumentError("Failed to parse HpkePublicKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<HpkeParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key->params);
+      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key.params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  return HpkePublicKey::Create(*parameters, proto_key->public_key,
+  return HpkePublicKey::Create(*parameters, proto_key.public_key(),
                                serialization.IdRequirement(),
                                GetPartialKeyAccess());
 }
@@ -406,16 +434,16 @@ absl::StatusOr<HpkePrivateKey> ParsePrivateKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  absl::StatusOr<HpkePrivateKeyStruct> proto_key = GetPrivateKeyParser().Parse(
-      serialization.SerializedKeyProto().GetSecret(*token));
-  if (!proto_key.ok()) {
+  ProtoHpkePrivateKey proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse HpkePrivateKey proto");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
-  if (proto_key->public_key.version != 0) {
+  if (proto_key.public_key().version() != 0) {
     return absl::InvalidArgumentError(
         "Only version 0 public keys are accepted.");
   }
@@ -427,20 +455,20 @@ absl::StatusOr<HpkePrivateKey> ParsePrivateKey(
   }
 
   absl::StatusOr<HpkeParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixTypeEnum(), proto_key->public_key.params);
+      serialization.GetOutputPrefixTypeEnum(), proto_key.public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
-      *parameters, proto_key->public_key.public_key,
+      *parameters, proto_key.public_key().public_key(),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
   return HpkePrivateKey::Create(*public_key,
-                                RestrictedData(proto_key->private_key, *token),
+                                RestrictedData(proto_key.private_key(), *token),
                                 GetPartialKeyAccess());
 }
 
@@ -452,35 +480,29 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<HpkeParamsStruct> params = FromParameters(parameters);
+  absl::StatusOr<ProtoHpkeParams> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
-  HpkeKeyFormatStruct proto_key_format;
-  proto_key_format.params = *params;
-
-  absl::StatusOr<std::string> serialized =
-      GetKeyFormatParser().SerializeIntoString(proto_key_format);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
+  ProtoHpkeKeyFormat proto_key_format;
+  *proto_key_format.mutable_params() = *params;
 
   return internal::ProtoParametersSerialization::Create(
-      kPrivateTypeUrl, *output_prefix_type, *serialized);
+      kPrivateTypeUrl, *output_prefix_type,
+      proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const HpkePublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  absl::StatusOr<HpkeParamsStruct> params = FromParameters(key.GetParameters());
+  absl::StatusOr<ProtoHpkeParams> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  HpkePublicKeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.params = *params;
-  proto_key.public_key =
-      std::string(key.GetPublicKeyBytes(GetPartialKeyAccess()));
+  ProtoHpkePublicKey proto_key;
+  proto_key.set_version(0);
+  *proto_key.mutable_params() = *params;
+  proto_key.set_public_key(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -488,13 +510,8 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<std::string> serialized =
-      GetPublicKeyParser().SerializeIntoString(proto_key);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
-  RestrictedData restricted_output =
-      RestrictedData(*serialized, InsecureSecretKeyAccess::Get());
+  RestrictedData restricted_output = RestrictedData(
+      proto_key.SerializeAsString(), InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
       kPublicTypeUrl, restricted_output,
       internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
@@ -512,19 +529,18 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<HpkeParamsStruct> params = FromParameters(key.GetParameters());
+  absl::StatusOr<ProtoHpkeParams> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  HpkePrivateKeyStruct proto_key;
-  proto_key.public_key.version = 0;
-  proto_key.public_key.params = *params;
-  proto_key.public_key.public_key =
-      std::string(key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
-  proto_key.version = 0;
-  proto_key.private_key =
-      util::SecretDataFromStringView(restricted_input->GetSecret(*token));
+  ProtoHpkePrivateKey proto_key;
+  proto_key.mutable_public_key()->set_version(0);
+  *proto_key.mutable_public_key()->mutable_params() = *params;
+  proto_key.mutable_public_key()->set_public_key(
+      key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess()));
+  proto_key.set_version(0);
+  proto_key.set_private_key(restricted_input->Get(*token));
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
@@ -532,14 +548,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<SecretData> serialized =
-      GetPrivateKeyParser().SerializeIntoSecretData(proto_key);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
-
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, RestrictedData(*serialized, *token),
+      kPrivateTypeUrl,
+      RestrictedData(proto_key.SerializeAsSecretData(), *token),
       internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }

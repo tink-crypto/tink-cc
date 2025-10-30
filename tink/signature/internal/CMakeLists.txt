@@ -503,7 +503,7 @@ tink_cc_test(
     tink::signature::internal::key_creators
     tink::signature::internal::ml_dsa_proto_serialization
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::string_view
     absl::optional
@@ -783,7 +783,7 @@ tink_cc_test(
     tink::signature::internal::config_v0
     tink::signature::internal::key_gen_config_v0
     gmock
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::core::key_status

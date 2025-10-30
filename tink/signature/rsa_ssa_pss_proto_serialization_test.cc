@@ -22,7 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/base/no_destructor.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -459,34 +459,34 @@ KeyValues GenerateKeyValues(int modulus_size_in_bits) {
 
   absl::StatusOr<std::string> n_str =
       internal::BignumToString(n_bn, BN_num_bytes(n_bn));
-  CHECK_OK(n_str);
+  ABSL_CHECK_OK(n_str);
   absl::StatusOr<std::string> e_str =
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
-  CHECK_OK(e_str);
+  ABSL_CHECK_OK(e_str);
   absl::StatusOr<std::string> d_str =
       internal::BignumToString(d_bn, BN_num_bytes(d_bn));
-  CHECK_OK(d_str);
+  ABSL_CHECK_OK(d_str);
 
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
 
   absl::StatusOr<std::string> p_str =
       internal::BignumToString(p_bn, BN_num_bytes(p_bn));
-  CHECK_OK(p_str);
+  ABSL_CHECK_OK(p_str);
   absl::StatusOr<std::string> q_str =
       internal::BignumToString(q_bn, BN_num_bytes(q_bn));
-  CHECK_OK(q_str);
+  ABSL_CHECK_OK(q_str);
 
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
 
   absl::StatusOr<std::string> dp_str =
       internal::BignumToString(dp_bn, BN_num_bytes(dp_bn));
-  CHECK_OK(dp_str);
+  ABSL_CHECK_OK(dp_str);
   absl::StatusOr<std::string> dq_str =
       internal::BignumToString(dq_bn, BN_num_bytes(dq_bn));
-  CHECK_OK(dq_str);
+  ABSL_CHECK_OK(dq_str);
   absl::StatusOr<std::string> q_inv_str =
       internal::BignumToString(q_inv_bn, BN_num_bytes(q_inv_bn));
-  CHECK_OK(q_inv_str);
+  ABSL_CHECK_OK(q_inv_str);
 
   return KeyValues{*n_str,  *e_str,  *p_str, *q_str,
                    *dp_str, *dq_str, *d_str, *q_inv_str};
@@ -1105,10 +1105,10 @@ KeyAndSerialization PublicKeyAndSerializationTink() {
           .SetSaltLengthInBytes(11)
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, BigInteger(values.n), 101020, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPssPublicKey",
       {FieldWithNumber(2).IsSubMessage(
@@ -1135,10 +1135,10 @@ KeyAndSerialization PublicKeyAndSerializationRaw() {
           .SetSaltLengthInBytes(0)
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, BigInteger(values.n), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPssPublicKey",
       {FieldWithNumber(2).IsSubMessage(
@@ -1165,7 +1165,7 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
           .SetSaltLengthInBytes(77)
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, BigInteger(values.n), absl::nullopt, GetPartialKeyAccess());
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
@@ -1179,7 +1179,7 @@ KeyAndSerialization PrivateKeyAndSerializationRaw() {
           .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
           .Build(GetPartialKeyAccess());
 
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPssPrivateKey",
       {FieldWithNumber(2).IsSubMessage(
@@ -1214,7 +1214,7 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .SetSaltLengthInBytes(0)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, BigInteger(values.n), 4455, GetPartialKeyAccess());
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
@@ -1228,7 +1228,7 @@ KeyAndSerialization PrivateKeyAndSerializationTink() {
           .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
           .Build(GetPartialKeyAccess());
 
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPssPrivateKey",
       {FieldWithNumber(2).IsSubMessage(
@@ -1262,7 +1262,7 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .SetSaltLengthInBytes(0)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, BigInteger(values.n), 4455, GetPartialKeyAccess());
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
@@ -1276,7 +1276,7 @@ KeyAndSerialization PrivateKeyAndSerializationNonCanonical() {
           .SetCrtCoefficient(RestrictedBigInteger(values.q_inv, token))
           .Build(GetPartialKeyAccess());
 
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   ProtoKeySerialization serialization = SerializeMessage(
       "type.googleapis.com/google.crypto.tink.RsaSsaPssPrivateKey",
       {FieldWithNumber(1).IsVarint(1000),  // Bad version

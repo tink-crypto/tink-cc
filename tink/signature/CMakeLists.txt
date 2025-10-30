@@ -599,7 +599,7 @@ tink_cc_library(
     config_v0.cc
     config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::signature::internal::config_v0
   TAGS
@@ -625,7 +625,7 @@ tink_cc_library(
     key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::key_gen_configuration
     tink::signature::internal::key_gen_config_v0
   TAGS
@@ -1211,7 +1211,7 @@ tink_cc_test(
     tink::signature::signature_config
     tink::signature::signature_key_templates
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::status
     absl::strings
@@ -1467,7 +1467,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     absl::optional
@@ -1534,7 +1534,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pkcs1_public_key
     gmock
     absl::no_destructor
-    absl::check
+    absl::absl_check
     absl::status
     absl::statusor
     absl::strings
@@ -1609,7 +1609,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::rsa_ssa_pss_public_key
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     absl::string_view
@@ -1638,7 +1638,7 @@ tink_cc_test(
     tink::signature::rsa_ssa_pss_public_key
     gmock
     absl::no_destructor
-    absl::check
+    absl::absl_check
     absl::status
     absl::statusor
     absl::string_view

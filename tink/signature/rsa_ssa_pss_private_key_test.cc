@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
@@ -157,13 +157,13 @@ RsaSsaPssPublicKey GetValidPublicKey() {
           .SetSaltLengthInBytes(32)
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status()) << "Failed to create parameters.";
+  ABSL_CHECK_OK(parameters.status()) << "Failed to create parameters.";
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   absl::StatusOr<RsaSsaPssPublicKey> public_key = RsaSsaPssPublicKey::Create(
       *parameters, modulus,
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status()) << "Failed to create public key.";
+  ABSL_CHECK_OK(public_key.status()) << "Failed to create public key.";
   return *public_key;
 }
 

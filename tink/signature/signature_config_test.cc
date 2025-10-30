@@ -23,7 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -330,34 +330,34 @@ RsaKeyValues GenerateRsaKeyValues(int modulus_size_in_bits) {
 
   absl::StatusOr<std::string> n_str =
       internal::BignumToString(n_bn, BN_num_bytes(n_bn));
-  CHECK_OK(n_str);
+  ABSL_CHECK_OK(n_str);
   absl::StatusOr<std::string> e_str =
       internal::BignumToString(e_bn, BN_num_bytes(e_bn));
-  CHECK_OK(e_str);
+  ABSL_CHECK_OK(e_str);
   absl::StatusOr<std::string> d_str =
       internal::BignumToString(d_bn, BN_num_bytes(d_bn));
-  CHECK_OK(d_str);
+  ABSL_CHECK_OK(d_str);
 
   RSA_get0_factors(rsa.get(), &p_bn, &q_bn);
 
   absl::StatusOr<std::string> p_str =
       internal::BignumToString(p_bn, BN_num_bytes(p_bn));
-  CHECK_OK(p_str);
+  ABSL_CHECK_OK(p_str);
   absl::StatusOr<std::string> q_str =
       internal::BignumToString(q_bn, BN_num_bytes(q_bn));
-  CHECK_OK(q_str);
+  ABSL_CHECK_OK(q_str);
 
   RSA_get0_crt_params(rsa.get(), &dp_bn, &dq_bn, &q_inv_bn);
 
   absl::StatusOr<std::string> dp_str =
       internal::BignumToString(dp_bn, BN_num_bytes(dp_bn));
-  CHECK_OK(dp_str);
+  ABSL_CHECK_OK(dp_str);
   absl::StatusOr<std::string> dq_str =
       internal::BignumToString(dq_bn, BN_num_bytes(dq_bn));
-  CHECK_OK(dq_str);
+  ABSL_CHECK_OK(dq_str);
   absl::StatusOr<std::string> q_inv_str =
       internal::BignumToString(q_inv_bn, BN_num_bytes(q_inv_bn));
-  CHECK_OK(q_inv_str);
+  ABSL_CHECK_OK(q_inv_str);
 
   return RsaKeyValues{*n_str,  *e_str,  *p_str, *q_str,
                       *dp_str, *dq_str, *d_str, *q_inv_str};

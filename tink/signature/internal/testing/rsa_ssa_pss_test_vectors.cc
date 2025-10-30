@@ -15,10 +15,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/signature/internal/testing/rsa_ssa_pss_test_vectors.h"
+
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
@@ -94,7 +95,7 @@ RsaSsaPssPrivateKey PrivateKeyFor2048BitParameters(
   absl::StatusOr<RsaSsaPssPublicKey> public_key =
       RsaSsaPssPublicKey::Create(parameters, BigInteger(public_modulus),
                                  id_requirement, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
@@ -109,7 +110,7 @@ RsaSsaPssPrivateKey PrivateKeyFor2048BitParameters(
           .SetCrtCoefficient(
               RestrictedBigInteger(q_inverse, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return *private_key;
 }
 
@@ -186,7 +187,7 @@ RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
   absl::StatusOr<RsaSsaPssPublicKey> public_key =
       RsaSsaPssPublicKey::Create(parameters, BigInteger(public_modulus),
                                  id_requirement, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<RsaSsaPssPrivateKey> private_key =
       RsaSsaPssPrivateKey::Builder()
           .SetPublicKey(*public_key)
@@ -201,7 +202,7 @@ RsaSsaPssPrivateKey PrivateKeyFor4096BitParameters(
           .SetCrtCoefficient(
               RestrictedBigInteger(q_inverse, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return *private_key;
 }
 
@@ -215,7 +216,7 @@ SignatureTestVector CreateTestVector0() {
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .SetSaltLengthInBytes(32)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
@@ -241,7 +242,7 @@ SignatureTestVector CreateTestVector1() {
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .SetSaltLengthInBytes(32)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
@@ -267,7 +268,7 @@ SignatureTestVector CreateTestVector2() {
           .SetVariant(RsaSsaPssParameters::Variant::kTink)
           .SetSaltLengthInBytes(32)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
@@ -294,7 +295,7 @@ SignatureTestVector CreateTestVector3() {
           .SetVariant(RsaSsaPssParameters::Variant::kCrunchy)
           .SetSaltLengthInBytes(32)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
@@ -321,7 +322,7 @@ SignatureTestVector CreateTestVector4() {
           .SetVariant(RsaSsaPssParameters::Variant::kLegacy)
           .SetSaltLengthInBytes(32)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
@@ -348,7 +349,7 @@ SignatureTestVector CreateTestVector5() {
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .SetSaltLengthInBytes(64)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
@@ -374,7 +375,7 @@ SignatureTestVector CreateTestVector6() {
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .SetSaltLengthInBytes(32)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor4096BitParameters(*parameters, absl::nullopt)),
@@ -408,7 +409,7 @@ SignatureTestVector CreateTestVector7() {
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .SetSaltLengthInBytes(32)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
@@ -434,7 +435,7 @@ SignatureTestVector CreateTestVector8() {
           .SetVariant(RsaSsaPssParameters::Variant::kNoPrefix)
           .SetSaltLengthInBytes(0)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPssPrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),

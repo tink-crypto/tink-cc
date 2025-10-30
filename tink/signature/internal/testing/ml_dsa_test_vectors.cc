@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
@@ -109,12 +109,12 @@ MlDsaPrivateKey PrivateKeyForMlDsa65Parameters(
 
   absl::StatusOr<MlDsaPublicKey> public_key = MlDsaPublicKey::Create(
       parameters, public_key_bytes, id_requirement, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<MlDsaPrivateKey> private_key = MlDsaPrivateKey::Create(
       *public_key,
       RestrictedData(private_key_seed_bytes, InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return *private_key;
 }
 
@@ -122,7 +122,7 @@ MlDsaPrivateKey PrivateKeyForMlDsa65Parameters(
 SignatureTestVector CreateTestVector0() {
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<MlDsaPrivateKey>(
           PrivateKeyForMlDsa65Parameters(*parameters, absl::nullopt)),
@@ -234,7 +234,7 @@ SignatureTestVector CreateTestVector0() {
 SignatureTestVector CreateTestVector1() {
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
       MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<MlDsaPrivateKey>(
           PrivateKeyForMlDsa65Parameters(*parameters,

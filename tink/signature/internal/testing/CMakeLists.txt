@@ -7,7 +7,7 @@ tink_cc_library(
     rsa_ssa_pkcs1_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
-    absl::check
+    absl::absl_check
     absl::memory
     absl::strings
     absl::optional
@@ -40,7 +40,7 @@ tink_cc_library(
     rsa_ssa_pss_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
-    absl::check
+    absl::absl_check
     absl::memory
     absl::strings
     absl::optional
@@ -63,7 +63,7 @@ tink_cc_library(
     ed25519_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
-    absl::check
+    absl::absl_check
     absl::memory
     absl::strings
     absl::string_view
@@ -86,7 +86,7 @@ tink_cc_library(
     ecdsa_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
-    absl::check
+    absl::absl_check
     absl::memory
     absl::strings
     absl::optional
@@ -111,7 +111,7 @@ tink_cc_library(
     ml_dsa_test_vectors.h
   DEPS
     tink::signature::internal::testing::signature_test_vector
-    absl::check
+    absl::absl_check
     absl::memory
     absl::strings
     absl::optional

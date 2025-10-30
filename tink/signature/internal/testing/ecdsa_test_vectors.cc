@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
@@ -105,13 +105,13 @@ SignatureTestVector CreateTestVector0() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(
@@ -129,13 +129,13 @@ SignatureTestVector CreateTestVector1() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(
@@ -154,13 +154,13 @@ SignatureTestVector CreateTestVector2() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(
@@ -179,13 +179,13 @@ SignatureTestVector CreateTestVector3() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kCrunchy)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(
@@ -204,13 +204,13 @@ SignatureTestVector CreateTestVector4() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kLegacy)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), 0x99887766, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie("0099887766515b67e48efb8ebc12e0ce691cf210b18c1e96409667aae"
@@ -228,13 +228,13 @@ SignatureTestVector CreateTestVector5() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P256Point(), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(
@@ -252,13 +252,13 @@ SignatureTestVector CreateTestVector6() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P384Point(), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(
@@ -277,13 +277,13 @@ SignatureTestVector CreateTestVector7() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P384Point(), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P384SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(
@@ -302,13 +302,13 @@ SignatureTestVector CreateTestVector8() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kIeeeP1363)
           .SetVariant(EcdsaParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<EcdsaPublicKey> public_key = EcdsaPublicKey::Create(
       *parameters, P521Point(), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, P521SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return SignatureTestVector(
       absl::make_unique<EcdsaPrivateKey>(*private_key),
       HexDecodeOrDie(

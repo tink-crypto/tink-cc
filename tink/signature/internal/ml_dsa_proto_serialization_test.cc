@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -95,11 +95,11 @@ MlDsaPrivateKey GenerateMlDsa65PrivateKey(MlDsaParameters::Variant variant,
                                           absl::optional<int> id_requirement) {
   absl::StatusOr<MlDsaParameters> parameters =
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
       internal::CreateMlDsaKey(*parameters, id_requirement);
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
 
   return **private_key;
 }

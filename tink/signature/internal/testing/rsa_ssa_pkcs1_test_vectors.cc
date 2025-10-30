@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
@@ -95,7 +95,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(parameters, BigInteger(public_modulus),
                                    id_requirement, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
@@ -110,7 +110,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
           .SetCrtCoefficient(
               RestrictedBigInteger(q_inverse, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return *private_key;
 }
 
@@ -187,7 +187,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
   absl::StatusOr<RsaSsaPkcs1PublicKey> public_key =
       RsaSsaPkcs1PublicKey::Create(parameters, BigInteger(public_modulus),
                                    id_requirement, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<RsaSsaPkcs1PrivateKey> private_key =
       RsaSsaPkcs1PrivateKey::Builder()
           .SetPublicKey(*public_key)
@@ -202,7 +202,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
           .SetCrtCoefficient(
               RestrictedBigInteger(q_inverse, InsecureSecretKeyAccess::Get()))
           .Build(GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
   return *private_key;
 }
 
@@ -213,7 +213,7 @@ SignatureTestVector CreateTestVector0() {
           .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
           .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
@@ -236,7 +236,7 @@ SignatureTestVector CreateTestVector1() {
           .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
           .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),
@@ -259,7 +259,7 @@ SignatureTestVector CreateTestVector2() {
           .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
           .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
@@ -283,7 +283,7 @@ SignatureTestVector CreateTestVector3() {
           .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
           .SetVariant(RsaSsaPkcs1Parameters::Variant::kCrunchy)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
@@ -307,7 +307,7 @@ SignatureTestVector CreateTestVector4() {
           .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
           .SetVariant(RsaSsaPkcs1Parameters::Variant::kLegacy)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, 0x99887766)),
@@ -330,7 +330,7 @@ SignatureTestVector CreateTestVector5() {
           .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
           .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor4096BitParameters(*parameters, absl::nullopt)),
@@ -361,7 +361,7 @@ SignatureTestVector CreateTestVector6() {
           .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha384)
           .SetVariant(RsaSsaPkcs1Parameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   return SignatureTestVector(
       absl::make_unique<RsaSsaPkcs1PrivateKey>(
           PrivateKeyFor2048BitParameters(*parameters, absl::nullopt)),

@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -66,7 +66,7 @@ SignatureTestVector CreateTestVector0() {
   absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kNoPrefix).value(),
       Ed25519PublicKeyBytes(), absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
       absl::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
@@ -80,7 +80,7 @@ SignatureTestVector CreateTestVector1() {
   absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink).value(),
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
       absl::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
@@ -95,7 +95,7 @@ SignatureTestVector CreateTestVector2() {
   absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kCrunchy).value(),
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
       absl::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),
@@ -111,7 +111,7 @@ SignatureTestVector CreateTestVector3() {
   absl::StatusOr<Ed25519PublicKey> public_key = Ed25519PublicKey::Create(
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kLegacy).value(),
       Ed25519PublicKeyBytes(), 0x99887766, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   return SignatureTestVector(
       absl::make_unique<Ed25519PrivateKey>(
           Ed25519PrivateKey::Create(*public_key, Ed25519PrivateKeyBytes(),

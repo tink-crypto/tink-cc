@@ -637,7 +637,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/signature/internal:config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -650,7 +650,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/signature/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -1384,7 +1384,7 @@ cc_test(
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
@@ -1611,7 +1611,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:optional",
@@ -1669,7 +1669,7 @@ cc_test(
         "//tink/util:test_util",
         "@boringssl//:crypto",
         "@com_google_absl//absl/base:no_destructor",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
@@ -1733,7 +1733,7 @@ cc_test(
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
@@ -1772,7 +1772,7 @@ cc_test(
         "//tink/util:test_matchers",
         "@boringssl//:crypto",
         "@com_google_absl//absl/base:no_destructor",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",

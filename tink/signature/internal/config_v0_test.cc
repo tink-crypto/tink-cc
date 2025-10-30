@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -133,14 +133,14 @@ SlhDsaParameters GetSlhDsaParameters(SlhDsaParameters::Variant variant) {
   absl::StatusOr<SlhDsaParameters> parameters = SlhDsaParameters::Create(
       SlhDsaParameters::HashType::kSha2, /*private_key_size_in_bytes=*/64,
       SlhDsaParameters::SignatureType::kSmallSignature, variant);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
 MlDsaParameters GetMlDsaParameters(MlDsaParameters::Variant variant) {
   absl::StatusOr<MlDsaParameters> parameters =
       MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 

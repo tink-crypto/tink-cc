@@ -302,7 +302,7 @@ cc_test(
         "//tink/signature/internal/testing:signature_test_vector",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@googletest//:gtest_main",
     ],
 )
@@ -437,7 +437,7 @@ cc_test(
         "//tink/signature:ml_dsa_public_key",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",

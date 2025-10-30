@@ -36,6 +36,7 @@ tink_cc_library(
     field_with_number.cc
     field_with_number.h
   DEPS
+    absl::absl_check
     absl::check
     absl::statusor
     absl::strings

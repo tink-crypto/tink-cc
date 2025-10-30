@@ -398,7 +398,7 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     tink::internal::ssl_util
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     absl::span
@@ -1414,7 +1414,7 @@ tink_cc_library(
     tink::internal::secret_buffer
     absl::btree
     absl::crc32c
-    absl::check
+    absl::absl_check
     absl::status
     absl::statusor
     absl::strings
@@ -1743,7 +1743,7 @@ tink_cc_library(
     global_serialization_registry.h
   DEPS
     tink::internal::serialization_registry
-    absl::check
+    absl::absl_check
     tink::aead::internal::aes_ctr_hmac_aead_proto_serialization_impl
     tink::aead::internal::aes_eax_proto_serialization_impl
     tink::aead::internal::aes_gcm_proto_serialization_impl
@@ -1775,7 +1775,7 @@ tink_cc_test(
     tink::internal::proto_key_serialization
     tink::internal::serialization
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::optional
     tink::core::big_integer

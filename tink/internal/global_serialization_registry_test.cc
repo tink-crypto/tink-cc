@@ -20,7 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
@@ -92,12 +92,12 @@ std::unique_ptr<const AesCmacKey> CreateAesCmacKey() {
   absl::StatusOr<AesCmacParameters> parameters = AesCmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       AesCmacParameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesCmacKey> key =
       AesCmacKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                          /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const AesCmacKey>(*key);
 }
@@ -105,7 +105,7 @@ std::unique_ptr<const AesCmacKey> CreateAesCmacKey() {
 std::unique_ptr<const AesCmacPrfKey> CreateAesCmacPrfKey() {
   absl::StatusOr<AesCmacPrfKey> key = AesCmacPrfKey::Create(
       RestrictedData(/*num_random_bytes=*/32), GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const AesCmacPrfKey>(*key);
 }
@@ -120,7 +120,7 @@ std::unique_ptr<const AesCtrHmacAeadKey> CreateAesCtrHmacAeadKey() {
           .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
           .SetVariant(AesCtrHmacAeadParameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesCtrHmacAeadKey> key =
       AesCtrHmacAeadKey::Builder()
@@ -141,12 +141,12 @@ std::unique_ptr<const AesEaxKey> CreateAesEaxKey() {
           .SetTagSizeInBytes(16)
           .SetVariant(AesEaxParameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesEaxKey> key =
       AesEaxKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                         /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const AesEaxKey>(*key);
 }
@@ -159,12 +159,12 @@ std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
           .SetTagSizeInBytes(16)
           .SetVariant(AesGcmParameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesGcmKey> key =
       AesGcmKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                         /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const AesGcmKey>(*key);
 }
@@ -172,12 +172,12 @@ std::unique_ptr<const AesGcmKey> CreateAesGcmKey() {
 std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
   absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesGcmSivKey> key =
       AesGcmSivKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                            /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const AesGcmSivKey>(*key);
 }
@@ -185,12 +185,12 @@ std::unique_ptr<const AesGcmSivKey> CreateAesGcmSivKey() {
 std::unique_ptr<const AesSivKey> CreateAesSivKey() {
   absl::StatusOr<AesSivParameters> parameters = AesSivParameters::Create(
       /*key_size_in_bytes=*/32, AesSivParameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesSivKey> key =
       AesSivKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                         /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const AesSivKey>(*key);
 }
@@ -200,7 +200,7 @@ std::unique_ptr<const ChaCha20Poly1305Key> CreateChaCha20Poly1305Key() {
       ChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(/*num_random_bytes=*/32), /*id_requirement=*/123,
       GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const ChaCha20Poly1305Key>(*key);
 }
@@ -213,17 +213,17 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
           .SetVariant(EcdsaParameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  CHECK_OK(ec_key);
+  ABSL_CHECK_OK(ec_key);
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
 
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
 
   RestrictedBigInteger private_key_value =
       RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
@@ -231,7 +231,7 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
 
   return absl::make_unique<const EcdsaPrivateKey>(*private_key);
 }
@@ -244,17 +244,17 @@ std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
           .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
           .SetVariant(EcdsaParameters::Variant::kTink)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<EcKey> ec_key = NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  CHECK_OK(ec_key);
+  ABSL_CHECK_OK(ec_key);
 
   EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
 
   absl::StatusOr<EcdsaPublicKey> public_key =
       EcdsaPublicKey::Create(*parameters, public_point,
                              /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
 
   return absl::make_unique<const EcdsaPublicKey>(*public_key);
 }
@@ -262,22 +262,22 @@ std::unique_ptr<const EcdsaPublicKey> CreateEcdsaPublicKey() {
 std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
   absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<std::unique_ptr<Ed25519Key>> key_pair = NewEd25519Key();
-  CHECK_OK(key_pair);
+  ABSL_CHECK_OK(key_pair);
 
   absl::StatusOr<Ed25519PublicKey> public_key =
       Ed25519PublicKey::Create(*parameters, (*key_pair)->public_key,
                                /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
 
   RestrictedData private_key_bytes = RestrictedData(
       (*key_pair)->private_key, GetInsecureSecretKeyAccessInternal());
 
   absl::StatusOr<Ed25519PrivateKey> private_key = Ed25519PrivateKey::Create(
       *public_key, private_key_bytes, GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
 
   return absl::make_unique<const Ed25519PrivateKey>(*private_key);
 }
@@ -285,12 +285,12 @@ std::unique_ptr<const Ed25519PrivateKey> CreateEd25519PrivateKey() {
 std::unique_ptr<const Ed25519PublicKey> CreateEd25519PublicKey() {
   absl::StatusOr<Ed25519Parameters> parameters =
       Ed25519Parameters::Create(Ed25519Parameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<Ed25519PublicKey> key =
       Ed25519PublicKey::Create(*parameters, subtle::Random::GetRandomBytes(32),
                                /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const Ed25519PublicKey>(*key);
 }
@@ -299,12 +299,12 @@ std::unique_ptr<const HkdfPrfKey> CreateHkdfPrfKey() {
   absl::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
       /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
       /*salt=*/absl::nullopt);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<HkdfPrfKey> key =
       HkdfPrfKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                          GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const HkdfPrfKey>(*key);
 }
@@ -313,12 +313,12 @@ std::unique_ptr<const HmacKey> CreateHmacKey() {
   absl::StatusOr<HmacParameters> parameters = HmacParameters::Create(
       /*key_size_in_bytes=*/32, /*cryptographic_tag_size_in_bytes=*/16,
       HmacParameters::HashType::kSha256, HmacParameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<HmacKey> key =
       HmacKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                       /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const HmacKey>(*key);
 }
@@ -326,12 +326,12 @@ std::unique_ptr<const HmacKey> CreateHmacKey() {
 std::unique_ptr<const HmacPrfKey> CreateHmacPrfKey() {
   absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<HmacPrfKey> key =
       HmacPrfKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/16),
                          GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const HmacPrfKey>(*key);
 }
@@ -340,11 +340,11 @@ std::unique_ptr<const LegacyKmsAeadKey> CreateLegacyKmsAeadKey() {
   absl::StatusOr<LegacyKmsAeadParameters> parameters =
       LegacyKmsAeadParameters::Create("key_uri",
                                       LegacyKmsAeadParameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<LegacyKmsAeadKey> key =
       LegacyKmsAeadKey::Create(*parameters, /*id_requirement=*/123);
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const LegacyKmsAeadKey>(*key);
 }
@@ -352,12 +352,12 @@ std::unique_ptr<const LegacyKmsAeadKey> CreateLegacyKmsAeadKey() {
 std::unique_ptr<const XAesGcmKey> CreateXAesGcmKey() {
   absl::StatusOr<XAesGcmParameters> parameters = XAesGcmParameters::Create(
       XAesGcmParameters::Variant::kTink, /*salt_size_bytes=*/12);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<XAesGcmKey> key =
       XAesGcmKey::Create(*parameters, RestrictedData(/*num_random_bytes=*/32),
                          /*id_requirement=*/123, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const XAesGcmKey>(*key);
 }
@@ -367,7 +367,7 @@ std::unique_ptr<const XChaCha20Poly1305Key> CreateXChaCha20Poly1305Key() {
       XChaCha20Poly1305Parameters::Variant::kTink,
       RestrictedData(/*num_random_bytes=*/32), /*id_requirement=*/123,
       GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   return absl::make_unique<const XChaCha20Poly1305Key>(*key);
 }
@@ -382,12 +382,12 @@ std::unique_ptr<const AesCtrHmacStreamingKey> CreateAesCtrHmacStreamingKey() {
           .SetHmacTagSizeInBytes(16)
           .SetCiphertextSegmentSizeInBytes(3 * 1024 * 1024)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, RestrictedData(/*num_random_bytes=*/35),
       GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
   return absl::make_unique<const AesCtrHmacStreamingKey>(*key);
 }
 
@@ -399,12 +399,12 @@ std::unique_ptr<const AesGcmHkdfStreamingKey> CreateAesGcmHkdfStreamingKey() {
           .SetDerivedKeySizeInBytes(32)
           .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha256)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters, RestrictedData(/*num_random_bytes=*/32),
       GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
   return absl::make_unique<const AesGcmHkdfStreamingKey>(*key);
 }
 

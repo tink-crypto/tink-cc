@@ -33,7 +33,7 @@
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
 #endif
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "openssl/bn.h"
 #include "openssl/ec.h"
 #include "openssl/ecdsa.h"
@@ -772,7 +772,7 @@ std::vector<EcdhWycheproofTestVector> ReadEcdhWycheproofTestVectors(
     absl::string_view file_name) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(std::string(file_name));
-  CHECK_OK(parsed_input.status());
+  ABSL_CHECK_OK(parsed_input.status());
   std::vector<EcdhWycheproofTestVector> test_vectors;
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");

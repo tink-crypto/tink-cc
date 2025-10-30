@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
@@ -50,7 +50,7 @@ std::string WiretypeAndFieldNumber(WireType wire_type, int field_number) {
   result.resize(
       proto_parsing::WireTypeAndFieldNumberLength(wire_type, field_number));
   SerializationState result_state = SerializationState(absl::MakeSpan(result));
-  CHECK_OK(proto_parsing::SerializeWireTypeAndFieldNumber(
+  ABSL_CHECK_OK(proto_parsing::SerializeWireTypeAndFieldNumber(
       wire_type, field_number, result_state));
   return result;
 }
@@ -59,7 +59,7 @@ std::string SerializeVarintToString(uint64_t v) {
   std::string result;
   result.resize(crypto::tink::internal::proto_parsing::VarintLength(v));
   SerializationState result_state = SerializationState(absl::MakeSpan(result));
-  CHECK_OK(SerializeVarint(v, result_state));
+  ABSL_CHECK_OK(SerializeVarint(v, result_state));
   return result;
 }
 
@@ -88,7 +88,7 @@ ProtoKeySerialization SerializeMessage(
       type_url,
       RestrictedData(absl::StrJoin(v, ""), InsecureSecretKeyAccess::Get()),
       key_material_type, output_prefix_type, id_requirement);
-  CHECK_OK(result.status());
+  ABSL_CHECK_OK(result.status());
   return *result;
 }
 

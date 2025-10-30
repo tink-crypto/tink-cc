@@ -411,13 +411,14 @@ TEST_P(AesCtrHmacStreamingProtoSerializationTest, SerializeParameters) {
   const ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type, Eq(OutputPrefixTypeEnum::kRaw));
+  const ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(),
+              Eq(OutputPrefixTypeEnum::kRaw));
 
   AesCtrHmacStreamingKeyFormat format;
-  ASSERT_THAT(format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(format.ParseFromString(key_template.value()), IsTrue());
   EXPECT_THAT(format.version(), Eq(0));
   EXPECT_THAT(format.key_size(), Eq(test_case.key_size));
 

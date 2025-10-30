@@ -124,14 +124,14 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 
 absl::StatusOr<AesSivParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetKeyTemplateStruct().type_url != kTypeUrl) {
+  if (serialization.GetProtoKeyTemplate().type_url() != kTypeUrl) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Wrong type URL when parsing AesSivParameters.");
   }
 
   ProtoAesSivKeyFormat proto_key_format;
   if (!proto_key_format.ParseFromString(
-          serialization.GetKeyTemplateStruct().value)) {
+          serialization.GetProtoKeyTemplate().value())) {
     return absl::InvalidArgumentError("Failed to parse AesSivKeyFormat proto");
   }
   if (proto_key_format.version() != 0) {
@@ -140,7 +140,7 @@ absl::StatusOr<AesSivParameters> ParseParameters(
   }
 
   absl::StatusOr<AesSivParameters::Variant> variant =
-      ToVariant(serialization.GetKeyTemplateStruct().output_prefix_type);
+      ToVariant(serialization.GetProtoKeyTemplate().output_prefix_type());
   if (!variant.ok()) return variant.status();
 
   return AesSivParameters::Create(proto_key_format.key_size(), *variant);

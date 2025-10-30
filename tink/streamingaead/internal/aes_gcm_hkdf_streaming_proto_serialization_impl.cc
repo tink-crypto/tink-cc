@@ -184,13 +184,13 @@ absl::StatusOr<AesGcmHkdfStreamingParamsStruct> FromParameters(
 
 absl::StatusOr<AesGcmHkdfStreamingParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesGcmHkdfStreamingParameters.");
   }
   absl::StatusOr<AesGcmHkdfStreamingKeyFormatStruct> parsed_key_format =
-      AesGcmHkdfStreamingKeyFormatStruct::Parser().Parse(key_template.value);
+      AesGcmHkdfStreamingKeyFormatStruct::Parser().Parse(key_template.value());
   if (!parsed_key_format.ok()) {
     return parsed_key_format.status();
   }

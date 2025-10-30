@@ -270,13 +270,13 @@ absl::StatusOr<ProtoAesCtrHmacStreamingParams> FromParameters(
 
 absl::StatusOr<AesCtrHmacStreamingParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesCtrHmacStreamingParameters.");
   }
   ProtoAesCtrHmacStreamingKeyFormat key_format_proto;
-  if (!key_format_proto.ParseFromString(key_template.value)) {
+  if (!key_format_proto.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse AesCtrHmacStreamingKeyFormat proto");
   }

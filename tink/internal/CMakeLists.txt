@@ -2149,6 +2149,41 @@ tink_cc_test(
 )
 
 tink_cc_library(
+  NAME mlkem_util
+  SRCS
+    mlkem_util.cc
+    mlkem_util.h
+  DEPS
+    tink::internal::call_with_core_dump_protection
+    tink::internal::secret_buffer
+    absl::memory
+    absl::status
+    absl::statusor
+    crypto
+    tink::core::secret_data
+    tink::subtle::subtle_util
+    tink::util::secret_data
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME mlkem_util_test
+  SRCS
+    mlkem_util_test.cc
+  DEPS
+    tink::internal::mlkem_util
+    gmock
+    absl::status
+    absl::statusor
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_library(
   NAME proto_parser_repeated_message_field
   SRCS
     proto_parser_repeated_message_field.h

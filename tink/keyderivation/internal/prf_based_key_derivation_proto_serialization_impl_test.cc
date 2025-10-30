@@ -255,9 +255,10 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
 
   absl::StatusOr<std::unique_ptr<Parameters>> params =
       registry.ParseParameters(*serialization);
-  EXPECT_THAT(params.status(),
-              StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Parsing input failed")));
+  EXPECT_THAT(
+      params.status(),
+      StatusIs(absl::StatusCode::kInvalidArgument,
+               HasSubstr("Failed to parse PrfBasedDeriverKeyFormatTP")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,
@@ -552,7 +553,7 @@ TEST(PrfBasedKeyDerivationProtoSerializationTest,
       registry.ParseKey(*serialization, GetInsecureSecretKeyAccessInternal());
   EXPECT_THAT(key.status(),
               StatusIs(absl::StatusCode::kInvalidArgument,
-                       HasSubstr("Parsing input failed")));
+                       HasSubstr("Failed to parse PrfBasedDeriverKeyTP")));
 }
 
 TEST(PrfBasedKeyDerivationProtoSerializationTest,

@@ -316,7 +316,6 @@ tink_cc_library(
     prf_based_key_derivation_proto_serialization_impl.cc
     prf_based_key_derivation_proto_serialization_impl.h
   DEPS
-    absl::no_destructor
     absl::check
     absl::memory
     absl::status
@@ -337,7 +336,8 @@ tink_cc_library(
     tink::internal::parameters_serializer
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
-    tink::internal::proto_parser
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
     tink::internal::serialization
     tink::internal::serialization_registry
     tink::internal::tink_proto_structs
@@ -345,7 +345,6 @@ tink_cc_library(
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::prf::prf_key
     tink::prf::prf_parameters
-    tink::streamingaead::aes_ctr_hmac_streaming_proto_serialization
     tink::util::status
     tink::proto::prf_based_deriver_cc_proto
     tink::proto::tink_cc_proto

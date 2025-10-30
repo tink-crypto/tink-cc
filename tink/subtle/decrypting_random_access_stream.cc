@@ -58,7 +58,7 @@ DecryptingRandomAccessStream::New(
   }
   std::unique_ptr<DecryptingRandomAccessStream> dec_stream(
       new DecryptingRandomAccessStream());
-  absl::MutexLock lock(&(dec_stream->status_mutex_));
+  absl::MutexLock lock(dec_stream->status_mutex_);
   dec_stream->segment_decrypter_ = std::move(segment_decrypter);
   dec_stream->ct_source_ = std::move(ciphertext_source);
 
@@ -100,7 +100,7 @@ absl::Status DecryptingRandomAccessStream::PRead(int64_t position, int count,
   }
 
   {  // Initialize, if not initialized yet.
-    absl::MutexLock lock(&status_mutex_);
+    absl::MutexLock lock(status_mutex_);
     InitializeIfNeeded();
     if (!status_.ok()) return status_;
   }
@@ -300,7 +300,7 @@ absl::Status DecryptingRandomAccessStream::PReadAndDecrypt(
 
 absl::StatusOr<int64_t> DecryptingRandomAccessStream::size() {
   {  // Initialize, if not initialized yet.
-    absl::MutexLock lock(&status_mutex_);
+    absl::MutexLock lock(status_mutex_);
     InitializeIfNeeded();
     if (!status_.ok()) return status_;
   }

@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "tink/aead.h"
 #include "tink/aead/aead_config.h"
@@ -47,7 +47,7 @@ using ::crypto::tink::test::StatusIs;
 using ::testing::HasSubstr;
 
 AesGcmParameters CreateAes256GcmParameters() {
-  CHECK_OK(AeadConfig::Register());
+  ABSL_CHECK_OK(AeadConfig::Register());
 
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
@@ -56,7 +56,7 @@ AesGcmParameters CreateAes256GcmParameters() {
           .SetTagSizeInBytes(16)
           .SetVariant(AesGcmParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 

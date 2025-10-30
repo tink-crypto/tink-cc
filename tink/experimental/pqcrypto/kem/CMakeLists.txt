@@ -153,7 +153,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::ml_kem_proto_serialization
     tink::experimental::pqcrypto::kem::ml_kem_public_key
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::string_view
     absl::optional

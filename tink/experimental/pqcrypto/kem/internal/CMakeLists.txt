@@ -162,7 +162,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     crypto
@@ -219,7 +219,7 @@ tink_cc_test(
     tink::experimental::pqcrypto::kem::internal::ml_kem_encapsulate_aes_gcm
     tink::experimental::pqcrypto::kem::internal::ml_kem_test_util
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     tink::core::aead
     tink::core::keyset_handle

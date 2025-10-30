@@ -20,7 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -74,11 +74,11 @@ class MlKemProtoSerializationTest : public ::testing::Test {
 MlKemPrivateKey GenerateMlKem768PrivateKey(int id_requirement) {
   absl::StatusOr<MlKemParameters> parameters = MlKemParameters::Create(
       /*key_size=*/768, MlKemParameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<MlKemPrivateKey> private_key =
       internal::GenerateMlKemPrivateKey(*parameters, id_requirement);
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
 
   return *private_key;
 }

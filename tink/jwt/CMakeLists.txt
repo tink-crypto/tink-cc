@@ -562,7 +562,7 @@ tink_cc_library(
     jwt_mac_config_v0.cc
     jwt_mac_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::jwt::internal::jwt_mac_config_v0
 )
@@ -573,7 +573,7 @@ tink_cc_library(
     jwt_mac_key_gen_config_v0.cc
     jwt_mac_key_gen_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::key_gen_configuration
     tink::jwt::internal::jwt_mac_key_gen_config_v0
 )
@@ -584,7 +584,7 @@ tink_cc_library(
     jwt_signature_config_v0.cc
     jwt_signature_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::jwt::internal::jwt_signature_config_v0
 )
@@ -595,7 +595,7 @@ tink_cc_library(
     jwt_signature_key_gen_config_v0.cc
     jwt_signature_key_gen_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::key_gen_configuration
     tink::jwt::internal::jwt_signature_key_gen_config_v0
 )
@@ -983,7 +983,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pkcs1_private_key
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     absl::string_view
@@ -1009,7 +1009,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pkcs1_proto_serialization
     tink::jwt::jwt_rsa_ssa_pkcs1_public_key
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::string_view
     absl::optional
@@ -1079,6 +1079,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_private_key
     tink::jwt::jwt_rsa_ssa_pss_public_key
     gmock
+    absl::absl_check
     absl::check
     absl::status
     absl::strings
@@ -1105,6 +1106,7 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_proto_serialization
     tink::jwt::jwt_rsa_ssa_pss_public_key
     gmock
+    absl::absl_check
     absl::check
     absl::status
     absl::string_view

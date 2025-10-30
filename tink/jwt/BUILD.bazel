@@ -610,7 +610,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/jwt/internal:jwt_mac_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -622,7 +622,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/jwt/internal:jwt_mac_key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -634,7 +634,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/jwt/internal:jwt_signature_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -646,7 +646,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/jwt/internal:jwt_signature_key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -1045,7 +1045,7 @@ cc_test(
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:test_matchers",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
@@ -1080,7 +1080,7 @@ cc_test(
         "//tink/internal:tink_proto_structs",
         "//tink/util:test_matchers",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
@@ -1141,6 +1141,7 @@ cc_test(
         "//tink/internal:ssl_unique_ptr",
         "//tink/util:test_matchers",
         "@boringssl//:crypto",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
@@ -1176,6 +1177,7 @@ cc_test(
         "//tink/internal:tink_proto_structs",
         "//tink/util:test_matchers",
         "@boringssl//:crypto",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",

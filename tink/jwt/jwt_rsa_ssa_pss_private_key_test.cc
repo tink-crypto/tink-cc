@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
@@ -120,7 +121,7 @@ const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
 
 std::string Base64WebSafeDecode(absl::string_view base64_string) {
   std::string dest;
-  CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
+  ABSL_CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
       << "Failed to base64 decode.";
 
   return dest;
@@ -159,7 +160,7 @@ JwtRsaSsaPssPublicKey GetValidPublicKey(
           .SetAlgorithm(algorithm)
           .SetKidStrategy(kid_strategy)
           .Build();
-  CHECK_OK(parameters.status()) << "Failed to create parameters.";
+  ABSL_CHECK_OK(parameters.status()) << "Failed to create parameters.";
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   JwtRsaSsaPssPublicKey::Builder builder = JwtRsaSsaPssPublicKey::Builder()
@@ -174,7 +175,7 @@ JwtRsaSsaPssPublicKey GetValidPublicKey(
 
   absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
       builder.Build(GetPartialKeyAccess());
-  CHECK_OK(public_key.status()) << "Failed to create public key.";
+  ABSL_CHECK_OK(public_key.status()) << "Failed to create public key.";
   return *public_key;
 }
 

@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
@@ -164,7 +164,7 @@ JwtRsaSsaPkcs1PublicKey GetValidPublicKey(
           .SetAlgorithm(algorithm)
           .SetKidStrategy(kid_strategy)
           .Build();
-  CHECK_OK(parameters.status()) << "Failed to create parameters.";
+  ABSL_CHECK_OK(parameters.status()) << "Failed to create parameters.";
 
   BigInteger modulus(Base64WebSafeDecode(k2048BitRsaModulus));
   JwtRsaSsaPkcs1PublicKey::Builder builder = JwtRsaSsaPkcs1PublicKey::Builder()
@@ -179,7 +179,7 @@ JwtRsaSsaPkcs1PublicKey GetValidPublicKey(
 
   absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
       builder.Build(GetPartialKeyAccess());
-  CHECK_OK(public_key.status()) << "Failed to create public key.";
+  ABSL_CHECK_OK(public_key.status()) << "Failed to create public key.";
   return *public_key;
 }
 

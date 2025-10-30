@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/check.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
@@ -154,7 +155,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
     absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
         key_bytes.size(), JwtHmacParameters::KidStrategy::kIgnored,
         JwtHmacParameters::Algorithm::kHs256);
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
 
     absl::StatusOr<JwtHmacKey> key =
         JwtHmacKey::Builder()
@@ -162,7 +163,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
             .SetKeyBytes(
                 RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(key);
+    ABSL_CHECK_OK(key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -191,7 +192,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
     absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
         key_bytes.size(), JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
         JwtHmacParameters::Algorithm::kHs256);
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtHmacKey> key =
         JwtHmacKey::Builder()
             .SetParameters(*params)
@@ -199,7 +200,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
             .SetKeyBytes(
                 RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(key);
+    ABSL_CHECK_OK(key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -224,7 +225,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
     absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
         key_bytes.size(), JwtHmacParameters::KidStrategy::kCustom,
         JwtHmacParameters::Algorithm::kHs256);
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtHmacKey> key =
         JwtHmacKey::Builder()
             .SetParameters(*params)
@@ -232,7 +233,7 @@ std::vector<JwtMacTestParam> GetJwtMacTestParams() {
             .SetKeyBytes(
                 RestrictedData(key_bytes, InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(key);
+    ABSL_CHECK_OK(key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()

@@ -24,6 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
@@ -273,14 +274,14 @@ BigInteger F4() {
 }
 
 std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
-  CHECK_OK(RegisterJwtEcdsaProtoSerialization());
+  ABSL_CHECK_OK(RegisterJwtEcdsaProtoSerialization());
   std::vector<JwtSignatureTestVector> res;
 
   {
     absl::StatusOr<JwtEcdsaParameters> params =
         JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kIgnored,
                                    JwtEcdsaParameters::Algorithm::kEs256);
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     EcPoint public_point(/*x=*/BigInteger(Base64WebSafeDecode(kEs256X)),
                          /*y=*/BigInteger(Base64WebSafeDecode(kEs256Y)));
 
@@ -289,13 +290,13 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetPublicPoint(public_point)
             .SetParameters(*params)
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
         *std::move(public_key),
         RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
                              InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -323,7 +324,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
     absl::StatusOr<JwtEcdsaParameters> params = JwtEcdsaParameters::Create(
         JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
         JwtEcdsaParameters::Algorithm::kEs256);
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     EcPoint public_point(/*x=*/BigInteger(Base64WebSafeDecode(kEs256X)),
                          /*y=*/BigInteger(Base64WebSafeDecode(kEs256Y)));
 
@@ -333,13 +334,13 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetParameters(*params)
             .SetIdRequirement(0x01020304)
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
         *std::move(public_key),
         RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
                              InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -365,7 +366,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
     absl::StatusOr<JwtEcdsaParameters> params =
         JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
                                    JwtEcdsaParameters::Algorithm::kEs256);
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     EcPoint public_point(/*x=*/BigInteger(Base64WebSafeDecode(kEs256X)),
                          /*y=*/BigInteger(Base64WebSafeDecode(kEs256Y)));
 
@@ -375,13 +376,13 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetParameters(*params)
             .SetCustomKid("custom-kid")
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
         *std::move(public_key),
         RestrictedBigInteger(Base64WebSafeDecode(kEs256S),
                              InsecureSecretKeyAccess::Get()),
         GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -411,13 +412,13 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetModulusSizeInBits(size_t(2048))
             .SetPublicExponent(F4())
             .Build();
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
         JwtRsaSsaPkcs1PublicKey::Builder()
             .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
             .SetParameters(*params)
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
         JwtRsaSsaPkcs1PrivateKey::Builder()
             .SetPublicKey(*std::move(public_key))
@@ -438,7 +439,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
                 RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
                                      InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -476,14 +477,14 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetModulusSizeInBits(size_t(2048))
             .SetPublicExponent(F4())
             .Build();
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
         JwtRsaSsaPkcs1PublicKey::Builder()
             .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
             .SetParameters(*params)
             .SetIdRequirement(0x01020304)
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
         JwtRsaSsaPkcs1PrivateKey::Builder()
             .SetPublicKey(*std::move(public_key))
@@ -504,7 +505,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
                 RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
                                      InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -538,14 +539,14 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetModulusSizeInBits(size_t(2048))
             .SetPublicExponent(F4())
             .Build();
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtRsaSsaPkcs1PublicKey> public_key =
         JwtRsaSsaPkcs1PublicKey::Builder()
             .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
             .SetParameters(*params)
             .SetCustomKid("custom-kid")
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtRsaSsaPkcs1PrivateKey> private_key =
         JwtRsaSsaPkcs1PrivateKey::Builder()
             .SetPublicKey(*std::move(public_key))
@@ -566,7 +567,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
                 RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
                                      InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -602,13 +603,13 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetModulusSizeInBits(size_t(2048))
             .SetPublicExponent(F4())
             .Build();
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
         JwtRsaSsaPssPublicKey::Builder()
             .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
             .SetParameters(*params)
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
         JwtRsaSsaPssPrivateKey::Builder()
             .SetPublicKey(*std::move(public_key))
@@ -629,7 +630,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
                 RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
                                      InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -667,14 +668,14 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetModulusSizeInBits(size_t(2048))
             .SetPublicExponent(F4())
             .Build();
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
         JwtRsaSsaPssPublicKey::Builder()
             .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
             .SetParameters(*params)
             .SetIdRequirement(0x01020304)
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
         JwtRsaSsaPssPrivateKey::Builder()
             .SetPublicKey(*std::move(public_key))
@@ -695,7 +696,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
                 RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
                                      InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()
@@ -728,14 +729,14 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
             .SetModulusSizeInBits(size_t(2048))
             .SetPublicExponent(F4())
             .Build();
-    CHECK_OK(params);
+    ABSL_CHECK_OK(params);
     absl::StatusOr<JwtRsaSsaPssPublicKey> public_key =
         JwtRsaSsaPssPublicKey::Builder()
             .SetModulus(BigInteger(Base64WebSafeDecode(kN2048Base64)))
             .SetParameters(*params)
             .SetCustomKid("custom-kid")
             .Build(GetPartialKeyAccess());
-    CHECK_OK(public_key);
+    ABSL_CHECK_OK(public_key);
     absl::StatusOr<JwtRsaSsaPssPrivateKey> private_key =
         JwtRsaSsaPssPrivateKey::Builder()
             .SetPublicKey(*std::move(public_key))
@@ -756,7 +757,7 @@ std::vector<JwtSignatureTestVector> GetJwtSignatureTestVectors() {
                 RestrictedBigInteger(Base64WebSafeDecode(kQInv2048Base64),
                                      InsecureSecretKeyAccess::Get()))
             .Build(GetPartialKeyAccess());
-    CHECK_OK(private_key);
+    ABSL_CHECK_OK(private_key);
 
     absl::StatusOr<JwtValidator> test_vector_validator =
         JwtValidatorBuilder()

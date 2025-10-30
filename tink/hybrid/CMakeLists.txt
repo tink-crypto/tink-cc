@@ -329,6 +329,7 @@ tink_cc_library(
     tink::internal::call_with_core_dump_protection
     tink::internal::ec_util
     tink::internal::err_util
+    tink::internal::mlkem_util
     tink::internal::ssl_unique_ptr
     tink::internal::xwing_util
     tink::subtle::common_enums
@@ -921,6 +922,7 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::restricted_data
     tink::internal::ec_util
+    tink::internal::mlkem_util
     tink::internal::secret_buffer
     tink::internal::ssl_unique_ptr
     tink::internal::xwing_util
@@ -943,7 +945,7 @@ tink_cc_test(
     tink::hybrid::hpke_proto_serialization
     tink::hybrid::hpke_public_key
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     absl::string_view

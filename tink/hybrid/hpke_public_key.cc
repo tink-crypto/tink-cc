@@ -64,6 +64,18 @@ absl::Status ValidatePublicKey(HpkeParameters::KemId kem_id,
       curve = subtle::EllipticCurveType::UNKNOWN_CURVE;
       expected_length = 1216;
       break;
+    // Key length from
+    // https://www.ietf.org/archive/id/draft-ietf-hpke-pq-01.html#name-ml-kem
+    case HpkeParameters::KemId::kMlKem768:
+      curve = subtle::EllipticCurveType::UNKNOWN_CURVE;
+      expected_length = 1184;
+      break;
+    // Key length from
+    // https://www.ietf.org/archive/id/draft-ietf-hpke-pq-01.html#name-ml-kem
+    case HpkeParameters::KemId::kMlKem1024:
+      curve = subtle::EllipticCurveType::UNKNOWN_CURVE;
+      expected_length = 1568;
+      break;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unknown KEM ID: ", kem_id));

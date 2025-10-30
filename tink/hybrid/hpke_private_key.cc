@@ -25,6 +25,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/bn_util.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/mlkem_util.h"
 #include "tink/internal/xwing_util.h"
 #include "tink/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -88,6 +89,16 @@ absl::Status ValidatePrivateKeyLength(HpkeParameters::KemId kem_id,
     case HpkeParameters::KemId::kXWing:
       expected_length = 32;
       break;
+    // Key length from
+    // https://www.ietf.org/archive/id/draft-ietf-hpke-pq-01.html#name-ml-kem
+    case HpkeParameters::KemId::kMlKem768:
+      expected_length = 64;
+      break;
+    // Key length from
+    // https://www.ietf.org/archive/id/draft-ietf-hpke-pq-01.html#name-ml-kem
+    case HpkeParameters::KemId::kMlKem1024:
+      expected_length = 64;
+      break;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           absl::StrCat("Unknown KEM ID: ", kem_id));
@@ -103,12 +114,6 @@ absl::Status ValidatePrivateKeyLength(HpkeParameters::KemId kem_id,
   }
 
   return absl::OkStatus();
-}
-
-bool IsNistKem(HpkeParameters::KemId kem_id) {
-  return kem_id == HpkeParameters::KemId::kDhkemP256HkdfSha256 ||
-         kem_id == HpkeParameters::KemId::kDhkemP384HkdfSha384 ||
-         kem_id == HpkeParameters::KemId::kDhkemP521HkdfSha512;
 }
 
 absl::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
@@ -161,10 +166,6 @@ absl::Status ValidateNistEcKeyPair(subtle::EllipticCurveType curve,
   return absl::OkStatus();
 }
 
-bool IsX25519Kem(HpkeParameters::KemId kem_id) {
-  return kem_id == HpkeParameters::KemId::kDhkemX25519HkdfSha256;
-}
-
 absl::Status ValidateX25519KeyPair(absl::string_view public_key_bytes,
                                    const SecretData& private_key_bytes) {
   absl::StatusOr<std::unique_ptr<internal::X25519Key>> x25519_key =
@@ -201,6 +202,25 @@ absl::Status ValidateXWingKeyPair(absl::string_view public_key_bytes,
   return absl::OkStatus();
 }
 
+absl::Status ValidateMlKemKeyPair(absl::string_view public_key_bytes,
+                                  const SecretData& private_key_bytes,
+                                  internal::MlKemKeySize key_size) {
+  absl::StatusOr<internal::MlKemKey> mlkem_key =
+      internal::MlKemKeyFromPrivateKey(private_key_bytes, key_size);
+  if (!mlkem_key.ok()) {
+    return mlkem_key.status();
+  }
+  auto public_key_bytes_from_private = absl::string_view(
+      reinterpret_cast<const char*>(mlkem_key->public_key.data()),
+      mlkem_key->public_key.size());
+  if (public_key_bytes != public_key_bytes_from_private) {
+    return absl::Status(
+        absl::StatusCode::kInvalidArgument,
+        "ML-KEM private key does not match the specified ML-KEM public key.");
+  }
+  return absl::OkStatus();
+}
+
 absl::Status ValidateKeyPair(const HpkePublicKey& public_key,
                              const RestrictedData& private_key_bytes,
                              PartialKeyAccessToken token) {
@@ -209,17 +229,31 @@ absl::Status ValidateKeyPair(const HpkePublicKey& public_key,
   const SecretData& secret =
       private_key_bytes.Get(InsecureSecretKeyAccess::Get());
 
-  if (IsNistKem(kem_id)) {
-    absl::StatusOr<subtle::EllipticCurveType> curve =
-        CurveTypeFromKemId(kem_id);
-    if (!curve.ok()) {
-      return curve.status();
+  switch (kem_id) {
+    case HpkeParameters::KemId::kDhkemP256HkdfSha256:
+    case HpkeParameters::KemId::kDhkemP384HkdfSha384:
+    case HpkeParameters::KemId::kDhkemP521HkdfSha512: {
+      absl::StatusOr<subtle::EllipticCurveType> curve =
+          CurveTypeFromKemId(kem_id);
+      if (!curve.ok()) {
+        return curve.status();
+      }
+      return ValidateNistEcKeyPair(*curve, public_key_bytes, secret);
     }
-    return ValidateNistEcKeyPair(*curve, public_key_bytes, secret);
-  } else if (IsX25519Kem(kem_id)) {
-    return ValidateX25519KeyPair(public_key_bytes, secret);
+    case HpkeParameters::KemId::kDhkemX25519HkdfSha256:
+      return ValidateX25519KeyPair(public_key_bytes, secret);
+    case HpkeParameters::KemId::kXWing:
+      return ValidateXWingKeyPair(public_key_bytes, secret);
+    case HpkeParameters::KemId::kMlKem768:
+      return ValidateMlKemKeyPair(public_key_bytes, secret,
+                                  internal::MlKemKeySize::ML_KEM768);
+    case HpkeParameters::KemId::kMlKem1024:
+      return ValidateMlKemKeyPair(public_key_bytes, secret,
+                                  internal::MlKemKeySize::ML_KEM1024);
+    default:
+      return absl::Status(absl::StatusCode::kInvalidArgument,
+                          absl::StrCat("Unknown KEM ID: ", kem_id));
   }
-  return ValidateXWingKeyPair(public_key_bytes, secret);
 }
 
 }  // namespace

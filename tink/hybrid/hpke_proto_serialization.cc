@@ -58,7 +58,7 @@ using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-bool HpkeKemEnumIsValid(int value) { return value >= 0 && value <= 5; }
+bool HpkeKemEnumIsValid(int value) { return value >= 0 && value <= 7; }
 
 // Proto enum com.google.crypto.tink.HpkeKem.
 enum class HpkeKemEnum : uint32_t {
@@ -68,6 +68,8 @@ enum class HpkeKemEnum : uint32_t {
   kDhkemP384HkdfSha384,
   kDhkemP521HkdfSha512,
   kXWing,
+  kMlKem768,
+  kMlKem1024,
 };
 
 bool HpkeKdfEnumIsValid(int value) { return value >= 0 && value <= 3; }
@@ -247,6 +249,10 @@ absl::StatusOr<HpkeParameters::KemId> ToKemId(HpkeKemEnum kem) {
       return HpkeParameters::KemId::kDhkemX25519HkdfSha256;
     case HpkeKemEnum::kXWing:
       return HpkeParameters::KemId::kXWing;
+    case HpkeKemEnum::kMlKem768:
+      return HpkeParameters::KemId::kMlKem768;
+    case HpkeKemEnum::kMlKem1024:
+      return HpkeParameters::KemId::kMlKem1024;
     default:
       return absl::InvalidArgumentError("Could not determine KEM.");
   }
@@ -264,6 +270,10 @@ absl::StatusOr<HpkeKemEnum> FromKemId(HpkeParameters::KemId kem_id) {
       return HpkeKemEnum::kDhkemX25519HkdfSha256;
     case HpkeParameters::KemId::kXWing:
       return HpkeKemEnum::kXWing;
+    case HpkeParameters::KemId::kMlKem768:
+      return HpkeKemEnum::kMlKem768;
+    case HpkeParameters::KemId::kMlKem1024:
+      return HpkeKemEnum::kMlKem1024;
     default:
       return absl::InvalidArgumentError("Could not determine KEM.");
   }

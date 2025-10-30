@@ -705,20 +705,20 @@ absl::StatusOr<ProtoEciesAeadHkdfPublicKey> FromPublicKey(
 
 absl::StatusOr<EciesParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateStruct key_template_struct =
-      serialization.GetKeyTemplateStruct();
-  if (key_template_struct.type_url != kPrivateTypeUrl) {
+  const internal::ProtoKeyTemplate& key_template =
+      serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EciesParameters.");
   }
 
   ProtoEciesAeadHkdfKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template_struct.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse EciesAeadHkdfKeyFormat proto");
   }
 
-  return ToParameters(key_template_struct.output_prefix_type,
+  return ToParameters(key_template.output_prefix_type(),
                       proto_key_format.params());
 }
 

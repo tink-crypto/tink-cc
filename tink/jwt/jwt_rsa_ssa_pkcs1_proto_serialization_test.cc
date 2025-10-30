@@ -290,14 +290,14 @@ TEST_P(JwtRsaSsaPkcs1ProtoSerializationTest, SerializeParametersSucceeds) {
           serialization->get());
 
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type,
+  const internal::ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(),
               Eq(static_cast<internal::OutputPrefixTypeEnum>(
                   test_case.output_prefix_type)));
   JwtRsaSsaPkcs1KeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 
   EXPECT_THAT(key_format.algorithm(), Eq(test_case.proto_algorithm));
   EXPECT_THAT(key_format.modulus_size_in_bits(),

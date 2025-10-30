@@ -284,15 +284,15 @@ absl::StatusOr<JwtRsaSsaPssPublicKey> ToPublicKey(
 
 absl::StatusOr<JwtRsaSsaPssParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateStruct& key_template =
-      serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kPrivateTypeUrl) {
+  const internal::ProtoKeyTemplate& key_template =
+      serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtRsaSsaPssParameters.");
   }
 
   absl::StatusOr<JwtRsaSsaPssKeyFormatStruct> key_format_struct =
-      JwtRsaSsaPssKeyFormatStruct::GetParser().Parse(key_template.value);
+      JwtRsaSsaPssKeyFormatStruct::GetParser().Parse(key_template.value());
   if (!key_format_struct.ok()) {
     return key_format_struct.status();
   }
@@ -301,7 +301,7 @@ absl::StatusOr<JwtRsaSsaPssParameters> ParseParameters(
         "Parsing JwtRsaSsaPssParameters failed: only version 0 is accepted.");
   }
 
-  return ToParameters(serialization.GetKeyTemplateStruct().output_prefix_type,
+  return ToParameters(key_template.output_prefix_type(),
                       key_format_struct->algorithm,
                       key_format_struct->modulus_size_in_bits,
                       BigInteger(key_format_struct->public_exponent),

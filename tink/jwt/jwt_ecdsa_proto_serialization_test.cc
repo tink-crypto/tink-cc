@@ -250,13 +250,13 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializeParameters) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url, Eq(kPrivateTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type,
+  const internal::ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));
   JwtEcdsaKeyFormat format;
-  ASSERT_THAT(format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(format.ParseFromString(key_template.value()), IsTrue());
   EXPECT_THAT(format.version(), Eq(0));
   EXPECT_THAT(format.algorithm(), Eq(test_case.proto_algorithm));
 }

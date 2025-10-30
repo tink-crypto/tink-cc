@@ -239,14 +239,14 @@ absl::StatusOr<JwtHmacParameters> ToParameters(
 
 absl::StatusOr<JwtHmacParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateStruct& key_template =
-      serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const internal::ProtoKeyTemplate& key_template =
+      serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtHmacParameters.");
   }
   ProtoJwtHmacKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse JwtHmacKeyFormat proto");
   }
 
@@ -256,7 +256,7 @@ absl::StatusOr<JwtHmacParameters> ParseParameters(
   }
 
   return ToParameters(proto_key_format.key_size(),
-                      serialization.GetKeyTemplateStruct().output_prefix_type,
+                      key_template.output_prefix_type(),
                       proto_key_format.algorithm(), /*has_custom_kid=*/false);
 }
 

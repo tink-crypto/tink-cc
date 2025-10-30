@@ -357,15 +357,15 @@ absl::StatusOr<ProtoJwtEcdsaPublicKey> ToProtoPublicKey(
 
 absl::StatusOr<JwtEcdsaParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateStruct& key_template =
-      serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kPrivateTypeUrl) {
+  const internal::ProtoKeyTemplate& key_template =
+      serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtEcdsaParameters.");
   }
 
   ProtoJwtEcdsaKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse JwtEcdsaKeyFormat proto");
   }
@@ -374,7 +374,7 @@ absl::StatusOr<JwtEcdsaParameters> ParseParameters(
         "Parsing JwtEcdsaParameters failed: only version 0 is accepted.");
   }
 
-  return ToParameters(serialization.GetKeyTemplateStruct().output_prefix_type,
+  return ToParameters(key_template.output_prefix_type(),
                       proto_key_format.algorithm(), /*has_custom_kid=*/false);
 }
 

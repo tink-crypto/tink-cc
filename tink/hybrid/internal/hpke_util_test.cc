@@ -99,6 +99,42 @@ INSTANTIATE_TEST_SUITE_P(
                              google::crypto::tink::HKDF_SHA256,
                              google::crypto::tink::CHACHA20_POLY1305),
             HpkeParams{HpkeKem::kXWing, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kChaCha20Poly1305}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::ML_KEM768,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_128_GCM),
+            HpkeParams{HpkeKem::kMlKem768, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes128Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::ML_KEM768,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_256_GCM),
+            HpkeParams{HpkeKem::kMlKem768, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes256Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::ML_KEM768,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::CHACHA20_POLY1305),
+            HpkeParams{HpkeKem::kMlKem768, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kChaCha20Poly1305}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::ML_KEM1024,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_128_GCM),
+            HpkeParams{HpkeKem::kMlKem1024, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes128Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::ML_KEM1024,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::AES_256_GCM),
+            HpkeParams{HpkeKem::kMlKem1024, HpkeKdf::kHkdfSha256,
+                       HpkeAead::kAes256Gcm}},
+        HpkeParamsConversionTestCase{
+            CreateHpkeParams(google::crypto::tink::ML_KEM1024,
+                             google::crypto::tink::HKDF_SHA256,
+                             google::crypto::tink::CHACHA20_POLY1305),
+            HpkeParams{HpkeKem::kMlKem1024, HpkeKdf::kHkdfSha256,
                        HpkeAead::kChaCha20Poly1305}}));
 
 TEST_P(HpkeParamsConversionTest, HpkeParamsProtoToStruct) {
@@ -134,8 +170,9 @@ TEST_P(HpkeBadParamsTest, HpkeParamsProtoToStruct) {
 
 TEST(HpkeKemEncodingSizeTest, HpkeEncapsulatedKeyLength) {
   // Encapsulated key length should match 'Nenc' column from
-  // https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1 and
-  // https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
+  // https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1,
+  // https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09
+  // and https://datatracker.ietf.org/doc/html/draft-ietf-hpke-pq-01.
   EXPECT_THAT(
       HpkeEncapsulatedKeyLength(google::crypto::tink::DHKEM_P256_HKDF_SHA256),
       IsOkAndHolds(65));
@@ -144,6 +181,10 @@ TEST(HpkeKemEncodingSizeTest, HpkeEncapsulatedKeyLength) {
       IsOkAndHolds(32));
   EXPECT_THAT(HpkeEncapsulatedKeyLength(google::crypto::tink::X_WING),
               IsOkAndHolds(1120));
+  EXPECT_THAT(HpkeEncapsulatedKeyLength(google::crypto::tink::ML_KEM768),
+              IsOkAndHolds(1088));
+  EXPECT_THAT(HpkeEncapsulatedKeyLength(google::crypto::tink::ML_KEM1024),
+              IsOkAndHolds(1568));
 }
 
 }  // namespace

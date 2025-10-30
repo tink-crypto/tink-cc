@@ -59,7 +59,11 @@ INSTANTIATE_TEST_SUITE_P(
            HpkeParams{HpkeKem::kX25519HkdfSha256, HpkeKdf::kHkdfSha256,
                       HpkeAead::kChaCha20Poly1305},
            HpkeParams{HpkeKem::kXWing, HpkeKdf::kHkdfSha256,
-                      HpkeAead::kAes128Gcm}));
+                      HpkeAead::kAes128Gcm},
+           HpkeParams{HpkeKem::kMlKem768, HpkeKdf::kHkdfSha256,
+                      HpkeAead::kAes128Gcm},
+           HpkeParams{HpkeKem::kMlKem1024, HpkeKdf::kHkdfSha256,
+                      HpkeAead::kAes256Gcm}));
 
 TEST_P(HpkeContextTest, SealAndOpen) {
   HpkeParams hpke_params = GetParam();

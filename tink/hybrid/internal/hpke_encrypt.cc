@@ -55,6 +55,10 @@ absl::StatusOr<HpkeKemProto> FromKemId(HpkeParameters::KemId kem_id) {
       return HpkeKemProto::DHKEM_X25519_HKDF_SHA256;
     case HpkeParameters::KemId::kXWing:
       return HpkeKemProto::X_WING;
+    case HpkeParameters::KemId::kMlKem768:
+      return HpkeKemProto::ML_KEM768;
+    case HpkeParameters::KemId::kMlKem1024:
+      return HpkeKemProto::ML_KEM1024;
     default:
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "Could not determine KEM.");
@@ -149,7 +153,8 @@ absl::StatusOr<std::unique_ptr<HybridEncrypt>> HpkeEncrypt::New(
   HpkeKemProto kem = recipient_public_key.params().kem();
   if (kem != HpkeKemProto::DHKEM_P256_HKDF_SHA256 &&
       kem != HpkeKemProto::DHKEM_X25519_HKDF_SHA256 &&
-      kem != HpkeKemProto::X_WING) {
+      kem != HpkeKemProto::X_WING && kem != HpkeKemProto::ML_KEM768 &&
+      kem != HpkeKemProto::ML_KEM1024) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Recipient public key has an unsupported KEM");
   }

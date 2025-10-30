@@ -33,11 +33,14 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// Nenc values in https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1
-// and https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
+// Nenc values in https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1,
+// https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09
+// and https://datatracker.ietf.org/doc/html/draft-ietf-hpke-pq-01.
 constexpr int kP256KemEncodingLengthInBytes = 65;
 constexpr int kX25519KemEncodingLengthInBytes = 32;
 constexpr int kXWingKemEncodingLengthInBytes = 1120;
+constexpr int kMlKem768EncodingLengthInBytes = 1088;
+constexpr int kMlKem1024EncodingLengthInBytes = 1568;
 
 std::string ConcatenatePayload(absl::string_view encapsulated_key,
                                absl::string_view ciphertext) {
@@ -46,19 +49,27 @@ std::string ConcatenatePayload(absl::string_view encapsulated_key,
 
 absl::StatusOr<HpkePayloadView> SplitPayload(const HpkeKem& kem,
                                              absl::string_view payload) {
-  if (kem == HpkeKem::kP256HkdfSha256) {
-    return HpkePayloadView(payload.substr(0, kP256KemEncodingLengthInBytes),
-                           payload.substr(kP256KemEncodingLengthInBytes));
-  } else if (kem == HpkeKem::kX25519HkdfSha256) {
-    return HpkePayloadView(payload.substr(0, kX25519KemEncodingLengthInBytes),
-                           payload.substr(kX25519KemEncodingLengthInBytes));
-  } else if (kem == HpkeKem::kXWing) {
-    return HpkePayloadView(payload.substr(0, kXWingKemEncodingLengthInBytes),
-                           payload.substr(kXWingKemEncodingLengthInBytes));
+  switch (kem) {
+    case HpkeKem::kP256HkdfSha256:
+      return HpkePayloadView(payload.substr(0, kP256KemEncodingLengthInBytes),
+                             payload.substr(kP256KemEncodingLengthInBytes));
+    case HpkeKem::kX25519HkdfSha256:
+      return HpkePayloadView(payload.substr(0, kX25519KemEncodingLengthInBytes),
+                             payload.substr(kX25519KemEncodingLengthInBytes));
+    case HpkeKem::kXWing:
+      return HpkePayloadView(payload.substr(0, kXWingKemEncodingLengthInBytes),
+                             payload.substr(kXWingKemEncodingLengthInBytes));
+    case HpkeKem::kMlKem768:
+      return HpkePayloadView(payload.substr(0, kMlKem768EncodingLengthInBytes),
+                             payload.substr(kMlKem768EncodingLengthInBytes));
+    case HpkeKem::kMlKem1024:
+      return HpkePayloadView(payload.substr(0, kMlKem1024EncodingLengthInBytes),
+                             payload.substr(kMlKem1024EncodingLengthInBytes));
+    default:
+      return absl::Status(
+          absl::StatusCode::kInvalidArgument,
+          absl::StrCat("Unable to split HPKE payload for KEM type ", kem));
   }
-  return absl::Status(
-      absl::StatusCode::kInvalidArgument,
-      absl::StrCat("Unable to split HPKE payload for KEM type ", kem));
 }
 
 absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupSender(
@@ -94,8 +105,8 @@ absl::StatusOr<std::unique_ptr<HpkeContext>> HpkeContext::SetupRecipient(
   if (!context.ok()) {
     return context.status();
   }
-  return {absl::WrapUnique(
-      new HpkeContext(encapsulated_key, *std::move(context)))};
+  return {
+      absl::WrapUnique(new HpkeContext(encapsulated_key, *std::move(context)))};
 }
 
 }  // namespace internal

@@ -33,6 +33,12 @@ namespace {
 // Encapsulated key length for XWing, see
 // https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
 constexpr int kXWingEncapsulatedKeyLength = 1120;
+// Encapsulated key length for ML-KEM-768, see
+// https://datatracker.ietf.org/doc/html/draft-ietf-hpke-pq-01.
+constexpr int kMlKem768EncapsulatedKeyLength = 1088;
+// Encapsulated key length for ML-KEM-1024, see
+// https://datatracker.ietf.org/doc/html/draft-ietf-hpke-pq-01.
+constexpr int kMlKem1024EncapsulatedKeyLength = 1568;
 
 absl::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
   switch (kem) {
@@ -42,6 +48,10 @@ absl::StatusOr<HpkeKem> HpkeKemProtoToEnum(google::crypto::tink::HpkeKem kem) {
       return HpkeKem::kP256HkdfSha256;
     case google::crypto::tink::HpkeKem::X_WING:
       return HpkeKem::kXWing;
+    case google::crypto::tink::HpkeKem::ML_KEM768:
+      return HpkeKem::kMlKem768;
+    case google::crypto::tink::HpkeKem::ML_KEM1024:
+      return HpkeKem::kMlKem1024;
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
@@ -102,6 +112,10 @@ absl::StatusOr<int32_t> HpkeEncapsulatedKeyLength(
           subtle::EcPointFormat::UNCOMPRESSED);
     case google::crypto::tink::HpkeKem::X_WING:
       return kXWingEncapsulatedKeyLength;
+    case google::crypto::tink::HpkeKem::ML_KEM768:
+      return kMlKem768EncapsulatedKeyLength;
+    case google::crypto::tink::HpkeKem::ML_KEM1024:
+      return kMlKem1024EncapsulatedKeyLength;
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,

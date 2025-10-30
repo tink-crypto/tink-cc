@@ -26,13 +26,16 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-// Values from https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1 and
-// https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09.
+// Values from https://www.rfc-editor.org/rfc/rfc9180.html#section-7.1,
+// https://datatracker.ietf.org/doc/html/draft-connolly-cfrg-xwing-kem-09, and
+// https://datatracker.ietf.org/doc/html/draft-ietf-hpke-pq-01.
 enum class HpkeKem {
   kUnknownKem = 0x0,
   kP256HkdfSha256 = 0x10,
   kX25519HkdfSha256 = 0x20,
   kXWing = 0x647a,
+  kMlKem768 = 0x0041,
+  kMlKem1024 = 0x0042,
 };
 
 // Values from https://www.rfc-editor.org/rfc/rfc9180.html#section-7.2.

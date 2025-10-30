@@ -25,6 +25,7 @@
 #include "openssl/base.h"
 #include "tink/hybrid/internal/hpke_key_manager_util.h"
 #include "tink/internal/ec_util.h"
+#include "tink/internal/mlkem_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/xwing_util.h"
 #include "tink/subtle/common_enums.h"
@@ -94,6 +95,18 @@ absl::Status GenerateXWingKey(HpkePublicKeyProto& public_key,
   return absl::OkStatus();
 }
 
+absl::Status GenerateMlKemKey(HpkePublicKeyProto& public_key,
+                              HpkePrivateKeyProto& private_key,
+                              MlKemKeySize key_size) {
+  absl::StatusOr<MlKemKey> key = NewMlKemKey(key_size);
+  if (!key.ok()) {
+    return key.status();
+  }
+  public_key.set_public_key(key->public_key.data(), key->public_key.size());
+  private_key.set_private_key(util::SecretDataAsStringView(key->private_key));
+  return absl::OkStatus();
+}
+
 }  // namespace
 
 absl::Status HpkePrivateKeyManager::ValidateKeyFormat(
@@ -147,6 +160,22 @@ absl::StatusOr<HpkePrivateKeyProto> HpkePrivateKeyManager::CreateKey(
     }
     case HpkeKem::X_WING: {
       absl::Status res = GenerateXWingKey(*public_key, private_key);
+      if (!res.ok()) {
+        return res;
+      }
+      break;
+    }
+    case HpkeKem::ML_KEM768: {
+      absl::Status res =
+          GenerateMlKemKey(*public_key, private_key, MlKemKeySize::ML_KEM768);
+      if (!res.ok()) {
+        return res;
+      }
+      break;
+    }
+    case HpkeKem::ML_KEM1024: {
+      absl::Status res =
+          GenerateMlKemKey(*public_key, private_key, MlKemKeySize::ML_KEM1024);
       if (!res.ok()) {
         return res;
       }

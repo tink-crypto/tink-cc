@@ -36,6 +36,10 @@ absl::StatusOr<const EVP_HPKE_KEM*> KemParam(const HpkeParams& params) {
       return EVP_hpke_x25519_hkdf_sha256();
     case HpkeKem::kXWing:
       return EVP_hpke_xwing();
+    case HpkeKem::kMlKem768:
+      return EVP_hpke_mlkem768();
+    case HpkeKem::kMlKem1024:
+      return EVP_hpke_mlkem1024();
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
@@ -52,6 +56,10 @@ absl::StatusOr<const EVP_HPKE_KEM*> KemParam(
       return EVP_hpke_x25519_hkdf_sha256();
     case google::crypto::tink::HpkeKem::X_WING:
       return EVP_hpke_xwing();
+    case google::crypto::tink::HpkeKem::ML_KEM768:
+      return EVP_hpke_mlkem768();
+    case google::crypto::tink::HpkeKem::ML_KEM1024:
+      return EVP_hpke_mlkem1024();
     default:
       return absl::Status(
           absl::StatusCode::kInvalidArgument,

@@ -85,7 +85,11 @@ INSTANTIATE_TEST_SUITE_P(
            CreateHpkeParams(HpkeKem::DHKEM_X25519_HKDF_SHA256,
                             HpkeKdf::HKDF_SHA256, HpkeAead::CHACHA20_POLY1305),
            CreateHpkeParams(HpkeKem::X_WING, HpkeKdf::HKDF_SHA256,
-                            HpkeAead::AES_128_GCM)));
+                            HpkeAead::AES_128_GCM),
+           CreateHpkeParams(HpkeKem::ML_KEM768, HpkeKdf::HKDF_SHA256,
+                            HpkeAead::AES_128_GCM),
+           CreateHpkeParams(HpkeKem::ML_KEM1024, HpkeKdf::HKDF_SHA256,
+                            HpkeAead::AES_256_GCM)));
 
 TEST_P(HpkeEncryptTest, SetupSenderContextAndEncrypt) {
   HpkeParams hpke_params = GetParam();

@@ -49,6 +49,8 @@ class HpkeParameters : public HybridParameters {
     kDhkemP521HkdfSha512 = 3,
     kDhkemX25519HkdfSha256 = 4,
     kXWing = 5,
+    kMlKem768 = 6,
+    kMlKem1024 = 7,
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };
 

@@ -124,6 +124,7 @@ tink_cc_library(
     tink::core::hybrid_decrypt
     tink::core::key_manager
     tink::internal::ec_util
+    tink::internal::mlkem_util
     tink::internal::ssl_unique_ptr
     tink::internal::xwing_util
     tink::subtle::common_enums

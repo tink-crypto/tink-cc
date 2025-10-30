@@ -55,7 +55,11 @@ INSTANTIATE_TEST_SUITE_P(
                     HpkeKem::kX25519HkdfSha256,
                     EVP_HPKE_DHKEM_X25519_HKDF_SHA256},
            TestCase{google::crypto::tink::HpkeKem::X_WING, HpkeKem::kXWing,
-                    EVP_HPKE_XWING}));
+                    EVP_HPKE_XWING},
+           TestCase{google::crypto::tink::HpkeKem::ML_KEM768,
+                    HpkeKem::kMlKem768, EVP_HPKE_MLKEM768},
+           TestCase{google::crypto::tink::HpkeKem::ML_KEM1024,
+                    HpkeKem::kMlKem1024, EVP_HPKE_MLKEM1024}));
 
 TEST_P(HpkeUtilBoringSslTest, ValidParamsFromProto) {
   TestCase test_case = GetParam();

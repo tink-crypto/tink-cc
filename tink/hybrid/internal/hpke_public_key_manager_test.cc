@@ -57,11 +57,10 @@ TEST(HpkePublicKeyManagerTest, ValidateEmptyKeyFails) {
 
 using HpkePublicKeyManagerTest = TestWithParam<HpkeKem>;
 
-INSTANTIATE_TEST_SUITE_P(HpkePublicKeyManagerTestSuite,
-                         HpkePublicKeyManagerTest,
-                         Values(HpkeKem::DHKEM_P256_HKDF_SHA256,
-                                HpkeKem::DHKEM_X25519_HKDF_SHA256,
-                                HpkeKem::X_WING));
+INSTANTIATE_TEST_SUITE_P(
+    HpkePublicKeyManagerTestSuite, HpkePublicKeyManagerTest,
+    Values(HpkeKem::DHKEM_P256_HKDF_SHA256, HpkeKem::DHKEM_X25519_HKDF_SHA256,
+           HpkeKem::X_WING, HpkeKem::ML_KEM768, HpkeKem::ML_KEM1024));
 
 TEST_P(HpkePublicKeyManagerTest, ValidateKeySucceeds) {
   HpkeKem kem = GetParam();

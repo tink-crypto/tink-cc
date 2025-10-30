@@ -171,18 +171,18 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 
 absl::StatusOr<HmacPrfParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing HmacPrfParameters.");
   }
-  if (key_template.output_prefix_type != OutputPrefixTypeEnum::kRaw) {
+  if (key_template.output_prefix_type() != OutputPrefixTypeEnum::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for HmacPrfParameters.");
   }
 
   ProtoHmacPrfKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse HmacPrfKeyFormat proto");
   }
   if (proto_key_format.version() != 0) {

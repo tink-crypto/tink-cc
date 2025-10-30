@@ -235,14 +235,14 @@ TEST_P(HmacPrfProtoSerializationTest, SerializeParameters) {
   const internal::ProtoParametersSerialization* proto_serialization =
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
-  const internal::KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url, Eq(kTypeUrl));
-  EXPECT_THAT(key_template.output_prefix_type,
+  const internal::ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(), Eq(kTypeUrl));
+  EXPECT_THAT(key_template.output_prefix_type(),
               Eq(internal::OutputPrefixTypeEnum::kRaw));
 
   HmacPrfKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
 
   EXPECT_THAT(key_format.version(), Eq(0));
   EXPECT_THAT(key_format.key_size(), Eq(test_case.key_size));

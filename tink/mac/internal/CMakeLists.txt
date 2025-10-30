@@ -398,11 +398,9 @@ tink_cc_library(
   SRCS
     hmac_proto_structs.h
   DEPS
-    absl::no_destructor
     absl::string_view
     tink::core::secret_data
     tink::internal::common_proto_enums
-    tink::internal::proto_parser
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
@@ -417,11 +415,8 @@ tink_cc_test(
   DEPS
     tink::mac::internal::hmac_proto_structs
     gmock
-    absl::statusor
     absl::strings
     tink::internal::common_proto_enums
     tink::internal::testing::field_with_number
     tink::util::secret_data
-    tink::util::test_matchers
-    tink::util::test_util
 )

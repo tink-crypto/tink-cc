@@ -20,10 +20,8 @@
 #include <array>
 #include <cstdint>
 
-#include "absl/base/no_destructor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/common_proto_enums.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
@@ -103,52 +101,6 @@ class ProtoHmacKey : public proto_parsing::Message<ProtoHmacKey> {
   proto_parsing::Uint32OwningField version_{1};
   proto_parsing::MessageOwningField<ProtoHmacParams> params_{2};
   proto_parsing::SecretDataOwningField key_value_{3};
-};
-
-// TODO: b/451894777 - Remove these structs once the migration to the classes
-// above is complete.
-struct HmacParamsStruct {
-  HashTypeEnum hash = HashTypeEnum::kUnknownHash;
-  uint32_t tag_size = 0;
-
-  static crypto::tink::internal::ProtoParser<HmacParamsStruct> CreateParser() {
-    return crypto::tink::internal::ProtoParserBuilder<HmacParamsStruct>()
-        .AddEnumField(1, &HmacParamsStruct::hash, &HashTypeEnumIsValid)
-        .AddUint32Field(2, &HmacParamsStruct::tag_size)
-        .BuildOrDie();
-  }
-
-  static const crypto::tink::internal::ProtoParser<HmacParamsStruct>&
-  GetParser() {
-    static const absl::NoDestructor<
-        crypto::tink::internal::ProtoParser<HmacParamsStruct>>
-        parser{CreateParser()};
-    return *parser;
-  }
-};
-
-struct HmacKeyFormatStruct {
-  HmacParamsStruct params = {};
-  uint32_t key_size = 0;
-  uint32_t version = 0;
-
-  static crypto::tink::internal::ProtoParser<HmacKeyFormatStruct>
-  CreateParser() {
-    return crypto::tink::internal::ProtoParserBuilder<HmacKeyFormatStruct>()
-        .AddMessageField(1, &HmacKeyFormatStruct::params,
-                         HmacParamsStruct::CreateParser())
-        .AddUint32Field(2, &HmacKeyFormatStruct::key_size)
-        .AddUint32Field(3, &HmacKeyFormatStruct::version)
-        .BuildOrDie();
-  }
-
-  static const crypto::tink::internal::ProtoParser<HmacKeyFormatStruct>&
-  GetParser() {
-    static const absl::NoDestructor<
-        crypto::tink::internal::ProtoParser<HmacKeyFormatStruct>>
-        parser{CreateParser()};
-    return *parser;
-  }
 };
 
 }  // namespace internal

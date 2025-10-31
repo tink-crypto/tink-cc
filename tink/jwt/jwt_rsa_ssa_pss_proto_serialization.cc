@@ -16,12 +16,11 @@
 
 #include "tink/jwt/jwt_rsa_ssa_pss_proto_serialization.h"
 
+#include <array>
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -35,7 +34,10 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_parameters.h"
 #include "tink/jwt/jwt_rsa_ssa_pss_private_key.h"
@@ -50,8 +52,14 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::ProtoParser;
-using ::crypto::tink::internal::ProtoParserBuilder;
+using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::MessageOwningFieldWithPresence;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 using JwtRsaSsaPssProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -72,14 +80,18 @@ using JwtRsaSsaPssProtoPrivateKeySerializerImpl =
     internal::KeySerializerImpl<JwtRsaSsaPssPrivateKey,
                                 internal::ProtoKeySerialization>;
 
-struct CustomKidStruct {
-  std::string value;
+class CustomKidTP : public Message<CustomKidTP> {
+ public:
+  CustomKidTP() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<CustomKidStruct> CreateParser() {
-    return ProtoParserBuilder<CustomKidStruct>()
-        .AddBytesStringField(1, &CustomKidStruct::value)
-        .BuildOrDie();
-  }
+  const std::string& value() const { return value_.value(); }
+  std::string* mutable_value() { return value_.mutable_value(); }
+
+  std::array<const OwningField*, 1> GetFields() const { return {&value_}; }
+
+ private:
+  OwningBytesField<std::string> value_{1};
 };
 
 bool JwtRsaSsaPssAlgorithmValid(int value) { return value >= 0 && value <= 3; }
@@ -91,79 +103,126 @@ enum class JwtRsaSsaPssAlgorithmEnum : uint8_t {
   kPs512 = 3,
 };
 
-struct JwtRsaSsaPssPublicKeyStruct {
-  uint32_t version;
-  JwtRsaSsaPssAlgorithmEnum algorithm;
-  std::string n;
-  std::string e;
-  std::optional<CustomKidStruct> custom_kid;
+class JwtRsaSsaPssPublicKeyTP : public Message<JwtRsaSsaPssPublicKeyTP> {
+ public:
+  JwtRsaSsaPssPublicKeyTP() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<JwtRsaSsaPssPublicKeyStruct> CreateParser() {
-    return ProtoParserBuilder<JwtRsaSsaPssPublicKeyStruct>()
-        .AddUint32Field(1, &JwtRsaSsaPssPublicKeyStruct::version)
-        .AddEnumField(2, &JwtRsaSsaPssPublicKeyStruct::algorithm,
-                      &JwtRsaSsaPssAlgorithmValid)
-        .AddBytesStringField(3, &JwtRsaSsaPssPublicKeyStruct::n)
-        .AddBytesStringField(4, &JwtRsaSsaPssPublicKeyStruct::e)
-        .AddMessageFieldWithPresence(5,
-                                     &JwtRsaSsaPssPublicKeyStruct::custom_kid,
-                                     CustomKidStruct::CreateParser())
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  JwtRsaSsaPssAlgorithmEnum algorithm() const { return algorithm_.value(); }
+  void set_algorithm(JwtRsaSsaPssAlgorithmEnum algorithm) {
+    algorithm_.set_value(algorithm);
   }
 
-  static const ProtoParser<JwtRsaSsaPssPublicKeyStruct>& GetParser() {
-    static absl::NoDestructor<ProtoParser<JwtRsaSsaPssPublicKeyStruct>> parser{
-        CreateParser()};
-    return *parser;
+  const std::string& n() const { return n_.value(); }
+  std::string* mutable_n() { return n_.mutable_value(); }
+
+  const std::string& e() const { return e_.value(); }
+  std::string* mutable_e() { return e_.mutable_value(); }
+
+  const CustomKidTP& custom_kid() const { return custom_kid_.value(); }
+  CustomKidTP* mutable_custom_kid() { return custom_kid_.mutable_value(); }
+  bool has_custom_kid() const { return custom_kid_.has_value(); }
+
+  std::array<const OwningField*, 5> GetFields() const {
+    return {&version_, &algorithm_, &n_, &e_, &custom_kid_};
   }
+
+ private:
+  Uint32OwningField version_{1};
+  EnumOwningField<JwtRsaSsaPssAlgorithmEnum> algorithm_{
+      2, &JwtRsaSsaPssAlgorithmValid};
+  OwningBytesField<std::string> n_{3};
+  OwningBytesField<std::string> e_{4};
+  MessageOwningFieldWithPresence<CustomKidTP> custom_kid_{5};
 };
 
-struct JwtRsaSsaPssPrivateKeyStruct {
-  uint32_t version;
-  JwtRsaSsaPssPublicKeyStruct public_key;
-  SecretData d;
-  SecretData p;
-  SecretData q;
-  SecretData dp;
-  SecretData dq;
-  SecretData crt;
+class JwtRsaSsaPssPrivateKeyTP : public Message<JwtRsaSsaPssPrivateKeyTP> {
+ public:
+  JwtRsaSsaPssPrivateKeyTP() = default;
 
-  static const ProtoParser<JwtRsaSsaPssPrivateKeyStruct>& GetParser() {
-    static absl::NoDestructor<ProtoParser<JwtRsaSsaPssPrivateKeyStruct>> parser{
-        ProtoParserBuilder<JwtRsaSsaPssPrivateKeyStruct>()
-            .AddUint32Field(1, &JwtRsaSsaPssPrivateKeyStruct::version)
-            .AddMessageField(2, &JwtRsaSsaPssPrivateKeyStruct::public_key,
-                             JwtRsaSsaPssPublicKeyStruct::CreateParser())
-            .AddBytesSecretDataField(3, &JwtRsaSsaPssPrivateKeyStruct::d)
-            .AddBytesSecretDataField(4, &JwtRsaSsaPssPrivateKeyStruct::p)
-            .AddBytesSecretDataField(5, &JwtRsaSsaPssPrivateKeyStruct::q)
-            .AddBytesSecretDataField(6, &JwtRsaSsaPssPrivateKeyStruct::dp)
-            .AddBytesSecretDataField(7, &JwtRsaSsaPssPrivateKeyStruct::dq)
-            .AddBytesSecretDataField(8, &JwtRsaSsaPssPrivateKeyStruct::crt)
-            .BuildOrDie()};
-    return *parser;
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const JwtRsaSsaPssPublicKeyTP& public_key() const {
+    return public_key_.value();
   }
+  JwtRsaSsaPssPublicKeyTP* mutable_public_key() {
+    return public_key_.mutable_value();
+  }
+
+  const SecretData& d() const { return d_.value(); }
+  SecretData* mutable_d() { return d_.mutable_value(); }
+
+  const SecretData& p() const { return p_.value(); }
+  SecretData* mutable_p() { return p_.mutable_value(); }
+
+  const SecretData& q() const { return q_.value(); }
+  SecretData* mutable_q() { return q_.mutable_value(); }
+
+  const SecretData& dp() const { return dp_.value(); }
+  SecretData* mutable_dp() { return dp_.mutable_value(); }
+
+  const SecretData& dq() const { return dq_.value(); }
+  SecretData* mutable_dq() { return dq_.mutable_value(); }
+
+  const SecretData& crt() const { return crt_.value(); }
+  SecretData* mutable_crt() { return crt_.mutable_value(); }
+
+  std::array<const OwningField*, 8> GetFields() const {
+    return {&version_, &public_key_, &d_, &p_, &q_, &dp_, &dq_, &crt_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<JwtRsaSsaPssPublicKeyTP> public_key_{2};
+  SecretDataOwningField d_{3};
+  SecretDataOwningField p_{4};
+  SecretDataOwningField q_{5};
+  SecretDataOwningField dp_{6};
+  SecretDataOwningField dq_{7};
+  SecretDataOwningField crt_{8};
 };
 
-struct JwtRsaSsaPssKeyFormatStruct {
-  uint32_t version;
-  JwtRsaSsaPssAlgorithmEnum algorithm;
-  uint32_t modulus_size_in_bits;
-  std::string public_exponent;
+class JwtRsaSsaPssKeyFormatTP : public Message<JwtRsaSsaPssKeyFormatTP> {
+ public:
+  JwtRsaSsaPssKeyFormatTP() = default;
+  using Message::SerializeAsString;
 
-  static const ProtoParser<JwtRsaSsaPssKeyFormatStruct>& GetParser() {
-    static absl::NoDestructor<ProtoParser<JwtRsaSsaPssKeyFormatStruct>> parser{
-        ProtoParserBuilder<JwtRsaSsaPssKeyFormatStruct>()
-            .AddUint32Field(1, &JwtRsaSsaPssKeyFormatStruct::version)
-            .AddEnumField(2, &JwtRsaSsaPssKeyFormatStruct::algorithm,
-                          &JwtRsaSsaPssAlgorithmValid)
-            .AddUint32Field(3,
-                            &JwtRsaSsaPssKeyFormatStruct::modulus_size_in_bits)
-            .AddBytesStringField(4,
-                                 &JwtRsaSsaPssKeyFormatStruct::public_exponent)
-            .BuildOrDie()};
-    return *parser;
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  JwtRsaSsaPssAlgorithmEnum algorithm() const { return algorithm_.value(); }
+  void set_algorithm(JwtRsaSsaPssAlgorithmEnum algorithm) {
+    algorithm_.set_value(algorithm);
   }
+
+  uint32_t modulus_size_in_bits() const {
+    return modulus_size_in_bits_.value();
+  }
+  void set_modulus_size_in_bits(uint32_t modulus_size_in_bits) {
+    modulus_size_in_bits_.set_value(modulus_size_in_bits);
+  }
+
+  const std::string& public_exponent() const {
+    return public_exponent_.value();
+  }
+  std::string* mutable_public_exponent() {
+    return public_exponent_.mutable_value();
+  }
+
+  std::array<const OwningField*, 4> GetFields() const {
+    return {&version_, &algorithm_, &modulus_size_in_bits_, &public_exponent_};
+  }
+
+ private:
+  Uint32OwningField version_{1};
+  EnumOwningField<JwtRsaSsaPssAlgorithmEnum> algorithm_{
+      2, &JwtRsaSsaPssAlgorithmValid};
+  Uint32OwningField modulus_size_in_bits_{3};
+  OwningBytesField<std::string> public_exponent_{4};
 };
 
 const absl::string_view kPrivateTypeUrl =
@@ -256,16 +315,15 @@ absl::StatusOr<JwtRsaSsaPssParameters> ToParameters(
 }
 
 absl::StatusOr<JwtRsaSsaPssPublicKey> ToPublicKey(
-    const JwtRsaSsaPssPublicKeyStruct& public_key_struct,
+    const JwtRsaSsaPssPublicKeyTP& public_key_tp,
     internal::OutputPrefixTypeEnum output_prefix_type,
     absl::optional<int> id_requirement) {
-  BigInteger modulus(public_key_struct.n);
+  BigInteger modulus(public_key_tp.n());
   int modulus_size_in_bits = modulus.SizeInBytes() * 8;
 
-  absl::StatusOr<JwtRsaSsaPssParameters> parameters =
-      ToParameters(output_prefix_type, public_key_struct.algorithm,
-                   modulus_size_in_bits, BigInteger(public_key_struct.e),
-                   public_key_struct.custom_kid.has_value());
+  absl::StatusOr<JwtRsaSsaPssParameters> parameters = ToParameters(
+      output_prefix_type, public_key_tp.algorithm(), modulus_size_in_bits,
+      BigInteger(public_key_tp.e()), public_key_tp.has_custom_kid());
   if (!parameters.ok()) {
     return parameters.status();
   }
@@ -276,8 +334,8 @@ absl::StatusOr<JwtRsaSsaPssPublicKey> ToPublicKey(
   if (id_requirement.has_value()) {
     builder.SetIdRequirement(*id_requirement);
   }
-  if (public_key_struct.custom_kid.has_value()) {
-    builder.SetCustomKid(public_key_struct.custom_kid.value().value);
+  if (public_key_tp.has_custom_kid()) {
+    builder.SetCustomKid(public_key_tp.custom_kid().value());
   }
   return builder.Build(GetPartialKeyAccess());
 }
@@ -291,20 +349,18 @@ absl::StatusOr<JwtRsaSsaPssParameters> ParseParameters(
         "Wrong type URL when parsing JwtRsaSsaPssParameters.");
   }
 
-  absl::StatusOr<JwtRsaSsaPssKeyFormatStruct> key_format_struct =
-      JwtRsaSsaPssKeyFormatStruct::GetParser().Parse(key_template.value());
-  if (!key_format_struct.ok()) {
-    return key_format_struct.status();
+  JwtRsaSsaPssKeyFormatTP key_format;
+  if (!key_format.ParseFromString(key_template.value())) {
+    return absl::InvalidArgumentError("Failed to parse JwtRsaSsaPssKeyFormat.");
   }
-  if (key_format_struct->version != 0) {
+  if (key_format.version() != 0) {
     return absl::InvalidArgumentError(
         "Parsing JwtRsaSsaPssParameters failed: only version 0 is accepted.");
   }
 
-  return ToParameters(key_template.output_prefix_type(),
-                      key_format_struct->algorithm,
-                      key_format_struct->modulus_size_in_bits,
-                      BigInteger(key_format_struct->public_exponent),
+  return ToParameters(key_template.output_prefix_type(), key_format.algorithm(),
+                      key_format.modulus_size_in_bits(),
+                      BigInteger(key_format.public_exponent()),
                       /*has_custom_kid=*/false);
 }
 
@@ -316,20 +372,17 @@ absl::StatusOr<JwtRsaSsaPssPublicKey> ParsePublicKey(
         "Wrong type URL when parsing JwtRsaSsaPssPublicKey.");
   }
 
-  absl::StatusOr<JwtRsaSsaPssPublicKeyStruct> public_key_struct =
-      JwtRsaSsaPssPublicKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(
-              InsecureSecretKeyAccess::Get()));
-  if (!public_key_struct.ok()) {
-    return public_key_struct.status();
+  JwtRsaSsaPssPublicKeyTP public_key;
+  if (!public_key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
+          InsecureSecretKeyAccess::Get()))) {
+    return absl::InvalidArgumentError("Failed to parse JwtRsaSsaPssPublicKey.");
   }
-  if (public_key_struct->version != 0) {
+  if (public_key.version() != 0) {
     return absl::InvalidArgumentError(
         "Parsing JwtRsaSsaPssPublicKey failed: only version 0 is accepted.");
   }
 
-  return ToPublicKey(*public_key_struct,
-                     serialization.GetOutputPrefixTypeEnum(),
+  return ToPublicKey(public_key, serialization.GetOutputPrefixTypeEnum(),
                      serialization.IdRequirement());
 }
 
@@ -344,22 +397,22 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> ParsePrivateKey(
         "Wrong type URL when parsing JwtRsaSsaPssPrivateKey.");
   }
 
-  absl::StatusOr<JwtRsaSsaPssPrivateKeyStruct> private_key_struct =
-      JwtRsaSsaPssPrivateKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!private_key_struct.ok()) {
-    return private_key_struct.status();
+  JwtRsaSsaPssPrivateKeyTP private_key;
+  if (!private_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse JwtRsaSsaPssPrivateKey.");
   }
-  if (private_key_struct->version != 0) {
+  if (private_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
-  if (private_key_struct->public_key.version != 0) {
+  if (private_key.public_key().version() != 0) {
     return absl::InvalidArgumentError(
         "Only version 0 public keys are accepted.");
   }
 
   absl::StatusOr<JwtRsaSsaPssPublicKey> public_key = ToPublicKey(
-      private_key_struct->public_key, serialization.GetOutputPrefixTypeEnum(),
+      private_key.public_key(), serialization.GetOutputPrefixTypeEnum(),
       serialization.IdRequirement());
   if (!public_key.ok()) {
     return public_key.status();
@@ -367,12 +420,12 @@ absl::StatusOr<JwtRsaSsaPssPrivateKey> ParsePrivateKey(
 
   return JwtRsaSsaPssPrivateKey::Builder()
       .SetPublicKey(*public_key)
-      .SetPrimeP(RestrictedBigInteger(private_key_struct->p, *token))
-      .SetPrimeQ(RestrictedBigInteger(private_key_struct->q, *token))
-      .SetPrimeExponentP(RestrictedBigInteger(private_key_struct->dp, *token))
-      .SetPrimeExponentQ(RestrictedBigInteger(private_key_struct->dq, *token))
-      .SetPrivateExponent(RestrictedBigInteger(private_key_struct->d, *token))
-      .SetCrtCoefficient(RestrictedBigInteger(private_key_struct->crt, *token))
+      .SetPrimeP(RestrictedBigInteger(private_key.p(), *token))
+      .SetPrimeQ(RestrictedBigInteger(private_key.q(), *token))
+      .SetPrimeExponentP(RestrictedBigInteger(private_key.dp(), *token))
+      .SetPrimeExponentQ(RestrictedBigInteger(private_key.dq(), *token))
+      .SetPrivateExponent(RestrictedBigInteger(private_key.d(), *token))
+      .SetCrtCoefficient(RestrictedBigInteger(private_key.crt(), *token))
       .Build(GetPartialKeyAccess());
 }
 
@@ -394,52 +447,47 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return proto_algorithm.status();
   }
 
-  JwtRsaSsaPssKeyFormatStruct key_format;
-  key_format.version = 0;
-  key_format.algorithm = *proto_algorithm;
-  key_format.modulus_size_in_bits =
-      static_cast<uint32_t>(parameters.GetModulusSizeInBits());
-  key_format.public_exponent =
-      std::string(parameters.GetPublicExponent().GetValue());
-
-  absl::StatusOr<std::string> serialized_key_format =
-      JwtRsaSsaPssKeyFormatStruct::GetParser().SerializeIntoString(key_format);
-  if (!serialized_key_format.ok()) {
-    return serialized_key_format.status();
-  }
+  JwtRsaSsaPssKeyFormatTP key_format;
+  key_format.set_version(0);
+  key_format.set_algorithm(*proto_algorithm);
+  key_format.set_modulus_size_in_bits(
+      static_cast<uint32_t>(parameters.GetModulusSizeInBits()));
+  *key_format.mutable_public_exponent() =
+      parameters.GetPublicExponent().GetValue();
 
   return internal::ProtoParametersSerialization::Create(
-      kPrivateTypeUrl, *output_prefix_type, *serialized_key_format);
+      kPrivateTypeUrl, *output_prefix_type, key_format.SerializeAsString());
 }
 
-absl::StatusOr<JwtRsaSsaPssPublicKeyStruct> ToStruct(
+absl::StatusOr<JwtRsaSsaPssPublicKeyTP> ToPublicKeyTP(
     const JwtRsaSsaPssPublicKey& public_key) {
   absl::StatusOr<JwtRsaSsaPssAlgorithmEnum> proto_algorithm =
       ToProtoAlgorithm(public_key.GetParameters().GetAlgorithm());
   if (!proto_algorithm.ok()) {
     return proto_algorithm.status();
   }
-  JwtRsaSsaPssPublicKeyStruct public_key_struct;
-  public_key_struct.version = 0;
-  public_key_struct.algorithm = *proto_algorithm;
-  public_key_struct.n =
-      std::string(public_key.GetModulus(GetPartialKeyAccess()).GetValue());
-  public_key_struct.e =
-      std::string(public_key.GetParameters().GetPublicExponent().GetValue());
+  JwtRsaSsaPssPublicKeyTP public_key_tp;
+  public_key_tp.set_version(0);
+  public_key_tp.set_algorithm(*proto_algorithm);
+  *public_key_tp.mutable_n() =
+      public_key.GetModulus(GetPartialKeyAccess()).GetValue();
+  *public_key_tp.mutable_e() =
+      public_key.GetParameters().GetPublicExponent().GetValue();
   if (public_key.GetParameters().GetKidStrategy() ==
       JwtRsaSsaPssParameters::KidStrategy::kCustom) {
-    public_key_struct.custom_kid = CustomKidStruct{public_key.GetKid().value()};
+    *public_key_tp.mutable_custom_kid()->mutable_value() =
+        public_key.GetKid().value();
   }
-  return public_key_struct;
+  return public_key_tp;
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const JwtRsaSsaPssPublicKey& public_key,
     absl::optional<SecretKeyAccessToken> token) {
-  absl::StatusOr<JwtRsaSsaPssPublicKeyStruct> public_key_struct =
-      ToStruct(public_key);
-  if (!public_key_struct.ok()) {
-    return public_key_struct.status();
+  absl::StatusOr<JwtRsaSsaPssPublicKeyTP> public_key_tp =
+      ToPublicKeyTP(public_key);
+  if (!public_key_tp.ok()) {
+    return public_key_tp.status();
   }
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
@@ -448,17 +496,10 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<std::string> serialized_public_key =
-      JwtRsaSsaPssPublicKeyStruct::GetParser().SerializeIntoString(
-          *public_key_struct);
-  if (!serialized_public_key.ok()) {
-    return serialized_public_key.status();
-  }
-
-  RestrictedData restricted_output =
-      RestrictedData(*serialized_public_key, InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
-      kPublicTypeUrl, std::move(restricted_output),
+      kPublicTypeUrl,
+      RestrictedData(public_key_tp->SerializeAsSecretData(),
+                     InsecureSecretKeyAccess::Get()),
       internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
       public_key.GetIdRequirement());
 }
@@ -470,23 +511,26 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<JwtRsaSsaPssPublicKeyStruct> public_key_struct =
-      ToStruct(private_key.GetPublicKey());
-  if (!public_key_struct.ok()) {
-    return public_key_struct.status();
+  absl::StatusOr<JwtRsaSsaPssPublicKeyTP> public_key_tp =
+      ToPublicKeyTP(private_key.GetPublicKey());
+  if (!public_key_tp.ok()) {
+    return public_key_tp.status();
   }
 
-  JwtRsaSsaPssPrivateKeyStruct private_key_struct;
-  private_key_struct.version = 0;
-  private_key_struct.public_key = *std::move(public_key_struct);
-  private_key_struct.p =
+  JwtRsaSsaPssPrivateKeyTP private_key_tp;
+  private_key_tp.set_version(0);
+  *private_key_tp.mutable_public_key() = *std::move(public_key_tp);
+  *private_key_tp.mutable_p() =
       private_key.GetPrimeP(GetPartialKeyAccess()).GetSecretData(*token);
-  private_key_struct.q =
+  *private_key_tp.mutable_q() =
       private_key.GetPrimeQ(GetPartialKeyAccess()).GetSecretData(*token);
-  private_key_struct.dp = private_key.GetPrimeExponentP().GetSecretData(*token);
-  private_key_struct.dq = private_key.GetPrimeExponentQ().GetSecretData(*token);
-  private_key_struct.d = private_key.GetPrivateExponent().GetSecretData(*token);
-  private_key_struct.crt =
+  *private_key_tp.mutable_dp() =
+      private_key.GetPrimeExponentP().GetSecretData(*token);
+  *private_key_tp.mutable_dq() =
+      private_key.GetPrimeExponentQ().GetSecretData(*token);
+  *private_key_tp.mutable_d() =
+      private_key.GetPrivateExponent().GetSecretData(*token);
+  *private_key_tp.mutable_crt() =
       private_key.GetCrtCoefficient().GetSecretData(*token);
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
@@ -496,16 +540,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<SecretData> serialized_key =
-      JwtRsaSsaPssPrivateKeyStruct::GetParser().SerializeIntoSecretData(
-          private_key_struct);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
-  RestrictedData restricted_output =
-      RestrictedData(*std::move(serialized_key), *token);
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, std::move(restricted_output),
+      kPrivateTypeUrl,
+      RestrictedData(private_key_tp.SerializeAsSecretData(), *token),
       internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
       private_key.GetIdRequirement());
 }

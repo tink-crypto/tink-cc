@@ -86,8 +86,7 @@ TEST_F(CleartextKeysetHandleTest, testWrite) {
   auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer =
       test::DummyKeysetWriter::New(std::move(destination_stream)).value();
 

@@ -557,8 +557,7 @@ TEST_F(KeysetHandleTest, WriteEncryptedKeysetWithAssociatedData) {
   // Prepare a keyset writer.
   DummyAead aead("dummy aead 42");
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer =
       std::move(BinaryKeysetWriter::New(std::move(destination_stream)).value());
 
@@ -1535,8 +1534,7 @@ TEST_F(KeysetHandleTest, WriteNoSecret) {
   auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer =
       test::DummyKeysetWriter::New(std::move(destination_stream)).value();
   auto result = handle->WriteNoSecret(writer.get());
@@ -1553,8 +1551,7 @@ TEST_F(KeysetHandleTest, WriteNoSecretFailForTypeUnknown) {
   auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer =
       test::DummyKeysetWriter::New(std::move(destination_stream)).value();
   auto result = handle->WriteNoSecret(writer.get());
@@ -1571,8 +1568,7 @@ TEST_F(KeysetHandleTest, WriteNoSecretFailForTypeSymmetric) {
   auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer =
       test::DummyKeysetWriter::New(std::move(destination_stream)).value();
   auto result = handle->WriteNoSecret(writer.get());
@@ -1589,8 +1585,7 @@ TEST_F(KeysetHandleTest, WriteNoSecretFailForTypeAssymmetricPrivate) {
   auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer =
       test::DummyKeysetWriter::New(std::move(destination_stream)).value();
   auto result = handle->WriteNoSecret(writer.get());
@@ -1618,8 +1613,7 @@ TEST_F(KeysetHandleTest, WriteNoSecretFailForHidden) {
   auto handle = TestKeysetHandle::GetKeysetHandle(keyset);
 
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer =
       test::DummyKeysetWriter::New(std::move(destination_stream)).value();
   auto result = handle->WriteNoSecret(writer.get());

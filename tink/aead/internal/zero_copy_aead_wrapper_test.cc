@@ -89,8 +89,7 @@ class ZeroCopyAeadWrapperTest : public testing::Test {
 
     // Creates a new AEAD set, adds a mock AEAD corresponding to the above key,
     // and stores the set as aead_set_.
-    std::unique_ptr<PrimitiveSet<ZeroCopyAead>> aead_set =
-        std::make_unique<PrimitiveSet<ZeroCopyAead>>();
+    auto aead_set = std::make_unique<PrimitiveSet<ZeroCopyAead>>();
     auto entry = aead_set->AddPrimitive(SetUpMockZeroCopyAead(), key_info);
     ASSERT_THAT(entry, IsOk());
     ASSERT_THAT(aead_set->set_primary(*entry), IsOk());

@@ -88,8 +88,7 @@ TEST(ChunkedMacWrapperTest, WrapNullptr) {
 }
 
 TEST(ChunkedMacWrapperTest, WrapEmpty) {
-  std::unique_ptr<PrimitiveSet<ChunkedMac>> mac_set =
-      std::make_unique<PrimitiveSet<ChunkedMac>>();
+  auto mac_set = std::make_unique<PrimitiveSet<ChunkedMac>>();
   EXPECT_THAT(ChunkedMacWrapper().Wrap(std::move(mac_set)).status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }

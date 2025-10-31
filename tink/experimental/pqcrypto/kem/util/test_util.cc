@@ -88,8 +88,7 @@ google::crypto::tink::Cecpq2AeadHkdfPrivateKey GetCecpq2AesGcmHkdfTestKey(
   google::crypto::tink::AesGcmKeyFormat key_format;
   key_format.set_key_size(aes_gcm_key_size);
   auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
-  std::unique_ptr<AesGcmKeyManager> key_manager =
-      std::make_unique<AesGcmKeyManager>();
+  auto key_manager = std::make_unique<AesGcmKeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
   aead_dem->set_type_url(dem_key_type);
   aead_dem->set_value(key_format.SerializeAsString());
@@ -120,8 +119,7 @@ google::crypto::tink::Cecpq2AeadHkdfPrivateKey GetCecpq2AesCtrHmacHkdfTestKey(
   auto params = ecies_key.mutable_public_key()->mutable_params();
   auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
 
-  std::unique_ptr<AesCtrHmacAeadKeyManager> key_manager =
-      std::make_unique<AesCtrHmacAeadKeyManager>();
+  auto key_manager = std::make_unique<AesCtrHmacAeadKeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
   aead_dem->set_type_url(dem_key_type);
   aead_dem->set_value(key_format.SerializeAsString());
@@ -139,8 +137,7 @@ GetCecpq2XChaCha20Poly1305HkdfTestKey(
 
   google::crypto::tink::XChaCha20Poly1305KeyFormat key_format;
   auto aead_dem = params->mutable_dem_params()->mutable_aead_dem();
-  std::unique_ptr<XChaCha20Poly1305KeyManager> key_manager =
-      std::make_unique<XChaCha20Poly1305KeyManager>();
+  auto key_manager = std::make_unique<XChaCha20Poly1305KeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
   aead_dem->set_type_url(dem_key_type);
   aead_dem->set_value(key_format.SerializeAsString());

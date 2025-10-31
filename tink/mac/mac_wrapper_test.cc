@@ -71,8 +71,7 @@ TEST(MacWrapperTest, WrapNullptr) {
 }
 
 TEST(MacWrapperTest, WrapEmpty) {
-  std::unique_ptr<PrimitiveSet<Mac>> mac_set =
-      std::make_unique<PrimitiveSet<Mac>>();
+  auto mac_set = std::make_unique<PrimitiveSet<Mac>>();
   auto mac_result = MacWrapper().Wrap(std::move(mac_set));
   EXPECT_FALSE(mac_result.ok());
   EXPECT_EQ(absl::StatusCode::kInvalidArgument, mac_result.status().code());
@@ -105,8 +104,7 @@ TEST(MacWrapperTest, Basic) {
   std::string mac_name_0 = "mac0";
   std::string mac_name_1 = "mac1";
   std::string mac_name_2 = "mac2";
-  std::unique_ptr<PrimitiveSet<Mac>> mac_set =
-      std::make_unique<PrimitiveSet<Mac>>();
+  auto mac_set = std::make_unique<PrimitiveSet<Mac>>();
   auto entry_result = mac_set->AddPrimitive(
       absl::make_unique<DummyMac>(mac_name_0), keyset_info.key_info(0));
   ASSERT_TRUE(entry_result.ok());
@@ -149,8 +147,7 @@ TEST(MacWrapperTest, testLegacyAuthentication) {
   key_info.set_status(KeyStatusType::ENABLED);
   std::string mac_name = "SomeLegacyMac";
 
-  std::unique_ptr<PrimitiveSet<Mac>> mac_set =
-      std::make_unique<PrimitiveSet<Mac>>();
+  auto mac_set = std::make_unique<PrimitiveSet<Mac>>();
   std::unique_ptr<Mac> mac(new DummyMac(mac_name));
   auto entry_result = mac_set->AddPrimitive(std::move(mac), key_info);
   ASSERT_TRUE(entry_result.ok());
@@ -204,8 +201,7 @@ class TryBreakLegacyMac : public Mac {
 // Checks that a raw tag can be verified after a legacy tag is verified with
 // the same output prefix. (To prevent regression of b/173013224).
 TEST(MacWrapperTest, VerifyRawAfterLegacy) {
-  std::unique_ptr<PrimitiveSet<Mac>> mac_set =
-      std::make_unique<PrimitiveSet<Mac>>();
+  auto mac_set = std::make_unique<PrimitiveSet<Mac>>();
 
   KeysetInfo::KeyInfo key_info_0;
   key_info_0.set_output_prefix_type(OutputPrefixType::RAW);

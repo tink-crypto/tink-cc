@@ -305,8 +305,7 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
   keyset_info.mutable_key_info(0)->set_key_id(1234543);
   keyset_info.mutable_key_info(0)->set_status(KeyStatusType::ENABLED);
   keyset_info.set_primary_key_id(1234543);
-  std::unique_ptr<PrimitiveSet<FakePrimitive>> primitive_set =
-      std::make_unique<PrimitiveSet<FakePrimitive>>();
+  auto primitive_set = std::make_unique<PrimitiveSet<FakePrimitive>>();
   auto entry = primitive_set->AddPrimitive(
       absl::make_unique<FakePrimitive>(raw_key), keyset_info.key_info(0));
   ASSERT_THAT(entry, IsOk());

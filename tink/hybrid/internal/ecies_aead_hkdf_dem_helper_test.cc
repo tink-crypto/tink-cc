@@ -74,8 +74,7 @@ TEST(EciesAeadHkdfDemHelperTest, InvalidKey) {
 TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeAeadKeyType) {
   google::crypto::tink::AesGcmKeyFormat key_format;
   key_format.set_key_size(16);
-  std::unique_ptr<AesGcmKeyManager> key_manager =
-      std::make_unique<AesGcmKeyManager>();
+  auto key_manager = std::make_unique<AesGcmKeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
 
   google::crypto::tink::KeyTemplate dem_key_template;
@@ -100,8 +99,7 @@ TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeAeadKeyType) {
 TEST(EciesAeadHkdfDemHelperTest, DemHelperWithSomeDeterministicAeadKeyType) {
   google::crypto::tink::AesSivKeyFormat key_format;
   key_format.set_key_size(64);
-  std::unique_ptr<AesSivKeyManager> key_manager =
-      std::make_unique<AesSivKeyManager>();
+  auto key_manager = std::make_unique<AesSivKeyManager>();
   std::string dem_key_type = key_manager->get_key_type();
 
   google::crypto::tink::KeyTemplate dem_key_template;

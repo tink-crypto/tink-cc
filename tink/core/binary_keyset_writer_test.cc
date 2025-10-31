@@ -101,8 +101,7 @@ TEST_F(BinaryKeysetWriterTest, testWriterCreation) {
 
 TEST_F(BinaryKeysetWriterTest, testWriteKeyset) {
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer_result = BinaryKeysetWriter::New(std::move(destination_stream));
   ASSERT_TRUE(writer_result.ok()) << writer_result.status();
   auto writer = std::move(writer_result.value());
@@ -113,8 +112,7 @@ TEST_F(BinaryKeysetWriterTest, testWriteKeyset) {
 
 TEST_F(BinaryKeysetWriterTest, testWriteEncryptedKeyset) {
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer_result = BinaryKeysetWriter::New(std::move(destination_stream));
   ASSERT_TRUE(writer_result.ok()) << writer_result.status();
   auto writer = std::move(writer_result.value());
@@ -125,8 +123,7 @@ TEST_F(BinaryKeysetWriterTest, testWriteEncryptedKeyset) {
 
 TEST_F(BinaryKeysetWriterTest, testDestinationStreamErrors) {
   std::stringbuf buffer;
-  std::unique_ptr<std::ostream> destination_stream =
-      std::make_unique<std::ostream>(&buffer);
+  auto destination_stream = std::make_unique<std::ostream>(&buffer);
   destination_stream->setstate(std::ostream::badbit);
   auto writer_result = BinaryKeysetWriter::New(std::move(destination_stream));
   ASSERT_TRUE(writer_result.ok()) << writer_result.status();

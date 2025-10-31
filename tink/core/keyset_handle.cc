@@ -23,9 +23,10 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/aead.h"
@@ -279,7 +280,7 @@ absl::Status KeysetHandle::Validate() const {
 
 KeysetHandle::Entry KeysetHandle::GetPrimary() const {
   absl::Status validation = Validate();
-  CHECK_OK(validation);
+  ABSL_CHECK_OK(validation);
 
   for (int i = 0; i < keyset_->key_size(); ++i) {
     if (keyset_->key(i).key_id() == keyset_->primary_key_id()) {
@@ -292,7 +293,7 @@ KeysetHandle::Entry KeysetHandle::GetPrimary() const {
 }
 
 KeysetHandle::Entry KeysetHandle::operator[](int index) const {
-  CHECK(index >= 0 && index < size())
+  ABSL_CHECK(index >= 0 && index < size())
       << "Invalid index " << index << " for keyset of size " << size();
 
   if (!entries_.empty() && entries_.size() > index) {
@@ -309,16 +310,16 @@ KeysetHandle::Entry KeysetHandle::operator[](int index) const {
 }
 
 KeysetHandle::Entry KeysetHandle::CreateEntryAt(int index) const {
-  CHECK(index >= 0 && index < size())
+  ABSL_CHECK(index >= 0 && index < size())
       << "Invalid index " << index << " for keyset of size " << size();
 
   absl::Status validation = ValidateAt(index);
-  CHECK_OK(validation);
+  ABSL_CHECK_OK(validation);
 
   absl::StatusOr<Entry> entry =
       CreateEntry(keyset_->key(index), keyset_->primary_key_id());
   // Status should be OK since this keyset handle has been validated.
-  CHECK_OK(entry.status());
+  ABSL_CHECK_OK(entry.status());
   return *entry;
 }
 

@@ -165,7 +165,7 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_key
     tink::keyderivation::prf_based_key_derivation_parameters
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor
@@ -345,7 +345,8 @@ tink_cc_test(
     tink::keyderivation::prf_based_key_derivation_parameters
     tink::keyderivation::prf_based_key_derivation_proto_serialization
     gmock
-    absl::check
+    absl::absl_check
+    absl::statusor
     absl::string_view
     absl::optional
     tink::core::key

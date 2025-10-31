@@ -22,9 +22,10 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/functional/any_invocable.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -79,7 +80,6 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/input_stream_util.h"
-#include "tink/util/secret_data.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
 
@@ -444,45 +444,45 @@ const KeyDeriverFnMap& ParametersToKeyDeriver() {
     static KeyDeriverFnMap* m = new KeyDeriverFnMap();
 
     // AEAD.
-    CHECK_OK(RegisterAesCtrHmacAeadProtoSerialization());
+    ABSL_CHECK_OK(RegisterAesCtrHmacAeadProtoSerialization());
     m->insert({std::type_index(typeid(AesCtrHmacAeadParameters)),
                DeriveAesCtrHmacAeadKey});
-    CHECK_OK(RegisterAesGcmProtoSerialization());
+    ABSL_CHECK_OK(RegisterAesGcmProtoSerialization());
     m->insert({std::type_index(typeid(AesGcmParameters)), DeriveAesGcmKey});
-    CHECK_OK(RegisterXChaCha20Poly1305ProtoSerialization());
+    ABSL_CHECK_OK(RegisterXChaCha20Poly1305ProtoSerialization());
     m->insert({std::type_index(typeid(XChaCha20Poly1305Parameters)),
                DeriveXChaCha20Poly1305Key});
 
     // Deterministic AEAD.
-    CHECK_OK(RegisterAesSivProtoSerialization());
+    ABSL_CHECK_OK(RegisterAesSivProtoSerialization());
     m->insert({std::type_index(typeid(AesSivParameters)), DeriveAesSivKey});
 
     // MAC.
-    CHECK_OK(RegisterHmacProtoSerialization());
+    ABSL_CHECK_OK(RegisterHmacProtoSerialization());
     m->insert({std::type_index(typeid(HmacParameters)), DeriveHmacKey});
 
     // PRF.
-    CHECK_OK(RegisterAesCmacPrfProtoSerialization());
+    ABSL_CHECK_OK(RegisterAesCmacPrfProtoSerialization());
     m->insert(
         {std::type_index(typeid(AesCmacPrfParameters)), DeriveAesCmacPrfKey});
-    CHECK_OK(RegisterHkdfPrfProtoSerialization());
+    ABSL_CHECK_OK(RegisterHkdfPrfProtoSerialization());
     m->insert({std::type_index(typeid(HkdfPrfParameters)), DeriveHkdfPrfKey});
-    CHECK_OK(RegisterHmacPrfProtoSerialization());
+    ABSL_CHECK_OK(RegisterHmacPrfProtoSerialization());
     m->insert({std::type_index(typeid(HmacPrfParameters)), DeriveHmacPrfKey});
 
     // Signature.
-    CHECK_OK(RegisterEcdsaProtoSerialization());
+    ABSL_CHECK_OK(RegisterEcdsaProtoSerialization());
     m->insert(
         {std::type_index(typeid(EcdsaParameters)), DeriveEcdsaPrivateKey});
-    CHECK_OK(RegisterEd25519ProtoSerialization());
+    ABSL_CHECK_OK(RegisterEd25519ProtoSerialization());
     m->insert(
         {std::type_index(typeid(Ed25519Parameters)), DeriveEd25519PrivateKey});
 
     // Streaming AEAD.
-    CHECK_OK(RegisterAesCtrHmacStreamingProtoSerialization());
+    ABSL_CHECK_OK(RegisterAesCtrHmacStreamingProtoSerialization());
     m->insert({std::type_index(typeid(AesCtrHmacStreamingParameters)),
                DeriveAesCtrHmacStreamingKey});
-    CHECK_OK(RegisterAesGcmHkdfStreamingProtoSerialization());
+    ABSL_CHECK_OK(RegisterAesGcmHkdfStreamingProtoSerialization());
     m->insert({std::type_index(typeid(AesGcmHkdfStreamingParameters)),
                DeriveAesGcmHkdfStreamingKey});
 

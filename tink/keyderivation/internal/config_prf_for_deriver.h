@@ -17,7 +17,7 @@
 #ifndef TINK_KEYDERIVATION_INTERNAL_CONFIG_PRF_FOR_DERIVER_H_
 #define TINK_KEYDERIVATION_INTERNAL_CONFIG_PRF_FOR_DERIVER_H_
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
@@ -33,7 +33,7 @@ inline const Configuration& ConfigPrfForDeriver() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
 
-    CHECK_OK(ConfigurationImpl::AddKeyTypeManager(
+    ABSL_CHECK_OK(ConfigurationImpl::AddKeyTypeManager(
         absl::make_unique<HkdfPrfKeyManager>(), *config));
 
     return config;

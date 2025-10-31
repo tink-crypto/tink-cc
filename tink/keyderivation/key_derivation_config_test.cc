@@ -21,7 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -146,7 +146,7 @@ KeyTemplate GetAesCmacPrfKeyTemplate() {
 AesCmacPrfParameters GetAesCmacPrfParameters() {
   absl::StatusOr<AesCmacPrfParameters> parameters =
       AesCmacPrfParameters::Create(kPrfKeyValue.size());
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
@@ -155,7 +155,7 @@ AesCmacPrfKey GetAesCmacPrfKey() {
       RestrictedData(kPrfKeyValue,
                      internal::GetInsecureSecretKeyAccessInternal()),
       GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
   return *key;
 }
 
@@ -173,7 +173,7 @@ XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
   absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 

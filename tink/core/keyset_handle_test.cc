@@ -26,7 +26,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_map.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -238,9 +238,9 @@ absl::StatusOr<std::unique_ptr<Aead>> GetPrimitiveForXChaCha20Poly1305Key(
 const KeyGenConfiguration& TestKeyGenConfig() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    CHECK_OK(internal::AddAeadKeyGenV0(*config));
-    CHECK_OK(RegisterEcdsaProtoSerialization());
-    CHECK_OK(internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
+    ABSL_CHECK_OK(internal::AddAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(RegisterEcdsaProtoSerialization());
+    ABSL_CHECK_OK(internal::KeyGenConfigurationImpl::AddAsymmetricKeyManagers(
         absl::make_unique<EcdsaSignKeyManager>(),
         absl::make_unique<EcdsaVerifyKeyManager>(), *config));
 

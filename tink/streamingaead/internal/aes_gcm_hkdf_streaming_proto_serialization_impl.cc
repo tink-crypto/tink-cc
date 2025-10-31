@@ -15,11 +15,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 #include "tink/streamingaead/internal/aes_gcm_hkdf_streaming_proto_serialization_impl.h"
 
+#include <array>
 #include <cstdint>
-#include <string>
 #include <utility>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -33,7 +32,10 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -49,62 +51,96 @@ namespace tink {
 namespace internal {
 namespace {
 
-struct AesGcmHkdfStreamingParamsStruct {
-  uint32_t ciphertext_segment_size;
-  uint32_t derived_key_size;
-  HashTypeEnum hkdf_hash_type;
+using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-  static ProtoParser<AesGcmHkdfStreamingParamsStruct> CreateParser() {
-    return ProtoParserBuilder<AesGcmHkdfStreamingParamsStruct>()
-        .AddUint32Field(
-            1, &AesGcmHkdfStreamingParamsStruct::ciphertext_segment_size)
-        .AddUint32Field(2, &AesGcmHkdfStreamingParamsStruct::derived_key_size)
-        .AddEnumField(3, &AesGcmHkdfStreamingParamsStruct::hkdf_hash_type,
-                      &HashTypeEnumIsValid)
-        .BuildOrDie();
+class AesGcmHkdfStreamingParamsTP
+    : public Message<AesGcmHkdfStreamingParamsTP> {
+ public:
+  AesGcmHkdfStreamingParamsTP() = default;
+  using Message::SerializeAsString;
+
+  uint32_t ciphertext_segment_size() const {
+    return ciphertext_segment_size_.value();
   }
+  void set_ciphertext_segment_size(uint32_t value) {
+    ciphertext_segment_size_.set_value(value);
+  }
+
+  uint32_t derived_key_size() const { return derived_key_size_.value(); }
+  void set_derived_key_size(uint32_t value) {
+    derived_key_size_.set_value(value);
+  }
+
+  HashTypeEnum hkdf_hash_type() const { return hkdf_hash_type_.value(); }
+  void set_hkdf_hash_type(HashTypeEnum value) {
+    hkdf_hash_type_.set_value(value);
+  }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&ciphertext_segment_size_, &derived_key_size_, &hkdf_hash_type_};
+  }
+
+ private:
+  Uint32OwningField ciphertext_segment_size_{1};
+  Uint32OwningField derived_key_size_{2};
+  EnumOwningField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
 };
 
-struct AesGcmHkdfStreamingKeyFormatStruct {
-  uint32_t version;
-  AesGcmHkdfStreamingParamsStruct params;
-  uint32_t key_size;
+class AesGcmHkdfStreamingKeyFormatTP
+    : public Message<AesGcmHkdfStreamingKeyFormatTP> {
+ public:
+  AesGcmHkdfStreamingKeyFormatTP() = default;
+  using Message::SerializeAsString;
 
-  static ProtoParser<AesGcmHkdfStreamingKeyFormatStruct> CreateParser() {
-    return ProtoParserBuilder<AesGcmHkdfStreamingKeyFormatStruct>()
-        .AddMessageField(1, &AesGcmHkdfStreamingKeyFormatStruct::params,
-                         AesGcmHkdfStreamingParamsStruct::CreateParser())
-        .AddUint32Field(2, &AesGcmHkdfStreamingKeyFormatStruct::key_size)
-        .AddUint32Field(3, &AesGcmHkdfStreamingKeyFormatStruct::version)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const AesGcmHkdfStreamingParamsTP& params() const { return params_.value(); }
+  AesGcmHkdfStreamingParamsTP* mutable_params() {
+    return params_.mutable_value();
   }
 
-  static const ProtoParser<AesGcmHkdfStreamingKeyFormatStruct>& Parser() {
-    static absl::NoDestructor<ProtoParser<AesGcmHkdfStreamingKeyFormatStruct>>
-        parser{AesGcmHkdfStreamingKeyFormatStruct::CreateParser()};
-    return *parser;
+  uint32_t key_size() const { return key_size_.value(); }
+  void set_key_size(uint32_t value) { key_size_.set_value(value); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&params_, &key_size_, &version_};
   }
+
+ private:
+  MessageOwningField<AesGcmHkdfStreamingParamsTP> params_{1};
+  Uint32OwningField key_size_{2};
+  Uint32OwningField version_{3};
 };
 
-struct AesGcmHkdfStreamingKeyStruct {
-  uint32_t version;
-  AesGcmHkdfStreamingParamsStruct params;
-  SecretData key_value;
+class AesGcmHkdfStreamingKeyTP : public Message<AesGcmHkdfStreamingKeyTP> {
+ public:
+  AesGcmHkdfStreamingKeyTP() = default;
 
-  static ProtoParser<AesGcmHkdfStreamingKeyStruct> CreateParser() {
-    return ProtoParserBuilder<AesGcmHkdfStreamingKeyStruct>()
-        .AddUint32Field(1, &AesGcmHkdfStreamingKeyStruct::version)
-        .AddMessageField(2, &AesGcmHkdfStreamingKeyStruct::params,
-                         AesGcmHkdfStreamingParamsStruct::CreateParser())
-        .AddBytesSecretDataField(3, &AesGcmHkdfStreamingKeyStruct::key_value)
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t value) { version_.set_value(value); }
+
+  const AesGcmHkdfStreamingParamsTP& params() const { return params_.value(); }
+  AesGcmHkdfStreamingParamsTP* mutable_params() {
+    return params_.mutable_value();
   }
 
-  static const ProtoParser<AesGcmHkdfStreamingKeyStruct>& Parser() {
-    static absl::NoDestructor<ProtoParser<AesGcmHkdfStreamingKeyStruct>> parser{
-        AesGcmHkdfStreamingKeyStruct::CreateParser()};
-    return *parser;
+  const SecretData& key_value() const { return key_value_.value(); }
+  SecretData* mutable_key_value() { return key_value_.mutable_value(); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &params_, &key_value_};
   }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<AesGcmHkdfStreamingParamsTP> params_{2};
+  SecretDataOwningField key_value_{3};
 };
 
 using AesGcmHkdfStreamingProtoParametersParserImpl =
@@ -152,22 +188,22 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 }
 
 absl::StatusOr<AesGcmHkdfStreamingParameters> ToParameters(
-    const AesGcmHkdfStreamingParamsStruct& params, int key_size) {
+    const AesGcmHkdfStreamingParamsTP& params, int key_size) {
   absl::StatusOr<AesGcmHkdfStreamingParameters::HashType> hash_type =
-      FromProtoHashType(params.hkdf_hash_type);
+      FromProtoHashType(params.hkdf_hash_type());
   if (!hash_type.ok()) {
     return hash_type.status();
   }
 
   return AesGcmHkdfStreamingParameters::Builder()
       .SetKeySizeInBytes(key_size)
-      .SetDerivedKeySizeInBytes(params.derived_key_size)
+      .SetDerivedKeySizeInBytes(params.derived_key_size())
       .SetHashType(*hash_type)
-      .SetCiphertextSegmentSizeInBytes(params.ciphertext_segment_size)
+      .SetCiphertextSegmentSizeInBytes(params.ciphertext_segment_size())
       .Build();
 }
 
-absl::StatusOr<AesGcmHkdfStreamingParamsStruct> FromParameters(
+absl::StatusOr<AesGcmHkdfStreamingParamsTP> FromParameters(
     const AesGcmHkdfStreamingParameters& parameters) {
   absl::StatusOr<HashTypeEnum> hash_type =
       ToProtoHashType(parameters.GetHashType());
@@ -175,10 +211,10 @@ absl::StatusOr<AesGcmHkdfStreamingParamsStruct> FromParameters(
     return hash_type.status();
   }
 
-  AesGcmHkdfStreamingParamsStruct params;
-  params.derived_key_size = parameters.DerivedKeySizeInBytes();
-  params.hkdf_hash_type = *hash_type;
-  params.ciphertext_segment_size = parameters.CiphertextSegmentSizeInBytes();
+  AesGcmHkdfStreamingParamsTP params;
+  params.set_derived_key_size(parameters.DerivedKeySizeInBytes());
+  params.set_hkdf_hash_type(*hash_type);
+  params.set_ciphertext_segment_size(parameters.CiphertextSegmentSizeInBytes());
   return params;
 }
 
@@ -189,40 +225,35 @@ absl::StatusOr<AesGcmHkdfStreamingParameters> ParseParameters(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesGcmHkdfStreamingParameters.");
   }
-  absl::StatusOr<AesGcmHkdfStreamingKeyFormatStruct> parsed_key_format =
-      AesGcmHkdfStreamingKeyFormatStruct::Parser().Parse(key_template.value());
-  if (!parsed_key_format.ok()) {
-    return parsed_key_format.status();
+  AesGcmHkdfStreamingKeyFormatTP key_format;
+  if (!key_format.ParseFromString(key_template.value())) {
+    return absl::InvalidArgumentError(
+        "Failed to parse AesGcmHkdfStreamingKeyFormat.");
   }
 
-  if (parsed_key_format->version != 0) {
+  if (key_format.version() != 0) {
     return absl::InvalidArgumentError(
         "Parsing AesGcmHkdfStreamingKeyFormat failed: only "
         "version 0 is accepted.");
   }
 
-  return ToParameters(parsed_key_format->params, parsed_key_format->key_size);
+  return ToParameters(key_format.params(), key_format.key_size());
 }
 
 absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const AesGcmHkdfStreamingParameters& parameters) {
-  absl::StatusOr<AesGcmHkdfStreamingParamsStruct> params_struct =
+  absl::StatusOr<AesGcmHkdfStreamingParamsTP> params =
       FromParameters(parameters);
-  if (!params_struct.ok()) {
-    return params_struct.status();
+  if (!params.ok()) {
+    return params.status();
   }
-  AesGcmHkdfStreamingKeyFormatStruct format;
-  format.version = 0;
-  format.key_size = parameters.KeySizeInBytes();
-  format.params = *params_struct;
+  AesGcmHkdfStreamingKeyFormatTP format;
+  format.set_version(0);
+  format.set_key_size(parameters.KeySizeInBytes());
+  *format.mutable_params() = *params;
 
-  absl::StatusOr<std::string> serialized =
-      AesGcmHkdfStreamingKeyFormatStruct::Parser().SerializeIntoString(format);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
   return ProtoParametersSerialization::Create(
-      kTypeUrl, OutputPrefixTypeEnum::kRaw, *serialized);
+      kTypeUrl, OutputPrefixTypeEnum::kRaw, format.SerializeAsString());
 }
 
 absl::StatusOr<AesGcmHkdfStreamingKey> ParseKey(
@@ -236,26 +267,26 @@ absl::StatusOr<AesGcmHkdfStreamingKey> ParseKey(
         "Wrong type URL when parsing AesGcmHkdfStreamingKey.");
   }
 
-  absl::StatusOr<AesGcmHkdfStreamingKeyStruct> parsed_key =
-      AesGcmHkdfStreamingKeyStruct::Parser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!parsed_key.ok()) {
-    return parsed_key.status();
+  AesGcmHkdfStreamingKeyTP key;
+  if (!key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError(
+        "Failed to parse AesGcmHkdfStreamingKey.");
   }
 
-  if (parsed_key->version != 0) {
+  if (key.version() != 0) {
     return absl::InvalidArgumentError(
         "Parsing AesGcmHkdfStreamingKey failed: only version 0 is accepted.");
   }
 
   absl::StatusOr<AesGcmHkdfStreamingParameters> parameters =
-      ToParameters(parsed_key->params, parsed_key->key_value.size());
+      ToParameters(key.params(), key.key_value().size());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   return AesGcmHkdfStreamingKey::Create(
-      *parameters, RestrictedData(std::move(parsed_key->key_value), *token),
+      *parameters, RestrictedData(std::move(key.key_value()), *token),
       GetPartialKeyAccess());
 }
 
@@ -271,25 +302,19 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return initial_key_material.status();
   }
 
-  absl::StatusOr<AesGcmHkdfStreamingParamsStruct> params_struct =
+  absl::StatusOr<AesGcmHkdfStreamingParamsTP> params =
       FromParameters(key.GetParameters());
-  if (!params_struct.ok()) {
-    return params_struct.status();
+  if (!params.ok()) {
+    return params.status();
   }
-  AesGcmHkdfStreamingKeyStruct key_struct;
-  key_struct.version = 0;
-  key_struct.params = *params_struct;
-  key_struct.key_value =
+  AesGcmHkdfStreamingKeyTP key_proto;
+  key_proto.set_version(0);
+  *key_proto.mutable_params() = *params;
+  *key_proto.mutable_key_value() =
       util::SecretDataFromStringView(initial_key_material->GetSecret(*token));
 
-  absl::StatusOr<SecretData> serialized_key =
-      AesGcmHkdfStreamingKeyStruct::Parser().SerializeIntoSecretData(
-          key_struct);
-  if (!serialized_key.ok()) {
-    return serialized_key.status();
-  }
   return ProtoKeySerialization::Create(
-      kTypeUrl, RestrictedData(*std::move(serialized_key), *token),
+      kTypeUrl, RestrictedData(key_proto.SerializeAsSecretData(), *token),
       KeyMaterialTypeEnum::kSymmetric, OutputPrefixTypeEnum::kRaw,
       key.GetIdRequirement());
 }

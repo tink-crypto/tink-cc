@@ -221,7 +221,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/streamingaead/internal:config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -234,7 +234,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/streamingaead/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 

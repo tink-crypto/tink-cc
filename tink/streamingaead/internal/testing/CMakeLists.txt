@@ -7,7 +7,7 @@ tink_cc_library(
     aes_ctr_hmac_streaming_test_vectors.h
   DEPS
     tink::streamingaead::internal::testing::streamingaead_test_vector
-    absl::check
+    absl::absl_check
     absl::strings
     absl::string_view
     tink::core::insecure_secret_key_access
@@ -38,7 +38,7 @@ tink_cc_library(
   DEPS
     tink::streamingaead::internal::testing::aes_ctr_hmac_streaming_test_vectors
     tink::streamingaead::internal::testing::streamingaead_test_vector
-    absl::check
+    absl::absl_check
     absl::strings
     absl::string_view
     tink::core::insecure_secret_key_access

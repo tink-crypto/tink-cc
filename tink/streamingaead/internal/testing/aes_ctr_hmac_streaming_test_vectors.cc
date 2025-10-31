@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
@@ -60,14 +60,14 @@ StreamingAeadTestVector CreateTestVector0() {
           .SetHmacTagSizeInBytes(32)
           .SetCiphertextSegmentSizeInBytes(64)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
   absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   absl::string_view plaintext =
       "This is a fairly long plaintext. However, it is not crazy long.";
@@ -113,13 +113,13 @@ StreamingAeadTestVector CreateTestVector1() {
           .SetHmacTagSizeInBytes(32)
           .SetCiphertextSegmentSizeInBytes(64)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
   absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   std::string plaintext = "";
   std::string associated_data = "";
@@ -141,13 +141,13 @@ StreamingAeadTestVector CreateTestVector2() {
           .SetHmacTagSizeInBytes(32)
           .SetCiphertextSegmentSizeInBytes(64)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
   absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   std::string plaintext = "";
   std::string associated_data = HexDecodeOrDie("000102030405");
@@ -169,13 +169,13 @@ StreamingAeadTestVector CreateTestVector3() {
           .SetHmacTagSizeInBytes(20)
           .SetCiphertextSegmentSizeInBytes(64)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
   absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   std::string plaintext = "";
   std::string associated_data = HexDecodeOrDie("000102030405");
@@ -197,14 +197,14 @@ StreamingAeadTestVector CreateTestVector4() {
           .SetHmacTagSizeInBytes(20)
           .SetCiphertextSegmentSizeInBytes(64)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   RestrictedData initial_key_material = RestrictedData(
       HexDecodeOrDie(
           "00112233445566778899aabbccddeeff000102030405060708090a0b0c0d0e0f"),
       InsecureSecretKeyAccess::Get());
   absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   std::string plaintext = "";
   std::string associated_data =
@@ -227,14 +227,14 @@ StreamingAeadTestVector CreateTestVector5() {
           .SetHmacTagSizeInBytes(20)
           .SetCiphertextSegmentSizeInBytes(64)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   RestrictedData initial_key_material = RestrictedData(
       HexDecodeOrDie(
           "00112233445566778899aabbccddeeff000102030405060708090a0b0c0d0e0f"),
       InsecureSecretKeyAccess::Get());
   absl::StatusOr<AesCtrHmacStreamingKey> key = AesCtrHmacStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   std::string plaintext = "";
   std::string associated_data =

@@ -14,20 +14,19 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
-#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
-#include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
-
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_key.h"
+#include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
+#include "tink/streamingaead/internal/testing/aes_ctr_hmac_streaming_test_vectors.h"
 #include "tink/streamingaead/internal/testing/streamingaead_test_vector.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_util.h"
@@ -48,14 +47,14 @@ StreamingAeadTestVector CreateTestVector0() {
           .SetHashType(AesGcmHkdfStreamingParameters::HashType::kSha1)
           .SetCiphertextSegmentSizeInBytes(64)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   RestrictedData initial_key_material =
       RestrictedData(HexDecodeOrDie("6eb56cdc726dfbe5d57f2fcdc6e9345b"),
                      InsecureSecretKeyAccess::Get());
   absl::StatusOr<AesGcmHkdfStreamingKey> key = AesGcmHkdfStreamingKey::Create(
       *parameters, initial_key_material, GetPartialKeyAccess());
-  CHECK_OK(key);
+  ABSL_CHECK_OK(key);
 
   absl::string_view plaintext =
       "This is a fairly long plaintext. It is of the exact length to create "

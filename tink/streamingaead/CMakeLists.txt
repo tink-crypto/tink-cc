@@ -206,7 +206,7 @@ tink_cc_library(
     config_v0.cc
     config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::streamingaead::internal::config_v0
 )
@@ -217,7 +217,7 @@ tink_cc_library(
     key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::key_gen_configuration
     tink::streamingaead::internal::key_gen_config_v0
 )

@@ -16,7 +16,7 @@
 
 #include "tink/config/v0.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/aead/internal/config_v0.h"
 #include "tink/configuration.h"
 #include "tink/daead/internal/config_v0.h"
@@ -33,13 +33,13 @@ namespace tink {
 const Configuration& ConfigV0() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
-    CHECK_OK(internal::AddMacV0(*config));
-    CHECK_OK(internal::AddAeadV0(*config));
-    CHECK_OK(internal::AddDeterministicAeadV0(*config));
-    CHECK_OK(internal::AddStreamingAeadV0(*config));
-    CHECK_OK(internal::AddHybridV0(*config));
-    CHECK_OK(internal::AddPrfV0(*config));
-    CHECK_OK(internal::AddSignatureV0(*config));
+    ABSL_CHECK_OK(internal::AddMacV0(*config));
+    ABSL_CHECK_OK(internal::AddAeadV0(*config));
+    ABSL_CHECK_OK(internal::AddDeterministicAeadV0(*config));
+    ABSL_CHECK_OK(internal::AddStreamingAeadV0(*config));
+    ABSL_CHECK_OK(internal::AddHybridV0(*config));
+    ABSL_CHECK_OK(internal::AddPrfV0(*config));
+    ABSL_CHECK_OK(internal::AddSignatureV0(*config));
     return config;
   }();
   return *instance;

@@ -23,7 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/internal/fips_utils.h"
@@ -173,7 +173,7 @@ bool TestSignatures(const std::string& filename,
                     subtle::EcdsaSignatureEncoding encoding) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(filename);
-  CHECK_OK(parsed_input.status());
+  ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
   int passed_tests = 0;

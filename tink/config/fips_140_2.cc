@@ -16,7 +16,7 @@
 
 #include "tink/config/fips_140_2.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "tink/aead/aead_wrapper.h"
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
@@ -122,10 +122,10 @@ const Configuration& ConfigFips140_2() {
     internal::SetFipsRestricted();
 
     static Configuration* config = new Configuration();
-    CHECK_OK(AddMac(*config));
-    CHECK_OK(AddAead(*config));
-    CHECK_OK(AddPrf(*config));
-    CHECK_OK(AddSignature(*config));
+    ABSL_CHECK_OK(AddMac(*config));
+    ABSL_CHECK_OK(AddAead(*config));
+    ABSL_CHECK_OK(AddPrf(*config));
+    ABSL_CHECK_OK(AddSignature(*config));
 
     return config;
   }();

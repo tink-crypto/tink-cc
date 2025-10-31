@@ -16,7 +16,7 @@
 
 #include "tink/config/key_gen_v0.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/aead/internal/key_gen_config_v0.h"
 #include "tink/daead/internal/key_gen_config_v0.h"
 #include "tink/hybrid/internal/key_gen_config_v0.h"
@@ -32,13 +32,13 @@ namespace tink {
 const KeyGenConfiguration& KeyGenConfigV0() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    CHECK_OK(internal::AddMacKeyGenV0(*config));
-    CHECK_OK(internal::AddAeadKeyGenV0(*config));
-    CHECK_OK(internal::AddDeterministicAeadKeyGenV0(*config));
-    CHECK_OK(internal::AddStreamingAeadKeyGenV0(*config));
-    CHECK_OK(internal::AddHybridKeyGenV0(*config));
-    CHECK_OK(internal::AddPrfKeyGenV0(*config));
-    CHECK_OK(internal::AddSignatureKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddMacKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddDeterministicAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddStreamingAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddHybridKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddPrfKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddSignatureKeyGenV0(*config));
     return config;
   }();
   return *instance;

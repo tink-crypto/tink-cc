@@ -23,7 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
@@ -223,7 +223,7 @@ std::vector<RsaSsaPssWycheproofTestVector> ReadWycheproofTestVectors(
   std::vector<RsaSsaPssWycheproofTestVector> test_vectors;
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(std::string(file_name));
-  CHECK_OK(parsed_input.status());
+  ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
   for (const google::protobuf::Value& test_group :

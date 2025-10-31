@@ -25,7 +25,7 @@
 #include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -209,13 +209,13 @@ void HmacComputeBenchmark(benchmark::State &state, HashType hash,
                           int key_size) {
   absl::StatusOr<std::unique_ptr<Mac>> hmac = HmacBoringSsl::New(
       hash, /*tag_size=*/key_size, Random::GetRandomKeyBytes(key_size));
-  CHECK_OK(hmac.status());
+  ABSL_CHECK_OK(hmac.status());
   std::string data(state.range(0), 'x');
   benchmark::DoNotOptimize(data);
   for (auto s : state) {
     absl::StatusOr<std::string> tag = (*hmac)->ComputeMac(data);
     benchmark::DoNotOptimize(tag);
-    CHECK_OK(tag.status());
+    ABSL_CHECK_OK(tag.status());
   }
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }
@@ -246,7 +246,7 @@ void HmacVerifyBenchmark(benchmark::State &state, HashType hash, int key_size) {
   absl::Status status;
   for (auto s : state) {
     benchmark::DoNotOptimize(status = (*hmac)->VerifyMac(*tag, data));
-    CHECK_OK(status);
+    ABSL_CHECK_OK(status);
   }
   state.SetBytesProcessed(state.iterations() * state.range(0));
 }

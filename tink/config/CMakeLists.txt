@@ -48,7 +48,7 @@ tink_cc_library(
     global_registry.cc
     global_registry.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::core::key_gen_configuration
     tink::internal::configuration_impl
@@ -61,7 +61,7 @@ tink_cc_library(
     fips_140_2.cc
     fips_140_2.h
   DEPS
-    absl::check
+    absl::absl_check
     absl::memory
     tink::core::configuration
     tink::aead::aead_wrapper
@@ -91,7 +91,7 @@ tink_cc_library(
     key_gen_fips_140_2.cc
     key_gen_fips_140_2.h
   DEPS
-    absl::check
+    absl::absl_check
     absl::memory
     tink::core::key_gen_configuration
     tink::aead::aes_ctr_hmac_aead_key_manager
@@ -115,7 +115,7 @@ tink_cc_library(
     v0.cc
     v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::aead::internal::config_v0
     tink::daead::internal::config_v0
@@ -135,7 +135,7 @@ tink_cc_library(
     key_gen_v0.cc
     key_gen_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::key_gen_configuration
     tink::aead::internal::key_gen_config_v0
     tink::daead::internal::key_gen_config_v0

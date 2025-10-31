@@ -16,7 +16,7 @@
 
 #include "tink/config/global_registry.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/configuration.h"
 #include "tink/internal/configuration_impl.h"
 #include "tink/internal/key_gen_configuration_impl.h"
@@ -28,7 +28,7 @@ namespace tink {
 const Configuration& ConfigGlobalRegistry() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
-    CHECK_OK(internal::ConfigurationImpl::SetGlobalRegistryMode(*config));
+    ABSL_CHECK_OK(internal::ConfigurationImpl::SetGlobalRegistryMode(*config));
     return config;
   }();
   return *instance;
@@ -37,7 +37,8 @@ const Configuration& ConfigGlobalRegistry() {
 const KeyGenConfiguration& KeyGenConfigGlobalRegistry() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    CHECK_OK(internal::KeyGenConfigurationImpl::SetGlobalRegistryMode(*config));
+    ABSL_CHECK_OK(
+        internal::KeyGenConfigurationImpl::SetGlobalRegistryMode(*config));
     return config;
   }();
   return *instance;

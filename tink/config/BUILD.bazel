@@ -63,7 +63,7 @@ cc_library(
         "//tink:key_gen_configuration",
         "//tink/internal:configuration_impl",
         "//tink/internal:key_gen_configuration_impl",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -137,7 +137,7 @@ cc_library(
         "//tink/prf/internal:config_v0",
         "//tink/signature/internal:config_v0",
         "//tink/streamingaead/internal:config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -156,7 +156,7 @@ cc_library(
         "//tink/prf/internal:key_gen_config_v0",
         "//tink/signature/internal:key_gen_config_v0",
         "//tink/streamingaead/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 

@@ -24,7 +24,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -256,7 +256,7 @@ static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> GetVerifier(
 bool TestSignatures(const std::string& filename) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(filename);
-  CHECK_OK(parsed_input.status());
+  ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
   int passed_tests = 0;
@@ -265,7 +265,7 @@ bool TestSignatures(const std::string& filename) {
        test_groups.list_value().values()) {
     auto test_group_fields = test_group.struct_value().fields();
     auto verifier_result = GetVerifier(test_group);
-    CHECK_OK(verifier_result.status());
+    ABSL_CHECK_OK(verifier_result.status());
 
     auto verifier = std::move(verifier_result.value());
     for (const google::protobuf::Value& test :

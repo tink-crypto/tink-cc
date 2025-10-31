@@ -983,7 +983,7 @@ tink_cc_test(
     tink::subtle::hmac_boringssl
     tink::subtle::random
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::statusor
     absl::strings
@@ -1217,7 +1217,7 @@ tink_cc_test(
     tink::subtle::ecdsa_verify_boringssl
     tink::subtle::subtle_util_boringssl
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     tink::core::public_key_verify
@@ -1266,7 +1266,7 @@ tink_cc_test(
   DEPS
     tink::subtle::ed25519_verify_boringssl
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     crypto
@@ -1293,7 +1293,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pss_verify_boringssl
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     crypto
@@ -1349,7 +1349,7 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::rsa_ssa_pkcs1_verify_boringssl
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     crypto

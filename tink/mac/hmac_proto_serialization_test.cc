@@ -241,16 +241,16 @@ TEST_P(HmacProtoSerializationTest, SerializeParameters) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  EXPECT_THAT(key_template.type_url,
+  const internal::ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  EXPECT_THAT(key_template.type_url(),
               Eq("type.googleapis.com/google.crypto.tink.HmacKey"));
-  EXPECT_THAT(key_template.output_prefix_type,
+  EXPECT_THAT(key_template.output_prefix_type(),
               Eq(static_cast<internal::OutputPrefixTypeEnum>(
                   test_case.output_prefix_type)));
 
   HmacKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(key_template.value), IsTrue());
+  ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
   ASSERT_THAT(key_format.key_size(), Eq(test_case.key_size));
   ASSERT_THAT(key_format.params().tag_size(), Eq(test_case.tag_size));
   ASSERT_THAT(key_format.params().hash(), Eq(test_case.proto_hash_type));

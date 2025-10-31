@@ -166,12 +166,13 @@ TEST_F(CreateKeysetKeyTestGlobalRegistry, CreateKeysetKeyFromParameters) {
 
   EXPECT_THAT((*keyset_key)->status(), Eq(KeyStatusType::ENABLED));
   EXPECT_THAT((*keyset_key)->key_id(), Eq(123));
-  const KeyTemplateStruct& key_template =
-      parameters->Serialization().GetKeyTemplateStruct();
+  const ProtoKeyTemplate& key_template =
+      parameters->Serialization().GetProtoKeyTemplate();
   EXPECT_THAT(
       (*keyset_key)->output_prefix_type(),
-      Eq(static_cast<OutputPrefixType>(key_template.output_prefix_type)));
-  EXPECT_THAT((*keyset_key)->key_data().type_url(), Eq(key_template.type_url));
+      Eq(static_cast<OutputPrefixType>(key_template.output_prefix_type())));
+  EXPECT_THAT((*keyset_key)->key_data().type_url(),
+              Eq(key_template.type_url()));
 }
 
 TEST_F(CreateKeysetKeyTestGlobalRegistry,

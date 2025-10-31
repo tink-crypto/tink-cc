@@ -130,14 +130,14 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 
 absl::StatusOr<HmacParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const KeyTemplateStruct key_template = serialization.GetKeyTemplateStruct();
-  if (key_template.type_url != kTypeUrl) {
+  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing HmacParameters.");
   }
 
   ProtoHmacKeyFormat proto_key_format;
-  if (!proto_key_format.ParseFromString(key_template.value)) {
+  if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse HmacKeyFormat proto.");
   }
   if (proto_key_format.version() != 0) {
@@ -147,7 +147,7 @@ absl::StatusOr<HmacParameters> ParseParameters(
   }
 
   absl::StatusOr<HmacParameters::Variant> variant =
-      ToVariant(key_template.output_prefix_type);
+      ToVariant(key_template.output_prefix_type());
   if (!variant.ok()) return variant.status();
 
   absl::StatusOr<HmacParameters::HashType> hash_type =

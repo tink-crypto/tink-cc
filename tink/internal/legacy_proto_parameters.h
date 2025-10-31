@@ -42,7 +42,7 @@ class LegacyProtoParameters : public Parameters {
       : serialization_(std::move(serialization)) {}
 
   bool HasIdRequirement() const override {
-    return serialization_.GetKeyTemplateStruct().output_prefix_type !=
+    return serialization_.GetProtoKeyTemplate().output_prefix_type() !=
            OutputPrefixTypeEnum::kRaw;
   }
 

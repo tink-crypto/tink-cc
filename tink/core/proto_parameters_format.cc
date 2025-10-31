@@ -32,16 +32,16 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::internal::KeyTemplateStruct;
+using ::crypto::tink::internal::ProtoKeyTemplate;
 
 absl::StatusOr<std::string> SerializeParametersToProtoFormat(
     const Parameters& parameters) {
   const internal::LegacyProtoParameters* legacy_proto_params =
       dynamic_cast<const internal::LegacyProtoParameters*>(&parameters);
   if (legacy_proto_params != nullptr) {
-    const KeyTemplateStruct& key_template =
-        legacy_proto_params->Serialization().GetKeyTemplateStruct();
-    return KeyTemplateStruct::GetParser().SerializeIntoString(key_template);
+    const ProtoKeyTemplate& key_template =
+        legacy_proto_params->Serialization().GetProtoKeyTemplate();
+    return key_template.SerializeAsString();
   }
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -60,21 +60,21 @@ absl::StatusOr<std::string> SerializeParametersToProtoFormat(
                         "Failed to serialize proto parameters.");
   }
 
-  const KeyTemplateStruct& key_template =
-      proto_serialization->GetKeyTemplateStruct();
-  return KeyTemplateStruct::GetParser().SerializeIntoString(key_template);
+  const ProtoKeyTemplate& key_template =
+      proto_serialization->GetProtoKeyTemplate();
+  return key_template.SerializeAsString();
 }
 
 absl::StatusOr<std::unique_ptr<Parameters>> ParseParametersFromProtoFormat(
     absl::string_view serialized_parameters) {
-  absl::StatusOr<KeyTemplateStruct> key_template =
-      KeyTemplateStruct::GetParser().Parse(serialized_parameters);
-  if (!key_template.ok()) {
-    return key_template.status();
+  ProtoKeyTemplate key_template;
+  if (!key_template.ParseFromString(serialized_parameters)) {
+    return absl::InvalidArgumentError(
+        "Failed to parse ProtoKeyTemplate from string.");
   }
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
-      internal::ProtoParametersSerialization::Create(*key_template);
+      internal::ProtoParametersSerialization::Create(key_template);
   if (!serialization.ok()) {
     return serialization.status();
   }

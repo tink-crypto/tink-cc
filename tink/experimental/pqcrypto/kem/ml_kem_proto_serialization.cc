@@ -216,23 +216,23 @@ absl::StatusOr<MlKemParamsStruct> FromParameters(
 
 absl::StatusOr<MlKemParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateStruct key_template =
-      serialization.GetKeyTemplateStruct();
+  const internal::ProtoKeyTemplate& key_template =
+      serialization.GetProtoKeyTemplate();
 
-  if (key_template.type_url != kPrivateTypeUrl) {
+  if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing MlKemParameters.");
   }
 
   absl::StatusOr<MlKemKeyFormatStruct> proto_key_format =
-      MlKemKeyFormatStruct::GetParser().Parse(key_template.value);
+      MlKemKeyFormatStruct::GetParser().Parse(key_template.value());
   if (!proto_key_format.ok()) {
     return proto_key_format.status();
   }
   if (proto_key_format->version != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
-  return ToParameters(key_template.output_prefix_type,
+  return ToParameters(key_template.output_prefix_type(),
                       proto_key_format->params);
 }
 

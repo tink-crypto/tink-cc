@@ -123,14 +123,14 @@ CreateKeysetKeyFromProtoParametersSerialization(
   // TODO(tholenst): ensure this doesn't leak.
   // Create KeyData from KeyTemplate and KeyTypeManagers.
   absl::StatusOr<std::unique_ptr<KeyData>> key_data;
-  const KeyTemplateStruct& key_template = serialization.GetKeyTemplateStruct();
+  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
   if (internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
     google::crypto::tink::KeyTemplate proto_key_template;
-    proto_key_template.set_type_url(key_template.type_url);
+    proto_key_template.set_type_url(key_template.type_url());
     proto_key_template.set_output_prefix_type(
         static_cast<google::crypto::tink::OutputPrefixType>(
-            key_template.output_prefix_type));
-    proto_key_template.set_value(key_template.value);
+            key_template.output_prefix_type()));
+    proto_key_template.set_value(key_template.value());
     key_data = Registry::NewKeyData(proto_key_template);
   } else {
     absl::StatusOr<const internal::KeyTypeInfoStore *> key_type_info_store =
@@ -138,12 +138,12 @@ CreateKeysetKeyFromProtoParametersSerialization(
     if (!key_type_info_store.ok()) {
       return key_type_info_store.status();
     }
-    absl::StatusOr<const internal::KeyTypeInfoStore::Info *> key_type_info =
-        (*key_type_info_store)->Get(key_template.type_url);
+    absl::StatusOr<const internal::KeyTypeInfoStore::Info*> key_type_info =
+        (*key_type_info_store)->Get(key_template.type_url());
     if (!key_type_info.ok()) {
       return key_type_info.status();
     }
-    key_data = (*key_type_info)->key_factory().NewKeyData(key_template.value);
+    key_data = (*key_type_info)->key_factory().NewKeyData(key_template.value());
   }
   if (!key_data.ok()) {
     return key_data.status();
@@ -154,7 +154,7 @@ CreateKeysetKeyFromProtoParametersSerialization(
   key->set_key_id(id);
   key->set_output_prefix_type(
       static_cast<google::crypto::tink::OutputPrefixType>(
-          key_template.output_prefix_type));
+          key_template.output_prefix_type()));
   *key->mutable_key_data() = **key_data;
   return key;
 }

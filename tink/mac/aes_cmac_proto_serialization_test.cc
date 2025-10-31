@@ -23,7 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -434,7 +434,7 @@ TEST_P(ParseTest, ParserCorrectly) {
 KeyAndSerialization CanonicalKeyAndSerialization0() {
   absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(16, 11, AesCmacParameters::Variant::kTink);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesCmacKey> key = AesCmacKey::Create(
       *parameters,
@@ -453,7 +453,7 @@ KeyAndSerialization CanonicalKeyAndSerialization0() {
 KeyAndSerialization CanonicalKeyAndSerialization1() {
   absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(32, 11, AesCmacParameters::Variant::kNoPrefix);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesCmacKey> key =
       AesCmacKey::Create(*parameters,
@@ -474,7 +474,7 @@ KeyAndSerialization CanonicalKeyAndSerialization1() {
 KeyAndSerialization NonCanonicalKeyAndSerialization2() {
   absl::StatusOr<AesCmacParameters> parameters =
       AesCmacParameters::Create(32, 11, AesCmacParameters::Variant::kNoPrefix);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<AesCmacKey> key =
       AesCmacKey::Create(*parameters,

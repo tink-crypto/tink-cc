@@ -26,7 +26,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -311,7 +311,7 @@ bool WycheproofTest(const google::protobuf::Struct &parsed_input,
       EXPECT_THAT(update_result, IsOk());
 
       absl::StatusOr<SecretData> finalize_result = hmac->FinalizeAsSecretData();
-      CHECK_OK(finalize_result.status());
+      ABSL_CHECK_OK(finalize_result.status());
       bool success = SecretDataAsStringView(*finalize_result) == tag;
       if (success) {
         // std::string result_tag = result.value();

@@ -23,7 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -164,7 +164,7 @@ struct StatefulCmacTestVector {
 std::vector<StatefulCmacTestVector> GetWycheproofCmakeTestVectors() {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors("aes_cmac_test.json");
-  CHECK_OK(parsed_input.status());
+  ABSL_CHECK_OK(parsed_input.status());
   std::vector<StatefulCmacTestVector> test_vectors;
   const google::protobuf::Value &test_groups =
       parsed_input->fields().at("testGroups");

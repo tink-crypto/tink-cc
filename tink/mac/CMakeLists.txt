@@ -268,7 +268,7 @@ tink_cc_library(
     config_v0.cc
     config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::mac::internal::config_v0
 )
@@ -279,7 +279,7 @@ tink_cc_library(
     key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::key_gen_configuration
     tink::mac::internal::key_gen_config_v0
 )
@@ -486,7 +486,7 @@ tink_cc_test(
     tink::mac::aes_cmac_parameters
     tink::mac::aes_cmac_proto_serialization
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::status
     absl::string_view

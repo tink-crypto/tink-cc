@@ -16,7 +16,7 @@
 
 #include "tink/mac/config_v0.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/configuration.h"
 #include "tink/mac/internal/config_v0.h"
 
@@ -26,7 +26,7 @@ namespace tink {
 const Configuration& ConfigMacV0() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
-    CHECK_OK(internal::AddMacV0(*config));
+    ABSL_CHECK_OK(internal::AddMacV0(*config));
     return config;
   }();
   return *instance;

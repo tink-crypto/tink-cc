@@ -23,7 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/types/optional.h"
@@ -62,7 +62,7 @@ using ::testing::Return;
 using ::testing::StrictMock;
 
 AesGcmParameters CreateAes256GcmParameters() {
-  CHECK_OK(AeadConfig::Register());
+  ABSL_CHECK_OK(AeadConfig::Register());
 
   absl::StatusOr<AesGcmParameters> parameters =
       AesGcmParameters::Builder()
@@ -71,7 +71,7 @@ AesGcmParameters CreateAes256GcmParameters() {
           .SetTagSizeInBytes(16)
           .SetVariant(AesGcmParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
@@ -79,16 +79,16 @@ std::unique_ptr<KemEncapsulate> CreateMlKemEncapsulateAes256Gcm(
     absl::optional<int> id_requirement) {
   absl::StatusOr<MlKemParameters> key_parameters =
       MlKemParameters::Create(768, MlKemParameters::Variant::kTink);
-  CHECK_OK(key_parameters);
+  ABSL_CHECK_OK(key_parameters);
 
   absl::StatusOr<MlKemPrivateKey> private_key =
       GenerateMlKemPrivateKey(*key_parameters, id_requirement);
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
 
   absl::StatusOr<std::unique_ptr<KemEncapsulate>> encapsulate =
       NewMlKemEncapsulateAes256Gcm(private_key->GetPublicKey(),
                                    CreateAes256GcmParameters());
-  CHECK_OK(encapsulate.status());
+  ABSL_CHECK_OK(encapsulate.status());
 
   return std::move(*encapsulate);
 }
@@ -133,7 +133,7 @@ class KemEncapsulateWrapperTest : public ::testing::Test {
             .AddPrimaryPrimitive(CreateMlKemEncapsulateAes256Gcm(0x7213743),
                                  keyset_info.key_info(2))
             .Build();
-    CHECK_OK(kem_encapsulate_set.status());
+    ABSL_CHECK_OK(kem_encapsulate_set.status());
 
     kem_encapsulate_set_ = absl::make_unique<PrimitiveSet<KemEncapsulate>>(
         std::move(*kem_encapsulate_set));

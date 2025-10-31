@@ -266,7 +266,7 @@ tink_cc_test(
     tink::mac::internal::stateful_mac
     gmock
     absl::log
-    absl::check
+    absl::absl_check
     absl::memory
     absl::status
     absl::strings
@@ -291,7 +291,7 @@ tink_cc_test(
     tink::mac::internal::stateful_cmac_boringssl
     tink::mac::internal::stateful_mac
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::statusor
     absl::strings
@@ -310,7 +310,7 @@ tink_cc_test(
   DEPS
     tink::mac::internal::aes_cmac_proto_serialization_impl
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::status
     absl::string_view

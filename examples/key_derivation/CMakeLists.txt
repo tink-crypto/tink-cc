@@ -4,7 +4,7 @@ target_include_directories(key_derivation_cli PUBLIC
   "${TINK_EXAMPLES_INCLUDE_PATH}")
 target_link_libraries(key_derivation_cli
   tink::static
-  absl::check
+  absl::absl_check
   absl::flags_parse
   util)
 

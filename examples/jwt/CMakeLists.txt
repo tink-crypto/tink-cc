@@ -5,7 +5,7 @@ target_include_directories(jwt_sign PUBLIC
 target_link_libraries(jwt_sign
   tink::static
   tink::jwt::jwt_signature_config
-  absl::check
+  absl::absl_check
   absl::flags_parse
   util)
 
@@ -17,7 +17,7 @@ target_link_libraries(jwt_verify
   tink::static
   tink::jwt::jwk_set_converter
   tink::jwt::jwt_signature_config
-  absl::check
+  absl::absl_check
   absl::flags_parse
   util)
 
@@ -29,7 +29,7 @@ target_link_libraries(jwt_generate_public_jwk_set
   tink::static
   tink::jwt::jwk_set_converter
   tink::jwt::jwt_signature_config
-  absl::check
+  absl::absl_check
   absl::flags_parse
   util)
 

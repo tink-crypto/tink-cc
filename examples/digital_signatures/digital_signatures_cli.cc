@@ -22,7 +22,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
               << " over the content of " << input_filename << '\n';
   }
 
-  CHECK_OK(tink_cc_examples::DigitalSignatureCli(
+  ABSL_CHECK_OK(tink_cc_examples::DigitalSignatureCli(
       mode, keyset_filename, input_filename, signature_filename));
   return 0;
 }

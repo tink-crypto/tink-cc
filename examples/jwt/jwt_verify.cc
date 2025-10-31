@@ -23,7 +23,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
   std::clog << "Using keyset in " << jwk_set_filename << " to ";
   std::clog << " verify a token with expected audience '" << audience << '\n';
 
-  CHECK_OK(
+  ABSL_CHECK_OK(
       tink_cc_examples::JwtVerify(jwk_set_filename, audience, token_filename));
   return 0;
 }

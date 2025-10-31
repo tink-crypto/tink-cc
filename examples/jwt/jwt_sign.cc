@@ -23,7 +23,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -107,7 +107,7 @@ int main(int argc, char** argv) {
             << "'; the resulting signature is written to " << token_filename
             << '\n';
 
-  CHECK_OK(
+  ABSL_CHECK_OK(
       tink_cc_examples::JwtSign(keyset_filename, audience, token_filename));
   return 0;
 }

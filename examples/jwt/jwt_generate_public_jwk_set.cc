@@ -22,7 +22,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "util/util.h"
@@ -86,8 +86,8 @@ int main(int argc, char** argv) {
   std::clog << " to JWK set format; the result is written to "
             << public_jwk_set_filename << '\n';
 
-  CHECK_OK(tink_cc_examples::JwtGeneratePublicJwkSet(public_keyset_filename,
-                                                     public_jwk_set_filename));
+  ABSL_CHECK_OK(tink_cc_examples::JwtGeneratePublicJwkSet(
+      public_keyset_filename, public_jwk_set_filename));
   return 0;
 }
 // [END jwt-generate-public-jwk-set]

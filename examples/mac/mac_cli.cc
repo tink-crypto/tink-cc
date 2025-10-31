@@ -27,7 +27,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "tink/config/global_registry.h"
@@ -133,8 +133,8 @@ int main(int argc, char** argv) {
             << ((mode == kCompute) ? "written to" : "read from") << " file '"
             << tag_filename << "'." << '\n';
 
-  CHECK_OK(tink_cc_examples::MacCli(mode, keyset_filename, data_filename,
-                                    tag_filename));
+  ABSL_CHECK_OK(tink_cc_examples::MacCli(mode, keyset_filename, data_filename,
+                                         tag_filename));
   return 0;
 }
 // [END mac-example]

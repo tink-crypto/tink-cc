@@ -21,7 +21,7 @@
 
 #include "absl/flags/flag.h"
 #include "absl/flags/parse.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -120,8 +120,8 @@ int main(int argc, char** argv) {
   std::clog << "The resulting output will be written to " << output_filename
             << '\n';
 
-  CHECK_OK(tink_cc_examples::AeadCli(mode, keyset_filename, input_filename,
-                                     output_filename, associated_data));
+  ABSL_CHECK_OK(tink_cc_examples::AeadCli(mode, keyset_filename, input_filename,
+                                          output_filename, associated_data));
   return 0;
 }
 // [END aead-example]

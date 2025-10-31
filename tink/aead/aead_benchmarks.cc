@@ -19,7 +19,7 @@
 
 #include "benchmark/benchmark.h"
 #include "gmock/gmock.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/aead.h"
@@ -50,15 +50,15 @@ absl::StatusOr<std::unique_ptr<Aead>> GetAead(const KeyTemplate& key_template) {
 
 
 void Encrypt(benchmark::State& state, const KeyTemplate& key_template) {
-  CHECK_OK(AeadConfig::Register());
+  ABSL_CHECK_OK(AeadConfig::Register());
   absl::StatusOr<std::unique_ptr<Aead>> aead = GetAead(key_template);
-  CHECK_OK(aead);
+  ABSL_CHECK_OK(aead);
 
   std::string plaintext(state.range(0), 'a');
   for (auto s : state) {
     absl::StatusOr<std::string> ciphertext =
         (*aead)->Encrypt(plaintext, kAssociatedData);
-    CHECK_OK(ciphertext);
+    ABSL_CHECK_OK(ciphertext);
     benchmark::DoNotOptimize(ciphertext);
   }
   state.SetBytesProcessed(state.iterations() * plaintext.size());
@@ -81,19 +81,19 @@ BENCHMARK(BM_Aes256GcmEncrypt)
     ->Range(kMinSize, kMaxSize);
 
 void Decrypt(benchmark::State& state, const KeyTemplate& key_template) {
-  CHECK_OK(AeadConfig::Register());
+  ABSL_CHECK_OK(AeadConfig::Register());
   absl::StatusOr<std::unique_ptr<Aead>> aead = GetAead(key_template);
-  CHECK_OK(aead);
+  ABSL_CHECK_OK(aead);
 
   std::string plaintext(state.range(0), 'a');
   absl::StatusOr<std::string> ciphertext =
       (*aead)->Encrypt(plaintext, kAssociatedData);
-  CHECK_OK(ciphertext);
+  ABSL_CHECK_OK(ciphertext);
 
   for (auto s : state) {
     absl::StatusOr<std::string> decrypted =
         (*aead)->Decrypt(*ciphertext, kAssociatedData);
-    CHECK_OK(decrypted);
+    ABSL_CHECK_OK(decrypted);
     benchmark::DoNotOptimize(decrypted);
   }
   state.SetBytesProcessed(state.iterations() * plaintext.size());

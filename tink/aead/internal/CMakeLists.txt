@@ -20,7 +20,7 @@ tink_cc_library(
     wycheproof_aead.cc
     wycheproof_aead.h
   DEPS
-    absl::check
+    absl::absl_check
     absl::strings
     tink::internal::testing::wycheproof_util
     tink::util::statusor
@@ -1079,7 +1079,7 @@ tink_cc_test(
   DEPS
     tink::aead::internal::legacy_kms_envelope_aead_proto_serialization_impl
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::status
     absl::string_view

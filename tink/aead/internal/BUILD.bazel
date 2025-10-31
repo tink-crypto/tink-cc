@@ -26,7 +26,7 @@ cc_library(
     deps = [
         "//tink/internal/testing:wycheproof_util",
         "//tink/util:statusor",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/strings",
     ],
 )
@@ -1139,7 +1139,7 @@ cc_test(
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",

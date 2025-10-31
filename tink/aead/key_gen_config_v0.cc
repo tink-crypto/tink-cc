@@ -16,7 +16,7 @@
 
 #include "tink/aead/key_gen_config_v0.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/aead/internal/key_gen_config_v0.h"
 #include "tink/key_gen_configuration.h"
 
@@ -26,7 +26,7 @@ namespace tink {
 const KeyGenConfiguration& KeyGenConfigAeadV0() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    CHECK_OK(internal::AddAeadKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddAeadKeyGenV0(*config));
     return config;
   }();
   return *instance;

@@ -194,7 +194,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/daead/internal:config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -207,7 +207,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/daead/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 

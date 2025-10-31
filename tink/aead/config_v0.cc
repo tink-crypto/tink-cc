@@ -16,7 +16,7 @@
 
 #include "tink/aead/config_v0.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/aead/internal/config_v0.h"
 #include "tink/configuration.h"
 
@@ -26,7 +26,7 @@ namespace tink {
 const Configuration& ConfigAeadV0() {
   static const Configuration* instance = [] {
     static Configuration* config = new Configuration();
-    CHECK_OK(internal::AddAeadV0(*config));
+    ABSL_CHECK_OK(internal::AddAeadV0(*config));
     return config;
   }();
   return *instance;

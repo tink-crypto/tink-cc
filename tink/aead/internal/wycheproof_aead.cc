@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/testing/wycheproof_util.h"
@@ -35,7 +35,7 @@ std::vector<WycheproofTestVector> ReadWycheproofTestVectors(
     absl::string_view file_name) {
   absl::StatusOr<google::protobuf::Struct> parsed_input =
       ReadTestVectors(std::string(file_name));
-  CHECK_OK(parsed_input.status());
+  ABSL_CHECK_OK(parsed_input.status());
   const google::protobuf::Value& test_groups =
       parsed_input->fields().at("testGroups");
   std::vector<WycheproofTestVector> test_vectors;

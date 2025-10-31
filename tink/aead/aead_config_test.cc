@@ -22,7 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -995,7 +995,7 @@ XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
   absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 

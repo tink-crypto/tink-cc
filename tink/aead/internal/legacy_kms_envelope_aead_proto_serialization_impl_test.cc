@@ -22,7 +22,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
@@ -111,7 +111,7 @@ XChaCha20Poly1305Parameters GetXChaCha20Poly1305Parameters() {
   absl::StatusOr<XChaCha20Poly1305Parameters> parameters =
       XChaCha20Poly1305Parameters::Create(
           XChaCha20Poly1305Parameters::Variant::kNoPrefix);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
@@ -134,7 +134,7 @@ AesGcmParameters GetAesGcmParameters() {
           .SetIvSizeInBytes(12)
           .SetTagSizeInBytes(16)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
@@ -153,7 +153,7 @@ KeyTemplate GetAesGcmSivKeyTemplate() {
 AesGcmSivParameters GetAesGcmSivParameters() {
   absl::StatusOr<AesGcmSivParameters> parameters = AesGcmSivParameters::Create(
       /*key_size_in_bytes=*/16, AesGcmSivParameters::Variant::kNoPrefix);
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
@@ -191,7 +191,7 @@ AesCtrHmacAeadParameters GetAesCtrHmacAeadParameters() {
           .SetHashType(AesCtrHmacAeadParameters::HashType::kSha256)
           .SetVariant(AesCtrHmacAeadParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 
@@ -214,7 +214,7 @@ AesEaxParameters GetAesEaxParameters() {
           .SetTagSizeInBytes(16)
           .SetVariant(AesEaxParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(parameters);
+  ABSL_CHECK_OK(parameters);
   return *parameters;
 }
 

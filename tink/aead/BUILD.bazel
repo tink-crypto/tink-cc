@@ -493,7 +493,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/aead/internal:config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -506,7 +506,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/aead/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -990,7 +990,7 @@ cc_test(
         "//tink/internal:tink_proto_structs",
         "//tink/subtle:random",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",
@@ -1803,7 +1803,7 @@ cc_test(
         "//tink:parameters",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@googletest//:gtest_main",
@@ -1820,7 +1820,7 @@ cc_test(
         "//tink:key",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
@@ -1862,7 +1862,7 @@ cc_test(
         "//tink/internal:tink_proto_structs",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:optional",
@@ -1879,7 +1879,7 @@ cc_test(
         "//tink:aead",
         "//tink:keyset_handle",
         "//tink/config:global_registry",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_benchmark//:benchmark_main",

@@ -452,7 +452,7 @@ tink_cc_library(
     config_v0.cc
     config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::configuration
     tink::aead::internal::config_v0
 )
@@ -463,7 +463,7 @@ tink_cc_library(
     key_gen_config_v0.cc
     key_gen_config_v0.h
   DEPS
-    absl::check
+    absl::absl_check
     tink::core::key_gen_configuration
     tink::aead::internal::key_gen_config_v0
 )
@@ -881,7 +881,7 @@ tink_cc_test(
     tink::aead::xchacha20_poly1305_key
     tink::aead::xchacha20_poly1305_parameters
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor
@@ -1709,7 +1709,7 @@ tink_cc_test(
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::xchacha20_poly1305_parameters
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::string_view
     tink::core::parameters
@@ -1726,7 +1726,7 @@ tink_cc_test(
     tink::aead::legacy_kms_envelope_aead_parameters
     tink::aead::xchacha20_poly1305_parameters
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::string_view
     absl::optional
@@ -1750,7 +1750,7 @@ tink_cc_test(
     tink::aead::legacy_kms_envelope_aead_proto_serialization
     tink::aead::xchacha20_poly1305_parameters
     gmock
-    absl::check
+    absl::absl_check
     absl::memory
     absl::string_view
     absl::optional
@@ -1785,7 +1785,7 @@ tink_cc_test(
     tink::aead::aead_config
     tink::aead::aead_key_templates
     gmock
-    absl::check
+    absl::absl_check
     absl::statusor
     absl::string_view
     benchmark::benchmark_main

@@ -17,7 +17,7 @@ tink_cc_library(
     hpke_test_vectors.h
   DEPS
     tink::hybrid::internal::testing::hybrid_test_vectors
-    absl::check
+    absl::absl_check
     absl::statusor
     absl::strings
     tink::core::insecure_secret_key_access
@@ -41,7 +41,7 @@ tink_cc_library(
     ecies_aead_hkdf_test_vectors.h
   DEPS
     tink::hybrid::internal::testing::hybrid_test_vectors
-    absl::check
+    absl::absl_check
     absl::optional
     tink::core::big_integer
     tink::core::ec_point

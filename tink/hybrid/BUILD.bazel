@@ -410,7 +410,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/hybrid/internal:config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 
@@ -424,7 +424,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/hybrid/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
     ],
 )
 

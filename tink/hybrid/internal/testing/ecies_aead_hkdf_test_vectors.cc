@@ -15,9 +15,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "tink/hybrid/internal/testing/ecies_aead_hkdf_test_vectors.h"
+
 #include <memory>
 #include <vector>
-#include "absl/log/check.h"
+
+#include "absl/log/absl_check.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
@@ -102,17 +104,17 @@ HybridTestVector CreateTestVector0() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -132,17 +134,17 @@ HybridTestVector CreateTestVector1() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -160,17 +162,17 @@ HybridTestVector CreateTestVector2() {
           .SetDemId(EciesParameters::DemId::kAes256GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -189,17 +191,17 @@ HybridTestVector CreateTestVector3() {
           .SetDemId(EciesParameters::DemId::kAes128CtrHmacSha256Raw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -218,17 +220,17 @@ HybridTestVector CreateTestVector4() {
           .SetDemId(EciesParameters::DemId::kAes256CtrHmacSha256Raw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -250,17 +252,17 @@ HybridTestVector CreateTestVector5() {
           .SetDemId(EciesParameters::DemId::kAes256SivRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -279,17 +281,17 @@ HybridTestVector CreateTestVector6() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kTink)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ 0x88668866,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -310,17 +312,17 @@ HybridTestVector CreateTestVector7() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kCrunchy)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ 0x88668866,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -341,17 +343,17 @@ HybridTestVector CreateTestVector8() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -371,17 +373,17 @@ HybridTestVector CreateTestVector9() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -401,17 +403,17 @@ HybridTestVector CreateTestVector10() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie(""),
       HexDecodeOrDie("02"),
@@ -431,17 +433,17 @@ HybridTestVector CreateTestVector11() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P256Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P256SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie(""),
@@ -461,17 +463,17 @@ HybridTestVector CreateTestVector12() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P384Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P384SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -492,17 +494,17 @@ HybridTestVector CreateTestVector13() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForNistCurve(*params, P521Point(),
                                          /*id_requirement*/ absl::nullopt,
                                          GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForNistCurve(*public_key, P521SecretValue(),
                                           GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),
@@ -524,7 +526,7 @@ HybridTestVector CreateTestVector14() {
           .SetDemId(EciesParameters::DemId::kAes128GcmRaw)
           .SetVariant(EciesParameters::Variant::kNoPrefix)
           .Build();
-  CHECK_OK(params);
+  ABSL_CHECK_OK(params);
 
   absl::StatusOr<EciesPublicKey> public_key =
       EciesPublicKey::CreateForCurveX25519(
@@ -532,7 +534,7 @@ HybridTestVector CreateTestVector14() {
           HexDecodeOrDie("90c5b6d9b337cc6c9c2e8ac44f1c0e7c41f23bdf7a04df3b9c808"
                          "1c0c278352a"),
           /*id_requirement*/ absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key);
+  ABSL_CHECK_OK(public_key);
   RestrictedData private_key_material = RestrictedData(
       HexDecodeOrDie(
           "97d2e385c9968fbe2dc0b85a182199ed7e0b5b4bb6060f76583c0893241f698d"),
@@ -540,7 +542,7 @@ HybridTestVector CreateTestVector14() {
   absl::StatusOr<EciesPrivateKey> private_key =
       EciesPrivateKey::CreateForCurveX25519(*public_key, private_key_material,
                                             GetPartialKeyAccess());
-  CHECK_OK(private_key);
+  ABSL_CHECK_OK(private_key);
   return HybridTestVector(
       std::make_shared<EciesPrivateKey>(*private_key), HexDecodeOrDie("01"),
       HexDecodeOrDie("02"),

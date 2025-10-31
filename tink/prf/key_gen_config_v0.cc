@@ -16,7 +16,7 @@
 
 #include "tink/prf/key_gen_config_v0.h"
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/key_gen_configuration.h"
 #include "tink/prf/internal/key_gen_config_v0.h"
 
@@ -26,7 +26,7 @@ namespace tink {
 const KeyGenConfiguration& KeyGenConfigPrfV0() {
   static const KeyGenConfiguration* instance = [] {
     static KeyGenConfiguration* config = new KeyGenConfiguration();
-    CHECK_OK(internal::AddPrfKeyGenV0(*config));
+    ABSL_CHECK_OK(internal::AddPrfKeyGenV0(*config));
     return config;
   }();
   return *instance;

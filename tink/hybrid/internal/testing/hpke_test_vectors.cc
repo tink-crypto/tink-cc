@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/hybrid/hpke_parameters.h"
@@ -67,14 +67,14 @@ HybridTestVector CreateTestVector0() {
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
 
   return HybridTestVector(
       std::make_shared<HpkePrivateKey>(*private_key), HexDecodeOrDie("01"),
@@ -92,20 +92,20 @@ HybridTestVector CreateTestVector1() {
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters,
       HexDecodeOrDie(
           "37fda3567bdbd628e88668c3c8d7e97d1d1253b6d4ea6d44c150f741f1bf4431"),
       /*id_requirement=*/absl::nullopt, GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key,
       RestrictedData(HexDecodeOrDie("52c4a758a802cd8b936eceea314432798d5baf2d7e"
                                     "9235dc084ab1b9cfa2f736"),
                      InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
 
   return HybridTestVector(
       std::make_shared<HpkePrivateKey>(*private_key), HexDecodeOrDie("01"),
@@ -123,14 +123,14 @@ HybridTestVector CreateTestVector2() {
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .SetAeadId(HpkeParameters::AeadId::kAesGcm256)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
 
   return HybridTestVector(
       std::make_shared<HpkePrivateKey>(*private_key), HexDecodeOrDie("01"),
@@ -149,14 +149,14 @@ HybridTestVector CreateTestVector3() {
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .SetAeadId(HpkeParameters::AeadId::kChaCha20Poly1305)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/absl::nullopt,
       GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
 
   return HybridTestVector(
       std::make_shared<HpkePrivateKey>(*private_key), HexDecodeOrDie("01"),
@@ -175,14 +175,14 @@ HybridTestVector CreateTestVector4() {
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x886688aa,
       GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
 
   return HybridTestVector(
       std::make_shared<HpkePrivateKey>(*private_key), HexDecodeOrDie("01"),
@@ -202,14 +202,14 @@ HybridTestVector CreateTestVector5() {
           .SetKdfId(HpkeParameters::KdfId::kHkdfSha256)
           .SetAeadId(HpkeParameters::AeadId::kAesGcm128)
           .Build();
-  CHECK_OK(parameters.status());
+  ABSL_CHECK_OK(parameters.status());
   absl::StatusOr<HpkePublicKey> public_key = HpkePublicKey::Create(
       *parameters, P256PointAsString(), /*id_requirement=*/0x886688aa,
       GetPartialKeyAccess());
-  CHECK_OK(public_key.status());
+  ABSL_CHECK_OK(public_key.status());
   absl::StatusOr<HpkePrivateKey> private_key = HpkePrivateKey::Create(
       *public_key, P256SecretValue(), GetPartialKeyAccess());
-  CHECK_OK(private_key.status());
+  ABSL_CHECK_OK(private_key.status());
 
   return HybridTestVector(
       std::make_shared<HpkePrivateKey>(*private_key), HexDecodeOrDie("01"),

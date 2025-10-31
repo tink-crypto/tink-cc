@@ -16,10 +16,10 @@
 
 #include "tink/experimental/pqcrypto/kem/ml_kem_proto_serialization.h"
 
+#include <array>
 #include <cstdint>
 #include <string>
 
-#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -35,16 +35,27 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
-#include "tink/internal/proto_parser.h"
+#include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_secret_data_owning_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace {
+
+using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::Message;
+using ::crypto::tink::internal::proto_parsing::MessageOwningField;
+using ::crypto::tink::internal::proto_parsing::OwningBytesField;
+using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 bool MlKemKeySizeEnumIsValid(int c) { return c >= 0 && c <= 1; }
 
@@ -53,69 +64,89 @@ enum class MlKemKeySizeEnum : uint32_t {
   kMlKem768 = 1,
 };
 
-struct MlKemParamsStruct {
-  MlKemKeySizeEnum ml_kem_key_size;
+class MlKemParamsTP : public Message<MlKemParamsTP> {
+ public:
+  MlKemParamsTP() = default;
+  using Message::SerializeAsString;
 
-  inline static internal::ProtoParser<MlKemParamsStruct> CreateParser() {
-    return internal::ProtoParserBuilder<MlKemParamsStruct>()
-        .AddEnumField(1, &MlKemParamsStruct::ml_kem_key_size,
-                      &MlKemKeySizeEnumIsValid)
-        .BuildOrDie();
+  MlKemKeySizeEnum ml_kem_key_size() const { return ml_kem_key_size_.value(); }
+  void set_ml_kem_key_size(MlKemKeySizeEnum value) {
+    ml_kem_key_size_.set_value(value);
   }
+
+  std::array<const OwningField*, 1> GetFields() const {
+    return {&ml_kem_key_size_};
+  }
+
+ private:
+  EnumOwningField<MlKemKeySizeEnum> ml_kem_key_size_{1,
+                                                     &MlKemKeySizeEnumIsValid};
 };
 
-struct MlKemKeyFormatStruct {
-  uint32_t version;
-  MlKemParamsStruct params;
+class MlKemKeyFormatTP : public Message<MlKemKeyFormatTP> {
+ public:
+  MlKemKeyFormatTP() = default;
+  using Message::SerializeAsString;
 
-  inline static internal::ProtoParser<MlKemKeyFormatStruct>& GetParser() {
-    static absl::NoDestructor<internal::ProtoParser<MlKemKeyFormatStruct>>
-        parser{internal::ProtoParserBuilder<MlKemKeyFormatStruct>()
-                   .AddUint32Field(1, &MlKemKeyFormatStruct::version)
-                   .AddMessageField(2, &MlKemKeyFormatStruct::params,
-                                    MlKemParamsStruct::CreateParser())
-                   .BuildOrDie()};
-    return *parser;
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const MlKemParamsTP& params() const { return params_.value(); }
+  MlKemParamsTP* mutable_params() { return params_.mutable_value(); }
+
+  std::array<const OwningField*, 2> GetFields() const {
+    return {&version_, &params_};
   }
+
+ private:
+  Uint32OwningField version_{1};
+  MessageOwningField<MlKemParamsTP> params_{2};
 };
 
-struct MlKemPublicKeyStruct {
-  uint32_t version = 0;
-  std::string key_value = {};
-  MlKemParamsStruct params = {};
+class MlKemPublicKeyTP : public Message<MlKemPublicKeyTP> {
+ public:
+  MlKemPublicKeyTP() = default;
 
-  inline static internal::ProtoParser<MlKemPublicKeyStruct> CreateParser() {
-    return internal::ProtoParserBuilder<MlKemPublicKeyStruct>()
-        .AddUint32Field(1, &MlKemPublicKeyStruct::version)
-        .AddBytesStringField(2, &MlKemPublicKeyStruct::key_value)
-        .AddMessageField(3, &MlKemPublicKeyStruct::params,
-                         MlKemParamsStruct::CreateParser())
-        .BuildOrDie();
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const std::string& key_value() const { return key_value_.value(); }
+  std::string* mutable_key_value() { return key_value_.mutable_value(); }
+
+  const MlKemParamsTP& params() const { return params_.value(); }
+  MlKemParamsTP* mutable_params() { return params_.mutable_value(); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &key_value_, &params_};
   }
 
-  inline static internal::ProtoParser<MlKemPublicKeyStruct>& GetParser() {
-    static absl::NoDestructor<internal::ProtoParser<MlKemPublicKeyStruct>>
-        parser{CreateParser()};
-    return *parser;
-  }
+ private:
+  Uint32OwningField version_{1};
+  OwningBytesField<std::string> key_value_{2};
+  MessageOwningField<MlKemParamsTP> params_{3};
 };
 
-struct MlKemPrivateKeyStruct {
-  uint32_t version = 0;
-  SecretData key_value = {};
-  MlKemPublicKeyStruct public_key = {};
+class MlKemPrivateKeyTP : public Message<MlKemPrivateKeyTP> {
+ public:
+  MlKemPrivateKeyTP() = default;
 
-  inline static internal::ProtoParser<MlKemPrivateKeyStruct>& GetParser() {
-    static absl::NoDestructor<internal::ProtoParser<MlKemPrivateKeyStruct>>
-        parser{
-            internal::ProtoParserBuilder<MlKemPrivateKeyStruct>()
-                .AddUint32Field(1, &MlKemPrivateKeyStruct::version)
-                .AddBytesSecretDataField(2, &MlKemPrivateKeyStruct::key_value)
-                .AddMessageField(3, &MlKemPrivateKeyStruct::public_key,
-                                 MlKemPublicKeyStruct::CreateParser())
-                .BuildOrDie()};
-    return *parser;
+  uint32_t version() const { return version_.value(); }
+  void set_version(uint32_t version) { version_.set_value(version); }
+
+  const SecretData& key_value() const { return key_value_.value(); }
+  SecretData* mutable_key_value() { return key_value_.mutable_value(); }
+
+  const MlKemPublicKeyTP& public_key() const { return public_key_.value(); }
+  MlKemPublicKeyTP* mutable_public_key() { return public_key_.mutable_value(); }
+
+  std::array<const OwningField*, 3> GetFields() const {
+    return {&version_, &key_value_, &public_key_};
   }
+
+ private:
+  Uint32OwningField version_{1};
+  SecretDataOwningField key_value_{2};
+  MessageOwningField<MlKemPublicKeyTP> public_key_{3};
 };
 
 using MlKemProtoParametersParserImpl =
@@ -186,14 +217,14 @@ absl::StatusOr<MlKemKeySizeEnum> ToProtoKeySize(int key_size) {
 
 absl::StatusOr<MlKemParameters> ToParameters(
     internal::OutputPrefixTypeEnum output_prefix_type,
-    const MlKemParamsStruct& params) {
+    const MlKemParamsTP& params) {
   absl::StatusOr<MlKemParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
     return variant.status();
   }
 
-  absl::StatusOr<int> key_size = ToKeySize(params.ml_kem_key_size);
+  absl::StatusOr<int> key_size = ToKeySize(params.ml_kem_key_size());
   if (!key_size.ok()) {
     return key_size.status();
   }
@@ -201,7 +232,7 @@ absl::StatusOr<MlKemParameters> ToParameters(
   return MlKemParameters::Create(*key_size, *variant);
 }
 
-absl::StatusOr<MlKemParamsStruct> FromParameters(
+absl::StatusOr<MlKemParamsTP> FromParameters(
     const MlKemParameters& parameters) {
   absl::StatusOr<MlKemKeySizeEnum> key_size =
       ToProtoKeySize(parameters.GetKeySize());
@@ -209,8 +240,8 @@ absl::StatusOr<MlKemParamsStruct> FromParameters(
     return key_size.status();
   }
 
-  MlKemParamsStruct params;
-  params.ml_kem_key_size = *key_size;
+  MlKemParamsTP params;
+  params.set_ml_kem_key_size(*key_size);
   return params;
 }
 
@@ -224,16 +255,15 @@ absl::StatusOr<MlKemParameters> ParseParameters(
         "Wrong type URL when parsing MlKemParameters.");
   }
 
-  absl::StatusOr<MlKemKeyFormatStruct> proto_key_format =
-      MlKemKeyFormatStruct::GetParser().Parse(key_template.value());
-  if (!proto_key_format.ok()) {
-    return proto_key_format.status();
+  MlKemKeyFormatTP proto_key_format;
+  if (!proto_key_format.ParseFromString(key_template.value())) {
+    return absl::InvalidArgumentError("Failed to parse MlKemKeyFormat.");
   }
-  if (proto_key_format->version != 0) {
+  if (proto_key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
   return ToParameters(key_template.output_prefix_type(),
-                      proto_key_format->params);
+                      proto_key_format.params());
 }
 
 absl::StatusOr<MlKemPublicKey> ParsePublicKey(
@@ -244,24 +274,22 @@ absl::StatusOr<MlKemPublicKey> ParsePublicKey(
         "Wrong type URL when parsing MlKemPublicKey.");
   }
 
-  absl::StatusOr<MlKemPublicKeyStruct> proto_key =
-      MlKemPublicKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(
-              InsecureSecretKeyAccess::Get()));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  MlKemPublicKeyTP proto_key;
+  if (!proto_key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
+          InsecureSecretKeyAccess::Get()))) {
+    return absl::InvalidArgumentError("Failed to parse MlKemPublicKey.");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<MlKemParameters> parameters =
-      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key->params);
+      ToParameters(serialization.GetOutputPrefixTypeEnum(), proto_key.params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
-  return MlKemPublicKey::Create(*parameters, proto_key->key_value,
+  return MlKemPublicKey::Create(*parameters, proto_key.key_value(),
                                 serialization.IdRequirement(),
                                 GetPartialKeyAccess());
 }
@@ -277,31 +305,30 @@ absl::StatusOr<MlKemPrivateKey> ParsePrivateKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  absl::StatusOr<MlKemPrivateKeyStruct> proto_key =
-      MlKemPrivateKeyStruct::GetParser().Parse(
-          serialization.SerializedKeyProto().GetSecret(*token));
-  if (!proto_key.ok()) {
-    return proto_key.status();
+  MlKemPrivateKeyTP proto_key;
+  if (!proto_key.ParseFromString(
+          serialization.SerializedKeyProto().GetSecret(*token))) {
+    return absl::InvalidArgumentError("Failed to parse MlKemPrivateKey.");
   }
-  if (proto_key->version != 0) {
+  if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
   }
 
   absl::StatusOr<MlKemParameters> parameters = ToParameters(
-      serialization.GetOutputPrefixTypeEnum(), proto_key->public_key.params);
+      serialization.GetOutputPrefixTypeEnum(), proto_key.public_key().params());
   if (!parameters.ok()) {
     return parameters.status();
   }
 
   absl::StatusOr<MlKemPublicKey> public_key = MlKemPublicKey::Create(
-      *parameters, proto_key->public_key.key_value,
+      *parameters, proto_key.public_key().key_value(),
       serialization.IdRequirement(), GetPartialKeyAccess());
   if (!public_key.ok()) {
     return public_key.status();
   }
 
   return MlKemPrivateKey::Create(*public_key,
-                                 RestrictedData(proto_key->key_value, *token),
+                                 RestrictedData(proto_key.key_value(), *token),
                                  GetPartialKeyAccess());
 }
 
@@ -313,42 +340,30 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<MlKemParamsStruct> params = FromParameters(parameters);
+  absl::StatusOr<MlKemParamsTP> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
-  MlKemKeyFormatStruct proto_key_format;
-  proto_key_format.params = *params;
-  proto_key_format.version = 0;
-
-  absl::StatusOr<std::string> serialized =
-      MlKemKeyFormatStruct::GetParser().SerializeIntoString(proto_key_format);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
+  MlKemKeyFormatTP proto_key_format;
+  *proto_key_format.mutable_params() = *params;
+  proto_key_format.set_version(0);
 
   return internal::ProtoParametersSerialization::Create(
-      kPrivateTypeUrl, *output_prefix_type, *serialized);
+      kPrivateTypeUrl, *output_prefix_type,
+      proto_key_format.SerializeAsString());
 }
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const MlKemPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  absl::StatusOr<MlKemParamsStruct> params =
-      FromParameters(key.GetParameters());
+  absl::StatusOr<MlKemParamsTP> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  MlKemPublicKeyStruct proto_key;
-  proto_key.version = 0;
-  proto_key.params = *params;
-  proto_key.key_value = key.GetPublicKeyBytes(GetPartialKeyAccess());
-
-  absl::StatusOr<std::string> serialized =
-      MlKemPublicKeyStruct::GetParser().SerializeIntoString(proto_key);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
+  MlKemPublicKeyTP proto_key;
+  proto_key.set_version(0);
+  *proto_key.mutable_params() = *params;
+  *proto_key.mutable_key_value() = key.GetPublicKeyBytes(GetPartialKeyAccess());
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
@@ -356,10 +371,10 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output =
-      RestrictedData(*serialized, InsecureSecretKeyAccess::Get());
   return internal::ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output,
+      kPublicTypeUrl,
+      RestrictedData(proto_key.SerializeAsSecretData(),
+                     InsecureSecretKeyAccess::Get()),
       internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
       key.GetIdRequirement());
 }
@@ -375,26 +390,19 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
     return restricted_input.status();
   }
 
-  absl::StatusOr<MlKemParamsStruct> params =
+  absl::StatusOr<MlKemParamsTP> params =
       FromParameters(key.GetPublicKey().GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  MlKemPrivateKeyStruct proto_private_key;
-  proto_private_key.version = 0;
-  proto_private_key.public_key.version = 0;
-  proto_private_key.public_key.params = *params;
-  proto_private_key.public_key.key_value =
+  MlKemPrivateKeyTP proto_private_key;
+  proto_private_key.set_version(0);
+  proto_private_key.mutable_public_key()->set_version(0);
+  *proto_private_key.mutable_public_key()->mutable_params() = *params;
+  *proto_private_key.mutable_public_key()->mutable_key_value() =
       key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
-  proto_private_key.key_value = restricted_input->Get(*token);
-
-  absl::StatusOr<SecretData> serialized =
-      MlKemPrivateKeyStruct::GetParser().SerializeIntoSecretData(
-          proto_private_key);
-  if (!serialized.ok()) {
-    return serialized.status();
-  }
+  *proto_private_key.mutable_key_value() = restricted_input->Get(*token);
 
   absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
@@ -402,9 +410,9 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
     return output_prefix_type.status();
   }
 
-  RestrictedData restricted_output = RestrictedData(*serialized, *token);
   return internal::ProtoKeySerialization::Create(
-      kPrivateTypeUrl, restricted_output,
+      kPrivateTypeUrl,
+      RestrictedData(proto_private_key.SerializeAsSecretData(), *token),
       internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }

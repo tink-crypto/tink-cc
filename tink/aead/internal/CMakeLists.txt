@@ -319,6 +319,7 @@ tink_cc_test(
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_boringssl
     gmock
+    absl::algorithm_container
     absl::check
     absl::status
     absl::strings

@@ -27,6 +27,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/algorithm/container.h"
 #include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -146,7 +147,7 @@ TEST_F(ZeroCopyAesGcmBoringSslTest, DecryptBufferTooSmall) {
 TEST_F(ZeroCopyAesGcmBoringSslTest, EncryptOverlappingPlaintextCiphertext) {
   std::string buffer(1024, '\0');
   // Copy the kMessage at the beginning of the buffer.
-  std::copy(kMessage.begin(), kMessage.end(), std::back_inserter(buffer));
+  absl::c_copy(kMessage, std::back_inserter(buffer));
   auto plaintext = absl::string_view(buffer).substr(0, kMessage.size());
   // The output buffer overlaps with a portion of the plaintext, in particular
   // the last kIvSizeInBytes bytes.

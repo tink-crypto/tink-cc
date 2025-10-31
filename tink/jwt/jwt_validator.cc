@@ -16,10 +16,10 @@
 
 #include "tink/jwt/jwt_validator.h"
 
-#include <algorithm>
 #include <string>
 #include <vector>
 
+#include "absl/algorithm/container.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -150,8 +150,7 @@ absl::Status JwtValidator::ValidateAudiences(RawJwt const& raw_jwt) const {
     if (!audiences.ok()) {
       return audiences.status();
     }
-    auto it =
-        std::find(audiences->begin(), audiences->end(), expected_audience_);
+    auto it = absl::c_find(*audiences, expected_audience_);
     if (it == audiences->end()) {
       return absl::Status(absl::StatusCode::kInvalidArgument,
                           "audience not found");

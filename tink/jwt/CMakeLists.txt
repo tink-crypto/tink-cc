@@ -24,6 +24,7 @@ tink_cc_library(
     jwt_validator.h
   DEPS
     tink::jwt::raw_jwt
+    absl::algorithm_container
     absl::status
     absl::statusor
     absl::strings

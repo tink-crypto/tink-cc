@@ -20,7 +20,6 @@
 #include <vector>
 
 #include "absl/base/no_destructor.h"
-#include "tink/internal/proto_parser.h"
 
 namespace crypto {
 namespace tink {
@@ -45,35 +44,6 @@ std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeEnum type) {
                                  "ASYMMETRIC_PRIVATE", "ASYMMETRIC_PUBLIC",
                                  "REMOTE"}};
   return (*kKeyMaterialTypeEnumNames)[static_cast<size_t>(type)];
-}
-
-ProtoParser<KeyTemplateStruct> KeyTemplateStruct::CreateParser() {
-  return ProtoParserBuilder<KeyTemplateStruct>()
-      .AddBytesStringField(1, &KeyTemplateStruct::type_url)
-      .AddBytesStringField(2, &KeyTemplateStruct::value)
-      .AddEnumField(3, &KeyTemplateStruct::output_prefix_type,
-                    &OutputPrefixTypeValid)
-      .BuildOrDie();
-}
-
-const ProtoParser<KeyTemplateStruct>& KeyTemplateStruct::GetParser() {
-  static const absl::NoDestructor<ProtoParser<KeyTemplateStruct>> parser(
-      CreateParser());
-  return *parser;
-}
-
-ProtoParser<KeyDataStruct> KeyDataStruct::CreateParser() {
-  return ProtoParserBuilder<KeyDataStruct>()
-      .AddBytesStringField(1, &KeyDataStruct::type_url)
-      .AddBytesSecretDataField(2, &KeyDataStruct::value)
-      .AddEnumField(3, &KeyDataStruct::key_material_type, &KeyMaterialTypeValid)
-      .BuildOrDie();
-}
-
-const ProtoParser<KeyDataStruct>& KeyDataStruct::GetParser() {
-  static const absl::NoDestructor<ProtoParser<KeyDataStruct>> parser(
-      CreateParser());
-  return *parser;
 }
 
 }  // namespace internal

@@ -155,63 +155,6 @@ TEST(ProtoKeyDataTest, SerializeProtoKeyData) {
                       KeyMaterialTypeEnum::kAsymmetricPrivate)))));
 }
 
-TEST(TinkProtoStructsTest, ParseKeyTemplateStruct) {
-  absl::StatusOr<KeyTemplateStruct> key_template_struct =
-      KeyTemplateStruct::GetParser().Parse(GetSerializedKeyTemplate(
-          "type_url", "value", OutputPrefixType::TINK));
-  ASSERT_THAT(key_template_struct, IsOk());
-
-  EXPECT_THAT(key_template_struct->type_url, Eq("type_url"));
-  EXPECT_THAT(key_template_struct->value, Eq("value"));
-  EXPECT_THAT(key_template_struct->output_prefix_type,
-              Eq(OutputPrefixTypeEnum::kTink));
-}
-
-TEST(TinkProtoStructsTest, SerializeKeyTemplateStruct) {
-  KeyTemplateStruct key_template_struct;
-  key_template_struct.type_url = "type_url",
-  key_template_struct.value = "value",
-  key_template_struct.output_prefix_type = OutputPrefixTypeEnum::kTink;
-  absl::StatusOr<std::string> serialized_key_template =
-      KeyTemplateStruct::GetParser().SerializeIntoString(key_template_struct);
-  ASSERT_THAT(serialized_key_template, IsOk());
-
-  KeyTemplate key_template;
-  key_template.ParseFromString(*serialized_key_template);
-  EXPECT_THAT(key_template.type_url(), Eq("type_url"));
-  EXPECT_THAT(key_template.value(), Eq("value"));
-  EXPECT_THAT(key_template.output_prefix_type(), Eq(OutputPrefixType::TINK));
-}
-
-TEST(TinkProtoStructsTest, ParseKeyDataStruct) {
-  absl::StatusOr<KeyDataStruct> key_data_struct =
-      KeyDataStruct::GetParser().Parse(
-          GetSerializedKeyData("type_url", "value", KeyData::SYMMETRIC));
-  ASSERT_THAT(key_data_struct, IsOk());
-
-  EXPECT_THAT(key_data_struct->type_url, Eq("type_url"));
-  EXPECT_THAT(util::SecretDataAsStringView(key_data_struct->value),
-              Eq("value"));
-  EXPECT_THAT(key_data_struct->key_material_type,
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-}
-
-TEST(TinkProtoStructsTest, SerializeKeyDataStruct) {
-  KeyDataStruct key_data_struct;
-  key_data_struct.type_url = "type_url";
-  key_data_struct.value = util::SecretDataFromStringView("value");
-  key_data_struct.key_material_type = KeyMaterialTypeEnum::kSymmetric;
-  absl::StatusOr<SecretData> serialized_key_data =
-      KeyDataStruct::GetParser().SerializeIntoSecretData(key_data_struct);
-  ASSERT_THAT(serialized_key_data, IsOk());
-
-  KeyData key_data;
-  key_data.ParseFromString(util::SecretDataAsStringView(*serialized_key_data));
-  EXPECT_THAT(key_data.type_url(), Eq("type_url"));
-  EXPECT_THAT(key_data.value(), Eq("value"));
-  EXPECT_THAT(key_data.key_material_type(), Eq(KeyData::SYMMETRIC));
-}
-
 }  // namespace
 }  // namespace internal
 }  // namespace tink

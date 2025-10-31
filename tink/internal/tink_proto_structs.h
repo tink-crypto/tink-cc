@@ -22,7 +22,6 @@
 #include <string_view>
 
 #include "absl/strings/string_view.h"
-#include "tink/internal/proto_parser.h"
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
@@ -140,24 +139,6 @@ class ProtoKeyData : public proto_parsing::Message<ProtoKeyData> {
   proto_parsing::SecretDataOwningField value_{2};
   proto_parsing::EnumOwningField<KeyMaterialTypeEnum> key_material_type_{
       3, &KeyMaterialTypeValid};
-};
-
-struct KeyTemplateStruct {
-  std::string type_url;
-  std::string value;
-  OutputPrefixTypeEnum output_prefix_type;
-
-  static ProtoParser<KeyTemplateStruct> CreateParser();
-  static const ProtoParser<KeyTemplateStruct>& GetParser();
-};
-
-struct KeyDataStruct {
-  std::string type_url;
-  SecretData value;
-  KeyMaterialTypeEnum key_material_type;
-
-  static ProtoParser<KeyDataStruct> CreateParser();
-  static const ProtoParser<KeyDataStruct>& GetParser();
 };
 
 }  // namespace internal

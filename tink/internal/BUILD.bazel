@@ -1987,7 +1987,6 @@ cc_library(
     hdrs = ["tink_proto_structs.h"],
     include_prefix = "tink/internal",
     deps = [
-        ":proto_parser",
         ":proto_parser_enum_field",
         ":proto_parser_message",
         ":proto_parser_owning_fields",

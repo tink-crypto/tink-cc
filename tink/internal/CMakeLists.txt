@@ -1916,7 +1916,6 @@ tink_cc_library(
     tink_proto_structs.cc
     tink_proto_structs.h
   DEPS
-    tink::internal::proto_parser
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields

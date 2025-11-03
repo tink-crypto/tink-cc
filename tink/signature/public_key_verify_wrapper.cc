@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,17 +22,18 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
 #include "tink/internal/monitoring.h"
+#include "tink/internal/monitoring_context.h"
+#include "tink/internal/monitoring_key_set_info.h"
 #include "tink/internal/monitoring_util.h"
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
 #include "tink/primitive_set.h"
 #include "tink/public_key_verify.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -110,8 +111,6 @@ absl::Status PublicKeyVerifySetWrapper::Verify(absl::string_view signature,
           monitoring_verify_client_->Log(entry->get_key_id(), data.size());
         }
         return absl::OkStatus();
-      } else {
-        // LOG that a matching key didn't verify the signature.
       }
     }
   }

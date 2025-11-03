@@ -21,6 +21,7 @@
 
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
@@ -31,7 +32,6 @@
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -46,7 +46,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
     const RsaSsaPkcs1Parameters& parameters,
     absl::optional<int> id_requirement) {
   std::string public_modulus;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
       "t6Q8PWSi1dkJj9hTP8hNYFlvadM7DflW9mWepOJhJ66w7nyoK1gPNqFMSQRyO125Gp-TEkod"
       "hWr0iujjHVx7BcV0llS4w5ACGgPrcAd6ZcSR0-Iqom-QFcNP8Sjg086MwoqQU_LYywlAGZ21"
       "WSdS_PERyGFiNnj3QQlO8Yns5jCtLCRwLHL0Pb1fEv45AuRIuUfVcPySBWYnDyGxvjYGDSM-"
@@ -54,19 +54,19 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
       "rk9Gw8cPUaX1_I8sLGuSiVdt3C_Fn2PZ3Z8i744FPFGGcG1qs2Wz-Q",
       &public_modulus));
   std::string p;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
       "2rnSOV4hKSN8sS4CgcQHFbs08XboFDqKum3sc4h3GRxrTmQdl1ZK9uw-PIHfQP0FkxXVrx-W"
       "E-ZEbrqivH_2iCLUS7wAl6XvARt1KkIaUxPPSYB9yk31s0Q8UK96E3_OrADAYtAJs-M3JxCL"
       "fNgqh56HDnETTQhH3rCT5T3yJws",
       &p));
   std::string q;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
       "1u_RiFDP7LBYh3N4GXLT9OpSKYP0uQZyiaZwBtOCBNJgQxaj10RWjsZu0c6Iedis4S7B_coS"
       "KB0Kj9PaPaBzg-IySRvvcQuPamQu66riMhjVtG6TlV8CLCYKrYl52ziqK0E_ym2QnkwsUX7e"
       "YTB7LbAHRK9GqocDE5B0f808I4s",
       &q));
   std::string d;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
       "GRtbIQmhOZtyszfgKdg4u_N-R_mZGU_9k7JQ_jn1DnfTuMdSNprTeaSTyWfSNkuaAwnOEbIQ"
       "Vy1IQbWVV25NY3ybc_IhUJtfri7bAXYEReWaCl3hdlPKXy9UvqPYGR0kIXTQRqns-dVJ7jah"
       "lI7LyckrpTmrM8dWBo4_PMaenNnPiQgO0xnuToxutRZJfJvG4Ox4ka3GORQd9CsCZ2vsUDms"
@@ -74,19 +74,19 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor2048BitParameters(
       "C1EWmeRDkK2ahecG85-oLKQt5VEpWHKmjOi_gJSdSgqcN96X52esAQ",
       &d));
   std::string prime_exponent_p;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
       "KkMTWqBUefVwZ2_Dbj1pPQqyHSHjj90L5x_MOzqYAJMcLMZtbUtwKqvVDq3tbEo3ZIcohbDt"
       "t6SbfmWzggabpQxNxuBpoOOf_a_HgMXK_lhqigI4y_kqS1wY52IwjUn5rgRrJ-yYo1h41KR-"
       "vz2pYhEAeYrhttWtxVqLCRViD6c",
       &prime_exponent_p));
   std::string prime_exponent_q;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
       "AvfS0-gRxvn0bwJoMSnFxYcK1WnuEjQFluMGfwGitQBWtfZ1Er7t1xDkbN9GQTB9yqpDoYaN"
       "06H7CFtrkxhJIBQaj6nkF5KKS3TQtQ5qCzkOkmxIe3KRbBymXxkb5qwUpX5ELD5xFc6Feiaf"
       "WYY63TmmEAu_lRFCOJ3xDea-ots",
       &prime_exponent_q));
   std::string q_inverse;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
       "lSQi-w9CpyUReMErP1RsBLk7wNtOvs5EQpPqmuMvqW57NBUczScEoPwmUqqabu9V0-Py4dQ5"
       "7_bapoKRu1R90bvuFnU63SHWEFglZQvJDMeAvmj4sm-Fp0oYu_neotgQ0hzbI5gry7ajdYy9"
       "-2lNx_76aBZoOUu9HCJ-UsfSOI8",
@@ -118,8 +118,8 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
     const RsaSsaPkcs1Parameters& parameters,
     absl::optional<int> id_requirement) {
   std::string d;
-  CHECK(absl::WebSafeBase64Unescape(
-                "QfFSeY4zl5LKG1MstcHg6IfBjyQ36inrbjSBMmk7_nPSnWo61B2LqOHr90EWgB"
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "QfFSeY4zl5LKG1MstcHg6IfBjyQ36inrbjSBMmk7_nPSnWo61B2LqOHr90EWgB"
       "lj03Q7IDrDymiLb-l9GvbMsRGmM4eDCKlPf5_6vtpTfN6dcrR2-KD9shaQgMVlHdgaX9a4Re"
       "lBmq3dqaKVob0-sfsEBkyrbCapIENUp8ECrERzJUP_vTtUKlYR3WnWRXlWmo-bYN5FPZrh2I"
       "0ZWLSF8EK9__ssfBxVO9DZgZwFd-k7vSkgbisjUN6LBiVDEEF2kY1AeBIzMtvrDlkskEXPUi"
@@ -131,8 +131,8 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       "AbwKBECyUwqh0hJnDtQpFFcvhJj6AILVoLlVqNeWIK3iE",
       &d));
   std::string public_modulus;
-  CHECK(absl::WebSafeBase64Unescape(
-                "AK9mcI3PaEhMPR2ICXxCsK0lek917W01OVK24Q6_eMKVJkzVKhf2muYn2B1Pkx"
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
+      "AK9mcI3PaEhMPR2ICXxCsK0lek917W01OVK24Q6_eMKVJkzVKhf2muYn2B1Pkx"
       "_yvdWr7g0B1tjNSN66-APH7osa9F1x6WnzY16d2WY3xvidHxHMFol1sPa-xGKu94uFBp4rHq"
       "rj7nYBJX4QmHzLG95QANhJPzC4P9M-lrVSyCVlHr2732NZpjoFN8dZtvNvNI_ndUb4fTgozm"
       "xbaRKGKawTjocP1DAtOzwwuOKPZMWwI3nFEEDJqkhFh2uiINPWYtcs-onHXeKLpCJUwCXC4b"
@@ -144,7 +144,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       "YJ96K9-YOpJnBNgYY_PNcvfl5SD87vYNOQxsbeIQIE-EkF",
       &public_modulus));
   std::string p;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
                 "AOQA7Ky1XEGqZcc7uSXwFbKjSNCmVBhCGqsDRdKJ1ErSmW98gnJ7pBIHTmiyFd"
       "JqU20SzY-YB05Xj3bfSYptJRPLO2cGiwrwjRB_EsG8OqexX_5le9_8x-8i6MhY3xGX5LABYs"
       "8dB0aLl3ysOtRgIvCeyeoJ0I7nRYjwDlexxjl9z7OI28cW7Tdvljbk-LAgBmygsMluP2-n7T"
@@ -152,7 +152,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       "m95wfhYEZtHYFwqUhajE1vD5nCcGcCNhquTLzPlW5RN2Asxm-_Dk-p7pIkH9aAP0k",
       &p));
   std::string q;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
                 "AMTv-c5IRTRvbx7Vyf06df2Rm2AwdaRlwy1QG3YAdojQ_PhICNH0-mTHqYaeNZ"
       "Rja6KniFKqaYimgdccW2UhGGKZXQhHhyucZ-AE0NtPLFkd7RhegcrH5sbHOcDtWCSGwcne9W"
       "zs54VyhIhGmOS5HYuLUD-sB0NgMzm8vNsnF_qIt458x6L4GE97HnRnLdSJBFaNkEdLJGXN1f"
@@ -160,7 +160,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       "e2PSglc8AlqQOulcFLrsJ8fnG_vc7trS_pw9zCxaaJQduYPyTbM9_szBj206lJb90",
       &q));
   std::string prime_exponent_p;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
                 "WQVTYwtcffb9zhAvdfSLRDgkkfKfGumUZ_jbJhzSWnRnm_PNKs3DfZaEsrP1eT"
       "YyZH_W6p29HIVrako7-GQs-dF72_neB-Nr8Gjs9d98N0U16anN9-JGXcQPh0nLrp7TlzSzU5"
       "JN6OlPuEm2nnz6p2AYDdzPJTx_FbxEnVC3yHKqybpBtTXqYJ6c08oKnxmh6H_FBqCY_Atgwe"
@@ -168,7 +168,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       "5aeeUxJc4smwFV1v4jkYgvWyVjpZRjc39iTsXt3iivqklRIQhDmi8LCtw34hQooQ",
       &prime_exponent_p));
   std::string prime_exponent_q;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
                 "AI3R7wghPU0Mbm47MPGeFvga0lSLsTxJWCuag5wPq0zNi07UuR1RmLvYmPlrl1"
       "Qb4JhKoz48oDEbD2e0cRC7q47duIRM1keOo7NMZId6VYp7pZEmBbvdBxDgyXNouE_dh1JzsD"
       "PXysZr-IsWo-YadO9XzNt9a-GWNm1-wFXlqjvuFpmSvEVc-kzKcd0LrJJgdXJLEbp1n2l8uH"
@@ -176,7 +176,7 @@ RsaSsaPkcs1PrivateKey PrivateKeyFor4096BitParameters(
       "jasOHnTprxw-v13rxLXzeJZZlOpkaNHGnjovuoe6N5NqcH1XkaLho0sanMnhJL4zU",
       &prime_exponent_q));
   std::string q_inverse;
-  CHECK(absl::WebSafeBase64Unescape(
+  ABSL_CHECK(absl::WebSafeBase64Unescape(
                 "AL6gykI07B_tLc5MEUbwAZec8frBkcIvwdlnbchmov9q5sBnI7xJt07BJlyrm8"
       "p_XWuOblmx6Qg4ccKwE1jt3Cd36J7X92D9IJwfagytmeT4wmruM7Qbuzg7iGeX4RJ4CLkvsJ"
       "ZRSh8Fvum-qMwEynypVJMB5-Uw8Y_6Cd_nMZeSK7pJs8ewrS7LDY7ODnrzxkJ1xRCXpVbvsB"

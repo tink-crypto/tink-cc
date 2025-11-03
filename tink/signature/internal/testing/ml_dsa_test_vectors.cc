@@ -44,7 +44,7 @@ using ::crypto::tink::test::HexDecodeOrDie;
 MlDsaPrivateKey PrivateKeyForMlDsa65Parameters(
     const MlDsaParameters& parameters, absl::optional<int> id_requirement) {
   std::string public_key_bytes;
-  CHECK(absl::HexStringToBytes(
+  ABSL_CHECK(absl::HexStringToBytes(
       "1483236FC9F943D98417809E95405384530ED83E151E8465D34E4638F1F8D7058D62E1"
       "9AB806490883A823176D4DC8A3C10C9960D0E948A9F7B62CA8E118DE5D7A05BB18E801"
       "8B6CACB4FE7885490599939D90D004BD480B116F5D6627B6C4C1B2A1496CC3525EF9F1"
@@ -103,7 +103,7 @@ MlDsaPrivateKey PrivateKeyForMlDsa65Parameters(
       "47E4C6F66FDA9DA423B884DB6ED79D012587F757F0BD974680AD8E",
       &public_key_bytes));
   std::string private_key_seed_bytes;
-  CHECK(absl::HexStringToBytes(
+  ABSL_CHECK(absl::HexStringToBytes(
       "7C9935A0B07694AA0C6D10E4DB6B1ADD2FD81A25CCB148032DCD739936737F2D",
       &private_key_seed_bytes));
 

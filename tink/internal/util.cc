@@ -19,7 +19,7 @@
 #include <functional>
 
 #include "absl/strings/ascii.h"
-#include "absl/log/log.h"
+#include "absl/log/absl_log.h"
 #include "absl/strings/string_view.h"
 
 namespace crypto {
@@ -63,7 +63,7 @@ bool IsPrintableAscii(absl::string_view input) {
 }
 
 void LogFatal(absl::string_view msg) {
-  LOG(FATAL) <<  msg;
+  ABSL_LOG(FATAL) <<  msg;
 }
 
 }  // namespace internal

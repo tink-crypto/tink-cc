@@ -28,7 +28,7 @@ tink_cc_library(
     util.h
   DEPS
     absl::core_headers
-    absl::log
+    absl::absl_log
     absl::strings
 )
 

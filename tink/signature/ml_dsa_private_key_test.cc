@@ -77,7 +77,7 @@ absl::StatusOr<KeyPair> GenerateKeyPair() {
   internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
   auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
 
-  CHECK_EQ(1, MLDSA65_generate_key(
+  ABSL_CHECK_EQ(1, MLDSA65_generate_key(
                   reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
                   private_seed_bytes.data(), bssl_private_key.get()));
 

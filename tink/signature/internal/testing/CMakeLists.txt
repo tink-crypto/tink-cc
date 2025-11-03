@@ -9,6 +9,7 @@ tink_cc_library(
     tink::signature::internal::testing::signature_test_vector
     absl::absl_check
     absl::memory
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::big_integer
@@ -18,7 +19,6 @@ tink_cc_library(
     tink::signature::rsa_ssa_pkcs1_parameters
     tink::signature::rsa_ssa_pkcs1_private_key
     tink::signature::rsa_ssa_pkcs1_public_key
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
 )
@@ -42,6 +42,7 @@ tink_cc_library(
     tink::signature::internal::testing::signature_test_vector
     absl::absl_check
     absl::memory
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::big_integer
@@ -51,7 +52,6 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key
     tink::signature::rsa_ssa_pss_public_key
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
 )

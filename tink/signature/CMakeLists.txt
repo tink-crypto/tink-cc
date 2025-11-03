@@ -10,12 +10,15 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::crypto_format
     tink::core::primitive_set
     tink::core::primitive_wrapper
     tink::core::public_key_verify
     tink::internal::monitoring
+    tink::internal::monitoring_context
+    tink::internal::monitoring_key_set_info
     tink::internal::monitoring_util
     tink::internal::registry_impl
     tink::internal::util
@@ -1214,6 +1217,7 @@ tink_cc_test(
     absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::big_integer

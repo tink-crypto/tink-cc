@@ -53,9 +53,9 @@ using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-class ProtoAesCmacPrfKeyFormat : public Message<ProtoAesCmacPrfKeyFormat> {
+class AesCmacPrfKeyFormatTP : public Message<AesCmacPrfKeyFormatTP> {
  public:
-  ProtoAesCmacPrfKeyFormat() = default;
+  AesCmacPrfKeyFormatTP() = default;
   using Message::SerializeAsString;
 
   uint32_t key_size() const { return key_size_.value(); }
@@ -73,9 +73,9 @@ class ProtoAesCmacPrfKeyFormat : public Message<ProtoAesCmacPrfKeyFormat> {
   Uint32OwningField version_{2};
 };
 
-class ProtoAesCmacPrfKey : public Message<ProtoAesCmacPrfKey> {
+class AesCmacPrfKeyTP : public Message<AesCmacPrfKeyTP> {
  public:
-  ProtoAesCmacPrfKey() = default;
+  AesCmacPrfKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
@@ -120,7 +120,7 @@ absl::StatusOr<AesCmacPrfParameters> ParseParameters(
         "Output prefix type must be RAW for AesCmacPrfParameters.");
   }
 
-  ProtoAesCmacPrfKeyFormat proto_key_format;
+  AesCmacPrfKeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse AesCmacPrfKeyFormat proto");
@@ -134,7 +134,7 @@ absl::StatusOr<AesCmacPrfParameters> ParseParameters(
 
 absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     const AesCmacPrfParameters& parameters) {
-  ProtoAesCmacPrfKeyFormat proto_key_format;
+  AesCmacPrfKeyFormatTP proto_key_format;
   proto_key_format.set_key_size(parameters.KeySizeInBytes());
   proto_key_format.set_version(0);
 
@@ -158,7 +158,7 @@ absl::StatusOr<AesCmacPrfKey> ParseKey(
         "Output prefix type must be RAW for AesCmacPrfKey.");
   }
 
-  ProtoAesCmacPrfKey proto_key;
+  AesCmacPrfKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse AesCmacPrfKey proto");
@@ -183,7 +183,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return restricted_input.status();
   }
 
-  ProtoAesCmacPrfKey proto_key;
+  AesCmacPrfKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->Get(*token));
 

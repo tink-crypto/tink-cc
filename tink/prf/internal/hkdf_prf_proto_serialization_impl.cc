@@ -59,9 +59,9 @@ using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-class ProtoHkdfPrfParams : public Message<ProtoHkdfPrfParams> {
+class HkdfPrfParamsTP : public Message<HkdfPrfParamsTP> {
  public:
-  ProtoHkdfPrfParams() = default;
+  HkdfPrfParamsTP() = default;
   using Message::SerializeAsString;
 
   HashTypeEnum hash() const { return hash_.value(); }
@@ -79,16 +79,16 @@ class ProtoHkdfPrfParams : public Message<ProtoHkdfPrfParams> {
   OwningBytesField<std::string> salt_{2};
 };
 
-class ProtoHkdfPrfKey : public Message<ProtoHkdfPrfKey> {
+class HkdfPrfKeyTP : public Message<HkdfPrfKeyTP> {
  public:
-  ProtoHkdfPrfKey() = default;
+  HkdfPrfKeyTP() = default;
   using Message::SerializeAsString;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  const ProtoHkdfPrfParams& params() const { return params_.value(); }
-  ProtoHkdfPrfParams* mutable_params() { return params_.mutable_value(); }
+  const HkdfPrfParamsTP& params() const { return params_.value(); }
+  HkdfPrfParamsTP* mutable_params() { return params_.mutable_value(); }
 
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(SecretData key_value) {
@@ -101,17 +101,17 @@ class ProtoHkdfPrfKey : public Message<ProtoHkdfPrfKey> {
 
  private:
   Uint32OwningField version_{1};
-  MessageOwningField<ProtoHkdfPrfParams> params_{2};
+  MessageOwningField<HkdfPrfParamsTP> params_{2};
   SecretDataOwningField key_value_{3};
 };
 
-class ProtoHkdfPrfKeyFormat : public Message<ProtoHkdfPrfKeyFormat> {
+class HkdfPrfKeyFormatTP : public Message<HkdfPrfKeyFormatTP> {
  public:
-  ProtoHkdfPrfKeyFormat() = default;
+  HkdfPrfKeyFormatTP() = default;
   using Message::SerializeAsString;
 
-  const ProtoHkdfPrfParams& params() const { return params_.value(); }
-  ProtoHkdfPrfParams* mutable_params() { return params_.mutable_value(); }
+  const HkdfPrfParamsTP& params() const { return params_.value(); }
+  HkdfPrfParamsTP* mutable_params() { return params_.mutable_value(); }
 
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
@@ -124,7 +124,7 @@ class ProtoHkdfPrfKeyFormat : public Message<ProtoHkdfPrfKeyFormat> {
   }
 
  private:
-  MessageOwningField<ProtoHkdfPrfParams> params_{1};
+  MessageOwningField<HkdfPrfParamsTP> params_{1};
   Uint32OwningField key_size_{2};
   Uint32OwningField version_{3};
 };
@@ -189,7 +189,7 @@ absl::StatusOr<HkdfPrfParameters> ParseParameters(
         "Output prefix type must be RAW for HkdfPrfParameters.");
   }
 
-  ProtoHkdfPrfKeyFormat proto_key_format;
+  HkdfPrfKeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(
           serialization.GetProtoKeyTemplate().value())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
@@ -223,7 +223,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return proto_hash_type.status();
   }
 
-  ProtoHkdfPrfKeyFormat proto_key_format;
+  HkdfPrfKeyFormatTP proto_key_format;
   proto_key_format.set_version(0);
   proto_key_format.set_key_size(parameters.KeySizeInBytes());
   proto_key_format.mutable_params()->set_hash(*proto_hash_type);
@@ -251,7 +251,7 @@ absl::StatusOr<HkdfPrfKey> ParseKey(
         "Output prefix type must be RAW for HkdfPrfKey.");
   }
 
-  ProtoHkdfPrfKey proto_key;
+  HkdfPrfKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse HkdfPrfKey proto");
@@ -300,7 +300,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return proto_hash_type.status();
   }
 
-  ProtoHkdfPrfKey proto_key;
+  HkdfPrfKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.mutable_params()->set_hash(*proto_hash_type);
   if (key.GetParameters().GetSalt().has_value()) {

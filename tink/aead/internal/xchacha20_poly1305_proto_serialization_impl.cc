@@ -56,9 +56,9 @@ using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-class ProtoXChaCha20Poly1305Key : public Message<ProtoXChaCha20Poly1305Key> {
+class XChaCha20Poly1305KeyTP : public Message<XChaCha20Poly1305KeyTP> {
  public:
-  ProtoXChaCha20Poly1305Key() = default;
+  XChaCha20Poly1305KeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -171,7 +171,7 @@ absl::StatusOr<XChaCha20Poly1305Key> ParseKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  ProtoXChaCha20Poly1305Key key;
+  XChaCha20Poly1305KeyTP key;
   if (!key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError(
@@ -206,7 +206,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  ProtoXChaCha20Poly1305Key proto_key;
+  XChaCha20Poly1305KeyTP proto_key;
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->GetSecret(*token));
   SecretData serialized_key = proto_key.SerializeAsSecretData();

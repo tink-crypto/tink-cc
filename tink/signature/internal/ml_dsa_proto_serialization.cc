@@ -69,9 +69,9 @@ enum class MlDsaInstanceEnum : uint32_t {
   kMlDsa65,
 };
 
-class ProtoMlDsaParams final : public Message<ProtoMlDsaParams> {
+class MlDsaParamsTP final : public Message<MlDsaParamsTP> {
  public:
-  ProtoMlDsaParams() = default;
+  MlDsaParamsTP() = default;
 
   MlDsaInstanceEnum ml_dsa_instance() const { return ml_dsa_instance_.value(); }
   void set_ml_dsa_instance(MlDsaInstanceEnum value) {
@@ -87,15 +87,15 @@ class ProtoMlDsaParams final : public Message<ProtoMlDsaParams> {
                                                       &MlDsaInstanceEnumValid};
 };
 
-class ProtoMlDsaKeyFormat final : public Message<ProtoMlDsaKeyFormat> {
+class MlDsaKeyFormatTP final : public Message<MlDsaKeyFormatTP> {
  public:
-  ProtoMlDsaKeyFormat() = default;
+  MlDsaKeyFormatTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
-  const ProtoMlDsaParams& params() const { return params_.value(); }
-  ProtoMlDsaParams* mutable_params() { return params_.mutable_value(); }
+  const MlDsaParamsTP& params() const { return params_.value(); }
+  MlDsaParamsTP* mutable_params() { return params_.mutable_value(); }
 
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
@@ -106,12 +106,12 @@ class ProtoMlDsaKeyFormat final : public Message<ProtoMlDsaKeyFormat> {
 
  private:
   Uint32OwningField version_{1};
-  MessageOwningField<ProtoMlDsaParams> params_{2};
+  MessageOwningField<MlDsaParamsTP> params_{2};
 };
 
-class ProtoMlDsaPublicKey final : public Message<ProtoMlDsaPublicKey> {
+class MlDsaPublicKeyTP final : public Message<MlDsaPublicKeyTP> {
  public:
-  ProtoMlDsaPublicKey() = default;
+  MlDsaPublicKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -119,8 +119,8 @@ class ProtoMlDsaPublicKey final : public Message<ProtoMlDsaPublicKey> {
   const std::string& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) { key_value_.set_value(value); }
 
-  const ProtoMlDsaParams& params() const { return params_.value(); }
-  ProtoMlDsaParams* mutable_params() { return params_.mutable_value(); }
+  const MlDsaParamsTP& params() const { return params_.value(); }
+  MlDsaParamsTP* mutable_params() { return params_.mutable_value(); }
 
   std::array<const OwningField*, 3> GetFields() const {
     return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
@@ -129,12 +129,12 @@ class ProtoMlDsaPublicKey final : public Message<ProtoMlDsaPublicKey> {
  private:
   Uint32OwningField version_{1};
   OwningBytesField<std::string> key_value_{2};
-  MessageOwningField<ProtoMlDsaParams> params_{3};
+  MessageOwningField<MlDsaParamsTP> params_{3};
 };
 
-class ProtoMlDsaPrivateKey final : public Message<ProtoMlDsaPrivateKey> {
+class MlDsaPrivateKeyTP final : public Message<MlDsaPrivateKeyTP> {
  public:
-  ProtoMlDsaPrivateKey() = default;
+  MlDsaPrivateKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -144,10 +144,8 @@ class ProtoMlDsaPrivateKey final : public Message<ProtoMlDsaPrivateKey> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  const ProtoMlDsaPublicKey& public_key() const { return public_key_.value(); }
-  ProtoMlDsaPublicKey* mutable_public_key() {
-    return public_key_.mutable_value();
-  }
+  const MlDsaPublicKeyTP& public_key() const { return public_key_.value(); }
+  MlDsaPublicKeyTP* mutable_public_key() { return public_key_.mutable_value(); }
 
   std::array<const OwningField*, 3> GetFields() const {
     return std::array<const OwningField*, 3>{&version_, &key_value_,
@@ -157,7 +155,7 @@ class ProtoMlDsaPrivateKey final : public Message<ProtoMlDsaPrivateKey> {
  private:
   Uint32OwningField version_{1};
   SecretDataOwningField key_value_{2};
-  MessageOwningField<ProtoMlDsaPublicKey> public_key_{3};
+  MessageOwningField<MlDsaPublicKeyTP> public_key_{3};
 };
 
 using MlDsaProtoParametersParserImpl =
@@ -231,7 +229,7 @@ absl::StatusOr<MlDsaInstanceEnum> ToProtoInstance(
 
 absl::StatusOr<MlDsaParameters> ToParameters(
     internal::OutputPrefixTypeEnum output_prefix_type,
-    const ProtoMlDsaParams& params) {
+    const MlDsaParamsTP& params) {
   absl::StatusOr<MlDsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -247,7 +245,7 @@ absl::StatusOr<MlDsaParameters> ToParameters(
   return MlDsaParameters::Create(*instance, *variant);
 }
 
-absl::StatusOr<ProtoMlDsaParams> FromParameters(
+absl::StatusOr<MlDsaParamsTP> FromParameters(
     const MlDsaParameters& parameters) {
   /* Only ML-DSA-65  is currently supported*/
   absl::StatusOr<MlDsaInstanceEnum> instance =
@@ -255,7 +253,7 @@ absl::StatusOr<ProtoMlDsaParams> FromParameters(
   if (!instance.ok()) {
     return instance.status();
   }
-  ProtoMlDsaParams params;
+  MlDsaParamsTP params;
   params.set_ml_dsa_instance(*instance);
   return params;
 }
@@ -269,7 +267,7 @@ absl::StatusOr<MlDsaParameters> ParseParameters(
         "Wrong type URL when parsing MlDsaParameters.");
   }
 
-  ProtoMlDsaKeyFormat proto_key_format;
+  MlDsaKeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse MlDsaKeyFormat proto");
   }
@@ -289,7 +287,7 @@ absl::StatusOr<MlDsaPublicKey> ParsePublicKey(
         "Wrong type URL when parsing MlDsaPublicKey.");
   }
 
-  ProtoMlDsaPublicKey proto_key;
+  MlDsaPublicKeyTP proto_key;
   if (!proto_key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
           InsecureSecretKeyAccess::Get()))) {
     return absl::InvalidArgumentError("Failed to parse MlDsaPublicKey proto");
@@ -319,7 +317,7 @@ absl::StatusOr<MlDsaPrivateKey> ParsePrivateKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  ProtoMlDsaPrivateKey proto_key;
+  MlDsaPrivateKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse MlDsaPrivateKey proto");
@@ -354,11 +352,11 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  absl::StatusOr<ProtoMlDsaParams> params = FromParameters(parameters);
+  absl::StatusOr<MlDsaParamsTP> params = FromParameters(parameters);
   if (!params.ok()) {
     return params.status();
   }
-  ProtoMlDsaKeyFormat proto_key_format;
+  MlDsaKeyFormatTP proto_key_format;
   *proto_key_format.mutable_params() = *params;
   proto_key_format.set_version(0);
 
@@ -369,12 +367,12 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
     const MlDsaPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  absl::StatusOr<ProtoMlDsaParams> params = FromParameters(key.GetParameters());
+  absl::StatusOr<MlDsaParamsTP> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  ProtoMlDsaPublicKey proto_key;
+  MlDsaPublicKeyTP proto_key;
   proto_key.set_version(0);
   *proto_key.mutable_params() = *params;
   proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
@@ -404,13 +402,13 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateSeed(
     return restricted_input.status();
   }
 
-  absl::StatusOr<ProtoMlDsaParams> params =
+  absl::StatusOr<MlDsaParamsTP> params =
       FromParameters(key.GetPublicKey().GetParameters());
   if (!params.ok()) {
     return params.status();
   }
 
-  ProtoMlDsaPrivateKey proto_private_key;
+  MlDsaPrivateKeyTP proto_private_key;
   proto_private_key.set_version(0);
   proto_private_key.mutable_public_key()->set_version(0);
   *proto_private_key.mutable_public_key()->mutable_params() = *params;

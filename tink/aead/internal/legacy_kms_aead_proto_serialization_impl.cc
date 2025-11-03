@@ -66,9 +66,9 @@ using LegacyKmsAeadProtoKeySerializerImpl =
     internal::KeySerializerImpl<LegacyKmsAeadKey,
                                 internal::ProtoKeySerialization>;
 
-class ProtoKmsAeadKeyFormat : public Message<ProtoKmsAeadKeyFormat> {
+class KmsAeadKeyFormatTP : public Message<KmsAeadKeyFormatTP> {
  public:
-  ProtoKmsAeadKeyFormat() = default;
+  KmsAeadKeyFormatTP() = default;
 
   const std::string& key_uri() const { return key_uri_.value(); }
   void set_key_uri(absl::string_view value) { key_uri_.set_value(value); }
@@ -82,15 +82,15 @@ class ProtoKmsAeadKeyFormat : public Message<ProtoKmsAeadKeyFormat> {
   OwningBytesField<std::string> key_uri_{1};
 };
 
-class ProtoKmsAeadKey : public Message<ProtoKmsAeadKey> {
+class KmsAeadKeyTP : public Message<KmsAeadKeyTP> {
  public:
-  ProtoKmsAeadKey() = default;
+  KmsAeadKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
-  const ProtoKmsAeadKeyFormat& params() const { return params_.value(); }
-  ProtoKmsAeadKeyFormat* mutable_params() { return params_.mutable_value(); }
+  const KmsAeadKeyFormatTP& params() const { return params_.value(); }
+  KmsAeadKeyFormatTP* mutable_params() { return params_.mutable_value(); }
 
   std::array<const OwningField*, 2> GetFields() const {
     return {&version_, &params_};
@@ -98,7 +98,7 @@ class ProtoKmsAeadKey : public Message<ProtoKmsAeadKey> {
 
  private:
   Uint32OwningField version_{1};
-  MessageOwningField<ProtoKmsAeadKeyFormat> params_{2};
+  MessageOwningField<KmsAeadKeyFormatTP> params_{2};
 };
 
 const absl::string_view kTypeUrl =
@@ -137,7 +137,7 @@ absl::StatusOr<LegacyKmsAeadParameters> ParseParameters(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsAeadParameters.");
   }
-  ProtoKmsAeadKeyFormat key_format;
+  KmsAeadKeyFormatTP key_format;
   if (!key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse KmsAeadKeyFormat proto");
   }
@@ -157,7 +157,7 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  ProtoKmsAeadKeyFormat key_format;
+  KmsAeadKeyFormatTP key_format;
   key_format.set_key_uri(parameters.GetKeyUri());
 
   return internal::ProtoParametersSerialization::Create(
@@ -171,7 +171,7 @@ absl::StatusOr<LegacyKmsAeadKey> ParseKey(
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing LegacyKmsAeadKey.");
   }
-  ProtoKmsAeadKey proto_key;
+  KmsAeadKeyTP proto_key;
   if (!proto_key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
           GetInsecureSecretKeyAccessInternal()))) {
     return absl::InvalidArgumentError("Failed to parse KmsAeadKey proto");
@@ -197,7 +197,7 @@ absl::StatusOr<LegacyKmsAeadKey> ParseKey(
 
 absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     const LegacyKmsAeadKey& key, absl::optional<SecretKeyAccessToken> token) {
-  ProtoKmsAeadKey proto_key;
+  KmsAeadKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.mutable_params()->set_key_uri(key.GetParameters().GetKeyUri());
 

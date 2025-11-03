@@ -56,9 +56,9 @@ using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 // Proto message com.google.crypto.tink.AesSivKey.
-class ProtoAesSivKey : public Message<ProtoAesSivKey> {
+class AesSivKeyTP : public Message<AesSivKeyTP> {
  public:
-  ProtoAesSivKey() = default;
+  AesSivKeyTP() = default;
   using Message::SerializeAsString;
 
   uint32_t version() const { return version_.value(); }
@@ -170,7 +170,7 @@ absl::StatusOr<AesSivKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "SecretKeyAccess is required");
   }
-  ProtoAesSivKey proto_key;
+  AesSivKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse AesSivKey proto");
@@ -203,7 +203,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
                         "SecretKeyAccess is required");
   }
 
-  ProtoAesSivKey proto_key;
+  AesSivKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->Get(*token));
 

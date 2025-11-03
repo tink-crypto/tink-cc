@@ -59,10 +59,10 @@ using AesGcmSivProtoKeyParserImpl =
 using AesGcmSivProtoKeySerializerImpl =
     KeySerializerImpl<AesGcmSivKey, ProtoKeySerialization>;
 
-class ProtoAesGcmSivKeyFormat
-    : public proto_parsing::Message<ProtoAesGcmSivKeyFormat> {
+class AesGcmSivKeyFormatTP
+    : public proto_parsing::Message<AesGcmSivKeyFormatTP> {
  public:
-  ProtoAesGcmSivKeyFormat() = default;
+  AesGcmSivKeyFormatTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -82,9 +82,9 @@ class ProtoAesGcmSivKeyFormat
   proto_parsing::Uint32OwningField key_size_{2};
 };
 
-class ProtoAesGcmSivKey : public proto_parsing::Message<ProtoAesGcmSivKey> {
+class AesGcmSivKeyTP : public proto_parsing::Message<AesGcmSivKeyTP> {
  public:
-  ProtoAesGcmSivKey() = default;
+  AesGcmSivKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -147,7 +147,7 @@ absl::StatusOr<AesGcmSivParameters> ParseParameters(
         "Wrong type URL when parsing AesGcmSivParameters.");
   }
 
-  ProtoAesGcmSivKeyFormat key_format;
+  AesGcmSivKeyFormatTP key_format;
   if (!key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse AesGcmSivKeyFormat proto");
@@ -172,7 +172,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  ProtoAesGcmSivKeyFormat key_format;
+  AesGcmSivKeyFormatTP key_format;
   key_format.set_version(0);
   key_format.set_key_size(parameters.KeySizeInBytes());
   return ProtoParametersSerialization::Create(kTypeUrl, *output_prefix_type,
@@ -190,7 +190,7 @@ absl::StatusOr<AesGcmSivKey> ParseKey(
         "Wrong type URL when parsing AesGcmSivKey.");
   }
 
-  ProtoAesGcmSivKey key_struct;
+  AesGcmSivKeyTP key_struct;
   if (!key_struct.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse AesGcmSivKey proto");
@@ -228,7 +228,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return restricted_input.status();
   }
 
-  ProtoAesGcmSivKey key_struct;
+  AesGcmSivKeyTP key_struct;
   key_struct.set_version(0);
   key_struct.set_key_value(restricted_input->GetSecret(*token));
   SecretData serialized_key = key_struct.SerializeAsSecretData();

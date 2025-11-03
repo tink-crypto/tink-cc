@@ -57,9 +57,9 @@ using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-class ProtoAesGcmKey : public Message<ProtoAesGcmKey> {
+class AesGcmKeyTP : public Message<AesGcmKeyTP> {
  public:
-  ProtoAesGcmKey() = default;
+  AesGcmKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -197,7 +197,7 @@ absl::StatusOr<AesGcmKey> ParseKey(const ProtoKeySerialization& serialization,
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  ProtoAesGcmKey proto_key;
+  AesGcmKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
@@ -240,7 +240,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  ProtoAesGcmKey proto_key;
+  AesGcmKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 

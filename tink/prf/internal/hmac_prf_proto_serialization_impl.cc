@@ -57,9 +57,9 @@ using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-class ProtoHmacPrfParams : public Message<ProtoHmacPrfParams> {
+class HmacPrfParamsTP : public Message<HmacPrfParamsTP> {
  public:
-  ProtoHmacPrfParams() = default;
+  HmacPrfParamsTP() = default;
   using Message::SerializeAsString;
 
   HashTypeEnum hash() const { return hash_.value(); }
@@ -71,16 +71,16 @@ class ProtoHmacPrfParams : public Message<ProtoHmacPrfParams> {
   EnumOwningField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
 };
 
-class ProtoHmacPrfKey : public Message<ProtoHmacPrfKey> {
+class HmacPrfKeyTP : public Message<HmacPrfKeyTP> {
  public:
-  ProtoHmacPrfKey() = default;
+  HmacPrfKeyTP() = default;
   using Message::SerializeAsString;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  const ProtoHmacPrfParams& params() const { return params_.value(); }
-  ProtoHmacPrfParams* mutable_params() { return params_.mutable_value(); }
+  const HmacPrfParamsTP& params() const { return params_.value(); }
+  HmacPrfParamsTP* mutable_params() { return params_.mutable_value(); }
 
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(SecretData key_value) {
@@ -93,17 +93,17 @@ class ProtoHmacPrfKey : public Message<ProtoHmacPrfKey> {
 
  private:
   Uint32OwningField version_{1};
-  MessageOwningField<ProtoHmacPrfParams> params_{2};
+  MessageOwningField<HmacPrfParamsTP> params_{2};
   SecretDataOwningField key_value_{3};
 };
 
-class ProtoHmacPrfKeyFormat : public Message<ProtoHmacPrfKeyFormat> {
+class HmacPrfKeyFormatTP : public Message<HmacPrfKeyFormatTP> {
  public:
-  ProtoHmacPrfKeyFormat() = default;
+  HmacPrfKeyFormatTP() = default;
   using Message::SerializeAsString;
 
-  const ProtoHmacPrfParams& params() const { return params_.value(); }
-  ProtoHmacPrfParams* mutable_params() { return params_.mutable_value(); }
+  const HmacPrfParamsTP& params() const { return params_.value(); }
+  HmacPrfParamsTP* mutable_params() { return params_.mutable_value(); }
 
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
@@ -116,7 +116,7 @@ class ProtoHmacPrfKeyFormat : public Message<ProtoHmacPrfKeyFormat> {
   }
 
  private:
-  MessageOwningField<ProtoHmacPrfParams> params_{1};
+  MessageOwningField<HmacPrfParamsTP> params_{1};
   Uint32OwningField key_size_{2};
   Uint32OwningField version_{3};
 };
@@ -181,7 +181,7 @@ absl::StatusOr<HmacPrfParameters> ParseParameters(
         "Output prefix type must be RAW for HmacPrfParameters.");
   }
 
-  ProtoHmacPrfKeyFormat proto_key_format;
+  HmacPrfKeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse HmacPrfKeyFormat proto");
   }
@@ -206,7 +206,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return proto_hash_type.status();
   }
 
-  ProtoHmacPrfKeyFormat proto_key_format;
+  HmacPrfKeyFormatTP proto_key_format;
   proto_key_format.mutable_params()->set_hash(*proto_hash_type);
   proto_key_format.set_key_size(parameters.KeySizeInBytes());
   proto_key_format.set_version(0);
@@ -231,7 +231,7 @@ absl::StatusOr<HmacPrfKey> ParseKey(
         "Output prefix type must be RAW for HmacPrfKey.");
   }
 
-  ProtoHmacPrfKey proto_key;
+  HmacPrfKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError("Failed to parse HmacPrfKey proto");
@@ -274,7 +274,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return proto_hash_type.status();
   }
 
-  ProtoHmacPrfKey proto_key;
+  HmacPrfKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.mutable_params()->set_hash(*proto_hash_type);
   proto_key.set_key_value(restricted_input->Get(*token));

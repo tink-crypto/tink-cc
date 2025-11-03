@@ -68,10 +68,10 @@ using ChaCha20Poly1305ProtoKeySerializerImpl =
     internal::KeySerializerImpl<ChaCha20Poly1305Key,
                                 internal::ProtoKeySerialization>;
 
-class ProtoChaCha20Poly1305KeyFormat
-    : public Message<ProtoChaCha20Poly1305KeyFormat> {
+class ChaCha20Poly1305KeyFormatTP
+    : public Message<ChaCha20Poly1305KeyFormatTP> {
  public:
-  ProtoChaCha20Poly1305KeyFormat() = default;
+  ChaCha20Poly1305KeyFormatTP() = default;
 
   std::array<const OwningField*, 0> GetFields() const { return {}; }
 
@@ -79,9 +79,9 @@ class ProtoChaCha20Poly1305KeyFormat
   using Message::SerializeAsString;
 };
 
-class ProtoChaCha20Poly1305Key : public Message<ProtoChaCha20Poly1305Key> {
+class ChaCha20Poly1305KeyTP : public Message<ChaCha20Poly1305KeyTP> {
  public:
-  ProtoChaCha20Poly1305Key() = default;
+  ChaCha20Poly1305KeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -145,7 +145,7 @@ absl::StatusOr<ChaCha20Poly1305Parameters> ParseParameters(
         "Wrong type URL when parsing ChaCha20Poly1305Parameters.");
   }
 
-  ProtoChaCha20Poly1305KeyFormat proto_key_format;
+  ChaCha20Poly1305KeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse ChaCha20Poly1305KeyFormat proto");
@@ -164,7 +164,7 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) return output_prefix_type.status();
 
-  ProtoChaCha20Poly1305KeyFormat proto_key_format;
+  ChaCha20Poly1305KeyFormatTP proto_key_format;
   std::string serialized_key_format = proto_key_format.SerializeAsString();
   return internal::ProtoParametersSerialization::Create(
       kTypeUrl, *output_prefix_type, serialized_key_format);
@@ -181,7 +181,7 @@ absl::StatusOr<ChaCha20Poly1305Key> ParseKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  ProtoChaCha20Poly1305Key proto_key;
+  ChaCha20Poly1305KeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError(
@@ -215,7 +215,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializeKey(
     return absl::InvalidArgumentError("SecretKeyAccess is required");
   }
 
-  ProtoChaCha20Poly1305Key proto_key;
+  ChaCha20Poly1305KeyTP proto_key;
   proto_key.set_version(0);
   proto_key.set_key_value(restricted_input->GetSecret(*token));
 

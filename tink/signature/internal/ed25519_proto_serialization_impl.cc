@@ -57,9 +57,9 @@ using ::crypto::tink::internal::proto_parsing::OwningBytesField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
-class ProtoEd25519KeyFormat final : public Message<ProtoEd25519KeyFormat> {
+class Ed25519KeyFormatTP final : public Message<Ed25519KeyFormatTP> {
  public:
-  ProtoEd25519KeyFormat() = default;
+  Ed25519KeyFormatTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -73,9 +73,9 @@ class ProtoEd25519KeyFormat final : public Message<ProtoEd25519KeyFormat> {
   Uint32OwningField version_{1};
 };
 
-class ProtoEd25519PublicKey final : public Message<ProtoEd25519PublicKey> {
+class Ed25519PublicKeyTP final : public Message<Ed25519PublicKeyTP> {
  public:
-  ProtoEd25519PublicKey() = default;
+  Ed25519PublicKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -92,9 +92,9 @@ class ProtoEd25519PublicKey final : public Message<ProtoEd25519PublicKey> {
   OwningBytesField<std::string> key_value_{2};
 };
 
-class ProtoEd25519PrivateKey final : public Message<ProtoEd25519PrivateKey> {
+class Ed25519PrivateKeyTP final : public Message<Ed25519PrivateKeyTP> {
  public:
-  ProtoEd25519PrivateKey() = default;
+  Ed25519PrivateKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -104,10 +104,8 @@ class ProtoEd25519PrivateKey final : public Message<ProtoEd25519PrivateKey> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  const ProtoEd25519PublicKey& public_key() const {
-    return public_key_.value();
-  }
-  ProtoEd25519PublicKey* mutable_public_key() {
+  const Ed25519PublicKeyTP& public_key() const { return public_key_.value(); }
+  Ed25519PublicKeyTP* mutable_public_key() {
     return public_key_.mutable_value();
   }
 
@@ -118,7 +116,7 @@ class ProtoEd25519PrivateKey final : public Message<ProtoEd25519PrivateKey> {
  private:
   Uint32OwningField version_{1};
   proto_parsing::SecretDataOwningField key_value_{2};
-  MessageOwningField<ProtoEd25519PublicKey> public_key_{3};
+  MessageOwningField<Ed25519PublicKeyTP> public_key_{3};
 };
 
 using Ed25519ProtoParametersParserImpl =
@@ -181,10 +179,10 @@ absl::StatusOr<Ed25519Parameters> ParseParameters(
         "Wrong type URL when parsing Ed25519Parameters.");
   }
 
-  ProtoEd25519KeyFormat proto_key_format;
+  Ed25519KeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
-        "Failed to parse ProtoEd25519KeyFormat proto");
+        "Failed to parse Ed25519KeyFormatTP proto");
   }
   if (proto_key_format.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
@@ -207,11 +205,11 @@ absl::StatusOr<Ed25519PublicKey> ParsePublicKey(
         "Wrong type URL when parsing Ed25519PublicKey.");
   }
 
-  ProtoEd25519PublicKey proto_key;
+  Ed25519PublicKeyTP proto_key;
   if (!proto_key.ParseFromString(serialization.SerializedKeyProto().GetSecret(
           InsecureSecretKeyAccess::Get()))) {
     return absl::InvalidArgumentError(
-        "Failed to parse ProtoEd25519PublicKey proto");
+        "Failed to parse Ed25519PublicKeyTP proto");
   }
   if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
@@ -244,11 +242,11 @@ absl::StatusOr<Ed25519PrivateKey> ParsePrivateKey(
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
-  ProtoEd25519PrivateKey proto_key;
+  Ed25519PrivateKeyTP proto_key;
   if (!proto_key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError(
-        "Failed to parse ProtoEd25519PrivateKey proto");
+        "Failed to parse Ed25519PrivateKeyTP proto");
   }
   if (proto_key.version() != 0) {
     return absl::InvalidArgumentError("Only version 0 keys are accepted.");
@@ -290,7 +288,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  ProtoEd25519KeyFormat proto_key_format;
+  Ed25519KeyFormatTP proto_key_format;
   proto_key_format.set_version(0);
 
   std::string serialized_parameters = proto_key_format.SerializeAsString();
@@ -300,7 +298,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
 
 absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const Ed25519PublicKey& key, absl::optional<SecretKeyAccessToken> token) {
-  ProtoEd25519PublicKey proto_key;
+  Ed25519PublicKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
@@ -330,7 +328,7 @@ absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     return absl::PermissionDeniedError("SecretKeyAccess is required");
   }
 
-  ProtoEd25519PrivateKey proto_private_key;
+  Ed25519PrivateKeyTP proto_private_key;
   proto_private_key.set_version(0);
   proto_private_key.mutable_public_key()->set_version(0);
   proto_private_key.mutable_public_key()->set_key_value(

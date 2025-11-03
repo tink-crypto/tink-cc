@@ -125,7 +125,7 @@ const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
 
 std::string Base64WebSafeDecode(absl::string_view base64_string) {
   std::string dest;
-  CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
+  ABSL_CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
       << "Failed to base64 decode.";
 
   return dest;

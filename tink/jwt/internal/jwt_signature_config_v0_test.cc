@@ -214,7 +214,7 @@ TEST_P(JwtDeterministicSignatureTest, SignAndVerify) {
 
 std::string Base64WebSafeDecode(absl::string_view base64_string) {
   std::string dest;
-  CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
+  ABSL_CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
       << "Failed to base64 decode.";
 
   return dest;

@@ -1469,6 +1469,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     crypto
@@ -1479,7 +1480,6 @@ tink_cc_test(
     tink::core::restricted_big_integer
     tink::internal::bn_util
     tink::internal::ssl_unique_ptr
-    tink::util::statusor
     tink::util::test_matchers
 )
 

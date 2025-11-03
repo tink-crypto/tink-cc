@@ -20,7 +20,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
@@ -339,7 +339,7 @@ constexpr absl::string_view kQInv =
 
 std::string Base64WebSafeDecode(absl::string_view base64_string) {
   std::string dest;
-  CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
+  ABSL_CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
       << "Failed to base64 decode.";
 
   return dest;

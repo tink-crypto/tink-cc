@@ -1023,7 +1023,6 @@ tink_cc_test(
     tink::jwt::internal::jwt_mac_key_gen_config_v0
     gmock
     absl::absl_check
-    absl::check
     absl::strings
     absl::string_view
     absl::time

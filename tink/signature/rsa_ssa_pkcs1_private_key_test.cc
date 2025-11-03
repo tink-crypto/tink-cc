@@ -23,6 +23,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -40,7 +41,6 @@
 #include "tink/restricted_big_integer.h"
 #include "tink/signature/rsa_ssa_pkcs1_parameters.h"
 #include "tink/signature/rsa_ssa_pkcs1_public_key.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -120,7 +120,7 @@ const BigInteger& kF4 = *new BigInteger(std::string("\x1\0\x1", 3));  // 65537
 
 std::string Base64WebSafeDecode(absl::string_view base64_string) {
   std::string dest;
-  CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
+  ABSL_CHECK(absl::WebSafeBase64Unescape(base64_string, &dest))
       << "Failed to base64 decode.";
 
   return dest;

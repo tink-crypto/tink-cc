@@ -39,7 +39,7 @@ tink_cc_library(
     test_file_util_cmake.cc
     test_file_util.h
   DEPS
-    absl::check
+    absl::absl_check
     absl::strings
     gmock
     tink::subtle::random
@@ -1853,6 +1853,7 @@ tink_cc_library(
   DEPS
     tink::internal::safe_stringops
     tink::internal::sanitizing_allocator
+    absl::absl_check
     absl::check
     absl::string_view
     absl::span
@@ -2293,7 +2294,7 @@ tink_cc_test(
     gmock
     absl::nullability
     absl::crc32c
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     absl::string_view

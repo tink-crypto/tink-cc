@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/safe_stringops.h"
@@ -89,12 +90,12 @@ class SecretBuffer {
   }
 
   uint8_t& operator[](size_t pos) {
-    CHECK(pos < size_) << "SecretBuffer::operator[] pos out of bounds";
+    ABSL_CHECK(pos < size_) << "SecretBuffer::operator[] pos out of bounds";
     return data_[pos];
   }
 
   const uint8_t& operator[](size_t pos) const {
-    CHECK(pos < size_) << "SecretBuffer::operator[] pos out of bounds";
+    ABSL_CHECK(pos < size_) << "SecretBuffer::operator[] pos out of bounds";
     return data_[pos];
   }
 
@@ -127,7 +128,7 @@ class SecretBuffer {
     uint8_t* new_data =
         crypto::tink::util::internal::SanitizingAllocator<uint8_t>().allocate(
             new_cap + sizeof(uint32_t));
-    CHECK(new_data != nullptr);
+    ABSL_CHECK(new_data != nullptr);
     if (data_ != nullptr) {
       ::crypto::tink::internal::SafeMemCopy(new_data, data_, size_);
       crypto::tink::util::internal::SanitizingAllocator<uint8_t>().deallocate(
@@ -162,14 +163,14 @@ class SecretBuffer {
 
   SecretBuffer substr(
       size_t pos, size_t count = std::numeric_limits<size_t>::max()) const& {
-    CHECK(pos <= size());
+    ABSL_CHECK(pos <= size());
     count = std::min(count, size() - pos);
     return SecretBuffer(AsStringView().substr(pos, count));
   }
 
   SecretBuffer substr(size_t pos,
                       size_t count = std::numeric_limits<size_t>::max()) && {
-    CHECK(pos <= size());
+    ABSL_CHECK(pos <= size());
     count = std::min(count, size() - pos);
     SecretBuffer result;
     result.swap(*this);

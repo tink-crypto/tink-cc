@@ -1077,7 +1077,6 @@ cc_test(
         "//tink/jwt:raw_jwt",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/time",

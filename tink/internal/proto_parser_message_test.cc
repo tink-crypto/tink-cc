@@ -25,7 +25,7 @@
 #include "gtest/gtest.h"
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_join.h"
@@ -125,9 +125,9 @@ TEST(MessageTest, Clear) {
 // Serializes a varint using a wrong CRC.
 absl::Status SerializeVarintWrongCrc(uint64_t value,
                                      SerializationState& output) {
-  CHECK(output.HasCrc());
+  ABSL_CHECK(output.HasCrc());
   const int size = VarintLength(value);
-  CHECK_GE(size, output.GetBuffer().size());
+  ABSL_CHECK_GE(size, output.GetBuffer().size());
   absl::Span<char> output_buffer = output.GetBuffer();
   int i = 0;
   while (value >= 0x80) {

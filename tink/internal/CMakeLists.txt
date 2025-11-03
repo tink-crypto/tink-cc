@@ -1394,57 +1394,6 @@ tink_cc_test(
     tink::util::test_util
 )
 
-tink_cc_library(
-  NAME proto_parser
-  SRCS
-    proto_parser.h
-  DEPS
-    tink::internal::proto_parser_enum_field
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_message_field
-    tink::internal::proto_parser_message_field_with_presence
-    tink::internal::proto_parser_options
-    tink::internal::proto_parser_presence_fields
-    tink::internal::proto_parser_repeated_message_field
-    tink::internal::proto_parser_repeated_secret_data_field
-    tink::internal::proto_parser_secret_data_field
-    tink::internal::proto_parser_state
-    tink::internal::proto_parser_uint64_field
-    tink::internal::proto_parsing_low_level_parser
-    tink::internal::secret_buffer
-    absl::btree
-    absl::crc32c
-    absl::absl_check
-    absl::status
-    absl::statusor
-    absl::strings
-    absl::string_view
-    absl::optional
-    absl::span
-    tink::util::secret_data
-)
-
-tink_cc_test(
-  NAME proto_parser_test
-  SRCS
-    proto_parser_test.cc
-  DEPS
-    tink::internal::proto_parser
-    tink::internal::proto_parser_options
-    tink::internal::proto_test_cc_proto
-    gmock
-    absl::crc32c
-    absl::status
-    absl::statusor
-    absl::strings
-    absl::optional
-    tink::core::secret_data
-    tink::internal::testing::field_with_number
-    tink::util::secret_data
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
 tink_cc_proto(
   NAME proto_test_cc_proto
   SRCS proto_test_proto.proto

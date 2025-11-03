@@ -1445,37 +1445,6 @@ cc_library(
     deps = ["@com_google_absl//absl/base"],
 )
 
-cc_library(
-    name = "proto_parser",
-    hdrs = ["proto_parser.h"],
-    include_prefix = "tink/internal",
-    deps = [
-        ":proto_parser_enum_field",
-        ":proto_parser_fields",
-        ":proto_parser_message_field",
-        ":proto_parser_message_field_with_presence",
-        ":proto_parser_options",
-        ":proto_parser_presence_fields",
-        ":proto_parser_repeated_message_field",
-        ":proto_parser_repeated_secret_data_field",
-        ":proto_parser_secret_data_field",
-        ":proto_parser_state",
-        ":proto_parser_uint64_field",
-        ":proto_parsing_low_level_parser",
-        ":secret_buffer",
-        "//tink/util:secret_data",
-        "@com_google_absl//absl/container:btree",
-        "@com_google_absl//absl/crc:crc32c",
-        "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
-        "@com_google_absl//absl/types:span",
-    ],
-)
-
 proto_library(
     name = "proto_test_proto",
     testonly = 1,
@@ -1486,27 +1455,6 @@ cc_proto_library(
     name = "proto_test_cc_proto",
     testonly = 1,
     deps = [":proto_test_proto"],
-)
-
-cc_test(
-    name = "proto_parser_test",
-    srcs = ["proto_parser_test.cc"],
-    deps = [
-        ":proto_parser",
-        ":proto_parser_options",
-        ":proto_test_cc_proto",
-        "//tink:secret_data",
-        "//tink/internal/testing:field_with_number",
-        "//tink/util:secret_data",
-        "//tink/util:test_matchers",
-        "//tink/util:test_util",
-        "@com_google_absl//absl/crc:crc32c",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:optional",
-        "@googletest//:gtest_main",
-    ],
 )
 
 cc_library(

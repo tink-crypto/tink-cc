@@ -1771,9 +1771,8 @@ tink_cc_library(
   DEPS
     tink::signature::signature_parameters
     absl::status
+    absl::statusor
     tink::core::parameters
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_test(
@@ -1784,8 +1783,8 @@ tink_cc_test(
     tink::signature::ml_dsa_parameters
     gmock
     absl::status
+    absl::statusor
     tink::core::parameters
-    tink::util::statusor
     tink::util::test_matchers
 )
 

@@ -17,19 +17,18 @@
 #include "tink/signature/ml_dsa_parameters.h"
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 
 absl::StatusOr<MlDsaParameters> MlDsaParameters::Create(Instance instance,
                                                         Variant variant) {
-  if (instance != Instance::kMlDsa65) {
+  if (instance != Instance::kMlDsa65 && instance != Instance::kMlDsa87) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid ML-DSA instance. Only ML-DSA-65 keys are "
-                        "currently supported.");
+                        "Invalid ML-DSA instance. Only ML-DSA-65 and "
+                        "ML-DSA-87 keys are currently supported.");
   }
 
   if (variant != Variant::kTink && variant != Variant::kNoPrefix) {

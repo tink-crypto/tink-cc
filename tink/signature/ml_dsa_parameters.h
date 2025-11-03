@@ -18,9 +18,10 @@
 #define TINK_SIGNATURE_ML_DSA_PARAMETERS_H_
 
 #include <memory>
+
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
 #include "tink/signature/signature_parameters.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -29,7 +30,8 @@ namespace tink {
 // Signature Standard (ML-DSA) described at
 // https://csrc.nist.gov/pubs/fips/204/ipd.
 //
-// Note that only the ML-DSA-65 parameter set is currently supported.
+// Note that only the ML-DSA-65 and ML-DSA-87 parameter sets are currently
+// supported.
 class MlDsaParameters : public SignatureParameters {
  public:
   // Describes the output prefix prepended to the signature.
@@ -42,10 +44,11 @@ class MlDsaParameters : public SignatureParameters {
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };
 
-  // Description of the ML-DSA instance. Only ML-DSA-65 is supported at
-  // the moment.
+  // Description of the ML-DSA instance. Only ML-DSA-65 and ML-DSA-87 are
+  // supported at the moment.
   enum class Instance : int {
     kMlDsa65 = 1,
+    kMlDsa87 = 2,
     kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements = 20,
   };
 
@@ -59,8 +62,8 @@ class MlDsaParameters : public SignatureParameters {
   static absl::StatusOr<MlDsaParameters> Create(Instance instance,
                                                 Variant variant);
 
-  // Returns the ML-DSA key instance (44, 65 or 87). Only 65 is supported at
-  // the moment.
+  // Returns the ML-DSA key instance (44, 65 or 87). Only 65 and 87 are
+  // supported at the moment.
   Instance GetInstance() const { return instance_; }
   Variant GetVariant() const { return variant_; }
 

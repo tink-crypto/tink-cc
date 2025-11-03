@@ -890,9 +890,8 @@ cc_library(
     deps = [
         ":signature_parameters",
         "//tink:parameters",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
     ],
 )
 
@@ -1884,9 +1883,9 @@ cc_test(
     deps = [
         ":ml_dsa_parameters",
         "//tink:parameters",
-        "//tink/util:statusor",
         "//tink/util:test_matchers",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )

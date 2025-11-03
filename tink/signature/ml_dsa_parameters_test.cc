@@ -21,8 +21,8 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "tink/parameters.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -36,6 +36,7 @@ using ::testing::TestWithParam;
 using ::testing::Values;
 
 struct VariantTestCase {
+  MlDsaParameters::Instance instance;
   MlDsaParameters::Variant variant;
   bool has_id_requirement;
 };
@@ -46,38 +47,49 @@ using MlDsaParametersTest = TestWithParam<VariantTestCase>;
 // be extended if other variants (e.g. no-prefix) are added in the future.
 INSTANTIATE_TEST_SUITE_P(
     MlDsaParametersTestSuite, MlDsaParametersTest,
-    Values(VariantTestCase{MlDsaParameters::Variant::kNoPrefix,
+    Values(VariantTestCase{MlDsaParameters::Instance::kMlDsa65,
+                           MlDsaParameters::Variant::kNoPrefix,
                            /*has_id_requirement=*/false},
-           VariantTestCase{MlDsaParameters::Variant::kTink,
+           VariantTestCase{MlDsaParameters::Instance::kMlDsa65,
+                           MlDsaParameters::Variant::kTink,
+                           /*has_id_requirement=*/true},
+           VariantTestCase{MlDsaParameters::Instance::kMlDsa87,
+                           MlDsaParameters::Variant::kNoPrefix,
+                           /*has_id_requirement=*/false},
+           VariantTestCase{MlDsaParameters::Instance::kMlDsa87,
+                           MlDsaParameters::Variant::kTink,
                            /*has_id_requirement=*/true}));
 
-TEST_P(MlDsaParametersTest, CreateMlDsa65Works) {
+TEST_P(MlDsaParametersTest, CreateMlDsaWorks) {
   VariantTestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  EXPECT_THAT(parameters->GetInstance(),
-              Eq(MlDsaParameters::Instance::kMlDsa65));
+  EXPECT_THAT(parameters->GetInstance(), Eq(test_case.instance));
   EXPECT_THAT(parameters->GetVariant(), Eq(test_case.variant));
   EXPECT_THAT(parameters->HasIdRequirement(), Eq(test_case.has_id_requirement));
 }
 
-TEST(MlDsaParametersTest, CreateWithInvalidVariantFails) {
+TEST_P(MlDsaParametersTest, CreateWithInvalidVariantFails) {
+  VariantTestCase test_case = GetParam();
+
   EXPECT_THAT(MlDsaParameters::Create(
-                  MlDsaParameters::Instance::kMlDsa65,
+                  test_case.instance,
                   MlDsaParameters::Variant::
                       kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
 
-TEST(MlDsaParametersTest, CreateWithInvalidInstanceFails) {
+TEST_P(MlDsaParametersTest, CreateWithInvalidInstanceFails) {
+  VariantTestCase test_case = GetParam();
+
   EXPECT_THAT(MlDsaParameters::Create(
                   MlDsaParameters::Instance::
                       kDoNotUseInsteadUseDefaultWhenWritingSwitchStatements,
-                  MlDsaParameters::Variant::kTink)
+                  test_case.variant)
                   .status(),
               StatusIs(absl::StatusCode::kInvalidArgument));
 }
@@ -85,13 +97,13 @@ TEST(MlDsaParametersTest, CreateWithInvalidInstanceFails) {
 TEST_P(MlDsaParametersTest, CopyConstructor) {
   VariantTestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   MlDsaParameters copy(*parameters);
 
-  EXPECT_THAT(copy.GetInstance(), Eq(MlDsaParameters::Instance::kMlDsa65));
+  EXPECT_THAT(copy.GetInstance(), Eq(test_case.instance));
   EXPECT_THAT(copy.GetVariant(), Eq(test_case.variant));
   EXPECT_THAT(copy.HasIdRequirement(), Eq(test_case.has_id_requirement));
 }
@@ -99,13 +111,13 @@ TEST_P(MlDsaParametersTest, CopyConstructor) {
 TEST_P(MlDsaParametersTest, CopyAssignment) {
   VariantTestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   MlDsaParameters copy = *parameters;
 
-  EXPECT_THAT(copy.GetInstance(), Eq(MlDsaParameters::Instance::kMlDsa65));
+  EXPECT_THAT(copy.GetInstance(), Eq(test_case.instance));
   EXPECT_THAT(copy.GetVariant(), Eq(test_case.variant));
   EXPECT_THAT(copy.HasIdRequirement(), Eq(test_case.has_id_requirement));
 }
@@ -113,12 +125,12 @@ TEST_P(MlDsaParametersTest, CopyAssignment) {
 TEST_P(MlDsaParametersTest, ParametersEquals) {
   VariantTestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> other_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(other_parameters, IsOk());
 
   EXPECT_TRUE(*parameters == *other_parameters);
@@ -127,20 +139,37 @@ TEST_P(MlDsaParametersTest, ParametersEquals) {
   EXPECT_FALSE(*other_parameters != *parameters);
 }
 
-TEST(MlDsaParametersTest, DifferentVariantNotEqual) {
+TEST_P(MlDsaParametersTest, DifferentInstanceNotEqual) {
+  VariantTestCase test_case = GetParam();
+
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
 
   absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+      MlDsaParameters::Instance::kMlDsa87, test_case.variant);
 
   EXPECT_TRUE(*parameters != *other_parameters);
   EXPECT_FALSE(*parameters == *other_parameters);
 }
 
-TEST(MlDsaParametersTest, Clone) {
+TEST_P(MlDsaParametersTest, DifferentVariantNotEqual) {
+  VariantTestCase test_case = GetParam();
+
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+      test_case.instance, MlDsaParameters::Variant::kNoPrefix);
+
+  absl::StatusOr<MlDsaParameters> other_parameters = MlDsaParameters::Create(
+      test_case.instance, MlDsaParameters::Variant::kTink);
+
+  EXPECT_TRUE(*parameters != *other_parameters);
+  EXPECT_FALSE(*parameters == *other_parameters);
+}
+
+TEST_P(MlDsaParametersTest, Clone) {
+  VariantTestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
 
   std::unique_ptr<Parameters> cloned_parameters = parameters->Clone();
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));

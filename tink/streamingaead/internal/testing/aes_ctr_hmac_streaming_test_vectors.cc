@@ -40,7 +40,7 @@ namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
 
 std::string Xor(absl::string_view a, absl::string_view b) {
-  CHECK_EQ(a.size(), b.size());
+  ABSL_CHECK_EQ(a.size(), b.size());
   std::string result;
   result.resize(a.size());
   for (int i = 0; i < a.size(); ++i) {

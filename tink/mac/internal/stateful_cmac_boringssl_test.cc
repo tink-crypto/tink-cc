@@ -190,7 +190,7 @@ std::vector<StatefulCmacTestVector> GetWycheproofCmakeTestVectors() {
       });
     }
   }
-  CHECK_EQ(skipped_test_groups, 6);
+  ABSL_CHECK_EQ(skipped_test_groups, 6);
   return test_vectors;
 }
 

@@ -44,10 +44,10 @@ cc_library(
         "//tink/internal:monitoring_util",
         "//tink/internal:registry_impl",
         "//tink/internal:util",
-        "//tink/util:status",
         "//tink/util:statusor",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
     ],
 )

@@ -431,7 +431,7 @@ cc_library(
     include_prefix = "tink/aead/internal",
     deps = [
         "@com_google_absl//absl/base:nullability",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/strings:cord",
         "@com_google_absl//absl/strings:string_view",
         "@com_google_absl//absl/types:span",

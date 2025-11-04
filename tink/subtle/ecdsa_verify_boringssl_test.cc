@@ -1,4 +1,4 @@
-// Copyright 2017 Google Inc.
+// Copyright 2017 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -224,7 +224,7 @@ bool TestSignatures(const std::string& filename,
     }
   }
   int num_tests = parsed_input->fields().at("numberOfTests").number_value();
-  CHECK_EQ(skipped_test_groups, expected_skipped_test_groups);
+  ABSL_CHECK_EQ(skipped_test_groups, expected_skipped_test_groups);
   std::cout << "total number of tests: " << num_tests;
   std::cout << "number of tests passed:" << passed_tests;
   std::cout << "number of tests failed:" << failed_tests;

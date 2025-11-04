@@ -7,7 +7,7 @@ tink_cc_library(
     tink_type_resolver.h
   DEPS
     protobuf::libprotobuf
-    absl::check
+    absl::absl_check
     absl::strings
     absl::string_view
 )

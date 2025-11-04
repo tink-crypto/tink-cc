@@ -412,7 +412,7 @@ tink_cc_library(
     cord_utils.h
   DEPS
     absl::nullability
-    absl::check
+    absl::absl_check
     absl::cord
     absl::string_view
     absl::span

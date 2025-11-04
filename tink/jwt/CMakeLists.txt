@@ -1015,6 +1015,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     crypto

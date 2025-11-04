@@ -22,7 +22,7 @@
 #include <utility>
 
 #include "absl/base/nullability.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_buffer.h"
 #include "absl/strings/string_view.h"
@@ -50,7 +50,7 @@ absl::Span<char> CordWriter::NextWriteBuffer() {
 }
 
 void CordWriter::Advance(int size) {
-  CHECK_LE(written_so_far_ + size, max_size_);
+  ABSL_CHECK_LE(written_so_far_ + size, max_size_);
   written_so_far_ += size;
   current_buffer_.IncreaseLengthBy(size);
   current_buffer_span_.remove_prefix(size);
@@ -61,7 +61,7 @@ void CordWriter::Advance(int size) {
 }
 
 void CordWriter::Write(absl::string_view data) {
-  CHECK_LE(data.size(), max_size_ + current_buffer_span_.size());
+  ABSL_CHECK_LE(data.size(), max_size_ + current_buffer_span_.size());
   while (!data.empty()) {
     absl::Span<char> buffer = NextWriteBuffer().subspan(0, data.size());
     std::memcpy(buffer.data(), data.data(), buffer.size());
@@ -100,7 +100,7 @@ void CordReader::Skip(size_t size) {
 
 void CordReader::ReadN(size_t size, char* /*absl_nonnull - not yet supported*/ dest) {
   // Cannot read more than Available().
-  CHECK_LE(size, Available());
+  ABSL_CHECK_LE(size, Available());
   while (size > 0) {
     absl::string_view chunk = Peek().substr(0, size);
     std::memcpy(dest, chunk.data(), chunk.size());

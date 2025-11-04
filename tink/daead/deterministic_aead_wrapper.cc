@@ -1,4 +1,4 @@
-// Copyright 2018 Google Inc.
+// Copyright 2018 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/crypto_format.h"
 #include "tink/deterministic_aead.h"
@@ -30,8 +31,6 @@
 #include "tink/internal/registry_impl.h"
 #include "tink/internal/util.h"
 #include "tink/primitive_set.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -132,8 +131,6 @@ DeterministicAeadSetWrapper::DecryptDeterministically(
                                                raw_ciphertext.size());
           }
           return std::move(decrypt_result.value());
-        } else {
-          // LOG that a matching key didn't decrypt the ciphertext.
         }
       }
     }

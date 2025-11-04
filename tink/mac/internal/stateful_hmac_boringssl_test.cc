@@ -27,6 +27,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/log/log.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -192,17 +193,17 @@ TEST_P(StatefulHmacBoringSslTest, MultipleUpdates) {
   ASSERT_THAT(hmac_result, IsOk());
   auto hmac = std::move(hmac_result.value());
   absl::string_view remaining_message = test_vector.message;
-  LOG(INFO) << "Starting to update";
+  ABSL_LOG(INFO) << "Starting to update";
   while (!remaining_message.empty()) {
     int random_byte = subtle::Random::GetRandomUInt8() % 15;
     int amount_to_consume =
         std::min<int>(remaining_message.size(), random_byte);
-    LOG(INFO) << "Consuming " << amount_to_consume << " bytes";
+    ABSL_LOG(INFO) << "Consuming " << amount_to_consume << " bytes";
     ASSERT_THAT(hmac->Update(remaining_message.substr(0, amount_to_consume)),
                 IsOk());
     remaining_message.remove_prefix(amount_to_consume);
   }
-  LOG(INFO) << "Done updating ";
+  ABSL_LOG(INFO) << "Done updating ";
   absl::StatusOr<SecretData> tag = hmac->FinalizeAsSecretData();
   ASSERT_THAT(tag, IsOk());
 

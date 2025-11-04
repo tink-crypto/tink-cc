@@ -267,6 +267,7 @@ tink_cc_test(
     gmock
     absl::log
     absl::absl_check
+    absl::absl_log
     absl::memory
     absl::status
     absl::strings

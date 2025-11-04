@@ -37,6 +37,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::crypto_format
     tink::core::deterministic_aead
@@ -46,7 +47,6 @@ tink_cc_library(
     tink::internal::monitoring_util
     tink::internal::registry_impl
     tink::internal::util
-    tink::util::status
     tink::util::statusor
     tink::proto::tink_cc_proto
 )

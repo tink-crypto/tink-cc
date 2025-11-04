@@ -18,14 +18,14 @@
 
 #include <cstdint>
 
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "tink/subtle/random.h"
 
 namespace crypto {
 namespace tink {
 
 RestrictedData::RestrictedData(int64_t num_random_bytes) {
-  CHECK_GE(num_random_bytes, 0)
+  ABSL_CHECK_GE(num_random_bytes, 0)
       << "Cannot generate a negative number of random bytes.\n";
   secret_ = subtle::Random::GetRandomKeyBytes(num_random_bytes);
 }

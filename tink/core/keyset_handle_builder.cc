@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_map.h"
+#include "absl/log/absl_check.h"
 #include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
@@ -125,7 +126,7 @@ void KeysetHandleBuilder::ClearPrimary() {
 
 KeysetHandleBuilder& KeysetHandleBuilder::AddEntry(
     KeysetHandleBuilder::Entry entry) {
-  CHECK(!entry.added_to_builder_)
+  ABSL_CHECK(!entry.added_to_builder_)
       << "Keyset handle builder entry already added to a builder.";
   entry.added_to_builder_ = true;
   if (entry.IsPrimary()) {
@@ -136,7 +137,7 @@ KeysetHandleBuilder& KeysetHandleBuilder::AddEntry(
 }
 
 KeysetHandleBuilder& KeysetHandleBuilder::RemoveEntry(int index) {
-  CHECK(index >= 0 && index < entries_.size())
+  ABSL_CHECK(index >= 0 && index < entries_.size())
       << "Keyset handle builder entry removal index out of range.";
   entries_.erase(entries_.begin() + index);
   return *this;

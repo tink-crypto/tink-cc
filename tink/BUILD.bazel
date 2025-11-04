@@ -789,7 +789,7 @@ cc_library(
         ":secret_key_access_token",
         "//tink/subtle:random",
         "//tink/util:secret_data",
-        "@com_google_absl//absl/log:check",
+        "@com_google_absl//absl/log:absl_check",
         "@com_google_absl//absl/strings:string_view",
     ],
 )

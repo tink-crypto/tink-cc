@@ -19,7 +19,7 @@
 #include <string>
 
 #include "google/protobuf/descriptor.pb.h"
-#include "absl/log/check.h"
+#include "absl/log/absl_check.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"
 #include "google/protobuf/descriptor.h"
@@ -70,7 +70,7 @@ const char kTinkFileDescBase64[] =
 
 FileDescriptorProto TinkFileDescProto() {
   std::string serialized_file_desc;
-  CHECK(absl::Base64Unescape(kTinkFileDescBase64, &serialized_file_desc));
+  ABSL_CHECK(absl::Base64Unescape(kTinkFileDescBase64, &serialized_file_desc));
   FileDescriptorProto file_desc_proto;
   file_desc_proto.ParseFromString(serialized_file_desc);
   return file_desc_proto;

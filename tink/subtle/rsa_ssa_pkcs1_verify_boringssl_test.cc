@@ -250,7 +250,7 @@ bool TestSignatures(const std::string& filename) {
   }
   int num_tests =
       (int)parsed_input->fields().at("numberOfTests").number_value();
-  CHECK_EQ(num_tests, passed_tests + failed_tests);
+  ABSL_CHECK_EQ(num_tests, passed_tests + failed_tests);
   std::cout << "total number of tests: " << num_tests;
   std::cout << "number of tests passed:" << passed_tests;
   std::cout << "number of tests failed:" << failed_tests;

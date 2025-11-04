@@ -734,7 +734,7 @@ tink_cc_library(
     restricted_data.h
   DEPS
     tink::core::secret_key_access_token
-    absl::check
+    absl::absl_check
     absl::string_view
     tink::subtle::random
     tink::util::secret_data

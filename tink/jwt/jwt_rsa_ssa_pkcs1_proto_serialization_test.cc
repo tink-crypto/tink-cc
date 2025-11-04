@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -342,15 +343,15 @@ struct KeyValues {
 
 KeyValues GenerateKeyValues(int modulus_size_in_bits) {
   internal::SslUniquePtr<RSA> rsa(RSA_new());
-  CHECK_NE(rsa.get(), nullptr);
+  ABSL_CHECK_NE(rsa.get(), nullptr);
 
   // Set public exponent to 65537.
   internal::SslUniquePtr<BIGNUM> e(BN_new());
-  CHECK_NE(e.get(), nullptr);
+  ABSL_CHECK_NE(e.get(), nullptr);
   BN_set_word(e.get(), 65537);
 
   // Generate an RSA key pair and get the values.
-  CHECK(RSA_generate_key_ex(rsa.get(), modulus_size_in_bits, e.get(),
+  ABSL_CHECK(RSA_generate_key_ex(rsa.get(), modulus_size_in_bits, e.get(),
                             /*cb=*/nullptr));
 
   const BIGNUM *n_bn, *e_bn, *d_bn, *p_bn, *q_bn, *dp_bn, *dq_bn, *q_inv_bn;

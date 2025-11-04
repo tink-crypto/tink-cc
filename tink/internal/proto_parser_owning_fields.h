@@ -22,11 +22,11 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
-#include "tink/internal/proto_parser_uint64_field.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_data.h"
 
@@ -107,8 +107,7 @@ class Uint32OwningField : public OwningField {
 class Uint64OwningField : public OwningField {
  public:
   explicit Uint64OwningField(uint64_t field_number)
-      : OwningField(field_number, WireType::kVarint),
-        field_(field_number, &Uint64OwningField::value_) {}
+      : OwningField(field_number, WireType::kVarint) {}
 
   // Copyable and movable.
   Uint64OwningField(const Uint64OwningField&) = default;
@@ -116,15 +115,35 @@ class Uint64OwningField : public OwningField {
   Uint64OwningField(Uint64OwningField&&) noexcept = default;
   Uint64OwningField& operator=(Uint64OwningField&&) noexcept = default;
 
-  void Clear() override { field_.ClearMember(*this); }
+  void Clear() override { value_ = 0; }
+
   bool ConsumeIntoMember(ParsingState& serialized) override {
-    return field_.ConsumeIntoMember(serialized, *this);
+    absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
+    if (!result.ok()) {
+      return false;
+    }
+    value_ = *result;
+    return true;
   }
+
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    return field_.SerializeWithTagInto(out, *this);
+    if (value_ == 0) {
+      return absl::OkStatus();
+    }
+    absl::Status status =
+        SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
+    return SerializeVarint(value_, out);
   }
+
   size_t GetSerializedSizeIncludingTag() const override {
-    return field_.GetSerializedSizeIncludingTag(*this);
+    if (value_ == 0) {
+      return 0;
+    }
+    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
+           VarintLength(value_);
   }
 
   void set_value(uint64_t value) { value_ = value; }
@@ -132,7 +151,6 @@ class Uint64OwningField : public OwningField {
 
  private:
   uint64_t value_ = 0;
-  Uint64Field<Uint64OwningField> field_;
 };
 
 template <typename StringLike>

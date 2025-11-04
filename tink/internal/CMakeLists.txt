@@ -1818,33 +1818,6 @@ tink_cc_library(
 )
 
 tink_cc_library(
-  NAME proto_parser_uint64_field
-  SRCS
-    proto_parser_uint64_field.h
-  DEPS
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_options
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_helpers
-    absl::status
-    absl::statusor
-)
-
-tink_cc_test(
-  NAME proto_parser_uint64_field_test
-  SRCS
-    proto_parser_uint64_field_test.cc
-  DEPS
-    tink::internal::proto_parser_state
-    tink::internal::proto_parser_uint64_field
-    gmock
-    absl::strings
-    absl::span
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
-tink_cc_library(
   NAME proto_parser_repeated_secret_data_field
   SRCS
     proto_parser_repeated_secret_data_field.h
@@ -2023,10 +1996,10 @@ tink_cc_library(
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_options
     tink::internal::proto_parser_state
-    tink::internal::proto_parser_uint64_field
     tink::internal::proto_parsing_helpers
     absl::core_headers
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::secret_data
 )

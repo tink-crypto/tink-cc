@@ -205,6 +205,11 @@ TEST(Uint32Field, FieldNumber) {
   ASSERT_THAT(field2.FieldNumber(), Eq(kUint32Field2Number));
 }
 
+TEST(Uint32Field, GetWireType) {
+  Uint32OwningField field(kUint32Field1Number);
+  EXPECT_THAT(field.GetWireType(), Eq(WireType::kVarint));
+}
+
 TEST(Uint32Field, CopyAndMove) {
   Uint32OwningField field1(kUint32Field1Number);
   field1.set_value(123);
@@ -397,6 +402,11 @@ TEST(Uint64Field, FieldNumber) {
   ASSERT_THAT(field2.FieldNumber(), Eq(123));
 }
 
+TEST(Uint64Field, GetWireType) {
+  Uint64OwningField field{1};
+  EXPECT_THAT(field.GetWireType(), Eq(WireType::kVarint));
+}
+
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
   OwningBytesField<std::string> field(kBytesField1Number);
@@ -496,6 +506,11 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
   std::string buffer;
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.SerializeWithTagInto(buffer_span), Not(IsOk()));
+}
+
+TEST(StringBytesField, GetWireType) {
+  OwningBytesField<std::string> field(kBytesField1Number);
+  EXPECT_THAT(field.GetWireType(), Eq(WireType::kLengthDelimited));
 }
 
 TEST(StringBytesField, CopyAndMove) {

@@ -1887,34 +1887,6 @@ cc_library(
 )
 
 cc_library(
-    name = "proto_parser_uint64_field",
-    hdrs = ["proto_parser_uint64_field.h"],
-    include_prefix = "tink/internal",
-    deps = [
-        ":proto_parser_fields",
-        ":proto_parser_options",
-        ":proto_parser_state",
-        ":proto_parsing_helpers",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-    ],
-)
-
-cc_test(
-    name = "proto_parser_uint64_field_test",
-    srcs = ["proto_parser_uint64_field_test.cc"],
-    deps = [
-        ":proto_parser_state",
-        ":proto_parser_uint64_field",
-        "//tink/util:test_matchers",
-        "//tink/util:test_util",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:span",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
     name = "proto_parser_repeated_secret_data_field",
     hdrs = ["proto_parser_repeated_secret_data_field.h"],
     include_prefix = "tink/internal",
@@ -2096,11 +2068,11 @@ cc_library(
         ":proto_parser_fields",
         ":proto_parser_options",
         ":proto_parser_state",
-        ":proto_parser_uint64_field",
         ":proto_parsing_helpers",
         "//tink:secret_data",
         "@com_google_absl//absl/base:core_headers",
         "@com_google_absl//absl/status",
+        "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings:string_view",
     ],
 )

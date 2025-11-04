@@ -622,3 +622,97 @@ tink_cc_test(
     tink::proto::aes_siv_cc_proto
     tink::proto::tink_cc_proto
 )
+
+tink_cc_library(
+  NAME ecies_proto_serialization_impl
+  SRCS
+    ecies_proto_serialization_impl.cc
+    ecies_proto_serialization_impl.h
+  DEPS
+    absl::core_headers
+    absl::status
+    absl::statusor
+    absl::str_format
+    absl::string_view
+    absl::optional
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_big_integer
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::core::secret_key_access_token
+    tink::aead::internal::aes_ctr_hmac_proto_structs
+    tink::aead::internal::aes_gcm_proto_format
+    tink::aead::internal::xchacha20_poly1305_proto_format
+    tink::daead::internal::aes_siv_proto_format
+    tink::hybrid::ecies_parameters
+    tink::hybrid::ecies_private_key
+    tink::hybrid::ecies_public_key
+    tink::internal::bn_encoding_util
+    tink::internal::common_proto_enums
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_owning_field
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::mac::internal::hmac_proto_structs
+    tink::util::secret_data
+)
+
+tink_cc_test(
+  NAME ecies_proto_serialization_impl_test
+  SRCS
+    ecies_proto_serialization_impl_test.cc
+  DEPS
+    tink::hybrid::internal::ecies_proto_serialization_impl
+    gmock
+    absl::check
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    tink::core::big_integer
+    tink::core::ec_point
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_big_integer
+    tink::core::restricted_data
+    tink::aead::internal::aes_ctr_hmac_proto_structs
+    tink::hybrid::ecies_parameters
+    tink::hybrid::ecies_private_key
+    tink::hybrid::ecies_public_key
+    tink::internal::common_proto_enums
+    tink::internal::ec_util
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+    tink::subtle::common_enums
+    tink::util::enums
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::proto::aes_ctr_cc_proto
+    tink::proto::aes_ctr_hmac_aead_cc_proto
+    tink::proto::aes_gcm_cc_proto
+    tink::proto::aes_siv_cc_proto
+    tink::proto::common_cc_proto
+    tink::proto::ecies_aead_hkdf_cc_proto
+    tink::proto::hmac_cc_proto
+    tink::proto::tink_cc_proto
+    tink::proto::xchacha20_poly1305_cc_proto
+)

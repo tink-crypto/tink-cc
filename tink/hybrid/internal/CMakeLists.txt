@@ -716,3 +716,81 @@ tink_cc_test(
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
 )
+
+tink_cc_library(
+  NAME hpke_proto_serialization_impl
+  SRCS
+    hpke_proto_serialization_impl.cc
+    hpke_proto_serialization_impl.h
+  DEPS
+    absl::core_headers
+    absl::status
+    absl::statusor
+    absl::string_view
+    absl::optional
+    tink::core::insecure_secret_key_access
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::core::secret_key_access_token
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_public_key
+    tink::internal::key_parser
+    tink::internal::key_serializer
+    tink::internal::mutable_serialization_registry
+    tink::internal::parameters_parser
+    tink::internal::parameters_serializer
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_message
+    tink::internal::proto_parser_owning_fields
+    tink::internal::proto_parser_secret_data_field
+    tink::internal::serialization_registry
+    tink::internal::tink_proto_structs
+  TAGS
+    exclude_if_openssl
+)
+
+tink_cc_test(
+  NAME hpke_proto_serialization_impl_test
+  SRCS
+    hpke_proto_serialization_impl_test.cc
+  DEPS
+    tink::hybrid::internal::hpke_proto_serialization_impl
+    gmock
+    absl::absl_check
+    absl::status
+    absl::statusor
+    absl::strings
+    absl::string_view
+    absl::optional
+    crypto
+    tink::core::insecure_secret_key_access_testonly
+    tink::core::key
+    tink::core::parameters
+    tink::core::partial_key_access
+    tink::core::restricted_data
+    tink::core::secret_data
+    tink::hybrid::hpke_parameters
+    tink::hybrid::hpke_private_key
+    tink::hybrid::hpke_public_key
+    tink::internal::ec_util
+    tink::internal::mutable_serialization_registry
+    tink::internal::proto_key_serialization
+    tink::internal::proto_parameters_serialization
+    tink::internal::serialization
+    tink::internal::serialization_registry
+    tink::internal::ssl_unique_ptr
+    tink::internal::tink_proto_structs
+    tink::internal::testing::equals_proto_key_serialization
+    tink::internal::testing::field_with_number
+    tink::subtle::common_enums
+    tink::util::secret_data
+    tink::util::test_matchers
+    tink::util::test_util
+    tink::proto::hpke_cc_proto
+  TAGS
+    exclude_if_openssl
+)

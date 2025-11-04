@@ -1,4 +1,4 @@
-// Copyright 2023 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,29 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_HYBRID_HPKE_PROTO_SERIALIZATION_H_
-#define TINK_HYBRID_HPKE_PROTO_SERIALIZATION_H_
+#ifndef TINK_HYBRID_INTERNAL_HPKE_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_HYBRID_INTERNAL_HPKE_PROTO_SERIALIZATION_IMPL_H_
 
 #include "absl/status/status.h"
-#include "tink/hybrid/internal/hpke_proto_serialization_impl.h"
 #include "tink/internal/mutable_serialization_registry.h"
+#include "tink/internal/serialization_registry.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for HPKE parameters and keys into
-// global serialization registry.
-inline absl::Status RegisterHpkeProtoSerialization() {
-  return internal::RegisterHpkeProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// specified mutable serialization `registry`.
+absl::Status RegisterHpkeProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for HPKE parameters and keys into
+// specified immutable serialization registry `builder`.
+absl::Status RegisterHpkeProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_HYBRID_HPKE_PROTO_SERIALIZATION_H_
+#endif  // TINK_HYBRID_INTERNAL_HPKE_PROTO_SERIALIZATION_IMPL_H_

@@ -27,35 +27,37 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/secret_data.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-template <typename Struct>
-class RepeatedSecretDataField : public Field<Struct> {
+// OwningRepeatedSecretDataField is a Field that owns a vector of SecretData.
+// It is used to represent a repeated field of SecretData in a proto message.
+class OwningRepeatedSecretDataField : public OwningField {
  public:
-  explicit RepeatedSecretDataField(int field_number,
-                                   std::vector<SecretData> Struct::* data)
-      : data_(data), field_number_(field_number) {}
+  explicit OwningRepeatedSecretDataField(int field_number)
+      : OwningField(field_number, WireType::kLengthDelimited) {}
+
   // Copyable and movable.
-  RepeatedSecretDataField(const RepeatedSecretDataField&) = default;
-  RepeatedSecretDataField& operator=(const RepeatedSecretDataField&) = default;
-  RepeatedSecretDataField(RepeatedSecretDataField&&) noexcept = default;
-  RepeatedSecretDataField& operator=(RepeatedSecretDataField&&) noexcept =
+  OwningRepeatedSecretDataField(const OwningRepeatedSecretDataField&) = default;
+  OwningRepeatedSecretDataField& operator=(
+      const OwningRepeatedSecretDataField&) = default;
+  OwningRepeatedSecretDataField(OwningRepeatedSecretDataField&&) noexcept =
       default;
+  OwningRepeatedSecretDataField& operator=(
+      OwningRepeatedSecretDataField&&) noexcept = default;
 
-  void ClearMember(Struct& s) const override { (s.*data_).clear(); }
+  void Clear() override { value_.clear(); }
 
-  bool ConsumeIntoMember(ParsingState& parsing_state,
-                         Struct& s) const override {
+  bool ConsumeIntoMember(ParsingState& parsing_state) override {
     absl::StatusOr<uint32_t> length = ConsumeVarintForSize(parsing_state);
     if (!length.ok()) {
       return false;
@@ -66,31 +68,30 @@ class RepeatedSecretDataField : public Field<Struct> {
     absl::string_view data = parsing_state.RemainingData().substr(0, *length);
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
     parsing_state.Advance(*length);
-    (s.*data_).push_back(crypto::tink::util::SecretDataFromStringView(data));
+    value_.push_back(crypto::tink::util::SecretDataFromStringView(data));
 #else
     CallWithCoreDumpProtection([&]() {
       absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(*length);
-      (s.*data_).push_back(SecretData(data, crc));
+      value_.push_back(SecretData(data, crc));
     });
 #endif
     return true;
   }
 
-  WireType GetWireType() const override { return WireType::kLengthDelimited; }
-  int GetFieldNumber() const override { return field_number_; }
-
-  absl::Status SerializeWithTagInto(SerializationState& serialization_state,
-                                    const Struct& values) const override {
-    for (const SecretData& secret_data : values.*data_) {
-      absl::Status status = SerializeWireTypeAndFieldNumber(
-          GetWireType(), GetFieldNumber(), serialization_state);
-      if (!status.ok()) {
-        return status;
+  absl::Status SerializeWithTagInto(
+      SerializationState& serialization_state) const override {
+    for (const SecretData& secret_data : value_) {
+      if (absl::Status result = SerializeWireTypeAndFieldNumber(
+              WireType::kLengthDelimited, FieldNumber(), serialization_state);
+          !result.ok()) {
+        return result;
       }
       absl::string_view data_view = util::SecretDataAsStringView(secret_data);
-      absl::Status s = SerializeVarint(data_view.size(), serialization_state);
-      if (!s.ok()) {
-        return s;
+
+      if (absl::Status result =
+              SerializeVarint(data_view.size(), serialization_state);
+          !result.ok()) {
+        return result;
       }
       if (serialization_state.GetBuffer().size() < data_view.size()) {
         return absl::InvalidArgumentError(absl::StrCat(
@@ -110,49 +111,15 @@ class RepeatedSecretDataField : public Field<Struct> {
     }
     return absl::OkStatus();
   }
-
-  size_t GetSerializedSizeIncludingTag(const Struct& values) const override {
+  size_t GetSerializedSizeIncludingTag() const override {
     size_t total_size = 0;
-    for (const SecretData& secret_data : values.*data_) {
+    for (const SecretData& secret_data : value_) {
       size_t cur_size = secret_data.size();
-      total_size +=
-          WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
-          VarintLength(cur_size) + cur_size;
+      total_size += WireTypeAndFieldNumberLength(WireType::kLengthDelimited,
+                                                 FieldNumber()) +
+                    VarintLength(cur_size) + cur_size;
     }
     return total_size;
-  }
-
- private:
-  std::vector<SecretData> Struct::* data_;
-  int field_number_;
-};
-
-// OwningRepeatedSecretDataField is a Field that owns a vector of SecretData.
-// It is used to represent a repeated field of SecretData in a proto message.
-class OwningRepeatedSecretDataField : public OwningField {
- public:
-  explicit OwningRepeatedSecretDataField(int field_number)
-      : OwningField(field_number, WireType::kLengthDelimited),
-        field_(field_number, &OwningRepeatedSecretDataField::value_) {}
-
-  // Copyable and movable.
-  OwningRepeatedSecretDataField(const OwningRepeatedSecretDataField&) = default;
-  OwningRepeatedSecretDataField& operator=(
-      const OwningRepeatedSecretDataField&) = default;
-  OwningRepeatedSecretDataField(OwningRepeatedSecretDataField&&) noexcept =
-      default;
-  OwningRepeatedSecretDataField& operator=(
-      OwningRepeatedSecretDataField&&) noexcept = default;
-
-  void Clear() override { field_.ClearMember(*this); }
-  bool ConsumeIntoMember(ParsingState& serialized) override {
-    return field_.ConsumeIntoMember(serialized, *this);
-  }
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    return field_.SerializeWithTagInto(out, *this);
-  }
-  size_t GetSerializedSizeIncludingTag() const override {
-    return field_.GetSerializedSizeIncludingTag(*this);
   }
 
   const std::vector<SecretData>& value() const { return value_; }
@@ -160,7 +127,6 @@ class OwningRepeatedSecretDataField : public OwningField {
 
  private:
   std::vector<SecretData> value_;
-  RepeatedSecretDataField<OwningRepeatedSecretDataField> field_;
 };
 
 }  // namespace proto_parsing

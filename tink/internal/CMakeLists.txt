@@ -1544,15 +1544,12 @@ tink_cc_library(
   SRCS
     proto_parser_presence_fields.h
   DEPS
-    tink::internal::proto_parser_fields
     tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     absl::status
     absl::statusor
-    absl::string_view
     absl::optional
-    absl::span
 )
 
 tink_cc_test(
@@ -1560,16 +1557,14 @@ tink_cc_test(
   SRCS
     proto_parser_presence_fields_test.cc
   DEPS
-    tink::internal::proto_parser_fields
     tink::internal::proto_parser_presence_fields
     tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
     gmock
     absl::strings
     absl::string_view
     absl::optional
     absl::span
-    tink::core::secret_data
-    tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
 )
@@ -1785,44 +1780,6 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME proto_parser_message_field_with_presence
-  SRCS
-    proto_parser_message_field_with_presence.h
-  DEPS
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_helpers
-    tink::internal::proto_parsing_low_level_parser
-    absl::status
-    absl::statusor
-    absl::strings
-    absl::string_view
-    absl::optional
-    absl::span
-)
-
-tink_cc_test(
-  NAME proto_parser_message_field_with_presence_test
-  SRCS
-    proto_parser_message_field_with_presence_test.cc
-  DEPS
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_message_field_with_presence
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_low_level_parser
-    gmock
-    absl::btree
-    absl::crc32c
-    absl::strings
-    absl::string_view
-    absl::optional
-    absl::span
-    tink::internal::testing::field_with_number
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
-tink_cc_library(
   NAME tink_proto_structs
   SRCS
     tink_proto_structs.cc
@@ -1893,7 +1850,6 @@ tink_cc_library(
     proto_parser_repeated_secret_data_field.h
   DEPS
     tink::internal::call_with_core_dump_protection
-    tink::internal::proto_parser_fields
     tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
@@ -1904,6 +1860,7 @@ tink_cc_library(
     absl::strings
     absl::string_view
     tink::core::secret_data
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -1913,6 +1870,7 @@ tink_cc_test(
   DEPS
     tink::internal::proto_parser_repeated_secret_data_field
     tink::internal::proto_parser_state
+    tink::internal::proto_parsing_helpers
     gmock
     absl::crc32c
     absl::strings
@@ -2055,42 +2013,6 @@ tink_cc_test(
     tink::util::test_util
   TAGS
     exclude_if_openssl
-)
-
-tink_cc_library(
-  NAME proto_parser_repeated_message_field
-  SRCS
-    proto_parser_repeated_message_field.h
-  DEPS
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_helpers
-    tink::internal::proto_parsing_low_level_parser
-    absl::status
-    absl::statusor
-    absl::strings
-    absl::string_view
-    absl::span
-)
-
-tink_cc_test(
-  NAME proto_parser_repeated_message_field_test
-  SRCS
-    proto_parser_repeated_message_field_test.cc
-  DEPS
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_repeated_message_field
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_low_level_parser
-    gmock
-    absl::btree
-    absl::crc32c
-    absl::strings
-    absl::string_view
-    absl::span
-    tink::internal::testing::field_with_number
-    tink::util::test_matchers
-    tink::util::test_util
 )
 
 tink_cc_library(

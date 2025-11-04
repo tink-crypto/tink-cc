@@ -22,10 +22,7 @@
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "absl/types/span.h"
-#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
@@ -35,92 +32,46 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-template <typename Struct>
-class Uint32FieldWithPresence : public Field<Struct> {
- public:
-  explicit Uint32FieldWithPresence(int field_number,
-                                   absl::optional<uint32_t> Struct::*value)
-      : value_(value), field_number_(field_number) {}
-
-  // Copyable and movable.
-  Uint32FieldWithPresence(const Uint32FieldWithPresence&) = default;
-  Uint32FieldWithPresence& operator=(const Uint32FieldWithPresence&) = default;
-  Uint32FieldWithPresence(Uint32FieldWithPresence&&) noexcept = default;
-  Uint32FieldWithPresence& operator=(Uint32FieldWithPresence&&) noexcept =
-      default;
-
-  void ClearMember(Struct& s) const override { (s.*value_).reset(); }
-
-  bool ConsumeIntoMember(ParsingState& serialized, Struct& s) const override {
-    absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
-    if (!result.ok()) {
-      return false;
-    }
-    s.*value_ = *result;
-    return true;
-  }
-
-  WireType GetWireType() const override { return WireType::kVarint; }
-  int GetFieldNumber() const override { return field_number_; }
-
-  absl::Status SerializeWithTagInto(SerializationState& out,
-                             const Struct& values) const override {
-    if (!RequiresSerialization(values)) {
-      return absl::OkStatus();
-    }
-    absl::Status status =
-        SerializeWireTypeAndFieldNumber(GetWireType(), GetFieldNumber(), out);
-    if (!status.ok()) {
-      return status;
-    }
-    if (!(values.*value_).has_value()) {
-      return absl::InvalidArgumentError(
-          "Must not call SerializeInto on absent Uint32FieldWithPresence");
-    }
-    return SerializeVarint(*(values.*value_), out);
-  }
-
-  size_t GetSerializedSizeIncludingTag(const Struct& values) const override {
-    if (!RequiresSerialization(values)) {
-      return 0;
-    }
-    if (!(values.*value_).has_value()) {
-      // We should never get here.
-      return 0;
-    }
-    return WireTypeAndFieldNumberLength(GetWireType(), GetFieldNumber()) +
-           VarintLength(*(values.*value_));
-  }
-
- private:
-  bool RequiresSerialization(const Struct& values) const {
-    return (values.*value_).has_value();
-  }
-
-  absl::optional<uint32_t> Struct::*value_;
-  int field_number_;
-};
-
 class OptionalUint32Field final : public OwningField {
  public:
   explicit OptionalUint32Field(uint32_t field_number)
-      : OwningField(field_number, WireType::kVarint),
-        field_(field_number, &OptionalUint32Field::value_) {}
+      : OwningField(field_number, WireType::kVarint) {}
+
   // Copyable and movable.
   OptionalUint32Field(const OptionalUint32Field&) = default;
   OptionalUint32Field& operator=(const OptionalUint32Field&) = default;
   OptionalUint32Field(OptionalUint32Field&&) noexcept = default;
   OptionalUint32Field& operator=(OptionalUint32Field&&) noexcept = default;
 
-  void Clear() override { field_.ClearMember(*this); }
+  void Clear() override { value_.reset(); }
+
   bool ConsumeIntoMember(ParsingState& serialized) override {
-    return field_.ConsumeIntoMember(serialized, *this);
+    absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
+    if (!result.ok()) {
+      return false;
+    }
+    value_ = *result;
+    return true;
   }
+
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    return field_.SerializeWithTagInto(out, *this);
+    if (!value_.has_value()) {
+      return absl::OkStatus();
+    }
+    absl::Status status =
+        SerializeWireTypeAndFieldNumber(WireType::kVarint, FieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
+    return SerializeVarint(*value_, out);
   }
+
   size_t GetSerializedSizeIncludingTag() const override {
-    return field_.GetSerializedSizeIncludingTag(*this);
+    if (!value_.has_value()) {
+      return 0;
+    }
+    return WireTypeAndFieldNumberLength(WireType::kVarint, FieldNumber()) +
+           VarintLength(*value_);
   }
 
   absl::optional<uint32_t> value() const { return value_; }
@@ -128,7 +79,6 @@ class OptionalUint32Field final : public OwningField {
 
  private:
   absl::optional<uint32_t> value_;
-  Uint32FieldWithPresence<OptionalUint32Field> field_;
 };
 
 }  // namespace proto_parsing

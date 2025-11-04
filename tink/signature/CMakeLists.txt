@@ -1855,6 +1855,7 @@ tink_cc_library(
     tink::signature::signature_public_key
     absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -1862,8 +1863,6 @@ tink_cc_library(
     tink::core::key
     tink::core::partial_key_access_token
     tink::internal::output_prefix_util
-    tink::util::status
-    tink::util::statusor
   TAGS
     exclude_if_openssl
 )
@@ -1876,7 +1875,8 @@ tink_cc_test(
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_public_key
     gmock
-    absl::check
+    absl::absl_check
+    absl::absl_log
     absl::status
     absl::strings
     absl::optional
@@ -1885,7 +1885,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::internal::secret_buffer
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl

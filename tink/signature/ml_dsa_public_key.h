@@ -22,13 +22,13 @@
 #include <string>
 
 #include "absl/base/attributes.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/signature_public_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

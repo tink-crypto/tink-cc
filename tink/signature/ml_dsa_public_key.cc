@@ -19,14 +19,15 @@
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "openssl/mldsa.h"
 #include "tink/internal/output_prefix_util.h"
 #include "tink/key.h"
+#include "tink/partial_key_access_token.h"
 #include "tink/signature/ml_dsa_parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -68,17 +69,27 @@ absl::StatusOr<MlDsaPublicKey> MlDsaPublicKey::Create(
         "requirement");
   }
 
-  if (parameters.GetInstance() != MlDsaParameters::Instance::kMlDsa65) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid ML-DSA instance. Only ML-DSA-65 is "
-                        "currently supported.");
-  }
-
-  if (public_key_bytes.size() != MLDSA65_PUBLIC_KEY_BYTES) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        absl::StrCat("Invalid ML-DSA public key size. Only ",
-                                     MLDSA65_PUBLIC_KEY_BYTES,
-                                     "-byte keys are currently supported."));
+  switch (parameters.GetInstance()) {
+    case MlDsaParameters::Instance::kMlDsa65: {
+      if (public_key_bytes.size() != MLDSA65_PUBLIC_KEY_BYTES) {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "Invalid ML-DSA public key size. Only ", MLDSA65_PUBLIC_KEY_BYTES,
+            "-byte keys are currently supported for ML-DSA-65."));
+      }
+      break;
+    }
+    case MlDsaParameters::Instance::kMlDsa87: {
+      if (public_key_bytes.size() != MLDSA87_PUBLIC_KEY_BYTES) {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "Invalid ML-DSA public key size. Only ", MLDSA87_PUBLIC_KEY_BYTES,
+            "-byte keys are currently supported for ML-DSA-87."));
+      }
+      break;
+    }
+    default:
+      return absl::InvalidArgumentError(
+          "Invalid ML-DSA instance. Only ML-DSA-65 and ML-DSA-87 are"
+          "currently supported.");
   }
 
   absl::StatusOr<std::string> output_prefix =

@@ -27,10 +27,9 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class ProtoAesGcmKeyFormat
-    : public proto_parsing::Message<ProtoAesGcmKeyFormat> {
+class AesGcmKeyFormatTP : public proto_parsing::Message<AesGcmKeyFormatTP> {
  public:
-  ProtoAesGcmKeyFormat() = default;
+  AesGcmKeyFormatTP() = default;
 
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }

@@ -237,8 +237,7 @@ absl::StatusOr<JwtHmacParameters> ToParameters(
 
 absl::StatusOr<JwtHmacParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::ProtoKeyTemplate& key_template =
-      serialization.GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtHmacParameters.");

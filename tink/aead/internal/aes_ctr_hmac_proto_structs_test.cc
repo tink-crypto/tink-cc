@@ -20,43 +20,36 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/internal/common_proto_enums.h"
 #include "tink/internal/testing/field_with_number.h"
 #include "tink/mac/internal/hmac_proto_structs.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
-#include "tink/util/test_util.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
-
-using ::crypto::tink::test::IsOk;
-using ::crypto::tink::test::IsOkAndHolds;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
-using ::testing::Not;
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrParams) {
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrParamsTP) {
   const std::string serialized_aes_ctr_params =
       proto_testing::FieldWithNumber(1).IsVarint(16);
 
-  ProtoAesCtrParams params;
+  AesCtrParamsTP params;
   ASSERT_THAT(params.ParseFromString(serialized_aes_ctr_params), IsTrue());
   EXPECT_THAT(params.iv_size(), Eq(16));
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrParamsInvalid) {
-  ProtoAesCtrParams params;
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrParamsInvalidTP) {
+  AesCtrParamsTP params;
   EXPECT_THAT(params.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrParams) {
-  ProtoAesCtrParams params;
+TEST(ProtoAesCtrMessagesTest, SerializeAesCtrParamsTP) {
+  AesCtrParamsTP params;
   params.set_iv_size(16);
 
   auto serialized_aes_ctr_params = params.SerializeAsSecretData();
@@ -64,26 +57,26 @@ TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrParams) {
               Eq(proto_testing::FieldWithNumber(1).IsVarint(16)));
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrKeyFormat) {
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrKeyFormatTP) {
   const std::string serialized_aes_ctr_key_format =
       absl::StrCat(proto_testing::FieldWithNumber(1).IsSubMessage(
                        {proto_testing::FieldWithNumber(1).IsVarint(12)}),
                    proto_testing::FieldWithNumber(2).IsVarint(32));
 
-  ProtoAesCtrKeyFormat key_format;
+  AesCtrKeyFormatTP key_format;
   ASSERT_THAT(key_format.ParseFromString(serialized_aes_ctr_key_format),
               IsTrue());
   EXPECT_THAT(key_format.params().iv_size(), Eq(12));
   EXPECT_THAT(key_format.key_size(), Eq(32));
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrKeyFormatInvalid) {
-  ProtoAesCtrKeyFormat key_format;
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrKeyFormatInvalidTP) {
+  AesCtrKeyFormatTP key_format;
   EXPECT_THAT(key_format.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrKeyFormat) {
-  ProtoAesCtrKeyFormat key_format;
+TEST(ProtoAesCtrMessagesTest, SerializeAesCtrKeyFormatTP) {
+  AesCtrKeyFormatTP key_format;
   key_format.mutable_params()->set_iv_size(12);
   key_format.set_key_size(32);
 
@@ -98,11 +91,11 @@ TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrKeyFormat) {
 }
 
 std::string GetSerializedAesCtrHmacAeadKeyFormat() {
-  ProtoAesCtrKeyFormat aes_ctr_key_format;
+  AesCtrKeyFormatTP aes_ctr_key_format;
   aes_ctr_key_format.mutable_params()->set_iv_size(12);
   aes_ctr_key_format.set_key_size(16);
 
-  ProtoHmacKeyFormat hmac_key_format;
+  HmacKeyFormatTP hmac_key_format;
   hmac_key_format.mutable_params()->set_hash(HashTypeEnum::kSha256);
   hmac_key_format.mutable_params()->set_tag_size(16);
   hmac_key_format.set_key_size(32);
@@ -116,8 +109,8 @@ std::string GetSerializedAesCtrHmacAeadKeyFormat() {
                               hmac_key_format.SerializeAsSecretData()))}));
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrHmacAeadKeyFormat) {
-  ProtoAesCtrHmacAeadKeyFormat key_format;
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyFormatTP) {
+  AesCtrHmacAeadKeyFormatTP key_format;
   ASSERT_THAT(
       key_format.ParseFromString(GetSerializedAesCtrHmacAeadKeyFormat()),
       IsTrue());
@@ -130,13 +123,13 @@ TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrHmacAeadKeyFormat) {
   EXPECT_THAT(key_format.hmac_key_format().version(), Eq(1));
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrHmacAeadKeyFormatInvalid) {
-  ProtoAesCtrHmacAeadKeyFormat key_format;
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyFormatInvalidTP) {
+  AesCtrHmacAeadKeyFormatTP key_format;
   EXPECT_THAT(key_format.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrHmacAeadKeyFormat) {
-  ProtoAesCtrHmacAeadKeyFormat key_format;
+TEST(ProtoAesCtrMessagesTest, SerializeAesCtrHmacAeadKeyFormatTP) {
+  AesCtrHmacAeadKeyFormatTP key_format;
   key_format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(12);
   key_format.mutable_aes_ctr_key_format()->set_key_size(16);
   key_format.mutable_hmac_key_format()->mutable_params()->set_hash(
@@ -154,7 +147,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrHmacAeadKeyFormat) {
 }
 
 std::string GetSerializedAesCtrKey() {
-  ProtoAesCtrParams params;
+  AesCtrParamsTP params;
   params.set_iv_size(16);
   return absl::StrCat(
       proto_testing::FieldWithNumber(1).IsVarint(1),  // version
@@ -164,9 +157,9 @@ std::string GetSerializedAesCtrKey() {
           "0123456789012345"));  // key_value
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrKey) {
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrKeyTP) {
   const std::string serialized_aes_ctr_key = GetSerializedAesCtrKey();
-  ProtoAesCtrKey key;
+  AesCtrKeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_aes_ctr_key), IsTrue());
   EXPECT_THAT(key.version(), Eq(1));
   EXPECT_THAT(key.params().iv_size(), Eq(16));
@@ -174,13 +167,13 @@ TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrKey) {
               Eq("0123456789012345"));
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrKeyInvalid) {
-  ProtoAesCtrKey key;
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrKeyInvalidTP) {
+  AesCtrKeyTP key;
   EXPECT_THAT(key.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrKey) {
-  ProtoAesCtrKey key;
+TEST(ProtoAesCtrMessagesTest, SerializeAesCtrKeyTP) {
+  AesCtrKeyTP key;
   key.set_version(1);
   key.mutable_params()->set_iv_size(16);
   key.set_key_value("0123456789012345");
@@ -192,7 +185,7 @@ TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrKey) {
 }
 
 std::string GetSerializedHmacKey() {
-  ProtoHmacParams params;
+  HmacParamsTP params;
   params.set_hash(HashTypeEnum::kSha256);
   params.set_tag_size(16);
   return absl::StrCat(
@@ -211,9 +204,9 @@ std::string GetSerializedAesCtrHmacAeadKey() {
                           GetSerializedHmacKey()));  // hmac_key
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrHmacAeadKey) {
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyTP) {
   const std::string serialized_key = GetSerializedAesCtrHmacAeadKey();
-  ProtoAesCtrHmacAeadKey key;
+  AesCtrHmacAeadKeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_key), IsTrue());
   EXPECT_THAT(key.version(), Eq(1));
   EXPECT_THAT(key.aes_ctr_key().version(), Eq(1));
@@ -227,13 +220,13 @@ TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrHmacAeadKey) {
               Eq("01234567890123456789012345678901"));
 }
 
-TEST(ProtoAesCtrMessagesTest, ParseProtoAesCtrHmacAeadKeyInvalid) {
-  ProtoAesCtrHmacAeadKey key;
+TEST(ProtoAesCtrMessagesTest, ParseAesCtrHmacAeadKeyInvalidTP) {
+  AesCtrHmacAeadKeyTP key;
   EXPECT_THAT(key.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoAesCtrMessagesTest, SerializeProtoAesCtrHmacAeadKey) {
-  ProtoAesCtrHmacAeadKey key;
+TEST(ProtoAesCtrMessagesTest, SerializeAesCtrHmacAeadKeyTP) {
+  AesCtrHmacAeadKeyTP key;
   key.set_version(1);
   key.mutable_aes_ctr_key()->set_version(1);
   key.mutable_aes_ctr_key()->mutable_params()->set_iv_size(16);

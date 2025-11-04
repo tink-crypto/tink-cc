@@ -182,7 +182,7 @@ EciesAeadDemParams CreateAesCtrHmacDemParams(
     absl::optional<int> version, absl::optional<int> hmac_key_size,
     absl::optional<int> tag_size,
     absl::optional<internal::HashTypeEnum> hash_type) {
-  internal::ProtoAesCtrHmacAeadKeyFormat format;
+  internal::AesCtrHmacAeadKeyFormatTP format;
   format.mutable_aes_ctr_key_format()->set_key_size(aes_key_size.value_or(0));
   format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(
       iv_size.value_or(0));
@@ -900,8 +900,8 @@ TEST_P(EciesProtoSerializationTest, SerializeParameters) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::ProtoKeyTemplate& key_template =
-      proto_serialization->GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
               Eq(test_case.output_prefix_type));

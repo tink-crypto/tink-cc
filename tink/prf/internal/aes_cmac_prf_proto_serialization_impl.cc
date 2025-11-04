@@ -110,7 +110,7 @@ const absl::string_view kTypeUrl =
 
 absl::StatusOr<AesCmacPrfParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesCmacPrfParameters.");

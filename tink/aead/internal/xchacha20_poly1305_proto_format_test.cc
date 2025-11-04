@@ -31,21 +31,21 @@ using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
-TEST(ProtoXChaCha20Poly1305KeyFormatTest, Parse) {
+TEST(XChaCha20Poly1305KeyFormatTPTest, Parse) {
   const std::string serialized_hmac_format =
       proto_testing::FieldWithNumber(1).IsVarint(1234);
-  ProtoXChaCha20Poly1305KeyFormat format;
+  XChaCha20Poly1305KeyFormatTP format;
   ASSERT_THAT(format.ParseFromString(serialized_hmac_format), IsTrue());
   EXPECT_THAT(format.version(), Eq(1234));
 }
 
-TEST(ProtoXChaCha20Poly1305KeyFormatTest, ParseInvalid) {
-  ProtoXChaCha20Poly1305KeyFormat format;
+TEST(XChaCha20Poly1305KeyFormatTPTest, ParseInvalid) {
+  XChaCha20Poly1305KeyFormatTP format;
   EXPECT_THAT(format.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoXChaCha20Poly1305KeyFormatTest, Serialize) {
-  ProtoXChaCha20Poly1305KeyFormat format;
+TEST(XChaCha20Poly1305KeyFormatTPTest, Serialize) {
+  XChaCha20Poly1305KeyFormatTP format;
   format.set_version(1234);
 
   auto serialized_hmac_format = format.SerializeAsSecretData();

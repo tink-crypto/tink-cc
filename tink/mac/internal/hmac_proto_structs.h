@@ -33,9 +33,9 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class ProtoHmacParams : public proto_parsing::Message<ProtoHmacParams> {
+class HmacParamsTP : public proto_parsing::Message<HmacParamsTP> {
  public:
-  ProtoHmacParams() = default;
+  HmacParamsTP() = default;
 
   HashTypeEnum hash() const { return hash_.value(); }
   void set_hash(HashTypeEnum value) { hash_.set_value(value); }
@@ -52,12 +52,12 @@ class ProtoHmacParams : public proto_parsing::Message<ProtoHmacParams> {
   proto_parsing::Uint32OwningField tag_size_{2};
 };
 
-class ProtoHmacKeyFormat : public proto_parsing::Message<ProtoHmacKeyFormat> {
+class HmacKeyFormatTP : public proto_parsing::Message<HmacKeyFormatTP> {
  public:
-  ProtoHmacKeyFormat() = default;
+  HmacKeyFormatTP() = default;
 
-  const ProtoHmacParams& params() const { return params_.value(); }
-  ProtoHmacParams* mutable_params() { return params_.mutable_value(); }
+  const HmacParamsTP& params() const { return params_.value(); }
+  HmacParamsTP* mutable_params() { return params_.mutable_value(); }
 
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
@@ -73,20 +73,20 @@ class ProtoHmacKeyFormat : public proto_parsing::Message<ProtoHmacKeyFormat> {
   }
 
  private:
-  proto_parsing::MessageOwningField<ProtoHmacParams> params_{1};
+  proto_parsing::MessageOwningField<HmacParamsTP> params_{1};
   proto_parsing::Uint32OwningField key_size_{2};
   proto_parsing::Uint32OwningField version_{3};
 };
 
-class ProtoHmacKey : public proto_parsing::Message<ProtoHmacKey> {
+class HmacKeyTP : public proto_parsing::Message<HmacKeyTP> {
  public:
-  ProtoHmacKey() = default;
+  HmacKeyTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
-  const ProtoHmacParams& params() const { return params_.value(); }
-  ProtoHmacParams* mutable_params() { return params_.mutable_value(); }
+  const HmacParamsTP& params() const { return params_.value(); }
+  HmacParamsTP* mutable_params() { return params_.mutable_value(); }
 
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) {
@@ -99,7 +99,7 @@ class ProtoHmacKey : public proto_parsing::Message<ProtoHmacKey> {
 
  private:
   proto_parsing::Uint32OwningField version_{1};
-  proto_parsing::MessageOwningField<ProtoHmacParams> params_{2};
+  proto_parsing::MessageOwningField<HmacParamsTP> params_{2};
   proto_parsing::SecretDataOwningField key_value_{3};
 };
 

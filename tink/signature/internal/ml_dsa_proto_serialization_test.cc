@@ -302,8 +302,8 @@ TEST_P(MlDsaProtoSerializationTest, SerializeMlDsa65SignatureParametersWorks) {
       dynamic_cast<const internal::ProtoParametersSerialization*>(
           serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
-  const internal::ProtoKeyTemplate& key_template =
-      proto_serialization->GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template =
+      proto_serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), Eq(kPrivateTypeUrl));
   EXPECT_THAT(key_template.output_prefix_type(),
               Eq(static_cast<internal::OutputPrefixTypeEnum>(

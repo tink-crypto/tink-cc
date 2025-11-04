@@ -62,15 +62,15 @@ std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeEnum type);
 
 inline bool KeyMaterialTypeValid(int c) { return c >= 0 && c <= 4; }
 
-class ProtoKeyTemplate : public proto_parsing::Message<ProtoKeyTemplate> {
+class KeyTemplateTP : public proto_parsing::Message<KeyTemplateTP> {
  public:
-  ProtoKeyTemplate() = default;
+  KeyTemplateTP() = default;
 
   // Copyable and movable.
-  ProtoKeyTemplate(const ProtoKeyTemplate&) = default;
-  ProtoKeyTemplate& operator=(const ProtoKeyTemplate&) = default;
-  ProtoKeyTemplate(ProtoKeyTemplate&&) noexcept = default;
-  ProtoKeyTemplate& operator=(ProtoKeyTemplate&&) noexcept = default;
+  KeyTemplateTP(const KeyTemplateTP&) = default;
+  KeyTemplateTP& operator=(const KeyTemplateTP&) = default;
+  KeyTemplateTP(KeyTemplateTP&&) noexcept = default;
+  KeyTemplateTP& operator=(KeyTemplateTP&&) noexcept = default;
 
   // This is OK because it doesn't contain any secret data.
   using Message::SerializeAsString;
@@ -101,15 +101,15 @@ class ProtoKeyTemplate : public proto_parsing::Message<ProtoKeyTemplate> {
       3, &OutputPrefixTypeValid};
 };
 
-class ProtoKeyData : public proto_parsing::Message<ProtoKeyData> {
+class KeyDataTP : public proto_parsing::Message<KeyDataTP> {
  public:
-  ProtoKeyData() = default;
+  KeyDataTP() = default;
 
   // Copyable and movable.
-  ProtoKeyData(const ProtoKeyData&) = default;
-  ProtoKeyData& operator=(const ProtoKeyData&) = default;
-  ProtoKeyData(ProtoKeyData&&) noexcept = default;
-  ProtoKeyData& operator=(ProtoKeyData&&) noexcept = default;
+  KeyDataTP(const KeyDataTP&) = default;
+  KeyDataTP& operator=(const KeyDataTP&) = default;
+  KeyDataTP(KeyDataTP&&) noexcept = default;
+  KeyDataTP& operator=(KeyDataTP&&) noexcept = default;
 
   // Note: Serialization is not public, as this contains secret key material.
 

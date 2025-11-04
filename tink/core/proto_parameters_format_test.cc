@@ -147,10 +147,9 @@ TEST_F(ProtoParametersFormatTest, ParseLegacyProtoParameters) {
 }
 
 TEST_F(ProtoParametersFormatTest, ParseInvalidKeyTemplateFails) {
-  ASSERT_THAT(
-      ParseParametersFromProtoFormat("invalid_key_template").status(),
-      StatusIs(absl::StatusCode::kInvalidArgument,
-               HasSubstr("Failed to parse ProtoKeyTemplate from string")));
+  ASSERT_THAT(ParseParametersFromProtoFormat("invalid_key_template").status(),
+              StatusIs(absl::StatusCode::kInvalidArgument,
+                       HasSubstr("Failed to parse KeyTemplateTP from string")));
 }
 
 TEST_F(ProtoParametersFormatTest, ParseInvalidAesCmacKeyFormatFails) {

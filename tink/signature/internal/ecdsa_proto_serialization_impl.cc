@@ -402,8 +402,7 @@ absl::StatusOr<EcdsaParamsTP> FromParameters(
 
 absl::StatusOr<EcdsaParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::ProtoKeyTemplate& key_template =
-      serialization.GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EcdsaParameters.");

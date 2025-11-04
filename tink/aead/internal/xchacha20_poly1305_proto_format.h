@@ -27,10 +27,10 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class ProtoXChaCha20Poly1305KeyFormat
-    : public proto_parsing::Message<ProtoXChaCha20Poly1305KeyFormat> {
+class XChaCha20Poly1305KeyFormatTP
+    : public proto_parsing::Message<XChaCha20Poly1305KeyFormatTP> {
  public:
-  ProtoXChaCha20Poly1305KeyFormat() = default;
+  XChaCha20Poly1305KeyFormatTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }

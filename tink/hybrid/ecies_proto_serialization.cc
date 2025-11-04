@@ -62,7 +62,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::ProtoKeyTemplate;
+using ::crypto::tink::internal::KeyTemplateTP;
 using ::crypto::tink::internal::proto_parsing::EnumOwningField;
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
@@ -113,13 +113,13 @@ class EciesAeadDemParamsTP : public Message<EciesAeadDemParamsTP> {
   EciesAeadDemParamsTP() = default;
   using Message::SerializeAsString;
 
-  const ProtoKeyTemplate& aead_dem() const { return aead_dem_.value(); }
-  ProtoKeyTemplate* mutable_aead_dem() { return aead_dem_.mutable_value(); }
+  const KeyTemplateTP& aead_dem() const { return aead_dem_.value(); }
+  KeyTemplateTP* mutable_aead_dem() { return aead_dem_.mutable_value(); }
 
   std::array<const OwningField*, 1> GetFields() const { return {&aead_dem_}; }
 
  private:
-  MessageOwningField<ProtoKeyTemplate> aead_dem_{2};
+  MessageOwningField<KeyTemplateTP> aead_dem_{2};
 };
 
 class EciesAeadHkdfParamsTP : public Message<EciesAeadHkdfParamsTP> {
@@ -387,7 +387,7 @@ absl::StatusOr<internal::EcPointFormatEnum> ToProtoPointFormat(
 }
 
 absl::Status ValidateAesCtrHmacAeadKeyFormat(
-    const internal::ProtoAesCtrHmacAeadKeyFormat& format) {
+    const internal::AesCtrHmacAeadKeyFormatTP& format) {
   if (format.aes_ctr_key_format().params().iv_size() != 16) {
     return absl::InvalidArgumentError("IV size must be 16 bytes.");
   }
@@ -413,7 +413,7 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
     const EciesAeadDemParamsTP& proto_dem_params) {
   if (proto_dem_params.aead_dem().type_url() ==
       "type.googleapis.com/google.crypto.tink.AesGcmKey") {
-    internal::ProtoAesGcmKeyFormat key_format;
+    internal::AesGcmKeyFormatTP key_format;
     if (!key_format.ParseFromString(proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
     }
@@ -430,7 +430,7 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
   }
   if (proto_dem_params.aead_dem().type_url() ==
       "type.googleapis.com/google.crypto.tink.AesSivKey") {
-    internal::ProtoAesSivKeyFormat aes_siv_key_format;
+    internal::AesSivKeyFormatTP aes_siv_key_format;
     if (!aes_siv_key_format.ParseFromString(
             proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError(
@@ -446,7 +446,7 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
       // TODO: b/330508549 - Remove type URL exception for an existing key.
       proto_dem_params.aead_dem().type_url() ==
           "type.googleapis.com/google.crypto.tink.XChaCha20Poly1305KeyFormat") {
-    internal::ProtoXChaCha20Poly1305KeyFormat format;
+    internal::XChaCha20Poly1305KeyFormatTP format;
     if (!format.ParseFromString(proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError(
           "Failed to parse XChaCha20Poly1305Key proto");
@@ -455,7 +455,7 @@ absl::StatusOr<EciesParameters::DemId> FromProtoDemParams(
   }
   if (proto_dem_params.aead_dem().type_url() ==
       "type.googleapis.com/google.crypto.tink.AesCtrHmacAeadKey") {
-    internal::ProtoAesCtrHmacAeadKeyFormat aes_ctr_hmac_aead_key_format;
+    internal::AesCtrHmacAeadKeyFormatTP aes_ctr_hmac_aead_key_format;
     if (!aes_ctr_hmac_aead_key_format.ParseFromString(
             proto_dem_params.aead_dem().value())) {
       return absl::InvalidArgumentError(
@@ -494,7 +494,7 @@ absl::StatusOr<EciesAeadDemParamsTP> ToProtoDemParams(
   if (dem_id == EciesParameters::DemId::kAes128GcmRaw ||
       dem_id == EciesParameters::DemId::kAes256GcmRaw) {
     int key_size = (dem_id == EciesParameters::DemId::kAes128GcmRaw) ? 16 : 32;
-    internal::ProtoAesGcmKeyFormat key_format;
+    internal::AesGcmKeyFormatTP key_format;
     key_format.set_version(0);
     key_format.set_key_size(key_size);
     return CreateEciesAeadDemParamsStruct(
@@ -502,7 +502,7 @@ absl::StatusOr<EciesAeadDemParamsTP> ToProtoDemParams(
         key_format.SerializeAsString());
   }
   if (dem_id == EciesParameters::DemId::kAes256SivRaw) {
-    internal::ProtoAesSivKeyFormat format;
+    internal::AesSivKeyFormatTP format;
     format.set_version(0);
     format.set_key_size(64);
     return CreateEciesAeadDemParamsStruct(
@@ -510,7 +510,7 @@ absl::StatusOr<EciesAeadDemParamsTP> ToProtoDemParams(
         format.SerializeAsString());
   }
   if (dem_id == EciesParameters::DemId::kXChaCha20Poly1305Raw) {
-    internal::ProtoXChaCha20Poly1305KeyFormat format;
+    internal::XChaCha20Poly1305KeyFormatTP format;
     format.set_version(0);
     std::string serialized_proto = format.SerializeAsString();
     return CreateEciesAeadDemParamsStruct(
@@ -523,7 +523,7 @@ absl::StatusOr<EciesAeadDemParamsTP> ToProtoDemParams(
         (dem_id == EciesParameters::DemId::kAes128CtrHmacSha256Raw) ? 16 : 32;
     const int tag_size = key_size;  // Allowed DEMs have matching key/tag sizes.
 
-    internal::ProtoAesCtrHmacAeadKeyFormat format;
+    internal::AesCtrHmacAeadKeyFormatTP format;
     format.mutable_aes_ctr_key_format()->set_key_size(key_size);
     format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(16);
     format.mutable_hmac_key_format()->set_version(0);
@@ -699,8 +699,7 @@ absl::StatusOr<EciesAeadHkdfPublicKeyTP> FromPublicKey(
 
 absl::StatusOr<EciesParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::ProtoKeyTemplate& key_template =
-      serialization.GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing EciesParameters.");

@@ -385,9 +385,9 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmac_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesCtrHmacAeadKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::AesCtrHmacAeadKey> proto_key =
       AesCtrHmacAeadKeyManager().DeriveKey(
@@ -442,9 +442,9 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcm_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesGcmKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::AesGcmKey> proto_key =
       AesGcmKeyManager().DeriveKey(key_format,
@@ -484,9 +484,9 @@ TEST_F(KeyDeriversRfcVectorTest, XChaCha20Poly1305_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::XChaCha20Poly1305KeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::XChaCha20Poly1305Key> proto_key =
       XChaCha20Poly1305KeyManager().DeriveKey(
@@ -525,9 +525,9 @@ TEST_F(KeyDeriversRfcVectorTest, AesSiv_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesSivKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::AesSivKey> proto_key =
       AesSivKeyManager().DeriveKey(key_format,
@@ -568,9 +568,9 @@ TEST_F(KeyDeriversRfcVectorTest, Hmac_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::HmacKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::HmacKey> proto_key =
       HmacKeyManager().DeriveKey(key_format,
@@ -610,9 +610,9 @@ TEST_F(KeyDeriversRfcVectorTest, AesCmacPrf_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesCmacPrfKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::AesCmacPrfKey> proto_key =
       AesCmacPrfKeyManager().DeriveKey(key_format,
@@ -654,9 +654,9 @@ TEST_F(KeyDeriversRfcVectorTest, HkdfPrf_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::HkdfPrfKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::HkdfPrfKey> proto_key =
       HkdfPrfKeyManager().DeriveKey(key_format,
@@ -695,9 +695,9 @@ TEST_F(KeyDeriversRfcVectorTest, HmacPrf_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::HmacPrfKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::HmacPrfKey> proto_key =
       HmacPrfKeyManager().DeriveKey(key_format,
@@ -742,9 +742,9 @@ TEST_F(KeyDeriversRfcVectorTest, Ecdsa) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::EcdsaKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::EcdsaPrivateKey> proto_key =
       EcdsaSignKeyManager().DeriveKey(key_format,
@@ -779,9 +779,9 @@ TEST_F(KeyDeriversRfcVectorTest, Ed25519) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::Ed25519KeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::Ed25519PrivateKey> proto_key =
       Ed25519SignKeyManager().DeriveKey(key_format,
@@ -836,9 +836,9 @@ TEST_F(KeyDeriversRfcVectorTest, AesCtrHmacStreaming_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesCtrHmacStreamingKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::AesCtrHmacStreamingKey> proto_key =
       AesCtrHmacStreamingKeyManager().DeriveKey(
@@ -890,9 +890,9 @@ TEST_F(KeyDeriversRfcVectorTest, AesGcmHkdfStreaming_GlobalRegistry) {
       dynamic_cast<const ProtoParametersSerialization*>(serialization->get());
   ASSERT_THAT(proto_serialization, NotNull());
   google::crypto::tink::AesGcmHkdfStreamingKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(
-                  proto_serialization->GetProtoKeyTemplate().value()),
-              IsTrue());
+  ASSERT_THAT(
+      key_format.ParseFromString(proto_serialization->GetKeyTemplate().value()),
+      IsTrue());
 
   absl::StatusOr<google::crypto::tink::AesGcmHkdfStreamingKey> proto_key =
       AesGcmHkdfStreamingKeyManager().DeriveKey(

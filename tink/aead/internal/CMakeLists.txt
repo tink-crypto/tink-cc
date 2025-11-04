@@ -1178,12 +1178,9 @@ tink_cc_test(
   DEPS
     tink::aead::internal::aes_ctr_hmac_proto_structs
     gmock
-    absl::statusor
     absl::strings
     tink::internal::common_proto_enums
     tink::internal::testing::field_with_number
     tink::mac::internal::hmac_proto_structs
     tink::util::secret_data
-    tink::util::test_matchers
-    tink::util::test_util
 )

@@ -31,9 +31,9 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class ProtoAesCtrParams : public proto_parsing::Message<ProtoAesCtrParams> {
+class AesCtrParamsTP : public proto_parsing::Message<AesCtrParamsTP> {
  public:
-  ProtoAesCtrParams() = default;
+  AesCtrParamsTP() = default;
 
   uint32_t iv_size() const { return iv_size_.value(); }
   void set_iv_size(uint32_t value) { iv_size_.set_value(value); }
@@ -46,12 +46,11 @@ class ProtoAesCtrParams : public proto_parsing::Message<ProtoAesCtrParams> {
   proto_parsing::Uint32OwningField iv_size_{1};
 };
 
-class ProtoAesCtrKeyFormat
-    : public proto_parsing::Message<ProtoAesCtrKeyFormat> {
+class AesCtrKeyFormatTP : public proto_parsing::Message<AesCtrKeyFormatTP> {
  public:
-  ProtoAesCtrKeyFormat() = default;
-  ProtoAesCtrParams* mutable_params() { return params_.mutable_value(); }
-  const ProtoAesCtrParams& params() const { return params_.value(); }
+  AesCtrKeyFormatTP() = default;
+  AesCtrParamsTP* mutable_params() { return params_.mutable_value(); }
+  const AesCtrParamsTP& params() const { return params_.value(); }
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
   std::array<const proto_parsing::OwningField*, 2> GetFields() const {
@@ -59,24 +58,24 @@ class ProtoAesCtrKeyFormat
   }
 
  private:
-  proto_parsing::MessageOwningField<ProtoAesCtrParams> params_{1};
+  proto_parsing::MessageOwningField<AesCtrParamsTP> params_{1};
   proto_parsing::Uint32OwningField key_size_{2};
 };
 
-class ProtoAesCtrHmacAeadKeyFormat
-    : public proto_parsing::Message<ProtoAesCtrHmacAeadKeyFormat> {
+class AesCtrHmacAeadKeyFormatTP
+    : public proto_parsing::Message<AesCtrHmacAeadKeyFormatTP> {
  public:
-  ProtoAesCtrHmacAeadKeyFormat() = default;
-  ProtoAesCtrKeyFormat* mutable_aes_ctr_key_format() {
+  AesCtrHmacAeadKeyFormatTP() = default;
+  AesCtrKeyFormatTP* mutable_aes_ctr_key_format() {
     return aes_ctr_key_format_.mutable_value();
   }
-  const ProtoAesCtrKeyFormat& aes_ctr_key_format() const {
+  const AesCtrKeyFormatTP& aes_ctr_key_format() const {
     return aes_ctr_key_format_.value();
   }
-  ProtoHmacKeyFormat* mutable_hmac_key_format() {
+  HmacKeyFormatTP* mutable_hmac_key_format() {
     return hmac_key_format_.mutable_value();
   }
-  const ProtoHmacKeyFormat& hmac_key_format() const {
+  const HmacKeyFormatTP& hmac_key_format() const {
     return hmac_key_format_.value();
   }
   std::array<const proto_parsing::OwningField*, 2> GetFields() const {
@@ -85,18 +84,17 @@ class ProtoAesCtrHmacAeadKeyFormat
   using Message::SerializeAsString;
 
  private:
-  proto_parsing::MessageOwningField<ProtoAesCtrKeyFormat> aes_ctr_key_format_{
-      1};
-  proto_parsing::MessageOwningField<ProtoHmacKeyFormat> hmac_key_format_{2};
+  proto_parsing::MessageOwningField<AesCtrKeyFormatTP> aes_ctr_key_format_{1};
+  proto_parsing::MessageOwningField<HmacKeyFormatTP> hmac_key_format_{2};
 };
 
-class ProtoAesCtrKey : public proto_parsing::Message<ProtoAesCtrKey> {
+class AesCtrKeyTP : public proto_parsing::Message<AesCtrKeyTP> {
  public:
-  ProtoAesCtrKey() = default;
+  AesCtrKeyTP() = default;
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
-  ProtoAesCtrParams* mutable_params() { return params_.mutable_value(); }
-  const ProtoAesCtrParams& params() const { return params_.value(); }
+  AesCtrParamsTP* mutable_params() { return params_.mutable_value(); }
+  const AesCtrParamsTP& params() const { return params_.value(); }
   const SecretData& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
@@ -107,28 +105,27 @@ class ProtoAesCtrKey : public proto_parsing::Message<ProtoAesCtrKey> {
 
  private:
   proto_parsing::Uint32OwningField version_{1};
-  proto_parsing::MessageOwningField<ProtoAesCtrParams> params_{2};
+  proto_parsing::MessageOwningField<AesCtrParamsTP> params_{2};
   proto_parsing::SecretDataOwningField key_value_{3};
 };
 
-class ProtoAesCtrHmacAeadKey
-    : public proto_parsing::Message<ProtoAesCtrHmacAeadKey> {
+class AesCtrHmacAeadKeyTP : public proto_parsing::Message<AesCtrHmacAeadKeyTP> {
  public:
-  ProtoAesCtrHmacAeadKey() = default;
+  AesCtrHmacAeadKeyTP() = default;
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
-  ProtoAesCtrKey* mutable_aes_ctr_key() { return aes_ctr_key_.mutable_value(); }
-  const ProtoAesCtrKey& aes_ctr_key() const { return aes_ctr_key_.value(); }
-  ProtoHmacKey* mutable_hmac_key() { return hmac_key_.mutable_value(); }
-  const ProtoHmacKey& hmac_key() const { return hmac_key_.value(); }
+  AesCtrKeyTP* mutable_aes_ctr_key() { return aes_ctr_key_.mutable_value(); }
+  const AesCtrKeyTP& aes_ctr_key() const { return aes_ctr_key_.value(); }
+  HmacKeyTP* mutable_hmac_key() { return hmac_key_.mutable_value(); }
+  const HmacKeyTP& hmac_key() const { return hmac_key_.value(); }
   std::array<const proto_parsing::OwningField*, 3> GetFields() const {
     return {&version_, &aes_ctr_key_, &hmac_key_};
   }
 
  private:
   proto_parsing::Uint32OwningField version_{1};
-  proto_parsing::MessageOwningField<ProtoAesCtrKey> aes_ctr_key_{2};
-  proto_parsing::MessageOwningField<ProtoHmacKey> hmac_key_{3};
+  proto_parsing::MessageOwningField<AesCtrKeyTP> aes_ctr_key_{2};
+  proto_parsing::MessageOwningField<HmacKeyTP> hmac_key_{3};
 };
 
 }  // namespace internal

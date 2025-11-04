@@ -179,11 +179,11 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 
 absl::StatusOr<HkdfPrfParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  if (serialization.GetProtoKeyTemplate().type_url() != kTypeUrl) {
+  if (serialization.GetKeyTemplate().type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing HkdfPrfParameters.");
   }
-  if (serialization.GetProtoKeyTemplate().output_prefix_type() !=
+  if (serialization.GetKeyTemplate().output_prefix_type() !=
       OutputPrefixTypeEnum::kRaw) {
     return absl::InvalidArgumentError(
         "Output prefix type must be RAW for HkdfPrfParameters.");
@@ -191,7 +191,7 @@ absl::StatusOr<HkdfPrfParameters> ParseParameters(
 
   HkdfPrfKeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(
-          serialization.GetProtoKeyTemplate().value())) {
+          serialization.GetKeyTemplate().value())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Failed to parse HkdfPrfKeyFormat proto");
   }

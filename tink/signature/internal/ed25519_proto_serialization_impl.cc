@@ -173,7 +173,7 @@ absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
 
 absl::StatusOr<Ed25519Parameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const ProtoKeyTemplate key_template = serialization.GetProtoKeyTemplate();
+  const KeyTemplateTP key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing Ed25519Parameters.");

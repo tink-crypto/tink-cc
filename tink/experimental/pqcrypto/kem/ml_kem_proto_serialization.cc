@@ -247,8 +247,7 @@ absl::StatusOr<MlKemParamsTP> FromParameters(
 
 absl::StatusOr<MlKemParameters> ParseParameters(
     const internal::ProtoParametersSerialization& serialization) {
-  const internal::ProtoKeyTemplate& key_template =
-      serialization.GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
 
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(

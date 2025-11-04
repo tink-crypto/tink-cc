@@ -32,15 +32,15 @@
 namespace crypto {
 namespace tink {
 
-using ::crypto::tink::internal::ProtoKeyTemplate;
+using ::crypto::tink::internal::KeyTemplateTP;
 
 absl::StatusOr<std::string> SerializeParametersToProtoFormat(
     const Parameters& parameters) {
   const internal::LegacyProtoParameters* legacy_proto_params =
       dynamic_cast<const internal::LegacyProtoParameters*>(&parameters);
   if (legacy_proto_params != nullptr) {
-    const ProtoKeyTemplate& key_template =
-        legacy_proto_params->Serialization().GetProtoKeyTemplate();
+    const KeyTemplateTP& key_template =
+        legacy_proto_params->Serialization().GetKeyTemplate();
     return key_template.SerializeAsString();
   }
 
@@ -60,17 +60,16 @@ absl::StatusOr<std::string> SerializeParametersToProtoFormat(
                         "Failed to serialize proto parameters.");
   }
 
-  const ProtoKeyTemplate& key_template =
-      proto_serialization->GetProtoKeyTemplate();
+  const KeyTemplateTP& key_template = proto_serialization->GetKeyTemplate();
   return key_template.SerializeAsString();
 }
 
 absl::StatusOr<std::unique_ptr<Parameters>> ParseParametersFromProtoFormat(
     absl::string_view serialized_parameters) {
-  ProtoKeyTemplate key_template;
+  KeyTemplateTP key_template;
   if (!key_template.ParseFromString(serialized_parameters)) {
     return absl::InvalidArgumentError(
-        "Failed to parse ProtoKeyTemplate from string.");
+        "Failed to parse KeyTemplateTP from string.");
   }
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =

@@ -54,11 +54,9 @@ class ProtoParametersSerialization : public Serialization {
   // Creates a `ProtoParametersSerialization` object from a key template
   // proto message.
   static absl::StatusOr<ProtoParametersSerialization> Create(
-      const ProtoKeyTemplate& key_template);
+      const KeyTemplateTP& key_template);
 
-  const ProtoKeyTemplate& GetProtoKeyTemplate() const {
-    return proto_key_template_;
-  }
+  const KeyTemplateTP& GetKeyTemplate() const { return proto_key_template_; }
 
   absl::string_view ObjectIdentifier() const override {
     return proto_key_template_.type_url();
@@ -71,7 +69,7 @@ class ProtoParametersSerialization : public Serialization {
   friend class LegacyProtoParameters;
   friend class LegacyProtoParametersTest;
 
-  explicit ProtoParametersSerialization(ProtoKeyTemplate proto_key_template)
+  explicit ProtoParametersSerialization(KeyTemplateTP proto_key_template)
       : proto_key_template_(std::move(proto_key_template)) {}
 
   // Returns `true` if this `ProtoParametersSerialization` object is equal to
@@ -81,7 +79,7 @@ class ProtoParametersSerialization : public Serialization {
   bool EqualsWithPotentialFalseNegatives(
       const ProtoParametersSerialization& other) const;
 
-  ProtoKeyTemplate proto_key_template_;
+  KeyTemplateTP proto_key_template_;
 };
 
 }  // namespace internal

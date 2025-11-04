@@ -23,7 +23,6 @@
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_owning_field.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -35,9 +34,9 @@ using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 // Proto message com.google.crypto.tink.AesSivKeyFormat.
-class ProtoAesSivKeyFormat : public Message<ProtoAesSivKeyFormat> {
+class AesSivKeyFormatTP : public Message<AesSivKeyFormatTP> {
  public:
-  ProtoAesSivKeyFormat() = default;
+  AesSivKeyFormatTP() = default;
   using Message::SerializeAsString;
 
   uint32_t key_size() const { return key_size_.value(); }

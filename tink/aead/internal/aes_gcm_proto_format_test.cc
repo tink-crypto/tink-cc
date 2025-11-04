@@ -33,23 +33,23 @@ using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
-TEST(ProtoAesGcmKeyFormatTest, Parse) {
+TEST(AesGcmKeyFormatTPTest, Parse) {
   const std::string serialized_format =
       absl::StrCat(proto_testing::FieldWithNumber(2).IsVarint(32),
                    proto_testing::FieldWithNumber(3).IsVarint(1234));
-  ProtoAesGcmKeyFormat format;
+  AesGcmKeyFormatTP format;
   ASSERT_THAT(format.ParseFromString(serialized_format), IsTrue());
   EXPECT_THAT(format.key_size(), Eq(32));
   EXPECT_THAT(format.version(), Eq(1234));
 }
 
-TEST(ProtoAesGcmKeyFormatTest, ParseInvalid) {
-  ProtoAesGcmKeyFormat format;
+TEST(AesGcmKeyFormatTPTest, ParseInvalid) {
+  AesGcmKeyFormatTP format;
   EXPECT_THAT(format.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoAesGcmKeyFormatTest, Serialize) {
-  ProtoAesGcmKeyFormat format;
+TEST(AesGcmKeyFormatTPTest, Serialize) {
+  AesGcmKeyFormatTP format;
   format.set_version(1234);
   format.set_key_size(32);
 

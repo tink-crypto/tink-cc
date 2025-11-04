@@ -138,14 +138,13 @@ absl::Status ValidateParamsForProto(const AesGcmParameters& params) {
 
 absl::StatusOr<AesGcmParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::ProtoKeyTemplate& key_template =
-      serialization.GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing AesGcmParameters.");
   }
 
-  ProtoAesGcmKeyFormat proto_key_format;
+  AesGcmKeyFormatTP proto_key_format;
   if (!proto_key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError("Failed to parse AesGcmKey proto");
   }
@@ -180,7 +179,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return output_prefix_type.status();
   }
 
-  ProtoAesGcmKeyFormat proto_key_format;
+  AesGcmKeyFormatTP proto_key_format;
   proto_key_format.set_key_size(parameters.KeySizeInBytes());
   proto_key_format.set_version(0);
   const std::string serialized_proto = proto_key_format.SerializeAsString();

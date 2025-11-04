@@ -58,7 +58,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   ASSERT_THAT(serialization.status(), IsOk());
 
   EXPECT_THAT(serialization->ObjectIdentifier(), "type_url");
-  const ProtoKeyTemplate& key_template = serialization->GetProtoKeyTemplate();
+  const KeyTemplateTP& key_template = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), "type_url");
   EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeEnum::kRaw);
   EXPECT_THAT(key_template.value(), test_proto.SerializeAsString());
@@ -66,8 +66,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromIndividualComponents) {
   parsed_proto.ParseFromString(key_template.value());
   EXPECT_THAT(parsed_proto.num(), Eq(12345));
 
-  const ProtoKeyTemplate& proto_key_template =
-      serialization->GetProtoKeyTemplate();
+  const KeyTemplateTP& proto_key_template = serialization->GetKeyTemplate();
   EXPECT_THAT(proto_key_template.type_url(), "type_url");
   EXPECT_THAT(proto_key_template.output_prefix_type(),
               OutputPrefixTypeEnum::kRaw);
@@ -101,8 +100,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplate) {
   ASSERT_THAT(serialization.status(), IsOk());
 
   EXPECT_THAT(serialization->ObjectIdentifier(), "type_url");
-  const ProtoKeyTemplate& key_template_struct =
-      serialization->GetProtoKeyTemplate();
+  const KeyTemplateTP& key_template_struct = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template_struct.type_url(), "type_url");
   EXPECT_THAT(key_template_struct.output_prefix_type(),
               OutputPrefixTypeEnum::kTink);
@@ -129,10 +127,10 @@ TEST_F(ProtoParametersSerializationTest,
                HasSubstr("Non-printable ASCII character in type URL.")));
 }
 
-TEST_F(ProtoParametersSerializationTest, CreateFromProtoKeyTemplate) {
+TEST_F(ProtoParametersSerializationTest, CreateFromKeyTemplateTP) {
   TestProto test_proto;
   test_proto.set_num(12345);
-  ProtoKeyTemplate proto_key_template;
+  KeyTemplateTP proto_key_template;
   proto_key_template.set_value(test_proto.SerializeAsString());
   proto_key_template.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
   proto_key_template.set_type_url("type_url");
@@ -140,7 +138,7 @@ TEST_F(ProtoParametersSerializationTest, CreateFromProtoKeyTemplate) {
       ProtoParametersSerialization::Create(proto_key_template);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  const ProtoKeyTemplate& key_template = serialization->GetProtoKeyTemplate();
+  const KeyTemplateTP& key_template = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template.type_url(), "type_url");
   EXPECT_THAT(key_template.output_prefix_type(), OutputPrefixTypeEnum::kTink);
   EXPECT_THAT(key_template.value(), test_proto.SerializeAsString());
@@ -150,10 +148,10 @@ TEST_F(ProtoParametersSerializationTest, CreateFromProtoKeyTemplate) {
 }
 
 TEST_F(ProtoParametersSerializationTest,
-       CreateFromProtoKeyTemplateWithNonPrintableAsciiTypeURLFails) {
+       CreateFromKeyTemplateTPWithNonPrintableAsciiTypeURLFails) {
   TestProto test_proto;
   test_proto.set_num(12345);
-  ProtoKeyTemplate proto_key_template;
+  KeyTemplateTP proto_key_template;
   proto_key_template.set_value(test_proto.SerializeAsString());
   proto_key_template.set_output_prefix_type(OutputPrefixTypeEnum::kTink);
   proto_key_template.set_type_url("type_url\x01");
@@ -166,7 +164,7 @@ TEST_F(ProtoParametersSerializationTest,
                HasSubstr("Non-printable ASCII character in type URL.")));
 }
 
-TEST_F(ProtoParametersSerializationTest, GetProtoKeyTemplate) {
+TEST_F(ProtoParametersSerializationTest, GetKeyTemplate) {
   TestProto test_proto;
   test_proto.set_num(12345);
   KeyTemplate key_template;
@@ -177,8 +175,7 @@ TEST_F(ProtoParametersSerializationTest, GetProtoKeyTemplate) {
       ProtoParametersSerialization::Create(key_template);
   ASSERT_THAT(serialization.status(), IsOk());
 
-  const ProtoKeyTemplate& key_template_struct =
-      serialization->GetProtoKeyTemplate();
+  const KeyTemplateTP& key_template_struct = serialization->GetKeyTemplate();
   EXPECT_THAT(key_template_struct.type_url(), "type_url");
   EXPECT_THAT(key_template_struct.output_prefix_type(),
               OutputPrefixTypeEnum::kTink);

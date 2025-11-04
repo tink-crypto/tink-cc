@@ -123,7 +123,7 @@ CreateKeysetKeyFromProtoParametersSerialization(
   // TODO(tholenst): ensure this doesn't leak.
   // Create KeyData from KeyTemplate and KeyTypeManagers.
   absl::StatusOr<std::unique_ptr<KeyData>> key_data;
-  const ProtoKeyTemplate& key_template = serialization.GetProtoKeyTemplate();
+  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (internal::KeyGenConfigurationImpl::IsInGlobalRegistryMode(config)) {
     google::crypto::tink::KeyTemplate proto_key_template;
     proto_key_template.set_type_url(key_template.type_url());

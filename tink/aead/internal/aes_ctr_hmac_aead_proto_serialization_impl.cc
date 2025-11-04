@@ -136,15 +136,14 @@ absl::StatusOr<HashTypeEnum> ToProtoHashType(
 
 absl::StatusOr<AesCtrHmacAeadParameters> ParseParameters(
     const ProtoParametersSerialization& serialization) {
-  const internal::ProtoKeyTemplate& key_template =
-      serialization.GetProtoKeyTemplate();
+  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kTypeUrl) {
     return absl::InvalidArgumentError(
         absl::StrCat("Wrong type URL when parsing AesCtrHmacAeadParameters: ",
                      key_template.type_url()));
   }
 
-  ProtoAesCtrHmacAeadKeyFormat key_format;
+  AesCtrHmacAeadKeyFormatTP key_format;
   if (!key_format.ParseFromString(key_template.value())) {
     return absl::InvalidArgumentError(
         "Failed to parse AesCtrHmacAeadKeyFormat proto");
@@ -193,7 +192,7 @@ absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     return hash_type.status();
   }
 
-  ProtoAesCtrHmacAeadKeyFormat key_format;
+  AesCtrHmacAeadKeyFormatTP key_format;
   key_format.mutable_aes_ctr_key_format()->mutable_params()->set_iv_size(
       parameters.GetIvSizeInBytes());
   key_format.mutable_aes_ctr_key_format()->set_key_size(
@@ -221,7 +220,7 @@ absl::StatusOr<AesCtrHmacAeadKey> ParseKey(
                         "SecretKeyAccess is required");
   }
 
-  ProtoAesCtrHmacAeadKey key;
+  AesCtrHmacAeadKeyTP key;
   if (!key.ParseFromString(
           serialization.SerializedKeyProto().GetSecret(*token))) {
     return absl::InvalidArgumentError(
@@ -299,7 +298,7 @@ absl::StatusOr<ProtoKeySerialization> SerializeKey(
     return hash_type.status();
   }
 
-  ProtoAesCtrHmacAeadKey proto_key;
+  AesCtrHmacAeadKeyTP proto_key;
   proto_key.set_version(0);
   proto_key.mutable_aes_ctr_key()->set_version(0);
   proto_key.mutable_aes_ctr_key()->mutable_params()->set_iv_size(

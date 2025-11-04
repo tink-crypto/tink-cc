@@ -34,24 +34,24 @@ using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
-TEST(ProtoHmacMessagesTest, ParseProtoHmacParams) {
+TEST(ProtoHmacMessagesTest, ParseHmacParamsTP) {
   const std::string serialized_hmac_params =
       absl::StrCat(proto_testing::FieldWithNumber(1).IsVarint(3),
                    proto_testing::FieldWithNumber(2).IsVarint(16));
 
-  ProtoHmacParams params;
+  HmacParamsTP params;
   ASSERT_THAT(params.ParseFromString(serialized_hmac_params), IsTrue());
   EXPECT_THAT(params.hash(), Eq(HashTypeEnum::kSha256));
   EXPECT_THAT(params.tag_size(), Eq(16));
 }
 
-TEST(ProtoHmacMessagesTest, ParseProtoHmacParamsInvalid) {
-  ProtoHmacParams params;
+TEST(ProtoHmacMessagesTest, ParseHmacParamsInvalidTP) {
+  HmacParamsTP params;
   EXPECT_THAT(params.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoHmacMessagesTest, SerializeProtoHmacParams) {
-  ProtoHmacParams params;
+TEST(ProtoHmacMessagesTest, SerializeHmacParamsTP) {
+  HmacParamsTP params;
   params.set_hash(HashTypeEnum::kSha256);
   params.set_tag_size(16);
 
@@ -61,7 +61,7 @@ TEST(ProtoHmacMessagesTest, SerializeProtoHmacParams) {
                               proto_testing::FieldWithNumber(2).IsVarint(16))));
 }
 
-TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyFormat) {
+TEST(ProtoHmacMessagesTest, ParseHmacKeyFormatTP) {
   const std::string serialized_hmac_format =
       absl::StrCat(proto_testing::FieldWithNumber(1).IsSubMessage(
                        {proto_testing::FieldWithNumber(1).IsVarint(3),
@@ -70,7 +70,7 @@ TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyFormat) {
                    proto_testing::FieldWithNumber(3).IsVarint(1)    // version
       );
 
-  ProtoHmacKeyFormat format;
+  HmacKeyFormatTP format;
   ASSERT_THAT(format.ParseFromString(serialized_hmac_format), IsTrue());
   EXPECT_THAT(format.params().hash(), Eq(HashTypeEnum::kSha256));
   EXPECT_THAT(format.params().tag_size(), Eq(16));
@@ -78,13 +78,13 @@ TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyFormat) {
   EXPECT_THAT(format.version(), Eq(1));
 }
 
-TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyFormatInvalid) {
-  ProtoHmacKeyFormat format;
+TEST(ProtoHmacMessagesTest, ParseHmacKeyFormatInvalidTP) {
+  HmacKeyFormatTP format;
   EXPECT_THAT(format.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoHmacMessagesTest, SerializeProtoHmacKeyFormat) {
-  ProtoHmacKeyFormat format;
+TEST(ProtoHmacMessagesTest, SerializeHmacKeyFormatTP) {
+  HmacKeyFormatTP format;
   format.mutable_params()->set_hash(HashTypeEnum::kSha256);
   format.mutable_params()->set_tag_size(16);
   format.set_key_size(32);
@@ -102,7 +102,7 @@ TEST(ProtoHmacMessagesTest, SerializeProtoHmacKeyFormat) {
               Eq(expected_serialized_hmac_format));
 }
 
-TEST(ProtoHmacMessagesTest, ParseProtoHmacKey) {
+TEST(ProtoHmacMessagesTest, ParseHmacKeyTP) {
   const std::string serialized_hmac_key =
       absl::StrCat(proto_testing::FieldWithNumber(2).IsSubMessage(
                        {proto_testing::FieldWithNumber(1).IsVarint(3),
@@ -112,7 +112,7 @@ TEST(ProtoHmacMessagesTest, ParseProtoHmacKey) {
                    proto_testing::FieldWithNumber(1).IsVarint(1)  // version
       );
 
-  ProtoHmacKey key;
+  HmacKeyTP key;
   ASSERT_THAT(key.ParseFromString(serialized_hmac_key), IsTrue());
   EXPECT_THAT(key.params().hash(), Eq(HashTypeEnum::kSha256));
   EXPECT_THAT(key.params().tag_size(), Eq(16));
@@ -121,13 +121,13 @@ TEST(ProtoHmacMessagesTest, ParseProtoHmacKey) {
   EXPECT_THAT(key.version(), Eq(1));
 }
 
-TEST(ProtoHmacMessagesTest, ParseProtoHmacKeyInvalid) {
-  ProtoHmacKey key;
+TEST(ProtoHmacMessagesTest, ParseHmacKeyInvalidTP) {
+  HmacKeyTP key;
   EXPECT_THAT(key.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(ProtoHmacMessagesTest, SerializeProtoHmacKey) {
-  ProtoHmacKey key;
+TEST(ProtoHmacMessagesTest, SerializeHmacKeyTP) {
+  HmacKeyTP key;
   key.mutable_params()->set_hash(HashTypeEnum::kSha256);
   key.mutable_params()->set_tag_size(16);
   key.set_key_value("01234567890123456789012345678901");

@@ -30,31 +30,31 @@ using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
 
-std::string GetSerializedProtoAesSivKeyFormat() {
+std::string GetSerializedAesSivKeyFormatTP() {
   return absl::StrCat(proto_testing::FieldWithNumber(1).IsVarint(64),
                       proto_testing::FieldWithNumber(2).IsVarint(1));
 }
 
-TEST(AesSivProtoStructsTest, ParseProtoAesSivKeyFormat) {
-  ProtoAesSivKeyFormat key_format;
-  ASSERT_THAT(key_format.ParseFromString(GetSerializedProtoAesSivKeyFormat()),
+TEST(AesSivProtoStructsTest, ParseAesSivKeyFormatTP) {
+  AesSivKeyFormatTP key_format;
+  ASSERT_THAT(key_format.ParseFromString(GetSerializedAesSivKeyFormatTP()),
               IsTrue());
   EXPECT_THAT(key_format.key_size(), Eq(64));
   EXPECT_THAT(key_format.version(), Eq(1));
 }
 
-TEST(AesSivProtoStructsTest, ParseProtoAesSivKeyFormatInvalid) {
-  ProtoAesSivKeyFormat key_format;
+TEST(AesSivProtoStructsTest, ParseAesSivKeyFormatTPInvalid) {
+  AesSivKeyFormatTP key_format;
   EXPECT_THAT(key_format.ParseFromString("invalid"), IsFalse());
 }
 
-TEST(AesSivProtoStructsTest, SerializeProtoAesSivKeyFormat) {
-  ProtoAesSivKeyFormat key_format;
+TEST(AesSivProtoStructsTest, SerializeAesSivKeyFormatTP) {
+  AesSivKeyFormatTP key_format;
   key_format.set_key_size(64);
   key_format.set_version(1);
 
   EXPECT_THAT(key_format.SerializeAsString(),
-              Eq(GetSerializedProtoAesSivKeyFormat()));
+              Eq(GetSerializedAesSivKeyFormatTP()));
 }
 
 }  // namespace

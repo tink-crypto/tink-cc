@@ -38,7 +38,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -57,7 +57,7 @@ using ::crypto::tink::internal::proto_parsing::EnumOwningField;
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
-using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 class HmacParamsTP : public Message<HmacParamsTP> {
@@ -170,7 +170,7 @@ class AesCtrHmacStreamingKeyTP : public Message<AesCtrHmacStreamingKeyTP> {
  private:
   Uint32OwningField version_{1};
   MessageOwningField<AesCtrHmacStreamingParamsTP> params_{2};
-  SecretDataOwningField key_value_{3};
+  SecretDataField key_value_{3};
 };
 
 using AesCtrHmacStreamingProtoParametersParserImpl =

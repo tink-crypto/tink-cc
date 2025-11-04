@@ -106,7 +106,7 @@ class AesCtrKeyTP : public proto_parsing::Message<AesCtrKeyTP> {
  private:
   proto_parsing::Uint32OwningField version_{1};
   proto_parsing::MessageOwningField<AesCtrParamsTP> params_{2};
-  proto_parsing::SecretDataOwningField key_value_{3};
+  proto_parsing::SecretDataField key_value_{3};
 };
 
 class AesCtrHmacAeadKeyTP : public proto_parsing::Message<AesCtrHmacAeadKeyTP> {

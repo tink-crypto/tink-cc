@@ -38,7 +38,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -54,7 +54,7 @@ namespace {
 
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::OwningField;
-using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 class AesGcmKeyTP : public Message<AesGcmKeyTP> {
@@ -75,7 +75,7 @@ class AesGcmKeyTP : public Message<AesGcmKeyTP> {
 
  private:
   Uint32OwningField version_{1};
-  SecretDataOwningField key_value_{3};
+  SecretDataField key_value_{3};
 };
 
 using AesGcmProtoParametersParserImpl =

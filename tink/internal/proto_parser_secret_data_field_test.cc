@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 
 #include <string>
 
@@ -56,16 +56,16 @@ absl::crc32c_t GetCrc32c(const SecretData& secret_data) {
 #endif
 }
 
-TEST(SecretDataOwningField, ClearMemberWorks) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ClearMemberWorks) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("hello");
   field.Clear();
   EXPECT_THAT(field.value(), IsEmpty());
   EXPECT_THAT(GetCrc32c(field.value()), Eq(absl::crc32c_t{0}));
 }
 
-TEST(SecretDataOwningField, ConsumeIntoMemberWithCrcSuccessCases) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ConsumeIntoMemberWithCrcSuccessCases) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
 
   std::string bytes =
@@ -82,8 +82,8 @@ TEST(SecretDataOwningField, ConsumeIntoMemberWithCrcSuccessCases) {
   EXPECT_THAT(crc_to_maintain, absl::ComputeCrc32c(bytes.substr(0, 11)));
 }
 
-TEST(SecretDataOwningField, ConsumeIntoMemberWithoutCrc) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ConsumeIntoMemberWithoutCrc) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
 
   std::string bytes =
@@ -98,8 +98,8 @@ TEST(SecretDataOwningField, ConsumeIntoMemberWithoutCrc) {
   EXPECT_THAT(parsing_state.RemainingData(), Eq("XYZ"));
 }
 
-TEST(SecretDataOwningField, ConsumeIntoMemberWithoutCrcEmptyString) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ConsumeIntoMemberWithoutCrcEmptyString) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
@@ -111,8 +111,8 @@ TEST(SecretDataOwningField, ConsumeIntoMemberWithoutCrcEmptyString) {
   EXPECT_THAT(parsing_state.RemainingData(), Eq("abcde"));
 }
 
-TEST(SecretDataOwningField, ConsumeIntoMemberWithCrcEmptyString) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ConsumeIntoMemberWithCrcEmptyString) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
@@ -128,8 +128,8 @@ TEST(SecretDataOwningField, ConsumeIntoMemberWithCrcEmptyString) {
 }
 
 // Tests that if the CRC is already populated, the field will just extend this.
-TEST(SecretDataOwningField, ExistingCRCIsExtendedWhenParsing) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ExistingCRCIsExtendedWhenParsing) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
 
   std::string bytes =
@@ -148,8 +148,8 @@ TEST(SecretDataOwningField, ExistingCRCIsExtendedWhenParsing) {
                   "Existing", HexDecodeOrDie("0a"), "1234567890"))));
 }
 
-TEST(SecretDataOwningField, SerializeEmptyWithoutCrcDoesntSerialize) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, SerializeEmptyWithoutCrcDoesntSerialize) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";
@@ -158,8 +158,8 @@ TEST(SecretDataOwningField, SerializeEmptyWithoutCrcDoesntSerialize) {
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
 }
 
-TEST(SecretDataOwningField, SerializeEmptyWithCrcDoesntSerialize) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, SerializeEmptyWithCrcDoesntSerialize) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";
@@ -170,8 +170,8 @@ TEST(SecretDataOwningField, SerializeEmptyWithCrcDoesntSerialize) {
   EXPECT_THAT(crc, Eq(absl::crc32c_t{}));
 }
 
-TEST(SecretDataOwningField, SerializeEmptyWithoutCrcAlwaysSerialize) {
-  SecretDataOwningField field(1, ProtoFieldOptions::kAlwaysSerialize);
+TEST(SecretDataField, SerializeEmptyWithoutCrcAlwaysSerialize) {
+  SecretDataField field(1, ProtoFieldOptions::kAlwaysSerialize);
   *field.mutable_value() = SecretDataFromStringView("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";
@@ -181,8 +181,8 @@ TEST(SecretDataOwningField, SerializeEmptyWithoutCrcAlwaysSerialize) {
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
 }
 
-TEST(SecretDataOwningField, SerializeEmptyWithCrcAlwaysSerialize) {
-  SecretDataOwningField field(1, ProtoFieldOptions::kAlwaysSerialize);
+TEST(SecretDataField, SerializeEmptyWithCrcAlwaysSerialize) {
+  SecretDataField field(1, ProtoFieldOptions::kAlwaysSerialize);
   *field.mutable_value() = SecretDataFromStringView("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";
@@ -194,8 +194,8 @@ TEST(SecretDataOwningField, SerializeEmptyWithCrcAlwaysSerialize) {
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(HexDecodeOrDie("0a00"))));
 }
 
-TEST(SecretDataOwningField, SerializeNonEmptyWithCrc) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, SerializeNonEmptyWithCrc) {
+  SecretDataField field(1);
   std::string text = "this is some text";
   *field.mutable_value() = SecretDataFromStringView(text);
 
@@ -213,8 +213,8 @@ TEST(SecretDataOwningField, SerializeNonEmptyWithCrc) {
       crc, Eq(absl::ComputeCrc32c(absl::StrCat(HexDecodeOrDie("0a11"), text))));
 }
 
-TEST(SecretDataOwningField, SerializeNonEmptyWithoutCrc) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, SerializeNonEmptyWithoutCrc) {
+  SecretDataField field(1);
   std::string text = "this is some text";
   *field.mutable_value() = SecretDataFromStringView(text);
 
@@ -230,10 +230,10 @@ TEST(SecretDataOwningField, SerializeNonEmptyWithoutCrc) {
 }
 
 #if not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-// Tests that when serializing a SecretDataOwningField, the resulting CRC
+// Tests that when serializing a SecretDataField, the resulting CRC
 // is computed from the CRC of the field (and not the actual data).
-TEST(SecretDataOwningField, CrcIsComputedFromCrc) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, CrcIsComputedFromCrc) {
+  SecretDataField field(1);
   std::string text1 = "this is some text";
   std::string text2 = "this is different";
   // The buffer is computed from a different value than the CRC.
@@ -253,8 +253,8 @@ TEST(SecretDataOwningField, CrcIsComputedFromCrc) {
 }
 #endif  // not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 
-TEST(SecretDataOwningField, SerializeTooSmallBuffer) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, SerializeTooSmallBuffer) {
+  SecretDataField field(1);
   std::string text = "this is some text";
   *field.mutable_value() = SecretDataFromStringView(text);
 
@@ -265,8 +265,8 @@ TEST(SecretDataOwningField, SerializeTooSmallBuffer) {
 }
 
 // The buffer won't even hold the varint.
-TEST(SecretDataOwningField, SerializeMuchTooSmallBuffer) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, SerializeMuchTooSmallBuffer) {
+  SecretDataField field(1);
   std::string text = "this is some text";
   *field.mutable_value() = SecretDataFromStringView(text);
 
@@ -278,8 +278,8 @@ TEST(SecretDataOwningField, SerializeMuchTooSmallBuffer) {
 
 // Test that when serializing, the existing CRC in the state is extended by
 // the new data (and not overwritten)
-TEST(SecretDataOwningField, ExistingCrcIsExtended) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ExistingCrcIsExtended) {
+  SecretDataField field(1);
   std::string text = "this is some text";
   *field.mutable_value() = SecretDataFromStringView(text);
 
@@ -297,8 +297,8 @@ TEST(SecretDataOwningField, ExistingCrcIsExtended) {
                        "existing", HexDecodeOrDie("0a11"), text))));
 }
 
-TEST(SecretDataOwningField, ConsumeIntoMemberFailsWithNotEnoughDataForLength) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ConsumeIntoMemberFailsWithNotEnoughDataForLength) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
   // Varint indicates more data, but there is none.
   std::string bytes = HexDecodeOrDie("81");
@@ -307,9 +307,8 @@ TEST(SecretDataOwningField, ConsumeIntoMemberFailsWithNotEnoughDataForLength) {
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
 }
 
-TEST(SecretDataOwningField,
-     ConsumeIntoMemberFailsWithNotEnoughDataForContent) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ConsumeIntoMemberFailsWithNotEnoughDataForContent) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
   // 10 bytes length specified, but only 9 bytes available.
   std::string bytes =
@@ -319,8 +318,8 @@ TEST(SecretDataOwningField,
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
 }
 
-TEST(SecretDataOwningField, ConsumeIntoMemberFailsWithMalformedVarint) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, ConsumeIntoMemberFailsWithMalformedVarint) {
+  SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
   // Varint is too long.
   std::string bytes = HexDecodeOrDie("ffffffff8f");
@@ -329,8 +328,8 @@ TEST(SecretDataOwningField, ConsumeIntoMemberFailsWithMalformedVarint) {
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
 }
 
-TEST(SecretDataOwningField, SerializeTooSmallBufferForSizeVarint) {
-  SecretDataOwningField field(1);
+TEST(SecretDataField, SerializeTooSmallBufferForSizeVarint) {
+  SecretDataField field(1);
   // Size 128 requires 2 bytes for the varint encoding of the size.
   std::string text(128, 'a');
   *field.mutable_value() = SecretDataFromStringView(text);
@@ -341,31 +340,31 @@ TEST(SecretDataOwningField, SerializeTooSmallBufferForSizeVarint) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
-TEST(SecretDataOwningField, CopyAndMove) {
-  SecretDataOwningField field(123);
+TEST(SecretDataField, CopyAndMove) {
+  SecretDataField field(123);
   *field.mutable_value() = SecretDataFromStringView("some secret data");
 
   // Test copy constructor
-  SecretDataOwningField field_copy(field);
+  SecretDataField field_copy(field);
   EXPECT_THAT(field_copy.FieldNumber(), Eq(123));
   EXPECT_THAT(SecretDataAsStringView(field_copy.value()),
               Eq("some secret data"));
 
   // Test copy assignment
-  SecretDataOwningField field_assign(456);
+  SecretDataField field_assign(456);
   field_assign = field;
   EXPECT_THAT(field_assign.FieldNumber(), Eq(123));
   EXPECT_THAT(SecretDataAsStringView(field_assign.value()),
               Eq("some secret data"));
 
   // Test move constructor
-  SecretDataOwningField field_move_construct(std::move(field));
+  SecretDataField field_move_construct(std::move(field));
   EXPECT_THAT(field_move_construct.FieldNumber(), Eq(123));
   EXPECT_THAT(SecretDataAsStringView(field_move_construct.value()),
               Eq("some secret data"));
 
   // Test move assignment
-  SecretDataOwningField field_move_assign(789);
+  SecretDataField field_move_assign(789);
   field_move_assign = std::move(field_copy);
   EXPECT_THAT(field_move_assign.FieldNumber(), Eq(123));
   EXPECT_THAT(SecretDataAsStringView(field_move_assign.value()),

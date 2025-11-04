@@ -25,7 +25,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 
@@ -136,7 +136,7 @@ class KeyDataTP : public proto_parsing::Message<KeyDataTP> {
 
  private:
   proto_parsing::OwningBytesField<std::string> type_url_{1};
-  proto_parsing::SecretDataOwningField value_{2};
+  proto_parsing::SecretDataField value_{2};
   proto_parsing::EnumOwningField<KeyMaterialTypeEnum> key_material_type_{
       3, &KeyMaterialTypeValid};
 };

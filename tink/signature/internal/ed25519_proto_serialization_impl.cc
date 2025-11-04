@@ -35,7 +35,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -115,7 +115,7 @@ class Ed25519PrivateKeyTP final : public Message<Ed25519PrivateKeyTP> {
 
  private:
   Uint32OwningField version_{1};
-  proto_parsing::SecretDataOwningField key_value_{2};
+  proto_parsing::SecretDataField key_value_{2};
   MessageOwningField<Ed25519PublicKeyTP> public_key_{3};
 };
 

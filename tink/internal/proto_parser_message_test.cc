@@ -265,7 +265,7 @@ struct OuterMessageWithSecretData : public Message<OuterMessageWithSecretData> {
     return {&inner_member_field, &secret_data_field};
   }
   MessageOwningField<InnerStruct> inner_member_field{1};
-  SecretDataOwningField secret_data_field{2};
+  SecretDataField secret_data_field{2};
 };
 
 TEST(MessageTest, ParseFromStringWithCrcSuccess) {

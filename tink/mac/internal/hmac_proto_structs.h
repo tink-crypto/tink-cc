@@ -25,7 +25,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 
@@ -100,7 +100,7 @@ class HmacKeyTP : public proto_parsing::Message<HmacKeyTP> {
  private:
   proto_parsing::Uint32OwningField version_{1};
   proto_parsing::MessageOwningField<HmacParamsTP> params_{2};
-  proto_parsing::SecretDataOwningField key_value_{3};
+  proto_parsing::SecretDataField key_value_{3};
 };
 
 }  // namespace internal

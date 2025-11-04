@@ -36,7 +36,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -100,7 +100,7 @@ class AesGcmSivKeyTP : public proto_parsing::Message<AesGcmSivKeyTP> {
 
  private:
   proto_parsing::Uint32OwningField version_{1};
-  proto_parsing::SecretDataOwningField key_value_{3};
+  proto_parsing::SecretDataField key_value_{3};
 };
 
 const absl::string_view kTypeUrl =

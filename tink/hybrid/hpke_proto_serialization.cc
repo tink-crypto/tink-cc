@@ -38,7 +38,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -55,7 +55,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
 using ::crypto::tink::internal::proto_parsing::OwningBytesField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
-using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 bool HpkeKemEnumIsValid(int value) { return value >= 0 && value <= 7; }
@@ -165,7 +165,7 @@ class HpkePrivateKeyTP : public Message<HpkePrivateKeyTP> {
  private:
   Uint32OwningField version_{1};
   MessageOwningField<HpkePublicKeyTP> public_key_{2};
-  SecretDataOwningField private_key_{3};
+  SecretDataField private_key_{3};
 };
 
 class HpkeKeyFormatTP : public Message<HpkeKeyFormatTP> {

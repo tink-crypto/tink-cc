@@ -38,7 +38,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_big_integer.h"
@@ -58,7 +58,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageOwningField;
 using ::crypto::tink::internal::proto_parsing::OwningBytesField;
 using ::crypto::tink::internal::proto_parsing::OwningField;
-using ::crypto::tink::internal::proto_parsing::SecretDataOwningField;
+using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
 
 class RsaSsaPssParamsTP : public Message<RsaSsaPssParamsTP> {
@@ -159,12 +159,12 @@ class RsaSsaPssPrivateKeyTP : public Message<RsaSsaPssPrivateKeyTP> {
  private:
   Uint32OwningField version_{1};
   MessageOwningField<RsaSsaPssPublicKeyTP> public_key_{2};
-  SecretDataOwningField d_{3};
-  SecretDataOwningField p_{4};
-  SecretDataOwningField q_{5};
-  SecretDataOwningField dp_{6};
-  SecretDataOwningField dq_{7};
-  SecretDataOwningField crt_{8};
+  SecretDataField d_{3};
+  SecretDataField p_{4};
+  SecretDataField q_{5};
+  SecretDataField dp_{6};
+  SecretDataField dq_{7};
+  SecretDataField crt_{8};
 };
 
 class RsaSsaPssKeyFormatTP : public Message<RsaSsaPssKeyFormatTP> {

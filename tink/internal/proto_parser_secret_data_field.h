@@ -38,18 +38,18 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-class SecretDataOwningField final : public OwningField {
+// SecretDataField is a Field that owns a SecretData.
+class SecretDataField final : public OwningField {
  public:
-  explicit SecretDataOwningField(
-      uint32_t field_number,
-      ProtoFieldOptions options = ProtoFieldOptions::kNone)
+  explicit SecretDataField(uint32_t field_number,
+                           ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : OwningField(field_number, WireType::kLengthDelimited),
         options_(options) {}
   // Copyable and movable.
-  SecretDataOwningField(const SecretDataOwningField&) = default;
-  SecretDataOwningField& operator=(const SecretDataOwningField&) = default;
-  SecretDataOwningField(SecretDataOwningField&&) noexcept = default;
-  SecretDataOwningField& operator=(SecretDataOwningField&&) noexcept = default;
+  SecretDataField(const SecretDataField&) = default;
+  SecretDataField& operator=(const SecretDataField&) = default;
+  SecretDataField(SecretDataField&&) noexcept = default;
+  SecretDataField& operator=(SecretDataField&&) noexcept = default;
 
   void Clear() override { value_ = SecretData(); }
   bool ConsumeIntoMember(ParsingState& serialized) override {

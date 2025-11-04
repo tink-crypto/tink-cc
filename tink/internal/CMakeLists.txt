@@ -1788,7 +1788,7 @@ tink_cc_library(
     tink::internal::proto_parser_enum_field
     tink::internal::proto_parser_message
     tink::internal::proto_parser_owning_fields
-    tink::internal::proto_parser_secret_data_owning_field
+    tink::internal::proto_parser_secret_data_field
     absl::no_destructor
     absl::string_view
     tink::core::secret_data
@@ -2102,9 +2102,9 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME proto_parser_secret_data_owning_field
+  NAME proto_parser_secret_data_field
   SRCS
-    proto_parser_secret_data_owning_field.h
+    proto_parser_secret_data_field.h
   DEPS
     tink::internal::call_with_core_dump_protection
     tink::internal::proto_parser_options
@@ -2122,12 +2122,12 @@ tink_cc_library(
 )
 
 tink_cc_test(
-  NAME proto_parser_secret_data_owning_field_test
+  NAME proto_parser_secret_data_field_test
   SRCS
-    proto_parser_secret_data_owning_field_test.cc
+    proto_parser_secret_data_field_test.cc
   DEPS
     tink::internal::proto_parser_options
-    tink::internal::proto_parser_secret_data_owning_field
+    tink::internal::proto_parser_secret_data_field
     tink::internal::proto_parser_state
     gmock
     absl::crc32c

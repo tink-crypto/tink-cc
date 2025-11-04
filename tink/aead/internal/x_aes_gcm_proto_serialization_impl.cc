@@ -35,7 +35,7 @@
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_owning_field.h"
+#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -111,7 +111,7 @@ class XAesGcmKeyTP : public Message<XAesGcmKeyTP> {
  private:
   Uint32OwningField version_{1};
   MessageOwningField<XAesGcmParamsTP> params_{2};
-  proto_parsing::SecretDataOwningField key_value_{3};
+  proto_parsing::SecretDataField key_value_{3};
 };
 
 using XAesGcmProtoParametersParserImpl =

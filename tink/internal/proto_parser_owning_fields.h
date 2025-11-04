@@ -139,7 +139,7 @@ template <typename StringLike>
 class OwningBytesField final : public OwningField {
  public:
   static_assert(!std::is_same<StringLike, ::crypto::tink::SecretData>::value,
-                "Use SecretDataOwningField instead");
+                "Use SecretDataField instead");
 
   explicit OwningBytesField(uint32_t field_number, ProtoFieldOptions options =
                                                        ProtoFieldOptions::kNone)

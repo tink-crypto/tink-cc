@@ -21,16 +21,17 @@
 
 #include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_owning_fields.h"
-#include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/secret_data.h"
+#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -43,22 +44,70 @@ class SecretDataOwningField final : public OwningField {
       uint32_t field_number,
       ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : OwningField(field_number, WireType::kLengthDelimited),
-        field_(field_number, &SecretDataOwningField::value_, options) {}
+        options_(options) {}
   // Copyable and movable.
   SecretDataOwningField(const SecretDataOwningField&) = default;
   SecretDataOwningField& operator=(const SecretDataOwningField&) = default;
   SecretDataOwningField(SecretDataOwningField&&) noexcept = default;
   SecretDataOwningField& operator=(SecretDataOwningField&&) noexcept = default;
 
-  void Clear() override { field_.ClearMember(*this); }
+  void Clear() override { value_ = SecretData(); }
   bool ConsumeIntoMember(ParsingState& serialized) override {
-    return field_.ConsumeIntoMember(serialized, *this);
+    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
+    if (!length.ok()) {
+      return false;
+    }
+    if (*length > serialized.RemainingData().size()) {
+      return false;
+    }
+    absl::string_view secret_bytes =
+        serialized.RemainingData().substr(0, *length);
+#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+    value_ = util::SecretDataFromStringView(secret_bytes);
+    serialized.Advance(*length);
+#else
+    value_ = CallWithCoreDumpProtection([&]() {
+      absl::crc32c_t crc = serialized.AdvanceAndGetCrc(*length);
+      return SecretData(secret_bytes, crc);
+    });
+#endif
+    return true;
   }
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    return field_.SerializeWithTagInto(out, *this);
+    if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysSerialize) {
+      return absl::OkStatus();
+    }
+    if (absl::Status result = SerializeWireTypeAndFieldNumber(
+            WireType::kLengthDelimited, FieldNumber(), out);
+        !result.ok()) {
+      return result;
+    }
+    if (absl::Status result = SerializeVarint(value_.size(), out);
+        !result.ok()) {
+      return result;
+    }
+    absl::string_view data_view = util::SecretDataAsStringView(value_);
+    if (out.GetBuffer().size() < data_view.size()) {
+      return absl::InvalidArgumentError(
+          absl::StrCat("Output buffer too small: ", out.GetBuffer().size(),
+                       " < ", data_view.size()));
+    }
+    SafeMemCopy(out.GetBuffer().data(), data_view.data(), data_view.size());
+#ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
+    out.Advance(data_view.size());
+#else
+    CallWithCoreDumpProtection(
+        [&]() { out.AdvanceWithCrc(data_view.size(), value_.GetCrc32c()); });
+#endif
+    return absl::OkStatus();
   }
   size_t GetSerializedSizeIncludingTag() const override {
-    return field_.GetSerializedSizeIncludingTag(*this);
+    if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysSerialize) {
+      return 0;
+    }
+    return WireTypeAndFieldNumberLength(WireType::kLengthDelimited,
+                                        FieldNumber()) +
+           VarintLength(value_.size()) + value_.size();
   }
 
   const SecretData& value() const { return value_; }
@@ -66,7 +115,7 @@ class SecretDataOwningField final : public OwningField {
 
  private:
   SecretData value_;
-  SecretDataField<SecretDataOwningField> field_;
+  ProtoFieldOptions options_;
 };
 
 }  // namespace proto_parsing

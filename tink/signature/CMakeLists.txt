@@ -1814,7 +1814,6 @@ tink_cc_library(
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::util::secret_data
-    tink::util::statusor
   TAGS
     exclude_if_openssl
 )
@@ -1828,7 +1827,7 @@ tink_cc_test(
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
     gmock
-    absl::check
+    absl::absl_check
     absl::status
     absl::strings
     absl::optional
@@ -1839,7 +1838,6 @@ tink_cc_test(
     tink::core::restricted_data
     tink::internal::secret_buffer
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl

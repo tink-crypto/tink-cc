@@ -20,12 +20,12 @@
 #include <memory>
 
 #include "absl/base/attributes.h"
+#include "absl/status/statusor.h"
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/signature/signature_private_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -76,6 +76,20 @@ class MlDsaPrivateKey final : public SignaturePrivateKey {
   explicit MlDsaPrivateKey(const MlDsaPublicKey& public_key,
                            const RestrictedData& private_seed_bytes)
       : public_key_(public_key), private_seed_bytes_(private_seed_bytes) {}
+
+  // Creates a new ML-DSA-65 private key from `private_seed_bytes`. Returns an
+  // error if `public_key` does not belong to the same key pair as
+  // `private_seed_bytes`.
+  static absl::StatusOr<MlDsaPrivateKey> Create65(
+      const MlDsaPublicKey& public_key,
+      const RestrictedData& private_seed_bytes, PartialKeyAccessToken token);
+
+  // Creates a new ML-DSA-87 private key from `private_seed_bytes`. Returns an
+  // error if `public_key` does not belong to the same key pair as
+  // `private_seed_bytes`.
+  static absl::StatusOr<MlDsaPrivateKey> Create87(
+      const MlDsaPublicKey& public_key,
+      const RestrictedData& private_seed_bytes, PartialKeyAccessToken token);
 
   MlDsaPublicKey public_key_;
   RestrictedData private_seed_bytes_;

@@ -23,6 +23,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "absl/types/optional.h"
@@ -35,7 +36,6 @@
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -50,6 +50,7 @@ using ::testing::TestWithParam;
 using ::testing::Values;
 
 struct TestCase {
+  MlDsaParameters::Instance instance;
   MlDsaParameters::Variant variant;
   absl::optional<int> id_requirement;
   std::string output_prefix;
@@ -59,43 +60,75 @@ using MlDsaPrivateKeyTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaPrivateKeyTestSuite, MlDsaPrivateKeyTest,
-    Values(TestCase{MlDsaParameters::Variant::kTink, 0x02030400,
+    Values(TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{MlDsaParameters::Variant::kTink, 0x03050709,
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kTink, 0x03050709,
                     std::string("\x01\x03\x05\x07\x09", 5)},
-           TestCase{MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kTink, 0x03050709,
+                    std::string("\x01\x03\x05\x07\x09", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
 
 struct KeyPair {
   std::string public_key_bytes;
   RestrictedData private_seed_bytes;
 };
 
-absl::StatusOr<KeyPair> GenerateKeyPair() {
-  std::string public_key_bytes;
-  public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
-  internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
-  auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
+absl::StatusOr<KeyPair> GenerateKeyPair(MlDsaParameters::Instance instance) {
+  if (instance == MlDsaParameters::Instance::kMlDsa65) {
+    std::string public_key_bytes;
+    public_key_bytes.resize(MLDSA65_PUBLIC_KEY_BYTES);
+    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
+    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA65_private_key>();
 
-  ABSL_CHECK_EQ(1, MLDSA65_generate_key(
-                  reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
-                  private_seed_bytes.data(), bssl_private_key.get()));
+    ABSL_CHECK_EQ(1, MLDSA65_generate_key(
+                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                         private_seed_bytes.data(), bssl_private_key.get()));
 
-  return KeyPair{
-      public_key_bytes,
-      RestrictedData(
-          util::internal::AsSecretData(std::move(private_seed_bytes)),
-          InsecureSecretKeyAccess::Get()),
-  };
+    return KeyPair{
+        public_key_bytes,
+        RestrictedData(
+            util::internal::AsSecretData(std::move(private_seed_bytes)),
+            InsecureSecretKeyAccess::Get()),
+    };
+  } else if (instance == MlDsaParameters::Instance::kMlDsa87) {
+    std::string public_key_bytes;
+    public_key_bytes.resize(MLDSA87_PUBLIC_KEY_BYTES);
+    internal::SecretBuffer private_seed_bytes(MLDSA_SEED_BYTES);
+    auto bssl_private_key = util::MakeSecretUniquePtr<MLDSA87_private_key>();
+
+    ABSL_CHECK_EQ(1, MLDSA87_generate_key(
+                         reinterpret_cast<uint8_t*>(&public_key_bytes[0]),
+                         private_seed_bytes.data(), bssl_private_key.get()));
+
+    return KeyPair{
+        public_key_bytes,
+        RestrictedData(
+            util::internal::AsSecretData(std::move(private_seed_bytes)),
+            InsecureSecretKeyAccess::Get()),
+    };
+  } else {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Unsupported instance: ", instance));
+  }
 }
 
 TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
   TestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =
@@ -118,11 +151,11 @@ TEST_P(MlDsaPrivateKeyTest, CreateSucceeds) {
 TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
   TestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =
@@ -161,13 +194,13 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithInvalidPrivateKeyLengthFails) {
 TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
   TestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair1, IsOk());
-  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair2, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key1 =
@@ -186,11 +219,11 @@ TEST_P(MlDsaPrivateKeyTest, CreateWithMismatchedKeysFails) {
 TEST_P(MlDsaPrivateKeyTest, KeyEquals) {
   TestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =
@@ -215,11 +248,11 @@ TEST_P(MlDsaPrivateKeyTest, KeyEquals) {
 TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
   TestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair1 = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair1, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key1 =
@@ -231,7 +264,7 @@ TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
       *public_key1, key_pair1->private_seed_bytes, GetPartialKeyAccess());
   ASSERT_THAT(private_key1, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair2 = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair2, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key2 =
@@ -250,11 +283,13 @@ TEST_P(MlDsaPrivateKeyTest, DifferentKeyBytesNotEqual) {
 }
 
 TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
+  TestCase test_case = GetParam();
+
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+      test_case.instance, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key123 =
@@ -282,11 +317,13 @@ TEST_P(MlDsaPrivateKeyTest, DifferentIdRequirementNotEqual) {
 }
 
 TEST_P(MlDsaPrivateKeyTest, Clone) {
+  TestCase test_case = GetParam();
+
   absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kTink);
+      test_case.instance, MlDsaParameters::Variant::kTink);
   ASSERT_THAT(parameters, IsOk());
 
-  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair();
+  absl::StatusOr<KeyPair> key_pair = GenerateKeyPair(test_case.instance);
   ASSERT_THAT(key_pair, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =

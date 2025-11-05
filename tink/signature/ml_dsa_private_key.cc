@@ -46,19 +46,26 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
     const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
     PartialKeyAccessToken token) {
   if (private_seed_bytes.size() != MLDSA_SEED_BYTES) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         absl::StrCat("Invalid ML-DSA private seed size. The seed must be ",
                      MLDSA_SEED_BYTES, " bytes."));
   }
 
-  if (public_key.GetParameters().GetInstance() !=
-      MlDsaParameters::Instance::kMlDsa65) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Invalid ML-DSA instance. Only ML-DSA-65 is "
-                        "currently supported.");
+  switch (public_key.GetParameters().GetInstance()) {
+    case MlDsaParameters::Instance::kMlDsa65:
+      return MlDsaPrivateKey::Create65(public_key, private_seed_bytes, token);
+    case MlDsaParameters::Instance::kMlDsa87:
+      return MlDsaPrivateKey::Create87(public_key, private_seed_bytes, token);
+    default:
+      return absl::InvalidArgumentError(
+          "Invalid ML-DSA instance. Only ML-DSA-65 and "
+          "ML-DSA-87 are currently supported.");
   }
+}
 
+absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create65(
+    const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
+    PartialKeyAccessToken token) {
   util::SecretUniquePtr<MLDSA65_private_key> boringssl_private_key =
       util::MakeSecretUniquePtr<MLDSA65_private_key>();
   absl::Status status = internal::CallWithCoreDumpProtection([&]() {
@@ -68,8 +75,8 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
                 private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
                     .data()),
             private_seed_bytes.size())) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Failed to create ML-DSA private key from seed.");
+      return absl::InternalError(
+          "Failed to create ML-DSA private key from seed.");
     }
     return absl::OkStatus();
   });
@@ -83,8 +90,8 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
                                                    sizeof(MLDSA65_public_key));
     if (!MLDSA65_public_from_private(boringssl_public_key.get(),
                                      boringssl_private_key.get())) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Failed to get ML-DSA public key from private key.");
+      return absl::InternalError(
+          "Failed to get ML-DSA public key from private key.");
     }
     internal::DfsanClearLabel(boringssl_public_key.get(),
                               sizeof(MLDSA65_public_key));
@@ -107,8 +114,7 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
                         MLDSA65_PUBLIC_KEY_BYTES) ||
         !MLDSA65_marshal_public_key(&cbb, boringssl_public_key.get()) ||
         !CBB_finish(&cbb, nullptr, &size) || size != MLDSA65_PUBLIC_KEY_BYTES) {
-      return absl::Status(absl::StatusCode::kInternal,
-                          "Failed to serialize ML-DSA public key.");
+      return absl::InternalError("Failed to serialize ML-DSA public key.");
     }
     internal::DfsanClearLabel(&public_key_bytes_regen[0],
                               MLDSA65_PUBLIC_KEY_BYTES);
@@ -121,8 +127,79 @@ absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create(
   if (CRYPTO_memcmp(expected_public_key_bytes.data(),
                     public_key_bytes_regen.data(),
                     MLDSA65_PUBLIC_KEY_BYTES) != 0) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "ML-DSA public key doesn't match the private key.");
+    return absl::InvalidArgumentError(
+        "ML-DSA public key doesn't match the private key.");
+  }
+
+  return MlDsaPrivateKey(public_key, private_seed_bytes);
+}
+
+absl::StatusOr<MlDsaPrivateKey> MlDsaPrivateKey::Create87(
+    const MlDsaPublicKey& public_key, const RestrictedData& private_seed_bytes,
+    PartialKeyAccessToken token) {
+  util::SecretUniquePtr<MLDSA87_private_key> boringssl_private_key =
+      util::MakeSecretUniquePtr<MLDSA87_private_key>();
+  absl::Status status = internal::CallWithCoreDumpProtection([&]() {
+    if (!MLDSA87_private_key_from_seed(
+            boringssl_private_key.get(),
+            reinterpret_cast<const uint8_t*>(
+                private_seed_bytes.GetSecret(InsecureSecretKeyAccess::Get())
+                    .data()),
+            private_seed_bytes.size())) {
+      return absl::InternalError(
+          "Failed to create ML-DSA private key from seed.");
+    }
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  auto boringssl_public_key = std::make_unique<MLDSA87_public_key>();
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(boringssl_public_key.get(),
+                                                   sizeof(MLDSA87_public_key));
+    if (!MLDSA87_public_from_private(boringssl_public_key.get(),
+                                     boringssl_private_key.get())) {
+      return absl::InternalError(
+          "Failed to get ML-DSA public key from private key.");
+    }
+    internal::DfsanClearLabel(boringssl_public_key.get(),
+                              sizeof(MLDSA87_public_key));
+    return absl::OkStatus();
+  });
+  if (!status.ok()) {
+    return status;
+  }
+
+  CBB cbb;
+  size_t size;
+  std::string public_key_bytes_regen;
+  public_key_bytes_regen.resize(MLDSA87_PUBLIC_KEY_BYTES);
+
+  status = internal::CallWithCoreDumpProtection([&]() {
+    internal::ScopedAssumeRegionCoreDumpSafe scope(&public_key_bytes_regen[0],
+                                                   MLDSA87_PUBLIC_KEY_BYTES);
+    if (!CBB_init_fixed(&cbb,
+                        reinterpret_cast<uint8_t*>(&public_key_bytes_regen[0]),
+                        MLDSA87_PUBLIC_KEY_BYTES) ||
+        !MLDSA87_marshal_public_key(&cbb, boringssl_public_key.get()) ||
+        !CBB_finish(&cbb, nullptr, &size) || size != MLDSA87_PUBLIC_KEY_BYTES) {
+      return absl::InternalError("Failed to serialize ML-DSA public key.");
+    }
+    internal::DfsanClearLabel(&public_key_bytes_regen[0],
+                              MLDSA87_PUBLIC_KEY_BYTES);
+    return absl::OkStatus();
+  });
+
+  absl::string_view expected_public_key_bytes =
+      public_key.GetPublicKeyBytes(token);
+
+  if (CRYPTO_memcmp(expected_public_key_bytes.data(),
+                    public_key_bytes_regen.data(),
+                    MLDSA87_PUBLIC_KEY_BYTES) != 0) {
+    return absl::InvalidArgumentError(
+        "ML-DSA public key doesn't match the private key.");
   }
 
   return MlDsaPrivateKey(public_key, private_seed_bytes);

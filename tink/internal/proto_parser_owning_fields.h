@@ -23,6 +23,7 @@
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
@@ -76,8 +77,7 @@ class Uint32OwningField : public OwningField {
   explicit Uint32OwningField(
       uint32_t field_number,
       ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : OwningField(field_number, WireType::kVarint),
-        field_(field_number, &Uint32OwningField::value_, options) {}
+      : OwningField(field_number, WireType::kVarint), options_(options) {}
 
   // Copyable and movable.
   Uint32OwningField(const Uint32OwningField&) = default;
@@ -85,23 +85,44 @@ class Uint32OwningField : public OwningField {
   Uint32OwningField(Uint32OwningField&&) noexcept = default;
   Uint32OwningField& operator=(Uint32OwningField&&) noexcept = default;
 
-  void Clear() override { field_.ClearMember(*this); }
+  void Clear() override { value_ = 0; }
   bool ConsumeIntoMember(ParsingState& serialized) override {
-    return field_.ConsumeIntoMember(serialized, *this);
+    absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
+    if (!result.ok()) {
+      return false;
+    }
+    value_ = *result;
+    return true;
   }
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    return field_.SerializeWithTagInto(out, *this);
+    if (!RequiresSerialization()) {
+      return absl::OkStatus();
+    }
+    absl::Status status =
+        SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
+    if (!status.ok()) {
+      return status;
+    }
+    return SerializeVarint(value_, out);
   }
   size_t GetSerializedSizeIncludingTag() const override {
-    return field_.GetSerializedSizeIncludingTag(*this);
+    if (!RequiresSerialization()) {
+      return 0;
+    }
+    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
+           VarintLength(value_);
   }
 
   void set_value(uint32_t value) { value_ = value; }
   uint32_t value() const { return value_; }
 
  private:
+  bool RequiresSerialization() const {
+    return options_ == ProtoFieldOptions::kAlwaysSerialize || value_ != 0;
+  }
+
   uint32_t value_ = 0;
-  Uint32Field<Uint32OwningField> field_;
+  ProtoFieldOptions options_;
 };
 
 class Uint64OwningField : public OwningField {
@@ -162,7 +183,7 @@ class OwningBytesField final : public OwningField {
   explicit OwningBytesField(uint32_t field_number, ProtoFieldOptions options =
                                                        ProtoFieldOptions::kNone)
       : OwningField(field_number, WireType::kLengthDelimited),
-        field_(field_number, &OwningBytesField<StringLike>::value_, options) {}
+        options_(options) {}
   // Copyable and movable.
   OwningBytesField(const OwningBytesField&) = default;
   OwningBytesField& operator=(const OwningBytesField&) = default;
@@ -171,13 +192,45 @@ class OwningBytesField final : public OwningField {
 
   void Clear() override { ClearStringLikeValue(value_); }
   bool ConsumeIntoMember(ParsingState& serialized) override {
-    return field_.ConsumeIntoMember(serialized, *this);
+    absl::StatusOr<absl::string_view> result =
+        ConsumeBytesReturnStringView(serialized);
+    if (!result.ok()) {
+      return false;
+    }
+    CopyIntoStringLikeValue(*result, value_);
+    return true;
   }
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    return field_.SerializeWithTagInto(out, *this);
+    if (!RequiresSerialization()) {
+      return absl::OkStatus();
+    }
+
+    if (absl::Status result =
+            SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
+        !result.ok()) {
+      return result;
+    }
+    size_t size = SizeOfStringLikeValue(value_);
+
+    if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
+      return result;
+    }
+    if (out.GetBuffer().size() < size) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+    }
+    SerializeStringLikeValue(value_, out.GetBuffer());
+    out.Advance(size);
+    return absl::OkStatus();
   }
+
   size_t GetSerializedSizeIncludingTag() const override {
-    return field_.GetSerializedSizeIncludingTag(*this);
+    if (!RequiresSerialization()) {
+      return 0;
+    }
+    size_t size = SizeOfStringLikeValue(value_);
+    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
+           VarintLength(size) + size;
   }
 
   void set_value(absl::string_view value) {
@@ -187,8 +240,13 @@ class OwningBytesField final : public OwningField {
   StringLike* mutable_value() { return &value_; }
 
  private:
+  bool RequiresSerialization() const {
+    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
+           SizeOfStringLikeValue(value_) != 0;
+  }
+
   StringLike value_;
-  BytesField<OwningBytesField<StringLike>, StringLike> field_;
+  ProtoFieldOptions options_;
 };
 
 }  // namespace proto_parsing

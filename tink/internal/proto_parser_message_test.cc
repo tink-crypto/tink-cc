@@ -149,7 +149,7 @@ class Uint32OwningFieldWrongCrc : public OwningField {
       uint32_t field_number,
       ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : OwningField(field_number, WireType::kVarint),
-        field_(field_number, &Uint32OwningFieldWrongCrc::value_, options) {}
+        field_(field_number, options) {}
 
   // Copyable and movable.
   Uint32OwningFieldWrongCrc(const Uint32OwningFieldWrongCrc&) = default;
@@ -159,29 +159,28 @@ class Uint32OwningFieldWrongCrc : public OwningField {
   Uint32OwningFieldWrongCrc& operator=(Uint32OwningFieldWrongCrc&&) noexcept =
       default;
 
-  void Clear() override { value_ = 0; }
+  void Clear() override { field_.Clear(); }
   bool ConsumeIntoMember(ParsingState& serialized) override {
-    return field_.ConsumeIntoMember(serialized, *this);
+    return field_.ConsumeIntoMember(serialized);
   }
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
     // Skip check for requires serialization.
     absl::Status status = SerializeWireTypeAndFieldNumber(
-        GetWireType(), field_.GetFieldNumber(), out);
+        GetWireType(), field_.FieldNumber(), out);
     if (!status.ok()) {
       return status;
     }
-    return SerializeVarintWrongCrc(value_, out);
+    return SerializeVarintWrongCrc(field_.value(), out);
   }
   size_t GetSerializedSizeIncludingTag() const override {
-    return field_.GetSerializedSizeIncludingTag(*this);
+    return field_.GetSerializedSizeIncludingTag();
   }
 
-  void set_value(uint32_t value) { value_ = value; }
-  uint32_t value() const { return value_; }
+  void set_value(uint32_t value) { field_.set_value(value); }
+  uint32_t value() const { return field_.value(); }
 
  private:
-  uint32_t value_ = 0;
-  Uint32Field<Uint32OwningFieldWrongCrc> field_;
+  Uint32OwningField field_;
 };
 
 class OuterProtoClassWithWrongCrc

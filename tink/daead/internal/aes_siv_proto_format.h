@@ -14,8 +14,8 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_DAEAD_INTERNAL_AES_SIV_PROTO_STRUCTS_H_
-#define TINK_DAEAD_INTERNAL_AES_SIV_PROTO_STRUCTS_H_
+#ifndef TINK_DAEAD_INTERNAL_AES_SIV_PROTO_FORMAT_H_
+#define TINK_DAEAD_INTERNAL_AES_SIV_PROTO_FORMAT_H_
 
 #include <array>
 #include <cstdint>
@@ -58,4 +58,4 @@ class AesSivKeyFormatTP : public Message<AesSivKeyFormatTP> {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_DAEAD_INTERNAL_AES_SIV_PROTO_STRUCTS_H_
+#endif  // TINK_DAEAD_INTERNAL_AES_SIV_PROTO_FORMAT_H_

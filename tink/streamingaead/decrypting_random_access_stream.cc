@@ -90,7 +90,7 @@ absl::Status DecryptingRandomAccessStream::PRead(
 absl::StatusOr<crypto::tink::RandomAccessStream*>
 DecryptingRandomAccessStream::GetMatchedStream() const {
   {
-    absl::ReaderMutexLock lock(&matching_mutex_);
+    absl::ReaderMutexLock lock(matching_mutex_);
     if (attempted_matching_) {
       if (matching_stream_ != nullptr) {
         return matching_stream_.get();
@@ -101,7 +101,7 @@ DecryptingRandomAccessStream::GetMatchedStream() const {
     }
   }
   // Matching has not been attempted yet, so try it now.
-  absl::MutexLock lock(&matching_mutex_);
+  absl::MutexLock lock(matching_mutex_);
 
   // Re-check that matching hasn't been attempted in the meantime.
   if (attempted_matching_) {

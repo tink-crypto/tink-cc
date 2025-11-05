@@ -39,21 +39,19 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-// OwningRepeatedSecretDataField is a Field that owns a vector of SecretData.
+// RepeatedSecretDataField is a Field that owns a vector of SecretData.
 // It is used to represent a repeated field of SecretData in a proto message.
-class OwningRepeatedSecretDataField : public OwningField {
+class RepeatedSecretDataField : public OwningField {
  public:
-  explicit OwningRepeatedSecretDataField(int field_number)
+  explicit RepeatedSecretDataField(int field_number)
       : OwningField(field_number, WireType::kLengthDelimited) {}
 
   // Copyable and movable.
-  OwningRepeatedSecretDataField(const OwningRepeatedSecretDataField&) = default;
-  OwningRepeatedSecretDataField& operator=(
-      const OwningRepeatedSecretDataField&) = default;
-  OwningRepeatedSecretDataField(OwningRepeatedSecretDataField&&) noexcept =
+  RepeatedSecretDataField(const RepeatedSecretDataField&) = default;
+  RepeatedSecretDataField& operator=(const RepeatedSecretDataField&) = default;
+  RepeatedSecretDataField(RepeatedSecretDataField&&) noexcept = default;
+  RepeatedSecretDataField& operator=(RepeatedSecretDataField&&) noexcept =
       default;
-  OwningRepeatedSecretDataField& operator=(
-      OwningRepeatedSecretDataField&&) noexcept = default;
 
   void Clear() override { value_.clear(); }
 

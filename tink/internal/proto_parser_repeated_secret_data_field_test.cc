@@ -59,8 +59,8 @@ absl::crc32c_t GetCrc32c(const SecretData& secret_data) {
 #endif
 }
 
-TEST(OwningRepeatedSecretDataField, ClearWorks) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, ClearWorks) {
+  RepeatedSecretDataField field(1);
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
   absl::crc32c_t crc_to_maintain = absl::ComputeCrc32c("Previously parsed");
@@ -71,8 +71,8 @@ TEST(OwningRepeatedSecretDataField, ClearWorks) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 }
 
-TEST(OwningRepeatedSecretDataField, ConsumeOneElementWorks) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, ConsumeOneElementWorks) {
+  RepeatedSecretDataField field(1);
 
   std::string bytes =
       absl::StrCat(/* 10 bytes */ HexDecodeOrDie("0a"), "1234567890XYZ");
@@ -95,8 +95,8 @@ TEST(OwningRepeatedSecretDataField, ConsumeOneElementWorks) {
               Eq(absl::StrCat("0a0a", HexEncode("1234567890"))));
 }
 
-TEST(OwningRepeatedSecretDataField, ConsumeMultipleElementsWorks) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, ConsumeMultipleElementsWorks) {
+  RepeatedSecretDataField field(1);
 
   std::string bytes1 = absl::StrCat(/* 3 bytes */ HexDecodeOrDie("03"), "one");
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
@@ -121,8 +121,8 @@ TEST(OwningRepeatedSecretDataField, ConsumeMultipleElementsWorks) {
                                                  "0a06", HexEncode("twotwo"))));
 }
 
-TEST(OwningRepeatedSecretDataField, ConsumeVarintSaysTooLong) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, ConsumeVarintSaysTooLong) {
+  RepeatedSecretDataField field(1);
 
   std::string bytes =
       absl::StrCat(/* 11 bytes */ HexDecodeOrDie("0b"), "1234567890");
@@ -133,8 +133,8 @@ TEST(OwningRepeatedSecretDataField, ConsumeVarintSaysTooLong) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 }
 
-TEST(OwningRepeatedSecretDataField, ConsumeEmptyWithoutVarint) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, ConsumeEmptyWithoutVarint) {
+  RepeatedSecretDataField field(1);
 
   std::string bytes = "";
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
@@ -144,8 +144,8 @@ TEST(OwningRepeatedSecretDataField, ConsumeEmptyWithoutVarint) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 }
 
-TEST(OwningRepeatedSecretDataField, ConsumeInvalidVarint) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, ConsumeInvalidVarint) {
+  RepeatedSecretDataField field(1);
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   absl::crc32c_t crc_to_maintain = absl::crc32c_t{};
@@ -155,8 +155,8 @@ TEST(OwningRepeatedSecretDataField, ConsumeInvalidVarint) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 }
 
-TEST(OwningRepeatedSecretDataField, SerializeEmptyDoesNotSerialize) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeEmptyDoesNotSerialize) {
+  RepeatedSecretDataField field(1);
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -165,8 +165,8 @@ TEST(OwningRepeatedSecretDataField, SerializeEmptyDoesNotSerialize) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 }
 
-TEST(OwningRepeatedSecretDataField, SerializeEmptySecretDataWorks) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeEmptySecretDataWorks) {
+  RepeatedSecretDataField field(1);
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"));
   absl::crc32c_t crc_to_maintain = absl::ComputeCrc32c("Previously parsed");
@@ -181,8 +181,8 @@ TEST(OwningRepeatedSecretDataField, SerializeEmptySecretDataWorks) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
 }
 
-TEST(OwningRepeatedSecretDataField, SerializeMultipleSecretDatasWorks) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeMultipleSecretDatasWorks) {
+  RepeatedSecretDataField field(1);
   std::string text1 = "one";
   std::string text2 = "twotwo";
   field.value().push_back(SecretDataFromStringView(text1));
@@ -202,8 +202,8 @@ TEST(OwningRepeatedSecretDataField, SerializeMultipleSecretDatasWorks) {
 
 // Tests that when serializing a SecretDataField, the resulting CRC
 // is computed from the CRC of the field (and not the actual data).
-TEST(OwningRepeatedSecretDataField, SerializeCrcIsComputedFromCrc) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeCrcIsComputedFromCrc) {
+  RepeatedSecretDataField field(1);
   std::string text1 = "this is some text";
   std::string text2 = "this is different";
   // The buffer is computed from a different value than the CRC.
@@ -225,8 +225,8 @@ TEST(OwningRepeatedSecretDataField, SerializeCrcIsComputedFromCrc) {
 
 #endif  // not TINK_CPP_SECRET_DATA_IS_STD_VECTOR
 
-TEST(OwningRepeatedSecretDataField, SerializeTooSmallBuffer) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeTooSmallBuffer) {
+  RepeatedSecretDataField field(1);
   std::string text1 = "one";
   std::string text2 = "twotwo";
   field.value().push_back(SecretDataFromStringView(text1));
@@ -239,8 +239,8 @@ TEST(OwningRepeatedSecretDataField, SerializeTooSmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
-TEST(OwningRepeatedSecretDataField, SerializeTooSmallBuffer2) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeTooSmallBuffer2) {
+  RepeatedSecretDataField field(1);
   std::string text1 = "one";
   std::string text2 = "twotwo";
   field.value().push_back(SecretDataFromStringView(text1));
@@ -252,8 +252,8 @@ TEST(OwningRepeatedSecretDataField, SerializeTooSmallBuffer2) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
-TEST(OwningRepeatedSecretDataField, SerializeTooSmallBuffer3) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeTooSmallBuffer3) {
+  RepeatedSecretDataField field(1);
   std::string text1 = "one";
   std::string text2 = "twotwo";
   field.value().push_back(SecretDataFromStringView(text1));
@@ -267,8 +267,8 @@ TEST(OwningRepeatedSecretDataField, SerializeTooSmallBuffer3) {
 
 // Test that when serializing, the existing CRC in the state is extended by
 // the new data (and not overwritten)
-TEST(OwningRepeatedSecretDataField, SerializeExtendsExistingCrc) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, SerializeExtendsExistingCrc) {
+  RepeatedSecretDataField field(1);
   std::string text = "this is some text";
   field.value().push_back(SecretDataFromStringView(text));
 
@@ -285,24 +285,24 @@ TEST(OwningRepeatedSecretDataField, SerializeExtendsExistingCrc) {
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(absl::StrCat(
                        "existing", HexDecodeOrDie("0a11"), text))));
 }
-TEST(OwningRepeatedSecretDataField, FieldNumberReturnsCorrectValue) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, FieldNumberReturnsCorrectValue) {
+  RepeatedSecretDataField field(1);
   EXPECT_THAT(field.FieldNumber(), Eq(1));
-  OwningRepeatedSecretDataField field2(100);
+  RepeatedSecretDataField field2(100);
   EXPECT_THAT(field2.FieldNumber(), Eq(100));
 }
 
-TEST(OwningRepeatedSecretDataField, GetWireTypeReturnsCorrectValue) {
-  OwningRepeatedSecretDataField field(1);
+TEST(RepeatedSecretDataField, GetWireTypeReturnsCorrectValue) {
+  RepeatedSecretDataField field(1);
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kLengthDelimited));
 }
 
-TEST(OwningRepeatedSecretDataField, CopyConstructor) {
-  OwningRepeatedSecretDataField original(1);
+TEST(RepeatedSecretDataField, CopyConstructor) {
+  RepeatedSecretDataField original(1);
   original.value().push_back(SecretDataFromStringView("secret1"));
   original.value().push_back(SecretDataFromStringView("secret2"));
 
-  OwningRepeatedSecretDataField copied = original;
+  RepeatedSecretDataField copied = original;
 
   EXPECT_THAT(copied.value(), SizeIs(2));
   EXPECT_THAT(SecretDataAsStringView(copied.value()[0]), Eq("secret1"));
@@ -323,12 +323,12 @@ TEST(OwningRepeatedSecretDataField, CopyConstructor) {
   EXPECT_THAT(SecretDataAsStringView(copied.value()[0]), Eq("secret1"));
 }
 
-TEST(OwningRepeatedSecretDataField, CopyAssignment) {
-  OwningRepeatedSecretDataField original(1);
+TEST(RepeatedSecretDataField, CopyAssignment) {
+  RepeatedSecretDataField original(1);
   original.value().push_back(SecretDataFromStringView("secret1"));
   original.value().push_back(SecretDataFromStringView("secret2"));
 
-  OwningRepeatedSecretDataField copied(2);
+  RepeatedSecretDataField copied(2);
   copied = original;
 
   EXPECT_THAT(copied.value(), SizeIs(2));
@@ -350,13 +350,13 @@ TEST(OwningRepeatedSecretDataField, CopyAssignment) {
   EXPECT_THAT(SecretDataAsStringView(copied.value()[0]), Eq("secret1"));
 }
 
-TEST(OwningRepeatedSecretDataField, MoveConstructor) {
-  OwningRepeatedSecretDataField original(1);
+TEST(RepeatedSecretDataField, MoveConstructor) {
+  RepeatedSecretDataField original(1);
   original.value().push_back(SecretDataFromStringView("secret1"));
   original.value().push_back(SecretDataFromStringView("secret2"));
   size_t original_size = original.GetSerializedSizeIncludingTag();
 
-  OwningRepeatedSecretDataField moved = std::move(original);
+  RepeatedSecretDataField moved = std::move(original);
 
   EXPECT_THAT(moved.value(), SizeIs(2));
   EXPECT_THAT(SecretDataAsStringView(moved.value()[0]), Eq("secret1"));
@@ -371,13 +371,13 @@ TEST(OwningRepeatedSecretDataField, MoveConstructor) {
                               HexEncode("secret2"))));
 }
 
-TEST(OwningRepeatedSecretDataField, MoveAssignment) {
-  OwningRepeatedSecretDataField original(1);
+TEST(RepeatedSecretDataField, MoveAssignment) {
+  RepeatedSecretDataField original(1);
   original.value().push_back(SecretDataFromStringView("secret1"));
   original.value().push_back(SecretDataFromStringView("secret2"));
   size_t original_size = original.GetSerializedSizeIncludingTag();
 
-  OwningRepeatedSecretDataField moved(2);
+  RepeatedSecretDataField moved(2);
   moved.value().push_back(SecretDataFromStringView("something_else"));
   moved = std::move(original);
 

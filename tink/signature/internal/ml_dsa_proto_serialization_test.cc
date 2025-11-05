@@ -22,6 +22,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
@@ -67,6 +68,7 @@ const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.MlDsaPublicKey";
 
 struct TestCase {
+  MlDsaParameters::Instance instance;
   MlDsaParameters::Variant variant;
   OutputPrefixTypeEnum output_prefix_type;
   absl::optional<int> id_requirement;
@@ -82,19 +84,31 @@ class MlDsaProtoSerializationTest : public TestWithParam<TestCase> {
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaProtoSerializationTestSuite, MlDsaProtoSerializationTest,
-    Values(TestCase{MlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x02030400,
-                    std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{MlDsaParameters::Variant::kTink,
-                    OutputPrefixTypeEnum::kTink, 0x03050709,
-                    std::string("\x01\x03\x05\x07\x09", 5)},
-           TestCase{MlDsaParameters::Variant::kNoPrefix,
-                    OutputPrefixTypeEnum::kRaw, absl::nullopt, ""}));
+    Values(
+        TestCase{MlDsaParameters::Instance::kMlDsa65,
+                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
+                 0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
+        TestCase{MlDsaParameters::Instance::kMlDsa65,
+                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
+                 0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
+        TestCase{MlDsaParameters::Instance::kMlDsa65,
+                 MlDsaParameters::Variant::kNoPrefix,
+                 OutputPrefixTypeEnum::kRaw, absl::nullopt, ""},
+        TestCase{MlDsaParameters::Instance::kMlDsa87,
+                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
+                 0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
+        TestCase{MlDsaParameters::Instance::kMlDsa87,
+                 MlDsaParameters::Variant::kTink, OutputPrefixTypeEnum::kTink,
+                 0x03050709, std::string("\x01\x03\x05\x07\x09", 5)},
+        TestCase{MlDsaParameters::Instance::kMlDsa87,
+                 MlDsaParameters::Variant::kNoPrefix,
+                 OutputPrefixTypeEnum::kRaw, absl::nullopt, ""}));
 
-MlDsaPrivateKey GenerateMlDsa65PrivateKey(MlDsaParameters::Variant variant,
-                                          absl::optional<int> id_requirement) {
+MlDsaPrivateKey GenerateMlDsaPrivateKey(MlDsaParameters::Instance instance,
+                                        MlDsaParameters::Variant variant,
+                                        absl::optional<int> id_requirement) {
   absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
+      MlDsaParameters::Create(instance, variant);
   ABSL_CHECK_OK(parameters);
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
@@ -104,18 +118,29 @@ MlDsaPrivateKey GenerateMlDsa65PrivateKey(MlDsaParameters::Variant variant,
   return **private_key;
 }
 
+MlDsaInstance ToProtoInstance(MlDsaParameters::Instance instance) {
+  switch (instance) {
+    case MlDsaParameters::Instance::kMlDsa65:
+      return MlDsaInstance::ML_DSA_65;
+    case MlDsaParameters::Instance::kMlDsa87:
+      return MlDsaInstance::ML_DSA_87;
+    default:
+      ABSL_LOG(FATAL) << "Invalid ML-DSA instance";
+  }
+}
+
 TEST_F(MlDsaProtoSerializationTest, RegisterTwiceSucceeds) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 }
 
-TEST_P(MlDsaProtoSerializationTest, ParseMlDsa65ParametersWorks) {
+TEST_P(MlDsaProtoSerializationTest, ParseMlDsaParametersWorks) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   MlDsaKeyFormat key_format_proto;
   MlDsaParams& params = *key_format_proto.mutable_params();
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
@@ -134,8 +159,7 @@ TEST_P(MlDsaProtoSerializationTest, ParseMlDsa65ParametersWorks) {
       dynamic_cast<const MlDsaParameters*>(parameters->get());
   ASSERT_THAT(ml_dsa_parameters, NotNull());
   EXPECT_THAT(ml_dsa_parameters->GetVariant(), Eq(test_case.variant));
-  EXPECT_THAT(ml_dsa_parameters->GetInstance(),
-              Eq(MlDsaParameters::Instance::kMlDsa65));
+  EXPECT_THAT(ml_dsa_parameters->GetInstance(), Eq(test_case.instance));
 }
 
 TEST_F(MlDsaProtoSerializationTest,
@@ -154,13 +178,14 @@ TEST_F(MlDsaProtoSerializationTest,
                        HasSubstr("Failed to parse MlDsaKeyFormat proto")));
 }
 
-TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
+TEST_P(MlDsaProtoSerializationTest, ParseParametersWithInvalidVersionFails) {
+  TestCase test_case = GetParam();
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   MlDsaKeyFormat key_format_proto;
   key_format_proto.set_version(1);
   MlDsaParams& params = *key_format_proto.mutable_params();
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
@@ -197,13 +222,14 @@ TEST_F(MlDsaProtoSerializationTest,
                HasSubstr("Could not determine MlDsaParameters::Instance")));
 }
 
-TEST_F(MlDsaProtoSerializationTest,
+TEST_P(MlDsaProtoSerializationTest,
        ParseParametersWithUnkownOutputPrefixFails) {
+  TestCase test_case = GetParam();
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   MlDsaKeyFormat key_format_proto;
   MlDsaParams& params = *key_format_proto.mutable_params();
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   absl::StatusOr<internal::ProtoParametersSerialization> serialization =
       internal::ProtoParametersSerialization::Create(
@@ -247,7 +273,7 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
     // Out of range instance - too large.
     MlDsaKeyFormat key_format_proto;
     MlDsaParams& params = *key_format_proto.mutable_params();
-    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(2));
+    params.set_ml_dsa_instance(static_cast<MlDsaInstance>(3));
 
     absl::StatusOr<internal::ProtoParametersSerialization> serialization =
         internal::ProtoParametersSerialization::Create(
@@ -283,12 +309,12 @@ TEST_F(MlDsaProtoSerializationTest, ParseParametersWithInvalidInstanceFails) {
   }
 }
 
-TEST_P(MlDsaProtoSerializationTest, SerializeMlDsa65SignatureParametersWorks) {
+TEST_P(MlDsaProtoSerializationTest, SerializeMlDsaSignatureParametersWorks) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -313,15 +339,15 @@ TEST_P(MlDsaProtoSerializationTest, SerializeMlDsa65SignatureParametersWorks) {
   ASSERT_THAT(key_format.ParseFromString(key_template.value()), IsTrue());
   ASSERT_TRUE(key_format.has_params());
   EXPECT_THAT(key_format.params().ml_dsa_instance(),
-              Eq(MlDsaInstance::ML_DSA_65));
+              Eq(ToProtoInstance(test_case.instance)));
 }
 
-TEST_P(MlDsaProtoSerializationTest, RoundTripMlDsa65SignatureParametersWorks) {
+TEST_P(MlDsaProtoSerializationTest, RoundTripMlDsaSignatureParametersWorks) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -347,13 +373,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorks) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid public key bytes.
-  MlDsaPrivateKey private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
   MlDsaParams params;
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   google::crypto::tink::MlDsaPublicKey key_proto;
   key_proto.set_version(0);
@@ -377,8 +403,8 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWorks) {
   EXPECT_THAT((*key)->GetParameters().HasIdRequirement(),
               test_case.id_requirement.has_value());
 
-  absl::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> expected_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> expected_key =
@@ -417,13 +443,13 @@ TEST_P(MlDsaProtoSerializationTest, ParsePublicKeyWithInvalidVersionFails) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid public key bytes.
-  MlDsaPrivateKey private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
   MlDsaParams params;
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   google::crypto::tink::MlDsaPublicKey key_proto;
   key_proto.set_version(1);
@@ -452,13 +478,13 @@ TEST_P(MlDsaProtoSerializationTest, SerializePublicKeyWorks) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid public key bytes.
-  MlDsaPrivateKey private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> key =
@@ -494,7 +520,7 @@ TEST_P(MlDsaProtoSerializationTest, SerializePublicKeyWorks) {
   EXPECT_THAT(proto_key.key_value(), Eq(raw_key_bytes));
   EXPECT_THAT(proto_key.has_params(), IsTrue());
   EXPECT_THAT(proto_key.params().ml_dsa_instance(),
-              Eq(MlDsaInstance::ML_DSA_65));
+              Eq(ToProtoInstance(test_case.instance)));
 }
 
 TEST_P(MlDsaProtoSerializationTest, RoundTripPublicKey) {
@@ -502,13 +528,13 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPublicKey) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid public key bytes.
-  MlDsaPrivateKey private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view raw_key_bytes =
       private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> key =
@@ -539,8 +565,8 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorks) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid private key bytes.
-  MlDsaPrivateKey raw_private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view private_seed_bytes =
       raw_private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
@@ -548,7 +574,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorks) {
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
   MlDsaParams params;
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   google::crypto::tink::MlDsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -579,8 +605,8 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWorks) {
   EXPECT_THAT((*private_key)->GetParameters().HasIdRequirement(),
               test_case.id_requirement.has_value());
 
-  absl::StatusOr<MlDsaParameters> expected_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> expected_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(expected_parameters, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> expected_public_key =
@@ -625,8 +651,8 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid private key bytes.
-  MlDsaPrivateKey raw_private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view private_seed_bytes =
       raw_private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
@@ -634,7 +660,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyWithInvalidVersion) {
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
   MlDsaParams params;
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   google::crypto::tink::MlDsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -669,8 +695,8 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid private key bytes.
-  MlDsaPrivateKey raw_private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view private_seed_bytes =
       raw_private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
@@ -678,7 +704,7 @@ TEST_P(MlDsaProtoSerializationTest, ParsePrivateKeyNoSecretKeyAccess) {
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
   MlDsaParams params;
-  params.set_ml_dsa_instance(MlDsaInstance::ML_DSA_65);
+  params.set_ml_dsa_instance(ToProtoInstance(test_case.instance));
 
   google::crypto::tink::MlDsaPublicKey public_key_proto;
   public_key_proto.set_version(0);
@@ -711,16 +737,16 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKey) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid private key bytes.
-  MlDsaPrivateKey raw_private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view private_seed_bytes =
       raw_private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =
@@ -765,7 +791,7 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKey) {
   EXPECT_THAT(proto_key.public_key().key_value(), Eq(public_key_bytes));
   EXPECT_THAT(proto_key.public_key().has_params(), IsTrue());
   EXPECT_THAT(proto_key.public_key().params().ml_dsa_instance(),
-              Eq(MlDsaInstance::ML_DSA_65));
+              Eq(ToProtoInstance(test_case.instance)));
 }
 
 TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
@@ -773,16 +799,16 @@ TEST_P(MlDsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccess) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid private key bytes.
-  MlDsaPrivateKey raw_private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view private_seed_bytes =
       raw_private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =
@@ -810,16 +836,16 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPrivateKey) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   // Generate valid private key bytes.
-  MlDsaPrivateKey raw_private_key =
-      GenerateMlDsa65PrivateKey(test_case.variant, test_case.id_requirement);
+  MlDsaPrivateKey raw_private_key = GenerateMlDsaPrivateKey(
+      test_case.instance, test_case.variant, test_case.id_requirement);
   absl::string_view private_seed_bytes =
       raw_private_key.GetPrivateSeedBytes(GetPartialKeyAccess())
           .GetSecret(InsecureSecretKeyAccess::Get());
   absl::string_view public_key_bytes =
       raw_private_key.GetPublicKey().GetPublicKeyBytes(GetPartialKeyAccess());
 
-  absl::StatusOr<MlDsaParameters> parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<MlDsaPublicKey> public_key =
@@ -851,7 +877,7 @@ TEST_P(MlDsaProtoSerializationTest, RoundTripPrivateKey) {
   ASSERT_THAT(**parsed_key, Eq(*private_key));
 }
 
-TEST_F(MlDsaProtoSerializationTest, ParseGoldenPrivateKeyWorks) {
+TEST_F(MlDsaProtoSerializationTest, ParseGoldenPrivateKey65Works) {
   ASSERT_THAT(RegisterMlDsaProtoSerialization(), IsOk());
 
   absl::string_view public_key_bytes_hex =

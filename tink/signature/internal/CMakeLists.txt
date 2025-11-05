@@ -305,6 +305,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     absl::optional
     crypto
@@ -327,7 +328,6 @@ tink_cc_library(
     tink::signature::slh_dsa_public_key
     tink::subtle::common_enums
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
   TAGS
     exclude_if_openssl
@@ -342,6 +342,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_proto_serialization
     tink::signature::internal::slh_dsa_proto_serialization
     gmock
+    absl::statusor
     absl::optional
     tink::core::key_gen_configuration
     tink::core::key_status
@@ -354,7 +355,6 @@ tink_cc_test(
     tink::signature::ml_dsa_private_key
     tink::signature::slh_dsa_parameters
     tink::signature::slh_dsa_private_key
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl
@@ -504,6 +504,7 @@ tink_cc_test(
     tink::signature::internal::ml_dsa_proto_serialization
     gmock
     absl::absl_check
+    absl::absl_log
     absl::status
     absl::string_view
     absl::optional

@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/internal/key_gen_configuration_impl.h"
 #include "tink/key_gen_configuration.h"
@@ -35,7 +36,6 @@
 #include "tink/signature/ml_dsa_private_key.h"
 #include "tink/signature/slh_dsa_parameters.h"
 #include "tink/signature/slh_dsa_private_key.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -53,14 +53,19 @@ using ::testing::Values;
 struct TestCase {
   absl::optional<int> id_requirement;
   std::string output_prefix;
+  MlDsaParameters::Instance mldsa_instance;
 };
 
 using KeyCreatorsTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     KeyCreatorsTestSuite, KeyCreatorsTest,
-    Values(TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{absl::nullopt, ""}));
+    Values(TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5),
+                    MlDsaParameters::Instance::kMlDsa65},
+           TestCase{absl::nullopt, "", MlDsaParameters::Instance::kMlDsa65},
+           TestCase{0x02030400, std::string("\x01\x02\x03\x04\x00", 5),
+                    MlDsaParameters::Instance::kMlDsa87},
+           TestCase{absl::nullopt, "", MlDsaParameters::Instance::kMlDsa87}));
 
 TEST_P(KeyCreatorsTest, CreateMlDsaPrivateKeyWorks) {
   TestCase test_case = GetParam();
@@ -69,7 +74,7 @@ TEST_P(KeyCreatorsTest, CreateMlDsaPrivateKeyWorks) {
                                          ? MlDsaParameters::Variant::kTink
                                          : MlDsaParameters::Variant::kNoPrefix;
   absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
+      MlDsaParameters::Create(test_case.mldsa_instance, variant);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
@@ -88,7 +93,7 @@ TEST_P(KeyCreatorsTest, CreateKeysetHandleFromConfigWithMlDsaKeyWorks) {
                                          ? MlDsaParameters::Variant::kTink
                                          : MlDsaParameters::Variant::kNoPrefix;
   absl::StatusOr<MlDsaParameters> parameters =
-      MlDsaParameters::Create(MlDsaParameters::Instance::kMlDsa65, variant);
+      MlDsaParameters::Create(test_case.mldsa_instance, variant);
   ASSERT_THAT(parameters, IsOk());
 
   KeyGenConfiguration key_creator_config;

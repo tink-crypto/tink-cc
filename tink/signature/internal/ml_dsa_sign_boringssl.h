@@ -19,16 +19,16 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/public_key_sign.h"
 #include "tink/signature/ml_dsa_private_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
 // Creates a new PublicKeySign primitive using the ML-DSA implementation from
-// BoringSSL. Only ML-DSA-65 is supported at the moment.
+// BoringSSL. Only ML-DSA-65 and ML-DSA-87 are supported at the moment.
 absl::StatusOr<std::unique_ptr<PublicKeySign>> NewMlDsaSignBoringSsl(
     MlDsaPrivateKey private_key);
 

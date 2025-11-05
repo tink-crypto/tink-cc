@@ -381,7 +381,6 @@ tink_cc_library(
     tink::signature::ml_dsa_private_key
     tink::subtle::subtle_util
     tink::util::secret_data
-    tink::util::statusor
   TAGS
     exclude_if_openssl
 )
@@ -394,6 +393,7 @@ tink_cc_test(
     tink::signature::internal::key_creators
     tink::signature::internal::ml_dsa_sign_boringssl
     gmock
+    absl::absl_log
     absl::status
     absl::statusor
     absl::optional
@@ -402,8 +402,6 @@ tink_cc_test(
     tink::internal::fips_utils
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
   TAGS
     exclude_if_openssl

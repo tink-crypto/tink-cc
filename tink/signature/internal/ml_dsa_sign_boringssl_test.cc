@@ -21,6 +21,7 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
@@ -30,8 +31,6 @@
 #include "tink/signature/internal/key_creators.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_private_key.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -45,6 +44,7 @@ using ::testing::TestWithParam;
 using ::testing::Values;
 
 struct TestCase {
+  MlDsaParameters::Instance instance;
   MlDsaParameters::Variant variant;
   absl::optional<int> id_requirement;
   std::string output_prefix;
@@ -54,9 +54,27 @@ using MlDsaSignBoringSslTest = TestWithParam<TestCase>;
 
 INSTANTIATE_TEST_SUITE_P(
     MlDsaSignBoringSslTestSuite, MlDsaSignBoringSslTest,
-    Values(TestCase{MlDsaParameters::Variant::kTink, 0x02030400,
+    Values(TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kTink, 0x02030400,
                     std::string("\x01\x02\x03\x04\x00", 5)},
-           TestCase{MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+           TestCase{MlDsaParameters::Instance::kMlDsa65,
+                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kTink, 0x02030400,
+                    std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{MlDsaParameters::Instance::kMlDsa87,
+                    MlDsaParameters::Variant::kNoPrefix, absl::nullopt, ""}));
+
+int SignatureBytes(MlDsaParameters::Instance instance) {
+  switch (instance) {
+    case MlDsaParameters::Instance::kMlDsa65:
+      return MLDSA65_SIGNATURE_BYTES;
+    case MlDsaParameters::Instance::kMlDsa87:
+      return MLDSA87_SIGNATURE_BYTES;
+    default:
+      ABSL_LOG(FATAL) << "Unsupported ML-DSA instance";
+  }
+}
 
 TEST_P(MlDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
@@ -66,8 +84,8 @@ TEST_P(MlDsaSignBoringSslTest, SignatureLengthIsCorrect) {
 
   TestCase test_case = GetParam();
 
-  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, test_case.variant);
+  absl::StatusOr<MlDsaParameters> key_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(key_parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
@@ -83,20 +101,22 @@ TEST_P(MlDsaSignBoringSslTest, SignatureLengthIsCorrect) {
   ASSERT_THAT(signature, IsOk());
 
   EXPECT_NE(*signature, message);
-  EXPECT_EQ((*signature).size(),
-            test_case.output_prefix.size() + MLDSA65_SIGNATURE_BYTES);
+  EXPECT_EQ((*signature).size(), test_case.output_prefix.size() +
+                                     SignatureBytes(test_case.instance));
   EXPECT_EQ(test_case.output_prefix,
             (*signature).substr(0, test_case.output_prefix.size()));
 }
 
-TEST(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
+TEST_P(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
+  TestCase test_case = GetParam();
+
   if (internal::IsFipsModeEnabled() && !internal::IsFipsEnabledInSsl()) {
     GTEST_SKIP()
         << "Test is skipped if kOnlyUseFips but BoringCrypto is unavailable.";
   }
 
   absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+      test_case.instance, MlDsaParameters::Variant::kNoPrefix);
   ASSERT_THAT(key_parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =
@@ -116,19 +136,21 @@ TEST(MlDsaSignBoringSslTest, SignatureIsNonDeterministic) {
   ASSERT_THAT(second_signature, IsOk());
 
   // Check the signatures' sizes.
-  EXPECT_EQ((*first_signature).size(), MLDSA65_SIGNATURE_BYTES);
-  EXPECT_EQ((*second_signature).size(), MLDSA65_SIGNATURE_BYTES);
+  EXPECT_EQ((*first_signature).size(), SignatureBytes(test_case.instance));
+  EXPECT_EQ((*second_signature).size(), SignatureBytes(test_case.instance));
 
   EXPECT_NE(*first_signature, *second_signature);
 }
 
-TEST(MlDsaSignBoringSslTest, FipsMode) {
+TEST_P(MlDsaSignBoringSslTest, FipsMode) {
   if (!IsFipsModeEnabled()) {
     GTEST_SKIP() << "Test assumes kOnlyUseFips.";
   }
 
-  absl::StatusOr<MlDsaParameters> key_parameters = MlDsaParameters::Create(
-      MlDsaParameters::Instance::kMlDsa65, MlDsaParameters::Variant::kNoPrefix);
+  TestCase test_case = GetParam();
+
+  absl::StatusOr<MlDsaParameters> key_parameters =
+      MlDsaParameters::Create(test_case.instance, test_case.variant);
   ASSERT_THAT(key_parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<MlDsaPrivateKey>> private_key =

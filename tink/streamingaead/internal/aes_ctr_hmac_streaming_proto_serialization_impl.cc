@@ -36,8 +36,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -53,12 +53,12 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class HmacParamsTP : public Message<HmacParamsTP> {
  public:
@@ -71,13 +71,11 @@ class HmacParamsTP : public Message<HmacParamsTP> {
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t tag_size) { tag_size_.set_value(tag_size); }
 
-  std::array<const OwningField*, 2> GetFields() const {
-    return {&hash_, &tag_size_};
-  }
+  std::array<const Field*, 2> GetFields() const { return {&hash_, &tag_size_}; }
 
  private:
-  EnumOwningField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
-  Uint32OwningField tag_size_{2};
+  EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
+  Uint32Field tag_size_{2};
 };
 
 class AesCtrHmacStreamingParamsTP
@@ -106,16 +104,16 @@ class AesCtrHmacStreamingParamsTP
   const HmacParamsTP& hmac_params() const { return hmac_params_.value(); }
   HmacParamsTP* mutable_hmac_params() { return hmac_params_.mutable_value(); }
 
-  std::array<const OwningField*, 4> GetFields() const {
+  std::array<const Field*, 4> GetFields() const {
     return {&ciphertext_segment_size_, &derived_key_size_, &hkdf_hash_type_,
             &hmac_params_};
   }
 
  private:
-  Uint32OwningField ciphertext_segment_size_{1};
-  Uint32OwningField derived_key_size_{2};
-  EnumOwningField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
-  MessageOwningField<HmacParamsTP> hmac_params_{4};
+  Uint32Field ciphertext_segment_size_{1};
+  Uint32Field derived_key_size_{2};
+  EnumField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
+  MessageField<HmacParamsTP> hmac_params_{4};
 };
 
 class AesCtrHmacStreamingKeyFormatTP
@@ -135,14 +133,14 @@ class AesCtrHmacStreamingKeyFormatTP
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&params_, &key_size_, &version_};
   }
 
  private:
-  MessageOwningField<AesCtrHmacStreamingParamsTP> params_{1};
-  Uint32OwningField key_size_{2};
-  Uint32OwningField version_{3};
+  MessageField<AesCtrHmacStreamingParamsTP> params_{1};
+  Uint32Field key_size_{2};
+  Uint32Field version_{3};
 };
 
 class AesCtrHmacStreamingKeyTP : public Message<AesCtrHmacStreamingKeyTP> {
@@ -163,13 +161,13 @@ class AesCtrHmacStreamingKeyTP : public Message<AesCtrHmacStreamingKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<AesCtrHmacStreamingParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<AesCtrHmacStreamingParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
 

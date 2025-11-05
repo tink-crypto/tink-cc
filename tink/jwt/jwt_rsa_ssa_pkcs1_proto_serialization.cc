@@ -37,8 +37,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_rsa_ssa_pkcs1_parameters.h"
@@ -54,14 +54,14 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::MessageOwningFieldWithPresence;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
+using ::crypto::tink::internal::proto_parsing::MessageFieldWithPresence;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 using JwtRsaSsaPkcs1ProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -101,10 +101,10 @@ class CustomKidTP : public Message<CustomKidTP> {
   const std::string& value() const { return value_.value(); }
   std::string* mutable_value() { return value_.mutable_value(); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&value_}; }
+  std::array<const Field*, 1> GetFields() const { return {&value_}; }
 
  private:
-  OwningBytesField<std::string> value_{1};
+  BytesField<std::string> value_{1};
 };
 
 class JwtRsaSsaPkcs1PublicKeyTP : public Message<JwtRsaSsaPkcs1PublicKeyTP> {
@@ -130,17 +130,17 @@ class JwtRsaSsaPkcs1PublicKeyTP : public Message<JwtRsaSsaPkcs1PublicKeyTP> {
   CustomKidTP* mutable_custom_kid() { return custom_kid_.mutable_value(); }
   bool has_custom_kid() const { return custom_kid_.has_value(); }
 
-  std::array<const OwningField*, 5> GetFields() const {
+  std::array<const Field*, 5> GetFields() const {
     return {&version_, &algorithm_, &n_, &e_, &custom_kid_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  EnumOwningField<JwtRsaSsaPkcs1AlgorithmEnum> algorithm_{
+  Uint32Field version_{1};
+  EnumField<JwtRsaSsaPkcs1AlgorithmEnum> algorithm_{
       2, &JwtRsaSsaPkcs1AlgorithmValid};
-  OwningBytesField<std::string> n_{3};
-  OwningBytesField<std::string> e_{4};
-  MessageOwningFieldWithPresence<CustomKidTP> custom_kid_{5};
+  BytesField<std::string> n_{3};
+  BytesField<std::string> e_{4};
+  MessageFieldWithPresence<CustomKidTP> custom_kid_{5};
 };
 
 class JwtRsaSsaPkcs1PrivateKeyTP : public Message<JwtRsaSsaPkcs1PrivateKeyTP> {
@@ -175,13 +175,13 @@ class JwtRsaSsaPkcs1PrivateKeyTP : public Message<JwtRsaSsaPkcs1PrivateKeyTP> {
   const SecretData& crt() const { return crt_.value(); }
   SecretData* mutable_crt() { return crt_.mutable_value(); }
 
-  std::array<const OwningField*, 8> GetFields() const {
+  std::array<const Field*, 8> GetFields() const {
     return {&version_, &public_key_, &d_, &p_, &q_, &dp_, &dq_, &crt_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<JwtRsaSsaPkcs1PublicKeyTP> public_key_{2};
+  Uint32Field version_{1};
+  MessageField<JwtRsaSsaPkcs1PublicKeyTP> public_key_{2};
   SecretDataField d_{3};
   SecretDataField p_{4};
   SecretDataField q_{5};
@@ -217,16 +217,16 @@ class JwtRsaSsaPkcs1KeyFormatTP : public Message<JwtRsaSsaPkcs1KeyFormatTP> {
     return public_exponent_.mutable_value();
   }
 
-  std::array<const OwningField*, 4> GetFields() const {
+  std::array<const Field*, 4> GetFields() const {
     return {&version_, &algorithm_, &modulus_size_in_bits_, &public_exponent_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  EnumOwningField<JwtRsaSsaPkcs1AlgorithmEnum> algorithm_{
+  Uint32Field version_{1};
+  EnumField<JwtRsaSsaPkcs1AlgorithmEnum> algorithm_{
       2, &JwtRsaSsaPkcs1AlgorithmValid};
-  Uint32OwningField modulus_size_in_bits_{3};
-  OwningBytesField<std::string> public_exponent_{4};
+  Uint32Field modulus_size_in_bits_{3};
+  BytesField<std::string> public_exponent_{4};
 };
 
 const absl::string_view kPrivateTypeUrl =

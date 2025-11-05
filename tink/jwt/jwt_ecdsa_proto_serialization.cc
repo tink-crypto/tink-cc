@@ -37,8 +37,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
@@ -54,14 +54,14 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::MessageOwningFieldWithPresence;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
+using ::crypto::tink::internal::proto_parsing::MessageFieldWithPresence;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class JwtEcdsaCustomKidTP : public Message<JwtEcdsaCustomKidTP> {
  public:
@@ -71,10 +71,10 @@ class JwtEcdsaCustomKidTP : public Message<JwtEcdsaCustomKidTP> {
   const std::string& value() const { return value_.value(); }
   void set_value(absl::string_view value) { value_.set_value(value); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&value_}; }
+  std::array<const Field*, 1> GetFields() const { return {&value_}; }
 
  private:
-  OwningBytesField<std::string> value_{1};
+  BytesField<std::string> value_{1};
 };
 
 bool JwtEcdsaAlgorithmValid(int value) { return value >= 0 && value <= 3; }
@@ -114,16 +114,16 @@ class JwtEcdsaPublicKeyTP : public Message<JwtEcdsaPublicKeyTP> {
     *custom_kid_.mutable_value() = custom_kid;
   }
 
-  std::array<const OwningField*, 5> GetFields() const {
+  std::array<const Field*, 5> GetFields() const {
     return {&version_, &algorithm_, &x_, &y_, &custom_kid_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  EnumOwningField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
-  OwningBytesField<std::string> x_{3};
-  OwningBytesField<std::string> y_{4};
-  MessageOwningFieldWithPresence<JwtEcdsaCustomKidTP> custom_kid_{5};
+  Uint32Field version_{1};
+  EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
+  BytesField<std::string> x_{3};
+  BytesField<std::string> y_{4};
+  MessageFieldWithPresence<JwtEcdsaCustomKidTP> custom_kid_{5};
 };
 
 class JwtEcdsaPrivateKeyTP : public Message<JwtEcdsaPrivateKeyTP> {
@@ -144,13 +144,13 @@ class JwtEcdsaPrivateKeyTP : public Message<JwtEcdsaPrivateKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &public_key_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<JwtEcdsaPublicKeyTP> public_key_{2};
+  Uint32Field version_{1};
+  MessageField<JwtEcdsaPublicKeyTP> public_key_{2};
   SecretDataField key_value_{3};
 };
 
@@ -167,13 +167,13 @@ class JwtEcdsaKeyFormatTP : public Message<JwtEcdsaKeyFormatTP> {
     algorithm_.set_value(algorithm);
   }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&version_, &algorithm_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  EnumOwningField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
+  Uint32Field version_{1};
+  EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
 };
 
 using JwtEcdsaProtoParametersParserImpl =

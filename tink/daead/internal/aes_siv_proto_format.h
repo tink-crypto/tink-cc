@@ -20,18 +20,18 @@
 #include <array>
 #include <cstdint>
 
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 // Proto message com.google.crypto.tink.AesSivKeyFormat.
 class AesSivKeyFormatTP : public Message<AesSivKeyFormatTP> {
@@ -45,13 +45,13 @@ class AesSivKeyFormatTP : public Message<AesSivKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&key_size_, &version_};
   }
 
  private:
-  Uint32OwningField key_size_{1};
-  Uint32OwningField version_{2};
+  Uint32Field key_size_{1};
+  Uint32Field version_{2};
 };
 
 }  // namespace internal

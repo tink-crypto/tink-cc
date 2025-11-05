@@ -24,8 +24,8 @@
 
 #include "absl/log/check.h"
 #include "absl/status/status.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
@@ -35,23 +35,22 @@ namespace internal {
 namespace proto_parsing {
 
 template <typename Enum>
-class EnumOwningField : public OwningField {
+class EnumField : public Field {
  public:
-  explicit EnumOwningField(int field_number,
-                           std::function<bool(uint32_t)> is_valid,
-                           Enum default_value = {},
-                           ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : OwningField(field_number, WireType::kVarint),
+  explicit EnumField(int field_number, std::function<bool(uint32_t)> is_valid,
+                     Enum default_value = {},
+                     ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : Field(field_number, WireType::kVarint),
         value_(default_value),
         is_valid_(std::move(is_valid)),
         default_value_(default_value),
         options_(options) {}
 
   // Copyable and movable.
-  EnumOwningField(const EnumOwningField&) = default;
-  EnumOwningField& operator=(const EnumOwningField&) = default;
-  EnumOwningField(EnumOwningField&&) noexcept = default;
-  EnumOwningField& operator=(EnumOwningField&&) noexcept = default;
+  EnumField(const EnumField&) = default;
+  EnumField& operator=(const EnumField&) = default;
+  EnumField(EnumField&&) noexcept = default;
+  EnumField& operator=(EnumField&&) noexcept = default;
 
   void Clear() override { value_ = default_value_; }
   bool ConsumeIntoMember(ParsingState& serialized) override {

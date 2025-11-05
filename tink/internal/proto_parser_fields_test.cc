@@ -14,7 +14,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_fields.h"
 
 #include <cstdint>
 #include <string>
@@ -28,8 +28,7 @@
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
-#include "tink/secret_data.h"
-#include "tink/util/secret_data.h"
+#include "tink/internal/proto_parsing_helpers.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -42,7 +41,6 @@ namespace {
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
 using ::crypto::tink::test::IsOk;
-using ::crypto::tink::util::SecretDataAsStringView;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
@@ -55,6 +53,7 @@ constexpr int32_t kUint32Field2Number = 2;
 constexpr int32_t kBytesField1Number = 3;
 
 // Uint32Field ==============================================================
+
 std::vector<std::pair<std::string, uint32_t>>
 Uint32TestCasesParseAndSerialize() {
   return std::vector<std::pair<std::string, uint32_t>>{
@@ -74,19 +73,19 @@ std::vector<std::pair<std::string, uint32_t>> Uint32TestCasesParseOnly() {
 }
 
 TEST(Uint32Field, UninitializedValueIsZero) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   EXPECT_THAT(field.value(), Eq(0));
 }
 
 TEST(Uint32Field, ClearWorks) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   field.set_value(123);
   field.Clear();
   EXPECT_THAT(field.value(), Eq(0));
 }
 
 TEST(Uint32Field, ConsumeIntoMemberSuccessCases) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   field.set_value(999);
 
   for (std::pair<std::string, uint32_t> test_case :
@@ -101,7 +100,7 @@ TEST(Uint32Field, ConsumeIntoMemberSuccessCases) {
 }
 
 TEST(Uint32Field, ConsumeIntoMemberLeavesRemainingData) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   field.set_value(999);
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
@@ -112,7 +111,7 @@ TEST(Uint32Field, ConsumeIntoMemberLeavesRemainingData) {
 }
 
 TEST(Uint32Field, ConsumeIntoMemberFailureCases) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   for (std::string test_case : {"", "faab"}) {
     SCOPED_TRACE(test_case);
     std::string serialized = HexDecodeOrDie(test_case);
@@ -122,7 +121,7 @@ TEST(Uint32Field, ConsumeIntoMemberFailureCases) {
 }
 
 TEST(Uint32Field, SerializeVarintSuccessCases) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   for (std::pair<std::string, uint32_t> test_case :
        Uint32TestCasesParseAndSerialize()) {
     SCOPED_TRACE(test_case.first);
@@ -142,7 +141,7 @@ TEST(Uint32Field, SerializeVarintSuccessCases) {
 }
 
 TEST(Uint32Field, SerializeVarintBufferTooSmall) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   for (std::pair<std::string, uint32_t> test_case :
        Uint32TestCasesParseAndSerialize()) {
     SCOPED_TRACE(test_case.first);
@@ -158,7 +157,7 @@ TEST(Uint32Field, SerializeVarintBufferTooSmall) {
 }
 
 TEST(Uint32Field, SerializeVarintLeavesRemainingData) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(14882);
@@ -171,7 +170,7 @@ TEST(Uint32Field, SerializeVarintLeavesRemainingData) {
 }
 
 TEST(Uint32Field, Empty) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(0);
@@ -184,8 +183,7 @@ TEST(Uint32Field, Empty) {
 }
 
 TEST(Uint32Field, EmptyAlwaysSerialize) {
-  Uint32OwningField field(kUint32Field1Number,
-                          ProtoFieldOptions::kAlwaysSerialize);
+  Uint32Field field(kUint32Field1Number, ProtoFieldOptions::kAlwaysSerialize);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(0);
@@ -199,39 +197,39 @@ TEST(Uint32Field, EmptyAlwaysSerialize) {
 }
 
 TEST(Uint32Field, FieldNumber) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   ASSERT_THAT(field.FieldNumber(), Eq(kUint32Field1Number));
-  Uint32OwningField field2(kUint32Field2Number);
+  Uint32Field field2(kUint32Field2Number);
   ASSERT_THAT(field2.FieldNumber(), Eq(kUint32Field2Number));
 }
 
 TEST(Uint32Field, GetWireType) {
-  Uint32OwningField field(kUint32Field1Number);
+  Uint32Field field(kUint32Field1Number);
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kVarint));
 }
 
 TEST(Uint32Field, CopyAndMove) {
-  Uint32OwningField field1(kUint32Field1Number);
+  Uint32Field field1(kUint32Field1Number);
   field1.set_value(123);
 
   // Test copy constructor
-  Uint32OwningField field_copy(field1);
+  Uint32Field field_copy(field1);
   EXPECT_THAT(field_copy.FieldNumber(), Eq(kUint32Field1Number));
   EXPECT_THAT(field_copy.value(), Eq(123));
 
   // Test copy assignment
-  Uint32OwningField field_assign(kUint32Field2Number);
+  Uint32Field field_assign(kUint32Field2Number);
   field_assign = field1;
   EXPECT_THAT(field_assign.FieldNumber(), Eq(kUint32Field1Number));
   EXPECT_THAT(field_assign.value(), Eq(123));
 
   // Test move constructor
-  Uint32OwningField field_move(std::move(field1));
+  Uint32Field field_move(std::move(field1));
   EXPECT_THAT(field_move.FieldNumber(), Eq(kUint32Field1Number));
   EXPECT_THAT(field_move.value(), Eq(123));
 
   // Test move assignment
-  Uint32OwningField field_move_assign(kUint32Field2Number);
+  Uint32Field field_move_assign(kUint32Field2Number);
   field_move_assign = std::move(field_copy);
   EXPECT_THAT(field_move_assign.FieldNumber(), Eq(kUint32Field1Number));
   EXPECT_THAT(field_move_assign.value(), Eq(123));
@@ -268,14 +266,14 @@ std::vector<std::pair<std::string, uint64_t>> Uint64TestCasesParseOnly() {
 }
 
 TEST(Uint64Field, ClearMemberWorks) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   field.set_value(123);
   field.Clear();
   EXPECT_THAT(field.value(), testing::Eq(0));
 }
 
 TEST(Uint64Field, ConsumeIntoMemberSuccessCases) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   field.set_value(999);
 
   for (std::pair<std::string, uint64_t> test_case :
@@ -290,7 +288,7 @@ TEST(Uint64Field, ConsumeIntoMemberSuccessCases) {
 }
 
 TEST(Uint64Field, ConsumeIntoMemberLeavesRemainingData) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   field.set_value(999);
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
@@ -301,7 +299,7 @@ TEST(Uint64Field, ConsumeIntoMemberLeavesRemainingData) {
 }
 
 TEST(Uint64Field, ConsumeIntoMemberFailureCases) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
 
   for (std::string test_case : {"", "faab"}) {
     SCOPED_TRACE(test_case);
@@ -312,7 +310,7 @@ TEST(Uint64Field, ConsumeIntoMemberFailureCases) {
 }
 
 TEST(Uint64Field, SerializeVarintSuccessCases) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
 
   for (std::pair<std::string, uint64_t> test_case :
        Uint64TestCasesParseAndSerialize()) {
@@ -333,7 +331,7 @@ TEST(Uint64Field, SerializeVarintSuccessCases) {
 }
 
 TEST(Uint64Field, SerializeVarintDifferentFieldNumberSuccessCases) {
-  Uint64OwningField field{12345};
+  Uint64Field field{12345};
 
   for (std::pair<std::string, uint64_t> test_case :
        Uint64TestCasesParseAndSerialize()) {
@@ -354,7 +352,7 @@ TEST(Uint64Field, SerializeVarintDifferentFieldNumberSuccessCases) {
 }
 
 TEST(Uint64Field, SerializeVarintBufferTooSmall) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   for (std::pair<std::string, uint64_t> test_case :
        Uint64TestCasesParseAndSerialize()) {
     SCOPED_TRACE(test_case.first);
@@ -370,7 +368,7 @@ TEST(Uint64Field, SerializeVarintBufferTooSmall) {
 }
 
 TEST(Uint64Field, SerializeVarintLeavesRemainingData) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(14882);
@@ -383,7 +381,7 @@ TEST(Uint64Field, SerializeVarintLeavesRemainingData) {
 }
 
 TEST(Uint64Field, Empty) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(0);
@@ -396,27 +394,27 @@ TEST(Uint64Field, Empty) {
 }
 
 TEST(Uint64Field, FieldNumber) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   ASSERT_THAT(field.FieldNumber(), Eq(1));
-  Uint64OwningField field2{123};
+  Uint64Field field2{123};
   ASSERT_THAT(field2.FieldNumber(), Eq(123));
 }
 
 TEST(Uint64Field, GetWireType) {
-  Uint64OwningField field{1};
+  Uint64Field field{1};
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kVarint));
 }
 
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   field.set_value("hello");
   field.Clear();
   EXPECT_THAT(field.value(), Eq(""));
 }
 
 TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   field.set_value("hello");
 
   std::string bytes =
@@ -428,7 +426,7 @@ TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
 }
 
 TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   field.set_value("hello");
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
@@ -439,7 +437,7 @@ TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
 }
 
 TEST(StringBytesField, EmptyWithoutVarint) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
 
   std::string bytes = "";
   ParsingState parsing_state = ParsingState(bytes);
@@ -447,7 +445,7 @@ TEST(StringBytesField, EmptyWithoutVarint) {
 }
 
 TEST(StringBytesField, InvalidVarint) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   ParsingState parsing_state = ParsingState(bytes);
@@ -455,7 +453,7 @@ TEST(StringBytesField, InvalidVarint) {
 }
 
 TEST(StringBytesField, SerializeEmpty) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   field.set_value("");
   std::string buffer = "a";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -465,8 +463,8 @@ TEST(StringBytesField, SerializeEmpty) {
 }
 
 TEST(StringBytesField, SerializeEmptyAlwaysSerialize) {
-  OwningBytesField<std::string> field(kBytesField1Number,
-                                      ProtoFieldOptions::kAlwaysSerialize);
+  BytesField<std::string> field(kBytesField1Number,
+                                ProtoFieldOptions::kAlwaysSerialize);
   field.set_value("");
   std::string buffer = "ab";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -477,7 +475,7 @@ TEST(StringBytesField, SerializeEmptyAlwaysSerialize) {
 }
 
 TEST(StringBytesField, SerializeNonEmpty) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -492,7 +490,7 @@ TEST(StringBytesField, SerializeNonEmpty) {
 }
 
 TEST(StringBytesField, SerializeTooSmallBuffer) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer = "BUFFERBUFFERBUFF";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -501,7 +499,7 @@ TEST(StringBytesField, SerializeTooSmallBuffer) {
 
 // The buffer won't even hold the varint.
 TEST(StringBytesField, SerializeVerySmallBuffer) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer;
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
@@ -509,32 +507,32 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
 }
 
 TEST(StringBytesField, GetWireType) {
-  OwningBytesField<std::string> field(kBytesField1Number);
+  BytesField<std::string> field(kBytesField1Number);
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kLengthDelimited));
 }
 
 TEST(StringBytesField, CopyAndMove) {
-  OwningBytesField<std::string> field1(kBytesField1Number);
+  BytesField<std::string> field1(kBytesField1Number);
   field1.set_value("test_string");
 
   // Test copy constructor
-  OwningBytesField<std::string> field_copy(field1);
+  BytesField<std::string> field_copy(field1);
   EXPECT_THAT(field_copy.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_copy.value(), Eq("test_string"));
 
   // Test copy assignment
-  OwningBytesField<std::string> field_assign(kUint32Field2Number);
+  BytesField<std::string> field_assign(kUint32Field2Number);
   field_assign = field1;
   EXPECT_THAT(field_assign.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_assign.value(), Eq("test_string"));
 
   // Test move constructor
-  OwningBytesField<std::string> field_move(std::move(field1));
+  BytesField<std::string> field_move(std::move(field1));
   EXPECT_THAT(field_move.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_move.value(), Eq("test_string"));
 
   // Test move assignment
-  OwningBytesField<std::string> field_move_assign(kUint32Field2Number);
+  BytesField<std::string> field_move_assign(kUint32Field2Number);
   field_move_assign = std::move(field_copy);
   EXPECT_THAT(field_move_assign.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_move_assign.value(), Eq("test_string"));

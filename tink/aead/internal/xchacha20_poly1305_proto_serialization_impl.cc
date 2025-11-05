@@ -35,8 +35,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -51,10 +51,10 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::OwningField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class XChaCha20Poly1305KeyTP : public Message<XChaCha20Poly1305KeyTP> {
  public:
@@ -68,12 +68,12 @@ class XChaCha20Poly1305KeyTP : public Message<XChaCha20Poly1305KeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&version_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
+  Uint32Field version_{1};
   SecretDataField key_value_{3};
 };
 

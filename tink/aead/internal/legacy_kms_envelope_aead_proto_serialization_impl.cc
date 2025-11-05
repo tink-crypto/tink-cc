@@ -43,8 +43,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -58,11 +58,11 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class KmsEnvelopeAeadKeyFormatTP : public Message<KmsEnvelopeAeadKeyFormatTP> {
  public:
@@ -76,7 +76,7 @@ class KmsEnvelopeAeadKeyFormatTP : public Message<KmsEnvelopeAeadKeyFormatTP> {
     return dek_template_.mutable_value();
   }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&kek_uri_, &dek_template_};
   }
 
@@ -84,8 +84,8 @@ class KmsEnvelopeAeadKeyFormatTP : public Message<KmsEnvelopeAeadKeyFormatTP> {
   using Message::SerializeAsString;
 
  private:
-  OwningBytesField<std::string> kek_uri_{1};
-  MessageOwningField<KeyTemplateTP> dek_template_{2};
+  BytesField<std::string> kek_uri_{1};
+  MessageField<KeyTemplateTP> dek_template_{2};
 };
 
 class KmsEnvelopeAeadKeyTP : public Message<KmsEnvelopeAeadKeyTP> {
@@ -100,13 +100,13 @@ class KmsEnvelopeAeadKeyTP : public Message<KmsEnvelopeAeadKeyTP> {
     return params_.mutable_value();
   }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&version_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<KmsEnvelopeAeadKeyFormatTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<KmsEnvelopeAeadKeyFormatTP> params_{2};
 };
 
 using LegacyKmsEnvelopeAeadProtoParametersParserImpl =

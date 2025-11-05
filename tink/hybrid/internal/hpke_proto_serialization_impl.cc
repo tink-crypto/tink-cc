@@ -37,8 +37,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -52,13 +52,13 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 bool HpkeKemEnumIsValid(int value) { return value >= 0 && value <= 7; }
 
@@ -108,14 +108,14 @@ class HpkeParamsTP : public Message<HpkeParamsTP> {
   HpkeAeadEnum aead() const { return aead_.value(); }
   void set_aead(HpkeAeadEnum aead) { aead_.set_value(aead); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&kem_, &kdf_, &aead_};
   }
 
  private:
-  EnumOwningField<HpkeKemEnum> kem_{1, &HpkeKemEnumIsValid};
-  EnumOwningField<HpkeKdfEnum> kdf_{2, &HpkeKdfEnumIsValid};
-  EnumOwningField<HpkeAeadEnum> aead_{3, &HpkeAeadEnumIsValid};
+  EnumField<HpkeKemEnum> kem_{1, &HpkeKemEnumIsValid};
+  EnumField<HpkeKdfEnum> kdf_{2, &HpkeKdfEnumIsValid};
+  EnumField<HpkeAeadEnum> aead_{3, &HpkeAeadEnumIsValid};
 };
 
 class HpkePublicKeyTP : public Message<HpkePublicKeyTP> {
@@ -134,14 +134,14 @@ class HpkePublicKeyTP : public Message<HpkePublicKeyTP> {
     public_key_.set_value(public_key);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &params_, &public_key_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<HpkeParamsTP> params_{2};
-  OwningBytesField<std::string> public_key_{3};
+  Uint32Field version_{1};
+  MessageField<HpkeParamsTP> params_{2};
+  BytesField<std::string> public_key_{3};
 };
 
 class HpkePrivateKeyTP : public Message<HpkePrivateKeyTP> {
@@ -160,13 +160,13 @@ class HpkePrivateKeyTP : public Message<HpkePrivateKeyTP> {
     *private_key_.mutable_value() = private_key;
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &public_key_, &private_key_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<HpkePublicKeyTP> public_key_{2};
+  Uint32Field version_{1};
+  MessageField<HpkePublicKeyTP> public_key_{2};
   SecretDataField private_key_{3};
 };
 
@@ -178,10 +178,10 @@ class HpkeKeyFormatTP : public Message<HpkeKeyFormatTP> {
   const HpkeParamsTP& params() const { return params_.value(); }
   HpkeParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&params_}; }
+  std::array<const Field*, 1> GetFields() const { return {&params_}; }
 
  private:
-  MessageOwningField<HpkeParamsTP> params_{1};
+  MessageField<HpkeParamsTP> params_{1};
 };
 
 using HpkeProtoParametersParserImpl =

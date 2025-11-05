@@ -33,8 +33,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -50,12 +50,12 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class HmacPrfParamsTP : public Message<HmacPrfParamsTP> {
  public:
@@ -65,10 +65,10 @@ class HmacPrfParamsTP : public Message<HmacPrfParamsTP> {
   HashTypeEnum hash() const { return hash_.value(); }
   void set_hash(HashTypeEnum hash) { hash_.set_value(hash); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&hash_}; }
+  std::array<const Field*, 1> GetFields() const { return {&hash_}; }
 
  private:
-  EnumOwningField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
+  EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
 };
 
 class HmacPrfKeyTP : public Message<HmacPrfKeyTP> {
@@ -87,13 +87,13 @@ class HmacPrfKeyTP : public Message<HmacPrfKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<HmacPrfParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<HmacPrfParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
 
@@ -111,14 +111,14 @@ class HmacPrfKeyFormatTP : public Message<HmacPrfKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&params_, &key_size_, &version_};
   }
 
  private:
-  MessageOwningField<HmacPrfParamsTP> params_{1};
-  Uint32OwningField key_size_{2};
-  Uint32OwningField version_{3};
+  MessageField<HmacPrfParamsTP> params_{1};
+  Uint32Field key_size_{2};
+  Uint32Field version_{3};
 };
 
 using HmacPrfProtoParametersParserImpl =

@@ -23,7 +23,7 @@
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/types/optional.h"
-#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
@@ -32,10 +32,10 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-class OptionalUint32Field final : public OwningField {
+class OptionalUint32Field final : public Field {
  public:
   explicit OptionalUint32Field(uint32_t field_number)
-      : OwningField(field_number, WireType::kVarint) {}
+      : Field(field_number, WireType::kVarint) {}
 
   // Copyable and movable.
   OptionalUint32Field(const OptionalUint32Field&) = default;

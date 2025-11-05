@@ -235,8 +235,8 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
-    tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_secret_data_field
     tink::internal::tink_proto_structs
 )
@@ -362,8 +362,8 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
-    tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_secret_data_field
     tink::internal::tink_proto_structs
 )
@@ -458,8 +458,8 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
-    tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_secret_data_field
     tink::internal::tink_proto_structs
 )
@@ -554,8 +554,8 @@ tink_cc_library(
     tink::internal::proto_key_serialization
     tink::internal::proto_parameters_serialization
     tink::internal::proto_parser_enum_field
+    tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
-    tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_secret_data_field
     tink::internal::tink_proto_structs
 )

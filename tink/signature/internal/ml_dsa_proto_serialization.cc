@@ -35,8 +35,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -54,13 +54,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 bool MlDsaInstanceEnumValid(int c) { return c >= 0 && c <= 1; }
 
@@ -78,13 +78,12 @@ class MlDsaParamsTP final : public Message<MlDsaParamsTP> {
     ml_dsa_instance_.set_value(value);
   }
 
-  std::array<const OwningField*, 1> GetFields() const {
-    return std::array<const OwningField*, 1>{&ml_dsa_instance_};
+  std::array<const Field*, 1> GetFields() const {
+    return std::array<const Field*, 1>{&ml_dsa_instance_};
   }
 
  private:
-  EnumOwningField<MlDsaInstanceEnum> ml_dsa_instance_{1,
-                                                      &MlDsaInstanceEnumValid};
+  EnumField<MlDsaInstanceEnum> ml_dsa_instance_{1, &MlDsaInstanceEnumValid};
 };
 
 class MlDsaKeyFormatTP final : public Message<MlDsaKeyFormatTP> {
@@ -100,13 +99,13 @@ class MlDsaKeyFormatTP final : public Message<MlDsaKeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const OwningField*, 2> GetFields() const {
-    return std::array<const OwningField*, 2>{&version_, &params_};
+  std::array<const Field*, 2> GetFields() const {
+    return std::array<const Field*, 2>{&version_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<MlDsaParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<MlDsaParamsTP> params_{2};
 };
 
 class MlDsaPublicKeyTP final : public Message<MlDsaPublicKeyTP> {
@@ -122,14 +121,14 @@ class MlDsaPublicKeyTP final : public Message<MlDsaPublicKeyTP> {
   const MlDsaParamsTP& params() const { return params_.value(); }
   MlDsaParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 3> GetFields() const {
-    return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
+  std::array<const Field*, 3> GetFields() const {
+    return std::array<const Field*, 3>{&version_, &key_value_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  OwningBytesField<std::string> key_value_{2};
-  MessageOwningField<MlDsaParamsTP> params_{3};
+  Uint32Field version_{1};
+  BytesField<std::string> key_value_{2};
+  MessageField<MlDsaParamsTP> params_{3};
 };
 
 class MlDsaPrivateKeyTP final : public Message<MlDsaPrivateKeyTP> {
@@ -147,15 +146,14 @@ class MlDsaPrivateKeyTP final : public Message<MlDsaPrivateKeyTP> {
   const MlDsaPublicKeyTP& public_key() const { return public_key_.value(); }
   MlDsaPublicKeyTP* mutable_public_key() { return public_key_.mutable_value(); }
 
-  std::array<const OwningField*, 3> GetFields() const {
-    return std::array<const OwningField*, 3>{&version_, &key_value_,
-                                             &public_key_};
+  std::array<const Field*, 3> GetFields() const {
+    return std::array<const Field*, 3>{&version_, &key_value_, &public_key_};
   }
 
  private:
-  Uint32OwningField version_{1};
+  Uint32Field version_{1};
   SecretDataField key_value_{2};
-  MessageOwningField<MlDsaPublicKeyTP> public_key_{3};
+  MessageField<MlDsaPublicKeyTP> public_key_{3};
 };
 
 using MlDsaProtoParametersParserImpl =

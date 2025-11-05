@@ -25,8 +25,8 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
@@ -39,12 +39,11 @@ namespace internal {
 namespace proto_parsing {
 
 // SecretDataField is a Field that owns a SecretData.
-class SecretDataField final : public OwningField {
+class SecretDataField final : public Field {
  public:
   explicit SecretDataField(uint32_t field_number,
                            ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : OwningField(field_number, WireType::kLengthDelimited),
-        options_(options) {}
+      : Field(field_number, WireType::kLengthDelimited), options_(options) {}
   // Copyable and movable.
   SecretDataField(const SecretDataField&) = default;
   SecretDataField& operator=(const SecretDataField&) = default;

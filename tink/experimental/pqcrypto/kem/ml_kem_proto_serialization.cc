@@ -36,8 +36,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -49,13 +49,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 bool MlKemKeySizeEnumIsValid(int c) { return c >= 0 && c <= 1; }
 
@@ -74,13 +74,10 @@ class MlKemParamsTP : public Message<MlKemParamsTP> {
     ml_kem_key_size_.set_value(value);
   }
 
-  std::array<const OwningField*, 1> GetFields() const {
-    return {&ml_kem_key_size_};
-  }
+  std::array<const Field*, 1> GetFields() const { return {&ml_kem_key_size_}; }
 
  private:
-  EnumOwningField<MlKemKeySizeEnum> ml_kem_key_size_{1,
-                                                     &MlKemKeySizeEnumIsValid};
+  EnumField<MlKemKeySizeEnum> ml_kem_key_size_{1, &MlKemKeySizeEnumIsValid};
 };
 
 class MlKemKeyFormatTP : public Message<MlKemKeyFormatTP> {
@@ -94,13 +91,13 @@ class MlKemKeyFormatTP : public Message<MlKemKeyFormatTP> {
   const MlKemParamsTP& params() const { return params_.value(); }
   MlKemParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&version_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<MlKemParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<MlKemParamsTP> params_{2};
 };
 
 class MlKemPublicKeyTP : public Message<MlKemPublicKeyTP> {
@@ -116,14 +113,14 @@ class MlKemPublicKeyTP : public Message<MlKemPublicKeyTP> {
   const MlKemParamsTP& params() const { return params_.value(); }
   MlKemParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &key_value_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  OwningBytesField<std::string> key_value_{2};
-  MessageOwningField<MlKemParamsTP> params_{3};
+  Uint32Field version_{1};
+  BytesField<std::string> key_value_{2};
+  MessageField<MlKemParamsTP> params_{3};
 };
 
 class MlKemPrivateKeyTP : public Message<MlKemPrivateKeyTP> {
@@ -139,14 +136,14 @@ class MlKemPrivateKeyTP : public Message<MlKemPrivateKeyTP> {
   const MlKemPublicKeyTP& public_key() const { return public_key_.value(); }
   MlKemPublicKeyTP* mutable_public_key() { return public_key_.mutable_value(); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &key_value_, &public_key_};
   }
 
  private:
-  Uint32OwningField version_{1};
+  Uint32Field version_{1};
   SecretDataField key_value_{2};
-  MessageOwningField<MlKemPublicKeyTP> public_key_{3};
+  MessageField<MlKemPublicKeyTP> public_key_{3};
 };
 
 using MlKemProtoParametersParserImpl =

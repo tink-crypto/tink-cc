@@ -34,8 +34,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -53,13 +53,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 bool IsSlhDsaHashTypeValid(uint32_t c) { return 0 <= c && c <= 2; }
 
@@ -94,16 +94,14 @@ class SlhDsaParamsTP final : public Message<SlhDsaParamsTP> {
     sig_type_.set_value(value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
-    return std::array<const OwningField*, 3>{&key_size_, &hash_type_,
-                                             &sig_type_};
+  std::array<const Field*, 3> GetFields() const {
+    return std::array<const Field*, 3>{&key_size_, &hash_type_, &sig_type_};
   }
 
  private:
-  Uint32OwningField key_size_{1};
-  EnumOwningField<SlhDsaHashTypeEnum> hash_type_{2, &IsSlhDsaHashTypeValid};
-  EnumOwningField<SlhDsaSignatureTypeEnum> sig_type_{
-      3, &IsSlhDsaSignatureTypeValid};
+  Uint32Field key_size_{1};
+  EnumField<SlhDsaHashTypeEnum> hash_type_{2, &IsSlhDsaHashTypeValid};
+  EnumField<SlhDsaSignatureTypeEnum> sig_type_{3, &IsSlhDsaSignatureTypeValid};
 };
 
 class SlhDsaKeyFormatTP final : public Message<SlhDsaKeyFormatTP> {
@@ -119,13 +117,13 @@ class SlhDsaKeyFormatTP final : public Message<SlhDsaKeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const OwningField*, 2> GetFields() const {
-    return std::array<const OwningField*, 2>{&version_, &params_};
+  std::array<const Field*, 2> GetFields() const {
+    return std::array<const Field*, 2>{&version_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<SlhDsaParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<SlhDsaParamsTP> params_{2};
 };
 
 class SlhDsaPublicKeyTP final : public Message<SlhDsaPublicKeyTP> {
@@ -141,14 +139,14 @@ class SlhDsaPublicKeyTP final : public Message<SlhDsaPublicKeyTP> {
   const SlhDsaParamsTP& params() const { return params_.value(); }
   SlhDsaParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 3> GetFields() const {
-    return std::array<const OwningField*, 3>{&version_, &key_value_, &params_};
+  std::array<const Field*, 3> GetFields() const {
+    return std::array<const Field*, 3>{&version_, &key_value_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  OwningBytesField<std::string> key_value_{2};
-  MessageOwningField<SlhDsaParamsTP> params_{3};
+  Uint32Field version_{1};
+  BytesField<std::string> key_value_{2};
+  MessageField<SlhDsaParamsTP> params_{3};
 };
 
 class SlhDsaPrivateKeyTP final : public Message<SlhDsaPrivateKeyTP> {
@@ -168,15 +166,14 @@ class SlhDsaPrivateKeyTP final : public Message<SlhDsaPrivateKeyTP> {
     return public_key_.mutable_value();
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
-    return std::array<const OwningField*, 3>{&version_, &key_value_,
-                                             &public_key_};
+  std::array<const Field*, 3> GetFields() const {
+    return std::array<const Field*, 3>{&version_, &key_value_, &public_key_};
   }
 
  private:
-  Uint32OwningField version_{1};
+  Uint32Field version_{1};
   SecretDataField key_value_{2};
-  MessageOwningField<SlhDsaPublicKeyTP> public_key_{3};
+  MessageField<SlhDsaPublicKeyTP> public_key_{3};
 };
 
 using SlhDsaProtoParametersParserImpl =

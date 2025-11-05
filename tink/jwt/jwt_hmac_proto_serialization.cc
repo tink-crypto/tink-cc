@@ -33,8 +33,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_hmac_key.h"
@@ -48,13 +48,13 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningFieldWithPresence;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageFieldWithPresence;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 using JwtHmacProtoParametersParserImpl =
     internal::ParametersParserImpl<internal::ProtoParametersSerialization,
@@ -75,10 +75,10 @@ class JwtHmacCustomKidTP : public Message<JwtHmacCustomKidTP> {
   const std::string& value() const { return value_.value(); }
   void set_value(absl::string_view value) { value_.set_value(value); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&value_}; }
+  std::array<const Field*, 1> GetFields() const { return {&value_}; }
 
  private:
-  OwningBytesField<std::string> value_{1};
+  BytesField<std::string> value_{1};
 };
 
 bool JwtHmacAlgorithmValid(int value) { return value >= 0 && value <= 3; }
@@ -117,15 +117,15 @@ class JwtHmacKeyTP : public Message<JwtHmacKeyTP> {
     *custom_kid_.mutable_value() = custom_kid;
   }
 
-  std::array<const OwningField*, 4> GetFields() const {
+  std::array<const Field*, 4> GetFields() const {
     return {&version_, &algorithm_, &key_value_, &custom_kid_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  EnumOwningField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
+  Uint32Field version_{1};
+  EnumField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
   SecretDataField key_value_{3};
-  MessageOwningFieldWithPresence<JwtHmacCustomKidTP> custom_kid_{4};
+  MessageFieldWithPresence<JwtHmacCustomKidTP> custom_kid_{4};
 };
 
 class JwtHmacKeyFormatTP : public Message<JwtHmacKeyFormatTP> {
@@ -144,14 +144,14 @@ class JwtHmacKeyFormatTP : public Message<JwtHmacKeyFormatTP> {
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &algorithm_, &key_size_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  EnumOwningField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
-  Uint32OwningField key_size_{3};
+  Uint32Field version_{1};
+  EnumField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
+  Uint32Field key_size_{3};
 };
 
 const absl::string_view kTypeUrl =

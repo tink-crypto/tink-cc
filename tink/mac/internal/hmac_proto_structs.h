@@ -23,8 +23,8 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/common_proto_enums.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -43,13 +43,13 @@ class HmacParamsTP : public proto_parsing::Message<HmacParamsTP> {
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t value) { tag_size_.set_value(value); }
 
-  std::array<const proto_parsing::OwningField*, 2> GetFields() const {
+  std::array<const proto_parsing::Field*, 2> GetFields() const {
     return {&hash_, &tag_size_};
   }
 
  private:
-  proto_parsing::EnumOwningField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
-  proto_parsing::Uint32OwningField tag_size_{2};
+  proto_parsing::EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
+  proto_parsing::Uint32Field tag_size_{2};
 };
 
 class HmacKeyFormatTP : public proto_parsing::Message<HmacKeyFormatTP> {
@@ -68,14 +68,14 @@ class HmacKeyFormatTP : public proto_parsing::Message<HmacKeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const proto_parsing::OwningField*, 3> GetFields() const {
+  std::array<const proto_parsing::Field*, 3> GetFields() const {
     return {&params_, &key_size_, &version_};
   }
 
  private:
-  proto_parsing::MessageOwningField<HmacParamsTP> params_{1};
-  proto_parsing::Uint32OwningField key_size_{2};
-  proto_parsing::Uint32OwningField version_{3};
+  proto_parsing::MessageField<HmacParamsTP> params_{1};
+  proto_parsing::Uint32Field key_size_{2};
+  proto_parsing::Uint32Field version_{3};
 };
 
 class HmacKeyTP : public proto_parsing::Message<HmacKeyTP> {
@@ -93,13 +93,13 @@ class HmacKeyTP : public proto_parsing::Message<HmacKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const proto_parsing::OwningField*, 3> GetFields() const {
+  std::array<const proto_parsing::Field*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
   }
 
  private:
-  proto_parsing::Uint32OwningField version_{1};
-  proto_parsing::MessageOwningField<HmacParamsTP> params_{2};
+  proto_parsing::Uint32Field version_{1};
+  proto_parsing::MessageField<HmacParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};
 };
 

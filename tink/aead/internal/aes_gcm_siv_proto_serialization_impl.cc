@@ -34,8 +34,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -70,7 +70,7 @@ class AesGcmSivKeyFormatTP
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
-  std::array<const proto_parsing::OwningField*, 2> GetFields() const {
+  std::array<const proto_parsing::Field*, 2> GetFields() const {
     return {&version_, &key_size_};
   }
 
@@ -78,8 +78,8 @@ class AesGcmSivKeyFormatTP
   using Message::SerializeAsString;
 
  private:
-  proto_parsing::Uint32OwningField version_{1};
-  proto_parsing::Uint32OwningField key_size_{2};
+  proto_parsing::Uint32Field version_{1};
+  proto_parsing::Uint32Field key_size_{2};
 };
 
 class AesGcmSivKeyTP : public proto_parsing::Message<AesGcmSivKeyTP> {
@@ -94,12 +94,12 @@ class AesGcmSivKeyTP : public proto_parsing::Message<AesGcmSivKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const proto_parsing::OwningField*, 2> GetFields() const {
+  std::array<const proto_parsing::Field*, 2> GetFields() const {
     return {&version_, &key_value_};
   }
 
  private:
-  proto_parsing::Uint32OwningField version_{1};
+  proto_parsing::Uint32Field version_{1};
   proto_parsing::SecretDataField key_value_{3};
 };
 

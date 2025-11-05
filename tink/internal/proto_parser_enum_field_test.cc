@@ -60,22 +60,22 @@ std::vector<std::pair<std::string, uint32_t>> GetUint32TestCases() {
       {"01", 1}, {"7f", 127}, {"8001", 128}, {"a274", 14882}};
 }
 
-TEST(EnumOwningField, ClearMemberWorks) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, ClearMemberWorks) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
   field.set_value(MyEnum::k1);
   field.Clear();
   EXPECT_THAT(field.value(), Eq(MyEnum::k0));
 }
 
-TEST(EnumOwningField, ClearMemberOtherDefaultWorks) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid, MyEnum::k1);
+TEST(EnumField, ClearMemberOtherDefaultWorks) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1);
   field.set_value(MyEnum::k0);
   field.Clear();
   EXPECT_THAT(field.value(), Eq(MyEnum::k1));
 }
 
-TEST(EnumOwningField, ConsumeIntoMemberSuccessCases) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, ConsumeIntoMemberSuccessCases) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
 
   for (std::pair<std::string, uint32_t> test_case : GetUint32TestCases()) {
     SCOPED_TRACE(test_case.first);
@@ -87,8 +87,8 @@ TEST(EnumOwningField, ConsumeIntoMemberSuccessCases) {
   }
 }
 
-TEST(EnumOwningField, ConsumeIntoMemberLeavesRemainingData) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, ConsumeIntoMemberLeavesRemainingData) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
   field.set_value(static_cast<MyEnum>(999));
   std::string serialized =
       absl::StrCat(HexDecodeOrDie("8001"), "remaining data");
@@ -98,8 +98,8 @@ TEST(EnumOwningField, ConsumeIntoMemberLeavesRemainingData) {
   EXPECT_THAT(parsing_state.RemainingData(), Eq("remaining data"));
 }
 
-TEST(EnumOwningField, ConsumeIntoMemberFailureCases) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, ConsumeIntoMemberFailureCases) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
 
   for (std::string test_case :
        {"", /* 11 bytes, too long */ "ffffffffffffffffffff01"}) {
@@ -110,8 +110,8 @@ TEST(EnumOwningField, ConsumeIntoMemberFailureCases) {
   }
 }
 
-TEST(EnumOwningField, ConsumeIntoMemberInvalidIgnores) {
-  EnumOwningField<MyEnum> field(1, &IsZeroOrOne);
+TEST(EnumField, ConsumeIntoMemberInvalidIgnores) {
+  EnumField<MyEnum> field(1, &IsZeroOrOne);
   field.set_value(MyEnum::k1);
   std::string serialized = HexDecodeOrDie(/* 2 as varint */ "02");
   ParsingState parsing_state = ParsingState(serialized);
@@ -119,8 +119,8 @@ TEST(EnumOwningField, ConsumeIntoMemberInvalidIgnores) {
   EXPECT_THAT(field.value(), Eq(MyEnum::k1));
 }
 
-TEST(EnumOwningField, SerializeVarintSuccessCases) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, SerializeVarintSuccessCases) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
 
   for (std::pair<std::string, uint32_t> test_case : GetUint32TestCases()) {
     SCOPED_TRACE(test_case.first);
@@ -139,8 +139,8 @@ TEST(EnumOwningField, SerializeVarintSuccessCases) {
   }
 }
 
-TEST(EnumOwningField, SerializeEmpty) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, SerializeEmpty) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k0);
@@ -152,8 +152,8 @@ TEST(EnumOwningField, SerializeEmpty) {
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(EnumOwningField, SerializeEmptyDifferentDefault) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid, MyEnum::k1);
+TEST(EnumField, SerializeEmptyDifferentDefault) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k1);
@@ -165,9 +165,9 @@ TEST(EnumOwningField, SerializeEmptyDifferentDefault) {
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(EnumOwningField, SerializeEmptyAlwaysSerialize) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid, MyEnum::k0,
-                                ProtoFieldOptions::kAlwaysSerialize);
+TEST(EnumField, SerializeEmptyAlwaysSerialize) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k0,
+                          ProtoFieldOptions::kAlwaysSerialize);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k0);
@@ -180,9 +180,9 @@ TEST(EnumOwningField, SerializeEmptyAlwaysSerialize) {
   EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
 }
 
-TEST(EnumOwningField, SerializeEmptyAlwaysSerializeDifferentDefault) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid, MyEnum::k1,
-                                ProtoFieldOptions::kAlwaysSerialize);
+TEST(EnumField, SerializeEmptyAlwaysSerializeDifferentDefault) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1,
+                          ProtoFieldOptions::kAlwaysSerialize);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k1);
@@ -195,8 +195,8 @@ TEST(EnumOwningField, SerializeEmptyAlwaysSerializeDifferentDefault) {
   EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0801"));
 }
 
-TEST(EnumOwningField, SerializeVarintBufferTooSmall) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, SerializeVarintBufferTooSmall) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
   for (std::pair<std::string, uint32_t> test_case : GetUint32TestCases()) {
     SCOPED_TRACE(test_case.first);
     field.set_value(static_cast<MyEnum>(test_case.second));
@@ -210,8 +210,8 @@ TEST(EnumOwningField, SerializeVarintBufferTooSmall) {
   }
 }
 
-TEST(EnumOwningField, SerializeVarintLeavesRemainingData) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, SerializeVarintLeavesRemainingData) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
   std::string buffer = "abcdef";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   field.set_value(static_cast<MyEnum>(14882));
@@ -223,26 +223,26 @@ TEST(EnumOwningField, SerializeVarintLeavesRemainingData) {
   EXPECT_THAT(state.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(EnumOwningField, FieldNumberAndWireType) {
-  EnumOwningField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, FieldNumberAndWireType) {
+  EnumField<MyEnum> field(1, &AlwaysValid);
   EXPECT_THAT(field.FieldNumber(), Eq(1));
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kVarint));
-  EnumOwningField<MyEnum> field2(2, &IsZeroOrOne);
+  EnumField<MyEnum> field2(2, &IsZeroOrOne);
   EXPECT_THAT(field2.FieldNumber(), Eq(2));
   EXPECT_THAT(field2.GetWireType(), Eq(WireType::kVarint));
 }
 
-TEST(EnumOwningField, DefaultValueInitialization) {
-  EnumOwningField<MyEnum> field1(1, &IsZeroOrOne, MyEnum::k1);
+TEST(EnumField, DefaultValueInitialization) {
+  EnumField<MyEnum> field1(1, &IsZeroOrOne, MyEnum::k1);
   EXPECT_THAT(field1.value(), Eq(MyEnum::k1));
 }
 
-TEST(EnumOwningField, CopyAndMove) {
-  EnumOwningField<MyEnum> field1(1, &IsZeroOrOne, MyEnum::k1);
+TEST(EnumField, CopyAndMove) {
+  EnumField<MyEnum> field1(1, &IsZeroOrOne, MyEnum::k1);
   field1.set_value(MyEnum::k0);
 
   // Test copy constructor
-  EnumOwningField<MyEnum> field_copy(field1);
+  EnumField<MyEnum> field_copy(field1);
   std::string serialized = HexDecodeOrDie(/* 1 as varint */ "01");
   ParsingState parsing_state = ParsingState(serialized);
   EXPECT_THAT(field_copy.ConsumeIntoMember(parsing_state), IsTrue());
@@ -251,7 +251,7 @@ TEST(EnumOwningField, CopyAndMove) {
 
   // Test copy assignment
   field1.set_value(MyEnum::k0);
-  EnumOwningField<MyEnum> field_assign(2, &AlwaysValid, MyEnum::k0);
+  EnumField<MyEnum> field_assign(2, &AlwaysValid, MyEnum::k0);
   field_assign = field1;
   serialized = HexDecodeOrDie(/* 1 as varint */ "01");
   parsing_state = ParsingState(serialized);
@@ -261,7 +261,7 @@ TEST(EnumOwningField, CopyAndMove) {
 
   // Test move constructor
   field1.set_value(MyEnum::k0);
-  EnumOwningField<MyEnum> field_move(std::move(field1));
+  EnumField<MyEnum> field_move(std::move(field1));
   serialized = HexDecodeOrDie(/* 1 as varint */ "01");
   parsing_state = ParsingState(serialized);
   EXPECT_THAT(field_move.ConsumeIntoMember(parsing_state), IsTrue());
@@ -270,7 +270,7 @@ TEST(EnumOwningField, CopyAndMove) {
 
   // Test move assignment
   field_copy.set_value(MyEnum::k0);
-  EnumOwningField<MyEnum> field_move_assign(2, &AlwaysValid, MyEnum::k0);
+  EnumField<MyEnum> field_move_assign(2, &AlwaysValid, MyEnum::k0);
   field_move_assign = std::move(field_copy);
   serialized = HexDecodeOrDie(/* 1 as varint */ "01");
   parsing_state = ParsingState(serialized);

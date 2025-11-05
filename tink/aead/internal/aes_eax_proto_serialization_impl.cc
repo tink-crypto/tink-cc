@@ -35,8 +35,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -50,12 +50,11 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 using AesEaxProtoParametersParserImpl =
     ParametersParserImpl<ProtoParametersSerialization, AesEaxParameters>;
@@ -76,10 +75,10 @@ class AesEaxParamsTP : public Message<AesEaxParamsTP> {
   uint32_t iv_size() const { return iv_size_.value(); }
   void set_iv_size(uint32_t value) { iv_size_.set_value(value); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&iv_size_}; }
+  std::array<const Field*, 1> GetFields() const { return {&iv_size_}; }
 
  private:
-  Uint32OwningField iv_size_{1};
+  Uint32Field iv_size_{1};
 };
 
 class AesEaxKeyFormatTP : public Message<AesEaxKeyFormatTP> {
@@ -92,7 +91,7 @@ class AesEaxKeyFormatTP : public Message<AesEaxKeyFormatTP> {
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&params_, &key_size_};
   }
 
@@ -100,8 +99,8 @@ class AesEaxKeyFormatTP : public Message<AesEaxKeyFormatTP> {
   using Message::SerializeAsString;
 
  private:
-  MessageOwningField<AesEaxParamsTP> params_{1};
-  Uint32OwningField key_size_{2};
+  MessageField<AesEaxParamsTP> params_{1};
+  Uint32Field key_size_{2};
 };
 
 class AesEaxKeyTP : public Message<AesEaxKeyTP> {
@@ -119,13 +118,13 @@ class AesEaxKeyTP : public Message<AesEaxKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<AesEaxParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<AesEaxParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
 

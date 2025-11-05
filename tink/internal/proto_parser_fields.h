@@ -37,17 +37,17 @@ namespace internal {
 namespace proto_parsing {
 
 // Represents a proto filed that owns the underlying value.
-class OwningField {
+class Field {
  public:
-  explicit OwningField(uint32_t field_number, WireType wire_type)
+  explicit Field(uint32_t field_number, WireType wire_type)
       : field_number_(field_number), wire_type_(wire_type) {}
-  virtual ~OwningField() = default;
+  virtual ~Field() = default;
 
   // Copyable and movable.
-  OwningField(const OwningField&) = default;
-  OwningField& operator=(const OwningField&) = default;
-  OwningField(OwningField&&) noexcept = default;
-  OwningField& operator=(OwningField&&) noexcept = default;
+  Field(const Field&) = default;
+  Field& operator=(const Field&) = default;
+  Field(Field&&) noexcept = default;
+  Field& operator=(Field&&) noexcept = default;
 
   // Clears the field.
   virtual void Clear() = 0;
@@ -72,18 +72,17 @@ class OwningField {
   WireType wire_type_;
 };
 
-class Uint32OwningField : public OwningField {
+class Uint32Field : public Field {
  public:
-  explicit Uint32OwningField(
-      uint32_t field_number,
-      ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : OwningField(field_number, WireType::kVarint), options_(options) {}
+  explicit Uint32Field(uint32_t field_number,
+                       ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : Field(field_number, WireType::kVarint), options_(options) {}
 
   // Copyable and movable.
-  Uint32OwningField(const Uint32OwningField&) = default;
-  Uint32OwningField& operator=(const Uint32OwningField&) = default;
-  Uint32OwningField(Uint32OwningField&&) noexcept = default;
-  Uint32OwningField& operator=(Uint32OwningField&&) noexcept = default;
+  Uint32Field(const Uint32Field&) = default;
+  Uint32Field& operator=(const Uint32Field&) = default;
+  Uint32Field(Uint32Field&&) noexcept = default;
+  Uint32Field& operator=(Uint32Field&&) noexcept = default;
 
   void Clear() override { value_ = 0; }
   bool ConsumeIntoMember(ParsingState& serialized) override {
@@ -125,16 +124,16 @@ class Uint32OwningField : public OwningField {
   ProtoFieldOptions options_;
 };
 
-class Uint64OwningField : public OwningField {
+class Uint64Field : public Field {
  public:
-  explicit Uint64OwningField(uint64_t field_number)
-      : OwningField(field_number, WireType::kVarint) {}
+  explicit Uint64Field(uint64_t field_number)
+      : Field(field_number, WireType::kVarint) {}
 
   // Copyable and movable.
-  Uint64OwningField(const Uint64OwningField&) = default;
-  Uint64OwningField& operator=(const Uint64OwningField&) = default;
-  Uint64OwningField(Uint64OwningField&&) noexcept = default;
-  Uint64OwningField& operator=(Uint64OwningField&&) noexcept = default;
+  Uint64Field(const Uint64Field&) = default;
+  Uint64Field& operator=(const Uint64Field&) = default;
+  Uint64Field(Uint64Field&&) noexcept = default;
+  Uint64Field& operator=(Uint64Field&&) noexcept = default;
 
   void Clear() override { value_ = 0; }
 
@@ -175,20 +174,19 @@ class Uint64OwningField : public OwningField {
 };
 
 template <typename StringLike>
-class OwningBytesField final : public OwningField {
+class BytesField final : public Field {
  public:
   static_assert(!std::is_same<StringLike, ::crypto::tink::SecretData>::value,
                 "Use SecretDataField instead");
 
-  explicit OwningBytesField(uint32_t field_number, ProtoFieldOptions options =
-                                                       ProtoFieldOptions::kNone)
-      : OwningField(field_number, WireType::kLengthDelimited),
-        options_(options) {}
+  explicit BytesField(uint32_t field_number,
+                      ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : Field(field_number, WireType::kLengthDelimited), options_(options) {}
   // Copyable and movable.
-  OwningBytesField(const OwningBytesField&) = default;
-  OwningBytesField& operator=(const OwningBytesField&) = default;
-  OwningBytesField(OwningBytesField&&) noexcept = default;
-  OwningBytesField& operator=(OwningBytesField&&) noexcept = default;
+  BytesField(const BytesField&) = default;
+  BytesField& operator=(const BytesField&) = default;
+  BytesField(BytesField&&) noexcept = default;
+  BytesField& operator=(BytesField&&) noexcept = default;
 
   void Clear() override { ClearStringLikeValue(value_); }
   bool ConsumeIntoMember(ParsingState& serialized) override {

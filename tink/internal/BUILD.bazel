@@ -1496,8 +1496,8 @@ cc_library(
     hdrs = ["proto_parser_enum_field.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":proto_parser_fields",
         ":proto_parser_options",
-        ":proto_parser_owning_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
         "@com_google_absl//absl/log:check",
@@ -1526,7 +1526,7 @@ cc_library(
     hdrs = ["proto_parser_presence_fields.h"],
     include_prefix = "tink/internal",
     deps = [
-        ":proto_parser_owning_fields",
+        ":proto_parser_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
         "@com_google_absl//absl/status",
@@ -1774,8 +1774,8 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser_enum_field",
+        ":proto_parser_fields",
         ":proto_parser_message",
-        ":proto_parser_owning_fields",
         ":proto_parser_secret_data_field",
         "//tink:secret_data",
         "//tink/util:secret_data",
@@ -1812,7 +1812,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":call_with_core_dump_protection",
-        ":proto_parser_owning_fields",
+        ":proto_parser_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
         ":safe_stringops",
@@ -1981,8 +1981,8 @@ cc_test(
 )
 
 cc_library(
-    name = "proto_parser_owning_fields",
-    hdrs = ["proto_parser_owning_fields.h"],
+    name = "proto_parser_fields",
+    hdrs = ["proto_parser_fields.h"],
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser_options",
@@ -1999,14 +1999,13 @@ cc_library(
 )
 
 cc_test(
-    name = "proto_parser_owning_fields_test",
-    srcs = ["proto_parser_owning_fields_test.cc"],
+    name = "proto_parser_fields_test",
+    srcs = ["proto_parser_fields_test.cc"],
     deps = [
+        ":proto_parser_fields",
         ":proto_parser_options",
-        ":proto_parser_owning_fields",
         ":proto_parser_state",
-        "//tink:secret_data",
-        "//tink/util:secret_data",
+        ":proto_parsing_helpers",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@com_google_absl//absl/strings",
@@ -2021,7 +2020,7 @@ cc_library(
     hdrs = ["proto_parser_message.h"],
     include_prefix = "tink/internal",
     deps = [
-        ":proto_parser_owning_fields",
+        ":proto_parser_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
         ":secret_buffer",
@@ -2048,11 +2047,10 @@ cc_test(
     srcs = ["proto_parser_message_test.cc"],
     deps = [
         ":proto_parser_enum_field",
+        ":proto_parser_fields",
         ":proto_parser_message",
         ":proto_parser_options",
-        ":proto_parser_owning_fields",
         ":proto_parser_state",
-        ":proto_parser_string_like_helpers",
         ":proto_parsing_helpers",
         "//tink:secret_data",
         "//tink/internal/testing:field_with_number",
@@ -2076,8 +2074,8 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":call_with_core_dump_protection",
+        ":proto_parser_fields",
         ":proto_parser_options",
-        ":proto_parser_owning_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",
         ":safe_stringops",

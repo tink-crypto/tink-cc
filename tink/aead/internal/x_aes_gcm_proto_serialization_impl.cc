@@ -33,8 +33,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -48,10 +48,10 @@ namespace tink {
 namespace internal {
 namespace {
 
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class XAesGcmParamsTP : public Message<XAesGcmParamsTP> {
  public:
@@ -60,10 +60,10 @@ class XAesGcmParamsTP : public Message<XAesGcmParamsTP> {
   uint32_t salt_size() const { return salt_size_.value(); }
   void set_salt_size(uint32_t value) { salt_size_.set_value(value); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&salt_size_}; }
+  std::array<const Field*, 1> GetFields() const { return {&salt_size_}; }
 
  private:
-  Uint32OwningField salt_size_{1};
+  Uint32Field salt_size_{1};
 };
 
 class XAesGcmKeyFormatTP : public Message<XAesGcmKeyFormatTP> {
@@ -76,7 +76,7 @@ class XAesGcmKeyFormatTP : public Message<XAesGcmKeyFormatTP> {
   const XAesGcmParamsTP& params() const { return params_.value(); }
   XAesGcmParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&version_, &params_};
   }
 
@@ -84,9 +84,9 @@ class XAesGcmKeyFormatTP : public Message<XAesGcmKeyFormatTP> {
   using Message::SerializeAsString;
 
  private:
-  Uint32OwningField version_{1};
+  Uint32Field version_{1};
   // reserved : 2
-  MessageOwningField<XAesGcmParamsTP> params_{3};
+  MessageField<XAesGcmParamsTP> params_{3};
 };
 
 class XAesGcmKeyTP : public Message<XAesGcmKeyTP> {
@@ -104,13 +104,13 @@ class XAesGcmKeyTP : public Message<XAesGcmKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<XAesGcmParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<XAesGcmParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};
 };
 

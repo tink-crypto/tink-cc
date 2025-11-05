@@ -20,8 +20,8 @@
 #include <array>
 #include <cstdint>
 
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 
 namespace crypto {
 namespace tink {
@@ -37,7 +37,7 @@ class AesGcmKeyFormatTP : public proto_parsing::Message<AesGcmKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const proto_parsing::OwningField*, 2> GetFields() const {
+  std::array<const proto_parsing::Field*, 2> GetFields() const {
     return {&key_size_, &version_};
   }
 
@@ -45,8 +45,8 @@ class AesGcmKeyFormatTP : public proto_parsing::Message<AesGcmKeyFormatTP> {
   using Message::SerializeAsString;
 
  private:
-  proto_parsing::Uint32OwningField key_size_{2};
-  proto_parsing::Uint32OwningField version_{3};
+  proto_parsing::Uint32Field key_size_{2};
+  proto_parsing::Uint32Field version_{3};
 };
 
 }  // namespace internal

@@ -33,8 +33,8 @@
 #include "tink/internal/parameters_serializer.h"
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/serialization.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -58,10 +58,10 @@ namespace {
 
 using ::crypto::tink::internal::KeyDataTP;
 using ::crypto::tink::internal::KeyTemplateTP;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class PrfBasedDeriverParamsTP : public Message<PrfBasedDeriverParamsTP> {
  public:
@@ -75,12 +75,12 @@ class PrfBasedDeriverParamsTP : public Message<PrfBasedDeriverParamsTP> {
     return derived_key_template_.mutable_value();
   }
 
-  std::array<const OwningField*, 1> GetFields() const {
+  std::array<const Field*, 1> GetFields() const {
     return {&derived_key_template_};
   }
 
  private:
-  MessageOwningField<KeyTemplateTP> derived_key_template_{1};
+  MessageField<KeyTemplateTP> derived_key_template_{1};
 };
 
 class PrfBasedDeriverKeyFormatTP : public Message<PrfBasedDeriverKeyFormatTP> {
@@ -98,13 +98,13 @@ class PrfBasedDeriverKeyFormatTP : public Message<PrfBasedDeriverKeyFormatTP> {
   const PrfBasedDeriverParamsTP& params() const { return params_.value(); }
   PrfBasedDeriverParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&prf_key_template_, &params_};
   }
 
  private:
-  MessageOwningField<KeyTemplateTP> prf_key_template_{1};
-  MessageOwningField<PrfBasedDeriverParamsTP> params_{2};
+  MessageField<KeyTemplateTP> prf_key_template_{1};
+  MessageField<PrfBasedDeriverParamsTP> params_{2};
 };
 
 class PrfBasedDeriverKeyTP : public Message<PrfBasedDeriverKeyTP> {
@@ -120,14 +120,14 @@ class PrfBasedDeriverKeyTP : public Message<PrfBasedDeriverKeyTP> {
   const PrfBasedDeriverParamsTP& params() const { return params_.value(); }
   PrfBasedDeriverParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &prf_key_, &params_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<KeyDataTP> prf_key_{2};
-  MessageOwningField<PrfBasedDeriverParamsTP> params_{3};
+  Uint32Field version_{1};
+  MessageField<KeyDataTP> prf_key_{2};
+  MessageField<PrfBasedDeriverParamsTP> params_{3};
 };
 
 using PrfBasedKeyDerivationProtoParametersParserImpl =

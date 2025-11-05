@@ -23,8 +23,8 @@
 
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
@@ -90,14 +90,14 @@ class KeyTemplateTP : public proto_parsing::Message<KeyTemplateTP> {
     output_prefix_type_.set_value(output_prefix_type);
   }
 
-  std::array<const proto_parsing::OwningField*, 3> GetFields() const {
+  std::array<const proto_parsing::Field*, 3> GetFields() const {
     return {&type_url_, &value_, &output_prefix_type_};
   }
 
  private:
-  proto_parsing::OwningBytesField<std::string> type_url_{1};
-  proto_parsing::OwningBytesField<std::string> value_{2};
-  proto_parsing::EnumOwningField<OutputPrefixTypeEnum> output_prefix_type_{
+  proto_parsing::BytesField<std::string> type_url_{1};
+  proto_parsing::BytesField<std::string> value_{2};
+  proto_parsing::EnumField<OutputPrefixTypeEnum> output_prefix_type_{
       3, &OutputPrefixTypeValid};
 };
 
@@ -130,14 +130,14 @@ class KeyDataTP : public proto_parsing::Message<KeyDataTP> {
     key_material_type_.set_value(key_material_type);
   }
 
-  std::array<const proto_parsing::OwningField*, 3> GetFields() const {
+  std::array<const proto_parsing::Field*, 3> GetFields() const {
     return {&type_url_, &value_, &key_material_type_};
   }
 
  private:
-  proto_parsing::OwningBytesField<std::string> type_url_{1};
+  proto_parsing::BytesField<std::string> type_url_{1};
   proto_parsing::SecretDataField value_{2};
-  proto_parsing::EnumOwningField<KeyMaterialTypeEnum> key_material_type_{
+  proto_parsing::EnumField<KeyMaterialTypeEnum> key_material_type_{
       3, &KeyMaterialTypeValid};
 };
 

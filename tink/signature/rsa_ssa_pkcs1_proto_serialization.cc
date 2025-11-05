@@ -37,8 +37,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -57,20 +57,20 @@ namespace crypto {
 namespace tink {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 using ::crypto::tink::util::SecretDataAsStringView;
 
 class RsaSsaPkcs1ParamsTP : public Message<RsaSsaPkcs1ParamsTP> {
  public:
   RsaSsaPkcs1ParamsTP() = default;
 
-  std::array<const OwningField*, 1> GetFields() const { return {&hash_type_}; }
+  std::array<const Field*, 1> GetFields() const { return {&hash_type_}; }
 
   void set_hash_type(internal::HashTypeEnum hash_type) {
     hash_type_.set_value(hash_type);
@@ -78,8 +78,8 @@ class RsaSsaPkcs1ParamsTP : public Message<RsaSsaPkcs1ParamsTP> {
   internal::HashTypeEnum hash_type() const { return hash_type_.value(); }
 
  private:
-  EnumOwningField<internal::HashTypeEnum> hash_type_{
-      1, internal::HashTypeEnumIsValid};
+  EnumField<internal::HashTypeEnum> hash_type_{1,
+                                               internal::HashTypeEnumIsValid};
 };
 
 class RsaSsaPkcs1PublicKeyMessageTP final
@@ -87,7 +87,7 @@ class RsaSsaPkcs1PublicKeyMessageTP final
  public:
   RsaSsaPkcs1PublicKeyMessageTP() = default;
 
-  std::array<const OwningField*, 4> GetFields() const {
+  std::array<const Field*, 4> GetFields() const {
     return {&version_, &params_, &n_, &e_};
   }
 
@@ -104,17 +104,17 @@ class RsaSsaPkcs1PublicKeyMessageTP final
   void set_e(absl::string_view e) { e_.set_value(e); }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<RsaSsaPkcs1ParamsTP> params_{2};
-  OwningBytesField<std::string> n_{3};
-  OwningBytesField<std::string> e_{4};
+  Uint32Field version_{1};
+  MessageField<RsaSsaPkcs1ParamsTP> params_{2};
+  BytesField<std::string> n_{3};
+  BytesField<std::string> e_{4};
 };
 
 class RsaSsaPkcs1PrivateKeyTP final : public Message<RsaSsaPkcs1PrivateKeyTP> {
  public:
   RsaSsaPkcs1PrivateKeyTP() = default;
 
-  std::array<const OwningField*, 8> GetFields() const {
+  std::array<const Field*, 8> GetFields() const {
     return {&version_, &public_key_, &d_, &p_, &q_, &dp_, &dq_, &crt_};
   }
 
@@ -159,8 +159,8 @@ class RsaSsaPkcs1PrivateKeyTP final : public Message<RsaSsaPkcs1PrivateKeyTP> {
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<RsaSsaPkcs1PublicKeyMessageTP> public_key_{2};
+  Uint32Field version_{1};
+  MessageField<RsaSsaPkcs1PublicKeyMessageTP> public_key_{2};
   SecretDataField d_{3};
   SecretDataField p_{4};
   SecretDataField q_{5};
@@ -173,7 +173,7 @@ class RsaSsaPkcs1KeyFormatTP final : public Message<RsaSsaPkcs1KeyFormatTP> {
  public:
   RsaSsaPkcs1KeyFormatTP() = default;
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&params_, &modulus_size_in_bits_, &public_exponent_};
   }
 
@@ -197,9 +197,9 @@ class RsaSsaPkcs1KeyFormatTP final : public Message<RsaSsaPkcs1KeyFormatTP> {
   using Message::SerializeAsString;
 
  private:
-  MessageOwningField<RsaSsaPkcs1ParamsTP> params_{1};
-  Uint32OwningField modulus_size_in_bits_{2};
-  OwningBytesField<std::string> public_exponent_{3};
+  MessageField<RsaSsaPkcs1ParamsTP> params_{1};
+  Uint32Field modulus_size_in_bits_{2};
+  BytesField<std::string> public_exponent_{3};
 };
 
 using RsaSsaPkcs1ProtoParametersParserImpl =

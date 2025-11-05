@@ -47,8 +47,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -66,13 +66,13 @@ namespace internal {
 namespace {
 
 using ::crypto::tink::internal::KeyTemplateTP;
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 using ::crypto::tink::util::SecretDataAsStringView;
 
 class ProtoEciesHkdfKemParams : public Message<ProtoEciesHkdfKemParams> {
@@ -95,15 +95,15 @@ class ProtoEciesHkdfKemParams : public Message<ProtoEciesHkdfKemParams> {
     hkdf_salt_.set_value(hkdf_salt);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&curve_type_, &hkdf_hash_type_, &hkdf_salt_};
   }
 
  private:
-  EnumOwningField<EllipticCurveTypeEnum> curve_type_{
-      1, &EllipticCurveTypeEnumIsValid};
-  EnumOwningField<HashTypeEnum> hkdf_hash_type_{2, &HashTypeEnumIsValid};
-  OwningBytesField<std::string> hkdf_salt_{11};
+  EnumField<EllipticCurveTypeEnum> curve_type_{1,
+                                               &EllipticCurveTypeEnumIsValid};
+  EnumField<HashTypeEnum> hkdf_hash_type_{2, &HashTypeEnumIsValid};
+  BytesField<std::string> hkdf_salt_{11};
 };
 
 class ProtoEciesAeadDemParams : public Message<ProtoEciesAeadDemParams> {
@@ -114,10 +114,10 @@ class ProtoEciesAeadDemParams : public Message<ProtoEciesAeadDemParams> {
   const KeyTemplateTP& aead_dem() const { return aead_dem_.value(); }
   KeyTemplateTP* mutable_aead_dem() { return aead_dem_.mutable_value(); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&aead_dem_}; }
+  std::array<const Field*, 1> GetFields() const { return {&aead_dem_}; }
 
  private:
-  MessageOwningField<KeyTemplateTP> aead_dem_{2};
+  MessageField<KeyTemplateTP> aead_dem_{2};
 };
 
 class ProtoEciesAeadHkdfParams : public Message<ProtoEciesAeadHkdfParams> {
@@ -144,15 +144,14 @@ class ProtoEciesAeadHkdfParams : public Message<ProtoEciesAeadHkdfParams> {
     ec_point_format_.set_value(ec_point_format);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&kem_params_, &dem_params_, &ec_point_format_};
   }
 
  private:
-  MessageOwningField<ProtoEciesHkdfKemParams> kem_params_{1};
-  MessageOwningField<ProtoEciesAeadDemParams> dem_params_{2};
-  EnumOwningField<EcPointFormatEnum> ec_point_format_{
-      3, &EcPointFormatEnumIsValid};
+  MessageField<ProtoEciesHkdfKemParams> kem_params_{1};
+  MessageField<ProtoEciesAeadDemParams> dem_params_{2};
+  EnumField<EcPointFormatEnum> ec_point_format_{3, &EcPointFormatEnumIsValid};
 };
 
 class ProtoEciesAeadHkdfPublicKey
@@ -173,15 +172,15 @@ class ProtoEciesAeadHkdfPublicKey
   const std::string& y() const { return y_.value(); }
   void set_y(absl::string_view y) { y_.set_value(y); }
 
-  std::array<const OwningField*, 4> GetFields() const {
+  std::array<const Field*, 4> GetFields() const {
     return {&version_, &params_, &x_, &y_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<ProtoEciesAeadHkdfParams> params_{2};
-  OwningBytesField<std::string> x_{3};
-  OwningBytesField<std::string> y_{4};
+  Uint32Field version_{1};
+  MessageField<ProtoEciesAeadHkdfParams> params_{2};
+  BytesField<std::string> x_{3};
+  BytesField<std::string> y_{4};
 };
 
 class ProtoEciesAeadHkdfPrivateKey
@@ -205,13 +204,13 @@ class ProtoEciesAeadHkdfPrivateKey
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &public_key_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<ProtoEciesAeadHkdfPublicKey> public_key_{2};
+  Uint32Field version_{1};
+  MessageField<ProtoEciesAeadHkdfPublicKey> public_key_{2};
   SecretDataField key_value_{3};
 };
 
@@ -224,10 +223,10 @@ class ProtoEciesAeadHkdfKeyFormat
   const ProtoEciesAeadHkdfParams& params() const { return params_.value(); }
   ProtoEciesAeadHkdfParams* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const OwningField*, 1> GetFields() const { return {&params_}; }
+  std::array<const Field*, 1> GetFields() const { return {&params_}; }
 
  private:
-  MessageOwningField<ProtoEciesAeadHkdfParams> params_{1};
+  MessageField<ProtoEciesAeadHkdfParams> params_{1};
 };
 
 using EciesProtoParametersParserImpl =

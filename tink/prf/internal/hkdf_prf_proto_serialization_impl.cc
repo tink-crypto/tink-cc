@@ -34,8 +34,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -51,13 +51,13 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class HkdfPrfParamsTP : public Message<HkdfPrfParamsTP> {
  public:
@@ -70,13 +70,11 @@ class HkdfPrfParamsTP : public Message<HkdfPrfParamsTP> {
   const std::string& salt() const { return salt_.value(); }
   void set_salt(absl::string_view salt) { salt_.set_value(salt); }
 
-  std::array<const OwningField*, 2> GetFields() const {
-    return {&hash_, &salt_};
-  }
+  std::array<const Field*, 2> GetFields() const { return {&hash_, &salt_}; }
 
  private:
-  EnumOwningField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
-  OwningBytesField<std::string> salt_{2};
+  EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
+  BytesField<std::string> salt_{2};
 };
 
 class HkdfPrfKeyTP : public Message<HkdfPrfKeyTP> {
@@ -95,13 +93,13 @@ class HkdfPrfKeyTP : public Message<HkdfPrfKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<HkdfPrfParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<HkdfPrfParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
 
@@ -119,14 +117,14 @@ class HkdfPrfKeyFormatTP : public Message<HkdfPrfKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&params_, &key_size_, &version_};
   }
 
  private:
-  MessageOwningField<HkdfPrfParamsTP> params_{1};
-  Uint32OwningField key_size_{2};
-  Uint32OwningField version_{3};
+  MessageField<HkdfPrfParamsTP> params_{1};
+  Uint32Field key_size_{2};
+  Uint32Field version_{3};
 };
 
 using HkdfPrfProtoParametersParserImpl =

@@ -27,7 +27,7 @@
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
-#include "tink/internal/proto_parser_owning_fields.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/internal/safe_stringops.h"
@@ -41,10 +41,10 @@ namespace proto_parsing {
 
 // RepeatedSecretDataField is a Field that owns a vector of SecretData.
 // It is used to represent a repeated field of SecretData in a proto message.
-class RepeatedSecretDataField : public OwningField {
+class RepeatedSecretDataField : public Field {
  public:
   explicit RepeatedSecretDataField(int field_number)
-      : OwningField(field_number, WireType::kLengthDelimited) {}
+      : Field(field_number, WireType::kLengthDelimited) {}
 
   // Copyable and movable.
   RepeatedSecretDataField(const RepeatedSecretDataField&) = default;

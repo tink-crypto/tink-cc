@@ -38,8 +38,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -58,13 +58,13 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::BytesField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningBytesField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 using ::crypto::tink::util::SecretDataAsStringView;
 
 bool EcdsaSignatureEncodingValid(uint32_t c) { return 0 <= c && c <= 2; }
@@ -97,16 +97,15 @@ class EcdsaParamsTP final : public Message<EcdsaParamsTP> {
            encoding_.value() == other.encoding_.value();
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&hash_type_, &curve_, &encoding_};
   }
 
  private:
-  EnumOwningField<HashTypeEnum> hash_type_{1, &HashTypeEnumIsValid};
-  EnumOwningField<EllipticCurveTypeEnum> curve_{2,
-                                                &EllipticCurveTypeEnumIsValid};
-  EnumOwningField<EcdsaSignatureEncodingEnum> encoding_{
-      3, &EcdsaSignatureEncodingValid};
+  EnumField<HashTypeEnum> hash_type_{1, &HashTypeEnumIsValid};
+  EnumField<EllipticCurveTypeEnum> curve_{2, &EllipticCurveTypeEnumIsValid};
+  EnumField<EcdsaSignatureEncodingEnum> encoding_{3,
+                                                  &EcdsaSignatureEncodingValid};
 };
 
 class EcdsaPublicKeyTP final : public Message<EcdsaPublicKeyTP> {
@@ -125,15 +124,15 @@ class EcdsaPublicKeyTP final : public Message<EcdsaPublicKeyTP> {
   const std::string& y() const { return y_.value(); }
   void set_y(absl::string_view value) { y_.set_value(value); }
 
-  std::array<const OwningField*, 4> GetFields() const {
+  std::array<const Field*, 4> GetFields() const {
     return {&version_, &params_, &x_, &y_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<EcdsaParamsTP> params_{2};
-  OwningBytesField<std::string> x_{3};
-  OwningBytesField<std::string> y_{4};
+  Uint32Field version_{1};
+  MessageField<EcdsaParamsTP> params_{2};
+  BytesField<std::string> x_{3};
+  BytesField<std::string> y_{4};
 };
 
 class EcdsaPrivateKeyTP final : public Message<EcdsaPrivateKeyTP> {
@@ -151,13 +150,13 @@ class EcdsaPrivateKeyTP final : public Message<EcdsaPrivateKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &public_key_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<EcdsaPublicKeyTP> public_key_{2};
+  Uint32Field version_{1};
+  MessageField<EcdsaPublicKeyTP> public_key_{2};
   SecretDataField key_value_{3};
 };
 
@@ -174,13 +173,13 @@ class EcdsaKeyFormatTP final : public Message<EcdsaKeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const OwningField*, 2> GetFields() const {
+  std::array<const Field*, 2> GetFields() const {
     return {&params_, &version_};
   }
 
  private:
-  MessageOwningField<EcdsaParamsTP> params_{2};
-  Uint32OwningField version_{3};
+  MessageField<EcdsaParamsTP> params_{2};
+  Uint32Field version_{3};
 };
 
 using EcdsaProtoParametersParserImpl =

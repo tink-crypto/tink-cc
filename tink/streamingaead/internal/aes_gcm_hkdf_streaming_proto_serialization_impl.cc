@@ -33,8 +33,8 @@
 #include "tink/internal/proto_key_serialization.h"
 #include "tink/internal/proto_parameters_serialization.h"
 #include "tink/internal/proto_parser_enum_field.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
-#include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
@@ -51,12 +51,12 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::crypto::tink::internal::proto_parsing::EnumOwningField;
+using ::crypto::tink::internal::proto_parsing::EnumField;
+using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageOwningField;
-using ::crypto::tink::internal::proto_parsing::OwningField;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
-using ::crypto::tink::internal::proto_parsing::Uint32OwningField;
+using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 class AesGcmHkdfStreamingParamsTP
     : public Message<AesGcmHkdfStreamingParamsTP> {
@@ -81,14 +81,14 @@ class AesGcmHkdfStreamingParamsTP
     hkdf_hash_type_.set_value(value);
   }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&ciphertext_segment_size_, &derived_key_size_, &hkdf_hash_type_};
   }
 
  private:
-  Uint32OwningField ciphertext_segment_size_{1};
-  Uint32OwningField derived_key_size_{2};
-  EnumOwningField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
+  Uint32Field ciphertext_segment_size_{1};
+  Uint32Field derived_key_size_{2};
+  EnumField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
 };
 
 class AesGcmHkdfStreamingKeyFormatTP
@@ -108,14 +108,14 @@ class AesGcmHkdfStreamingKeyFormatTP
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&params_, &key_size_, &version_};
   }
 
  private:
-  MessageOwningField<AesGcmHkdfStreamingParamsTP> params_{1};
-  Uint32OwningField key_size_{2};
-  Uint32OwningField version_{3};
+  MessageField<AesGcmHkdfStreamingParamsTP> params_{1};
+  Uint32Field key_size_{2};
+  Uint32Field version_{3};
 };
 
 class AesGcmHkdfStreamingKeyTP : public Message<AesGcmHkdfStreamingKeyTP> {
@@ -133,13 +133,13 @@ class AesGcmHkdfStreamingKeyTP : public Message<AesGcmHkdfStreamingKeyTP> {
   const SecretData& key_value() const { return key_value_.value(); }
   SecretData* mutable_key_value() { return key_value_.mutable_value(); }
 
-  std::array<const OwningField*, 3> GetFields() const {
+  std::array<const Field*, 3> GetFields() const {
     return {&version_, &params_, &key_value_};
   }
 
  private:
-  Uint32OwningField version_{1};
-  MessageOwningField<AesGcmHkdfStreamingParamsTP> params_{2};
+  Uint32Field version_{1};
+  MessageField<AesGcmHkdfStreamingParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
 

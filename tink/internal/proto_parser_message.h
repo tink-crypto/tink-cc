@@ -41,6 +41,7 @@
 #include "tink/internal/secret_buffer.h"
 #include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
+#include "tink/util/secret_data.h"
 
 ABSL_POINTERS_DEFAULT_NONNULL
 

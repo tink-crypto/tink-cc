@@ -32,7 +32,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_enum_field.h"
-#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_owning_fields.h"
 #include "tink/internal/proto_parser_state.h"

@@ -25,9 +25,9 @@
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
-#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
+#include "tink/internal/proto_parser_string_like_helpers.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_data.h"
 

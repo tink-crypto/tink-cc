@@ -1433,49 +1433,6 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME proto_parser_fields
-  SRCS
-    proto_parser_fields.cc
-    proto_parser_fields.h
-  DEPS
-    tink::internal::proto_parser_options
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_helpers
-    tink::internal::safe_stringops
-    absl::core_headers
-    absl::status
-    absl::statusor
-    absl::strings
-    absl::string_view
-    absl::span
-    tink::core::big_integer
-    tink::core::insecure_secret_key_access
-    tink::core::restricted_big_integer
-    tink::util::secret_data
-)
-
-tink_cc_test(
-  NAME proto_parser_fields_test
-  SRCS
-    proto_parser_fields_test.cc
-  DEPS
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_options
-    tink::internal::proto_parser_state
-    tink::internal::secret_buffer
-    gmock
-    absl::strings
-    absl::string_view
-    absl::span
-    tink::core::big_integer
-    tink::core::insecure_secret_key_access
-    tink::core::secret_data
-    tink::util::secret_data
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
-tink_cc_library(
   NAME proto_parser_enum_field
   SRCS
     proto_parser_enum_field.h
@@ -1958,9 +1915,9 @@ tink_cc_library(
   SRCS
     proto_parser_owning_fields.h
   DEPS
-    tink::internal::proto_parser_fields
     tink::internal::proto_parser_options
     tink::internal::proto_parser_state
+    tink::internal::proto_parser_string_like_helpers
     tink::internal::proto_parsing_helpers
     absl::core_headers
     absl::status
@@ -2011,6 +1968,7 @@ tink_cc_library(
     absl::span
     tink::core::secret_data
     tink::subtle::subtle_util
+    tink::util::secret_data
 )
 
 tink_cc_test(
@@ -2019,11 +1977,11 @@ tink_cc_test(
     proto_parser_message_test.cc
   DEPS
     tink::internal::proto_parser_enum_field
-    tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
     tink::internal::proto_parser_options
     tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state
+    tink::internal::proto_parser_string_like_helpers
     tink::internal::proto_parsing_helpers
     gmock
     absl::nullability
@@ -2077,4 +2035,24 @@ tink_cc_test(
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
+)
+
+tink_cc_library(
+  NAME proto_parser_string_like_helpers
+  SRCS
+    proto_parser_string_like_helpers.h
+  DEPS
+    absl::string_view
+    absl::span
+)
+
+tink_cc_test(
+  NAME proto_parser_string_like_helpers_test
+  SRCS
+    proto_parser_string_like_helpers_test.cc
+  DEPS
+    tink::internal::proto_parser_string_like_helpers
+    gmock
+    absl::string_view
+    absl::span
 )

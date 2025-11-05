@@ -1540,7 +1540,6 @@ cc_library(
     hdrs = ["proto_parser_enum_field.h"],
     include_prefix = "tink/internal",
     deps = [
-        ":proto_parser_fields",
         ":proto_parser_options",
         ":proto_parser_owning_fields",
         ":proto_parser_state",

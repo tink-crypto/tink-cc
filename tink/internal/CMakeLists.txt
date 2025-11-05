@@ -1480,7 +1480,6 @@ tink_cc_library(
   SRCS
     proto_parser_enum_field.h
   DEPS
-    tink::internal::proto_parser_fields
     tink::internal::proto_parser_options
     tink::internal::proto_parser_owning_fields
     tink::internal::proto_parser_state

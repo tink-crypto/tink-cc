@@ -110,7 +110,6 @@ tink_cc_library(
     ed25519_sign_boringssl.cc
     ed25519_sign_boringssl.h
   DEPS
-    absl::log
     absl::memory
     absl::status
     absl::strings
@@ -1113,7 +1112,6 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_eax_boringssl
     gmock
-    absl::check
     absl::status
     absl::strings
     crypto
@@ -1169,7 +1167,6 @@ tink_cc_test(
   DEPS
     tink::subtle::aes_siv_boringssl
     gmock
-    absl::check
     absl::status
     absl::string_view
     tink::config::tink_fips

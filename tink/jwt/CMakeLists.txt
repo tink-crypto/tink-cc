@@ -1085,7 +1085,6 @@ tink_cc_test(
     tink::jwt::jwt_rsa_ssa_pss_public_key
     gmock
     absl::absl_check
-    absl::check
     absl::status
     absl::strings
     absl::string_view

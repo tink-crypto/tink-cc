@@ -1122,7 +1122,6 @@ tink_cc_test(
     tink::jwt::internal::jwt_signature_key_gen_config_v0
     gmock
     absl::absl_check
-    absl::check
     absl::statusor
     absl::strings
     absl::string_view

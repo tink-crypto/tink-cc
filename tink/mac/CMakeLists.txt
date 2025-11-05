@@ -174,7 +174,6 @@ tink_cc_library(
     aes_cmac_parameters.h
   DEPS
     tink::mac::mac_parameters
-    absl::log
     absl::status
     absl::strings
     tink::core::crypto_format
@@ -222,7 +221,6 @@ tink_cc_library(
     hmac_parameters.h
   DEPS
     tink::mac::mac_parameters
-    absl::log
     absl::status
     absl::strings
     tink::core::crypto_format

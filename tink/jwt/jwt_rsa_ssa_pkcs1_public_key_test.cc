@@ -21,7 +21,6 @@
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/strings/escaping.h"
 #include "absl/strings/string_view.h"

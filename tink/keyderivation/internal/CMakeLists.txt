@@ -315,7 +315,6 @@ tink_cc_library(
     prf_based_key_derivation_proto_serialization_impl.cc
     prf_based_key_derivation_proto_serialization_impl.h
   DEPS
-    absl::check
     absl::memory
     absl::status
     absl::statusor

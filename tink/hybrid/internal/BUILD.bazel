@@ -345,7 +345,6 @@ cc_test(
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/types:optional",

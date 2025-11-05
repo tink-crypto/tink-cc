@@ -24,7 +24,6 @@
 #include <ostream>
 #include <set>
 
-#include "absl/log/log.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
 #include "tink/crypto_format.h"

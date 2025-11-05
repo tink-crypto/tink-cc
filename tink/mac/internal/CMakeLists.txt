@@ -265,7 +265,6 @@ tink_cc_test(
     tink::mac::internal::stateful_hmac_boringssl
     tink::mac::internal::stateful_mac
     gmock
-    absl::log
     absl::absl_check
     absl::absl_log
     absl::memory

@@ -347,7 +347,6 @@ cc_library(
         "//tink/prf:prf_key",
         "//tink/prf:prf_parameters",
         "//tink/util:status",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/memory",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/status:statusor",

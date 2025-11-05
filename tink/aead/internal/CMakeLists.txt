@@ -60,7 +60,6 @@ tink_cc_library(
   DEPS
     tink::aead::internal::aead_util
     tink::aead::internal::cord_utils
-    absl::check
     absl::memory
     absl::status
     absl::cord
@@ -320,7 +319,6 @@ tink_cc_test(
     tink::aead::internal::zero_copy_aes_gcm_boringssl
     gmock
     absl::algorithm_container
-    absl::check
     absl::status
     absl::strings
     absl::span

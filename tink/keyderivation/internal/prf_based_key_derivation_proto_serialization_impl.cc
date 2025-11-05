@@ -20,7 +20,6 @@
 #include <cstdint>
 #include <memory>
 
-#include "absl/log/check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"

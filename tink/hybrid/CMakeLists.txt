@@ -1039,7 +1039,6 @@ tink_cc_test(
     tink::hybrid::ecies_proto_serialization
     tink::hybrid::ecies_public_key
     gmock
-    absl::check
     absl::status
     absl::statusor
     absl::strings

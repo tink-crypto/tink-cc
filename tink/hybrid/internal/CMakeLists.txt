@@ -366,7 +366,6 @@ tink_cc_test(
     tink::hybrid::internal::hpke_encrypt
     tink::hybrid::internal::hpke_test_util
     gmock
-    absl::check
     absl::status
     absl::strings
     absl::optional

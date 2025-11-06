@@ -19,9 +19,9 @@
 
 #include <memory>
 
+#include "absl/status/statusor.h"
 #include "tink/public_key_verify.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {

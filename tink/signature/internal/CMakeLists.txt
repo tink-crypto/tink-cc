@@ -413,7 +413,9 @@ tink_cc_library(
     ml_dsa_verify_boringssl.cc
     ml_dsa_verify_boringssl.h
   DEPS
+    absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     crypto
@@ -422,8 +424,6 @@ tink_cc_library(
     tink::internal::fips_utils
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_public_key
-    tink::util::status
-    tink::util::statusor
   TAGS
     exclude_if_openssl
 )
@@ -450,7 +450,6 @@ tink_cc_test(
     tink::signature::ml_dsa_parameters
     tink::signature::ml_dsa_private_key
     tink::signature::ml_dsa_public_key
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
   TAGS

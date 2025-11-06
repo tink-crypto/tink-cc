@@ -20,7 +20,9 @@
 #include <memory>
 #include <utility>
 
+#include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/string_view.h"
 #include "openssl/base.h"
@@ -31,15 +33,13 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/ml_dsa_parameters.h"
 #include "tink/signature/ml_dsa_public_key.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
 namespace internal {
 namespace {
 
-class MlDsaVerifyBoringSsl : public PublicKeyVerify {
+class MlDsa65VerifyBoringSsl : public PublicKeyVerify {
  public:
   static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
       crypto::tink::internal::FipsCompatibility::kNotFips;
@@ -50,7 +50,7 @@ class MlDsaVerifyBoringSsl : public PublicKeyVerify {
   absl::Status Verify(absl::string_view signature,
                       absl::string_view data) const override;
 
-  explicit MlDsaVerifyBoringSsl(
+  explicit MlDsa65VerifyBoringSsl(
       MlDsaPublicKey public_key,
       std::unique_ptr<MLDSA65_public_key> boringssl_public_key)
       : public_key_(std::move(public_key)),
@@ -60,59 +60,130 @@ class MlDsaVerifyBoringSsl : public PublicKeyVerify {
   std::unique_ptr<MLDSA65_public_key> boringssl_public_key_;
 };
 
-absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsaVerifyBoringSsl::New(
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa65VerifyBoringSsl::New(
     MlDsaPublicKey public_key) {
-  auto status = CheckFipsCompatibility<MlDsaVerifyBoringSsl>();
+  auto status = CheckFipsCompatibility<MlDsa65VerifyBoringSsl>();
   if (!status.ok()) {
     return status;
   }
 
   if (public_key.GetParameters().GetInstance() !=
       MlDsaParameters::Instance::kMlDsa65) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Only ML-DSA-65 is supported");
+    return absl::InternalError("Expected ML-DSA-65");
   }
 
   absl::string_view public_key_bytes =
       public_key.GetPublicKeyBytes(GetPartialKeyAccess());
 
   CBS cbs;
-  CBS_init(&cbs, reinterpret_cast<const uint8_t *>(public_key_bytes.data()),
+  CBS_init(&cbs, reinterpret_cast<const uint8_t*>(public_key_bytes.data()),
            public_key_bytes.size());
   auto boringssl_public_key = std::make_unique<MLDSA65_public_key>();
   if (!MLDSA65_parse_public_key(boringssl_public_key.get(), &cbs)) {
-    return absl::Status(absl::StatusCode::kInternal,
-                        "Invalid ML-DSA public key");
+    return absl::InternalError("Invalid ML-DSA public key");
   }
 
-  return absl::make_unique<MlDsaVerifyBoringSsl>(
+  return absl::make_unique<MlDsa65VerifyBoringSsl>(
       std::move(public_key), std::move(boringssl_public_key));
 }
 
-absl::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
-                                          absl::string_view data) const {
+absl::Status MlDsa65VerifyBoringSsl::Verify(absl::string_view signature,
+                                            absl::string_view data) const {
   size_t output_prefix_size = public_key_.GetOutputPrefix().size();
 
   if (signature.size() != MLDSA65_SIGNATURE_BYTES + output_prefix_size) {
-    return absl::Status(
-        absl::StatusCode::kInvalidArgument,
+    return absl::InvalidArgumentError(
         "Verification failed: incorrect signature length for ML-DSA");
   }
 
   if (!absl::StartsWith(signature, public_key_.GetOutputPrefix())) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Verification failed: invalid output prefix");
+    return absl::InvalidArgumentError(
+        "Verification failed: invalid output prefix");
   }
 
   if (1 != MLDSA65_verify(boringssl_public_key_.get(),
-                          reinterpret_cast<const uint8_t *>(signature.data() +
-                                                            output_prefix_size),
+                          reinterpret_cast<const uint8_t*>(signature.data() +
+                                                           output_prefix_size),
                           MLDSA65_SIGNATURE_BYTES,
-                          reinterpret_cast<const uint8_t *>(data.data()),
+                          reinterpret_cast<const uint8_t*>(data.data()),
                           data.size(), /* context = */ nullptr,
                           /* context_len = */ 0)) {
-    return absl::Status(absl::StatusCode::kInvalidArgument,
-                        "Signature is not valid");
+    return absl::InvalidArgumentError("Signature is not valid");
+  }
+
+  return absl::OkStatus();
+}
+
+class MlDsa87VerifyBoringSsl : public PublicKeyVerify {
+ public:
+  static constexpr crypto::tink::internal::FipsCompatibility kFipsStatus =
+      crypto::tink::internal::FipsCompatibility::kNotFips;
+
+  static absl::StatusOr<std::unique_ptr<PublicKeyVerify>> New(
+      MlDsaPublicKey public_key);
+
+  absl::Status Verify(absl::string_view signature,
+                      absl::string_view data) const override;
+
+  explicit MlDsa87VerifyBoringSsl(
+      MlDsaPublicKey public_key,
+      std::unique_ptr<MLDSA87_public_key> boringssl_public_key)
+      : public_key_(std::move(public_key)),
+        boringssl_public_key_(std::move(boringssl_public_key)) {}
+
+  MlDsaPublicKey public_key_;
+  std::unique_ptr<MLDSA87_public_key> boringssl_public_key_;
+};
+
+absl::StatusOr<std::unique_ptr<PublicKeyVerify>> MlDsa87VerifyBoringSsl::New(
+    MlDsaPublicKey public_key) {
+  auto status = CheckFipsCompatibility<MlDsa87VerifyBoringSsl>();
+  if (!status.ok()) {
+    return status;
+  }
+
+  if (public_key.GetParameters().GetInstance() !=
+      MlDsaParameters::Instance::kMlDsa87) {
+    return absl::InternalError("Expected ML-DSA-87");
+  }
+
+  absl::string_view public_key_bytes =
+      public_key.GetPublicKeyBytes(GetPartialKeyAccess());
+
+  CBS cbs;
+  CBS_init(&cbs, reinterpret_cast<const uint8_t*>(public_key_bytes.data()),
+           public_key_bytes.size());
+  auto boringssl_public_key = std::make_unique<MLDSA87_public_key>();
+  if (!MLDSA87_parse_public_key(boringssl_public_key.get(), &cbs)) {
+    return absl::InternalError("Invalid ML-DSA public key");
+  }
+
+  return absl::make_unique<MlDsa87VerifyBoringSsl>(
+      std::move(public_key), std::move(boringssl_public_key));
+}
+
+absl::Status MlDsa87VerifyBoringSsl::Verify(absl::string_view signature,
+                                            absl::string_view data) const {
+  size_t output_prefix_size = public_key_.GetOutputPrefix().size();
+
+  if (signature.size() != MLDSA87_SIGNATURE_BYTES + output_prefix_size) {
+    return absl::InvalidArgumentError(
+        "Verification failed: incorrect signature length for ML-DSA");
+  }
+
+  if (!absl::StartsWith(signature, public_key_.GetOutputPrefix())) {
+    return absl::InvalidArgumentError(
+        "Verification failed: invalid output prefix");
+  }
+
+  if (1 != MLDSA87_verify(boringssl_public_key_.get(),
+                          reinterpret_cast<const uint8_t*>(signature.data() +
+                                                           output_prefix_size),
+                          MLDSA87_SIGNATURE_BYTES,
+                          reinterpret_cast<const uint8_t*>(data.data()),
+                          data.size(), /* context = */ nullptr,
+                          /* context_len = */ 0)) {
+    return absl::InvalidArgumentError("Signature is not valid");
   }
 
   return absl::OkStatus();
@@ -122,7 +193,15 @@ absl::Status MlDsaVerifyBoringSsl::Verify(absl::string_view signature,
 
 absl::StatusOr<std::unique_ptr<PublicKeyVerify>> NewMlDsaVerifyBoringSsl(
     MlDsaPublicKey public_key) {
-  return MlDsaVerifyBoringSsl::New(std::move(public_key));
+  switch (public_key.GetParameters().GetInstance()) {
+    case MlDsaParameters::Instance::kMlDsa65:
+      return MlDsa65VerifyBoringSsl::New(std::move(public_key));
+    case MlDsaParameters::Instance::kMlDsa87:
+      return MlDsa87VerifyBoringSsl::New(std::move(public_key));
+    default:
+      return absl::InvalidArgumentError(
+          "Only ML-DSA-65 and ML-DSA-87 are supported");
+  }
 }
 
 }  // namespace internal

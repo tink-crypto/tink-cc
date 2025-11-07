@@ -1441,8 +1441,8 @@ tink_cc_library(
     tink::internal::proto_parser_options
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
-    absl::check
     absl::status
+    absl::statusor
 )
 
 tink_cc_test(
@@ -1958,7 +1958,6 @@ tink_cc_library(
     absl::nullability
     absl::crc32c
     absl::absl_check
-    absl::check
     absl::status
     absl::statusor
     absl::strings

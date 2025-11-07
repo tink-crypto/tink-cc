@@ -60,8 +60,10 @@ tink_cc_library(
   DEPS
     tink::aead::internal::aead_util
     tink::aead::internal::cord_utils
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::cord
     absl::string_view
     absl::span
@@ -70,7 +72,6 @@ tink_cc_library(
     tink::internal::ssl_unique_ptr
     tink::subtle::random
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 

@@ -28,7 +28,6 @@
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
 #include "absl/log/absl_check.h"
-#include "absl/log/check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -169,8 +168,8 @@ bool Message<Derived>::ParseFromStringImpl(
   if (!Parse(state)) {
     return false;
   }
-  QCHECK(state.ParsingDone());
-  QCHECK(state.RemainingData().empty());
+  ABSL_QCHECK(state.ParsingDone());
+  ABSL_QCHECK(state.RemainingData().empty());
   return true;
 }
 
@@ -196,8 +195,8 @@ SecretData Message<Derived>::SerializeAsSecretData() const {
   return CallWithCoreDumpProtection([&]() -> SecretData {
     absl::crc32c_t result_crc = absl::crc32c_t(0);
     auto serialization_state = SerializationState(buffer, &result_crc);
-    QCHECK(Serialize(serialization_state));
-    QCHECK(serialization_state.GetBuffer().empty());
+    ABSL_QCHECK(Serialize(serialization_state));
+    ABSL_QCHECK(serialization_state.GetBuffer().empty());
 #ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
     return util::SecretDataFromStringView(out.AsStringView());
 #else
@@ -212,8 +211,8 @@ std::string Message<Derived>::SerializeAsString() const {
   subtle::ResizeStringUninitialized(&out, ByteSizeLong());
   SerializationState serialization_state(
       absl::MakeSpan(reinterpret_cast<char*>(out.data()), out.size()));
-  QCHECK(Serialize(serialization_state));
-  QCHECK(serialization_state.GetBuffer().empty());
+  ABSL_QCHECK(Serialize(serialization_state));
+  ABSL_QCHECK(serialization_state.GetBuffer().empty());
   return out;
 }
 
@@ -403,7 +402,7 @@ class RepeatedMessageField : public Field {
     if (!parsed_message.Parse(submessage_parsing_state)) {
       return false;
     }
-    QCHECK(submessage_parsing_state.ParsingDone());
+    ABSL_QCHECK(submessage_parsing_state.ParsingDone());
     values_.push_back(std::move(parsed_message));
     return true;
   }

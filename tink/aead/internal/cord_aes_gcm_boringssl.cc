@@ -23,8 +23,10 @@
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
 #include "absl/strings/cord_buffer.h"
 #include "absl/strings/string_view.h"
@@ -40,9 +42,6 @@
 #include "tink/aead/internal/cord_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -149,7 +148,7 @@ absl::StatusOr<internal::SslUniquePtr<EVP_CIPHER_CTX>> NewContext(
 // was successful, false otherwise.
 bool DoCryptAndConsume(absl::Cord& input, size_t bytes_to_crypt,
                        EVP_CIPHER_CTX& context, CordWriter& writer) {
-  DCHECK(input.size() >= bytes_to_crypt);
+  ABSL_DCHECK(input.size() >= bytes_to_crypt);
   int unused_len = 0;
   while (bytes_to_crypt > 0) {
     // Process at most `kMaxSegmentSize` bytes at a time, then remove the

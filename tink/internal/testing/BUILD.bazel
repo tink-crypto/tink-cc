@@ -49,7 +49,6 @@ cc_library(
         "//tink/internal:proto_parsing_helpers",
         "//tink/internal:tink_proto_structs",
         "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/log:check",
         "@com_google_absl//absl/status:statusor",
         "@com_google_absl//absl/strings",
         "@com_google_absl//absl/strings:string_view",

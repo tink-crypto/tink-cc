@@ -48,14 +48,14 @@ constexpr absl::string_view kDecrypt = "decrypt";
 
 void ValidateParams() {
   // [START_EXCLUDE]
-  CHECK(absl::GetFlag(FLAGS_mode) == kEncrypt ||
+  ABSL_CHECK(absl::GetFlag(FLAGS_mode) == kEncrypt ||
         absl::GetFlag(FLAGS_mode) == kDecrypt)
       << "Invalid mode; must be `encrypt` or `decrypt`";
-  CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
       << "Keyset file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_input_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_input_filename).empty())
       << "Input file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_output_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_output_filename).empty())
       << "Output file must be specified";
   // [END_EXCLUDE]
 }

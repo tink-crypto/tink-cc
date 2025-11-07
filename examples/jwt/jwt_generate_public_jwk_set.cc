@@ -42,9 +42,9 @@ using ::crypto::tink::KeysetHandle;
 
 void ValidateParams() {
   // [START_EXCLUDE]
-  CHECK(!absl::GetFlag(FLAGS_public_keyset_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_public_keyset_filename).empty())
       << "Public keyset file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_public_jwk_set_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_public_jwk_set_filename).empty())
       << "Public JWK set file must be specified";
   // [END_EXCLUDE]
 }

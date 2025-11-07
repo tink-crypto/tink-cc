@@ -49,11 +49,11 @@ using ::crypto::tink::RawJwtBuilder;
 
 void ValidateParams() {
   // [START_EXCLUDE]
-  CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
       << "Keyset file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_audience).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_audience).empty())
       << "Expected audience in the token must be specified";
-  CHECK(!absl::GetFlag(FLAGS_token_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_token_filename).empty())
       << "Token file must be specified";
   // [END_EXCLUDE]
 }

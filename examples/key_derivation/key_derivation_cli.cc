@@ -47,11 +47,11 @@ using ::crypto::tink::KeysetHandle;
 
 void ValidateParams() {
   // [START_EXCLUDE]
-  CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
       << "Keyset file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_salt_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_salt_filename).empty())
       << "Input file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_derived_keyset_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_derived_keyset_filename).empty())
       << "Output file must be specified";
   // [END_EXCLUDE]
 }

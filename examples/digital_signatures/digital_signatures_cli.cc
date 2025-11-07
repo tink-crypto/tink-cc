@@ -49,15 +49,15 @@ constexpr absl::string_view kVerify = "verify";
 
 void ValidateParams() {
   // [START_EXCLUDE]
-  CHECK(absl::GetFlag(FLAGS_mode) == kSign ||
+  ABSL_CHECK(absl::GetFlag(FLAGS_mode) == kSign ||
         absl::GetFlag(FLAGS_mode) == kVerify)
       << "Invalid mode; must be `" << kSign << "` or `" << kVerify << "`"
       << '\n';
-  CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_keyset_filename).empty())
       << "Keyset file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_input_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_input_filename).empty())
       << "Input file must be specified";
-  CHECK(!absl::GetFlag(FLAGS_signature_filename).empty())
+  ABSL_CHECK(!absl::GetFlag(FLAGS_signature_filename).empty())
       << "Signature file must be specified";
   // [END_EXCLUDE]
 }

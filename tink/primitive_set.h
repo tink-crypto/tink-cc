@@ -183,7 +183,7 @@ class PrimitiveSet {
     Builder& AddPrimitive(
         std::unique_ptr<P> primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       if (!status_.ok()) return *this;
       status_ = AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
                                  primitives_in_keyset_order_)
@@ -202,7 +202,7 @@ class PrimitiveSet {
     Builder& AddPrimaryPrimitive(
         std::unique_ptr<P> primitive,
         const google::crypto::tink::KeysetInfo::KeyInfo& key_info) & {
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       if (!status_.ok()) return *this;
       auto entry_result =
           AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
@@ -224,7 +224,7 @@ class PrimitiveSet {
     // Add the given annotations. Existing annotations will not be overwritten.
     Builder& AddAnnotations(
         absl::flat_hash_map<std::string, std::string> annotations) & {
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       annotations_.merge(std::move(annotations));
       return *this;
     }
@@ -235,7 +235,7 @@ class PrimitiveSet {
     }
 
     absl::StatusOr<PrimitiveSet<P>> Build() && {
-      absl::MutexLock lock(&mutex_);
+      absl::MutexLock lock(mutex_);
       if (!status_.ok()) return status_;
       return PrimitiveSet<P>(std::move(primitives_), primary_,
                              std::move(primitives_in_keyset_order_),
@@ -286,7 +286,7 @@ class PrimitiveSet {
                           "PrimitiveSet is not mutable.");
     }
 
-    absl::MutexLock lock(primitives_mutex_.get());
+    absl::MutexLock lock(*primitives_mutex_.get());
     return AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
                             primitives_in_keyset_order_);
   }
@@ -317,7 +317,7 @@ class PrimitiveSet {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "PrimitiveSet is not mutable.");
     }
-    absl::MutexLock lock(primitives_mutex_.get());
+    absl::MutexLock lock(*primitives_mutex_.get());
     return SetPrimaryImpl(&primary_, primary, primitives_);
   }
 

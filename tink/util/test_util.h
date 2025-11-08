@@ -517,7 +517,7 @@ class DummyStreamingAead : public StreamingAead {
 
    private:
     absl::Status CheckHeader() ABSL_LOCKS_EXCLUDED(header_check_status_mutex_) {
-      absl::MutexLock lock(&header_check_status_mutex_);
+      absl::MutexLock lock(header_check_status_mutex_);
       if (header_check_status_.code() != absl::StatusCode::kUnavailable) {
         return header_check_status_;
       }

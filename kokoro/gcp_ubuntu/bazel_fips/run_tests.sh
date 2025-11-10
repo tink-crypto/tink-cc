@@ -29,6 +29,7 @@ set -eEuo pipefail
 #  sh ./kokoro/gcp_ubuntu/bazel_fips/run_tests.sh
 #
 RUN_COMMAND_ARGS=()
+CONTAINER_IMAGE=
 if [[ -n "${KOKORO_ARTIFACTS_DIR:-}" ]]; then
   readonly TINK_BASE_DIR="$(echo "${KOKORO_ARTIFACTS_DIR}"/git*)"
   cd "${TINK_BASE_DIR}/tink_cc"
@@ -41,6 +42,7 @@ readonly CONTAINER_IMAGE
 if [[ -n "${CONTAINER_IMAGE}" ]]; then
   RUN_COMMAND_ARGS+=( -c "${CONTAINER_IMAGE}" )
 fi
+readonly RUN_COMMAND_ARGS
 
 CACHE_FLAGS=()
 if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
@@ -52,38 +54,22 @@ if [[ -n "${TINK_REMOTE_BAZEL_CACHE_GCS_BUCKET:-}" ]]; then
 fi
 readonly CACHE_FLAGS
 
-# Run build and tests with the BoringSSL FIPS module
-# Prepare the workspace to use BoringCrypto which is in
-# third_party/boringssl_fips; insert the local_repository instruction below
-# in WORKSPACE.
-APPEND_AFTER='workspace(name = "tink_cc")'
-NUM_MATCHES="$(grep -c "${APPEND_AFTER}" WORKSPACE)"
-if (( $? != 0 || NUM_MATCHES != 1)); then
-  echo "ERROR: Could not patch WORKSPACE to build BoringSSL with FIPS module"
-  exit 1
-fi
-mapfile LOCAL_FIPS_REPOSITORY <<EOM
-local_repository(
-  name = "boringssl",
-  path = "third_party/boringssl_fips",
-)
-EOM
-printf -v INSERT_TEXT '\\n%s' "${LOCAL_FIPS_REPOSITORY[@]//$'\n'/}"
-sed -i.bak "/${APPEND_AFTER}/a \\${INSERT_TEXT}" WORKSPACE
-
 cat <<EOF > _do_run_test.sh
 set -euo pipefail
 
-readonly BAZEL_FLAGS=(
-  --//tink/config:use_only_fips=True
-  --build_tag_filters=fips,-requires_boringcrypto_update
-  ${CACHE_FLAGS[@]}
-)
+bazelisk build ${CACHE_FLAGS[@]} \
+  --//tink/config:use_only_fips=True \
+  --build_tag_filters=fips,-requires_boringcrypto_update \
+  --override_module=boringssl=third_party/boringssl_fips \
+  --enable_bzlmod -- ...
 
-bazelisk build "\${BAZEL_FLAGS[@]}" -- ...
-bazelisk test "\${BAZEL_FLAGS[@]}" \
+bazelisk test ${CACHE_FLAGS[@]} \
+  --//tink/config:use_only_fips=True \
+  --build_tag_filters=fips,-requires_boringcrypto_update \
   --build_tests_only \
   --test_output=errors \
+  --override_module=boringssl=third_party/boringssl_fips \
+  --enable_bzlmod \
   --test_tag_filters=fips,-requires_boringcrypto_update -- ...
 EOF
 chmod +x _do_run_test.sh
@@ -92,7 +78,6 @@ chmod +x _do_run_test.sh
 trap cleanup EXIT
 
 cleanup() {
-  mv WORKSPACE.bak WORKSPACE
   rm -rf _do_run_test.sh
 }
 

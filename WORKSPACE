@@ -2,12 +2,8 @@
 
 workspace(name = "tink_cc")
 
-# Use this repository if you want to build the FIPS module for BoringSSL
-# local_repository(
-#   name = "boringssl",
-#   path = "third_party/boringssl_fips/",
-# )
-#
+# Run with --override_repository=boringssl=third_party/boringssl_fips to use
+# the FIPS module.
 
 load("@tink_cc//:tink_cc_deps.bzl", "tink_cc_deps", "tink_cc_testonly_deps")
 

@@ -60,8 +60,7 @@ set -euo pipefail
 bazelisk build ${CACHE_FLAGS[@]} \
   --//tink/config:use_only_fips=True \
   --build_tag_filters=fips,-requires_boringcrypto_update \
-  --override_module=boringssl=third_party/boringssl_fips \
-  --enable_bzlmod -- ...
+  --override_module=boringssl=third_party/boringssl_fips -- ...
 
 bazelisk test ${CACHE_FLAGS[@]} \
   --//tink/config:use_only_fips=True \
@@ -69,7 +68,6 @@ bazelisk test ${CACHE_FLAGS[@]} \
   --build_tests_only \
   --test_output=errors \
   --override_module=boringssl=third_party/boringssl_fips \
-  --enable_bzlmod \
   --test_tag_filters=fips,-requires_boringcrypto_update -- ...
 EOF
 chmod +x _do_run_test.sh

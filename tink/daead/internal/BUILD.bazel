@@ -13,7 +13,7 @@ cc_library(
         "//tink/daead:deterministic_aead_wrapper",
         "//tink/internal:configuration_impl",
         "//tink/util:status",
-        "@com_google_absl//absl/memory",
+        "@abseil-cpp//absl/memory",
     ],
 )
 
@@ -27,7 +27,7 @@ cc_library(
         "//tink/daead:aes_siv_key_manager",
         "//tink/internal:key_gen_configuration_impl",
         "//tink/util:status",
-        "@com_google_absl//absl/memory",
+        "@abseil-cpp//absl/memory",
     ],
 )
 
@@ -57,11 +57,11 @@ cc_library(
         "//tink/internal:serialization_registry",
         "//tink/internal:tink_proto_structs",
         "//tink/util:status",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
     ],
 )
 
@@ -111,10 +111,10 @@ cc_test(
         "//tink/internal:tink_proto_structs",
         "//tink/subtle:random",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -136,7 +136,7 @@ cc_test(
     deps = [
         ":aes_siv_proto_format",
         "//tink/internal/testing:field_with_number",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],
 )

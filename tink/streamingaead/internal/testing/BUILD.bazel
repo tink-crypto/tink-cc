@@ -20,9 +20,9 @@ cc_library(
         "//tink/streamingaead:aes_ctr_hmac_streaming_parameters",
         "//tink/util:statusor",
         "//tink/util:test_util",
-        "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -33,7 +33,7 @@ cc_library(
     include_prefix = "tink/streamingaead/internal/testing",
     deps = [
         "//tink/streamingaead:streaming_aead_key",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -53,8 +53,8 @@ cc_library(
         "//tink/streamingaead:aes_gcm_hkdf_streaming_parameters",
         "//tink/util:statusor",
         "//tink/util:test_util",
-        "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )

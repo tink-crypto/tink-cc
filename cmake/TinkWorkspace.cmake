@@ -128,7 +128,7 @@ if (NOT TINK_USE_INSTALLED_PROTOBUF)
   set(protobuf_INSTALL OFF CACHE BOOL "Tink dependency override" FORCE)
 
   http_archive(
-    NAME com_google_protobuf
+    NAME protobuf
     URL https://github.com/protocolbuffers/protobuf/releases/download/v30.2/protobuf-30.2.zip
     SHA256 6544e5ceec7f29d00397193360435ca8b3c4e843de3cf5698a99d36b72d65342
   )

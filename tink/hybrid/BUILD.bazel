@@ -19,8 +19,8 @@ cc_library(
         "//tink/aead:aead_config",
         "//tink/config:tink_fips",
         "//tink/util:status",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/memory",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/memory",
     ],
 )
 
@@ -41,7 +41,7 @@ cc_library(
         "//tink/hybrid/internal:hpke_private_key_manager",
         "//tink/hybrid/internal:hpke_public_key_manager",
         "//tink/util:status",
-        "@com_google_absl//absl/memory",
+        "@abseil-cpp//absl/memory",
     ],
 )
 
@@ -63,9 +63,9 @@ cc_library(
         "//tink/internal:util",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -87,9 +87,9 @@ cc_library(
         "//tink/internal:util",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -106,7 +106,7 @@ cc_library(
         "//tink:registry",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/base:core_headers",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 
@@ -123,7 +123,7 @@ cc_library(
         "//tink:registry",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/base:core_headers",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 
@@ -140,7 +140,7 @@ cc_library(
         "//proto:tink_cc_proto",
         "//tink/aead:aead_key_templates",
         "//tink/daead:deterministic_aead_key_templates",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -160,9 +160,9 @@ cc_library(
         "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -181,9 +181,9 @@ cc_library(
         "//tink/util:enums",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -211,10 +211,10 @@ cc_library(
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:validation",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -238,9 +238,9 @@ cc_library(
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:validation",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -254,9 +254,9 @@ cc_library(
         "//tink:hybrid_encrypt",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -276,7 +276,7 @@ cc_library(
     deps = [
         ":hybrid_parameters",
         "//tink:key",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -290,8 +290,8 @@ cc_library(
         ":hybrid_public_key",
         "//tink:key",
         "//tink:private_key",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:optional",
     ],
 )
 
@@ -304,8 +304,8 @@ cc_library(
     deps = [
         ":hybrid_parameters",
         "//tink:parameters",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
     ],
 )
 
@@ -324,11 +324,11 @@ cc_library(
         "//tink/internal:output_prefix_util",
         "//tink/subtle:common_enums",
         "//tink/util:statusor",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
     ],
 )
 
@@ -357,11 +357,11 @@ cc_library(
         "//tink/internal:xwing_util",
         "//tink/subtle:common_enums",
         "//tink/util:statusor",
+        "@abseil-cpp//absl/log",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/log",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
     ],
 )
 
@@ -373,7 +373,7 @@ cc_library(
     deps = [
         "//tink/hybrid/internal:hpke_proto_serialization_impl",
         "//tink/internal:mutable_serialization_registry",
-        "@com_google_absl//absl/status",
+        "@abseil-cpp//absl/status",
     ],
 )
 
@@ -387,7 +387,7 @@ cc_library(
     deps = [
         "//tink:configuration",
         "//tink/hybrid/internal:config_v0",
-        "@com_google_absl//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
@@ -401,7 +401,7 @@ cc_library(
     deps = [
         "//tink:key_gen_configuration",
         "//tink/hybrid/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
@@ -420,10 +420,10 @@ cc_library(
         "//tink/daead:aes_siv_parameters",
         "//tink/util:status",
         "//tink/util:statusor",
-        "@com_google_absl//absl/base:core_headers",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/base:core_headers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:optional",
     ],
 )
 
@@ -445,11 +445,11 @@ cc_library(
         "//tink/subtle:common_enums",
         "//tink/util:status",
         "//tink/util:statusor",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/types:optional",
     ],
 )
 
@@ -478,11 +478,11 @@ cc_library(
         "//tink/util:secret_data",
         "//tink/util:status",
         "//tink/util:statusor",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:str_format",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:str_format",
-        "@com_google_absl//absl/types:optional",
     ],
 )
 
@@ -493,8 +493,8 @@ cc_library(
     deps = [
         "//tink/hybrid/internal:ecies_proto_serialization_impl",
         "//tink/internal:mutable_serialization_registry",
+        "@abseil-cpp//absl/status",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
     ],
 )
 
@@ -540,12 +540,12 @@ cc_test(
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -585,8 +585,8 @@ cc_test(
         "//tink/subtle:random",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )
@@ -609,10 +609,10 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],
 )
@@ -635,10 +635,10 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/container:flat_hash_map",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/container:flat_hash_map",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
 )
@@ -660,7 +660,7 @@ cc_test(
         "//tink/util:status",
         "//tink/util:test_keyset_handle",
         "//tink/util:test_util",
-        "@com_google_absl//absl/memory",
+        "@abseil-cpp//absl/memory",
         "@googletest//:gtest_main",
     ],
 )
@@ -728,9 +728,9 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
 )
@@ -749,8 +749,8 @@ cc_test(
         "//tink/util:enums",
         "//tink/util:statusor",
         "//tink/util:test_util",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
 )
@@ -785,9 +785,9 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],
 )
@@ -811,7 +811,7 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/status",
+        "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
 )
@@ -824,7 +824,7 @@ cc_test(
         "//tink:hybrid_decrypt",
         "//tink:hybrid_encrypt",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/status",
+        "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
 )
@@ -836,8 +836,8 @@ cc_test(
         ":hpke_parameters",
         "//tink:parameters",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
         "@googletest//:gtest_main",
     ],
 )
@@ -856,10 +856,10 @@ cc_test(
         "//tink/subtle:random",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -886,12 +886,12 @@ cc_test(
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -925,12 +925,12 @@ cc_test(
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -966,9 +966,9 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -989,9 +989,9 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -1017,11 +1017,11 @@ cc_test(
         "//tink/util:statusor",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )
@@ -1063,12 +1063,12 @@ cc_test(
         "//tink/util:enums",
         "//tink/util:secret_data",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
         "@googletest//:gtest_main",
     ],
 )

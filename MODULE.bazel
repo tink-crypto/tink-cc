@@ -46,7 +46,6 @@ bazel_dep(
 bazel_dep(
     name = "protobuf",
     version = "30.2",
-    repo_name = "com_google_protobuf",
 )
 bazel_dep(
     name = "boringssl",
@@ -55,14 +54,12 @@ bazel_dep(
 bazel_dep(
     name = "abseil-cpp",
     version = "20250814.1",
-    repo_name = "com_google_absl",
 )
 
 bazel_dep(
     name = "google_benchmark",
     version = "1.9.1",
     dev_dependency = True,
-    repo_name = "com_google_benchmark",
 )
 
 wycheproof_extension = use_extension(

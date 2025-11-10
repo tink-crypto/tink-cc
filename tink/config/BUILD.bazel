@@ -20,7 +20,7 @@ cc_library(
         "//tink/signature:signature_config",
         "//tink/streamingaead:streaming_aead_config",
         "//tink/util:status",
-        "@com_google_absl//absl/base:core_headers",
+        "@abseil-cpp//absl/base:core_headers",
     ],
 )
 
@@ -47,8 +47,8 @@ cc_library(
         "//tink/internal:fips_utils",
         "//tink/internal:registry_impl",
         "//tink/util:status",
+        "@abseil-cpp//absl/base:core_headers",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/base:core_headers",
     ],
 )
 
@@ -63,7 +63,7 @@ cc_library(
         "//tink:key_gen_configuration",
         "//tink/internal:configuration_impl",
         "//tink/internal:key_gen_configuration_impl",
-        "@com_google_absl//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
@@ -93,7 +93,7 @@ cc_library(
         "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
         "//tink/signature:rsa_ssa_pss_sign_key_manager",
         "//tink/signature:rsa_ssa_pss_verify_key_manager",
-        "@com_google_absl//absl/log:check",
+        "@abseil-cpp//absl/log:check",
     ],
 )
 
@@ -117,7 +117,7 @@ cc_library(
         "//tink/signature:rsa_ssa_pkcs1_verify_key_manager",
         "//tink/signature:rsa_ssa_pss_sign_key_manager",
         "//tink/signature:rsa_ssa_pss_verify_key_manager",
-        "@com_google_absl//absl/log:check",
+        "@abseil-cpp//absl/log:check",
     ],
 )
 
@@ -137,7 +137,7 @@ cc_library(
         "//tink/prf/internal:config_v0",
         "//tink/signature/internal:config_v0",
         "//tink/streamingaead/internal:config_v0",
-        "@com_google_absl//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
@@ -156,7 +156,7 @@ cc_library(
         "//tink/prf/internal:key_gen_config_v0",
         "//tink/signature/internal:key_gen_config_v0",
         "//tink/streamingaead/internal:key_gen_config_v0",
-        "@com_google_absl//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_check",
     ],
 )
 
@@ -180,7 +180,7 @@ cc_test(
         "//tink/aead:aes_gcm_key_manager",
         "//tink/util:status",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/status",
+        "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
 )
@@ -208,8 +208,8 @@ cc_test(
         "//tink/internal:fips_utils",
         "//tink/util:status",
         "//tink/util:test_matchers",
+        "@abseil-cpp//absl/status",
         "@boringssl//:crypto",
-        "@com_google_absl//absl/status",
         "@googletest//:gtest_main",
     ],
 )
@@ -231,9 +231,9 @@ cc_test(
         "//tink/util:status",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
 )
@@ -266,7 +266,7 @@ cc_test(
         "//tink/signature:rsa_ssa_pss_verify_key_manager",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/status",
+        "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
 )
@@ -291,7 +291,7 @@ cc_test(
         "//tink/signature:rsa_ssa_pss_verify_key_manager",
         "//tink/util:statusor",
         "//tink/util:test_matchers",
-        "@com_google_absl//absl/status",
+        "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
 )

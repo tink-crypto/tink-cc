@@ -12,7 +12,7 @@ cc_library(
     include_prefix = "tink/hybrid/internal/testing",
     deps = [
         "//tink/hybrid:hybrid_private_key",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )
 
@@ -34,9 +34,9 @@ cc_library(
         "//tink/hybrid:hpke_public_key",
         "//tink/util:secret_data",
         "//tink/util:test_util",
-        "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings",
     ],
 )
 
@@ -59,7 +59,7 @@ cc_library(
         "//tink/hybrid:ecies_public_key",
         "//tink/util:statusor",
         "//tink/util:test_util",
-        "@com_google_absl//absl/log:absl_check",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/types:optional",
     ],
 )

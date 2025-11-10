@@ -10,7 +10,7 @@ cc_library(
     deps = [
         "//tink:keyset_handle",
         "//tink/util:statusor",
-        "@com_google_absl//absl/strings",
+        "@abseil-cpp//absl/strings",
     ],
 )
 

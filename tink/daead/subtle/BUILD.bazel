@@ -12,9 +12,9 @@ cc_library(
         "//tink:aead",
         "//tink:deterministic_aead",
         "//tink/util:statusor",
-        "@com_google_absl//absl/functional:bind_front",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:variant",
+        "@abseil-cpp//absl/functional:bind_front",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:variant",
     ],
 )
 
@@ -28,10 +28,10 @@ cc_test(
         "//tink:deterministic_aead",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
-        "@com_google_absl//absl/memory",
-        "@com_google_absl//absl/status",
-        "@com_google_absl//absl/status:statusor",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/memory",
+        "@abseil-cpp//absl/status",
+        "@abseil-cpp//absl/status:statusor",
+        "@abseil-cpp//absl/strings:string_view",
         "@googletest//:gtest_main",
     ],
 )

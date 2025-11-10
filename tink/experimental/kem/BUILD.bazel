@@ -18,8 +18,8 @@ cc_library(
         ":kem_public_key",
         "//tink:key",
         "//tink:private_key",
-        "@com_google_absl//absl/strings:string_view",
-        "@com_google_absl//absl/types:optional",
+        "@abseil-cpp//absl/strings:string_view",
+        "@abseil-cpp//absl/types:optional",
     ],
 )
 
@@ -30,6 +30,6 @@ cc_library(
     deps = [
         ":kem_parameters",
         "//tink:key",
-        "@com_google_absl//absl/strings:string_view",
+        "@abseil-cpp//absl/strings:string_view",
     ],
 )

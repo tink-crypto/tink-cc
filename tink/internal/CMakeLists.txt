@@ -765,7 +765,6 @@ tink_cc_library(
     tink::internal::parser_index
     tink::internal::serialization
     absl::function_ref
-    absl::log
     absl::status
     absl::statusor
     absl::strings
@@ -804,7 +803,6 @@ tink_cc_library(
     tink::internal::serialization
     tink::internal::serializer_index
     absl::function_ref
-    absl::log
     absl::status
     absl::statusor
     absl::optional
@@ -1683,7 +1681,6 @@ tink_cc_library(
     tink::internal::safe_stringops
     tink::internal::sanitizing_allocator
     absl::absl_check
-    absl::check
     absl::string_view
     absl::span
 )

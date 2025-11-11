@@ -443,6 +443,14 @@ class RepeatedMessageField : public Field {
         });
   }
 
+  // See https://protobuf.dev/reference/cpp/cpp-generated/#repeatedmessage.
+  int values_size() const { return values_.size(); }
+  const MessageT& values(int index) const { return values_[index]; }
+  MessageT* mutable_values(int index) { return &values_[index]; }
+  MessageT* add_values() {
+    values_.emplace_back();
+    return &values_.back();
+  }
   const std::vector<MessageT>& values() const { return values_; }
   std::vector<MessageT>* mutable_values() { return &values_; }
 

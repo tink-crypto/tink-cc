@@ -619,6 +619,33 @@ TEST(RepeatedMessageField, SerializeVerySmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
+TEST(RepeatedMessageField, Accessors) {
+  RepeatedMessageField<InnerStruct> field{1};
+  EXPECT_EQ(field.values_size(), 0);
+
+  InnerStruct* v1 = field.add_values();
+  v1->set_uint32_member_1(1);
+  EXPECT_EQ(field.values_size(), 1);
+  EXPECT_EQ(field.values(0).uint32_member_1(), 1);
+  EXPECT_EQ(v1, field.mutable_values(0));
+
+  field.mutable_values(0)->set_uint32_member_1(2);
+  EXPECT_EQ(field.values(0).uint32_member_1(), 2);
+
+  InnerStruct* v2 = field.add_values();
+  v2->set_uint32_member_1(3);
+  v2->set_uint32_member_2(4);
+  EXPECT_EQ(field.values_size(), 2);
+  EXPECT_EQ(field.values(1).uint32_member_1(), 3);
+  EXPECT_EQ(field.values(1).uint32_member_2(), 4);
+
+  EXPECT_EQ(field.values().size(), 2);
+  EXPECT_EQ(field.mutable_values()->size(), 2);
+  field.mutable_values()->back().set_uint32_member_1(5);
+  EXPECT_EQ(field.values(1).uint32_member_1(), 5);
+  EXPECT_EQ(field.values(1).uint32_member_2(), 4);
+}
+
 class Submessage : public Message<Submessage> {
  public:
   Submessage() = default;

@@ -55,7 +55,6 @@ using ::google::crypto::tink::JwtHmacAlgorithm;
 using ::google::crypto::tink::JwtHmacKeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;
-using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -66,11 +65,13 @@ const absl::string_view kTypeUrl =
 
 struct TestCase {
   JwtHmacParameters::KidStrategy strategy;
+  // Helper member for parsing/serializing parameters with custom kid strategy.
+  JwtHmacParameters::KidStrategy expected_parameters_strategy;
   OutputPrefixTypeEnum output_prefix_type;
   JwtHmacParameters::Algorithm algorithm;
   JwtHmacAlgorithm proto_algorithm;
   int key_size;
-  absl::optional<std::string> expected_kid;
+  absl::optional<std::string> kid;
   absl::optional<int> id;
   std::string output_prefix;
 };
@@ -89,23 +90,31 @@ TEST_F(JwtHmacProtoSerializationTest, RegisterTwiceSucceeds) {
 
 INSTANTIATE_TEST_SUITE_P(
     JwtHmacProtoSerializationTestSuite, JwtHmacProtoSerializationTest,
-    Values(
-        TestCase{JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
-                 OutputPrefixTypeEnum::kTink,
-                 JwtHmacParameters::Algorithm::kHs256, JwtHmacAlgorithm::HS256,
-                 /*key_size=*/16, /*expected_kid=*/"AgMEAA",
-                 /*id=*/0x02030400,
-                 /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
-        TestCase{JwtHmacParameters::KidStrategy::kIgnored,
-                 OutputPrefixTypeEnum::kRaw,
-                 JwtHmacParameters::Algorithm::kHs384, JwtHmacAlgorithm::HS384,
-                 /*key_size=*/32, /*expected_kid=*/absl::nullopt,
-                 /*id=*/absl::nullopt, /*output_prefix=*/""},
-        TestCase{JwtHmacParameters::KidStrategy::kIgnored,
-                 OutputPrefixTypeEnum::kRaw,
-                 JwtHmacParameters::Algorithm::kHs512, JwtHmacAlgorithm::HS512,
-                 /*key_size=*/32, /*expected_kid=*/absl::nullopt,
-                 /*id=*/absl::nullopt, /*output_prefix=*/""}));
+    Values(TestCase{
+               /*strategy=*/JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+               /*expected_parameters_strategy=*/
+               JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+               OutputPrefixTypeEnum::kTink,
+               JwtHmacParameters::Algorithm::kHs256, JwtHmacAlgorithm::HS256,
+               /*key_size=*/16, /*kid=*/"AgMEAA",
+               /*id=*/0x02030400,
+               /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
+           TestCase{/*strategy=*/JwtHmacParameters::KidStrategy::kIgnored,
+                    /*expected_parameters_strategy=*/
+                    JwtHmacParameters::KidStrategy::kIgnored,
+                    OutputPrefixTypeEnum::kRaw,
+                    JwtHmacParameters::Algorithm::kHs384,
+                    JwtHmacAlgorithm::HS384,
+                    /*key_size=*/32, /*kid=*/absl::nullopt,
+                    /*id=*/absl::nullopt, /*output_prefix=*/""},
+           TestCase{/*strategy=*/JwtHmacParameters::KidStrategy::kCustom,
+                    /*expected_parameters_strategy=*/
+                    JwtHmacParameters::KidStrategy::kIgnored,
+                    OutputPrefixTypeEnum::kRaw,
+                    JwtHmacParameters::Algorithm::kHs512,
+                    JwtHmacAlgorithm::HS512,
+                    /*key_size=*/32, /*kid=*/"custom_kid",
+                    /*id=*/absl::nullopt, /*output_prefix=*/""}));
 
 TEST_P(JwtHmacProtoSerializationTest, ParseParameters) {
   TestCase test_case = GetParam();
@@ -128,7 +137,8 @@ TEST_P(JwtHmacProtoSerializationTest, ParseParameters) {
   EXPECT_THAT((*parsed)->HasIdRequirement(), test_case.id.has_value());
 
   absl::StatusOr<JwtHmacParameters> expected = JwtHmacParameters::Create(
-      test_case.key_size, test_case.strategy, test_case.algorithm);
+      test_case.key_size, test_case.expected_parameters_strategy,
+      test_case.algorithm);
   ASSERT_THAT(expected, IsOk());
   EXPECT_THAT(**parsed, Eq(*expected));
 }
@@ -225,7 +235,8 @@ TEST_P(JwtHmacProtoSerializationTest, SerializeParameters) {
   ASSERT_THAT(RegisterJwtHmacProtoSerialization(), IsOk());
 
   absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      test_case.key_size, test_case.strategy, test_case.algorithm);
+      test_case.key_size, test_case.expected_parameters_strategy,
+      test_case.algorithm);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -271,7 +282,7 @@ TEST_F(JwtHmacProtoSerializationTest, SerializeParametersWithCustomKidFails) {
               "Unable to serialize JwtHmacParameters::KidStrategy::kCustom")));
 }
 
-TEST_P(JwtHmacProtoSerializationTest, ParseKeyWithoutCustomKid) {
+TEST_P(JwtHmacProtoSerializationTest, ParseKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtHmacProtoSerialization(), IsOk());
 
@@ -280,6 +291,9 @@ TEST_P(JwtHmacProtoSerializationTest, ParseKeyWithoutCustomKid) {
   key_proto.set_version(0);
   key_proto.set_algorithm(test_case.proto_algorithm);
   key_proto.set_key_value(raw_key_bytes);
+  if (test_case.strategy == JwtHmacParameters::KidStrategy::kCustom) {
+    key_proto.mutable_custom_kid()->set_value(*test_case.kid);
+  }
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
@@ -310,51 +324,11 @@ TEST_P(JwtHmacProtoSerializationTest, ParseKeyWithoutCustomKid) {
   if (test_case.id.has_value()) {
     builder.SetIdRequirement(*test_case.id);
   }
+  if (test_case.strategy == JwtHmacParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
+  }
   absl::StatusOr<JwtHmacKey> expected_key =
       builder.Build(GetPartialKeyAccess());
-  ASSERT_THAT(expected_key, IsOk());
-  EXPECT_THAT(**parsed_key, Eq(*expected_key));
-}
-
-TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithCustomKid) {
-  ASSERT_THAT(RegisterJwtHmacProtoSerialization(), IsOk());
-
-  std::string raw_key_bytes = Random::GetRandomBytes(32);
-  google::crypto::tink::JwtHmacKey key_proto;
-  key_proto.set_version(0);
-  key_proto.set_algorithm(JwtHmacAlgorithm::HS256);
-  key_proto.set_key_value(raw_key_bytes);
-  key_proto.mutable_custom_kid()->set_value("custom_kid");
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(kTypeUrl, serialized_key,
-                                              KeyMaterialTypeEnum::kSymmetric,
-                                              OutputPrefixTypeEnum::kRaw,
-                                              /*id_requirement=*/absl::nullopt);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
-      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(parsed_key, IsOk());
-  EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(), IsFalse());
-  EXPECT_THAT((*parsed_key)->GetIdRequirement(), Eq(absl::nullopt));
-
-  absl::StatusOr<JwtHmacParameters> expected_parameters =
-      JwtHmacParameters::Create(/*key_size_in_bytes=*/32,
-                                JwtHmacParameters::KidStrategy::kCustom,
-                                JwtHmacParameters::Algorithm::kHs256);
-  ASSERT_THAT(expected_parameters, IsOk());
-
-  absl::StatusOr<JwtHmacKey> expected_key =
-      JwtHmacKey::Builder()
-          .SetParameters(*expected_parameters)
-          .SetKeyBytes(
-              RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()))
-          .SetCustomKid(key_proto.custom_kid().value())
-          .Build(GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*expected_key));
 }
@@ -518,7 +492,7 @@ TEST_F(JwtHmacProtoSerializationTest, ParseKeyWithoutSecretKeyAccess) {
                                      HasSubstr("SecretKeyAccess is required")));
 }
 
-TEST_P(JwtHmacProtoSerializationTest, SerializeKeyWithoutCustomKid) {
+TEST_P(JwtHmacProtoSerializationTest, SerializeKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtHmacProtoSerialization(), IsOk());
 
@@ -534,6 +508,9 @@ TEST_P(JwtHmacProtoSerializationTest, SerializeKeyWithoutCustomKid) {
               RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()));
   if (test_case.id.has_value()) {
     builder.SetIdRequirement(*test_case.id);
+  }
+  if (test_case.strategy == JwtHmacParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
   }
   absl::StatusOr<JwtHmacKey> key = builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
@@ -564,55 +541,12 @@ TEST_P(JwtHmacProtoSerializationTest, SerializeKeyWithoutCustomKid) {
   EXPECT_THAT(proto_key.version(), Eq(0));
   EXPECT_THAT(proto_key.key_value(), Eq(raw_key_bytes));
   EXPECT_THAT(proto_key.algorithm(), Eq(test_case.proto_algorithm));
-  EXPECT_THAT(proto_key.has_custom_kid(), IsFalse());
-}
-
-TEST_F(JwtHmacProtoSerializationTest, SerializeKeyWithCustomKid) {
-  ASSERT_THAT(RegisterJwtHmacProtoSerialization(), IsOk());
-
-  absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
-      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
-      JwtHmacParameters::Algorithm::kHs256);
-  ASSERT_THAT(parameters, IsOk());
-
-  std::string raw_key_bytes = Random::GetRandomBytes(32);
-  absl::StatusOr<JwtHmacKey> key =
-      JwtHmacKey::Builder()
-          .SetParameters(*parameters)
-          .SetKeyBytes(
-              RestrictedData(raw_key_bytes, InsecureSecretKeyAccess::Get()))
-          .SetCustomKid("custom_kid")
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<internal::ProtoKeySerialization>(
-              *key, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(serialization, IsOk());
-  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kTypeUrl));
-
-  const internal::ProtoKeySerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoKeySerialization*>(
-          serialization->get());
-  ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kSymmetric));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
-
-  google::crypto::tink::JwtHmacKey proto_key;
-  ASSERT_THAT(proto_key.ParseFromString(
-                  proto_serialization->SerializedKeyProto().GetSecret(
-                      InsecureSecretKeyAccess::Get())),
-              IsTrue());
-  EXPECT_THAT(proto_key.version(), Eq(0));
-  EXPECT_THAT(proto_key.key_value(), Eq(raw_key_bytes));
-  EXPECT_THAT(proto_key.algorithm(), Eq(JwtHmacAlgorithm::HS256));
-  ASSERT_THAT(proto_key.has_custom_kid(), IsTrue());
-  EXPECT_THAT(proto_key.custom_kid().value(), Eq(*key->GetKid()));
+  EXPECT_THAT(
+      proto_key.has_custom_kid(),
+      Eq(test_case.strategy == JwtHmacParameters::KidStrategy::kCustom));
+  if (test_case.strategy == JwtHmacParameters::KidStrategy::kCustom) {
+    EXPECT_THAT(proto_key.custom_kid().value(), Eq(*key->GetKid()));
+  }
 }
 
 TEST_F(JwtHmacProtoSerializationTest, SerializeKeyWithoutSecretKeyAccess) {

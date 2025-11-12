@@ -61,7 +61,6 @@ using ::google::crypto::tink::JwtEcdsaAlgorithm;
 using ::google::crypto::tink::JwtEcdsaKeyFormat;
 using ::testing::Eq;
 using ::testing::HasSubstr;
-using ::testing::IsFalse;
 using ::testing::IsTrue;
 using ::testing::NotNull;
 using ::testing::TestWithParam;
@@ -74,11 +73,13 @@ const absl::string_view kPrivateTypeUrl =
 
 struct TestCase {
   JwtEcdsaParameters::KidStrategy strategy;
+  // Helper member for parsing/serializing parameters with custom kid strategy.
+  JwtEcdsaParameters::KidStrategy expected_parameters_strategy;
   OutputPrefixTypeEnum output_prefix_type;
   JwtEcdsaParameters::Algorithm algorithm;
   JwtEcdsaAlgorithm proto_algorithm;
   subtle::EllipticCurveType curve;
-  absl::optional<std::string> expected_kid;
+  absl::optional<std::string> kid;
   absl::optional<int> id;
   std::string output_prefix;
 };
@@ -98,23 +99,29 @@ TEST_F(JwtEcdsaProtoSerializationTest, RegisterTwiceSucceeds) {
 INSTANTIATE_TEST_SUITE_P(
     JwtEcdsaProtoSerializationTestSuite, JwtEcdsaProtoSerializationTest,
     Values(
-        TestCase{JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
-                 OutputPrefixTypeEnum::kTink,
-                 JwtEcdsaParameters::Algorithm::kEs256,
-                 JwtEcdsaAlgorithm::ES256, subtle::EllipticCurveType::NIST_P256,
-                 /*expected_kid=*/"AgMEAA", /*id=*/0x02030400,
-                 /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
-        TestCase{JwtEcdsaParameters::KidStrategy::kIgnored,
+        TestCase{
+            /*strategy=*/JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+            /*expected_parameters_strategy=*/
+            JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId,
+            OutputPrefixTypeEnum::kTink, JwtEcdsaParameters::Algorithm::kEs256,
+            JwtEcdsaAlgorithm::ES256, subtle::EllipticCurveType::NIST_P256,
+            /*kid=*/"AgMEAA", /*id=*/0x02030400,
+            /*output_prefix=*/std::string("\x01\x02\x03\x04\x00", 5)},
+        TestCase{/*strategy=*/JwtEcdsaParameters::KidStrategy::kIgnored,
+                 /*expected_parameters_strategy=*/
+                 JwtEcdsaParameters::KidStrategy::kIgnored,
                  OutputPrefixTypeEnum::kRaw,
                  JwtEcdsaParameters::Algorithm::kEs384,
                  JwtEcdsaAlgorithm::ES384, subtle::EllipticCurveType::NIST_P384,
-                 /*expected_kid=*/absl::nullopt, /*id=*/absl::nullopt,
+                 /*kid=*/absl::nullopt, /*id=*/absl::nullopt,
                  /*output_prefix=*/""},
-        TestCase{JwtEcdsaParameters::KidStrategy::kIgnored,
+        TestCase{/*strategy=*/JwtEcdsaParameters::KidStrategy::kCustom,
+                 /*expected_parameters_strategy=*/
+                 JwtEcdsaParameters::KidStrategy::kIgnored,
                  OutputPrefixTypeEnum::kRaw,
                  JwtEcdsaParameters::Algorithm::kEs512,
                  JwtEcdsaAlgorithm::ES512, subtle::EllipticCurveType::NIST_P521,
-                 /*expected_kid=*/absl::nullopt, /*id=*/absl::nullopt,
+                 /*kid=*/"custom_kid", /*id=*/absl::nullopt,
                  /*output_prefix=*/""}));
 
 TEST_P(JwtEcdsaProtoSerializationTest, ParseParameters) {
@@ -137,8 +144,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParseParameters) {
   ASSERT_THAT(parsed, IsOk());
   EXPECT_THAT((*parsed)->HasIdRequirement(), test_case.id.has_value());
 
-  absl::StatusOr<JwtEcdsaParameters> expected =
-      JwtEcdsaParameters::Create(test_case.strategy, test_case.algorithm);
+  absl::StatusOr<JwtEcdsaParameters> expected = JwtEcdsaParameters::Create(
+      test_case.expected_parameters_strategy, test_case.algorithm);
   ASSERT_THAT(expected, IsOk());
   EXPECT_THAT(**parsed, Eq(*expected));
 }
@@ -235,8 +242,8 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializeParameters) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
-  absl::StatusOr<JwtEcdsaParameters> parameters =
-      JwtEcdsaParameters::Create(test_case.strategy, test_case.algorithm);
+  absl::StatusOr<JwtEcdsaParameters> parameters = JwtEcdsaParameters::Create(
+      test_case.expected_parameters_strategy, test_case.algorithm);
   ASSERT_THAT(parameters, IsOk());
 
   absl::StatusOr<std::unique_ptr<Serialization>> serialization =
@@ -279,7 +286,7 @@ TEST_F(JwtEcdsaProtoSerializationTest, SerializeParametersWithCustomKidFails) {
                                  "JwtEcdsaParameters::KidStrategy::kCustom")));
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithoutCustomKid) {
+TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
@@ -291,6 +298,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithoutCustomKid) {
   key_proto.set_algorithm(test_case.proto_algorithm);
   key_proto.set_x(ec_key->pub_x);
   key_proto.set_y(ec_key->pub_y);
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    key_proto.mutable_custom_kid()->set_value(*test_case.kid);
+  }
   RestrictedData serialized_key = RestrictedData(
       key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
 
@@ -321,55 +331,11 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithoutCustomKid) {
   if (test_case.id.has_value()) {
     builder.SetIdRequirement(*test_case.id);
   }
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
+  }
   absl::StatusOr<JwtEcdsaPublicKey> expected_key =
       builder.Build(GetPartialKeyAccess());
-  ASSERT_THAT(expected_key, IsOk());
-  EXPECT_THAT(**parsed_key, Eq(*expected_key));
-}
-
-TEST_F(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithCustomKid) {
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  google::crypto::tink::JwtEcdsaPublicKey key_proto;
-  key_proto.set_version(0);
-  key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
-  key_proto.set_x(ec_key->pub_x);
-  key_proto.set_y(ec_key->pub_y);
-  key_proto.mutable_custom_kid()->set_value("custom_kid");
-  RestrictedData serialized_key = RestrictedData(
-      key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kPublicTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPublic, OutputPrefixTypeEnum::kRaw,
-          /*id_requirement=*/absl::nullopt);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
-      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, /*token=*/absl::nullopt);
-  ASSERT_THAT(parsed_key, IsOk());
-  EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(), IsFalse());
-  EXPECT_THAT((*parsed_key)->GetIdRequirement(), Eq(absl::nullopt));
-
-  absl::StatusOr<JwtEcdsaParameters> expected_parameters =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(expected_parameters, IsOk());
-
-  EcPoint public_point =
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  absl::StatusOr<JwtEcdsaPublicKey> expected_key =
-      JwtEcdsaPublicKey::Builder()
-          .SetParameters(*expected_parameters)
-          .SetPublicPoint(public_point)
-          .SetCustomKid(key_proto.custom_kid().value())
-          .Build(GetPartialKeyAccess());
   ASSERT_THAT(expected_key, IsOk());
   EXPECT_THAT(**parsed_key, Eq(*expected_key));
 }
@@ -520,7 +486,7 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePublicKeyWithUnknownAlgorithm) {
                        HasSubstr("Could not determine JwtEcdsaAlgorithm")));
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithoutCustomKid) {
+TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
@@ -537,6 +503,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithoutCustomKid) {
                                            .SetPublicPoint(public_point);
   if (test_case.id.has_value()) {
     builder.SetIdRequirement(*test_case.id);
+  }
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
   }
   absl::StatusOr<JwtEcdsaPublicKey> key = builder.Build(GetPartialKeyAccess());
   ASSERT_THAT(key, IsOk());
@@ -570,63 +539,15 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithoutCustomKid) {
   EXPECT_THAT(proto_key.y(),
               Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_y)));
   EXPECT_THAT(proto_key.algorithm(), Eq(test_case.proto_algorithm));
-  EXPECT_THAT(proto_key.has_custom_kid(), IsFalse());
+  EXPECT_THAT(
+      proto_key.has_custom_kid(),
+      Eq(test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom));
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    EXPECT_THAT(proto_key.custom_kid().value(), Eq(*key->GetKid()));
+  }
 }
 
-TEST_F(JwtEcdsaProtoSerializationTest, SerializePublicKeyWithCustomKid) {
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
-
-  absl::StatusOr<JwtEcdsaParameters> parameters =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  absl::StatusOr<JwtEcdsaPublicKey> key = JwtEcdsaPublicKey::Builder()
-                                              .SetParameters(*parameters)
-                                              .SetPublicPoint(public_point)
-                                              .SetCustomKid("custom_kid")
-                                              .Build(GetPartialKeyAccess());
-  ASSERT_THAT(key, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<internal::ProtoKeySerialization>(
-              *key, /*token=*/absl::nullopt);
-  ASSERT_THAT(serialization, IsOk());
-  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPublicTypeUrl));
-
-  const internal::ProtoKeySerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoKeySerialization*>(
-          serialization->get());
-  ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPublicTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPublic));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
-
-  google::crypto::tink::JwtEcdsaPublicKey proto_key;
-  ASSERT_THAT(proto_key.ParseFromString(
-                  proto_serialization->SerializedKeyProto().GetSecret(
-                      InsecureSecretKeyAccess::Get())),
-              IsTrue());
-  EXPECT_THAT(proto_key.version(), Eq(0));
-  EXPECT_THAT(proto_key.x(),
-              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_x)));
-  EXPECT_THAT(proto_key.y(),
-              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_y)));
-  EXPECT_THAT(proto_key.algorithm(), Eq(JwtEcdsaAlgorithm::ES256));
-  ASSERT_THAT(proto_key.has_custom_kid(), IsTrue());
-  EXPECT_THAT(proto_key.custom_kid().value(), Eq(*key->GetKid()));
-}
-
-TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutCustomKid) {
+TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
@@ -638,6 +559,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutCustomKid) {
   public_key_proto.set_algorithm(test_case.proto_algorithm);
   public_key_proto.set_x(ec_key->pub_x);
   public_key_proto.set_y(ec_key->pub_y);
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    public_key_proto.mutable_custom_kid()->set_value(*test_case.kid);
+  }
 
   google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
   private_key_proto.set_version(0);
@@ -673,68 +597,11 @@ TEST_P(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutCustomKid) {
   if (test_case.id.has_value()) {
     builder.SetIdRequirement(*test_case.id);
   }
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
+  }
   absl::StatusOr<JwtEcdsaPublicKey> expected_public_key =
       builder.Build(GetPartialKeyAccess());
-  ASSERT_THAT(expected_public_key, IsOk());
-
-  absl::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
-      JwtEcdsaPrivateKey::Create(
-          *expected_public_key,
-          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                               InsecureSecretKeyAccess::Get()),
-          GetPartialKeyAccess());
-  ASSERT_THAT(expected_private_key, IsOk());
-  EXPECT_THAT(**parsed_key, Eq(*expected_private_key));
-}
-
-TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithCustomKid) {
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  google::crypto::tink::JwtEcdsaPublicKey public_key_proto;
-  public_key_proto.set_version(0);
-  public_key_proto.set_algorithm(JwtEcdsaAlgorithm::ES256);
-  public_key_proto.set_x(ec_key->pub_x);
-  public_key_proto.set_y(ec_key->pub_y);
-  public_key_proto.mutable_custom_kid()->set_value("custom_kid");
-
-  google::crypto::tink::JwtEcdsaPrivateKey private_key_proto;
-  private_key_proto.set_version(0);
-  *private_key_proto.mutable_public_key() = public_key_proto;
-  private_key_proto.set_key_value(util::SecretDataAsStringView(ec_key->priv));
-  RestrictedData serialized_key = RestrictedData(
-      private_key_proto.SerializeAsString(), InsecureSecretKeyAccess::Get());
-
-  absl::StatusOr<internal::ProtoKeySerialization> serialization =
-      internal::ProtoKeySerialization::Create(
-          kPrivateTypeUrl, serialized_key,
-          KeyMaterialTypeEnum::kAsymmetricPrivate, OutputPrefixTypeEnum::kRaw,
-          /*id_requirement=*/absl::nullopt);
-  ASSERT_THAT(serialization, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Key>> parsed_key =
-      internal::MutableSerializationRegistry::GlobalInstance().ParseKey(
-          *serialization, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(parsed_key, IsOk());
-  EXPECT_THAT((*parsed_key)->GetParameters().HasIdRequirement(), IsFalse());
-  EXPECT_THAT((*parsed_key)->GetIdRequirement(), Eq(absl::nullopt));
-
-  absl::StatusOr<JwtEcdsaParameters> expected_parameters =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(expected_parameters, IsOk());
-
-  EcPoint public_point =
-      EcPoint(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  absl::StatusOr<JwtEcdsaPublicKey> expected_public_key =
-      JwtEcdsaPublicKey::Builder()
-          .SetParameters(*expected_parameters)
-          .SetPublicPoint(public_point)
-          .SetCustomKid(public_key_proto.custom_kid().value())
-          .Build(GetPartialKeyAccess());
   ASSERT_THAT(expected_public_key, IsOk());
 
   absl::StatusOr<JwtEcdsaPrivateKey> expected_private_key =
@@ -936,7 +803,7 @@ TEST_F(JwtEcdsaProtoSerializationTest, ParsePrivateKeyWithoutSecretKeyAccess) {
                                      HasSubstr("SecretKeyAccess is required")));
 }
 
-TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithoutCustomKid) {
+TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKey) {
   TestCase test_case = GetParam();
   ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
 
@@ -953,6 +820,9 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithoutCustomKid) {
                                            .SetPublicPoint(public_point);
   if (test_case.id.has_value()) {
     builder.SetIdRequirement(*test_case.id);
+  }
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    builder.SetCustomKid(*test_case.kid);
   }
   absl::StatusOr<JwtEcdsaPublicKey> public_key =
       builder.Build(GetPartialKeyAccess());
@@ -998,72 +868,13 @@ TEST_P(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithoutCustomKid) {
               Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_y)));
   EXPECT_THAT(proto_key.public_key().algorithm(),
               Eq(test_case.proto_algorithm));
-  EXPECT_THAT(proto_key.public_key().has_custom_kid(), IsFalse());
-}
-
-TEST_F(JwtEcdsaProtoSerializationTest, SerializePrivateKeyWithCustomKid) {
-  ASSERT_THAT(RegisterJwtEcdsaProtoSerialization(), IsOk());
-
-  absl::StatusOr<JwtEcdsaParameters> parameters =
-      JwtEcdsaParameters::Create(JwtEcdsaParameters::KidStrategy::kCustom,
-                                 JwtEcdsaParameters::Algorithm::kEs256);
-  ASSERT_THAT(parameters, IsOk());
-
-  absl::StatusOr<internal::EcKey> ec_key =
-      internal::NewEcKey(subtle::EllipticCurveType::NIST_P256);
-  ASSERT_THAT(ec_key, IsOk());
-
-  EcPoint public_point(BigInteger(ec_key->pub_x), BigInteger(ec_key->pub_y));
-  absl::StatusOr<JwtEcdsaPublicKey> public_key =
-      JwtEcdsaPublicKey::Builder()
-          .SetParameters(*parameters)
-          .SetPublicPoint(public_point)
-          .SetCustomKid("custom_kid")
-          .Build(GetPartialKeyAccess());
-  ASSERT_THAT(public_key, IsOk());
-
-  absl::StatusOr<JwtEcdsaPrivateKey> private_key = JwtEcdsaPrivateKey::Create(
-      *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
-      GetPartialKeyAccess());
-  ASSERT_THAT(private_key, IsOk());
-
-  absl::StatusOr<std::unique_ptr<Serialization>> serialization =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .SerializeKey<internal::ProtoKeySerialization>(
-              *private_key, InsecureSecretKeyAccess::Get());
-  ASSERT_THAT(serialization, IsOk());
-  EXPECT_THAT((*serialization)->ObjectIdentifier(), Eq(kPrivateTypeUrl));
-
-  const internal::ProtoKeySerialization* proto_serialization =
-      dynamic_cast<const internal::ProtoKeySerialization*>(
-          serialization->get());
-  ASSERT_THAT(proto_serialization, NotNull());
-  EXPECT_THAT(proto_serialization->TypeUrl(), Eq(kPrivateTypeUrl));
-  EXPECT_THAT(proto_serialization->GetKeyMaterialTypeEnum(),
-              Eq(KeyMaterialTypeEnum::kAsymmetricPrivate));
-  EXPECT_THAT(proto_serialization->GetOutputPrefixTypeEnum(),
-              Eq(OutputPrefixTypeEnum::kRaw));
-  EXPECT_THAT(proto_serialization->IdRequirement(), Eq(absl::nullopt));
-
-  google::crypto::tink::JwtEcdsaPrivateKey proto_key;
-  ASSERT_THAT(proto_key.ParseFromString(
-                  proto_serialization->SerializedKeyProto().GetSecret(
-                      InsecureSecretKeyAccess::Get())),
-              IsTrue());
-  EXPECT_THAT(proto_key.version(), Eq(0));
-  EXPECT_THAT(proto_key.key_value(),
-              Eq(absl::StrCat(std::string("\x00", 1),
-                              util::SecretDataAsStringView(ec_key->priv))));
-  EXPECT_THAT(proto_key.public_key().x(),
-              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_x)));
-  EXPECT_THAT(proto_key.public_key().y(),
-              Eq(absl::StrCat(std::string("\x00", 1), ec_key->pub_y)));
-  EXPECT_THAT(proto_key.public_key().algorithm(), Eq(JwtEcdsaAlgorithm::ES256));
-  ASSERT_THAT(proto_key.public_key().has_custom_kid(), IsTrue());
-  EXPECT_THAT(proto_key.public_key().custom_kid().value(),
-              Eq(*public_key->GetKid()));
+  ASSERT_THAT(
+      proto_key.public_key().has_custom_kid(),
+      Eq(test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom));
+  if (test_case.strategy == JwtEcdsaParameters::KidStrategy::kCustom) {
+    EXPECT_THAT(proto_key.public_key().custom_kid().value(),
+                Eq(*public_key->GetKid()));
+  }
 }
 
 TEST_F(JwtEcdsaProtoSerializationTest,

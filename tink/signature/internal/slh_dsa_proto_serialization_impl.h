@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,29 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_H_
-#define TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_H_
+#ifndef TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_IMPL_H_
 
 #include "absl/status/status.h"
 #include "tink/internal/mutable_serialization_registry.h"
-#include "tink/signature/internal/slh_dsa_proto_serialization_impl.h"
+#include "tink/internal/serialization_registry.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for SLH-DSA parameters and keys into
-// global serialization registry.
-inline absl::Status RegisterSlhDsaProtoSerialization() {
-  return internal::RegisterSlhDsaProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// specified mutable serialization `registry`.
+absl::Status RegisterSlhDsaProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for SLH-DSA parameters and keys into
+// specified immutable serialization registry `builder`.
+absl::Status RegisterSlhDsaProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_H_
+#endif  // TINK_SIGNATURE_INTERNAL_SLH_DSA_PROTO_SERIALIZATION_IMPL_H_

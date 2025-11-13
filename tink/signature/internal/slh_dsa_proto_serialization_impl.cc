@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/signature/internal/slh_dsa_proto_serialization.h"
+#include "tink/signature/internal/slh_dsa_proto_serialization_impl.h"
 
 #include <array>
 #include <cstdint>
@@ -37,6 +37,7 @@
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
 #include "tink/restricted_data.h"
@@ -51,6 +52,7 @@ ABSL_POINTERS_DEFAULT_NONNULL
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::internal::proto_parsing::BytesField;
@@ -177,21 +179,17 @@ class SlhDsaPrivateKeyTP final : public Message<SlhDsaPrivateKeyTP> {
 };
 
 using SlhDsaProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   SlhDsaParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, SlhDsaParameters>;
 using SlhDsaProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<SlhDsaParameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<SlhDsaParameters, ProtoParametersSerialization>;
 using SlhDsaProtoPublicKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, SlhDsaPublicKey>;
+    KeyParserImpl<ProtoKeySerialization, SlhDsaPublicKey>;
 using SlhDsaProtoPublicKeySerializerImpl =
-    internal::KeySerializerImpl<SlhDsaPublicKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<SlhDsaPublicKey, ProtoKeySerialization>;
 using SlhDsaProtoPrivateKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, SlhDsaPrivateKey>;
+    KeyParserImpl<ProtoKeySerialization, SlhDsaPrivateKey>;
 using SlhDsaProtoPrivateKeySerializerImpl =
-    internal::KeySerializerImpl<SlhDsaPrivateKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<SlhDsaPrivateKey, ProtoKeySerialization>;
 
 const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.SlhDsaPrivateKey";
@@ -199,11 +197,11 @@ const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.SlhDsaPublicKey";
 
 absl::StatusOr<SlhDsaParameters::Variant> ToVariant(
-    internal::OutputPrefixTypeEnum output_prefix_type) {
+    OutputPrefixTypeEnum output_prefix_type) {
   switch (output_prefix_type) {
-    case internal::OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeEnum::kRaw:
       return SlhDsaParameters::Variant::kNoPrefix;
-    case internal::OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeEnum::kTink:
       return SlhDsaParameters::Variant::kTink;
     default:
       return absl::InvalidArgumentError(
@@ -211,13 +209,13 @@ absl::StatusOr<SlhDsaParameters::Variant> ToVariant(
   }
 }
 
-absl::StatusOr<internal::OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     SlhDsaParameters::Variant variant) {
   switch (variant) {
     case SlhDsaParameters::Variant::kNoPrefix:
-      return internal::OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeEnum::kRaw;
     case SlhDsaParameters::Variant::kTink:
-      return internal::OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeEnum::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine output prefix type");
@@ -276,8 +274,7 @@ absl::StatusOr<SlhDsaSignatureTypeEnum> ToProtoSignatureType(
 }
 
 absl::StatusOr<SlhDsaParameters> ToParameters(
-    internal::OutputPrefixTypeEnum output_prefix_type,
-    const SlhDsaParamsTP& params) {
+    OutputPrefixTypeEnum output_prefix_type, const SlhDsaParamsTP& params) {
   absl::StatusOr<SlhDsaParameters::Variant> variant =
       ToVariant(output_prefix_type);
   if (!variant.ok()) {
@@ -324,8 +321,8 @@ absl::StatusOr<SlhDsaParamsTP> FromParameters(
 }
 
 absl::StatusOr<SlhDsaParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateTP key_template = serialization.GetKeyTemplate();
+    const ProtoParametersSerialization& serialization) {
+  const KeyTemplateTP key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing SlhDsaParameters.");
@@ -344,7 +341,7 @@ absl::StatusOr<SlhDsaParameters> ParseParameters(
 }
 
 absl::StatusOr<SlhDsaPublicKey> ParsePublicKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
     return absl::InvalidArgumentError(
@@ -372,7 +369,7 @@ absl::StatusOr<SlhDsaPublicKey> ParsePublicKey(
 }
 
 absl::StatusOr<SlhDsaPrivateKey> ParsePrivateKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
@@ -409,9 +406,9 @@ absl::StatusOr<SlhDsaPrivateKey> ParsePrivateKey(
                                   GetPartialKeyAccess());
 }
 
-absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const SlhDsaParameters& parameters) {
-  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -431,11 +428,11 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
     return serialized_proto.status();
   }
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kPrivateTypeUrl, *output_prefix_type, *serialized_proto);
 }
 
-absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const SlhDsaPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<SlhDsaParamsTP> params = FromParameters(key.GetParameters());
   if (!params.ok()) {
@@ -447,7 +444,7 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
   *proto_key.mutable_params() = *params;
   proto_key.set_key_value(key.GetPublicKeyBytes(GetPartialKeyAccess()));
 
-  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -455,13 +452,12 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
 
   RestrictedData restricted_output = RestrictedData(
       proto_key.SerializeAsSecretData(), InsecureSecretKeyAccess::Get());
-  return internal::ProtoKeySerialization::Create(
-      kPublicTypeUrl, restricted_output,
-      internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
-      key.GetIdRequirement());
+  return ProtoKeySerialization::Create(
+      kPublicTypeUrl, restricted_output, KeyMaterialTypeEnum::kAsymmetricPublic,
+      *output_prefix_type, key.GetIdRequirement());
 }
 
-absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     const SlhDsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
@@ -492,15 +488,15 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
     return serialized_proto.status();
   }
 
-  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetVariant());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kPrivateTypeUrl, RestrictedData(*serialized_proto, *token),
-      internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 
@@ -542,42 +538,76 @@ SlhDsaProtoPrivateKeySerializerImpl& SlhDsaProtoPrivateKeySerializer() {
 
 }  // namespace
 
-absl::Status RegisterSlhDsaProtoSerialization() {
-  absl::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(&SlhDsaProtoParametersParser());
-  if (!status.ok()) {
+absl::Status RegisterSlhDsaProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
+  if (absl::Status status =
+          registry.RegisterParametersParser(&SlhDsaProtoParametersParser());
+      !status.ok()) {
     return status;
   }
 
-  status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersSerializer(&SlhDsaProtoParametersSerializer());
-  if (!status.ok()) {
+  if (absl::Status status = registry.RegisterParametersSerializer(
+          &SlhDsaProtoParametersSerializer());
+      !status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(&SlhDsaProtoPublicKeyParser());
-  if (!status.ok()) {
+  if (absl::Status status =
+          registry.RegisterKeyParser(&SlhDsaProtoPublicKeyParser());
+      !status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeySerializer(&SlhDsaProtoPublicKeySerializer());
-  if (!status.ok()) {
+  if (absl::Status status =
+          registry.RegisterKeySerializer(&SlhDsaProtoPublicKeySerializer());
+      !status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(&SlhDsaProtoPrivateKeyParser());
-  if (!status.ok()) {
+  if (absl::Status status =
+          registry.RegisterKeyParser(&SlhDsaProtoPrivateKeyParser());
+      !status.ok()) {
     return status;
   }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(&SlhDsaProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(&SlhDsaProtoPrivateKeySerializer());
 }
 
+absl::Status RegisterSlhDsaProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  if (absl::Status status =
+          builder.RegisterParametersParser(&SlhDsaProtoParametersParser());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status = builder.RegisterParametersSerializer(
+          &SlhDsaProtoParametersSerializer());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          builder.RegisterKeyParser(&SlhDsaProtoPublicKeyParser());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          builder.RegisterKeySerializer(&SlhDsaProtoPublicKeySerializer());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          builder.RegisterKeyParser(&SlhDsaProtoPrivateKeyParser());
+      !status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(&SlhDsaProtoPrivateKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

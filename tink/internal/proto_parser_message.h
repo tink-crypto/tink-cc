@@ -49,10 +49,6 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-// Forward declaration to allow friend statement in Message.
-template <typename MessageT>
-class MessageField;
-
 // Represents a proto message.
 //
 // Usage:
@@ -105,8 +101,6 @@ class Message {
   friend class MessageField;
   template <typename MessageT>
   friend class RepeatedMessageField;
-  template <typename MessageT>
-  friend class MessageFieldWithPresence;
 
   Message() = default;
   virtual ~Message() = default;
@@ -265,101 +259,6 @@ bool Message<Derived>::Parse(ParsingState& in) {
   return true;
 }
 
-// Represents a proto message that is owned by the MessageField.
-//
-// Usage:
-//
-// class MyMessage : public Messag<MyMessage> {
-//  public:
-//   MyMessage() : Message(&fields_) {}
-//   ~MyMessage() = default;
-//
-//   std::array<const Field*, 2> GetFields() const {
-//     return {&some_message_, &some_other_string_};
-//   }
-//
-//  private:
-//   MessageField<MySubMessage> some_message_{1};
-//   SecretDataField some_other_string_{2};
-// };
-//
-// This class is not thread-safe.
-template <typename MessageT>
-class MessageField : public Field {
- public:
-  static_assert(std::is_copy_constructible<MessageT>::value,
-                "MessageT must be copy constructible.");
-  static_assert(std::is_copy_assignable<MessageT>::value,
-                "MessageT must be copy assignable.");
-  static_assert(std::is_move_constructible<MessageT>::value,
-                "MessageT must be move constructible.");
-  static_assert(std::is_move_assignable<MessageT>::value,
-                "MessageT must be move assignable.");
-
-  explicit MessageField(int field_number)
-      : Field(field_number, WireType::kLengthDelimited) {}
-
-  // Copyable and movable.
-  MessageField(const MessageField&) = default;
-  MessageField& operator=(const MessageField&) = default;
-  MessageField(MessageField&&) noexcept = default;
-  MessageField& operator=(MessageField&&) noexcept = default;
-
-  void Clear() override { value_.Clear(); }
-
-  bool ConsumeIntoMember(ParsingState& serialized) override {
-    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
-    if (!length.ok()) {
-      return false;
-    }
-    if (*length > serialized.RemainingData().size()) {
-      return false;
-    }
-    ParsingState submessage_parsing_state =
-        serialized.SplitOffSubmessageState(*length);
-    return value_.Parse(submessage_parsing_state);
-  }
-
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    const size_t size = value_.ByteSizeLong();
-    if (size == 0) {
-      return absl::OkStatus();
-    }
-    if (absl::Status res =
-            SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-        !res.ok()) {
-      return res;
-    }
-    if (absl::Status res = SerializeVarint(size, out); !res.ok()) {
-      return res;
-    }
-    if (out.GetBuffer().size() < size) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
-    }
-    // Serialize the message.
-    if (!value_.Serialize(out)) {
-      return absl::InternalError("Failed to serialize message");
-    }
-    return absl::OkStatus();
-  }
-
-  size_t GetSerializedSizeIncludingTag() const override {
-    const size_t message_size = value_.ByteSizeLong();
-    if (message_size <= 0) {
-      return 0;
-    }
-    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-           VarintLength(message_size) + message_size;
-  }
-
-  MessageT* mutable_value() { return &value_; }
-  const MessageT& value() const { return value_; }
-
- private:
-  MessageT value_;
-};
-
 // Represents a repeated proto message.
 //
 // Usage:
@@ -458,19 +357,45 @@ class RepeatedMessageField : public Field {
   std::vector<MessageT> values_;
 };
 
+// Represents a field of type proto message.
+//
+// Usage:
+//
+// class MyMessage : public Messag<MyMessage> {
+//  public:
+//   MyMessage() : Message(&fields_) {}
+//   ~MyMessage() = default;
+//
+//   std::array<const Field*, 2> GetFields() const {
+//     return {&some_message_, &some_other_string_};
+//   }
+//
+//  private:
+//   MessageField<MySubMessage> some_message_{1};
+//   SecretDataField some_other_string_{2};
+// };
+//
+// This class is not thread-safe.
 template <typename MessageT>
-class MessageFieldWithPresence : public Field {
+class MessageField : public Field {
+  static_assert(std::is_copy_constructible_v<MessageT>,
+                "MessageT must be copy constructible.");
+  static_assert(std::is_copy_assignable_v<MessageT>,
+                "MessageT must be copy assignable.");
+  static_assert(std::is_move_constructible_v<MessageT>,
+                "MessageT must be move constructible.");
+  static_assert(std::is_move_assignable_v<MessageT>,
+                "MessageT must be move assignable.");
+
  public:
-  explicit MessageFieldWithPresence(int field_number)
+  explicit MessageField(int field_number)
       : Field(field_number, WireType::kLengthDelimited) {}
 
   // Copyable and movable.
-  MessageFieldWithPresence(const MessageFieldWithPresence&) = default;
-  MessageFieldWithPresence& operator=(const MessageFieldWithPresence&) =
-      default;
-  MessageFieldWithPresence(MessageFieldWithPresence&&) noexcept = default;
-  MessageFieldWithPresence& operator=(MessageFieldWithPresence&&) noexcept =
-      default;
+  MessageField(const MessageField&) = default;
+  MessageField& operator=(const MessageField&) = default;
+  MessageField(MessageField&&) noexcept = default;
+  MessageField& operator=(MessageField&&) noexcept = default;
 
   void Clear() override { value_.reset(); }
 
@@ -546,6 +471,10 @@ class MessageFieldWithPresence : public Field {
     return *default_value;
   }
 };
+
+// TODO: b/451894777 - Remove this once all users are migrated.
+template <typename MessageT>
+using MessageFieldWithPresence = MessageField<MessageT>;
 
 }  // namespace proto_parsing
 }  // namespace internal

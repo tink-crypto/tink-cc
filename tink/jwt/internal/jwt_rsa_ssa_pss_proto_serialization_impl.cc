@@ -58,7 +58,6 @@ using ::crypto::tink::internal::proto_parsing::EnumField;
 using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
-using ::crypto::tink::internal::proto_parsing::MessageFieldWithPresence;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
@@ -132,7 +131,7 @@ class JwtRsaSsaPssPublicKeyTP : public Message<JwtRsaSsaPssPublicKeyTP> {
                                                   &JwtRsaSsaPssAlgorithmValid};
   BytesField<std::string> n_{3};
   BytesField<std::string> e_{4};
-  MessageFieldWithPresence<CustomKidTP> custom_kid_{5};
+  MessageField<CustomKidTP> custom_kid_{5};
 };
 
 class JwtRsaSsaPssPrivateKeyTP : public Message<JwtRsaSsaPssPrivateKeyTP> {

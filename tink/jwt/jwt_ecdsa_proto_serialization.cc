@@ -59,7 +59,7 @@ using ::crypto::tink::internal::proto_parsing::EnumField;
 using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
-using ::crypto::tink::internal::proto_parsing::MessageFieldWithPresence;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
@@ -123,7 +123,7 @@ class JwtEcdsaPublicKeyTP : public Message<JwtEcdsaPublicKeyTP> {
   EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
   BytesField<std::string> x_{3};
   BytesField<std::string> y_{4};
-  MessageFieldWithPresence<JwtEcdsaCustomKidTP> custom_kid_{5};
+  MessageField<JwtEcdsaCustomKidTP> custom_kid_{5};
 };
 
 class JwtEcdsaPrivateKeyTP : public Message<JwtEcdsaPrivateKeyTP> {

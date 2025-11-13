@@ -1975,6 +1975,7 @@ tink_cc_test(
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_message
     tink::internal::proto_parser_options
+    tink::internal::proto_parser_secret_data_field
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     gmock
@@ -1982,6 +1983,7 @@ tink_cc_test(
     absl::crc32c
     absl::absl_check
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::span

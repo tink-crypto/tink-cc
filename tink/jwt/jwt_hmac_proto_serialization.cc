@@ -52,7 +52,7 @@ using ::crypto::tink::internal::proto_parsing::BytesField;
 using ::crypto::tink::internal::proto_parsing::EnumField;
 using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageFieldWithPresence;
+using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
@@ -125,7 +125,7 @@ class JwtHmacKeyTP : public Message<JwtHmacKeyTP> {
   Uint32Field version_{1};
   EnumField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
   SecretDataField key_value_{3};
-  MessageFieldWithPresence<JwtHmacCustomKidTP> custom_kid_{4};
+  MessageField<JwtHmacCustomKidTP> custom_kid_{4};
 };
 
 class JwtHmacKeyFormatTP : public Message<JwtHmacKeyFormatTP> {

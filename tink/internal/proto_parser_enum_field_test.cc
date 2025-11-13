@@ -167,7 +167,7 @@ TEST(EnumField, SerializeEmptyDifferentDefault) {
 
 TEST(EnumField, SerializeEmptyAlwaysSerialize) {
   EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k0,
-                          ProtoFieldOptions::kAlwaysSerialize);
+                          ProtoFieldOptions::kAlwaysPresent);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k0);
@@ -182,7 +182,7 @@ TEST(EnumField, SerializeEmptyAlwaysSerialize) {
 
 TEST(EnumField, SerializeEmptyAlwaysSerializeDifferentDefault) {
   EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1,
-                          ProtoFieldOptions::kAlwaysSerialize);
+                          ProtoFieldOptions::kAlwaysPresent);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k1);

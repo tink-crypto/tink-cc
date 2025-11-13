@@ -171,7 +171,7 @@ TEST(SecretDataField, SerializeEmptyWithCrcDoesntSerialize) {
 }
 
 TEST(SecretDataField, SerializeEmptyWithoutCrcAlwaysSerialize) {
-  SecretDataField field(1, ProtoFieldOptions::kAlwaysSerialize);
+  SecretDataField field(1, ProtoFieldOptions::kAlwaysPresent);
   *field.mutable_value() = SecretDataFromStringView("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";
@@ -182,7 +182,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcAlwaysSerialize) {
 }
 
 TEST(SecretDataField, SerializeEmptyWithCrcAlwaysSerialize) {
-  SecretDataField field(1, ProtoFieldOptions::kAlwaysSerialize);
+  SecretDataField field(1, ProtoFieldOptions::kAlwaysPresent);
   *field.mutable_value() = SecretDataFromStringView("");
 
   std::string buffer = "BUFFERBUFFERBUFFER";

@@ -183,7 +183,7 @@ TEST(Uint32Field, Empty) {
 }
 
 TEST(Uint32Field, EmptyAlwaysSerialize) {
-  Uint32Field field(kUint32Field1Number, ProtoFieldOptions::kAlwaysSerialize);
+  Uint32Field field(kUint32Field1Number, ProtoFieldOptions::kAlwaysPresent);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(0);
@@ -464,7 +464,7 @@ TEST(StringBytesField, SerializeEmpty) {
 
 TEST(StringBytesField, SerializeEmptyAlwaysSerialize) {
   BytesField<std::string> field(kBytesField1Number,
-                                ProtoFieldOptions::kAlwaysSerialize);
+                                ProtoFieldOptions::kAlwaysPresent);
   field.set_value("");
   std::string buffer = "ab";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));

@@ -24,9 +24,9 @@ namespace internal {
 enum class ProtoFieldOptions {
   // Do not serialize in case the value of the field is the default.
   kNone = 0,
-  // Always write the field: this is useful in case proto treats the field as
-  // required.
-  kAlwaysSerialize = 1,
+  // Consider the field to be always present, and thus serialize it even if
+  // the value is the default.
+  kAlwaysPresent = 1,
 };
 
 }  // namespace internal

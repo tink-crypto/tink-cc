@@ -117,7 +117,7 @@ class Uint32Field : public Field {
 
  private:
   bool RequiresSerialization() const {
-    return options_ == ProtoFieldOptions::kAlwaysSerialize || value_ != 0;
+    return options_ == ProtoFieldOptions::kAlwaysPresent || value_ != 0;
   }
 
   uint32_t value_ = 0;
@@ -239,7 +239,7 @@ class BytesField final : public Field {
 
  private:
   bool RequiresSerialization() const {
-    return options_ == ProtoFieldOptions::kAlwaysSerialize ||
+    return options_ == ProtoFieldOptions::kAlwaysPresent ||
            SizeOfStringLikeValue(value_) != 0;
   }
 

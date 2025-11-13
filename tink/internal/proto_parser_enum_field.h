@@ -88,7 +88,7 @@ class EnumField : public Field {
 
  private:
   bool RequiresSerialization() const {
-    return (options_ == ProtoFieldOptions::kAlwaysSerialize) ||
+    return (options_ == ProtoFieldOptions::kAlwaysPresent) ||
            value_ != default_value_;
   }
 

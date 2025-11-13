@@ -73,7 +73,7 @@ class SecretDataField final : public Field {
     return true;
   }
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysSerialize) {
+    if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysPresent) {
       return absl::OkStatus();
     }
     if (absl::Status result = SerializeWireTypeAndFieldNumber(
@@ -101,7 +101,7 @@ class SecretDataField final : public Field {
     return absl::OkStatus();
   }
   size_t GetSerializedSizeIncludingTag() const override {
-    if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysSerialize) {
+    if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysPresent) {
       return 0;
     }
     return WireTypeAndFieldNumberLength(WireType::kLengthDelimited,

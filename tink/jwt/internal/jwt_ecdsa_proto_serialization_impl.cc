@@ -14,7 +14,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tink/jwt/jwt_ecdsa_proto_serialization.h"
+#include "tink/jwt/internal/jwt_ecdsa_proto_serialization_impl.h"
 
 #include <array>
 #include <cstdint>
@@ -40,6 +40,7 @@
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
+#include "tink/internal/serialization_registry.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/jwt/jwt_ecdsa_parameters.h"
 #include "tink/jwt/jwt_ecdsa_private_key.h"
@@ -52,13 +53,13 @@
 
 namespace crypto {
 namespace tink {
+namespace internal {
 namespace {
 
 using ::crypto::tink::internal::proto_parsing::BytesField;
 using ::crypto::tink::internal::proto_parsing::EnumField;
 using ::crypto::tink::internal::proto_parsing::Field;
 using ::crypto::tink::internal::proto_parsing::Message;
-using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
@@ -177,22 +178,17 @@ class JwtEcdsaKeyFormatTP : public Message<JwtEcdsaKeyFormatTP> {
 };
 
 using JwtEcdsaProtoParametersParserImpl =
-    internal::ParametersParserImpl<internal::ProtoParametersSerialization,
-                                   JwtEcdsaParameters>;
+    ParametersParserImpl<ProtoParametersSerialization, JwtEcdsaParameters>;
 using JwtEcdsaProtoParametersSerializerImpl =
-    internal::ParametersSerializerImpl<JwtEcdsaParameters,
-                                       internal::ProtoParametersSerialization>;
+    ParametersSerializerImpl<JwtEcdsaParameters, ProtoParametersSerialization>;
 using JwtEcdsaProtoPublicKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization, JwtEcdsaPublicKey>;
+    KeyParserImpl<ProtoKeySerialization, JwtEcdsaPublicKey>;
 using JwtEcdsaProtoPublicKeySerializerImpl =
-    internal::KeySerializerImpl<JwtEcdsaPublicKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<JwtEcdsaPublicKey, ProtoKeySerialization>;
 using JwtEcdsaProtoPrivateKeyParserImpl =
-    internal::KeyParserImpl<internal::ProtoKeySerialization,
-                            JwtEcdsaPrivateKey>;
+    KeyParserImpl<ProtoKeySerialization, JwtEcdsaPrivateKey>;
 using JwtEcdsaProtoPrivateKeySerializerImpl =
-    internal::KeySerializerImpl<JwtEcdsaPrivateKey,
-                                internal::ProtoKeySerialization>;
+    KeySerializerImpl<JwtEcdsaPrivateKey, ProtoKeySerialization>;
 
 const absl::string_view kPublicTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtEcdsaPublicKey";
@@ -200,14 +196,14 @@ const absl::string_view kPrivateTypeUrl =
     "type.googleapis.com/google.crypto.tink.JwtEcdsaPrivateKey";
 
 absl::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
-    internal::OutputPrefixTypeEnum output_prefix_type, bool has_custom_kid) {
+    OutputPrefixTypeEnum output_prefix_type, bool has_custom_kid) {
   switch (output_prefix_type) {
-    case internal::OutputPrefixTypeEnum::kRaw:
+    case OutputPrefixTypeEnum::kRaw:
       if (has_custom_kid) {
         return JwtEcdsaParameters::KidStrategy::kCustom;
       }
       return JwtEcdsaParameters::KidStrategy::kIgnored;
-    case internal::OutputPrefixTypeEnum::kTink:
+    case OutputPrefixTypeEnum::kTink:
       return JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId;
     default:
       return absl::InvalidArgumentError(
@@ -215,15 +211,15 @@ absl::StatusOr<JwtEcdsaParameters::KidStrategy> ToKidStrategy(
   }
 }
 
-absl::StatusOr<internal::OutputPrefixTypeEnum> ToOutputPrefixType(
+absl::StatusOr<OutputPrefixTypeEnum> ToOutputPrefixType(
     JwtEcdsaParameters::KidStrategy kid_strategy) {
   switch (kid_strategy) {
     case JwtEcdsaParameters::KidStrategy::kCustom:
-      return internal::OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeEnum::kRaw;
     case JwtEcdsaParameters::KidStrategy::kIgnored:
-      return internal::OutputPrefixTypeEnum::kRaw;
+      return OutputPrefixTypeEnum::kRaw;
     case JwtEcdsaParameters::KidStrategy::kBase64EncodedKeyId:
-      return internal::OutputPrefixTypeEnum::kTink;
+      return OutputPrefixTypeEnum::kTink;
     default:
       return absl::InvalidArgumentError(
           "Could not determine JwtEcdsaParameters::KidStrategy.");
@@ -261,7 +257,7 @@ absl::StatusOr<JwtEcdsaAlgorithmEnum> ToProtoAlgorithm(
 }
 
 absl::StatusOr<JwtEcdsaParameters> ToParameters(
-    internal::OutputPrefixTypeEnum output_prefix_type,
+    OutputPrefixTypeEnum output_prefix_type,
     JwtEcdsaAlgorithmEnum proto_algorithm, bool has_custom_kid) {
   absl::StatusOr<JwtEcdsaParameters::KidStrategy> kid_strategy =
       ToKidStrategy(output_prefix_type, has_custom_kid);
@@ -324,14 +320,14 @@ absl::StatusOr<JwtEcdsaPublicKeyTP> ToProtoPublicKey(
     return enc_length.status();
   }
 
-  absl::StatusOr<std::string> x = internal::GetValueOfFixedLength(
+  absl::StatusOr<std::string> x = GetValueOfFixedLength(
       public_key.GetPublicPoint(GetPartialKeyAccess()).GetX().GetValue(),
       *enc_length);
   if (!x.ok()) {
     return x.status();
   }
 
-  absl::StatusOr<std::string> y = internal::GetValueOfFixedLength(
+  absl::StatusOr<std::string> y = GetValueOfFixedLength(
       public_key.GetPublicPoint(GetPartialKeyAccess()).GetY().GetValue(),
       *enc_length);
   if (!y.ok()) {
@@ -352,8 +348,8 @@ absl::StatusOr<JwtEcdsaPublicKeyTP> ToProtoPublicKey(
 }
 
 absl::StatusOr<JwtEcdsaParameters> ParseParameters(
-    const internal::ProtoParametersSerialization& serialization) {
-  const internal::KeyTemplateTP& key_template = serialization.GetKeyTemplate();
+    const ProtoParametersSerialization& serialization) {
+  const KeyTemplateTP& key_template = serialization.GetKeyTemplate();
   if (key_template.type_url() != kPrivateTypeUrl) {
     return absl::InvalidArgumentError(
         "Wrong type URL when parsing JwtEcdsaParameters.");
@@ -373,13 +369,13 @@ absl::StatusOr<JwtEcdsaParameters> ParseParameters(
                       proto_key_format.algorithm(), /*has_custom_kid=*/false);
 }
 
-absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
+absl::StatusOr<ProtoParametersSerialization> SerializeParameters(
     const JwtEcdsaParameters& parameters) {
   if (parameters.GetKidStrategy() == JwtEcdsaParameters::KidStrategy::kCustom) {
     return absl::InvalidArgumentError(
         "Unable to serialize JwtEcdsaParameters::KidStrategy::kCustom.");
   }
-  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(parameters.GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
@@ -394,12 +390,12 @@ absl::StatusOr<internal::ProtoParametersSerialization> SerializeParameters(
   format.set_version(0);
   format.set_algorithm(*proto_algorithm);
 
-  return internal::ProtoParametersSerialization::Create(
+  return ProtoParametersSerialization::Create(
       kPrivateTypeUrl, *output_prefix_type, format.SerializeAsString());
 }
 
 absl::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (serialization.TypeUrl() != kPublicTypeUrl) {
     return absl::InvalidArgumentError(
@@ -429,28 +425,28 @@ absl::StatusOr<JwtEcdsaPublicKey> ParsePublicKey(
                      serialization.IdRequirement());
 }
 
-absl::StatusOr<internal::ProtoKeySerialization> SerializePublicKey(
+absl::StatusOr<ProtoKeySerialization> SerializePublicKey(
     const JwtEcdsaPublicKey& key, absl::optional<SecretKeyAccessToken> token) {
   absl::StatusOr<JwtEcdsaPublicKeyTP> proto_public_key = ToProtoPublicKey(key);
   if (!proto_public_key.ok()) {
     return proto_public_key.status();
   }
 
-  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kPublicTypeUrl,
       RestrictedData(proto_public_key->SerializeAsSecretData(),
                      InsecureSecretKeyAccess::Get()),
-      internal::KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
+      KeyMaterialTypeEnum::kAsymmetricPublic, *output_prefix_type,
       key.GetIdRequirement());
 }
 
 absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
-    const internal::ProtoKeySerialization& serialization,
+    const ProtoKeySerialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
@@ -492,7 +488,7 @@ absl::StatusOr<JwtEcdsaPrivateKey> ParsePrivateKey(
                                     GetPartialKeyAccess());
 }
 
-absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
+absl::StatusOr<ProtoKeySerialization> SerializePrivateKey(
     const JwtEcdsaPrivateKey& key, absl::optional<SecretKeyAccessToken> token) {
   if (!token.has_value()) {
     return absl::PermissionDeniedError("SecretKeyAccess is required");
@@ -519,20 +515,20 @@ absl::StatusOr<internal::ProtoKeySerialization> SerializePrivateKey(
   JwtEcdsaPrivateKeyTP proto_private_key;
   proto_private_key.set_version(0);
   *proto_private_key.mutable_public_key() = *std::move(proto_public_key);
-  proto_private_key.set_key_value(*internal::GetSecretValueOfFixedLength(
-      *restricted_input, *enc_length, *token));
+  proto_private_key.set_key_value(
+      *GetSecretValueOfFixedLength(*restricted_input, *enc_length, *token));
 
-  absl::StatusOr<internal::OutputPrefixTypeEnum> output_prefix_type =
+  absl::StatusOr<OutputPrefixTypeEnum> output_prefix_type =
       ToOutputPrefixType(key.GetPublicKey().GetParameters().GetKidStrategy());
   if (!output_prefix_type.ok()) {
     return output_prefix_type.status();
   }
 
-  return internal::ProtoKeySerialization::Create(
+  return ProtoKeySerialization::Create(
       kPrivateTypeUrl,
       RestrictedData(proto_private_key.SerializeAsSecretData(),
                      InsecureSecretKeyAccess::Get()),
-      internal::KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
+      KeyMaterialTypeEnum::kAsymmetricPrivate, *output_prefix_type,
       key.GetIdRequirement());
 }
 
@@ -574,42 +570,76 @@ JwtEcdsaProtoPrivateKeySerializerImpl& JwtEcdsaProtoPrivateKeySerializer() {
 
 }  // namespace
 
-absl::Status RegisterJwtEcdsaProtoSerialization() {
-  absl::Status status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersParser(&JwtEcdsaProtoParametersParser());
-  if (!status.ok()) {
+absl::Status RegisterJwtEcdsaProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry) {
+  if (absl::Status status =
+          registry.RegisterParametersParser(&JwtEcdsaProtoParametersParser());
+      !status.ok()) {
     return status;
   }
 
-  status =
-      internal::MutableSerializationRegistry::GlobalInstance()
-          .RegisterParametersSerializer(&JwtEcdsaProtoParametersSerializer());
-  if (!status.ok()) {
+  if (absl::Status status = registry.RegisterParametersSerializer(
+          &JwtEcdsaProtoParametersSerializer());
+      !status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(&JwtEcdsaProtoPublicKeyParser());
-  if (!status.ok()) {
+  if (absl::Status status =
+          registry.RegisterKeyParser(&JwtEcdsaProtoPublicKeyParser());
+      !status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeySerializer(&JwtEcdsaProtoPublicKeySerializer());
-  if (!status.ok()) {
+  if (absl::Status status =
+          registry.RegisterKeySerializer(&JwtEcdsaProtoPublicKeySerializer());
+      !status.ok()) {
     return status;
   }
 
-  status = internal::MutableSerializationRegistry::GlobalInstance()
-               .RegisterKeyParser(&JwtEcdsaProtoPrivateKeyParser());
-  if (!status.ok()) {
+  if (absl::Status status =
+          registry.RegisterKeyParser(&JwtEcdsaProtoPrivateKeyParser());
+      !status.ok()) {
     return status;
   }
 
-  return internal::MutableSerializationRegistry::GlobalInstance()
-      .RegisterKeySerializer(&JwtEcdsaProtoPrivateKeySerializer());
+  return registry.RegisterKeySerializer(&JwtEcdsaProtoPrivateKeySerializer());
 }
 
+absl::Status RegisterJwtEcdsaProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder) {
+  if (absl::Status status =
+          builder.RegisterParametersParser(&JwtEcdsaProtoParametersParser());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status = builder.RegisterParametersSerializer(
+          &JwtEcdsaProtoParametersSerializer());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          builder.RegisterKeyParser(&JwtEcdsaProtoPublicKeyParser());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          builder.RegisterKeySerializer(&JwtEcdsaProtoPublicKeySerializer());
+      !status.ok()) {
+    return status;
+  }
+
+  if (absl::Status status =
+          builder.RegisterKeyParser(&JwtEcdsaProtoPrivateKeyParser());
+      !status.ok()) {
+    return status;
+  }
+
+  return builder.RegisterKeySerializer(&JwtEcdsaProtoPrivateKeySerializer());
+}
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto

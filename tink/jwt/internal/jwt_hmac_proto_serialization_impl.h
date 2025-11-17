@@ -1,4 +1,4 @@
-// Copyright 2024 Google LLC
+// Copyright 2025 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,29 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef TINK_JWT_JWT_HMAC_PROTO_SERIALIZATION_H_
-#define TINK_JWT_JWT_HMAC_PROTO_SERIALIZATION_H_
+#ifndef TINK_JWT_INTERNAL_JWT_HMAC_PROTO_SERIALIZATION_IMPL_H_
+#define TINK_JWT_INTERNAL_JWT_HMAC_PROTO_SERIALIZATION_IMPL_H_
 
 #include "absl/status/status.h"
 #include "tink/internal/mutable_serialization_registry.h"
-#include "tink/jwt/internal/jwt_hmac_proto_serialization_impl.h"
+#include "tink/internal/serialization_registry.h"
 
 namespace crypto {
 namespace tink {
+namespace internal {
 
 // Registers proto parsers and serializers for JWT HMAC parameters and keys
-// into global serialization registry.
-inline absl::Status RegisterJwtHmacProtoSerialization() {
-  return internal::RegisterJwtHmacProtoSerializationWithMutableRegistry(
-      internal::MutableSerializationRegistry::GlobalInstance());
-}
+// into specified mutable serialization `registry`.
+absl::Status RegisterJwtHmacProtoSerializationWithMutableRegistry(
+    MutableSerializationRegistry& registry);
 
+// Registers proto parsers and serializers for JWT HMAC parameters and keys
+// into specified immutable serialization registry `builder`.
+absl::Status RegisterJwtHmacProtoSerializationWithRegistryBuilder(
+    SerializationRegistry::Builder& builder);
+
+}  // namespace internal
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_JWT_JWT_HMAC_PROTO_SERIALIZATION_H_
+#endif  // TINK_JWT_INTERNAL_JWT_HMAC_PROTO_SERIALIZATION_IMPL_H_

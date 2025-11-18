@@ -18,7 +18,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <type_traits>
+#include <string>
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
@@ -27,9 +27,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
-#include "tink/internal/proto_parser_string_like_helpers.h"
 #include "tink/internal/proto_parsing_helpers.h"
-#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -173,12 +171,8 @@ class Uint64Field : public Field {
   uint64_t value_ = 0;
 };
 
-template <typename StringLike>
 class BytesField final : public Field {
  public:
-  static_assert(!std::is_same<StringLike, ::crypto::tink::SecretData>::value,
-                "Use SecretDataField instead");
-
   explicit BytesField(uint32_t field_number,
                       ProtoFieldOptions options = ProtoFieldOptions::kNone)
       : Field(field_number, WireType::kLengthDelimited), options_(options) {}
@@ -188,14 +182,14 @@ class BytesField final : public Field {
   BytesField(BytesField&&) noexcept = default;
   BytesField& operator=(BytesField&&) noexcept = default;
 
-  void Clear() override { ClearStringLikeValue(value_); }
+  void Clear() override { value_.clear(); }
   bool ConsumeIntoMember(ParsingState& serialized) override {
     absl::StatusOr<absl::string_view> result =
         ConsumeBytesReturnStringView(serialized);
     if (!result.ok()) {
       return false;
     }
-    CopyIntoStringLikeValue(*result, value_);
+    set_value(*result);
     return true;
   }
   absl::Status SerializeWithTagInto(SerializationState& out) const override {
@@ -208,8 +202,7 @@ class BytesField final : public Field {
         !result.ok()) {
       return result;
     }
-    size_t size = SizeOfStringLikeValue(value_);
-
+    size_t size = value_.size();
     if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
       return result;
     }
@@ -217,7 +210,8 @@ class BytesField final : public Field {
       return absl::InvalidArgumentError(absl::StrCat(
           "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
     }
-    SerializeStringLikeValue(value_, out.GetBuffer());
+    // size is guaranteed to be <= out.GetBuffer().size().
+    value_.copy(out.GetBuffer().data(), size);
     out.Advance(size);
     return absl::OkStatus();
   }
@@ -226,24 +220,21 @@ class BytesField final : public Field {
     if (!RequiresSerialization()) {
       return 0;
     }
-    size_t size = SizeOfStringLikeValue(value_);
+    size_t size = value_.size();
     return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
            VarintLength(size) + size;
   }
 
-  void set_value(absl::string_view value) {
-    CopyIntoStringLikeValue(value, value_);
-  }
-  const StringLike& value() const { return value_; }
-  StringLike* mutable_value() { return &value_; }
+  void set_value(absl::string_view value) { value_ = std::string(value); }
+  const std::string& value() const { return value_; }
+  std::string* mutable_value() { return &value_; }
 
  private:
   bool RequiresSerialization() const {
-    return options_ == ProtoFieldOptions::kAlwaysPresent ||
-           SizeOfStringLikeValue(value_) != 0;
+    return options_ == ProtoFieldOptions::kAlwaysPresent || !value_.empty();
   }
 
-  StringLike value_;
+  std::string value_;
   ProtoFieldOptions options_;
 };
 

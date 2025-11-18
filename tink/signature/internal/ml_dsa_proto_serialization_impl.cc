@@ -130,7 +130,7 @@ class MlDsaPublicKeyTP final : public Message<MlDsaPublicKeyTP> {
 
  private:
   Uint32Field version_{1};
-  BytesField<std::string> key_value_{2};
+  BytesField key_value_{2};
   MessageField<MlDsaParamsTP> params_{3};
 };
 

@@ -107,8 +107,8 @@ class RsaSsaPkcs1PublicKeyMessageTP final
  private:
   Uint32Field version_{1};
   MessageField<RsaSsaPkcs1ParamsTP> params_{2};
-  BytesField<std::string> n_{3};
-  BytesField<std::string> e_{4};
+  BytesField n_{3};
+  BytesField e_{4};
 };
 
 class RsaSsaPkcs1PrivateKeyTP final : public Message<RsaSsaPkcs1PrivateKeyTP> {
@@ -200,7 +200,7 @@ class RsaSsaPkcs1KeyFormatTP final : public Message<RsaSsaPkcs1KeyFormatTP> {
  private:
   MessageField<RsaSsaPkcs1ParamsTP> params_{1};
   Uint32Field modulus_size_in_bits_{2};
-  BytesField<std::string> public_exponent_{3};
+  BytesField public_exponent_{3};
 };
 
 using RsaSsaPkcs1ProtoParametersParserImpl =

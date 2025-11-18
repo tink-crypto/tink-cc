@@ -86,7 +86,7 @@ class CustomKidTP : public Message<CustomKidTP> {
   std::array<const Field*, 1> GetFields() const { return {&value_}; }
 
  private:
-  BytesField<std::string> value_{1};
+  BytesField value_{1};
 };
 
 bool JwtRsaSsaPssAlgorithmValid(int value) { return value >= 0 && value <= 3; }
@@ -129,8 +129,8 @@ class JwtRsaSsaPssPublicKeyTP : public Message<JwtRsaSsaPssPublicKeyTP> {
   Uint32Field version_{1};
   EnumField<JwtRsaSsaPssAlgorithmEnum> algorithm_{2,
                                                   &JwtRsaSsaPssAlgorithmValid};
-  BytesField<std::string> n_{3};
-  BytesField<std::string> e_{4};
+  BytesField n_{3};
+  BytesField e_{4};
   MessageField<CustomKidTP> custom_kid_{5};
 };
 
@@ -217,7 +217,7 @@ class JwtRsaSsaPssKeyFormatTP : public Message<JwtRsaSsaPssKeyFormatTP> {
   EnumField<JwtRsaSsaPssAlgorithmEnum> algorithm_{2,
                                                   &JwtRsaSsaPssAlgorithmValid};
   Uint32Field modulus_size_in_bits_{3};
-  BytesField<std::string> public_exponent_{4};
+  BytesField public_exponent_{4};
 };
 
 const absl::string_view kPrivateTypeUrl =

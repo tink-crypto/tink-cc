@@ -74,7 +74,7 @@ class HkdfPrfParamsTP : public Message<HkdfPrfParamsTP> {
 
  private:
   EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
-  BytesField<std::string> salt_{2};
+  BytesField salt_{2};
 };
 
 class HkdfPrfKeyTP : public Message<HkdfPrfKeyTP> {

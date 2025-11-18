@@ -46,9 +46,9 @@ cc_library(
         "//tink/subtle:random",
         "//tink/util:status",
         "//tink/util:test_util",
-        "@bazel_tools//tools/cpp/runfiles",
         "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/strings",
+        "@bazel_tools//tools/cpp/runfiles",
         "@googletest//:gtest",
     ],
 )
@@ -143,9 +143,9 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         "//tink/util:status",
-        "@boringssl//:crypto",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
+        "@boringssl//:crypto",
     ],
 )
 
@@ -1723,9 +1723,9 @@ cc_library(
     hdrs = ["sanitizing_allocator.h"],
     include_prefix = "tink/internal",
     deps = [
-        "@boringssl//:crypto",
         "@abseil-cpp//absl/base:config",
         "@abseil-cpp//absl/base:core_headers",
+        "@boringssl//:crypto",
     ],
 )
 
@@ -1984,9 +1984,7 @@ cc_library(
     deps = [
         ":proto_parser_options",
         ":proto_parser_state",
-        ":proto_parser_string_like_helpers",
         ":proto_parsing_helpers",
-        "//tink:secret_data",
         "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
@@ -2100,27 +2098,6 @@ cc_test(
         "//tink/util:test_util",
         "@abseil-cpp//absl/crc:crc32c",
         "@abseil-cpp//absl/strings",
-        "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:span",
-        "@googletest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "proto_parser_string_like_helpers",
-    hdrs = ["proto_parser_string_like_helpers.h"],
-    include_prefix = "tink/internal",
-    deps = [
-        "@abseil-cpp//absl/strings:string_view",
-        "@abseil-cpp//absl/types:span",
-    ],
-)
-
-cc_test(
-    name = "proto_parser_string_like_helpers_test",
-    srcs = ["proto_parser_string_like_helpers_test.cc"],
-    deps = [
-        ":proto_parser_string_like_helpers",
         "@abseil-cpp//absl/strings:string_view",
         "@abseil-cpp//absl/types:span",
         "@googletest//:gtest_main",

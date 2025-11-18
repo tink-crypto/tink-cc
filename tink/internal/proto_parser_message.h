@@ -63,7 +63,7 @@ namespace proto_parsing {
 //   }
 //
 //  private:
-//   BytesField<std::string> some_string_{1};
+//   BytesField some_string_{1};
 //   SecretDataField some_other_string_{2};
 // };
 //

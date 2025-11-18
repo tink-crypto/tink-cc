@@ -407,14 +407,14 @@ TEST(Uint64Field, GetWireType) {
 
 // StringBytesField ============================================================
 TEST(StringBytesField, ClearMemberWorks) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   field.set_value("hello");
   field.Clear();
   EXPECT_THAT(field.value(), Eq(""));
 }
 
 TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   field.set_value("hello");
 
   std::string bytes =
@@ -426,7 +426,7 @@ TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
 }
 
 TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   field.set_value("hello");
 
   std::string bytes = absl::StrCat(/* 0 bytes */ HexDecodeOrDie("00"), "abcde");
@@ -437,7 +437,7 @@ TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
 }
 
 TEST(StringBytesField, EmptyWithoutVarint) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
 
   std::string bytes = "";
   ParsingState parsing_state = ParsingState(bytes);
@@ -445,7 +445,7 @@ TEST(StringBytesField, EmptyWithoutVarint) {
 }
 
 TEST(StringBytesField, InvalidVarint) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
   ParsingState parsing_state = ParsingState(bytes);
@@ -453,7 +453,7 @@ TEST(StringBytesField, InvalidVarint) {
 }
 
 TEST(StringBytesField, SerializeEmpty) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   field.set_value("");
   std::string buffer = "a";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -463,8 +463,7 @@ TEST(StringBytesField, SerializeEmpty) {
 }
 
 TEST(StringBytesField, SerializeEmptyAlwaysSerialize) {
-  BytesField<std::string> field(kBytesField1Number,
-                                ProtoFieldOptions::kAlwaysPresent);
+  BytesField field(kBytesField1Number, ProtoFieldOptions::kAlwaysPresent);
   field.set_value("");
   std::string buffer = "ab";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -475,7 +474,7 @@ TEST(StringBytesField, SerializeEmptyAlwaysSerialize) {
 }
 
 TEST(StringBytesField, SerializeNonEmpty) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -490,7 +489,7 @@ TEST(StringBytesField, SerializeNonEmpty) {
 }
 
 TEST(StringBytesField, SerializeTooSmallBuffer) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer = "BUFFERBUFFERBUFF";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -499,7 +498,7 @@ TEST(StringBytesField, SerializeTooSmallBuffer) {
 
 // The buffer won't even hold the varint.
 TEST(StringBytesField, SerializeVerySmallBuffer) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer;
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
@@ -507,32 +506,32 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
 }
 
 TEST(StringBytesField, GetWireType) {
-  BytesField<std::string> field(kBytesField1Number);
+  BytesField field(kBytesField1Number);
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kLengthDelimited));
 }
 
 TEST(StringBytesField, CopyAndMove) {
-  BytesField<std::string> field1(kBytesField1Number);
+  BytesField field1(kBytesField1Number);
   field1.set_value("test_string");
 
   // Test copy constructor
-  BytesField<std::string> field_copy(field1);
+  BytesField field_copy(field1);
   EXPECT_THAT(field_copy.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_copy.value(), Eq("test_string"));
 
   // Test copy assignment
-  BytesField<std::string> field_assign(kUint32Field2Number);
+  BytesField field_assign(kUint32Field2Number);
   field_assign = field1;
   EXPECT_THAT(field_assign.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_assign.value(), Eq("test_string"));
 
   // Test move constructor
-  BytesField<std::string> field_move(std::move(field1));
+  BytesField field_move(std::move(field1));
   EXPECT_THAT(field_move.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_move.value(), Eq("test_string"));
 
   // Test move assignment
-  BytesField<std::string> field_move_assign(kUint32Field2Number);
+  BytesField field_move_assign(kUint32Field2Number);
   field_move_assign = std::move(field_copy);
   EXPECT_THAT(field_move_assign.FieldNumber(), Eq(kBytesField1Number));
   EXPECT_THAT(field_move_assign.value(), Eq("test_string"));

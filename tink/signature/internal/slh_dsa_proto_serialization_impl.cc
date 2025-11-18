@@ -147,7 +147,7 @@ class SlhDsaPublicKeyTP final : public Message<SlhDsaPublicKeyTP> {
 
  private:
   Uint32Field version_{1};
-  BytesField<std::string> key_value_{2};
+  BytesField key_value_{2};
   MessageField<SlhDsaParamsTP> params_{3};
 };
 

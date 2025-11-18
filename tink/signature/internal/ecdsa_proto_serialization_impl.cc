@@ -131,8 +131,8 @@ class EcdsaPublicKeyTP final : public Message<EcdsaPublicKeyTP> {
  private:
   Uint32Field version_{1};
   MessageField<EcdsaParamsTP> params_{2};
-  BytesField<std::string> x_{3};
-  BytesField<std::string> y_{4};
+  BytesField x_{3};
+  BytesField y_{4};
 };
 
 class EcdsaPrivateKeyTP final : public Message<EcdsaPrivateKeyTP> {

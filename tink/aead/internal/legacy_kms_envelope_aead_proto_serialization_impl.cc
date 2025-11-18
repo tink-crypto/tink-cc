@@ -84,7 +84,7 @@ class KmsEnvelopeAeadKeyFormatTP : public Message<KmsEnvelopeAeadKeyFormatTP> {
   using Message::SerializeAsString;
 
  private:
-  BytesField<std::string> kek_uri_{1};
+  BytesField kek_uri_{1};
   MessageField<KeyTemplateTP> dek_template_{2};
 };
 

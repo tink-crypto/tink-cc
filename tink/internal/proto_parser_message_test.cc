@@ -524,7 +524,7 @@ class Submessage : public Message<Submessage> {
   // Arbitrary padding to make sure pasing/serializing doesn't rely on
   // fields being contiguous in memory.
   [[maybe_unused]] uint8_t padding_[20] = {};
-  BytesField<std::string> bytes_field_{2};
+  BytesField bytes_field_{2};
 };
 
 enum class TestEnum : uint32_t {
@@ -575,7 +575,7 @@ class TestMessage : public Message<TestMessage> {
 
  private:
   Uint32Field uint32_field_{1};
-  BytesField<std::string> bytes_field_{2};
+  BytesField bytes_field_{2};
   MessageField<Submessage> sub_message_field_{3};
   EnumField<TestEnum> enum_field_{4, &TestEnum_IsValid, TestEnum::kZero};
 };

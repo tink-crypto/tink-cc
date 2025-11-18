@@ -141,7 +141,7 @@ class HpkePublicKeyTP : public Message<HpkePublicKeyTP> {
  private:
   Uint32Field version_{1};
   MessageField<HpkeParamsTP> params_{2};
-  BytesField<std::string> public_key_{3};
+  BytesField public_key_{3};
 };
 
 class HpkePrivateKeyTP : public Message<HpkePrivateKeyTP> {

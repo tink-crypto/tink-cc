@@ -103,7 +103,7 @@ class ProtoEciesHkdfKemParams : public Message<ProtoEciesHkdfKemParams> {
   EnumField<EllipticCurveTypeEnum> curve_type_{1,
                                                &EllipticCurveTypeEnumIsValid};
   EnumField<HashTypeEnum> hkdf_hash_type_{2, &HashTypeEnumIsValid};
-  BytesField<std::string> hkdf_salt_{11};
+  BytesField hkdf_salt_{11};
 };
 
 class ProtoEciesAeadDemParams : public Message<ProtoEciesAeadDemParams> {
@@ -179,8 +179,8 @@ class ProtoEciesAeadHkdfPublicKey
  private:
   Uint32Field version_{1};
   MessageField<ProtoEciesAeadHkdfParams> params_{2};
-  BytesField<std::string> x_{3};
-  BytesField<std::string> y_{4};
+  BytesField x_{3};
+  BytesField y_{4};
 };
 
 class ProtoEciesAeadHkdfPrivateKey

@@ -95,8 +95,8 @@ class KeyTemplateTP : public proto_parsing::Message<KeyTemplateTP> {
   }
 
  private:
-  proto_parsing::BytesField<std::string> type_url_{1};
-  proto_parsing::BytesField<std::string> value_{2};
+  proto_parsing::BytesField type_url_{1};
+  proto_parsing::BytesField value_{2};
   proto_parsing::EnumField<OutputPrefixTypeEnum> output_prefix_type_{
       3, &OutputPrefixTypeValid};
 };
@@ -135,7 +135,7 @@ class KeyDataTP : public proto_parsing::Message<KeyDataTP> {
   }
 
  private:
-  proto_parsing::BytesField<std::string> type_url_{1};
+  proto_parsing::BytesField type_url_{1};
   proto_parsing::SecretDataField value_{2};
   proto_parsing::EnumField<KeyMaterialTypeEnum> key_material_type_{
       3, &KeyMaterialTypeValid};

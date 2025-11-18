@@ -119,7 +119,7 @@ class MlKemPublicKeyTP : public Message<MlKemPublicKeyTP> {
 
  private:
   Uint32Field version_{1};
-  BytesField<std::string> key_value_{2};
+  BytesField key_value_{2};
   MessageField<MlKemParamsTP> params_{3};
 };
 

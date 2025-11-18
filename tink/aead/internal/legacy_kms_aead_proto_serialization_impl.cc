@@ -79,7 +79,7 @@ class KmsAeadKeyFormatTP : public Message<KmsAeadKeyFormatTP> {
   using Message::SerializeAsString;
 
  private:
-  BytesField<std::string> key_uri_{1};
+  BytesField key_uri_{1};
 };
 
 class KmsAeadKeyTP : public Message<KmsAeadKeyTP> {

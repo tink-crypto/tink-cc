@@ -78,7 +78,7 @@ class JwtHmacCustomKidTP : public Message<JwtHmacCustomKidTP> {
   std::array<const Field*, 1> GetFields() const { return {&value_}; }
 
  private:
-  BytesField<std::string> value_{1};
+  BytesField value_{1};
 };
 
 bool JwtHmacAlgorithmValid(int value) { return value >= 0 && value <= 3; }

@@ -75,7 +75,7 @@ class JwtEcdsaCustomKidTP : public Message<JwtEcdsaCustomKidTP> {
   std::array<const Field*, 1> GetFields() const { return {&value_}; }
 
  private:
-  BytesField<std::string> value_{1};
+  BytesField value_{1};
 };
 
 bool JwtEcdsaAlgorithmValid(int value) { return value >= 0 && value <= 3; }
@@ -122,8 +122,8 @@ class JwtEcdsaPublicKeyTP : public Message<JwtEcdsaPublicKeyTP> {
  private:
   Uint32Field version_{1};
   EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
-  BytesField<std::string> x_{3};
-  BytesField<std::string> y_{4};
+  BytesField x_{3};
+  BytesField y_{4};
   MessageField<JwtEcdsaCustomKidTP> custom_kid_{5};
 };
 

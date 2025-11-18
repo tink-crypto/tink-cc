@@ -89,7 +89,7 @@ class Ed25519PublicKeyTP final : public Message<Ed25519PublicKeyTP> {
 
  private:
   Uint32Field version_{1};
-  BytesField<std::string> key_value_{2};
+  BytesField key_value_{2};
 };
 
 class Ed25519PrivateKeyTP final : public Message<Ed25519PrivateKeyTP> {

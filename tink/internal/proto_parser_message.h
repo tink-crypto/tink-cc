@@ -472,10 +472,6 @@ class MessageField : public Field {
   }
 };
 
-// TODO: b/451894777 - Remove this once all users are migrated.
-template <typename MessageT>
-using MessageFieldWithPresence = MessageField<MessageT>;
-
 }  // namespace proto_parsing
 }  // namespace internal
 }  // namespace tink

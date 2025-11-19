@@ -26,6 +26,7 @@
 #include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/internal/call_with_core_dump_protection.h"
@@ -179,6 +180,57 @@ bool Message::Parse(ParsingState& in) {
     }
   }
   return true;
+}
+
+bool MessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
+  absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
+  if (!length.ok()) {
+    return false;
+  }
+  if (*length > serialized.RemainingData().size()) {
+    return false;
+  }
+  ParsingState submessage_parsing_state =
+      serialized.SplitOffSubmessageState(*length);
+  Message* /*absl_nullable - not yet supported*/ msg = mutable_message();
+  ABSL_DCHECK(msg != nullptr);
+  return msg->Parse(submessage_parsing_state);
+}
+
+absl::Status MessageFieldBase::SerializeWithTagInto(
+    SerializationState& out) const {
+  const Message* /*absl_nullable - not yet supported*/ msg = message();
+  if (msg == nullptr) {
+    return absl::OkStatus();
+  }
+  if (absl::Status result =
+          SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
+      !result.ok()) {
+    return result;
+  }
+  const size_t size = msg->ByteSizeLong();
+  if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
+    return result;
+  }
+  if (out.GetBuffer().size() < size) {
+    return absl::InvalidArgumentError(absl::StrCat(
+        "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+  }
+  // Serialize the msg.
+  if (!msg->Serialize(out)) {
+    return absl::InternalError("Failed to serialize message");
+  }
+  return absl::OkStatus();
+}
+
+size_t MessageFieldBase::GetSerializedSizeIncludingTag() const {
+  const Message* /*absl_nullable - not yet supported*/ msg = message();
+  if (msg == nullptr) {
+    return 0;
+  }
+  const size_t size = msg->ByteSizeLong();
+  return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
+         VarintLength(size) + size;
 }
 
 }  // namespace proto_parsing

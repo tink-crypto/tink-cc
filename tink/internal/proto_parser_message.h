@@ -99,8 +99,7 @@ class Message {
   std::string SerializeAsString() const;
 
  private:
-  template <typename MessageT>
-  friend class MessageField;
+  friend class MessageFieldBase;
   template <typename MessageT>
   friend class RepeatedMessageField;
 
@@ -227,27 +226,54 @@ class RepeatedMessageField : public Field {
   std::vector<MessageT> values_;
 };
 
+// Base class for MessageField and RepeatedMessageField.
+//
+// It implements all methods of `Field` but `Clear`.
+class MessageFieldBase : public Field {
+ public:
+  explicit MessageFieldBase(int field_number)
+      : Field(field_number, WireType::kLengthDelimited) {}
+
+  // Copyable and movable.
+  MessageFieldBase(const MessageFieldBase&) = default;
+  MessageFieldBase& operator=(const MessageFieldBase&) = default;
+  MessageFieldBase(MessageFieldBase&&) noexcept = default;
+  MessageFieldBase& operator=(MessageFieldBase&&) noexcept = default;
+
+  bool ConsumeIntoMember(ParsingState& serialized) override;
+  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  size_t GetSerializedSizeIncludingTag() const override;
+
+ protected:
+  // Returns the message if it is set, otherwise nullptr.
+  virtual const Message* /*absl_nullable - not yet supported*/ message() const = 0;
+  // Returns a mutable message, which is guaranteed to be non-null.
+  virtual Message* mutable_message() = 0;
+};
+
 // Represents a field of type proto message.
 //
 // Usage:
 //
-// class MyMessage : public Messag<MyMessage> {
+// class MyMessage : public Message {
 //  public:
 //   MyMessage() : Message(&fields_) {}
 //   ~MyMessage() = default;
 //
-//   std::array<const Field*, 2> GetFields() const {
-//     return {&some_message_, &some_other_string_};
+//  private:
+//   size_t num_fields() const override { return 2; }
+//   const Field* field(int i) const override {
+//     return std::array<const Field*, 2>{&some_string_,
+//     &some_other_string_}[i];
 //   }
 //
-//  private:
 //   MessageField<MySubMessage> some_message_{1};
 //   SecretDataField some_other_string_{2};
 // };
 //
 // This class is not thread-safe.
 template <typename MessageT>
-class MessageField : public Field {
+class MessageField : public MessageFieldBase {
   static_assert(std::is_copy_constructible_v<MessageT>,
                 "MessageT must be copy constructible.");
   static_assert(std::is_copy_assignable_v<MessageT>,
@@ -258,8 +284,7 @@ class MessageField : public Field {
                 "MessageT must be move assignable.");
 
  public:
-  explicit MessageField(int field_number)
-      : Field(field_number, WireType::kLengthDelimited) {}
+  explicit MessageField(int field_number) : MessageFieldBase(field_number) {}
 
   // Copyable and movable.
   MessageField(const MessageField&) = default;
@@ -268,55 +293,6 @@ class MessageField : public Field {
   MessageField& operator=(MessageField&&) noexcept = default;
 
   void Clear() override { value_.reset(); }
-
-  bool ConsumeIntoMember(ParsingState& serialized) override {
-    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
-    if (!length.ok()) {
-      return false;
-    }
-    if (*length > serialized.RemainingData().size()) {
-      return false;
-    }
-    ParsingState submessage_parsing_state =
-        serialized.SplitOffSubmessageState(*length);
-    if (!value_.has_value()) {
-      value_.emplace();
-    }
-    return value_->Parse(submessage_parsing_state);
-  }
-
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    if (!value_.has_value()) {
-      return absl::OkStatus();
-    }
-    if (absl::Status result =
-            SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-        !result.ok()) {
-      return result;
-    }
-    const size_t size = value_->ByteSizeLong();
-    if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
-      return result;
-    }
-    if (out.GetBuffer().size() < size) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
-    }
-    // Serialize the message.
-    if (!value_->Serialize(out)) {
-      return absl::InternalError("Failed to serialize message");
-    }
-    return absl::OkStatus();
-  }
-
-  size_t GetSerializedSizeIncludingTag() const override {
-    if (!value_.has_value()) {
-      return 0;
-    }
-    const size_t size = value_->ByteSizeLong();
-    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-           VarintLength(size) + size;
-  }
 
   // See https://protobuf.dev/reference/cpp/cpp-generated/#embeddedmessage.
   bool has_value() const { return value_.has_value(); }
@@ -334,12 +310,21 @@ class MessageField : public Field {
   }
 
  private:
-  absl::optional<MessageT> value_ = absl::nullopt;
+  const Message* /*absl_nullable - not yet supported*/ message() const override {
+    return value_.has_value() ? &*value_ : nullptr;
+  }
+  Message* mutable_message() override {
+    if (!value_.has_value()) {
+      value_.emplace();
+    }
+    return &value_.value();
+  }
 
   const MessageT& DefaultValue() const {
     static const absl::NoDestructor<MessageT> default_value;
     return *default_value;
   }
+  absl::optional<MessageT> value_ = absl::nullopt;
 };
 
 }  // namespace proto_parsing

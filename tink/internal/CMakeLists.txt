@@ -1943,8 +1943,10 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_parser_message
   SRCS
+    proto_parser_message.cc
     proto_parser_message.h
   DEPS
+    tink::internal::call_with_core_dump_protection
     tink::internal::proto_parser_fields
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers

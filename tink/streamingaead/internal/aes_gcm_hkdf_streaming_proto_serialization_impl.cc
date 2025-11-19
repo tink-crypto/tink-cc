@@ -58,8 +58,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class AesGcmHkdfStreamingParamsTP
-    : public Message<AesGcmHkdfStreamingParamsTP> {
+class AesGcmHkdfStreamingParamsTP : public Message {
  public:
   AesGcmHkdfStreamingParamsTP() = default;
   using Message::SerializeAsString;
@@ -81,18 +80,18 @@ class AesGcmHkdfStreamingParamsTP
     hkdf_hash_type_.set_value(value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&ciphertext_segment_size_, &derived_key_size_, &hkdf_hash_type_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&ciphertext_segment_size_,
+                                       &derived_key_size_, &hkdf_hash_type_}[i];
+  }
   Uint32Field ciphertext_segment_size_{1};
   Uint32Field derived_key_size_{2};
   EnumField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
 };
 
-class AesGcmHkdfStreamingKeyFormatTP
-    : public Message<AesGcmHkdfStreamingKeyFormatTP> {
+class AesGcmHkdfStreamingKeyFormatTP : public Message {
  public:
   AesGcmHkdfStreamingKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -108,17 +107,17 @@ class AesGcmHkdfStreamingKeyFormatTP
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&params_, &key_size_, &version_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&params_, &key_size_, &version_}[i];
+  }
   MessageField<AesGcmHkdfStreamingParamsTP> params_{1};
   Uint32Field key_size_{2};
   Uint32Field version_{3};
 };
 
-class AesGcmHkdfStreamingKeyTP : public Message<AesGcmHkdfStreamingKeyTP> {
+class AesGcmHkdfStreamingKeyTP : public Message {
  public:
   AesGcmHkdfStreamingKeyTP() = default;
 
@@ -133,11 +132,11 @@ class AesGcmHkdfStreamingKeyTP : public Message<AesGcmHkdfStreamingKeyTP> {
   const SecretData& key_value() const { return key_value_.value(); }
   SecretData* mutable_key_value() { return key_value_.mutable_value(); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
+  }
   Uint32Field version_{1};
   MessageField<AesGcmHkdfStreamingParamsTP> params_{2};
   SecretDataField key_value_{3};

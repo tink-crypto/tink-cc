@@ -64,7 +64,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class JwtEcdsaCustomKidTP : public Message<JwtEcdsaCustomKidTP> {
+class JwtEcdsaCustomKidTP : public Message {
  public:
   JwtEcdsaCustomKidTP() = default;
   using Message::SerializeAsString;
@@ -72,9 +72,12 @@ class JwtEcdsaCustomKidTP : public Message<JwtEcdsaCustomKidTP> {
   const std::string& value() const { return value_.value(); }
   void set_value(absl::string_view value) { value_.set_value(value); }
 
-  std::array<const Field*, 1> GetFields() const { return {&value_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&value_}[i];
+  }
+
   BytesField value_{1};
 };
 
@@ -87,7 +90,7 @@ enum class JwtEcdsaAlgorithmEnum : uint32_t {
   kEs512 = 3,
 };
 
-class JwtEcdsaPublicKeyTP : public Message<JwtEcdsaPublicKeyTP> {
+class JwtEcdsaPublicKeyTP : public Message {
  public:
   JwtEcdsaPublicKeyTP() = default;
   using Message::SerializeAsString;
@@ -115,11 +118,13 @@ class JwtEcdsaPublicKeyTP : public Message<JwtEcdsaPublicKeyTP> {
     *custom_kid_.mutable_value() = custom_kid;
   }
 
-  std::array<const Field*, 5> GetFields() const {
-    return {&version_, &algorithm_, &x_, &y_, &custom_kid_};
+ private:
+  size_t num_fields() const override { return 5; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 5>{&version_, &algorithm_, &x_, &y_,
+                                       &custom_kid_}[i];
   }
 
- private:
   Uint32Field version_{1};
   EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
   BytesField x_{3};
@@ -127,7 +132,7 @@ class JwtEcdsaPublicKeyTP : public Message<JwtEcdsaPublicKeyTP> {
   MessageField<JwtEcdsaCustomKidTP> custom_kid_{5};
 };
 
-class JwtEcdsaPrivateKeyTP : public Message<JwtEcdsaPrivateKeyTP> {
+class JwtEcdsaPrivateKeyTP : public Message {
  public:
   JwtEcdsaPrivateKeyTP() = default;
   using Message::SerializeAsString;
@@ -145,17 +150,18 @@ class JwtEcdsaPrivateKeyTP : public Message<JwtEcdsaPrivateKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &public_key_, &key_value_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &public_key_, &key_value_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<JwtEcdsaPublicKeyTP> public_key_{2};
   SecretDataField key_value_{3};
 };
 
-class JwtEcdsaKeyFormatTP : public Message<JwtEcdsaKeyFormatTP> {
+class JwtEcdsaKeyFormatTP : public Message {
  public:
   JwtEcdsaKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -168,11 +174,12 @@ class JwtEcdsaKeyFormatTP : public Message<JwtEcdsaKeyFormatTP> {
     algorithm_.set_value(algorithm);
   }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &algorithm_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &algorithm_}[i];
   }
 
- private:
   Uint32Field version_{1};
   EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
 };

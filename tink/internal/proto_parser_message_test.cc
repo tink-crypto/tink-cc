@@ -64,7 +64,7 @@ using ::testing::IsTrue;
 using ::testing::Not;
 using ::testing::Test;
 
-class InnerStruct final : public Message<InnerStruct> {
+class InnerStruct final : public Message {
  public:
   InnerStruct() = default;
 
@@ -87,27 +87,30 @@ class InnerStruct final : public Message<InnerStruct> {
            uint32_member_2_.value() == other.uint32_member_2_.value();
   }
 
-  std::array<const Field*, 2> GetFields() const {
-    return std::array<const Field*, 2>{&uint32_member_1_, &uint32_member_2_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{
+        {&uint32_member_1_, &uint32_member_2_}}[i];
   }
 
- private:
   Uint32Field uint32_member_1_{1};
   Uint32Field uint32_member_2_{2};
 };
 
-class OuterStruct : public Message<OuterStruct> {
+class OuterStruct : public Message {
  public:
   const InnerStruct& inner_member() const { return inner_member_.value(); }
   InnerStruct* mutable_inner_member() { return inner_member_.mutable_value(); }
 
   using Message::SerializeAsString;
 
-  std::array<const Field*, 1> GetFields() const {
-    return std::array<const Field*, 1>{&inner_member_};
+ private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{{&inner_member_}}[i];
   }
 
- private:
   MessageField<InnerStruct> inner_member_{1};
 };
 
@@ -125,7 +128,6 @@ TEST(MessageTest, Clear) {
 // Serializes a varint using a wrong CRC.
 absl::Status SerializeVarintWrongCrc(uint64_t value,
                                      SerializationState& output) {
-  ABSL_CHECK(output.HasCrc());
   const int size = VarintLength(value);
   ABSL_CHECK_GE(size, output.GetBuffer().size());
   absl::Span<char> output_buffer = output.GetBuffer();
@@ -180,8 +182,7 @@ class Uint32FieldWrongCrc : public Field {
   Uint32Field field_;
 };
 
-class OuterProtoClassWithWrongCrc
-    : public Message<OuterProtoClassWithWrongCrc> {
+class OuterProtoClassWithWrongCrc : public Message {
  public:
   const InnerStruct& inner_member() const { return inner_member_.value(); }
   InnerStruct* mutable_inner_member() { return inner_member_.mutable_value(); }
@@ -190,11 +191,12 @@ class OuterProtoClassWithWrongCrc
 
   using Message::SerializeAsString;
 
-  std::array<const Field*, 2> GetFields() const {
-    return std::array<const Field*, 2>{&inner_member_, &uint32_member_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{{&inner_member_, &uint32_member_}}[i];
   }
 
- private:
   MessageField<InnerStruct> inner_member_{1};
   Uint32FieldWrongCrc uint32_member_{2};
 };
@@ -256,10 +258,15 @@ TEST(MessageTest, ParseFromStringSuccess) {
   EXPECT_THAT(s.inner_member().uint32_member_2(), Eq(0x7a));
 }
 
-struct OuterMessageWithSecretData : public Message<OuterMessageWithSecretData> {
-  std::array<const Field*, 2> GetFields() const {
-    return {&inner_member_field, &secret_data_field};
+struct OuterMessageWithSecretData : public Message {
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{
+        {&inner_member_field, &secret_data_field}}[i];
   }
+
+ public:
   MessageField<InnerStruct> inner_member_field{1};
   SecretDataField secret_data_field{2};
 };
@@ -499,7 +506,7 @@ TEST(RepeatedMessageField, Accessors) {
 // -----------------------------------------------------------------------------
 // MessageField tests.
 
-class Submessage : public Message<Submessage> {
+class Submessage : public Message {
  public:
   Submessage() = default;
 
@@ -515,11 +522,12 @@ class Submessage : public Message<Submessage> {
            bytes_field_.value() == other.bytes_field_.value();
   }
 
-  std::array<const Field*, 2> GetFields() const {
-    return std::array<const Field*, 2>{&uint32_field_, &bytes_field_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{{&uint32_field_, &bytes_field_}}[i];
   }
 
- private:
   Uint32Field uint32_field_{1};
   // Arbitrary padding to make sure pasing/serializing doesn't rely on
   // fields being contiguous in memory.
@@ -539,7 +547,7 @@ bool TestEnum_IsValid(uint32_t value) {
          value == static_cast<uint32_t>(TestEnum::kTwo);
 }
 
-class TestMessage : public Message<TestMessage> {
+class TestMessage : public Message {
  public:
   TestMessage() = default;
 
@@ -558,11 +566,6 @@ class TestMessage : public Message<TestMessage> {
     return sub_message_field_.mutable_value();
   }
 
-  std::array<const Field*, 4> GetFields() const {
-    return std::array<const Field*, 4>{&uint32_field_, &bytes_field_,
-                                       &sub_message_field_, &enum_field_};
-  }
-
   TestEnum enum_field() const { return enum_field_.value(); }
   void set_enum_field(TestEnum value) { enum_field_.set_value(value); }
 
@@ -574,6 +577,12 @@ class TestMessage : public Message<TestMessage> {
   }
 
  private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{
+        {&uint32_field_, &bytes_field_, &sub_message_field_, &enum_field_}}[i];
+  }
+
   Uint32Field uint32_field_{1};
   BytesField bytes_field_{2};
   MessageField<Submessage> sub_message_field_{3};
@@ -848,18 +857,19 @@ TEST(MessageFieldTest, SerializeVerySmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
 }
 
-class MessageWithBrokenFieldOrder
-    : public Message<MessageWithBrokenFieldOrder> {
+class MessageWithBrokenFieldOrder : public Message {
  public:
   MessageWithBrokenFieldOrder() = default;
-
-  std::array<const Field*, 2> GetFields() const {
-    return std::array<const Field*, 2>{&uint32_member_2_, &uint32_member_1_};
-  }
 
   using Message::ParseFromString;
 
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{
+        {&uint32_member_2_, &uint32_member_1_}}[i];
+  }
+
   Uint32Field uint32_member_1_{1};
   Uint32Field uint32_member_2_{2};
 };
@@ -868,7 +878,7 @@ TEST(MessageFieldDeathTest, DiesOnParse) {
   MessageWithBrokenFieldOrder message;
   EXPECT_DEBUG_DEATH(
       { message.ParseFromString(HexDecodeOrDie("0800")); },
-      HasSubstr("GetFields() must be sorted"));
+      HasSubstr("Fields returned by field() must be sorted"));
 }
 
 }  // namespace

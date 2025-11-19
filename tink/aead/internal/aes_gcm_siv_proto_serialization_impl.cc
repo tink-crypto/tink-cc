@@ -59,8 +59,7 @@ using AesGcmSivProtoKeyParserImpl =
 using AesGcmSivProtoKeySerializerImpl =
     KeySerializerImpl<AesGcmSivKey, ProtoKeySerialization>;
 
-class AesGcmSivKeyFormatTP
-    : public proto_parsing::Message<AesGcmSivKeyFormatTP> {
+class AesGcmSivKeyFormatTP : public proto_parsing::Message {
  public:
   AesGcmSivKeyFormatTP() = default;
 
@@ -70,19 +69,20 @@ class AesGcmSivKeyFormatTP
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
-  std::array<const proto_parsing::Field*, 2> GetFields() const {
-    return {&version_, &key_size_};
-  }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 2; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 2>{&version_, &key_size_}[i];
+  }
+
   proto_parsing::Uint32Field version_{1};
   proto_parsing::Uint32Field key_size_{2};
 };
 
-class AesGcmSivKeyTP : public proto_parsing::Message<AesGcmSivKeyTP> {
+class AesGcmSivKeyTP : public proto_parsing::Message {
  public:
   AesGcmSivKeyTP() = default;
 
@@ -94,11 +94,13 @@ class AesGcmSivKeyTP : public proto_parsing::Message<AesGcmSivKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const proto_parsing::Field*, 2> GetFields() const {
-    return {&version_, &key_value_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 2>{&version_,
+                                                      &key_value_}[i];
   }
 
- private:
   proto_parsing::Uint32Field version_{1};
   proto_parsing::SecretDataField key_value_{3};
 };

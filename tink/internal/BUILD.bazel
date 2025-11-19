@@ -2013,9 +2013,11 @@ cc_test(
 
 cc_library(
     name = "proto_parser_message",
+    srcs = ["proto_parser_message.cc"],
     hdrs = ["proto_parser_message.h"],
     include_prefix = "tink/internal",
     deps = [
+        ":call_with_core_dump_protection",
         ":proto_parser_fields",
         ":proto_parser_state",
         ":proto_parsing_helpers",

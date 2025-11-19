@@ -18,6 +18,7 @@
 #define TINK_AEAD_INTERNAL_XCHACHA20_POLY1305_PROTO_FORMAT_H_
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 
 #include "tink/internal/proto_parser_fields.h"
@@ -27,22 +28,22 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class XChaCha20Poly1305KeyFormatTP
-    : public proto_parsing::Message<XChaCha20Poly1305KeyFormatTP> {
+class XChaCha20Poly1305KeyFormatTP : public proto_parsing::Message {
  public:
   XChaCha20Poly1305KeyFormatTP() = default;
 
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
 
-  std::array<const proto_parsing::Field*, 1> GetFields() const {
-    return {&version_};
-  }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 1; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 1>{&version_}[i];
+  }
+
   proto_parsing::Uint32Field version_{1};
 };
 

@@ -62,7 +62,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class RsaSsaPssParamsTP : public Message<RsaSsaPssParamsTP> {
+class RsaSsaPssParamsTP : public Message {
  public:
   RsaSsaPssParamsTP() = default;
   using Message::SerializeAsString;
@@ -80,17 +80,19 @@ class RsaSsaPssParamsTP : public Message<RsaSsaPssParamsTP> {
     salt_length_.set_value(salt_length);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&sig_hash_, &mgf1_hash_, &salt_length_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&sig_hash_, &mgf1_hash_,
+                                       &salt_length_}[i];
   }
 
- private:
   EnumField<HashTypeEnum> sig_hash_{1, &HashTypeEnumIsValid};
   EnumField<HashTypeEnum> mgf1_hash_{2, &HashTypeEnumIsValid};
   Uint32Field salt_length_{3};
 };
 
-class RsaSsaPssPublicKeyTP : public Message<RsaSsaPssPublicKeyTP> {
+class RsaSsaPssPublicKeyTP : public Message {
  public:
   RsaSsaPssPublicKeyTP() = default;
   using Message::SerializeAsString;
@@ -107,18 +109,19 @@ class RsaSsaPssPublicKeyTP : public Message<RsaSsaPssPublicKeyTP> {
   const std::string& e() const { return e_.value(); }
   void set_e(absl::string_view e) { e_.set_value(e); }
 
-  std::array<const Field*, 4> GetFields() const {
-    return {&version_, &params_, &n_, &e_};
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{&version_, &params_, &n_, &e_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<RsaSsaPssParamsTP> params_{2};
   BytesField n_{3};
   BytesField e_{4};
 };
 
-class RsaSsaPssPrivateKeyTP : public Message<RsaSsaPssPrivateKeyTP> {
+class RsaSsaPssPrivateKeyTP : public Message {
  public:
   RsaSsaPssPrivateKeyTP() = default;
   using Message::SerializeAsString;
@@ -149,11 +152,13 @@ class RsaSsaPssPrivateKeyTP : public Message<RsaSsaPssPrivateKeyTP> {
   const SecretData& crt() const { return crt_.value(); }
   void set_crt(SecretData crt) { *crt_.mutable_value() = std::move(crt); }
 
-  std::array<const Field*, 8> GetFields() const {
-    return {&version_, &public_key_, &d_, &p_, &q_, &dp_, &dq_, &crt_};
+ private:
+  size_t num_fields() const override { return 8; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 8>{&version_, &public_key_, &d_,  &p_,
+                                       &q_,       &dp_,         &dq_, &crt_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<RsaSsaPssPublicKeyTP> public_key_{2};
   SecretDataField d_{3};
@@ -164,7 +169,7 @@ class RsaSsaPssPrivateKeyTP : public Message<RsaSsaPssPrivateKeyTP> {
   SecretDataField crt_{8};
 };
 
-class RsaSsaPssKeyFormatTP : public Message<RsaSsaPssKeyFormatTP> {
+class RsaSsaPssKeyFormatTP : public Message {
  public:
   RsaSsaPssKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -186,11 +191,13 @@ class RsaSsaPssKeyFormatTP : public Message<RsaSsaPssKeyFormatTP> {
     public_exponent_.set_value(public_exponent);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&params_, &modulus_size_in_bits_, &public_exponent_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&params_, &modulus_size_in_bits_,
+                                       &public_exponent_}[i];
   }
 
- private:
   MessageField<RsaSsaPssParamsTP> params_{1};
   Uint32Field modulus_size_in_bits_{2};
   BytesField public_exponent_{3};

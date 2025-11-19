@@ -17,6 +17,7 @@
 #include "tink/jwt/internal/jwt_hmac_proto_serialization_impl.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -67,7 +68,7 @@ using JwtHmacProtoKeyParserImpl =
 using JwtHmacProtoKeySerializerImpl =
     KeySerializerImpl<JwtHmacKey, ProtoKeySerialization>;
 
-class JwtHmacCustomKidTP : public Message<JwtHmacCustomKidTP> {
+class JwtHmacCustomKidTP : public Message {
  public:
   JwtHmacCustomKidTP() = default;
   using Message::SerializeAsString;
@@ -75,9 +76,12 @@ class JwtHmacCustomKidTP : public Message<JwtHmacCustomKidTP> {
   const std::string& value() const { return value_.value(); }
   void set_value(absl::string_view value) { value_.set_value(value); }
 
-  std::array<const Field*, 1> GetFields() const { return {&value_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&value_}[i];
+  }
+
   BytesField value_{1};
 };
 
@@ -90,7 +94,7 @@ enum class JwtHmacAlgorithmEnum : uint32_t {
   kHS512 = 3,
 };
 
-class JwtHmacKeyTP : public Message<JwtHmacKeyTP> {
+class JwtHmacKeyTP : public Message {
  public:
   JwtHmacKeyTP() = default;
   using Message::SerializeAsString;
@@ -117,18 +121,20 @@ class JwtHmacKeyTP : public Message<JwtHmacKeyTP> {
     *custom_kid_.mutable_value() = custom_kid;
   }
 
-  std::array<const Field*, 4> GetFields() const {
-    return {&version_, &algorithm_, &key_value_, &custom_kid_};
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{&version_, &algorithm_, &key_value_,
+                                       &custom_kid_}[i];
   }
 
- private:
   Uint32Field version_{1};
   EnumField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
   SecretDataField key_value_{3};
   MessageField<JwtHmacCustomKidTP> custom_kid_{4};
 };
 
-class JwtHmacKeyFormatTP : public Message<JwtHmacKeyFormatTP> {
+class JwtHmacKeyFormatTP : public Message {
  public:
   JwtHmacKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -144,11 +150,12 @@ class JwtHmacKeyFormatTP : public Message<JwtHmacKeyFormatTP> {
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &algorithm_, &key_size_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &algorithm_, &key_size_}[i];
   }
 
- private:
   Uint32Field version_{1};
   EnumField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
   Uint32Field key_size_{3};

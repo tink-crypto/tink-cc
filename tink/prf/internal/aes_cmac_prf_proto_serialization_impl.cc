@@ -53,7 +53,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class AesCmacPrfKeyFormatTP : public Message<AesCmacPrfKeyFormatTP> {
+class AesCmacPrfKeyFormatTP : public Message {
  public:
   AesCmacPrfKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -64,16 +64,16 @@ class AesCmacPrfKeyFormatTP : public Message<AesCmacPrfKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&key_size_, &version_};
-  }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&key_size_, &version_}[i];
+  }
   Uint32Field key_size_{1};
   Uint32Field version_{2};
 };
 
-class AesCmacPrfKeyTP : public Message<AesCmacPrfKeyTP> {
+class AesCmacPrfKeyTP : public Message {
  public:
   AesCmacPrfKeyTP() = default;
 
@@ -85,11 +85,11 @@ class AesCmacPrfKeyTP : public Message<AesCmacPrfKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &key_value_};
-  }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &key_value_}[i];
+  }
   Uint32Field version_{1};
   SecretDataField key_value_{2};
 };

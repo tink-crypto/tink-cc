@@ -57,7 +57,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class HmacPrfParamsTP : public Message<HmacPrfParamsTP> {
+class HmacPrfParamsTP : public Message {
  public:
   HmacPrfParamsTP() = default;
   using Message::SerializeAsString;
@@ -65,13 +65,15 @@ class HmacPrfParamsTP : public Message<HmacPrfParamsTP> {
   HashTypeEnum hash() const { return hash_.value(); }
   void set_hash(HashTypeEnum hash) { hash_.set_value(hash); }
 
-  std::array<const Field*, 1> GetFields() const { return {&hash_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&hash_}[i];
+  }
   EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
 };
 
-class HmacPrfKeyTP : public Message<HmacPrfKeyTP> {
+class HmacPrfKeyTP : public Message {
  public:
   HmacPrfKeyTP() = default;
   using Message::SerializeAsString;
@@ -87,17 +89,17 @@ class HmacPrfKeyTP : public Message<HmacPrfKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
+  }
   Uint32Field version_{1};
   MessageField<HmacPrfParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
 
-class HmacPrfKeyFormatTP : public Message<HmacPrfKeyFormatTP> {
+class HmacPrfKeyFormatTP : public Message {
  public:
   HmacPrfKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -111,11 +113,11 @@ class HmacPrfKeyFormatTP : public Message<HmacPrfKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&params_, &key_size_, &version_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&params_, &key_size_, &version_}[i];
+  }
   MessageField<HmacPrfParamsTP> params_{1};
   Uint32Field key_size_{2};
   Uint32Field version_{3};

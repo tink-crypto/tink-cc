@@ -60,7 +60,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class HmacParamsTP : public Message<HmacParamsTP> {
+class HmacParamsTP : public Message {
  public:
   HmacParamsTP() = default;
   using Message::SerializeAsString;
@@ -71,15 +71,17 @@ class HmacParamsTP : public Message<HmacParamsTP> {
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t tag_size) { tag_size_.set_value(tag_size); }
 
-  std::array<const Field*, 2> GetFields() const { return {&hash_, &tag_size_}; }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&hash_, &tag_size_}[i];
+  }
+
   EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
   Uint32Field tag_size_{2};
 };
 
-class AesCtrHmacStreamingParamsTP
-    : public Message<AesCtrHmacStreamingParamsTP> {
+class AesCtrHmacStreamingParamsTP : public Message {
  public:
   AesCtrHmacStreamingParamsTP() = default;
   using Message::SerializeAsString;
@@ -104,20 +106,21 @@ class AesCtrHmacStreamingParamsTP
   const HmacParamsTP& hmac_params() const { return hmac_params_.value(); }
   HmacParamsTP* mutable_hmac_params() { return hmac_params_.mutable_value(); }
 
-  std::array<const Field*, 4> GetFields() const {
-    return {&ciphertext_segment_size_, &derived_key_size_, &hkdf_hash_type_,
-            &hmac_params_};
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{&ciphertext_segment_size_,
+                                       &derived_key_size_, &hkdf_hash_type_,
+                                       &hmac_params_}[i];
   }
 
- private:
   Uint32Field ciphertext_segment_size_{1};
   Uint32Field derived_key_size_{2};
   EnumField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
   MessageField<HmacParamsTP> hmac_params_{4};
 };
 
-class AesCtrHmacStreamingKeyFormatTP
-    : public Message<AesCtrHmacStreamingKeyFormatTP> {
+class AesCtrHmacStreamingKeyFormatTP : public Message {
  public:
   AesCtrHmacStreamingKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -133,17 +136,18 @@ class AesCtrHmacStreamingKeyFormatTP
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t key_size) { key_size_.set_value(key_size); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&params_, &key_size_, &version_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&params_, &key_size_, &version_}[i];
   }
 
- private:
   MessageField<AesCtrHmacStreamingParamsTP> params_{1};
   Uint32Field key_size_{2};
   Uint32Field version_{3};
 };
 
-class AesCtrHmacStreamingKeyTP : public Message<AesCtrHmacStreamingKeyTP> {
+class AesCtrHmacStreamingKeyTP : public Message {
  public:
   AesCtrHmacStreamingKeyTP() = default;
   using Message::SerializeAsString;
@@ -161,11 +165,12 @@ class AesCtrHmacStreamingKeyTP : public Message<AesCtrHmacStreamingKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<AesCtrHmacStreamingParamsTP> params_{2};
   SecretDataField key_value_{3};

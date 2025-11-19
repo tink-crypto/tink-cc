@@ -59,7 +59,7 @@ using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class HkdfPrfParamsTP : public Message<HkdfPrfParamsTP> {
+class HkdfPrfParamsTP : public Message {
  public:
   HkdfPrfParamsTP() = default;
   using Message::SerializeAsString;
@@ -70,14 +70,16 @@ class HkdfPrfParamsTP : public Message<HkdfPrfParamsTP> {
   const std::string& salt() const { return salt_.value(); }
   void set_salt(absl::string_view salt) { salt_.set_value(salt); }
 
-  std::array<const Field*, 2> GetFields() const { return {&hash_, &salt_}; }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&hash_, &salt_}[i];
+  }
   EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
   BytesField salt_{2};
 };
 
-class HkdfPrfKeyTP : public Message<HkdfPrfKeyTP> {
+class HkdfPrfKeyTP : public Message {
  public:
   HkdfPrfKeyTP() = default;
   using Message::SerializeAsString;
@@ -93,17 +95,17 @@ class HkdfPrfKeyTP : public Message<HkdfPrfKeyTP> {
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
+  }
   Uint32Field version_{1};
   MessageField<HkdfPrfParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
 
-class HkdfPrfKeyFormatTP : public Message<HkdfPrfKeyFormatTP> {
+class HkdfPrfKeyFormatTP : public Message {
  public:
   HkdfPrfKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -117,11 +119,11 @@ class HkdfPrfKeyFormatTP : public Message<HkdfPrfKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&params_, &key_size_, &version_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&params_, &key_size_, &version_}[i];
+  }
   MessageField<HkdfPrfParamsTP> params_{1};
   Uint32Field key_size_{2};
   Uint32Field version_{3};

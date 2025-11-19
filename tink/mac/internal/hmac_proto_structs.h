@@ -33,7 +33,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class HmacParamsTP : public proto_parsing::Message<HmacParamsTP> {
+class HmacParamsTP : public proto_parsing::Message {
  public:
   HmacParamsTP() = default;
 
@@ -43,16 +43,17 @@ class HmacParamsTP : public proto_parsing::Message<HmacParamsTP> {
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t value) { tag_size_.set_value(value); }
 
-  std::array<const proto_parsing::Field*, 2> GetFields() const {
-    return {&hash_, &tag_size_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 2>{&hash_, &tag_size_}[i];
   }
 
- private:
   proto_parsing::EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
   proto_parsing::Uint32Field tag_size_{2};
 };
 
-class HmacKeyFormatTP : public proto_parsing::Message<HmacKeyFormatTP> {
+class HmacKeyFormatTP : public proto_parsing::Message {
  public:
   HmacKeyFormatTP() = default;
 
@@ -68,17 +69,19 @@ class HmacKeyFormatTP : public proto_parsing::Message<HmacKeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const proto_parsing::Field*, 3> GetFields() const {
-    return {&params_, &key_size_, &version_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 3>{&params_, &key_size_,
+                                                      &version_}[i];
   }
 
- private:
   proto_parsing::MessageField<HmacParamsTP> params_{1};
   proto_parsing::Uint32Field key_size_{2};
   proto_parsing::Uint32Field version_{3};
 };
 
-class HmacKeyTP : public proto_parsing::Message<HmacKeyTP> {
+class HmacKeyTP : public proto_parsing::Message {
  public:
   HmacKeyTP() = default;
 
@@ -93,11 +96,13 @@ class HmacKeyTP : public proto_parsing::Message<HmacKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const proto_parsing::Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 3>{&version_, &params_,
+                                                      &key_value_}[i];
   }
 
- private:
   proto_parsing::Uint32Field version_{1};
   proto_parsing::MessageField<HmacParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};

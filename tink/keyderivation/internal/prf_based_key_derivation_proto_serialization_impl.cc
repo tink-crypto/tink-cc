@@ -63,7 +63,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class PrfBasedDeriverParamsTP : public Message<PrfBasedDeriverParamsTP> {
+class PrfBasedDeriverParamsTP : public Message {
  public:
   PrfBasedDeriverParamsTP() = default;
   using Message::SerializeAsString;
@@ -75,15 +75,16 @@ class PrfBasedDeriverParamsTP : public Message<PrfBasedDeriverParamsTP> {
     return derived_key_template_.mutable_value();
   }
 
-  std::array<const Field*, 1> GetFields() const {
-    return {&derived_key_template_};
+ private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&derived_key_template_}[i];
   }
 
- private:
   MessageField<KeyTemplateTP> derived_key_template_{1};
 };
 
-class PrfBasedDeriverKeyFormatTP : public Message<PrfBasedDeriverKeyFormatTP> {
+class PrfBasedDeriverKeyFormatTP : public Message {
  public:
   PrfBasedDeriverKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -98,16 +99,17 @@ class PrfBasedDeriverKeyFormatTP : public Message<PrfBasedDeriverKeyFormatTP> {
   const PrfBasedDeriverParamsTP& params() const { return params_.value(); }
   PrfBasedDeriverParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&prf_key_template_, &params_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&prf_key_template_, &params_}[i];
   }
 
- private:
   MessageField<KeyTemplateTP> prf_key_template_{1};
   MessageField<PrfBasedDeriverParamsTP> params_{2};
 };
 
-class PrfBasedDeriverKeyTP : public Message<PrfBasedDeriverKeyTP> {
+class PrfBasedDeriverKeyTP : public Message {
  public:
   PrfBasedDeriverKeyTP() = default;
 
@@ -120,11 +122,12 @@ class PrfBasedDeriverKeyTP : public Message<PrfBasedDeriverKeyTP> {
   const PrfBasedDeriverParamsTP& params() const { return params_.value(); }
   PrfBasedDeriverParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &prf_key_, &params_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &prf_key_, &params_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<KeyDataTP> prf_key_{2};
   MessageField<PrfBasedDeriverParamsTP> params_{3};

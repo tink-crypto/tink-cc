@@ -57,7 +57,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class Ed25519KeyFormatTP final : public Message<Ed25519KeyFormatTP> {
+class Ed25519KeyFormatTP final : public Message {
  public:
   Ed25519KeyFormatTP() = default;
 
@@ -67,13 +67,15 @@ class Ed25519KeyFormatTP final : public Message<Ed25519KeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const Field*, 1> GetFields() const { return {&version_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&version_}[i];
+  }
   Uint32Field version_{1};
 };
 
-class Ed25519PublicKeyTP final : public Message<Ed25519PublicKeyTP> {
+class Ed25519PublicKeyTP final : public Message {
  public:
   Ed25519PublicKeyTP() = default;
 
@@ -83,16 +85,16 @@ class Ed25519PublicKeyTP final : public Message<Ed25519PublicKeyTP> {
   const std::string& key_value() const { return key_value_.value(); }
   void set_key_value(absl::string_view value) { key_value_.set_value(value); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &key_value_};
-  }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &key_value_}[i];
+  }
   Uint32Field version_{1};
   BytesField key_value_{2};
 };
 
-class Ed25519PrivateKeyTP final : public Message<Ed25519PrivateKeyTP> {
+class Ed25519PrivateKeyTP final : public Message {
  public:
   Ed25519PrivateKeyTP() = default;
 
@@ -109,11 +111,11 @@ class Ed25519PrivateKeyTP final : public Message<Ed25519PrivateKeyTP> {
     return public_key_.mutable_value();
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &key_value_, &public_key_};
-  }
-
  private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
+  }
   Uint32Field version_{1};
   proto_parsing::SecretDataField key_value_{2};
   MessageField<Ed25519PublicKeyTP> public_key_{3};

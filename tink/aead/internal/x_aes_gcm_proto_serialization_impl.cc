@@ -53,20 +53,23 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class XAesGcmParamsTP : public Message<XAesGcmParamsTP> {
+class XAesGcmParamsTP : public Message {
  public:
   XAesGcmParamsTP() = default;
 
   uint32_t salt_size() const { return salt_size_.value(); }
   void set_salt_size(uint32_t value) { salt_size_.set_value(value); }
 
-  std::array<const Field*, 1> GetFields() const { return {&salt_size_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&salt_size_}[i];
+  }
+
   Uint32Field salt_size_{1};
 };
 
-class XAesGcmKeyFormatTP : public Message<XAesGcmKeyFormatTP> {
+class XAesGcmKeyFormatTP : public Message {
  public:
   XAesGcmKeyFormatTP() = default;
 
@@ -76,20 +79,21 @@ class XAesGcmKeyFormatTP : public Message<XAesGcmKeyFormatTP> {
   const XAesGcmParamsTP& params() const { return params_.value(); }
   XAesGcmParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &params_};
-  }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &params_}[i];
+  }
+
   Uint32Field version_{1};
   // reserved : 2
   MessageField<XAesGcmParamsTP> params_{3};
 };
 
-class XAesGcmKeyTP : public Message<XAesGcmKeyTP> {
+class XAesGcmKeyTP : public Message {
  public:
   XAesGcmKeyTP() = default;
 
@@ -104,11 +108,12 @@ class XAesGcmKeyTP : public Message<XAesGcmKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<XAesGcmParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};

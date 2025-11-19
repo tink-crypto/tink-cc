@@ -75,7 +75,7 @@ using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 using ::crypto::tink::util::SecretDataAsStringView;
 
-class ProtoEciesHkdfKemParams : public Message<ProtoEciesHkdfKemParams> {
+class ProtoEciesHkdfKemParams : public Message {
  public:
   ProtoEciesHkdfKemParams() = default;
   using Message::SerializeAsString;
@@ -95,18 +95,20 @@ class ProtoEciesHkdfKemParams : public Message<ProtoEciesHkdfKemParams> {
     hkdf_salt_.set_value(hkdf_salt);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&curve_type_, &hkdf_hash_type_, &hkdf_salt_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&curve_type_, &hkdf_hash_type_,
+                                       &hkdf_salt_}[i];
   }
 
- private:
   EnumField<EllipticCurveTypeEnum> curve_type_{1,
                                                &EllipticCurveTypeEnumIsValid};
   EnumField<HashTypeEnum> hkdf_hash_type_{2, &HashTypeEnumIsValid};
   BytesField hkdf_salt_{11};
 };
 
-class ProtoEciesAeadDemParams : public Message<ProtoEciesAeadDemParams> {
+class ProtoEciesAeadDemParams : public Message {
  public:
   ProtoEciesAeadDemParams() = default;
   using Message::SerializeAsString;
@@ -114,13 +116,16 @@ class ProtoEciesAeadDemParams : public Message<ProtoEciesAeadDemParams> {
   const KeyTemplateTP& aead_dem() const { return aead_dem_.value(); }
   KeyTemplateTP* mutable_aead_dem() { return aead_dem_.mutable_value(); }
 
-  std::array<const Field*, 1> GetFields() const { return {&aead_dem_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&aead_dem_}[i];
+  }
+
   MessageField<KeyTemplateTP> aead_dem_{2};
 };
 
-class ProtoEciesAeadHkdfParams : public Message<ProtoEciesAeadHkdfParams> {
+class ProtoEciesAeadHkdfParams : public Message {
  public:
   ProtoEciesAeadHkdfParams() = default;
   using Message::SerializeAsString;
@@ -144,18 +149,19 @@ class ProtoEciesAeadHkdfParams : public Message<ProtoEciesAeadHkdfParams> {
     ec_point_format_.set_value(ec_point_format);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&kem_params_, &dem_params_, &ec_point_format_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&kem_params_, &dem_params_,
+                                       &ec_point_format_}[i];
   }
 
- private:
   MessageField<ProtoEciesHkdfKemParams> kem_params_{1};
   MessageField<ProtoEciesAeadDemParams> dem_params_{2};
   EnumField<EcPointFormatEnum> ec_point_format_{3, &EcPointFormatEnumIsValid};
 };
 
-class ProtoEciesAeadHkdfPublicKey
-    : public Message<ProtoEciesAeadHkdfPublicKey> {
+class ProtoEciesAeadHkdfPublicKey : public Message {
  public:
   ProtoEciesAeadHkdfPublicKey() = default;
   using Message::SerializeAsString;
@@ -172,19 +178,19 @@ class ProtoEciesAeadHkdfPublicKey
   const std::string& y() const { return y_.value(); }
   void set_y(absl::string_view y) { y_.set_value(y); }
 
-  std::array<const Field*, 4> GetFields() const {
-    return {&version_, &params_, &x_, &y_};
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{&version_, &params_, &x_, &y_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<ProtoEciesAeadHkdfParams> params_{2};
   BytesField x_{3};
   BytesField y_{4};
 };
 
-class ProtoEciesAeadHkdfPrivateKey
-    : public Message<ProtoEciesAeadHkdfPrivateKey> {
+class ProtoEciesAeadHkdfPrivateKey : public Message {
  public:
   ProtoEciesAeadHkdfPrivateKey() = default;
   using Message::SerializeAsString;
@@ -204,18 +210,18 @@ class ProtoEciesAeadHkdfPrivateKey
     *key_value_.mutable_value() = std::move(key_value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &public_key_, &key_value_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &public_key_, &key_value_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<ProtoEciesAeadHkdfPublicKey> public_key_{2};
   SecretDataField key_value_{3};
 };
 
-class ProtoEciesAeadHkdfKeyFormat
-    : public Message<ProtoEciesAeadHkdfKeyFormat> {
+class ProtoEciesAeadHkdfKeyFormat : public Message {
  public:
   ProtoEciesAeadHkdfKeyFormat() = default;
   using Message::SerializeAsString;
@@ -223,9 +229,12 @@ class ProtoEciesAeadHkdfKeyFormat
   const ProtoEciesAeadHkdfParams& params() const { return params_.value(); }
   ProtoEciesAeadHkdfParams* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 1> GetFields() const { return {&params_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&params_}[i];
+  }
+
   MessageField<ProtoEciesAeadHkdfParams> params_{1};
 };
 

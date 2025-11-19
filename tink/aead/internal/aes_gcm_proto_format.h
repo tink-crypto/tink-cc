@@ -27,7 +27,7 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class AesGcmKeyFormatTP : public proto_parsing::Message<AesGcmKeyFormatTP> {
+class AesGcmKeyFormatTP : public proto_parsing::Message {
  public:
   AesGcmKeyFormatTP() = default;
 
@@ -37,14 +37,15 @@ class AesGcmKeyFormatTP : public proto_parsing::Message<AesGcmKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const proto_parsing::Field*, 2> GetFields() const {
-    return {&key_size_, &version_};
-  }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 2; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 2>{&key_size_, &version_}[i];
+  }
+
   proto_parsing::Uint32Field key_size_{2};
   proto_parsing::Uint32Field version_{3};
 };

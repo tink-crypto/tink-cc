@@ -75,7 +75,7 @@ using JwtRsaSsaPssProtoPrivateKeyParserImpl =
 using JwtRsaSsaPssProtoPrivateKeySerializerImpl =
     KeySerializerImpl<JwtRsaSsaPssPrivateKey, ProtoKeySerialization>;
 
-class CustomKidTP : public Message<CustomKidTP> {
+class CustomKidTP : public Message {
  public:
   CustomKidTP() = default;
   using Message::SerializeAsString;
@@ -83,9 +83,12 @@ class CustomKidTP : public Message<CustomKidTP> {
   const std::string& value() const { return value_.value(); }
   std::string* mutable_value() { return value_.mutable_value(); }
 
-  std::array<const Field*, 1> GetFields() const { return {&value_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&value_}[i];
+  }
+
   BytesField value_{1};
 };
 
@@ -98,7 +101,7 @@ enum class JwtRsaSsaPssAlgorithmEnum : uint8_t {
   kPs512 = 3,
 };
 
-class JwtRsaSsaPssPublicKeyTP : public Message<JwtRsaSsaPssPublicKeyTP> {
+class JwtRsaSsaPssPublicKeyTP : public Message {
  public:
   JwtRsaSsaPssPublicKeyTP() = default;
   using Message::SerializeAsString;
@@ -121,11 +124,13 @@ class JwtRsaSsaPssPublicKeyTP : public Message<JwtRsaSsaPssPublicKeyTP> {
   CustomKidTP* mutable_custom_kid() { return custom_kid_.mutable_value(); }
   bool has_custom_kid() const { return custom_kid_.has_value(); }
 
-  std::array<const Field*, 5> GetFields() const {
-    return {&version_, &algorithm_, &n_, &e_, &custom_kid_};
+ private:
+  size_t num_fields() const override { return 5; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 5>{&version_, &algorithm_, &n_, &e_,
+                                       &custom_kid_}[i];
   }
 
- private:
   Uint32Field version_{1};
   EnumField<JwtRsaSsaPssAlgorithmEnum> algorithm_{2,
                                                   &JwtRsaSsaPssAlgorithmValid};
@@ -134,7 +139,7 @@ class JwtRsaSsaPssPublicKeyTP : public Message<JwtRsaSsaPssPublicKeyTP> {
   MessageField<CustomKidTP> custom_kid_{5};
 };
 
-class JwtRsaSsaPssPrivateKeyTP : public Message<JwtRsaSsaPssPrivateKeyTP> {
+class JwtRsaSsaPssPrivateKeyTP : public Message {
  public:
   JwtRsaSsaPssPrivateKeyTP() = default;
 
@@ -166,11 +171,13 @@ class JwtRsaSsaPssPrivateKeyTP : public Message<JwtRsaSsaPssPrivateKeyTP> {
   const SecretData& crt() const { return crt_.value(); }
   SecretData* mutable_crt() { return crt_.mutable_value(); }
 
-  std::array<const Field*, 8> GetFields() const {
-    return {&version_, &public_key_, &d_, &p_, &q_, &dp_, &dq_, &crt_};
+ private:
+  size_t num_fields() const override { return 8; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 8>{&version_, &public_key_, &d_,  &p_,
+                                       &q_,       &dp_,         &dq_, &crt_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<JwtRsaSsaPssPublicKeyTP> public_key_{2};
   SecretDataField d_{3};
@@ -181,7 +188,7 @@ class JwtRsaSsaPssPrivateKeyTP : public Message<JwtRsaSsaPssPrivateKeyTP> {
   SecretDataField crt_{8};
 };
 
-class JwtRsaSsaPssKeyFormatTP : public Message<JwtRsaSsaPssKeyFormatTP> {
+class JwtRsaSsaPssKeyFormatTP : public Message {
  public:
   JwtRsaSsaPssKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -208,11 +215,13 @@ class JwtRsaSsaPssKeyFormatTP : public Message<JwtRsaSsaPssKeyFormatTP> {
     return public_exponent_.mutable_value();
   }
 
-  std::array<const Field*, 4> GetFields() const {
-    return {&version_, &algorithm_, &modulus_size_in_bits_, &public_exponent_};
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{
+        &version_, &algorithm_, &modulus_size_in_bits_, &public_exponent_}[i];
   }
 
- private:
   Uint32Field version_{1};
   EnumField<JwtRsaSsaPssAlgorithmEnum> algorithm_{2,
                                                   &JwtRsaSsaPssAlgorithmValid};

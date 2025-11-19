@@ -62,7 +62,7 @@ std::string_view KeyMaterialTypeEnumName(KeyMaterialTypeEnum type);
 
 inline bool KeyMaterialTypeValid(int c) { return c >= 0 && c <= 4; }
 
-class KeyTemplateTP : public proto_parsing::Message<KeyTemplateTP> {
+class KeyTemplateTP : public proto_parsing::Message {
  public:
   KeyTemplateTP() = default;
 
@@ -90,18 +90,20 @@ class KeyTemplateTP : public proto_parsing::Message<KeyTemplateTP> {
     output_prefix_type_.set_value(output_prefix_type);
   }
 
-  std::array<const proto_parsing::Field*, 3> GetFields() const {
-    return {&type_url_, &value_, &output_prefix_type_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 3>{&type_url_, &value_,
+                                                      &output_prefix_type_}[i];
   }
 
- private:
   proto_parsing::BytesField type_url_{1};
   proto_parsing::BytesField value_{2};
   proto_parsing::EnumField<OutputPrefixTypeEnum> output_prefix_type_{
       3, &OutputPrefixTypeValid};
 };
 
-class KeyDataTP : public proto_parsing::Message<KeyDataTP> {
+class KeyDataTP : public proto_parsing::Message {
  public:
   KeyDataTP() = default;
 
@@ -130,11 +132,13 @@ class KeyDataTP : public proto_parsing::Message<KeyDataTP> {
     key_material_type_.set_value(key_material_type);
   }
 
-  std::array<const proto_parsing::Field*, 3> GetFields() const {
-    return {&type_url_, &value_, &key_material_type_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 3>{&type_url_, &value_,
+                                                      &key_material_type_}[i];
   }
 
- private:
   proto_parsing::BytesField type_url_{1};
   proto_parsing::SecretDataField value_{2};
   proto_parsing::EnumField<KeyMaterialTypeEnum> key_material_type_{

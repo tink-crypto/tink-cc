@@ -68,18 +68,22 @@ using ChaCha20Poly1305ProtoKeySerializerImpl =
     internal::KeySerializerImpl<ChaCha20Poly1305Key,
                                 internal::ProtoKeySerialization>;
 
-class ChaCha20Poly1305KeyFormatTP
-    : public Message<ChaCha20Poly1305KeyFormatTP> {
+class ChaCha20Poly1305KeyFormatTP : public Message {
  public:
   ChaCha20Poly1305KeyFormatTP() = default;
 
-  std::array<const Field*, 0> GetFields() const { return {}; }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
+
+ private:
+  size_t num_fields() const override { return 0; }
+  const Field* field(int i) const override {
+    // This should not be called since num_fields() is 0.
+    return nullptr;
+  }
 };
 
-class ChaCha20Poly1305KeyTP : public Message<ChaCha20Poly1305KeyTP> {
+class ChaCha20Poly1305KeyTP : public Message {
  public:
   ChaCha20Poly1305KeyTP() = default;
 
@@ -91,11 +95,11 @@ class ChaCha20Poly1305KeyTP : public Message<ChaCha20Poly1305KeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &key_value_};
-  }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &key_value_}[i];
+  }
   Uint32Field version_{1};
   SecretDataField key_value_{2};
 };

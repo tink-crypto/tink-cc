@@ -34,7 +34,7 @@ using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 // Proto message com.google.crypto.tink.AesSivKeyFormat.
-class AesSivKeyFormatTP : public Message<AesSivKeyFormatTP> {
+class AesSivKeyFormatTP : public Message {
  public:
   AesSivKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -45,11 +45,12 @@ class AesSivKeyFormatTP : public Message<AesSivKeyFormatTP> {
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t version) { version_.set_value(version); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&key_size_, &version_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&key_size_, &version_}[i];
   }
 
- private:
   Uint32Field key_size_{1};
   Uint32Field version_{2};
 };

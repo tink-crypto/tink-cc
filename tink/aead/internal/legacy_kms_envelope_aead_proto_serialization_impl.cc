@@ -64,7 +64,7 @@ using ::crypto::tink::internal::proto_parsing::Message;
 using ::crypto::tink::internal::proto_parsing::MessageField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
-class KmsEnvelopeAeadKeyFormatTP : public Message<KmsEnvelopeAeadKeyFormatTP> {
+class KmsEnvelopeAeadKeyFormatTP : public Message {
  public:
   KmsEnvelopeAeadKeyFormatTP() = default;
 
@@ -76,19 +76,19 @@ class KmsEnvelopeAeadKeyFormatTP : public Message<KmsEnvelopeAeadKeyFormatTP> {
     return dek_template_.mutable_value();
   }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&kek_uri_, &dek_template_};
-  }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&kek_uri_, &dek_template_}[i];
+  }
   BytesField kek_uri_{1};
   MessageField<KeyTemplateTP> dek_template_{2};
 };
 
-class KmsEnvelopeAeadKeyTP : public Message<KmsEnvelopeAeadKeyTP> {
+class KmsEnvelopeAeadKeyTP : public Message {
  public:
   KmsEnvelopeAeadKeyTP() = default;
 
@@ -100,11 +100,11 @@ class KmsEnvelopeAeadKeyTP : public Message<KmsEnvelopeAeadKeyTP> {
     return params_.mutable_value();
   }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &params_};
-  }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &params_}[i];
+  }
   Uint32Field version_{1};
   MessageField<KmsEnvelopeAeadKeyFormatTP> params_{2};
 };

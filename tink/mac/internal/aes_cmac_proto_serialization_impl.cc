@@ -59,21 +59,22 @@ using ::crypto::tink::internal::proto_parsing::SecretDataField;
 using ::crypto::tink::internal::proto_parsing::Uint32Field;
 
 // Corresponds to google.crypto.tink.AesCmacKeyFormat.
-class AesCmacParamProto : public Message<AesCmacParamProto> {
+class AesCmacParamProto : public Message {
  public:
   uint32_t tag_size() const { return tag_size_.value(); }
   void set_tag_size(uint32_t value) { tag_size_.set_value(value); }
 
-  std::array<const Field*, 1> GetFields() const {
-    return std::array<const Field*, 1>{&tag_size_};
+ private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&tag_size_}[i];
   }
 
- private:
   Uint32Field tag_size_{1};
 };
 
 // Corresponds to google.crypto.tink.AesCmacKey.
-class AesCmacKeyProto : public Message<AesCmacKeyProto> {
+class AesCmacKeyProto : public Message {
  public:
   uint32_t version() const { return version_.value(); }
   void set_version(uint32_t value) { version_.set_value(value); }
@@ -86,18 +87,19 @@ class AesCmacKeyProto : public Message<AesCmacKeyProto> {
   const AesCmacParamProto& params() const { return params_.value(); }
   AesCmacParamProto* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return std::array<const Field*, 3>{&version_, &key_value_, &params_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &key_value_, &params_}[i];
   }
 
- private:
   Uint32Field version_{1};
   SecretDataField key_value_{2};
   MessageField<AesCmacParamProto> params_{3};
 };
 
 // Corresponds to google.crypto.tink.AesCmacKeyFormat.
-class AesCmacKeyFormatProto : public Message<AesCmacKeyFormatProto> {
+class AesCmacKeyFormatProto : public Message {
  public:
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
@@ -108,11 +110,12 @@ class AesCmacKeyFormatProto : public Message<AesCmacKeyFormatProto> {
   // This is safe because format doesn't contain any secret data.
   using Message::SerializeAsString;
 
-  std::array<const Field*, 2> GetFields() const {
-    return std::array<const Field*, 2>{&key_size_, &params_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&key_size_, &params_}[i];
   }
 
- private:
   Uint32Field key_size_{1};
   MessageField<AesCmacParamProto> params_{2};
 };

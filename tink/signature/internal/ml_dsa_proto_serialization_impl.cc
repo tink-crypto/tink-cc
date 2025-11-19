@@ -72,7 +72,7 @@ enum class MlDsaInstanceEnum : uint32_t {
   kMlDsa87,
 };
 
-class MlDsaParamsTP final : public Message<MlDsaParamsTP> {
+class MlDsaParamsTP final : public Message {
  public:
   MlDsaParamsTP() = default;
 
@@ -81,15 +81,16 @@ class MlDsaParamsTP final : public Message<MlDsaParamsTP> {
     ml_dsa_instance_.set_value(value);
   }
 
-  std::array<const Field*, 1> GetFields() const {
-    return std::array<const Field*, 1>{&ml_dsa_instance_};
+ private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&ml_dsa_instance_}[i];
   }
 
- private:
   EnumField<MlDsaInstanceEnum> ml_dsa_instance_{1, &MlDsaInstanceEnumValid};
 };
 
-class MlDsaKeyFormatTP final : public Message<MlDsaKeyFormatTP> {
+class MlDsaKeyFormatTP final : public Message {
  public:
   MlDsaKeyFormatTP() = default;
 
@@ -102,16 +103,17 @@ class MlDsaKeyFormatTP final : public Message<MlDsaKeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const Field*, 2> GetFields() const {
-    return std::array<const Field*, 2>{&version_, &params_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &params_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<MlDsaParamsTP> params_{2};
 };
 
-class MlDsaPublicKeyTP final : public Message<MlDsaPublicKeyTP> {
+class MlDsaPublicKeyTP final : public Message {
  public:
   MlDsaPublicKeyTP() = default;
 
@@ -124,17 +126,18 @@ class MlDsaPublicKeyTP final : public Message<MlDsaPublicKeyTP> {
   const MlDsaParamsTP& params() const { return params_.value(); }
   MlDsaParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return std::array<const Field*, 3>{&version_, &key_value_, &params_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &key_value_, &params_}[i];
   }
 
- private:
   Uint32Field version_{1};
   BytesField key_value_{2};
   MessageField<MlDsaParamsTP> params_{3};
 };
 
-class MlDsaPrivateKeyTP final : public Message<MlDsaPrivateKeyTP> {
+class MlDsaPrivateKeyTP final : public Message {
  public:
   MlDsaPrivateKeyTP() = default;
 
@@ -149,11 +152,12 @@ class MlDsaPrivateKeyTP final : public Message<MlDsaPrivateKeyTP> {
   const MlDsaPublicKeyTP& public_key() const { return public_key_.value(); }
   MlDsaPublicKeyTP* mutable_public_key() { return public_key_.mutable_value(); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return std::array<const Field*, 3>{&version_, &key_value_, &public_key_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
   }
 
- private:
   Uint32Field version_{1};
   SecretDataField key_value_{2};
   MessageField<MlDsaPublicKeyTP> public_key_{3};

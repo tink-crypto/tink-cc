@@ -66,23 +66,25 @@ using LegacyKmsAeadProtoKeySerializerImpl =
     internal::KeySerializerImpl<LegacyKmsAeadKey,
                                 internal::ProtoKeySerialization>;
 
-class KmsAeadKeyFormatTP : public Message<KmsAeadKeyFormatTP> {
+class KmsAeadKeyFormatTP : public Message {
  public:
   KmsAeadKeyFormatTP() = default;
 
   const std::string& key_uri() const { return key_uri_.value(); }
   void set_key_uri(absl::string_view value) { key_uri_.set_value(value); }
 
-  std::array<const Field*, 1> GetFields() const { return {&key_uri_}; }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&key_uri_}[i];
+  }
   BytesField key_uri_{1};
 };
 
-class KmsAeadKeyTP : public Message<KmsAeadKeyTP> {
+class KmsAeadKeyTP : public Message {
  public:
   KmsAeadKeyTP() = default;
 
@@ -92,11 +94,11 @@ class KmsAeadKeyTP : public Message<KmsAeadKeyTP> {
   const KmsAeadKeyFormatTP& params() const { return params_.value(); }
   KmsAeadKeyFormatTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &params_};
-  }
-
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &params_}[i];
+  }
   Uint32Field version_{1};
   MessageField<KmsAeadKeyFormatTP> params_{2};
 };

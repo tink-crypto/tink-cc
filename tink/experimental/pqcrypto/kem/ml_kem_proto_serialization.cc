@@ -64,7 +64,7 @@ enum class MlKemKeySizeEnum : uint32_t {
   kMlKem768 = 1,
 };
 
-class MlKemParamsTP : public Message<MlKemParamsTP> {
+class MlKemParamsTP : public Message {
  public:
   MlKemParamsTP() = default;
   using Message::SerializeAsString;
@@ -74,13 +74,16 @@ class MlKemParamsTP : public Message<MlKemParamsTP> {
     ml_kem_key_size_.set_value(value);
   }
 
-  std::array<const Field*, 1> GetFields() const { return {&ml_kem_key_size_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&ml_kem_key_size_}[i];
+  }
+
   EnumField<MlKemKeySizeEnum> ml_kem_key_size_{1, &MlKemKeySizeEnumIsValid};
 };
 
-class MlKemKeyFormatTP : public Message<MlKemKeyFormatTP> {
+class MlKemKeyFormatTP : public Message {
  public:
   MlKemKeyFormatTP() = default;
   using Message::SerializeAsString;
@@ -91,16 +94,17 @@ class MlKemKeyFormatTP : public Message<MlKemKeyFormatTP> {
   const MlKemParamsTP& params() const { return params_.value(); }
   MlKemParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&version_, &params_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&version_, &params_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<MlKemParamsTP> params_{2};
 };
 
-class MlKemPublicKeyTP : public Message<MlKemPublicKeyTP> {
+class MlKemPublicKeyTP : public Message {
  public:
   MlKemPublicKeyTP() = default;
 
@@ -113,17 +117,18 @@ class MlKemPublicKeyTP : public Message<MlKemPublicKeyTP> {
   const MlKemParamsTP& params() const { return params_.value(); }
   MlKemParamsTP* mutable_params() { return params_.mutable_value(); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &key_value_, &params_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &key_value_, &params_}[i];
   }
 
- private:
   Uint32Field version_{1};
   BytesField key_value_{2};
   MessageField<MlKemParamsTP> params_{3};
 };
 
-class MlKemPrivateKeyTP : public Message<MlKemPrivateKeyTP> {
+class MlKemPrivateKeyTP : public Message {
  public:
   MlKemPrivateKeyTP() = default;
 
@@ -136,11 +141,12 @@ class MlKemPrivateKeyTP : public Message<MlKemPrivateKeyTP> {
   const MlKemPublicKeyTP& public_key() const { return public_key_.value(); }
   MlKemPublicKeyTP* mutable_public_key() { return public_key_.mutable_value(); }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &key_value_, &public_key_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
   }
 
- private:
   Uint32Field version_{1};
   SecretDataField key_value_{2};
   MessageField<MlKemPublicKeyTP> public_key_{3};

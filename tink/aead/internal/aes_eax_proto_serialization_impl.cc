@@ -68,20 +68,23 @@ using AesEaxProtoKeySerializerImpl =
 constexpr absl::string_view kTypeUrl =
     "type.googleapis.com/google.crypto.tink.AesEaxKey";
 
-class AesEaxParamsTP : public Message<AesEaxParamsTP> {
+class AesEaxParamsTP : public Message {
  public:
   AesEaxParamsTP() = default;
 
   uint32_t iv_size() const { return iv_size_.value(); }
   void set_iv_size(uint32_t value) { iv_size_.set_value(value); }
 
-  std::array<const Field*, 1> GetFields() const { return {&iv_size_}; }
-
  private:
+  size_t num_fields() const override { return 1; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 1>{&iv_size_}[i];
+  }
+
   Uint32Field iv_size_{1};
 };
 
-class AesEaxKeyFormatTP : public Message<AesEaxKeyFormatTP> {
+class AesEaxKeyFormatTP : public Message {
  public:
   AesEaxKeyFormatTP() = default;
 
@@ -91,19 +94,20 @@ class AesEaxKeyFormatTP : public Message<AesEaxKeyFormatTP> {
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&params_, &key_size_};
-  }
-
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&params_, &key_size_}[i];
+  }
+
   MessageField<AesEaxParamsTP> params_{1};
   Uint32Field key_size_{2};
 };
 
-class AesEaxKeyTP : public Message<AesEaxKeyTP> {
+class AesEaxKeyTP : public Message {
  public:
   AesEaxKeyTP() = default;
 
@@ -118,11 +122,12 @@ class AesEaxKeyTP : public Message<AesEaxKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<AesEaxParamsTP> params_{2};
   SecretDataField key_value_{3};

@@ -31,39 +31,41 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
-class AesCtrParamsTP : public proto_parsing::Message<AesCtrParamsTP> {
+class AesCtrParamsTP : public proto_parsing::Message {
  public:
   AesCtrParamsTP() = default;
 
   uint32_t iv_size() const { return iv_size_.value(); }
   void set_iv_size(uint32_t value) { iv_size_.set_value(value); }
 
-  std::array<const proto_parsing::Field*, 1> GetFields() const {
-    return {&iv_size_};
+ private:
+  size_t num_fields() const override { return 1; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 1>{&iv_size_}[i];
   }
 
- private:
   proto_parsing::Uint32Field iv_size_{1};
 };
 
-class AesCtrKeyFormatTP : public proto_parsing::Message<AesCtrKeyFormatTP> {
+class AesCtrKeyFormatTP : public proto_parsing::Message {
  public:
   AesCtrKeyFormatTP() = default;
   AesCtrParamsTP* mutable_params() { return params_.mutable_value(); }
   const AesCtrParamsTP& params() const { return params_.value(); }
   uint32_t key_size() const { return key_size_.value(); }
   void set_key_size(uint32_t value) { key_size_.set_value(value); }
-  std::array<const proto_parsing::Field*, 2> GetFields() const {
-    return {&params_, &key_size_};
-  }
 
  private:
+  size_t num_fields() const override { return 2; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 2>{&params_, &key_size_}[i];
+  }
+
   proto_parsing::MessageField<AesCtrParamsTP> params_{1};
   proto_parsing::Uint32Field key_size_{2};
 };
 
-class AesCtrHmacAeadKeyFormatTP
-    : public proto_parsing::Message<AesCtrHmacAeadKeyFormatTP> {
+class AesCtrHmacAeadKeyFormatTP : public proto_parsing::Message {
  public:
   AesCtrHmacAeadKeyFormatTP() = default;
   AesCtrKeyFormatTP* mutable_aes_ctr_key_format() {
@@ -78,17 +80,20 @@ class AesCtrHmacAeadKeyFormatTP
   const HmacKeyFormatTP& hmac_key_format() const {
     return hmac_key_format_.value();
   }
-  std::array<const proto_parsing::Field*, 2> GetFields() const {
-    return {&aes_ctr_key_format_, &hmac_key_format_};
-  }
   using Message::SerializeAsString;
 
  private:
+  size_t num_fields() const override { return 2; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 2>{&aes_ctr_key_format_,
+                                                      &hmac_key_format_}[i];
+  }
+
   proto_parsing::MessageField<AesCtrKeyFormatTP> aes_ctr_key_format_{1};
   proto_parsing::MessageField<HmacKeyFormatTP> hmac_key_format_{2};
 };
 
-class AesCtrKeyTP : public proto_parsing::Message<AesCtrKeyTP> {
+class AesCtrKeyTP : public proto_parsing::Message {
  public:
   AesCtrKeyTP() = default;
   uint32_t version() const { return version_.value(); }
@@ -99,17 +104,20 @@ class AesCtrKeyTP : public proto_parsing::Message<AesCtrKeyTP> {
   void set_key_value(absl::string_view value) {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
-  std::array<const proto_parsing::Field*, 3> GetFields() const {
-    return {&version_, &params_, &key_value_};
-  }
 
  private:
+  size_t num_fields() const override { return 3; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 3>{&version_, &params_,
+                                                      &key_value_}[i];
+  }
+
   proto_parsing::Uint32Field version_{1};
   proto_parsing::MessageField<AesCtrParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};
 };
 
-class AesCtrHmacAeadKeyTP : public proto_parsing::Message<AesCtrHmacAeadKeyTP> {
+class AesCtrHmacAeadKeyTP : public proto_parsing::Message {
  public:
   AesCtrHmacAeadKeyTP() = default;
   uint32_t version() const { return version_.value(); }
@@ -118,11 +126,14 @@ class AesCtrHmacAeadKeyTP : public proto_parsing::Message<AesCtrHmacAeadKeyTP> {
   const AesCtrKeyTP& aes_ctr_key() const { return aes_ctr_key_.value(); }
   HmacKeyTP* mutable_hmac_key() { return hmac_key_.mutable_value(); }
   const HmacKeyTP& hmac_key() const { return hmac_key_.value(); }
-  std::array<const proto_parsing::Field*, 3> GetFields() const {
-    return {&version_, &aes_ctr_key_, &hmac_key_};
-  }
 
  private:
+  size_t num_fields() const override { return 3; }
+  const proto_parsing::Field* field(int i) const override {
+    return std::array<const proto_parsing::Field*, 3>{&version_, &aes_ctr_key_,
+                                                      &hmac_key_}[i];
+  }
+
   proto_parsing::Uint32Field version_{1};
   proto_parsing::MessageField<AesCtrKeyTP> aes_ctr_key_{2};
   proto_parsing::MessageField<HmacKeyTP> hmac_key_{3};

@@ -76,7 +76,7 @@ enum class EcdsaSignatureEncodingEnum : uint32_t {
   kDer,
 };
 
-class EcdsaParamsTP final : public Message<EcdsaParamsTP> {
+class EcdsaParamsTP final : public Message {
  public:
   EcdsaParamsTP() = default;
 
@@ -97,18 +97,19 @@ class EcdsaParamsTP final : public Message<EcdsaParamsTP> {
            encoding_.value() == other.encoding_.value();
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&hash_type_, &curve_, &encoding_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&hash_type_, &curve_, &encoding_}[i];
   }
 
- private:
   EnumField<HashTypeEnum> hash_type_{1, &HashTypeEnumIsValid};
   EnumField<EllipticCurveTypeEnum> curve_{2, &EllipticCurveTypeEnumIsValid};
   EnumField<EcdsaSignatureEncodingEnum> encoding_{3,
                                                   &EcdsaSignatureEncodingValid};
 };
 
-class EcdsaPublicKeyTP final : public Message<EcdsaPublicKeyTP> {
+class EcdsaPublicKeyTP final : public Message {
  public:
   EcdsaPublicKeyTP() = default;
 
@@ -124,18 +125,19 @@ class EcdsaPublicKeyTP final : public Message<EcdsaPublicKeyTP> {
   const std::string& y() const { return y_.value(); }
   void set_y(absl::string_view value) { y_.set_value(value); }
 
-  std::array<const Field*, 4> GetFields() const {
-    return {&version_, &params_, &x_, &y_};
+ private:
+  size_t num_fields() const override { return 4; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 4>{&version_, &params_, &x_, &y_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<EcdsaParamsTP> params_{2};
   BytesField x_{3};
   BytesField y_{4};
 };
 
-class EcdsaPrivateKeyTP final : public Message<EcdsaPrivateKeyTP> {
+class EcdsaPrivateKeyTP final : public Message {
  public:
   EcdsaPrivateKeyTP() = default;
 
@@ -150,17 +152,18 @@ class EcdsaPrivateKeyTP final : public Message<EcdsaPrivateKeyTP> {
     *key_value_.mutable_value() = util::SecretDataFromStringView(value);
   }
 
-  std::array<const Field*, 3> GetFields() const {
-    return {&version_, &public_key_, &key_value_};
+ private:
+  size_t num_fields() const override { return 3; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 3>{&version_, &public_key_, &key_value_}[i];
   }
 
- private:
   Uint32Field version_{1};
   MessageField<EcdsaPublicKeyTP> public_key_{2};
   SecretDataField key_value_{3};
 };
 
-class EcdsaKeyFormatTP final : public Message<EcdsaKeyFormatTP> {
+class EcdsaKeyFormatTP final : public Message {
  public:
   EcdsaKeyFormatTP() = default;
 
@@ -173,11 +176,12 @@ class EcdsaKeyFormatTP final : public Message<EcdsaKeyFormatTP> {
   // This is OK because this class doesn't contain secret data.
   using Message::SerializeAsString;
 
-  std::array<const Field*, 2> GetFields() const {
-    return {&params_, &version_};
+ private:
+  size_t num_fields() const override { return 2; }
+  const Field* field(int i) const override {
+    return std::array<const Field*, 2>{&params_, &version_}[i];
   }
 
- private:
   MessageField<EcdsaParamsTP> params_{2};
   Uint32Field version_{3};
 };

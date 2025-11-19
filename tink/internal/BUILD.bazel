@@ -1491,6 +1491,7 @@ cc_test(
 
 cc_library(
     name = "proto_parser_enum_field",
+    srcs = ["proto_parser_enum_field.cc"],
     hdrs = ["proto_parser_enum_field.h"],
     include_prefix = "tink/internal",
     deps = [

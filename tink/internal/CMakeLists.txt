@@ -1433,6 +1433,7 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_parser_enum_field
   SRCS
+    proto_parser_enum_field.cc
     proto_parser_enum_field.h
   DEPS
     tink::internal::proto_parser_fields

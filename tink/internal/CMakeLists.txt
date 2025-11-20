@@ -1911,6 +1911,7 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_parser_fields
   SRCS
+    proto_parser_fields.cc
     proto_parser_fields.h
   DEPS
     tink::internal::proto_parser_options
@@ -1999,6 +2000,7 @@ tink_cc_test(
 tink_cc_library(
   NAME proto_parser_secret_data_field
   SRCS
+    proto_parser_secret_data_field.cc
     proto_parser_secret_data_field.h
   DEPS
     tink::internal::call_with_core_dump_protection

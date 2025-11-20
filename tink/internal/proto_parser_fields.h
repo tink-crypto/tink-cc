@@ -22,8 +22,6 @@
 
 #include "absl/base/attributes.h"
 #include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
@@ -82,33 +80,10 @@ class Uint32Field : public Field {
   Uint32Field(Uint32Field&&) noexcept = default;
   Uint32Field& operator=(Uint32Field&&) noexcept = default;
 
-  void Clear() override { value_ = 0; }
-  bool ConsumeIntoMember(ParsingState& serialized) override {
-    absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
-    if (!result.ok()) {
-      return false;
-    }
-    value_ = *result;
-    return true;
-  }
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    if (!RequiresSerialization()) {
-      return absl::OkStatus();
-    }
-    absl::Status status =
-        SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-    if (!status.ok()) {
-      return status;
-    }
-    return SerializeVarint(value_, out);
-  }
-  size_t GetSerializedSizeIncludingTag() const override {
-    if (!RequiresSerialization()) {
-      return 0;
-    }
-    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-           VarintLength(value_);
-  }
+  void Clear() override;
+  bool ConsumeIntoMember(ParsingState& serialized) override;
+  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  size_t GetSerializedSizeIncludingTag() const override;
 
   void set_value(uint32_t value) { value_ = value; }
   uint32_t value() const { return value_; }
@@ -133,36 +108,10 @@ class Uint64Field : public Field {
   Uint64Field(Uint64Field&&) noexcept = default;
   Uint64Field& operator=(Uint64Field&&) noexcept = default;
 
-  void Clear() override { value_ = 0; }
-
-  bool ConsumeIntoMember(ParsingState& serialized) override {
-    absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
-    if (!result.ok()) {
-      return false;
-    }
-    value_ = *result;
-    return true;
-  }
-
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    if (value_ == 0) {
-      return absl::OkStatus();
-    }
-    absl::Status status =
-        SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-    if (!status.ok()) {
-      return status;
-    }
-    return SerializeVarint(value_, out);
-  }
-
-  size_t GetSerializedSizeIncludingTag() const override {
-    if (value_ == 0) {
-      return 0;
-    }
-    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-           VarintLength(value_);
-  }
+  void Clear() override;
+  bool ConsumeIntoMember(ParsingState& serialized) override;
+  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  size_t GetSerializedSizeIncludingTag() const override;
 
   void set_value(uint64_t value) { value_ = value; }
   uint64_t value() const { return value_; }
@@ -182,48 +131,10 @@ class BytesField final : public Field {
   BytesField(BytesField&&) noexcept = default;
   BytesField& operator=(BytesField&&) noexcept = default;
 
-  void Clear() override { value_.clear(); }
-  bool ConsumeIntoMember(ParsingState& serialized) override {
-    absl::StatusOr<absl::string_view> result =
-        ConsumeBytesReturnStringView(serialized);
-    if (!result.ok()) {
-      return false;
-    }
-    set_value(*result);
-    return true;
-  }
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    if (!RequiresSerialization()) {
-      return absl::OkStatus();
-    }
-
-    if (absl::Status result =
-            SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-        !result.ok()) {
-      return result;
-    }
-    size_t size = value_.size();
-    if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
-      return result;
-    }
-    if (out.GetBuffer().size() < size) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
-    }
-    // size is guaranteed to be <= out.GetBuffer().size().
-    value_.copy(out.GetBuffer().data(), size);
-    out.Advance(size);
-    return absl::OkStatus();
-  }
-
-  size_t GetSerializedSizeIncludingTag() const override {
-    if (!RequiresSerialization()) {
-      return 0;
-    }
-    size_t size = value_.size();
-    return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-           VarintLength(size) + size;
-  }
+  void Clear() override;
+  bool ConsumeIntoMember(ParsingState& serialized) override;
+  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  size_t GetSerializedSizeIncludingTag() const override;
 
   void set_value(absl::string_view value) { value_ = std::string(value); }
   const std::string& value() const { return value_; }

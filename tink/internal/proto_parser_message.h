@@ -20,20 +20,15 @@
 #include <cstdint>
 #include <string>
 #include <type_traits>
-#include <utility>
 #include <vector>
 
-#include "absl/algorithm/container.h"
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
-#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
-#include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
@@ -101,8 +96,7 @@ class Message {
 
  private:
   friend class MessageFieldBase;
-  template <typename MessageT>
-  friend class RepeatedMessageField;
+  friend class RepeatedMessageFieldBase;
 
   bool FieldsAreSorted() const;
   // Returns the field with the given `field_number`, or nullptr if no such
@@ -129,6 +123,35 @@ class Message {
   virtual const Field* field(int i) const = 0;
 };
 
+// Base class for RepeatedMessageField.
+//
+// It implements all methods of `Field` but `Clear`.
+class RepeatedMessageFieldBase : public Field {
+ public:
+  explicit RepeatedMessageFieldBase(int field_number)
+      : Field(field_number, WireType::kLengthDelimited) {}
+
+  // Copyable and movable.
+  RepeatedMessageFieldBase(const RepeatedMessageFieldBase&) = default;
+  RepeatedMessageFieldBase& operator=(const RepeatedMessageFieldBase&) =
+      default;
+  RepeatedMessageFieldBase(RepeatedMessageFieldBase&&) noexcept = default;
+  RepeatedMessageFieldBase& operator=(RepeatedMessageFieldBase&&) noexcept =
+      default;
+
+  bool ConsumeIntoMember(ParsingState& serialized) override;
+  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  size_t GetSerializedSizeIncludingTag() const override;
+
+ protected:
+  // Returns the i-th message.
+  virtual const Message& message(int i) const = 0;
+  // Adds a new message and returns a pointer to it.
+  virtual Message* add_message() = 0;
+  // Returns the number of messages.
+  virtual size_t num_messages() const = 0;
+};
+
 // Represents a repeated proto message.
 //
 // Usage:
@@ -144,10 +167,10 @@ class Message {
 //
 // This class is not thread-safe.
 template <typename MessageT>
-class RepeatedMessageField : public Field {
+class RepeatedMessageField : public RepeatedMessageFieldBase {
  public:
   explicit RepeatedMessageField(int field_number)
-      : Field(field_number, WireType::kLengthDelimited) {}
+      : RepeatedMessageFieldBase(field_number) {}
 
   // Copyable and movable.
   RepeatedMessageField(const RepeatedMessageField&) = default;
@@ -156,61 +179,6 @@ class RepeatedMessageField : public Field {
   RepeatedMessageField& operator=(RepeatedMessageField&&) noexcept = default;
 
   void Clear() override { values_.clear(); }
-
-  bool ConsumeIntoMember(ParsingState& serialized) override {
-    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
-    if (!length.ok()) {
-      return false;
-    }
-    if (*length > serialized.RemainingData().size()) {
-      return false;
-    }
-    ParsingState submessage_parsing_state =
-        serialized.SplitOffSubmessageState(*length);
-    MessageT parsed_message;
-    if (!parsed_message.Parse(submessage_parsing_state)) {
-      return false;
-    }
-    ABSL_QCHECK(submessage_parsing_state.ParsingDone());
-    values_.push_back(std::move(parsed_message));
-    return true;
-  }
-
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
-    for (const MessageT& message : values_) {
-      if (absl::Status res = SerializeWireTypeAndFieldNumber(
-              GetWireType(), FieldNumber(), out);
-          !res.ok()) {
-        return res;
-      }
-      const size_t size = message.ByteSizeLong();
-      if (absl::Status res = SerializeVarint(size, out); !res.ok()) {
-        return res;
-      }
-      if (out.GetBuffer().size() < size) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
-      }
-      // Serialize the message.
-      if (!message.Serialize(out)) {
-        return absl::InternalError("Failed to serialize message");
-      }
-    }
-    return absl::OkStatus();
-  }
-
-  size_t GetSerializedSizeIncludingTag() const override {
-    const size_t wire_type_and_field_number_length =
-        WireTypeAndFieldNumberLength(GetWireType(), FieldNumber());
-    return absl::c_accumulate(
-        values_, 0,
-        [wire_type_and_field_number_length](size_t sum,
-                                            const MessageT& message) {
-          const size_t message_size = message.ByteSizeLong();
-          return sum + message_size + VarintLength(message_size) +
-                 wire_type_and_field_number_length;
-        });
-  }
 
   // See https://protobuf.dev/reference/cpp/cpp-generated/#repeatedmessage.
   int values_size() const { return values_.size(); }
@@ -224,10 +192,14 @@ class RepeatedMessageField : public Field {
   std::vector<MessageT>* mutable_values() { return &values_; }
 
  private:
+  const Message& message(int i) const override { return values(i); }
+  Message* add_message() override { return add_values(); }
+  size_t num_messages() const override { return values_size(); }
+
   std::vector<MessageT> values_;
 };
 
-// Base class for MessageField and RepeatedMessageField.
+// Base class for MessageField.
 //
 // It implements all methods of `Field` but `Clear`.
 class MessageFieldBase : public Field {

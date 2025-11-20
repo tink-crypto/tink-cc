@@ -43,6 +43,8 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
+// Message.
+
 bool Message::FieldsAreSorted() const {
   for (size_t i = 1; i < num_fields(); ++i) {
     if (field(i - 1)->FieldNumber() >= field(i)->FieldNumber()) {
@@ -182,6 +184,8 @@ bool Message::Parse(ParsingState& in) {
   return true;
 }
 
+// MessageFieldBase.
+
 bool MessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
   if (!length.ok()) {
@@ -231,6 +235,63 @@ size_t MessageFieldBase::GetSerializedSizeIncludingTag() const {
   const size_t size = msg->ByteSizeLong();
   return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
          VarintLength(size) + size;
+}
+
+// RepeatedMessageFieldBase.
+
+bool RepeatedMessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
+  absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
+  if (!length.ok()) {
+    return false;
+  }
+  if (*length > serialized.RemainingData().size()) {
+    return false;
+  }
+  ParsingState submessage_parsing_state =
+      serialized.SplitOffSubmessageState(*length);
+  Message* to_add = add_message();
+  if (!to_add->Parse(submessage_parsing_state)) {
+    return false;
+  }
+  ABSL_QCHECK(submessage_parsing_state.ParsingDone());
+  return true;
+}
+
+absl::Status RepeatedMessageFieldBase::SerializeWithTagInto(
+    SerializationState& out) const {
+  for (int i = 0; i < num_messages(); ++i) {
+    const Message& msg = message(i);
+    if (absl::Status res =
+            SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
+        !res.ok()) {
+      return res;
+    }
+    const size_t size = msg.ByteSizeLong();
+    if (absl::Status res = SerializeVarint(size, out); !res.ok()) {
+      return res;
+    }
+    if (out.GetBuffer().size() < size) {
+      return absl::InvalidArgumentError(absl::StrCat(
+          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+    }
+    // Serialize the message.
+    if (!msg.Serialize(out)) {
+      return absl::InternalError("Failed to serialize message");
+    }
+  }
+  return absl::OkStatus();
+}
+
+size_t RepeatedMessageFieldBase::GetSerializedSizeIncludingTag() const {
+  const size_t wire_type_and_field_number_length =
+      WireTypeAndFieldNumberLength(GetWireType(), FieldNumber());
+  size_t size = 0;
+  for (int i = 0; i < num_messages(); ++i) {
+    const Message& msg = message(i);
+    size += msg.ByteSizeLong() + VarintLength(msg.ByteSizeLong()) +
+            wire_type_and_field_number_length;
+  }
+  return size;
 }
 
 }  // namespace proto_parsing

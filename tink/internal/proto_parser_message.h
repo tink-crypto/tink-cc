@@ -35,6 +35,7 @@
 #include "absl/types/optional.h"
 #include "absl/types/span.h"
 #include "tink/internal/proto_parser_fields.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_data.h"
@@ -271,6 +272,14 @@ class MessageFieldBase : public Field {
 //   SecretDataField some_other_string_{2};
 // };
 //
+// Note:
+// * if options == ProtoFieldOptions::kAlwaysPresent, then the field is
+//   always present (i.e., has_value() never returns false). This forces
+//   serialization as well, which is useful if the field is LEGACY_REQUIRED in
+//   proto.
+// * if options == ProtoFieldOptions::kNone, then the field is serialized
+//   only if the value is set (even if with a default value).
+//
 // This class is not thread-safe.
 template <typename MessageT>
 class MessageField : public MessageFieldBase {
@@ -284,7 +293,11 @@ class MessageField : public MessageFieldBase {
                 "MessageT must be move assignable.");
 
  public:
-  explicit MessageField(int field_number) : MessageFieldBase(field_number) {}
+  explicit MessageField(int field_number,
+                        ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      : MessageFieldBase(field_number), options_(options) {
+    Clear();
+  }
 
   // Copyable and movable.
   MessageField(const MessageField&) = default;
@@ -292,9 +305,25 @@ class MessageField : public MessageFieldBase {
   MessageField(MessageField&&) noexcept = default;
   MessageField& operator=(MessageField&&) noexcept = default;
 
-  void Clear() override { value_.reset(); }
+  // Clears the field.
+  //
+  // If options_ == ProtoFieldOptions::kAlwaysPresent then the field is set to
+  // the default value. Otherwise the optional field is cleared.
+  void Clear() override {
+    if (options_ == ProtoFieldOptions::kAlwaysPresent) {
+      value_.emplace();
+    } else {
+      value_.reset();
+    }
+  }
 
-  // See https://protobuf.dev/reference/cpp/cpp-generated/#embeddedmessage.
+  // APIs. See
+  // https://protobuf.dev/reference/cpp/cpp-generated/#embeddedmessage.
+
+  // Returns whether the field has value.
+  //
+  // If options_ == ProtoFieldOptions::kAlwaysPresent this is always true as the
+  // class guarantees that value_ always has a value.
   bool has_value() const { return value_.has_value(); }
   const MessageT& value() const {
     if (value_.has_value()) {
@@ -306,7 +335,7 @@ class MessageField : public MessageFieldBase {
     if (!value_.has_value()) {
       value_.emplace();
     }
-    return &*value_;
+    return &value_.value();
   }
 
  private:
@@ -324,7 +353,9 @@ class MessageField : public MessageFieldBase {
     static const absl::NoDestructor<MessageT> default_value;
     return *default_value;
   }
+
   absl::optional<MessageT> value_ = absl::nullopt;
+  ProtoFieldOptions options_;
 };
 
 }  // namespace proto_parsing

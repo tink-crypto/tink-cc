@@ -1948,6 +1948,7 @@ tink_cc_library(
   DEPS
     tink::internal::call_with_core_dump_protection
     tink::internal::proto_parser_fields
+    tink::internal::proto_parser_options
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::secret_buffer

@@ -798,6 +798,41 @@ TEST(MessageFieldTest, SerializeNulloptProducesEmptySerialization) {
   EXPECT_THAT(buffer, Eq("abc"));
 }
 
+// When the options are set to kAlwaysPresent, we produce a non-empty
+// serialization.
+TEST(MessageFieldTest, SerializekAlwaysPresentProducesNonEmptySerialization) {
+  MessageField<InnerStruct> field(1, ProtoFieldOptions::kAlwaysPresent);
+
+  std::string buffer = "abcabc";
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(4));
+  EXPECT_THAT(buffer, absl::StrCat(test::HexDecodeOrDie("0a00"), "cabc"));
+}
+
+TEST(MessageFieldTest, HasValueAlwaysTrueIfkAlwaysPresent) {
+  MessageField<InnerStruct> field(1, ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  *field.mutable_value() = InnerStruct{};
+  EXPECT_THAT(field.has_value(), IsTrue());
+}
+
+TEST(MessageFieldTest, HasValueIsFalseIfkNone) {
+  MessageField<InnerStruct> field(1, ProtoFieldOptions::kNone);
+  EXPECT_THAT(field.has_value(), IsFalse());
+  *field.mutable_value() = InnerStruct{};
+  EXPECT_THAT(field.has_value(), IsTrue());
+
+  // The value is serialized.
+  std::string buffer = "abcabc";
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(4));
+  EXPECT_THAT(buffer, absl::StrCat(test::HexDecodeOrDie("0a00"), "cabc"));
+}
+
 // When the optional struct is set to the default value, we produce a
 // serialization of the empty submessage.
 TEST(MessageFieldTest,

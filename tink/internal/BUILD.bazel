@@ -2028,6 +2028,7 @@ cc_library(
         "//tink/subtle:subtle_util",
         "//tink/util:secret_data",
         "@abseil-cpp//absl/algorithm:container",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/crc:crc32c",

@@ -22,6 +22,7 @@
 #include <type_traits>
 #include <vector>
 
+#include "absl/base/attributes.h"
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
@@ -321,6 +322,7 @@ class MessageField : public MessageFieldBase {
     return &value_.value();
   }
 
+  ABSL_ATTRIBUTE_NOINLINE
   const MessageT& DefaultValue() const {
     static const absl::NoDestructor<MessageT> default_value;
     return *default_value;

@@ -17,11 +17,14 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
+#include "absl/base/no_destructor.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
 
@@ -92,7 +95,19 @@ size_t Uint64Field::GetSerializedSizeIncludingTag() const {
 
 // BytesField.
 
-void BytesField::Clear() { value_.clear(); }
+BytesField::BytesField(uint32_t field_number, ProtoFieldOptions options)
+    : Field(field_number, WireType::kLengthDelimited), options_(options) {
+  Clear();
+}
+
+void BytesField::Clear() {
+  if (options_ == ProtoFieldOptions::kAlwaysPresent) {
+    value_.emplace();
+  } else {
+    value_.reset();
+  }
+}
+
 bool BytesField::ConsumeIntoMember(ParsingState& serialized) {
   absl::StatusOr<absl::string_view> result =
       ConsumeBytesReturnStringView(serialized);
@@ -102,8 +117,9 @@ bool BytesField::ConsumeIntoMember(ParsingState& serialized) {
   set_value(*result);
   return true;
 }
+
 absl::Status BytesField::SerializeWithTagInto(SerializationState& out) const {
-  if (!RequiresSerialization()) {
+  if (!value_.has_value()) {
     return absl::OkStatus();
   }
 
@@ -112,7 +128,7 @@ absl::Status BytesField::SerializeWithTagInto(SerializationState& out) const {
       !result.ok()) {
     return result;
   }
-  size_t size = value_.size();
+  const size_t size = value_->size();
   if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
     return result;
   }
@@ -121,18 +137,41 @@ absl::Status BytesField::SerializeWithTagInto(SerializationState& out) const {
         "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
   }
   // size is guaranteed to be <= out.GetBuffer().size().
-  value_.copy(out.GetBuffer().data(), size);
+  value_->copy(out.GetBuffer().data(), size);
   out.Advance(size);
   return absl::OkStatus();
 }
 
 size_t BytesField::GetSerializedSizeIncludingTag() const {
-  if (!RequiresSerialization()) {
+  if (!value_.has_value()) {
     return 0;
   }
-  size_t size = value_.size();
+  const size_t size = value_->size();
   return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
          VarintLength(size) + size;
+}
+
+void BytesField::set_value(absl::string_view value) {
+  value_ = std::string(value);
+}
+
+const std::string& BytesField::value() const {
+  if (!value_.has_value()) {
+    return default_value();
+  }
+  return *value_;
+}
+
+std::string* BytesField::mutable_value() {
+  if (!value_.has_value()) {
+    value_.emplace();
+  }
+  return &*value_;
+}
+
+const std::string& BytesField::default_value() const {
+  static const absl::NoDestructor<std::string> kDefaultValue;
+  return *kDefaultValue;
 }
 
 }  // namespace proto_parsing

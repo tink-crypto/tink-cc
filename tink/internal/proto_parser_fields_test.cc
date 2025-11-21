@@ -29,6 +29,7 @@
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
+#include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -405,15 +406,29 @@ TEST(Uint64Field, GetWireType) {
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kVarint));
 }
 
-// StringBytesField ============================================================
-TEST(StringBytesField, ClearMemberWorks) {
-  BytesField field(kBytesField1Number);
+// BytesField ============================================================
+
+TEST(BytesField, ClearkNone) {
+  BytesField field(1, ProtoFieldOptions::kNone);
+  EXPECT_FALSE(field.has_value());
   field.set_value("hello");
+  EXPECT_TRUE(field.has_value());
   field.Clear();
-  EXPECT_THAT(field.value(), Eq(""));
+  EXPECT_FALSE(field.has_value());
+  EXPECT_THAT(field.value(), IsEmpty());
 }
 
-TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
+TEST(BytesField, ClearkAlwaysPresent) {
+  BytesField field(1, ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_TRUE(field.has_value());
+  *field.mutable_value() = "hello";
+  EXPECT_TRUE(field.has_value());
+  field.Clear();
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+}
+
+TEST(BytesField, ConsumeIntoMemberSuccessCases) {
   BytesField field(kBytesField1Number);
   field.set_value("hello");
 
@@ -425,7 +440,7 @@ TEST(StringBytesField, ConsumeIntoMemberSuccessCases) {
   EXPECT_THAT(parsing_state.RemainingData(), Eq("XYZ"));
 }
 
-TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
+TEST(BytesField, ConsumeIntoMemberEmptyString) {
   BytesField field(kBytesField1Number);
   field.set_value("hello");
 
@@ -436,7 +451,7 @@ TEST(StringBytesField, ConsumeIntoMemberEmptyString) {
   EXPECT_THAT(parsing_state.RemainingData(), Eq("abcde"));
 }
 
-TEST(StringBytesField, EmptyWithoutVarint) {
+TEST(BytesField, EmptyWithoutVarint) {
   BytesField field(kBytesField1Number);
 
   std::string bytes = "";
@@ -444,7 +459,7 @@ TEST(StringBytesField, EmptyWithoutVarint) {
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
 }
 
-TEST(StringBytesField, InvalidVarint) {
+TEST(BytesField, InvalidVarint) {
   BytesField field(kBytesField1Number);
 
   std::string bytes = absl::StrCat(HexDecodeOrDie("808080808000"), "abcde");
@@ -452,18 +467,26 @@ TEST(StringBytesField, InvalidVarint) {
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
 }
 
-TEST(StringBytesField, SerializeEmpty) {
-  BytesField field(kBytesField1Number);
-  field.set_value("");
-  std::string buffer = "a";
-  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+TEST(BytesField, SerializeEmptykNone) {
+  BytesField field(kBytesField1Number, ProtoFieldOptions::kNone);
+  EXPECT_FALSE(field.has_value());
+  EXPECT_THAT(field.value(), IsEmpty());
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+
+  field.set_value("");
+  std::string buffer = "ab";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
   EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
-  EXPECT_THAT(state.GetBuffer().size(), Eq(1));
+  EXPECT_THAT(state.GetBuffer().size(), Eq(0));
 }
 
-TEST(StringBytesField, SerializeEmptyAlwaysSerialize) {
+TEST(BytesField, SerializeEmptykAlwaysPresent) {
   BytesField field(kBytesField1Number, ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(field.value(), IsEmpty());
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+
   field.set_value("");
   std::string buffer = "ab";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -473,7 +496,7 @@ TEST(StringBytesField, SerializeEmptyAlwaysSerialize) {
   EXPECT_THAT(HexEncode(buffer), Eq("1a00"));
 }
 
-TEST(StringBytesField, SerializeNonEmpty) {
+TEST(BytesField, SerializeNonEmpty) {
   BytesField field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
@@ -488,7 +511,7 @@ TEST(StringBytesField, SerializeNonEmpty) {
                                       "This is some text", "UFFER")));
 }
 
-TEST(StringBytesField, SerializeTooSmallBuffer) {
+TEST(BytesField, SerializeTooSmallBuffer) {
   BytesField field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer = "BUFFERBUFFERBUFF";
@@ -497,7 +520,7 @@ TEST(StringBytesField, SerializeTooSmallBuffer) {
 }
 
 // The buffer won't even hold the varint.
-TEST(StringBytesField, SerializeVerySmallBuffer) {
+TEST(BytesField, SerializeVerySmallBuffer) {
   BytesField field(kBytesField1Number);
   field.set_value("This is some text");
   std::string buffer;
@@ -505,12 +528,12 @@ TEST(StringBytesField, SerializeVerySmallBuffer) {
   EXPECT_THAT(field.SerializeWithTagInto(buffer_span), Not(IsOk()));
 }
 
-TEST(StringBytesField, GetWireType) {
+TEST(BytesField, GetWireType) {
   BytesField field(kBytesField1Number);
   EXPECT_THAT(field.GetWireType(), Eq(WireType::kLengthDelimited));
 }
 
-TEST(StringBytesField, CopyAndMove) {
+TEST(BytesField, CopyAndMove) {
   BytesField field1(kBytesField1Number);
   field1.set_value("test_string");
 

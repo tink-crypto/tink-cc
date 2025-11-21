@@ -18,6 +18,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 #include <string>
 
 #include "absl/base/attributes.h"
@@ -120,11 +121,21 @@ class Uint64Field : public Field {
   uint64_t value_ = 0;
 };
 
+// Represents a proto field that owns a string.
+//
+// Note:
+// * if options == ProtoFieldOptions::kAlwaysPresent, then the field is
+//   always present (i.e., has_value() never returns false). This forces
+//   serialization as well, which is useful if the field is LEGACY_REQUIRED in
+//   proto.
+// * if options == ProtoFieldOptions::kNone, then the field is serialized
+//   only if the value is set (even if with a default value).
+//
+// This class is not thread-safe.
 class BytesField final : public Field {
  public:
   explicit BytesField(uint32_t field_number,
-                      ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : Field(field_number, WireType::kLengthDelimited), options_(options) {}
+                      ProtoFieldOptions options = ProtoFieldOptions::kNone);
   // Copyable and movable.
   BytesField(const BytesField&) = default;
   BytesField& operator=(const BytesField&) = default;
@@ -136,16 +147,15 @@ class BytesField final : public Field {
   absl::Status SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
-  void set_value(absl::string_view value) { value_ = std::string(value); }
-  const std::string& value() const { return value_; }
-  std::string* mutable_value() { return &value_; }
+  bool has_value() const { return value_.has_value(); }
+  void set_value(absl::string_view value);
+  const std::string& value() const;
+  std::string* mutable_value();
 
  private:
-  bool RequiresSerialization() const {
-    return options_ == ProtoFieldOptions::kAlwaysPresent || !value_.empty();
-  }
+  const std::string& default_value() const;
 
-  std::string value_;
+  std::optional<std::string> value_;
   ProtoFieldOptions options_;
 };
 

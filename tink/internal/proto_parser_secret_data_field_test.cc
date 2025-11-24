@@ -21,7 +21,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/crc/crc32c.h"
-#include "absl/strings/escaping.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
@@ -56,12 +55,25 @@ absl::crc32c_t GetCrc32c(const SecretData& secret_data) {
 #endif
 }
 
-TEST(SecretDataField, ClearMemberWorks) {
-  SecretDataField field(1);
+TEST(SecretDataField, ClearkNone) {
+  SecretDataField field(1, ProtoFieldOptions::kNone);
+  EXPECT_FALSE(field.has_value());
   *field.mutable_value() = SecretDataFromStringView("hello");
+  EXPECT_TRUE(field.has_value());
   field.Clear();
+  EXPECT_FALSE(field.has_value());
   EXPECT_THAT(field.value(), IsEmpty());
   EXPECT_THAT(GetCrc32c(field.value()), Eq(absl::crc32c_t{0}));
+}
+
+TEST(SecretDataField, ClearkAlwaysPresent) {
+  SecretDataField field(1, ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_TRUE(field.has_value());
+  *field.mutable_value() = SecretDataFromStringView("hello");
+  EXPECT_TRUE(field.has_value());
+  field.Clear();
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
 }
 
 TEST(SecretDataField, ConsumeIntoMemberWithCrcSuccessCases) {
@@ -148,9 +160,11 @@ TEST(SecretDataField, ExistingCRCIsExtendedWhenParsing) {
                   "Existing", HexDecodeOrDie("0a"), "1234567890"))));
 }
 
-TEST(SecretDataField, SerializeEmptyWithoutCrcDoesntSerialize) {
+TEST(SecretDataField, SerializeEmptyWithoutCrcIfNotSetkNone) {
   SecretDataField field(1);
-  *field.mutable_value() = SecretDataFromStringView("");
+  EXPECT_FALSE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
@@ -158,16 +172,77 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcDoesntSerialize) {
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
 }
 
-TEST(SecretDataField, SerializeEmptyWithCrcDoesntSerialize) {
+TEST(SecretDataField, SerializeEmptyWithoutCrcIfNotSetkAlwaysPresent) {
+  SecretDataField field(1, ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+
+  std::string buffer = "BUFFERBUFFERBUFFER";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
+  EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
+}
+
+TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkNone) {
   SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("");
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+
+  std::string buffer = "BUFFERBUFFERBUFFER";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
+  EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
+}
+
+TEST(SecretDataField, SerializeEmptyWithCrcIfNotSetkNone) {
+  SecretDataField field(1);
+  EXPECT_FALSE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
   EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
-  EXPECT_THAT(crc, Eq(absl::crc32c_t{}));
+  EXPECT_THAT(crc, Eq(absl::crc32c_t{0}));
+}
+
+TEST(SecretDataField, SerializeEmptyWithCrcIfSetkAlwaysPresent) {
+  SecretDataField field(1, ProtoFieldOptions::kAlwaysPresent);
+  *field.mutable_value() = SecretDataFromStringView("");
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+
+  std::string buffer = "BUFFERBUFFERBUFFER";
+  absl::crc32c_t crc{};
+  SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
+  EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(HexDecodeOrDie("0a00"))));
+}
+
+TEST(SecretDataField, SerializeEmptyWithCrcIfSetkNone) {
+  SecretDataField field(1);
+  *field.mutable_value() = SecretDataFromStringView("");
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+
+  std::string buffer = "BUFFERBUFFERBUFFER";
+  absl::crc32c_t crc{};
+  SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
+  EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
+  EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(HexDecodeOrDie("0a00"))));
 }
 
 TEST(SecretDataField, SerializeEmptyWithoutCrcAlwaysSerialize) {

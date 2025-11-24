@@ -2012,6 +2012,7 @@ tink_cc_library(
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::safe_stringops
+    absl::no_destructor
     absl::crc32c
     absl::status
     absl::statusor

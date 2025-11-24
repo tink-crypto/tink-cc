@@ -2086,6 +2086,7 @@ cc_library(
         ":safe_stringops",
         "//tink:secret_data",
         "//tink/util:secret_data",
+        "@abseil-cpp//absl/base:no_destructor",
         "@abseil-cpp//absl/crc:crc32c",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

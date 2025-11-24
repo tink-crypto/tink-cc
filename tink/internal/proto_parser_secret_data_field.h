@@ -13,17 +13,17 @@
 // limitations under the License.
 //
 ///////////////////////////////////////////////////////////////////////////////
-#ifndef TINK_INTERNAL_PROTO_PARSER_SECRET_DATA_OWNING_FIELD_H_
-#define TINK_INTERNAL_PROTO_PARSER_SECRET_DATA_OWNING_FIELD_H_
+#ifndef TINK_INTERNAL_PROTO_PARSER_SECRET_DATA_FIELD_H_
+#define TINK_INTERNAL_PROTO_PARSER_SECRET_DATA_FIELD_H_
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 #include "absl/status/status.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
-#include "tink/internal/proto_parsing_helpers.h"
 #include "tink/secret_data.h"
 
 namespace crypto {
@@ -32,11 +32,20 @@ namespace internal {
 namespace proto_parsing {
 
 // SecretDataField is a Field that owns a SecretData.
+//
+// Note:
+// * if options == ProtoFieldOptions::kAlwaysPresent, then the field is
+//   always present (i.e., has_value() never returns false). This forces
+//   serialization as well, which is useful if the field is LEGACY_REQUIRED in
+//   proto.
+// * if options == ProtoFieldOptions::kNone, then the field is serialized
+//   only if the value is set (even if with a default value).
+//
+// This class is not thread-safe.
 class SecretDataField final : public Field {
  public:
-  explicit SecretDataField(uint32_t field_number,
-                           ProtoFieldOptions options = ProtoFieldOptions::kNone)
-      : Field(field_number, WireType::kLengthDelimited), options_(options) {}
+  explicit SecretDataField(uint32_t field_number, ProtoFieldOptions options =
+                                                      ProtoFieldOptions::kNone);
   // Copyable and movable.
   SecretDataField(const SecretDataField&) = default;
   SecretDataField& operator=(const SecretDataField&) = default;
@@ -48,11 +57,14 @@ class SecretDataField final : public Field {
   absl::Status SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
-  const SecretData& value() const { return value_; }
-  SecretData* mutable_value() { return &value_; }
+  bool has_value() const;
+  const SecretData& value() const;
+  SecretData* mutable_value();
 
  private:
-  SecretData value_;
+  const SecretData& default_value() const;
+
+  std::optional<SecretData> value_;
   ProtoFieldOptions options_;
 };
 
@@ -61,4 +73,4 @@ class SecretDataField final : public Field {
 }  // namespace tink
 }  // namespace crypto
 
-#endif  // TINK_INTERNAL_PROTO_PARSER_SECRET_DATA_OWNING_FIELD_H_
+#endif  // TINK_INTERNAL_PROTO_PARSER_SECRET_DATA_FIELD_H_

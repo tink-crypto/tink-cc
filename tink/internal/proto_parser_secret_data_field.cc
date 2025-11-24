@@ -18,12 +18,14 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "absl/base/no_destructor.h"
 #include "absl/crc/crc32c.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
@@ -36,12 +38,25 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-void SecretDataField::Clear() { value_ = SecretData(); }
+SecretDataField::SecretDataField(uint32_t field_number,
+                                 ProtoFieldOptions options)
+    : Field(field_number, WireType::kLengthDelimited), options_(options) {
+  Clear();
+}
+
+void SecretDataField::Clear() {
+  if (options_ == ProtoFieldOptions::kAlwaysPresent) {
+    value_.emplace();
+  } else {
+    value_.reset();
+  }
+}
 bool SecretDataField::ConsumeIntoMember(ParsingState& serialized) {
   absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
   if (!length.ok()) {
     return false;
   }
+
   if (*length > serialized.RemainingData().size()) {
     return false;
   }
@@ -60,7 +75,7 @@ bool SecretDataField::ConsumeIntoMember(ParsingState& serialized) {
 }
 absl::Status SecretDataField::SerializeWithTagInto(
     SerializationState& out) const {
-  if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysPresent) {
+  if (!value_.has_value()) {
     return absl::OkStatus();
   }
   if (absl::Status result = SerializeWireTypeAndFieldNumber(
@@ -68,10 +83,11 @@ absl::Status SecretDataField::SerializeWithTagInto(
       !result.ok()) {
     return result;
   }
-  if (absl::Status result = SerializeVarint(value_.size(), out); !result.ok()) {
+  const SecretData& value = value_.value();
+  if (absl::Status result = SerializeVarint(value.size(), out); !result.ok()) {
     return result;
   }
-  absl::string_view data_view = util::SecretDataAsStringView(value_);
+  absl::string_view data_view = util::SecretDataAsStringView(value);
   if (out.GetBuffer().size() < data_view.size()) {
     return absl::InvalidArgumentError(
         absl::StrCat("Output buffer too small: ", out.GetBuffer().size(), " < ",
@@ -82,17 +98,39 @@ absl::Status SecretDataField::SerializeWithTagInto(
   out.Advance(data_view.size());
 #else
   CallWithCoreDumpProtection(
-      [&]() { out.AdvanceWithCrc(data_view.size(), value_.GetCrc32c()); });
+      [&]() { out.AdvanceWithCrc(data_view.size(), value.GetCrc32c()); });
 #endif
   return absl::OkStatus();
 }
 size_t SecretDataField::GetSerializedSizeIncludingTag() const {
-  if (value_.empty() && options_ != ProtoFieldOptions::kAlwaysPresent) {
+  if (!value_.has_value()) {
     return 0;
   }
+  const size_t value_size = value_->size();
   return WireTypeAndFieldNumberLength(WireType::kLengthDelimited,
                                       FieldNumber()) +
-         VarintLength(value_.size()) + value_.size();
+         VarintLength(value_size) + value_size;
+}
+
+bool SecretDataField::has_value() const { return value_.has_value(); }
+
+const SecretData& SecretDataField::value() const {
+  if (!value_.has_value()) {
+    return default_value();
+  }
+  return *value_;
+}
+
+SecretData* SecretDataField::mutable_value() {
+  if (!value_.has_value()) {
+    value_.emplace();
+  }
+  return &value_.value();
+}
+
+const SecretData& SecretDataField::default_value() const {
+  static const absl::NoDestructor<SecretData> kDefaultSecretData;
+  return *kDefaultSecretData;
 }
 
 }  // namespace proto_parsing

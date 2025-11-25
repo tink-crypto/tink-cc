@@ -55,8 +55,8 @@ absl::crc32c_t GetCrc32c(const SecretData& secret_data) {
 #endif
 }
 
-TEST(SecretDataField, ClearkNone) {
-  SecretDataField field(1, ProtoFieldOptions::kNone);
+TEST(SecretDataField, ClearkExplicit) {
+  SecretDataField field(1, ProtoFieldOptions::kExplicit);
   EXPECT_FALSE(field.has_value());
   *field.mutable_value() = SecretDataFromStringView("hello");
   EXPECT_TRUE(field.has_value());
@@ -160,7 +160,7 @@ TEST(SecretDataField, ExistingCRCIsExtendedWhenParsing) {
                   "Existing", HexDecodeOrDie("0a"), "1234567890"))));
 }
 
-TEST(SecretDataField, SerializeEmptyWithoutCrcIfNotSetkNone) {
+TEST(SecretDataField, SerializeEmptyWithoutCrcIfNotSetkExplicit) {
   SecretDataField field(1);
   EXPECT_FALSE(field.has_value());
   EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
@@ -185,7 +185,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcIfNotSetkAlwaysPresent) {
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
 }
 
-TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkNone) {
+TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkExplicit) {
   SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("");
   EXPECT_TRUE(field.has_value());
@@ -199,7 +199,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkNone) {
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
 }
 
-TEST(SecretDataField, SerializeEmptyWithCrcIfNotSetkNone) {
+TEST(SecretDataField, SerializeEmptyWithCrcIfNotSetkExplicit) {
   SecretDataField field(1);
   EXPECT_FALSE(field.has_value());
   EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
@@ -229,7 +229,7 @@ TEST(SecretDataField, SerializeEmptyWithCrcIfSetkAlwaysPresent) {
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(HexDecodeOrDie("0a00"))));
 }
 
-TEST(SecretDataField, SerializeEmptyWithCrcIfSetkNone) {
+TEST(SecretDataField, SerializeEmptyWithCrcIfSetkExplicit) {
   SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("");
   EXPECT_TRUE(field.has_value());

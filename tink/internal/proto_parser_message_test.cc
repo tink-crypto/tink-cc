@@ -149,7 +149,7 @@ class Uint32FieldWrongCrc : public Field {
  public:
   explicit Uint32FieldWrongCrc(
       uint32_t field_number,
-      ProtoFieldOptions options = ProtoFieldOptions::kNone)
+      ProtoFieldOptions options = ProtoFieldOptions::kImplicit)
       : Field(field_number, WireType::kVarint), field_(field_number, options) {}
 
   // Copyable and movable.
@@ -589,6 +589,12 @@ class TestMessage : public Message {
   EnumField<TestEnum> enum_field_{4, &TestEnum_IsValid, TestEnum::kZero};
 };
 
+TEST(MessageFieldDeathTest, CannotCreateWithImplicitOption) {
+  EXPECT_DEATH(MessageField<TestMessage> field(
+                   1, crypto::tink::internal::ProtoFieldOptions::kImplicit),
+               "MessageField does not support kImplicit option.");
+}
+
 TEST(MessageFieldTest, CopyConstructor) {
   MessageField<TestMessage> field(1);
   field.mutable_value()->set_uint32_field(123);
@@ -818,8 +824,8 @@ TEST(MessageFieldTest, HasValueAlwaysTrueIfkAlwaysPresent) {
   EXPECT_THAT(field.has_value(), IsTrue());
 }
 
-TEST(MessageFieldTest, HasValueIsFalseIfkNone) {
-  MessageField<InnerStruct> field(1, ProtoFieldOptions::kNone);
+TEST(MessageFieldTest, HasValueIsFalseIfkExplicit) {
+  MessageField<InnerStruct> field(1, ProtoFieldOptions::kExplicit);
   EXPECT_THAT(field.has_value(), IsFalse());
   *field.mutable_value() = InnerStruct{};
   EXPECT_THAT(field.has_value(), IsTrue());

@@ -409,7 +409,7 @@ TEST(Uint64Field, GetWireType) {
 // BytesField ============================================================
 
 TEST(BytesField, ClearkNone) {
-  BytesField field(1, ProtoFieldOptions::kNone);
+  BytesField field(1, ProtoFieldOptions::kExplicit);
   EXPECT_FALSE(field.has_value());
   field.set_value("hello");
   EXPECT_TRUE(field.has_value());
@@ -468,7 +468,7 @@ TEST(BytesField, InvalidVarint) {
 }
 
 TEST(BytesField, SerializeEmptykNone) {
-  BytesField field(kBytesField1Number, ProtoFieldOptions::kNone);
+  BytesField field(kBytesField1Number, ProtoFieldOptions::kExplicit);
   EXPECT_FALSE(field.has_value());
   EXPECT_THAT(field.value(), IsEmpty());
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));

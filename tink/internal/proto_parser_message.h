@@ -26,6 +26,7 @@
 #include "absl/base/no_destructor.h"
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -250,7 +251,7 @@ class MessageFieldBase : public Field {
 //   always present (i.e., has_value() never returns false). This forces
 //   serialization as well, which is useful if the field is LEGACY_REQUIRED in
 //   proto.
-// * if options == ProtoFieldOptions::kNone, then the field is serialized
+// * if options == ProtoFieldOptions::kExplicit, then the field is serialized
 //   only if the value is set (even if with a default value).
 //
 // This class is not thread-safe.
@@ -266,9 +267,11 @@ class MessageField : public MessageFieldBase {
                 "MessageT must be move assignable.");
 
  public:
-  explicit MessageField(int field_number,
-                        ProtoFieldOptions options = ProtoFieldOptions::kNone)
+  explicit MessageField(int field_number, ProtoFieldOptions options =
+                                              ProtoFieldOptions::kExplicit)
       : MessageFieldBase(field_number), options_(options) {
+    ABSL_CHECK(options_ != ProtoFieldOptions::kImplicit)
+        << "MessageField does not support kImplicit option.";
     Clear();
   }
 

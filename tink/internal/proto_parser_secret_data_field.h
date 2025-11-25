@@ -38,14 +38,17 @@ namespace proto_parsing {
 //   always present (i.e., has_value() never returns false). This forces
 //   serialization as well, which is useful if the field is LEGACY_REQUIRED in
 //   proto.
-// * if options == ProtoFieldOptions::kNone, then the field is serialized
+// * if options == ProtoFieldOptions::kExplicit, then the field is serialized
 //   only if the value is set (even if with a default value).
+//
+// TODO: b/463591596 - Add support for ProtoFieldOptions::kImplicit.
 //
 // This class is not thread-safe.
 class SecretDataField final : public Field {
  public:
-  explicit SecretDataField(uint32_t field_number, ProtoFieldOptions options =
-                                                      ProtoFieldOptions::kNone);
+  explicit SecretDataField(
+      uint32_t field_number,
+      ProtoFieldOptions options = ProtoFieldOptions::kExplicit);
   // Copyable and movable.
   SecretDataField(const SecretDataField&) = default;
   SecretDataField& operator=(const SecretDataField&) = default;

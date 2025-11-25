@@ -72,7 +72,7 @@ class Field {
 class Uint32Field : public Field {
  public:
   explicit Uint32Field(uint32_t field_number,
-                       ProtoFieldOptions options = ProtoFieldOptions::kNone)
+                       ProtoFieldOptions options = ProtoFieldOptions::kImplicit)
       : Field(field_number, WireType::kVarint), options_(options) {}
 
   // Copyable and movable.
@@ -128,14 +128,16 @@ class Uint64Field : public Field {
 //   always present (i.e., has_value() never returns false). This forces
 //   serialization as well, which is useful if the field is LEGACY_REQUIRED in
 //   proto.
-// * if options == ProtoFieldOptions::kNone, then the field is serialized
+// * if options == ProtoFieldOptions::kExplicit, then the field is serialized
 //   only if the value is set (even if with a default value).
+//
+// TODO: b/463591596 - Add support for ProtoFieldOptions::kImplicit.
 //
 // This class is not thread-safe.
 class BytesField final : public Field {
  public:
   explicit BytesField(uint32_t field_number,
-                      ProtoFieldOptions options = ProtoFieldOptions::kNone);
+                      ProtoFieldOptions options = ProtoFieldOptions::kExplicit);
   // Copyable and movable.
   BytesField(const BytesField&) = default;
   BytesField& operator=(const BytesField&) = default;

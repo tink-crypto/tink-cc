@@ -21,12 +21,25 @@ namespace crypto {
 namespace tink {
 namespace internal {
 
+// Options for proto fields.
+//
+// WARNING: This isn't fully implemented yet for all fields.
+//
+// [1] https://protobuf.dev/editions/features/#field_presence.
 enum class ProtoFieldOptions {
-  // Do not serialize in case the value of the field is the default.
-  kNone = 0,
+  // Does not track field presence, serializes the field only if the value
+  // is not the default. This is equivalent to Protobufs `IMPLICIT` [1].
+  // NOTE:
+  //  - Message fields do not support this option.
+  //  - `IMPLICIT` scalar fields do no support custom default values.
+  kImplicit = 0,
+  // Tracks field presence. This means that after a call to "set_field" the
+  // field will be serialized, even if the value equals the default. This is
+  // equivalent to Protobufs `EXPLICIT` [1].
+  kExplicit = 1,
   // Consider the field to be always present, and thus serialize it even if
   // the value is the default.
-  kAlwaysPresent = 1,
+  kAlwaysPresent = 2,
 };
 
 }  // namespace internal

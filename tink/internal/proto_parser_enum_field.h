@@ -65,7 +65,7 @@ class EnumField : public EnumFieldBase {
  public:
   explicit EnumField(int field_number, std::function<bool(uint32_t)> is_valid,
                      Enum default_value = {},
-                     ProtoFieldOptions options = ProtoFieldOptions::kNone)
+                     ProtoFieldOptions options = ProtoFieldOptions::kImplicit)
       : EnumFieldBase(field_number, std::move(is_valid),
                       static_cast<uint32_t>(default_value), options) {}
 

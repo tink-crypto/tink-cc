@@ -95,13 +95,29 @@ size_t Uint64Field::GetSerializedSizeIncludingTag() const {
 
 // BytesField.
 
+bool BytesField::RequiresSerialization() const {
+  switch (options_) {
+    case ProtoFieldOptions::kExplicit:
+      // With kExplicit, value_ is serialized only if it has a value.
+      return value_.has_value();
+    case ProtoFieldOptions::kAlwaysPresent:
+      // With kAlwaysPresent, value_ is always set and is always serialized.
+      return true;
+    case ProtoFieldOptions::kImplicit:
+      // With kImplicit, value_ is always set and is serialized only if it is
+      // not equal to the default value.
+      return *value_ != default_value();
+  }
+}
+
 BytesField::BytesField(uint32_t field_number, ProtoFieldOptions options)
     : Field(field_number, WireType::kLengthDelimited), options_(options) {
   Clear();
 }
 
 void BytesField::Clear() {
-  if (options_ == ProtoFieldOptions::kAlwaysPresent) {
+  if (options_ == ProtoFieldOptions::kAlwaysPresent ||
+      options_ == ProtoFieldOptions::kImplicit) {
     value_.emplace();
   } else {
     value_.reset();
@@ -119,7 +135,7 @@ bool BytesField::ConsumeIntoMember(ParsingState& serialized) {
 }
 
 absl::Status BytesField::SerializeWithTagInto(SerializationState& out) const {
-  if (!value_.has_value()) {
+  if (!RequiresSerialization()) {
     return absl::OkStatus();
   }
 
@@ -143,7 +159,7 @@ absl::Status BytesField::SerializeWithTagInto(SerializationState& out) const {
 }
 
 size_t BytesField::GetSerializedSizeIncludingTag() const {
-  if (!value_.has_value()) {
+  if (!RequiresSerialization()) {
     return 0;
   }
   const size_t size = value_->size();

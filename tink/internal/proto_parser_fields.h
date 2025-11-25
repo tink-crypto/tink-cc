@@ -130,8 +130,11 @@ class Uint64Field : public Field {
 //   proto.
 // * if options == ProtoFieldOptions::kExplicit, then the field is serialized
 //   only if the value is set (even if with a default value).
-//
-// TODO: b/463591596 - Add support for ProtoFieldOptions::kImplicit.
+// * if options == ProtoFieldOptions::kImplicit, then has_value() always returns
+//   true; the field is serialized only if not equal to the default value (empty
+//   string).
+//   (Note: Message implementations with kImplicit fields should not
+//   expose `has_*` methods for compatibility with Protobufs.)
 //
 // This class is not thread-safe.
 class BytesField final : public Field {
@@ -155,6 +158,8 @@ class BytesField final : public Field {
   std::string* mutable_value();
 
  private:
+  bool RequiresSerialization() const;
+
   const std::string& default_value() const;
 
   std::optional<std::string> value_;

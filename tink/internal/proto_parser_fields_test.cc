@@ -408,7 +408,7 @@ TEST(Uint64Field, GetWireType) {
 
 // BytesField ============================================================
 
-TEST(BytesField, ClearkNone) {
+TEST(BytesField, ClearkExplicit) {
   BytesField field(1, ProtoFieldOptions::kExplicit);
   EXPECT_FALSE(field.has_value());
   field.set_value("hello");
@@ -416,6 +416,16 @@ TEST(BytesField, ClearkNone) {
   field.Clear();
   EXPECT_FALSE(field.has_value());
   EXPECT_THAT(field.value(), IsEmpty());
+}
+
+TEST(BytesField, ClearkImplicit) {
+  BytesField field(1, ProtoFieldOptions::kImplicit);
+  EXPECT_TRUE(field.has_value());
+  *field.mutable_value() = "hello";
+  EXPECT_TRUE(field.has_value());
+  field.Clear();
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 }
 
 TEST(BytesField, ClearkAlwaysPresent) {
@@ -467,7 +477,7 @@ TEST(BytesField, InvalidVarint) {
   EXPECT_THAT(field.ConsumeIntoMember(parsing_state), IsFalse());
 }
 
-TEST(BytesField, SerializeEmptykNone) {
+TEST(BytesField, SerializeEmptykExplicit) {
   BytesField field(kBytesField1Number, ProtoFieldOptions::kExplicit);
   EXPECT_FALSE(field.has_value());
   EXPECT_THAT(field.value(), IsEmpty());
@@ -479,6 +489,20 @@ TEST(BytesField, SerializeEmptykNone) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
   EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
   EXPECT_THAT(state.GetBuffer().size(), Eq(0));
+}
+
+TEST(BytesField, SerializeEmptykImplicit) {
+  BytesField field(kBytesField1Number, ProtoFieldOptions::kImplicit);
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(field.value(), IsEmpty());
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+
+  field.set_value("");
+  std::string buffer = "ab";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(state.GetBuffer().size(), Eq(2));
 }
 
 TEST(BytesField, SerializeEmptykAlwaysPresent) {

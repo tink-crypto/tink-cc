@@ -76,6 +76,16 @@ TEST(SecretDataField, ClearkAlwaysPresent) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
 }
 
+TEST(SecretDataField, ClearkImplicit) {
+  SecretDataField field(1, ProtoFieldOptions::kImplicit);
+  EXPECT_TRUE(field.has_value());
+  *field.mutable_value() = SecretDataFromStringView("hello");
+  EXPECT_TRUE(field.has_value());
+  field.Clear();
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+}
+
 TEST(SecretDataField, ConsumeIntoMemberWithCrcSuccessCases) {
   SecretDataField field(1);
   *field.mutable_value() = SecretDataFromStringView("before");
@@ -199,9 +209,36 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkExplicit) {
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
 }
 
+TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkImplicit) {
+  SecretDataField field(1, ProtoFieldOptions::kImplicit);
+  *field.mutable_value() = SecretDataFromStringView("");
+  EXPECT_TRUE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+
+  std::string buffer = "BUFFERBUFFERBUFFER";
+  SerializationState state = SerializationState(absl::MakeSpan(buffer));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
+}
+
 TEST(SecretDataField, SerializeEmptyWithCrcIfNotSetkExplicit) {
-  SecretDataField field(1);
+  SecretDataField field(1, ProtoFieldOptions::kExplicit);
   EXPECT_FALSE(field.has_value());
+  EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+
+  std::string buffer = "BUFFERBUFFERBUFFER";
+  absl::crc32c_t crc{};
+  SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
+  EXPECT_THAT(crc, Eq(absl::crc32c_t{0}));
+}
+
+TEST(SecretDataField, SerializeEmptyWithCrcIfNotSetkImplicit) {
+  SecretDataField field(1, ProtoFieldOptions::kImplicit);
+  EXPECT_TRUE(field.has_value());
   EXPECT_THAT(SecretDataAsStringView(field.value()), Eq(""));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 

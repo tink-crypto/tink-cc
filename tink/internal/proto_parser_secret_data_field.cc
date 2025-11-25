@@ -17,6 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <optional>
 
 #include "absl/base/no_destructor.h"
 #include "absl/crc/crc32c.h"
@@ -45,12 +46,32 @@ SecretDataField::SecretDataField(uint32_t field_number,
 }
 
 void SecretDataField::Clear() {
-  if (options_ == ProtoFieldOptions::kAlwaysPresent) {
+  if (options_ == ProtoFieldOptions::kAlwaysPresent ||
+      options_ == ProtoFieldOptions::kImplicit) {
     value_.emplace();
   } else {
     value_.reset();
   }
 }
+
+bool SecretDataField::RequiresSerialization() const {
+  switch (options_) {
+    case ProtoFieldOptions::kExplicit:
+      // With kExplicit, value_ is serialized only if it has a value.
+      return value_.has_value();
+    case ProtoFieldOptions::kAlwaysPresent:
+      // With kAlwaysPresent, value_ is always set and is always serialized.
+      return true;
+    case ProtoFieldOptions::kImplicit:
+      // With kImplicit, value_ is always set and is serialized only if it is
+      // not equal to the default value.
+      return !util::SecretDataEquals(*value_, default_value());
+    default:
+      ABSL_DCHECK(false) << "Unknown options: " << static_cast<int>(options_);
+      return false;
+  }
+}
+
 bool SecretDataField::ConsumeIntoMember(ParsingState& serialized) {
   absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
   if (!length.ok()) {
@@ -75,7 +96,7 @@ bool SecretDataField::ConsumeIntoMember(ParsingState& serialized) {
 }
 absl::Status SecretDataField::SerializeWithTagInto(
     SerializationState& out) const {
-  if (!value_.has_value()) {
+  if (!RequiresSerialization()) {
     return absl::OkStatus();
   }
   if (absl::Status result = SerializeWireTypeAndFieldNumber(
@@ -103,7 +124,7 @@ absl::Status SecretDataField::SerializeWithTagInto(
   return absl::OkStatus();
 }
 size_t SecretDataField::GetSerializedSizeIncludingTag() const {
-  if (!value_.has_value()) {
+  if (!RequiresSerialization()) {
     return 0;
   }
   const size_t value_size = value_->size();

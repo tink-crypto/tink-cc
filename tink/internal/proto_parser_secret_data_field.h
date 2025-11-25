@@ -35,15 +35,13 @@ namespace proto_parsing {
 //
 // Note:
 // * if options == ProtoFieldOptions::kAlwaysPresent, then the field is
-//   always present (i.e., has_value() is always true). This forces
+//   always present (i.e., has_value() never returns false). This forces
 //   serialization as well, which is useful if the field is LEGACY_REQUIRED in
 //   proto.
 // * if options == ProtoFieldOptions::kExplicit, then the field is serialized
 //   only if the value is set (even if with a default value).
-// * if options == ProtoFieldOptions::kImplicit, then has_value() always returns
-//   true; the field is serialized only if not equal to the default value.
-//   (Note: Message implementations with kImplicit fields should not expose
-//   `has_*` methods for compatibility with Protobufs.)
+//
+// TODO: b/463591596 - Add support for ProtoFieldOptions::kImplicit.
 //
 // This class is not thread-safe.
 class SecretDataField final : public Field {
@@ -67,8 +65,6 @@ class SecretDataField final : public Field {
   SecretData* mutable_value();
 
  private:
-  bool RequiresSerialization() const;
-
   const SecretData& default_value() const;
 
   std::optional<SecretData> value_;

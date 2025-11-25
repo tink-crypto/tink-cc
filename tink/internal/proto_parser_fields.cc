@@ -20,6 +20,7 @@
 #include <string>
 
 #include "absl/base/no_destructor.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -107,6 +108,9 @@ bool BytesField::RequiresSerialization() const {
       // With kImplicit, value_ is always set and is serialized only if it is
       // not equal to the default value.
       return *value_ != default_value();
+    default:
+      ABSL_DCHECK(false) << "Unknown options: " << static_cast<int>(options_);
+      return false;
   }
 }
 

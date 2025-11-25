@@ -1919,6 +1919,7 @@ tink_cc_library(
     tink::internal::proto_parsing_helpers
     absl::core_headers
     absl::no_destructor
+    absl::absl_check
     absl::status
     absl::statusor
     absl::strings

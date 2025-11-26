@@ -1462,36 +1462,6 @@ tink_cc_test(
 )
 
 tink_cc_library(
-  NAME proto_parser_presence_fields
-  SRCS
-    proto_parser_presence_fields.h
-  DEPS
-    tink::internal::proto_parser_fields
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_helpers
-    absl::status
-    absl::statusor
-    absl::optional
-)
-
-tink_cc_test(
-  NAME proto_parser_presence_fields_test
-  SRCS
-    proto_parser_presence_fields_test.cc
-  DEPS
-    tink::internal::proto_parser_presence_fields
-    tink::internal::proto_parser_state
-    tink::internal::proto_parsing_helpers
-    gmock
-    absl::strings
-    absl::string_view
-    absl::optional
-    absl::span
-    tink::util::test_matchers
-    tink::util::test_util
-)
-
-tink_cc_library(
   NAME proto_parser_options
   SRCS
     proto_parser_options.h

@@ -131,7 +131,7 @@ class JwtRsaSsaPssPublicKeyTP : public Message {
                                        &custom_kid_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   EnumField<JwtRsaSsaPssAlgorithmEnum> algorithm_{2,
                                                   &JwtRsaSsaPssAlgorithmValid};
   BytesField n_{3};
@@ -178,7 +178,7 @@ class JwtRsaSsaPssPrivateKeyTP : public Message {
                                        &q_,       &dp_,         &dq_, &crt_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<JwtRsaSsaPssPublicKeyTP> public_key_{2};
   SecretDataField d_{3};
   SecretDataField p_{4};
@@ -222,10 +222,10 @@ class JwtRsaSsaPssKeyFormatTP : public Message {
         &version_, &algorithm_, &modulus_size_in_bits_, &public_exponent_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   EnumField<JwtRsaSsaPssAlgorithmEnum> algorithm_{2,
                                                   &JwtRsaSsaPssAlgorithmValid};
-  Uint32Field modulus_size_in_bits_{3};
+  Uint32Field modulus_size_in_bits_{3, ProtoFieldOptions::kImplicit};
   BytesField public_exponent_{4};
 };
 

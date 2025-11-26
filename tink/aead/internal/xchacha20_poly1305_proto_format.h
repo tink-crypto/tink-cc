@@ -44,7 +44,7 @@ class XChaCha20Poly1305KeyFormatTP : public proto_parsing::Message {
     return std::array<const proto_parsing::Field*, 1>{&version_}[i];
   }
 
-  proto_parsing::Uint32Field version_{1};
+  proto_parsing::Uint32Field version_{1, ProtoFieldOptions::kImplicit};
 };
 
 }  // namespace internal

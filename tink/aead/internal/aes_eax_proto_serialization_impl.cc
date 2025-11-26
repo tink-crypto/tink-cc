@@ -81,7 +81,7 @@ class AesEaxParamsTP : public Message {
     return std::array<const Field*, 1>{&iv_size_}[i];
   }
 
-  Uint32Field iv_size_{1};
+  Uint32Field iv_size_{1, ProtoFieldOptions::kImplicit};
 };
 
 class AesEaxKeyFormatTP : public Message {
@@ -104,7 +104,7 @@ class AesEaxKeyFormatTP : public Message {
   }
 
   MessageField<AesEaxParamsTP> params_{1};
-  Uint32Field key_size_{2};
+  Uint32Field key_size_{2, ProtoFieldOptions::kImplicit};
 };
 
 class AesEaxKeyTP : public Message {
@@ -128,7 +128,7 @@ class AesEaxKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<AesEaxParamsTP> params_{2};
   SecretDataField key_value_{3};
 };

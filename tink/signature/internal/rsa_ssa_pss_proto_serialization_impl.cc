@@ -89,7 +89,7 @@ class RsaSsaPssParamsTP : public Message {
 
   EnumField<HashTypeEnum> sig_hash_{1, &HashTypeEnumIsValid};
   EnumField<HashTypeEnum> mgf1_hash_{2, &HashTypeEnumIsValid};
-  Uint32Field salt_length_{3};
+  Uint32Field salt_length_{3, ProtoFieldOptions::kImplicit};
 };
 
 class RsaSsaPssPublicKeyTP : public Message {
@@ -115,7 +115,7 @@ class RsaSsaPssPublicKeyTP : public Message {
     return std::array<const Field*, 4>{&version_, &params_, &n_, &e_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<RsaSsaPssParamsTP> params_{2};
   BytesField n_{3};
   BytesField e_{4};
@@ -159,7 +159,7 @@ class RsaSsaPssPrivateKeyTP : public Message {
                                        &q_,       &dp_,         &dq_, &crt_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<RsaSsaPssPublicKeyTP> public_key_{2};
   SecretDataField d_{3};
   SecretDataField p_{4};
@@ -199,7 +199,7 @@ class RsaSsaPssKeyFormatTP : public Message {
   }
 
   MessageField<RsaSsaPssParamsTP> params_{1};
-  Uint32Field modulus_size_in_bits_{2};
+  Uint32Field modulus_size_in_bits_{2, ProtoFieldOptions::kImplicit};
   BytesField public_exponent_{3};
 };
 

@@ -46,8 +46,8 @@ class AesGcmKeyFormatTP : public proto_parsing::Message {
     return std::array<const proto_parsing::Field*, 2>{&key_size_, &version_}[i];
   }
 
-  proto_parsing::Uint32Field key_size_{2};
-  proto_parsing::Uint32Field version_{3};
+  proto_parsing::Uint32Field key_size_{2, ProtoFieldOptions::kImplicit};
+  proto_parsing::Uint32Field version_{3, ProtoFieldOptions::kImplicit};
 };
 
 }  // namespace internal

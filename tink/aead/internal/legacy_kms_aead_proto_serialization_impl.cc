@@ -99,7 +99,7 @@ class KmsAeadKeyTP : public Message {
   const Field* field(int i) const override {
     return std::array<const Field*, 2>{&version_, &params_}[i];
   }
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<KmsAeadKeyFormatTP> params_{2};
 };
 

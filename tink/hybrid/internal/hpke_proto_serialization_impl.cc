@@ -141,7 +141,7 @@ class HpkePublicKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &params_, &public_key_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<HpkeParamsTP> params_{2};
   BytesField public_key_{3};
 };
@@ -169,7 +169,7 @@ class HpkePrivateKeyTP : public Message {
                                        &private_key_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<HpkePublicKeyTP> public_key_{2};
   SecretDataField private_key_{3};
 };

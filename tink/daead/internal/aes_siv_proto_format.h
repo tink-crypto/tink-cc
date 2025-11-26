@@ -51,8 +51,8 @@ class AesSivKeyFormatTP : public Message {
     return std::array<const Field*, 2>{&key_size_, &version_}[i];
   }
 
-  Uint32Field key_size_{1};
-  Uint32Field version_{2};
+  Uint32Field key_size_{1, ProtoFieldOptions::kImplicit};
+  Uint32Field version_{2, ProtoFieldOptions::kImplicit};
 };
 
 }  // namespace internal

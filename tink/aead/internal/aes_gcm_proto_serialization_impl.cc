@@ -76,7 +76,7 @@ class AesGcmKeyTP : public Message {
     return std::array<const Field*, 2>{&version_, &key_value_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   SecretDataField key_value_{3};
 };
 

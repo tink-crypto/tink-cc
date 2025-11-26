@@ -38,6 +38,7 @@
 #include "tink/internal/proto_parser_enum_field.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_message.h"
+#include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_secret_data_field.h"
 #include "tink/internal/tink_proto_structs.h"
 #include "tink/partial_key_access.h"
@@ -100,7 +101,7 @@ class MlKemKeyFormatTP : public Message {
     return std::array<const Field*, 2>{&version_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, internal::ProtoFieldOptions::kImplicit};
   MessageField<MlKemParamsTP> params_{2};
 };
 
@@ -123,7 +124,7 @@ class MlKemPublicKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &key_value_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, internal::ProtoFieldOptions::kImplicit};
   BytesField key_value_{2};
   MessageField<MlKemParamsTP> params_{3};
 };
@@ -147,7 +148,7 @@ class MlKemPrivateKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, internal::ProtoFieldOptions::kImplicit};
   SecretDataField key_value_{2};
   MessageField<MlKemPublicKeyTP> public_key_{3};
 };

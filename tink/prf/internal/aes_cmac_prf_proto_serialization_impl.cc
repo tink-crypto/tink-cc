@@ -69,8 +69,8 @@ class AesCmacPrfKeyFormatTP : public Message {
   const Field* field(int i) const override {
     return std::array<const Field*, 2>{&key_size_, &version_}[i];
   }
-  Uint32Field key_size_{1};
-  Uint32Field version_{2};
+  Uint32Field key_size_{1, ProtoFieldOptions::kImplicit};
+  Uint32Field version_{2, ProtoFieldOptions::kImplicit};
 };
 
 class AesCmacPrfKeyTP : public Message {
@@ -90,7 +90,7 @@ class AesCmacPrfKeyTP : public Message {
   const Field* field(int i) const override {
     return std::array<const Field*, 2>{&version_, &key_value_}[i];
   }
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   SecretDataField key_value_{2};
 };
 

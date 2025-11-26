@@ -125,7 +125,7 @@ class JwtEcdsaPublicKeyTP : public Message {
                                        &custom_kid_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
   BytesField x_{3};
   BytesField y_{4};
@@ -156,7 +156,7 @@ class JwtEcdsaPrivateKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &public_key_, &key_value_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<JwtEcdsaPublicKeyTP> public_key_{2};
   SecretDataField key_value_{3};
 };
@@ -180,7 +180,7 @@ class JwtEcdsaKeyFormatTP : public Message {
     return std::array<const Field*, 2>{&version_, &algorithm_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   EnumField<JwtEcdsaAlgorithmEnum> algorithm_{2, &JwtEcdsaAlgorithmValid};
 };
 

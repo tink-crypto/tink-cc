@@ -66,7 +66,7 @@ class XAesGcmParamsTP : public Message {
     return std::array<const Field*, 1>{&salt_size_}[i];
   }
 
-  Uint32Field salt_size_{1};
+  Uint32Field salt_size_{1, ProtoFieldOptions::kImplicit};
 };
 
 class XAesGcmKeyFormatTP : public Message {
@@ -88,7 +88,7 @@ class XAesGcmKeyFormatTP : public Message {
     return std::array<const Field*, 2>{&version_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   // reserved : 2
   MessageField<XAesGcmParamsTP> params_{3};
 };
@@ -114,7 +114,7 @@ class XAesGcmKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<XAesGcmParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};
 };

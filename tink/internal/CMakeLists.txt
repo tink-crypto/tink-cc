@@ -1940,7 +1940,6 @@ tink_cc_test(
     absl::strings
     absl::string_view
     absl::span
-    tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
 )

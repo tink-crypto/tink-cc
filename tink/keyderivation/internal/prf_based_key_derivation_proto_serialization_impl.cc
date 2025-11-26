@@ -128,7 +128,7 @@ class PrfBasedDeriverKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &prf_key_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<KeyDataTP> prf_key_{2};
   MessageField<PrfBasedDeriverParamsTP> params_{3};
 };

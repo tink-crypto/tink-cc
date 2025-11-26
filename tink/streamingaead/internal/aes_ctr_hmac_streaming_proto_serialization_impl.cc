@@ -78,7 +78,7 @@ class HmacParamsTP : public Message {
   }
 
   EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
-  Uint32Field tag_size_{2};
+  Uint32Field tag_size_{2, ProtoFieldOptions::kImplicit};
 };
 
 class AesCtrHmacStreamingParamsTP : public Message {
@@ -114,8 +114,8 @@ class AesCtrHmacStreamingParamsTP : public Message {
                                        &hmac_params_}[i];
   }
 
-  Uint32Field ciphertext_segment_size_{1};
-  Uint32Field derived_key_size_{2};
+  Uint32Field ciphertext_segment_size_{1, ProtoFieldOptions::kImplicit};
+  Uint32Field derived_key_size_{2, ProtoFieldOptions::kImplicit};
   EnumField<HashTypeEnum> hkdf_hash_type_{3, &HashTypeEnumIsValid};
   MessageField<HmacParamsTP> hmac_params_{4};
 };
@@ -143,8 +143,8 @@ class AesCtrHmacStreamingKeyFormatTP : public Message {
   }
 
   MessageField<AesCtrHmacStreamingParamsTP> params_{1};
-  Uint32Field key_size_{2};
-  Uint32Field version_{3};
+  Uint32Field key_size_{2, ProtoFieldOptions::kImplicit};
+  Uint32Field version_{3, ProtoFieldOptions::kImplicit};
 };
 
 class AesCtrHmacStreamingKeyTP : public Message {
@@ -171,7 +171,7 @@ class AesCtrHmacStreamingKeyTP : public Message {
     return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<AesCtrHmacStreamingParamsTP> params_{2};
   SecretDataField key_value_{3};
 };

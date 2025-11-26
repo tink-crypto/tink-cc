@@ -50,7 +50,7 @@ class HmacParamsTP : public proto_parsing::Message {
   }
 
   proto_parsing::EnumField<HashTypeEnum> hash_{1, &HashTypeEnumIsValid};
-  proto_parsing::Uint32Field tag_size_{2};
+  proto_parsing::Uint32Field tag_size_{2, ProtoFieldOptions::kImplicit};
 };
 
 class HmacKeyFormatTP : public proto_parsing::Message {
@@ -77,8 +77,8 @@ class HmacKeyFormatTP : public proto_parsing::Message {
   }
 
   proto_parsing::MessageField<HmacParamsTP> params_{1};
-  proto_parsing::Uint32Field key_size_{2};
-  proto_parsing::Uint32Field version_{3};
+  proto_parsing::Uint32Field key_size_{2, ProtoFieldOptions::kImplicit};
+  proto_parsing::Uint32Field version_{3, ProtoFieldOptions::kImplicit};
 };
 
 class HmacKeyTP : public proto_parsing::Message {
@@ -103,7 +103,7 @@ class HmacKeyTP : public proto_parsing::Message {
                                                       &key_value_}[i];
   }
 
-  proto_parsing::Uint32Field version_{1};
+  proto_parsing::Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   proto_parsing::MessageField<HmacParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};
 };

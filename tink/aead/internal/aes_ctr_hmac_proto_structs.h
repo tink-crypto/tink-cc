@@ -44,7 +44,7 @@ class AesCtrParamsTP : public proto_parsing::Message {
     return std::array<const proto_parsing::Field*, 1>{&iv_size_}[i];
   }
 
-  proto_parsing::Uint32Field iv_size_{1};
+  proto_parsing::Uint32Field iv_size_{1, ProtoFieldOptions::kImplicit};
 };
 
 class AesCtrKeyFormatTP : public proto_parsing::Message {
@@ -62,7 +62,7 @@ class AesCtrKeyFormatTP : public proto_parsing::Message {
   }
 
   proto_parsing::MessageField<AesCtrParamsTP> params_{1};
-  proto_parsing::Uint32Field key_size_{2};
+  proto_parsing::Uint32Field key_size_{2, ProtoFieldOptions::kImplicit};
 };
 
 class AesCtrHmacAeadKeyFormatTP : public proto_parsing::Message {
@@ -112,7 +112,7 @@ class AesCtrKeyTP : public proto_parsing::Message {
                                                       &key_value_}[i];
   }
 
-  proto_parsing::Uint32Field version_{1};
+  proto_parsing::Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   proto_parsing::MessageField<AesCtrParamsTP> params_{2};
   proto_parsing::SecretDataField key_value_{3};
 };
@@ -134,7 +134,7 @@ class AesCtrHmacAeadKeyTP : public proto_parsing::Message {
                                                       &hmac_key_}[i];
   }
 
-  proto_parsing::Uint32Field version_{1};
+  proto_parsing::Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   proto_parsing::MessageField<AesCtrKeyTP> aes_ctr_key_{2};
   proto_parsing::MessageField<HmacKeyTP> hmac_key_{3};
 };

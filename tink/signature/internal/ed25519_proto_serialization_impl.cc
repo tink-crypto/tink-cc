@@ -72,7 +72,7 @@ class Ed25519KeyFormatTP final : public Message {
   const Field* field(int i) const override {
     return std::array<const Field*, 1>{&version_}[i];
   }
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
 };
 
 class Ed25519PublicKeyTP final : public Message {
@@ -90,7 +90,7 @@ class Ed25519PublicKeyTP final : public Message {
   const Field* field(int i) const override {
     return std::array<const Field*, 2>{&version_, &key_value_}[i];
   }
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   BytesField key_value_{2};
 };
 
@@ -116,7 +116,7 @@ class Ed25519PrivateKeyTP final : public Message {
   const Field* field(int i) const override {
     return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
   }
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   proto_parsing::SecretDataField key_value_{2};
   MessageField<Ed25519PublicKeyTP> public_key_{3};
 };

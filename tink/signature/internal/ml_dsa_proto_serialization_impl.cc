@@ -109,7 +109,7 @@ class MlDsaKeyFormatTP final : public Message {
     return std::array<const Field*, 2>{&version_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<MlDsaParamsTP> params_{2};
 };
 
@@ -132,7 +132,7 @@ class MlDsaPublicKeyTP final : public Message {
     return std::array<const Field*, 3>{&version_, &key_value_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   BytesField key_value_{2};
   MessageField<MlDsaParamsTP> params_{3};
 };
@@ -158,7 +158,7 @@ class MlDsaPrivateKeyTP final : public Message {
     return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   SecretDataField key_value_{2};
   MessageField<MlDsaPublicKeyTP> public_key_{3};
 };

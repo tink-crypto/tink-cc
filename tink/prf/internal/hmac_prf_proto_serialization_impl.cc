@@ -94,7 +94,7 @@ class HmacPrfKeyTP : public Message {
   const Field* field(int i) const override {
     return std::array<const Field*, 3>{&version_, &params_, &key_value_}[i];
   }
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<HmacPrfParamsTP> params_{2};
   SecretDataField key_value_{3};
 };
@@ -119,8 +119,8 @@ class HmacPrfKeyFormatTP : public Message {
     return std::array<const Field*, 3>{&params_, &key_size_, &version_}[i];
   }
   MessageField<HmacPrfParamsTP> params_{1};
-  Uint32Field key_size_{2};
-  Uint32Field version_{3};
+  Uint32Field key_size_{2, ProtoFieldOptions::kImplicit};
+  Uint32Field version_{3, ProtoFieldOptions::kImplicit};
 };
 
 using HmacPrfProtoParametersParserImpl =

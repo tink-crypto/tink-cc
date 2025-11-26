@@ -2006,7 +2006,6 @@ cc_test(
         ":proto_parser_options",
         ":proto_parser_state",
         ":proto_parsing_helpers",
-        "//tink/util:secret_data",
         "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/strings",

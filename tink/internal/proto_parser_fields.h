@@ -69,11 +69,25 @@ class Field {
   WireType wire_type_;
 };
 
+// Represents a proto field that owns a uint32_t.
+//
+// Note:
+// * if options == ProtoFieldOptions::kAlwaysPresent, then the field is
+//   always present (i.e., has_value() never returns false). This forces
+//   serialization as well, which is useful if the field is LEGACY_REQUIRED in
+//   proto.
+// * if options == ProtoFieldOptions::kExplicit, then the field is serialized
+//   only if the value is set (even if with a default value).
+// * if options == ProtoFieldOptions::kImplicit, then has_value() always returns
+//   true; the field is serialized only if not equal to the default value (0).
+//   (Note: Message implementations with kImplicit fields should not
+//   expose `has_*` methods for compatibility with Protobufs.)
+//
+// This class is not thread-safe.
 class Uint32Field : public Field {
  public:
-  explicit Uint32Field(uint32_t field_number,
-                       ProtoFieldOptions options = ProtoFieldOptions::kImplicit)
-      : Field(field_number, WireType::kVarint), options_(options) {}
+  explicit Uint32Field(uint32_t field_number, ProtoFieldOptions options =
+                                                  ProtoFieldOptions::kExplicit);
 
   // Copyable and movable.
   Uint32Field(const Uint32Field&) = default;
@@ -86,22 +100,36 @@ class Uint32Field : public Field {
   absl::Status SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
+  bool has_value() const { return value_.has_value(); }
   void set_value(uint32_t value) { value_ = value; }
-  uint32_t value() const { return value_; }
+  uint32_t value() const { return value_.value_or(0); }
 
  private:
-  bool RequiresSerialization() const {
-    return options_ == ProtoFieldOptions::kAlwaysPresent || value_ != 0;
-  }
+  bool RequiresSerialization() const;
 
-  uint32_t value_ = 0;
+  std::optional<uint32_t> value_ = 0;
   ProtoFieldOptions options_;
 };
 
+// Represents a proto field that owns a uint64_t.
+//
+// Note:
+// * if options == ProtoFieldOptions::kAlwaysPresent, then the field is
+//   always present (i.e., has_value() never returns false). This forces
+//   serialization as well, which is useful if the field is LEGACY_REQUIRED in
+//   proto.
+// * if options == ProtoFieldOptions::kExplicit, then the field is serialized
+//   only if the value is set (even if with a default value).
+// * if options == ProtoFieldOptions::kImplicit, then has_value() always returns
+//   true; the field is serialized only if not equal to the default value (0).
+//   (Note: Message implementations with kImplicit fields should not
+//   expose `has_*` methods for compatibility with Protobufs.)
+//
+// This class is not thread-safe.
 class Uint64Field : public Field {
  public:
-  explicit Uint64Field(uint64_t field_number)
-      : Field(field_number, WireType::kVarint) {}
+  explicit Uint64Field(uint64_t field_number, ProtoFieldOptions options =
+                                                  ProtoFieldOptions::kExplicit);
 
   // Copyable and movable.
   Uint64Field(const Uint64Field&) = default;
@@ -114,11 +142,15 @@ class Uint64Field : public Field {
   absl::Status SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
+  bool has_value() const { return value_.has_value(); }
   void set_value(uint64_t value) { value_ = value; }
-  uint64_t value() const { return value_; }
+  uint64_t value() const { return value_.value_or(0); }
 
  private:
-  uint64_t value_ = 0;
+  bool RequiresSerialization() const;
+
+  std::optional<uint64_t> value_ = 0;
+  ProtoFieldOptions options_;
 };
 
 // Represents a proto field that owns a string.

@@ -78,8 +78,8 @@ class AesGcmSivKeyFormatTP : public proto_parsing::Message {
     return std::array<const proto_parsing::Field*, 2>{&version_, &key_size_}[i];
   }
 
-  proto_parsing::Uint32Field version_{1};
-  proto_parsing::Uint32Field key_size_{2};
+  proto_parsing::Uint32Field version_{1, ProtoFieldOptions::kImplicit};
+  proto_parsing::Uint32Field key_size_{2, ProtoFieldOptions::kImplicit};
 };
 
 class AesGcmSivKeyTP : public proto_parsing::Message {
@@ -101,7 +101,7 @@ class AesGcmSivKeyTP : public proto_parsing::Message {
                                                       &key_value_}[i];
   }
 
-  proto_parsing::Uint32Field version_{1};
+  proto_parsing::Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   proto_parsing::SecretDataField key_value_{3};
 };
 

@@ -70,7 +70,7 @@ class AesCmacParamProto : public Message {
     return std::array<const Field*, 1>{&tag_size_}[i];
   }
 
-  Uint32Field tag_size_{1};
+  Uint32Field tag_size_{1, ProtoFieldOptions::kImplicit};
 };
 
 // Corresponds to google.crypto.tink.AesCmacKey.
@@ -93,7 +93,7 @@ class AesCmacKeyProto : public Message {
     return std::array<const Field*, 3>{&version_, &key_value_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   SecretDataField key_value_{2};
   MessageField<AesCmacParamProto> params_{3};
 };
@@ -116,7 +116,7 @@ class AesCmacKeyFormatProto : public Message {
     return std::array<const Field*, 2>{&key_size_, &params_}[i];
   }
 
-  Uint32Field key_size_{1};
+  Uint32Field key_size_{1, ProtoFieldOptions::kImplicit};
   MessageField<AesCmacParamProto> params_{2};
 };
 

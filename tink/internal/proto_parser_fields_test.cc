@@ -29,7 +29,6 @@
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
-#include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -73,15 +72,33 @@ std::vector<std::pair<std::string, uint32_t>> Uint32TestCasesParseOnly() {
   return result;
 }
 
-TEST(Uint32Field, UninitializedValueIsZero) {
-  Uint32Field field(kUint32Field1Number);
+TEST(Uint32Field, ClearkExplicit) {
+  Uint32Field field(1, ProtoFieldOptions::kExplicit);
+  EXPECT_THAT(field.has_value(), IsFalse());
+  field.set_value(123);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  field.Clear();
+  EXPECT_THAT(field.has_value(), IsFalse());
   EXPECT_THAT(field.value(), Eq(0));
 }
 
-TEST(Uint32Field, ClearWorks) {
-  Uint32Field field(kUint32Field1Number);
+TEST(Uint32Field, ClearkImplicit) {
+  Uint32Field field(1, ProtoFieldOptions::kImplicit);
+  EXPECT_THAT(field.has_value(), IsTrue());
   field.set_value(123);
+  EXPECT_THAT(field.has_value(), IsTrue());
   field.Clear();
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(0));
+}
+
+TEST(Uint32Field, ClearkAlwaysPresent) {
+  Uint32Field field(1, ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  field.set_value(123);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  field.Clear();
+  EXPECT_THAT(field.has_value(), IsTrue());
   EXPECT_THAT(field.value(), Eq(0));
 }
 
@@ -170,31 +187,75 @@ TEST(Uint32Field, SerializeVarintLeavesRemainingData) {
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(Uint32Field, Empty) {
+TEST(Uint32Field, EmptykExplicit) {
   Uint32Field field(kUint32Field1Number);
   std::string buffer = "abcdef";
-  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsFalse());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
   field.set_value(0);
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "cdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+    EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+  }
+}
 
-  ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
-  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
-  std::string expected = "abcdef";
-  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
-  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+TEST(Uint32Field, EmptykImplicit) {
+  {
+    Uint32Field field(kUint32Field1Number, ProtoFieldOptions::kImplicit);
+    std::string buffer = "abcdef";
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
+  {
+    Uint32Field field(kUint32Field1Number, ProtoFieldOptions::kImplicit);
+    std::string buffer = "abcdef";
+    field.set_value(0);
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
 }
 
 TEST(Uint32Field, EmptyAlwaysSerialize) {
   Uint32Field field(kUint32Field1Number, ProtoFieldOptions::kAlwaysPresent);
   std::string buffer = "abcdef";
-  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "cdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+    EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+  }
   field.set_value(0);
-
-  ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
-  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
-  std::string expected = "cdef";
-  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
-  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
-  EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "cdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+    EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+  }
 }
 
 TEST(Uint32Field, FieldNumber) {
@@ -266,11 +327,34 @@ std::vector<std::pair<std::string, uint64_t>> Uint64TestCasesParseOnly() {
   return result;
 }
 
-TEST(Uint64Field, ClearMemberWorks) {
-  Uint64Field field{1};
+TEST(Uint64Field, ClearkNone) {
+  Uint64Field field(1);
+  EXPECT_THAT(field.has_value(), IsFalse());
   field.set_value(123);
+  EXPECT_THAT(field.has_value(), IsTrue());
   field.Clear();
-  EXPECT_THAT(field.value(), testing::Eq(0));
+  EXPECT_THAT(field.has_value(), IsFalse());
+  EXPECT_THAT(field.value(), Eq(0));
+}
+
+TEST(Uint64Field, ClearkImplicit) {
+  Uint64Field field(1, ProtoFieldOptions::kImplicit);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  field.set_value(123);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  field.Clear();
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(0));
+}
+
+TEST(Uint64Field, ClearkAlwaysPresent) {
+  Uint64Field field(1, ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  field.set_value(123);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  field.Clear();
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(0));
 }
 
 TEST(Uint64Field, ConsumeIntoMemberSuccessCases) {
@@ -381,17 +465,75 @@ TEST(Uint64Field, SerializeVarintLeavesRemainingData) {
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(Uint64Field, Empty) {
-  Uint64Field field{1};
+TEST(Uint64Field, EmptykExplicit) {
+  Uint64Field field(1, ProtoFieldOptions::kExplicit);
   std::string buffer = "abcdef";
-  SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsFalse());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
   field.set_value(0);
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "cdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+    EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+  }
+}
 
-  ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
-  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
-  std::string expected = "abcdef";
-  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
-  EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+TEST(Uint64Field, EmptykImplicit) {
+  {
+    Uint64Field field(1, ProtoFieldOptions::kImplicit);
+    std::string buffer = "abcdef";
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
+  {
+    Uint64Field field(1, ProtoFieldOptions::kImplicit);
+    std::string buffer = "abcdef";
+    field.set_value(0);
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
+}
+
+TEST(Uint64Field, EmptyAlwaysSerialize) {
+  Uint64Field field(1, ProtoFieldOptions::kAlwaysPresent);
+  std::string buffer = "abcdef";
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "cdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+    EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+  }
+  field.set_value(0);
+  {
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    ASSERT_THAT(field.has_value(), IsTrue());
+    ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "cdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+    EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0800"));
+  }
 }
 
 TEST(Uint64Field, FieldNumber) {

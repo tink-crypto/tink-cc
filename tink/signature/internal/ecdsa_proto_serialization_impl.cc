@@ -131,7 +131,7 @@ class EcdsaPublicKeyTP final : public Message {
     return std::array<const Field*, 4>{&version_, &params_, &x_, &y_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<EcdsaParamsTP> params_{2};
   BytesField x_{3};
   BytesField y_{4};
@@ -158,7 +158,7 @@ class EcdsaPrivateKeyTP final : public Message {
     return std::array<const Field*, 3>{&version_, &public_key_, &key_value_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<EcdsaPublicKeyTP> public_key_{2};
   SecretDataField key_value_{3};
 };
@@ -183,7 +183,7 @@ class EcdsaKeyFormatTP final : public Message {
   }
 
   MessageField<EcdsaParamsTP> params_{2};
-  Uint32Field version_{3};
+  Uint32Field version_{3, ProtoFieldOptions::kImplicit};
 };
 
 using EcdsaProtoParametersParserImpl =

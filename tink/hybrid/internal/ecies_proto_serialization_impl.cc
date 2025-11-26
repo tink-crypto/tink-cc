@@ -184,7 +184,7 @@ class ProtoEciesAeadHkdfPublicKey : public Message {
     return std::array<const Field*, 4>{&version_, &params_, &x_, &y_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<ProtoEciesAeadHkdfParams> params_{2};
   BytesField x_{3};
   BytesField y_{4};
@@ -216,7 +216,7 @@ class ProtoEciesAeadHkdfPrivateKey : public Message {
     return std::array<const Field*, 3>{&version_, &public_key_, &key_value_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<ProtoEciesAeadHkdfPublicKey> public_key_{2};
   SecretDataField key_value_{3};
 };

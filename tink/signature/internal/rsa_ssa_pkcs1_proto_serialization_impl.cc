@@ -108,7 +108,7 @@ class RsaSsaPkcs1PublicKeyMessageTP final : public Message {
     return std::array<const Field*, 4>{&version_, &params_, &n_, &e_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<RsaSsaPkcs1ParamsTP> params_{2};
   BytesField n_{3};
   BytesField e_{4};
@@ -165,7 +165,7 @@ class RsaSsaPkcs1PrivateKeyTP final : public Message {
                                        &q_,       &dp_,         &dq_, &crt_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<RsaSsaPkcs1PublicKeyMessageTP> public_key_{2};
   SecretDataField d_{3};
   SecretDataField p_{4};
@@ -206,7 +206,7 @@ class RsaSsaPkcs1KeyFormatTP final : public Message {
   }
 
   MessageField<RsaSsaPkcs1ParamsTP> params_{1};
-  Uint32Field modulus_size_in_bits_{2};
+  Uint32Field modulus_size_in_bits_{2, ProtoFieldOptions::kImplicit};
   BytesField public_exponent_{3};
 };
 

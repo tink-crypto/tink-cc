@@ -102,7 +102,7 @@ class SlhDsaParamsTP final : public Message {
     return std::array<const Field*, 3>{&key_size_, &hash_type_, &sig_type_}[i];
   }
 
-  Uint32Field key_size_{1};
+  Uint32Field key_size_{1, ProtoFieldOptions::kImplicit};
   EnumField<SlhDsaHashTypeEnum> hash_type_{2, &IsSlhDsaHashTypeValid};
   EnumField<SlhDsaSignatureTypeEnum> sig_type_{3, &IsSlhDsaSignatureTypeValid};
 };
@@ -126,7 +126,7 @@ class SlhDsaKeyFormatTP final : public Message {
     return std::array<const Field*, 2>{&version_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   MessageField<SlhDsaParamsTP> params_{2};
 };
 
@@ -149,7 +149,7 @@ class SlhDsaPublicKeyTP final : public Message {
     return std::array<const Field*, 3>{&version_, &key_value_, &params_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   BytesField key_value_{2};
   MessageField<SlhDsaParamsTP> params_{3};
 };
@@ -177,7 +177,7 @@ class SlhDsaPrivateKeyTP final : public Message {
     return std::array<const Field*, 3>{&version_, &key_value_, &public_key_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   SecretDataField key_value_{2};
   MessageField<SlhDsaPublicKeyTP> public_key_{3};
 };

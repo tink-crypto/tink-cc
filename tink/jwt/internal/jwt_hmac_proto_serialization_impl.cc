@@ -128,7 +128,7 @@ class JwtHmacKeyTP : public Message {
                                        &custom_kid_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   EnumField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
   SecretDataField key_value_{3};
   MessageField<JwtHmacCustomKidTP> custom_kid_{4};
@@ -156,9 +156,9 @@ class JwtHmacKeyFormatTP : public Message {
     return std::array<const Field*, 3>{&version_, &algorithm_, &key_size_}[i];
   }
 
-  Uint32Field version_{1};
+  Uint32Field version_{1, ProtoFieldOptions::kImplicit};
   EnumField<JwtHmacAlgorithmEnum> algorithm_{2, &JwtHmacAlgorithmValid};
-  Uint32Field key_size_{3};
+  Uint32Field key_size_{3, ProtoFieldOptions::kImplicit};
 };
 
 const absl::string_view kTypeUrl =

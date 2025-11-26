@@ -36,7 +36,35 @@ namespace proto_parsing {
 
 // Uint32Field.
 
-void Uint32Field::Clear() { value_ = 0; }
+Uint32Field::Uint32Field(uint32_t field_number, ProtoFieldOptions options)
+    : Field(field_number, WireType::kVarint), options_(options) {
+  Clear();
+}
+
+bool Uint32Field::RequiresSerialization() const {
+  switch (options_) {
+    case ProtoFieldOptions::kExplicit:
+      // With kExplicit, value_ is serialized only if it has a value.
+      return value_.has_value();
+    case ProtoFieldOptions::kAlwaysPresent:
+      // With kAlwaysPresent, value_ is always set and is always serialized.
+      return true;
+    case ProtoFieldOptions::kImplicit:
+      // With kImplicit, value_ is always set and is serialized only if it is
+      // not equal to the default value.
+      return value() != 0;
+  }
+}
+
+void Uint32Field::Clear() {
+  if (options_ == ProtoFieldOptions::kAlwaysPresent ||
+      options_ == ProtoFieldOptions::kImplicit) {
+    value_ = 0;
+  } else {
+    value_.reset();
+  }
+}
+
 bool Uint32Field::ConsumeIntoMember(ParsingState& serialized) {
   absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
   if (!result.ok()) {
@@ -45,6 +73,7 @@ bool Uint32Field::ConsumeIntoMember(ParsingState& serialized) {
   value_ = *result;
   return true;
 }
+
 absl::Status Uint32Field::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
     return absl::OkStatus();
@@ -54,19 +83,48 @@ absl::Status Uint32Field::SerializeWithTagInto(SerializationState& out) const {
   if (!status.ok()) {
     return status;
   }
-  return SerializeVarint(value_, out);
+  return SerializeVarint(*value_, out);
 }
+
 size_t Uint32Field::GetSerializedSizeIncludingTag() const {
   if (!RequiresSerialization()) {
     return 0;
   }
   return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-         VarintLength(value_);
+         VarintLength(*value_);
 }
 
 // Uint64Field.
 
-void Uint64Field::Clear() { value_ = 0; }
+Uint64Field::Uint64Field(uint64_t field_number, ProtoFieldOptions options)
+    : Field(field_number, WireType::kVarint), options_(options) {
+  Clear();
+}
+
+bool Uint64Field::RequiresSerialization() const {
+  switch (options_) {
+    case ProtoFieldOptions::kExplicit:
+      // With kExplicit, value_ is serialized only if it has a value.
+      return value_.has_value();
+    case ProtoFieldOptions::kAlwaysPresent:
+      // With kAlwaysPresent, value_ is always set and is always serialized.
+      return true;
+    case ProtoFieldOptions::kImplicit:
+      // With kImplicit, value_ is always set and is serialized only if it is
+      // not equal to the default value.
+      return value() != 0ull;
+  }
+}
+
+void Uint64Field::Clear() {
+  if (options_ == ProtoFieldOptions::kAlwaysPresent ||
+      options_ == ProtoFieldOptions::kImplicit) {
+    value_ = 0;
+  } else {
+    value_.reset();
+  }
+}
+
 bool Uint64Field::ConsumeIntoMember(ParsingState& serialized) {
   absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
   if (!result.ok()) {
@@ -75,8 +133,9 @@ bool Uint64Field::ConsumeIntoMember(ParsingState& serialized) {
   value_ = *result;
   return true;
 }
+
 absl::Status Uint64Field::SerializeWithTagInto(SerializationState& out) const {
-  if (value_ == 0) {
+  if (!RequiresSerialization()) {
     return absl::OkStatus();
   }
   absl::Status status =
@@ -84,14 +143,15 @@ absl::Status Uint64Field::SerializeWithTagInto(SerializationState& out) const {
   if (!status.ok()) {
     return status;
   }
-  return SerializeVarint(value_, out);
+  return SerializeVarint(*value_, out);
 }
+
 size_t Uint64Field::GetSerializedSizeIncludingTag() const {
-  if (value_ == 0) {
+  if (!RequiresSerialization()) {
     return 0;
   }
   return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-         VarintLength(value_);
+         VarintLength(*value_);
 }
 
 // BytesField.

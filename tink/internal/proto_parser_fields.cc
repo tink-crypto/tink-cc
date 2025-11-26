@@ -54,6 +54,8 @@ bool Uint32Field::RequiresSerialization() const {
       // not equal to the default value.
       return value() != 0;
   }
+  // TODO - handle this better.
+  return true;
 }
 
 void Uint32Field::Clear() {
@@ -114,6 +116,8 @@ bool Uint64Field::RequiresSerialization() const {
       // not equal to the default value.
       return value() != 0ull;
   }
+  // TODO - handle this better.
+  return true;
 }
 
 void Uint64Field::Clear() {

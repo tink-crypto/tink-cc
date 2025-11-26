@@ -94,25 +94,23 @@ bool SecretDataField::ConsumeIntoMember(ParsingState& serialized) {
 #endif
   return true;
 }
-absl::Status SecretDataField::SerializeWithTagInto(
+bool SecretDataField::SerializeWithTagInto(
     SerializationState& out) const {
   if (!RequiresSerialization()) {
-    return absl::OkStatus();
+    return true;
   }
   if (absl::Status result = SerializeWireTypeAndFieldNumber(
           WireType::kLengthDelimited, FieldNumber(), out);
       !result.ok()) {
-    return result;
+    return false;
   }
   const SecretData& value = value_.value();
   if (absl::Status result = SerializeVarint(value.size(), out); !result.ok()) {
-    return result;
+    return false;
   }
   absl::string_view data_view = util::SecretDataAsStringView(value);
   if (out.GetBuffer().size() < data_view.size()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Output buffer too small: ", out.GetBuffer().size(), " < ",
-                     data_view.size()));
+    return false;
   }
   SafeMemCopy(out.GetBuffer().data(), data_view.data(), data_view.size());
 #ifdef TINK_CPP_SECRET_DATA_IS_STD_VECTOR
@@ -121,7 +119,7 @@ absl::Status SecretDataField::SerializeWithTagInto(
   CallWithCoreDumpProtection(
       [&]() { out.AdvanceWithCrc(data_view.size(), value.GetCrc32c()); });
 #endif
-  return absl::OkStatus();
+  return true;
 }
 size_t SecretDataField::GetSerializedSizeIncludingTag() const {
   if (!RequiresSerialization()) {

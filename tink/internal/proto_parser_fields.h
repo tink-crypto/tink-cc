@@ -56,7 +56,7 @@ class Field {
 
   // Serializes the field into the given serialization state. Returns true if
   // the serialization was successful.
-  virtual absl::Status SerializeWithTagInto(SerializationState& out) const = 0;
+  virtual bool SerializeWithTagInto(SerializationState& out) const = 0;
 
   // Returns the size of the serialized field, including the tag.
   virtual size_t GetSerializedSizeIncludingTag() const = 0;
@@ -97,7 +97,7 @@ class Uint32Field : public Field {
 
   void Clear() override;
   bool ConsumeIntoMember(ParsingState& serialized) override;
-  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  bool SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
   bool has_value() const { return value_.has_value(); }
@@ -139,7 +139,7 @@ class Uint64Field : public Field {
 
   void Clear() override;
   bool ConsumeIntoMember(ParsingState& serialized) override;
-  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  bool SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
   bool has_value() const { return value_.has_value(); }
@@ -181,7 +181,7 @@ class BytesField final : public Field {
 
   void Clear() override;
   bool ConsumeIntoMember(ParsingState& serialized) override;
-  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  bool SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
   bool has_value() const { return value_.has_value(); }

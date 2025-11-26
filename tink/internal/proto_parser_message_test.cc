@@ -162,14 +162,14 @@ class Uint32FieldWrongCrc : public Field {
   bool ConsumeIntoMember(ParsingState& serialized) override {
     return field_.ConsumeIntoMember(serialized);
   }
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+  bool SerializeWithTagInto(SerializationState& out) const override {
     // Skip check for requires serialization.
     absl::Status status = SerializeWireTypeAndFieldNumber(
         GetWireType(), field_.FieldNumber(), out);
     if (!status.ok()) {
-      return status;
+      return false;
     }
-    return SerializeVarintWrongCrc(field_.value(), out);
+    return SerializeVarintWrongCrc(field_.value(), out).ok();
   }
   size_t GetSerializedSizeIncludingTag() const override {
     return field_.GetSerializedSizeIncludingTag();
@@ -411,7 +411,7 @@ TEST(RepeatedMessageField, SerializeEmpty) {
   std::string buffer = "abc";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(3));
   EXPECT_THAT(buffer, Eq("abc"));
 }
@@ -424,7 +424,7 @@ TEST(RepeatedMessageField, SerializeNonEmpty) {
   std::string buffer = "BUFFERBUFFERBUFFERBUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(10));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 10));
   EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[10]));
   EXPECT_THAT(buffer.substr(0, 10),
@@ -444,7 +444,7 @@ TEST(RepeatedMessageField, SerializeNonEmptyWithEmptyInnerStruct) {
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   // Tag (1 << 3 | 2) = 0x0a, Length = 0x00. Total 2 bytes.
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 2));
   EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[2]));
   EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
@@ -457,7 +457,7 @@ TEST(RepeatedMessageField, SerializeTooSmallBuffer) {
   field.mutable_values()->push_back(InnerStruct(0x23, 0x7a));
   std::string buffer = "BUFFE";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 TEST(RepeatedMessageField, SerializeSmallerBuffer) {
@@ -465,7 +465,7 @@ TEST(RepeatedMessageField, SerializeSmallerBuffer) {
   field.mutable_values()->push_back(InnerStruct(0x23, 0x7a));
   std::string buffer = "B";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 TEST(RepeatedMessageField, SerializeVerySmallBuffer) {
@@ -473,7 +473,7 @@ TEST(RepeatedMessageField, SerializeVerySmallBuffer) {
   field.mutable_values()->push_back(InnerStruct(0x23, 0x7a));
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 TEST(RepeatedMessageField, Accessors) {
@@ -799,7 +799,7 @@ TEST(MessageFieldTest, SerializeNulloptProducesEmptySerialization) {
   std::string buffer = "abc";
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(3));
   EXPECT_THAT(buffer, Eq("abc"));
 }
@@ -812,7 +812,7 @@ TEST(MessageFieldTest, SerializekAlwaysPresentProducesNonEmptySerialization) {
   std::string buffer = "abcabc";
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(4));
   EXPECT_THAT(buffer, absl::StrCat(test::HexDecodeOrDie("0a00"), "cabc"));
 }
@@ -834,7 +834,7 @@ TEST(MessageFieldTest, HasValueIsFalseIfkExplicit) {
   std::string buffer = "abcabc";
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(4));
   EXPECT_THAT(buffer, absl::StrCat(test::HexDecodeOrDie("0a00"), "cabc"));
 }
@@ -849,7 +849,7 @@ TEST(MessageFieldTest,
   std::string buffer = "abc";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(1));
   // Serialized as empty submessage.
   EXPECT_THAT(buffer.substr(0, 2), Eq(FieldWithNumber(1).IsSubMessage({})));
@@ -861,7 +861,7 @@ TEST(MessageFieldTest, SerializeNonEmpty) {
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(6));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(buffer.size() - 6));
   EXPECT_THAT(&(state.GetBuffer())[0], Eq(&buffer[6]));
   EXPECT_THAT(
@@ -877,7 +877,7 @@ TEST(MessageFieldTest, SerializeTooSmallBuffer) {
   *field.mutable_value() = InnerStruct(0x23, 0x7a);
   std::string buffer = "BUFFE";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 // The buffer can hold the tag, but not the varint of the length.
@@ -886,7 +886,7 @@ TEST(MessageFieldTest, SerializeSmallerBuffer) {
   *field.mutable_value() = InnerStruct(0x23, 0x7a);
   std::string buffer = "B";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 // The buffer won't even hold the varint.
@@ -895,7 +895,7 @@ TEST(MessageFieldTest, SerializeVerySmallBuffer) {
   *field.mutable_value() = InnerStruct(0x23, 0x7a);
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 class MessageWithBrokenFieldOrder : public Message {

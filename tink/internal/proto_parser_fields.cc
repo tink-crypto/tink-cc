@@ -76,16 +76,16 @@ bool Uint32Field::ConsumeIntoMember(ParsingState& serialized) {
   return true;
 }
 
-absl::Status Uint32Field::SerializeWithTagInto(SerializationState& out) const {
+bool Uint32Field::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
-    return absl::OkStatus();
+    return true;
   }
   absl::Status status =
       SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
   if (!status.ok()) {
-    return status;
+    return false;
   }
-  return SerializeVarint(*value_, out);
+  return SerializeVarint(*value_, out).ok();
 }
 
 size_t Uint32Field::GetSerializedSizeIncludingTag() const {
@@ -137,17 +137,16 @@ bool Uint64Field::ConsumeIntoMember(ParsingState& serialized) {
   value_ = *result;
   return true;
 }
-
-absl::Status Uint64Field::SerializeWithTagInto(SerializationState& out) const {
+bool Uint64Field::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
-    return absl::OkStatus();
+    return true;
   }
   absl::Status status =
       SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
   if (!status.ok()) {
-    return status;
+    return false;
   }
-  return SerializeVarint(*value_, out);
+  return SerializeVarint(*value_, out).ok();
 }
 
 size_t Uint64Field::GetSerializedSizeIncludingTag() const {
@@ -202,28 +201,27 @@ bool BytesField::ConsumeIntoMember(ParsingState& serialized) {
   return true;
 }
 
-absl::Status BytesField::SerializeWithTagInto(SerializationState& out) const {
+bool BytesField::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
-    return absl::OkStatus();
+    return true;
   }
 
   if (absl::Status result =
           SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
       !result.ok()) {
-    return result;
+    return false;
   }
   const size_t size = value_->size();
   if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
-    return result;
+    return false;
   }
   if (out.GetBuffer().size() < size) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+    return false;
   }
   // size is guaranteed to be <= out.GetBuffer().size().
   value_->copy(out.GetBuffer().data(), size);
   out.Advance(size);
-  return absl::OkStatus();
+  return true;
 }
 
 size_t BytesField::GetSerializedSizeIncludingTag() const {

@@ -187,7 +187,7 @@ TEST(EnumField, SerializeVarintSuccessCases) {
     std::string buffer;
     buffer.resize(expected_serialization.size());
     SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
     EXPECT_THAT(buffer, Eq(expected_serialization));
     EXPECT_THAT(buffer_span.GetBuffer().size(), Eq(0));
   }
@@ -200,7 +200,7 @@ TEST(EnumField, SerializeEmptykExplicit) {
     EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
     std::string buffer = "abcdef";
     SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
     std::string expected = "abcdef";
     EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
   }
@@ -212,7 +212,7 @@ TEST(EnumField, SerializeEmptykExplicit) {
     EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
     std::string buffer = "abcdef";
     SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
     std::string expected = "cdef";
     EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
   }
@@ -225,7 +225,7 @@ TEST(EnumField, SerializeEmptykImplicit) {
     EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
     std::string buffer = "abcdef";
     SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
     std::string expected = "abcdef";
     EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
   }
@@ -237,7 +237,7 @@ TEST(EnumField, SerializeEmptykImplicit) {
     EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
     std::string buffer = "abcdef";
     SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
     std::string expected = "abcdef";
     EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
   }
@@ -251,7 +251,7 @@ TEST(EnumField, SerializeEmptykAlwaysPresent) {
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
-  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
   std::string expected = "cdef";
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
@@ -263,7 +263,7 @@ TEST(EnumField, SerializeEmptyDifferentDefaultkExplicit) {
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k1);
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
-  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
   std::string expected = "cdef";
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
@@ -276,7 +276,7 @@ TEST(EnumField, SerializeEmptyAlwaysSerialize) {
   field.set_value(MyEnum::k0);
 
   ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
-  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
   std::string expected = "cdef";
   // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
@@ -291,7 +291,7 @@ TEST(EnumField, SerializeEmptyAlwaysSerializeDifferentDefault) {
   field.set_value(MyEnum::k1);
 
   ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
-  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsTrue());
   std::string expected = "cdef";
   // Note: absl::MakeSpan("cdef").size() == 5 (will add null terminator).
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
@@ -309,7 +309,7 @@ TEST(EnumField, SerializeVarintBufferTooSmall) {
     std::string buffer;
     buffer.resize(test_case.first.size() / 2);
     SerializationState state = SerializationState(absl::MakeSpan(buffer));
-    EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+    EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
   }
 }
 
@@ -319,7 +319,7 @@ TEST(EnumField, SerializeVarintLeavesRemainingData) {
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   field.set_value(static_cast<MyEnum>(14882));
   // Will overwrite the first two bytes with 0xa274
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(HexEncode(buffer), Eq("08a274646566"));
   std::string expected = "def";
   // Note: absl::MakeSpan("def").size() == 4 (will add null terminator).

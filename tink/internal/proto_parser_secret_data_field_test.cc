@@ -178,7 +178,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcIfNotSetkExplicit) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
 }
 
@@ -190,7 +190,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcIfNotSetkAlwaysPresent) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
 }
@@ -204,7 +204,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkExplicit) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
 }
@@ -218,7 +218,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcIfSetkImplicit) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
 }
 
@@ -231,7 +231,7 @@ TEST(SecretDataField, SerializeEmptyWithCrcIfNotSetkExplicit) {
   std::string buffer = "BUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
   EXPECT_THAT(crc, Eq(absl::crc32c_t{0}));
 }
@@ -245,7 +245,7 @@ TEST(SecretDataField, SerializeEmptyWithCrcIfNotSetkImplicit) {
   std::string buffer = "BUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
   EXPECT_THAT(crc, Eq(absl::crc32c_t{0}));
 }
@@ -260,7 +260,7 @@ TEST(SecretDataField, SerializeEmptyWithCrcIfSetkAlwaysPresent) {
   std::string buffer = "BUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(HexDecodeOrDie("0a00"))));
@@ -276,7 +276,7 @@ TEST(SecretDataField, SerializeEmptyWithCrcIfSetkExplicit) {
   std::string buffer = "BUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(HexDecodeOrDie("0a00"))));
@@ -288,7 +288,7 @@ TEST(SecretDataField, SerializeEmptyWithoutCrcAlwaysSerialize) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
 }
@@ -300,7 +300,7 @@ TEST(SecretDataField, SerializeEmptyWithCrcAlwaysSerialize) {
   std::string buffer = "BUFFERBUFFERBUFFER";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer.substr(0, 2), Eq(HexDecodeOrDie("0a00")));
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
   EXPECT_THAT(crc, Eq(absl::ComputeCrc32c(HexDecodeOrDie("0a00"))));
@@ -315,7 +315,7 @@ TEST(SecretDataField, SerializeNonEmptyWithCrc) {
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(19));
-  ASSERT_THAT(field.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(),
               Eq(buffer.size() - field.GetSerializedSizeIncludingTag()));
   EXPECT_THAT(&(state.GetBuffer())[0],
@@ -333,7 +333,7 @@ TEST(SecretDataField, SerializeNonEmptyWithoutCrc) {
   std::string buffer = "BUFFERBUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(19));
-  ASSERT_THAT(field.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(),
               Eq(buffer.size() - field.GetSerializedSizeIncludingTag()));
   EXPECT_THAT(&(state.GetBuffer())[0],
@@ -355,7 +355,7 @@ TEST(SecretDataField, CrcIsComputedFromCrc) {
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(19));
-  ASSERT_THAT(field.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(),
               Eq(buffer.size() - field.GetSerializedSizeIncludingTag()));
   EXPECT_THAT(buffer, Eq(absl::StrCat(HexDecodeOrDie("0a11"), text1, "UFFER")));
@@ -373,7 +373,7 @@ TEST(SecretDataField, SerializeTooSmallBuffer) {
   std::string buffer = "BUFFERBUFFERBUFFE";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 // The buffer won't even hold the varint.
@@ -385,7 +385,7 @@ TEST(SecretDataField, SerializeMuchTooSmallBuffer) {
   std::string buffer = "";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 // Test that when serializing, the existing CRC in the state is extended by
@@ -399,7 +399,7 @@ TEST(SecretDataField, ExistingCrcIsExtended) {
   absl::crc32c_t crc = absl::ComputeCrc32c("existing");
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(19));
-  ASSERT_THAT(field.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(),
               Eq(buffer.size() - field.GetSerializedSizeIncludingTag()));
   EXPECT_THAT(&(state.GetBuffer())[0],
@@ -449,7 +449,7 @@ TEST(SecretDataField, SerializeTooSmallBufferForSizeVarint) {
   // Buffer is big enough for tag (1 byte) but not full size varint (2 bytes).
   std::string buffer = "BU";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 TEST(SecretDataField, CopyAndMove) {

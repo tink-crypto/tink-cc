@@ -92,17 +92,16 @@ bool EnumFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   return true;
 }
 
-absl::Status EnumFieldBase::SerializeWithTagInto(
-    SerializationState& out) const {
+bool EnumFieldBase::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
-    return absl::OkStatus();
+    return true;
   }
   absl::Status status =
       SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
   if (!status.ok()) {
-    return status;
+    return false;
   }
-  return SerializeVarint(value(), out);
+  return SerializeVarint(value(), out).ok();
 }
 size_t EnumFieldBase::GetSerializedSizeIncludingTag() const {
   if (!RequiresSerialization()) {

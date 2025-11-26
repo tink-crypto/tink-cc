@@ -142,7 +142,7 @@ class RepeatedMessageFieldBase : public Field {
       default;
 
   bool ConsumeIntoMember(ParsingState& serialized) override;
-  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  bool SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
  protected:
@@ -216,7 +216,7 @@ class MessageFieldBase : public Field {
   MessageFieldBase& operator=(MessageFieldBase&&) noexcept = default;
 
   bool ConsumeIntoMember(ParsingState& serialized) override;
-  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  bool SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
  protected:

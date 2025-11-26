@@ -90,7 +90,7 @@ TEST(RepeatedSecretDataField, ConsumeOneElementWorks) {
 
   std::string buffer(12, '\0');
   SerializationState serialization_state(absl::MakeSpan(buffer));
-  ASSERT_THAT(field.SerializeWithTagInto(serialization_state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(serialization_state), IsTrue());
   EXPECT_THAT(HexEncode(buffer),
               Eq(absl::StrCat("0a0a", HexEncode("1234567890"))));
 }
@@ -116,7 +116,7 @@ TEST(RepeatedSecretDataField, ConsumeMultipleElementsWorks) {
 
   std::string buffer(13, '\0');
   SerializationState serialization_state(absl::MakeSpan(buffer));
-  ASSERT_THAT(field.SerializeWithTagInto(serialization_state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(serialization_state), IsTrue());
   EXPECT_THAT(HexEncode(buffer), Eq(absl::StrCat("0a03", HexEncode("one"),
                                                  "0a06", HexEncode("twotwo"))));
 }
@@ -160,7 +160,7 @@ TEST(RepeatedSecretDataField, SerializeEmptyDoesNotSerialize) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[0]));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
 }
@@ -175,7 +175,7 @@ TEST(RepeatedSecretDataField, SerializeEmptySecretDataWorks) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[2]));
   EXPECT_THAT(HexEncode(buffer.substr(0, 2)), Eq("0a00"));
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
@@ -190,7 +190,7 @@ TEST(RepeatedSecretDataField, SerializeMultipleSecretDatasWorks) {
 
   std::string buffer = "BUFFERBUFFERBUFFER";
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(&state.GetBuffer()[0], Eq(&buffer[13]));
   EXPECT_THAT(
       HexEncode(buffer.substr(0, 13)),
@@ -214,7 +214,7 @@ TEST(RepeatedSecretDataField, SerializeCrcIsComputedFromCrc) {
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(19));
-  ASSERT_THAT(field.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(),
               Eq(buffer.size() - field.GetSerializedSizeIncludingTag()));
   EXPECT_THAT(buffer, Eq(absl::StrCat(HexDecodeOrDie("0a11"), text1, "UFFER")));
@@ -236,7 +236,7 @@ TEST(RepeatedSecretDataField, SerializeTooSmallBuffer) {
   std::string buffer = "123456789012";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 TEST(RepeatedSecretDataField, SerializeTooSmallBuffer2) {
@@ -249,7 +249,7 @@ TEST(RepeatedSecretDataField, SerializeTooSmallBuffer2) {
   std::string buffer = "0";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 TEST(RepeatedSecretDataField, SerializeTooSmallBuffer3) {
@@ -262,7 +262,7 @@ TEST(RepeatedSecretDataField, SerializeTooSmallBuffer3) {
   std::string buffer = "";
   absl::crc32c_t crc{};
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 // Test that when serializing, the existing CRC in the state is extended by
@@ -276,7 +276,7 @@ TEST(RepeatedSecretDataField, SerializeExtendsExistingCrc) {
   absl::crc32c_t crc = absl::ComputeCrc32c("existing");
   SerializationState state = SerializationState(absl::MakeSpan(buffer), &crc);
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(19));
-  ASSERT_THAT(field.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(),
               Eq(buffer.size() - field.GetSerializedSizeIncludingTag()));
   EXPECT_THAT(&(state.GetBuffer())[0],
@@ -312,7 +312,7 @@ TEST(RepeatedSecretDataField, CopyConstructor) {
 
   std::string buffer(copied.GetSerializedSizeIncludingTag(), '\0');
   SerializationState state(absl::MakeSpan(buffer));
-  ASSERT_THAT(copied.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(copied.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(HexEncode(buffer),
               Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
                               HexEncode("secret2"))));
@@ -339,7 +339,7 @@ TEST(RepeatedSecretDataField, CopyAssignment) {
 
   std::string buffer(copied.GetSerializedSizeIncludingTag(), '\0');
   SerializationState state(absl::MakeSpan(buffer));
-  ASSERT_THAT(copied.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(copied.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(HexEncode(buffer),
               Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
                               HexEncode("secret2"))));
@@ -365,7 +365,7 @@ TEST(RepeatedSecretDataField, MoveConstructor) {
 
   std::string buffer(moved.GetSerializedSizeIncludingTag(), '\0');
   SerializationState state(absl::MakeSpan(buffer));
-  ASSERT_THAT(moved.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(moved.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(HexEncode(buffer),
               Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
                               HexEncode("secret2"))));
@@ -388,7 +388,7 @@ TEST(RepeatedSecretDataField, MoveAssignment) {
 
   std::string buffer(moved.GetSerializedSizeIncludingTag(), '\0');
   SerializationState state(absl::MakeSpan(buffer));
-  ASSERT_THAT(moved.SerializeWithTagInto(state), IsOk());
+  ASSERT_THAT(moved.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(HexEncode(buffer),
               Eq(absl::StrCat("0a07", HexEncode("secret1"), "0a07",
                               HexEncode("secret2"))));

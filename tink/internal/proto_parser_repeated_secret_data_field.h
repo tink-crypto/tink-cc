@@ -76,25 +76,23 @@ class RepeatedSecretDataField : public Field {
     return true;
   }
 
-  absl::Status SerializeWithTagInto(
+  bool SerializeWithTagInto(
       SerializationState& serialization_state) const override {
     for (const SecretData& secret_data : value_) {
       if (absl::Status result = SerializeWireTypeAndFieldNumber(
               WireType::kLengthDelimited, FieldNumber(), serialization_state);
           !result.ok()) {
-        return result;
+        return false;
       }
       absl::string_view data_view = util::SecretDataAsStringView(secret_data);
 
       if (absl::Status result =
               SerializeVarint(data_view.size(), serialization_state);
           !result.ok()) {
-        return result;
+        return false;
       }
       if (serialization_state.GetBuffer().size() < data_view.size()) {
-        return absl::InvalidArgumentError(absl::StrCat(
-            "Output buffer too small: ", serialization_state.GetBuffer().size(),
-            " < ", data_view.size()));
+        return false;
       }
       SafeMemCopy(serialization_state.GetBuffer().data(), data_view.data(),
                   data_view.size());
@@ -107,7 +105,7 @@ class RepeatedSecretDataField : public Field {
       });
 #endif
     }
-    return absl::OkStatus();
+    return true;
   }
   size_t GetSerializedSizeIncludingTag() const override {
     size_t total_size = 0;

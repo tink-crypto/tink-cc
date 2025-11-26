@@ -59,7 +59,7 @@ class SecretDataField final : public Field {
 
   void Clear() override;
   bool ConsumeIntoMember(ParsingState& serialized) override;
-  absl::Status SerializeWithTagInto(SerializationState& out) const override;
+  bool SerializeWithTagInto(SerializationState& out) const override;
   size_t GetSerializedSizeIncludingTag() const override;
 
   bool has_value() const;

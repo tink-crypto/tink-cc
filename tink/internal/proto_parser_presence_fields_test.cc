@@ -100,7 +100,7 @@ TEST(OptionalUint32Field, SerializeWithNoValue) {
   EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
   std::string buffer;
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(state.GetBuffer().size(), Eq(0));
 }
 
@@ -113,7 +113,7 @@ TEST(OptionalUint32Field, SerializeWithZero) {
   std::string buffer;
   buffer.resize(expected_serialization.size());
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer, Eq(expected_serialization));
   EXPECT_THAT(state.GetBuffer().size(), Eq(0));
 }
@@ -127,7 +127,7 @@ TEST(OptionalUint32Field, SerializeWithValue) {
   std::string buffer;
   buffer.resize(expected_serialization.size());
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), IsOk());
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsTrue());
   EXPECT_THAT(buffer, Eq(expected_serialization));
   EXPECT_THAT(state.GetBuffer().size(), Eq(0));
 }
@@ -141,7 +141,7 @@ TEST(OptionalUint32Field, SerializeWithValueTooSmallBuffer) {
   std::string buffer;
   buffer.resize(expected_serialization.size() - 1);
   SerializationState state = SerializationState(absl::MakeSpan(buffer));
-  EXPECT_THAT(field.SerializeWithTagInto(state), Not(IsOk()));
+  EXPECT_THAT(field.SerializeWithTagInto(state), IsFalse());
 }
 
 TEST(OptionalUint32Field, CopyConstructorWithValue) {

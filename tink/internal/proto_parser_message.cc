@@ -139,8 +139,7 @@ std::string Message::SerializeAsString() const {
 
 bool Message::Serialize(SerializationState& out) const {
   for (size_t i = 0; i < num_fields(); ++i) {
-    if (absl::Status result = field(i)->SerializeWithTagInto(out);
-        !result.ok()) {
+    if (!field(i)->SerializeWithTagInto(out)) {
       return false;
     }
   }
@@ -201,30 +200,26 @@ bool MessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   return msg->Parse(submessage_parsing_state);
 }
 
-absl::Status MessageFieldBase::SerializeWithTagInto(
+bool MessageFieldBase::SerializeWithTagInto(
     SerializationState& out) const {
   const Message* /*absl_nullable - not yet supported*/ msg = message();
   if (msg == nullptr) {
-    return absl::OkStatus();
+    return true;
   }
   if (absl::Status result =
           SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
       !result.ok()) {
-    return result;
+    return false;
   }
   const size_t size = msg->ByteSizeLong();
   if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
-    return result;
+    return false;
   }
   if (out.GetBuffer().size() < size) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+    return false;
   }
   // Serialize the msg.
-  if (!msg->Serialize(out)) {
-    return absl::InternalError("Failed to serialize message");
-  }
-  return absl::OkStatus();
+  return msg->Serialize(out);
 }
 
 size_t MessageFieldBase::GetSerializedSizeIncludingTag() const {
@@ -257,29 +252,28 @@ bool RepeatedMessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   return true;
 }
 
-absl::Status RepeatedMessageFieldBase::SerializeWithTagInto(
+bool RepeatedMessageFieldBase::SerializeWithTagInto(
     SerializationState& out) const {
   for (int i = 0; i < num_messages(); ++i) {
     const Message& msg = message(i);
     if (absl::Status res =
             SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
         !res.ok()) {
-      return res;
+      return false;
     }
     const size_t size = msg.ByteSizeLong();
     if (absl::Status res = SerializeVarint(size, out); !res.ok()) {
-      return res;
+      return false;
     }
     if (out.GetBuffer().size() < size) {
-      return absl::InvalidArgumentError(absl::StrCat(
-          "Output buffer too small: ", out.GetBuffer().size(), " < ", size));
+      return false;
     }
     // Serialize the message.
     if (!msg.Serialize(out)) {
-      return absl::InternalError("Failed to serialize message");
+      return false;
     }
   }
-  return absl::OkStatus();
+  return true;
 }
 
 size_t RepeatedMessageFieldBase::GetSerializedSizeIncludingTag() const {

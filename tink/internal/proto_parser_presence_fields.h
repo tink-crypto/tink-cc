@@ -54,16 +54,16 @@ class OptionalUint32Field final : public Field {
     return true;
   }
 
-  absl::Status SerializeWithTagInto(SerializationState& out) const override {
+  bool SerializeWithTagInto(SerializationState& out) const override {
     if (!value_.has_value()) {
-      return absl::OkStatus();
+      return true;
     }
     absl::Status status =
         SerializeWireTypeAndFieldNumber(WireType::kVarint, FieldNumber(), out);
     if (!status.ok()) {
-      return status;
+      return false;
     }
-    return SerializeVarint(*value_, out);
+    return SerializeVarint(*value_, out).ok();
   }
 
   size_t GetSerializedSizeIncludingTag() const override {

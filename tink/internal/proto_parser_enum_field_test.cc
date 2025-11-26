@@ -60,15 +60,69 @@ std::vector<std::pair<std::string, uint32_t>> GetUint32TestCases() {
       {"01", 1}, {"7f", 127}, {"8001", 128}, {"a274", 14882}};
 }
 
-TEST(EnumField, ClearMemberWorks) {
+TEST(EnumField, ClearkExplicit) {
   EnumField<MyEnum> field(1, &AlwaysValid);
+  EXPECT_THAT(field.has_value(), IsFalse());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
   field.set_value(MyEnum::k1);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k1));
   field.Clear();
+  EXPECT_THAT(field.has_value(), IsFalse());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
+  field.set_value(MyEnum::k0);
+  EXPECT_THAT(field.has_value(), IsTrue());
   EXPECT_THAT(field.value(), Eq(MyEnum::k0));
 }
 
-TEST(EnumField, ClearMemberOtherDefaultWorks) {
+TEST(EnumFieldDeathTest, CreateWithNonDefaultEnumValueAndkImplicit) {
+  EXPECT_DEATH(EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1,
+                                       ProtoFieldOptions::kImplicit),
+               "Default value must be 0 if options are kImplicit.");
+}
+
+TEST(EnumField, ClearkImplicit) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k0,
+                          ProtoFieldOptions::kImplicit);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
+  field.set_value(MyEnum::k1);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k1));
+  field.Clear();
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
+  field.set_value(MyEnum::k0);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
+}
+
+TEST(EnumField, ClearkAlwaysPresent) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k0,
+                          ProtoFieldOptions::kAlwaysPresent);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
+  field.set_value(MyEnum::k1);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k1));
+  field.Clear();
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
+  field.set_value(MyEnum::k0);
+  EXPECT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.value(), Eq(MyEnum::k0));
+}
+
+TEST(EnumField, CleaOtherDefaultWorkskNone) {
   EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1);
+  field.set_value(MyEnum::k0);
+  field.Clear();
+  EXPECT_THAT(field.value(), Eq(MyEnum::k1));
+}
+
+TEST(EnumField, CleaOtherDefaultWorkskAlwaysPresent) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1,
+                          ProtoFieldOptions::kAlwaysPresent);
   field.set_value(MyEnum::k0);
   field.Clear();
   EXPECT_THAT(field.value(), Eq(MyEnum::k1));
@@ -139,29 +193,78 @@ TEST(EnumField, SerializeVarintSuccessCases) {
   }
 }
 
-TEST(EnumField, SerializeEmpty) {
-  EnumField<MyEnum> field(1, &AlwaysValid);
+TEST(EnumField, SerializeEmptykExplicit) {
+  {
+    EnumField<MyEnum> field(1, &AlwaysValid);
+    ASSERT_THAT(field.has_value(), IsFalse());
+    EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    std::string buffer = "abcdef";
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
+  {
+    EnumField<MyEnum> field(1, &AlwaysValid);
+    // When set, always serializes.
+    field.set_value(MyEnum::k0);
+    ASSERT_THAT(field.has_value(), IsTrue());
+    EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
+    std::string buffer = "abcdef";
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "cdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
+}
+
+TEST(EnumField, SerializeEmptykImplicit) {
+  {
+    EnumField<MyEnum> field(1, &AlwaysValid, {}, ProtoFieldOptions::kImplicit);
+    ASSERT_THAT(field.has_value(), IsTrue());
+    EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    std::string buffer = "abcdef";
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
+  {
+    EnumField<MyEnum> field(1, &AlwaysValid, {}, ProtoFieldOptions::kImplicit);
+    // Even when set, does not serialize.
+    field.set_value(MyEnum::k0);
+    ASSERT_THAT(field.has_value(), IsTrue());
+    EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+    std::string buffer = "abcdef";
+    SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
+    EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
+    std::string expected = "abcdef";
+    EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
+  }
+}
+
+TEST(EnumField, SerializeEmptykAlwaysPresent) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k0,
+                          ProtoFieldOptions::kAlwaysPresent);
+  ASSERT_THAT(field.has_value(), IsTrue());
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
-  field.set_value(MyEnum::k0);
-
-  ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
   EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
-  std::string expected = "abcdef";
-  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
+  std::string expected = "cdef";
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 
-TEST(EnumField, SerializeEmptyDifferentDefault) {
-  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1);
+TEST(EnumField, SerializeEmptyDifferentDefaultkExplicit) {
+  EnumField<MyEnum> field(1, &AlwaysValid, MyEnum::k1,
+                          ProtoFieldOptions::kExplicit);
   std::string buffer = "abcdef";
   SerializationState buffer_span = SerializationState(absl::MakeSpan(buffer));
   field.set_value(MyEnum::k1);
-
-  ASSERT_THAT(field.GetSerializedSizeIncludingTag(), Eq(0));
+  EXPECT_THAT(field.GetSerializedSizeIncludingTag(), Eq(2));
   EXPECT_THAT(field.SerializeWithTagInto(buffer_span), IsOk());
-  std::string expected = "abcdef";
-  // Note: absl::MakeSpan("abcdef").size() == 7 (will add null terminator).
+  std::string expected = "cdef";
   EXPECT_THAT(buffer_span.GetBuffer(), Eq(absl::MakeSpan(expected)));
 }
 

@@ -1440,6 +1440,7 @@ tink_cc_library(
     tink::internal::proto_parser_options
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
+    absl::absl_check
     absl::status
     absl::statusor
 )
@@ -1956,7 +1957,6 @@ tink_cc_library(
     tink::internal::proto_parser_state
     tink::internal::proto_parsing_helpers
     tink::internal::secret_buffer
-    absl::algorithm_container
     absl::core_headers
     absl::no_destructor
     absl::nullability

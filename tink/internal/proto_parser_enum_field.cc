@@ -18,9 +18,13 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
+#include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_options.h"
 #include "tink/internal/proto_parser_state.h"
 #include "tink/internal/proto_parsing_helpers.h"
@@ -30,7 +34,52 @@ namespace tink {
 namespace internal {
 namespace proto_parsing {
 
-void EnumFieldBase::Clear() { value_ = default_value_; }
+EnumFieldBase::EnumFieldBase(int field_number,
+                             std::function<bool(uint32_t)> is_valid,
+                             uint32_t default_value, ProtoFieldOptions options)
+    : Field(field_number, WireType::kVarint),
+      is_valid_(std::move(is_valid)),
+      default_value_(default_value),
+      options_(options) {
+  // NOTE: The following works because [1,2]:
+  // 1. IMPLICIT enums must always be OPEN
+  // 2. OPEN enums's first value must be 0.
+  // 3. IMPLICIT enums cannot have a different first value than 0.
+  //
+  // https://protobuf.dev/programming-guides/proto3/#enum [2]
+  // https://protobuf.dev/editions/features/#enum_type
+  ABSL_CHECK(default_value_ == 0 || options_ != ProtoFieldOptions::kImplicit)
+      << "Default value must be 0 if options are kImplicit.";
+  Clear();
+}
+
+void EnumFieldBase::Clear() {
+  if (options_ == ProtoFieldOptions::kAlwaysPresent ||
+      options_ == ProtoFieldOptions::kImplicit) {
+    set_value(default_value_);
+  } else {
+    value_.reset();
+  }
+}
+
+bool EnumFieldBase::RequiresSerialization() const {
+  switch (options_) {
+    case ProtoFieldOptions::kExplicit:
+      // With kExplicit, value_ is serialized only if it has a value.
+      return value_.has_value();
+    case ProtoFieldOptions::kAlwaysPresent:
+      // With kAlwaysPresent, value_ is always set and is always serialized.
+      return true;
+    case ProtoFieldOptions::kImplicit:
+      // With kImplicit, value_ is always set and is serialized only if it is
+      // not equal to the default value.
+      return value() != default_value_;
+    default:
+      ABSL_DCHECK(false) << "Unknown options: " << static_cast<int>(options_);
+      return false;
+  }
+}
+
 bool EnumFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
   if (!result.ok()) {
@@ -42,6 +91,7 @@ bool EnumFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   value_ = static_cast<uint32_t>(*result);
   return true;
 }
+
 absl::Status EnumFieldBase::SerializeWithTagInto(
     SerializationState& out) const {
   if (!RequiresSerialization()) {
@@ -52,19 +102,14 @@ absl::Status EnumFieldBase::SerializeWithTagInto(
   if (!status.ok()) {
     return status;
   }
-  return SerializeVarint(static_cast<uint32_t>(value_), out);
+  return SerializeVarint(value(), out);
 }
 size_t EnumFieldBase::GetSerializedSizeIncludingTag() const {
   if (!RequiresSerialization()) {
     return 0;
   }
   return WireTypeAndFieldNumberLength(GetWireType(), FieldNumber()) +
-         VarintLength(static_cast<uint32_t>(value_));
-}
-
-bool EnumFieldBase::RequiresSerialization() const {
-  return (options_ == ProtoFieldOptions::kAlwaysPresent) ||
-         value_ != default_value_;
+         VarintLength(value());
 }
 
 }  // namespace proto_parsing

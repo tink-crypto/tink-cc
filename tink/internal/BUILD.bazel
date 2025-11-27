@@ -1462,6 +1462,7 @@ cc_library(
     include_prefix = "tink/internal",
     deps = [
         ":proto_parser_state",
+        "@abseil-cpp//absl/base:core_headers",
         "@abseil-cpp//absl/numeric:bits",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

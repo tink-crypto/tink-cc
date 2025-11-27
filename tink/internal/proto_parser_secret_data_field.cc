@@ -99,13 +99,12 @@ bool SecretDataField::SerializeWithTagInto(
   if (!RequiresSerialization()) {
     return true;
   }
-  if (absl::Status result = SerializeWireTypeAndFieldNumber(
-          WireType::kLengthDelimited, FieldNumber(), out);
-      !result.ok()) {
+  if (!SerializeWireTypeAndFieldNumber(WireType::kLengthDelimited,
+                                       FieldNumber(), out)) {
     return false;
   }
   const SecretData& value = value_.value();
-  if (absl::Status result = SerializeVarint(value.size(), out); !result.ok()) {
+  if (!SerializeVarint(value.size(), out)) {
     return false;
   }
   absl::string_view data_view = util::SecretDataAsStringView(value);

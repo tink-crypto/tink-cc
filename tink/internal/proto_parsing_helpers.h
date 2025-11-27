@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "absl/base/attributes.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
@@ -39,7 +40,8 @@ absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(ParsingState& parsing_state);
 absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(ParsingState& parsing_state);
 
 int VarintLength(uint64_t value);
-absl::Status SerializeVarint(uint64_t value, SerializationState& output);
+ABSL_MUST_USE_RESULT
+bool SerializeVarint(uint64_t value, SerializationState& output);
 
 // See https://protobuf.dev/programming-guides/encoding/#structure
 // and
@@ -58,11 +60,11 @@ enum class WireType : uint8_t {
 absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
     ParsingState& parsing_state);
 
-// Serializes a wiretype/field_number into the output. Returns an error if the
+// Serializes a wiretype/field_number into the output. Returns false if the
 // output buffer is too small or field_number is not in the range [1, 2^29-1].
-absl::Status SerializeWireTypeAndFieldNumber(WireType wire_type,
-                                             int field_number,
-                                             SerializationState& output);
+ABSL_MUST_USE_RESULT
+bool SerializeWireTypeAndFieldNumber(WireType wire_type, int field_number,
+                                     SerializationState& output);
 int WireTypeAndFieldNumberLength(WireType wire_type, int field_number);
 
 // Parses the next part of `parsing_state` as Varint (using the variant that

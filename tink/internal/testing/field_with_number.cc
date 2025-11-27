@@ -50,7 +50,7 @@ std::string WiretypeAndFieldNumber(WireType wire_type, int field_number) {
   result.resize(
       proto_parsing::WireTypeAndFieldNumberLength(wire_type, field_number));
   SerializationState result_state = SerializationState(absl::MakeSpan(result));
-  ABSL_CHECK_OK(proto_parsing::SerializeWireTypeAndFieldNumber(
+  ABSL_CHECK(proto_parsing::SerializeWireTypeAndFieldNumber(
       wire_type, field_number, result_state));
   return result;
 }
@@ -59,7 +59,7 @@ std::string SerializeVarintToString(uint64_t v) {
   std::string result;
   result.resize(crypto::tink::internal::proto_parsing::VarintLength(v));
   SerializationState result_state = SerializationState(absl::MakeSpan(result));
-  ABSL_CHECK_OK(SerializeVarint(v, result_state));
+  ABSL_CHECK(SerializeVarint(v, result_state));
   return result;
 }
 

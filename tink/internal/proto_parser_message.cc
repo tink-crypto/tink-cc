@@ -206,13 +206,11 @@ bool MessageFieldBase::SerializeWithTagInto(
   if (msg == nullptr) {
     return true;
   }
-  if (absl::Status result =
-          SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-      !result.ok()) {
+  if (!SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out)) {
     return false;
   }
   const size_t size = msg->ByteSizeLong();
-  if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
+  if (!SerializeVarint(size, out)) {
     return false;
   }
   if (out.GetBuffer().size() < size) {
@@ -256,13 +254,11 @@ bool RepeatedMessageFieldBase::SerializeWithTagInto(
     SerializationState& out) const {
   for (int i = 0; i < num_messages(); ++i) {
     const Message& msg = message(i);
-    if (absl::Status res =
-            SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-        !res.ok()) {
+    if (!SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out)) {
       return false;
     }
     const size_t size = msg.ByteSizeLong();
-    if (absl::Status res = SerializeVarint(size, out); !res.ok()) {
+    if (!SerializeVarint(size, out)) {
       return false;
     }
     if (out.GetBuffer().size() < size) {

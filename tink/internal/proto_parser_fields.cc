@@ -80,12 +80,10 @@ bool Uint32Field::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
     return true;
   }
-  absl::Status status =
-      SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-  if (!status.ok()) {
+  if (!SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out)) {
     return false;
   }
-  return SerializeVarint(*value_, out).ok();
+  return SerializeVarint(*value_, out);
 }
 
 size_t Uint32Field::GetSerializedSizeIncludingTag() const {
@@ -141,12 +139,10 @@ bool Uint64Field::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
     return true;
   }
-  absl::Status status =
-      SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-  if (!status.ok()) {
+  if (!SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out)) {
     return false;
   }
-  return SerializeVarint(*value_, out).ok();
+  return SerializeVarint(*value_, out);
 }
 
 size_t Uint64Field::GetSerializedSizeIncludingTag() const {
@@ -206,13 +202,11 @@ bool BytesField::SerializeWithTagInto(SerializationState& out) const {
     return true;
   }
 
-  if (absl::Status result =
-          SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-      !result.ok()) {
+  if (!SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out)) {
     return false;
   }
   const size_t size = value_->size();
-  if (absl::Status result = SerializeVarint(size, out); !result.ok()) {
+  if (!SerializeVarint(size, out)) {
     return false;
   }
   if (out.GetBuffer().size() < size) {

@@ -96,12 +96,10 @@ bool EnumFieldBase::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
     return true;
   }
-  absl::Status status =
-      SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out);
-  if (!status.ok()) {
+  if (!SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out)) {
     return false;
   }
-  return SerializeVarint(value(), out).ok();
+  return SerializeVarint(value(), out);
 }
 size_t EnumFieldBase::GetSerializedSizeIncludingTag() const {
   if (!RequiresSerialization()) {

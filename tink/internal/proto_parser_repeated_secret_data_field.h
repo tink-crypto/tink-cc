@@ -79,16 +79,13 @@ class RepeatedSecretDataField : public Field {
   bool SerializeWithTagInto(
       SerializationState& serialization_state) const override {
     for (const SecretData& secret_data : value_) {
-      if (absl::Status result = SerializeWireTypeAndFieldNumber(
-              WireType::kLengthDelimited, FieldNumber(), serialization_state);
-          !result.ok()) {
+      if (!SerializeWireTypeAndFieldNumber(
+              WireType::kLengthDelimited, FieldNumber(), serialization_state)) {
         return false;
       }
       absl::string_view data_view = util::SecretDataAsStringView(secret_data);
 
-      if (absl::Status result =
-              SerializeVarint(data_view.size(), serialization_state);
-          !result.ok()) {
+      if (!SerializeVarint(data_view.size(), serialization_state)) {
         return false;
       }
       if (serialization_state.GetBuffer().size() < data_view.size()) {

@@ -56,7 +56,8 @@ class Field {
 
   // Serializes the field into the given serialization state. Returns true if
   // the serialization was successful.
-  virtual bool SerializeWithTagInto(SerializationState& out) const = 0;
+  virtual ABSL_MUST_USE_RESULT bool SerializeWithTagInto(
+      SerializationState& out) const = 0;
 
   // Returns the size of the serialized field, including the tag.
   virtual size_t GetSerializedSizeIncludingTag() const = 0;

@@ -164,9 +164,8 @@ class Uint32FieldWrongCrc : public Field {
   }
   bool SerializeWithTagInto(SerializationState& out) const override {
     // Skip check for requires serialization.
-    absl::Status status = SerializeWireTypeAndFieldNumber(
-        GetWireType(), field_.FieldNumber(), out);
-    if (!status.ok()) {
+    if (!SerializeWireTypeAndFieldNumber(GetWireType(), field_.FieldNumber(),
+                                         out)) {
       return false;
     }
     return SerializeVarintWrongCrc(field_.value(), out).ok();

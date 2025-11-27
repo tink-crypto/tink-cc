@@ -1404,6 +1404,7 @@ tink_cc_library(
     proto_parsing_helpers.h
   DEPS
     tink::internal::proto_parser_state
+    absl::core_headers
     absl::bits
     absl::status
     absl::statusor

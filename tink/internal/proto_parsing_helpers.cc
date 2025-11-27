@@ -126,11 +126,10 @@ int VarintLength(uint64_t value) {
   return (bit_width + 6) / 7;
 }
 
-absl::Status SerializeVarint(uint64_t value, SerializationState& output) {
+bool SerializeVarint(uint64_t value, SerializationState& output) {
   int size = VarintLength(value);
   if (output.GetBuffer().size() < size) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Output buffer too small to contain varint of size ", size));
+    return false;
   }
   absl::Span<char> output_buffer = output.GetBuffer();
   int i = 0;
@@ -140,7 +139,7 @@ absl::Status SerializeVarint(uint64_t value, SerializationState& output) {
   }
   output_buffer[i++] = static_cast<char>(value);
   output.Advance(size);
-  return absl::OkStatus();
+  return true;
 }
 
 // https://protobuf.dev/programming-guides/encoding/#structure
@@ -158,12 +157,10 @@ absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
   return std::make_pair(wiretype, field_number);
 }
 
-absl::Status SerializeWireTypeAndFieldNumber(WireType wire_type,
-                                             int field_number,
-                                             SerializationState& output) {
+bool SerializeWireTypeAndFieldNumber(WireType wire_type, int field_number,
+                                     SerializationState& output) {
   if (field_number <= 0 || field_number >= (1<<29)) {
-    return absl::InvalidArgumentError(absl::StrCat(
-        "Field Number ", field_number, " is not in range [1, 2^29)"));
+    return false;
   }
   uint32_t shifted = static_cast<uint32_t>(field_number) << 3;
   return SerializeVarint(shifted | static_cast<uint32_t>(wire_type),

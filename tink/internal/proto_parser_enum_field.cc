@@ -81,14 +81,14 @@ bool EnumFieldBase::RequiresSerialization() const {
 }
 
 bool EnumFieldBase::ConsumeIntoMember(ParsingState& serialized) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
-  if (!result.ok()) {
+  uint32_t result;
+  if (!ConsumeVarintIntoUint32(serialized, result)) {
     return false;
   }
-  if (!is_valid_(result.value())) {
+  if (!is_valid_(result)) {
     return true;
   }
-  value_ = static_cast<uint32_t>(*result);
+  value_ = static_cast<uint32_t>(result);
   return true;
 }
 

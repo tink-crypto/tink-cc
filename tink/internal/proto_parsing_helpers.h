@@ -21,10 +21,7 @@
 #include <utility>
 
 #include "absl/base/attributes.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
-#include "absl/types/span.h"
 #include "tink/internal/proto_parser_state.h"
 
 namespace crypto {
@@ -34,12 +31,15 @@ namespace proto_parsing {
 
 // Consumes (i.e. reads and removes from the input |parsing_state|) a Varint
 // and returns it as a uint64_t.
-absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(ParsingState& parsing_state);
+ABSL_MUST_USE_RESULT
+bool ConsumeVarintIntoUint64(ParsingState& parsing_state, uint64_t& result);
 
 // Consumes a Varint and returns it as a uint32_t.
-absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(ParsingState& parsing_state);
+ABSL_MUST_USE_RESULT
+bool ConsumeVarintIntoUint32(ParsingState& parsing_state, uint32_t& result);
 
 int VarintLength(uint64_t value);
+
 ABSL_MUST_USE_RESULT
 bool SerializeVarint(uint64_t value, SerializationState& output);
 
@@ -56,9 +56,11 @@ enum class WireType : uint8_t {
   kFixed32 = 5,
 };
 
-// Consumes a wiretype/field number encoding and returns the result.
-absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
-    ParsingState& parsing_state);
+// Consumes a wiretype/field number encoding and writes it into WireType and
+// field_number.
+ABSL_MUST_USE_RESULT
+bool ConsumeIntoWireTypeAndFieldNumber(ParsingState& parsing_state,
+                                       WireType& wire_type, int& field_number);
 
 // Serializes a wiretype/field_number into the output. Returns false if the
 // output buffer is too small or field_number is not in the range [1, 2^29-1].
@@ -69,28 +71,34 @@ int WireTypeAndFieldNumberLength(WireType wire_type, int field_number);
 
 // Parses the next part of `parsing_state` as Varint (using the variant that
 // proto uses when it parses the size of a kLengthDelimited field)
-absl::StatusOr<uint32_t> ConsumeVarintForSize(ParsingState& parsing_state);
+ABSL_MUST_USE_RESULT
+bool ConsumeVarintForSize(ParsingState& parsing_state, uint32_t& result);
 
 // Consumes a length delimited field and returns the string_view to the field.
-absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
-    ParsingState& parsing_state);
+ABSL_MUST_USE_RESULT
+bool ConsumeBytesReturnStringView(ParsingState& parsing_state,
+                                  absl::string_view& result);
 
-// Consumes a Fixed32 byte field. Currently returns Status instead of
-// StatusOr<uint32_t> as we never need the value.
-absl::Status ConsumeFixed32(ParsingState& parsing_state);
+// Consumes a Fixed32 byte field. Currently doesn't give back the value because
+// we never need the result.
+ABSL_MUST_USE_RESULT
+bool ConsumeFixed32(ParsingState& parsing_state);
 // Consumes a Fixed64 byte field. Currently returns Status instead of
 // StatusOr<uint64_t> as we never need the value.
-absl::Status ConsumeFixed64(ParsingState& parsing_state);
+ABSL_MUST_USE_RESULT
+bool ConsumeFixed64(ParsingState& parsing_state);
 
 // Skips a field of type "wire_type". Returns non-ok status for
 // wire_type == kStartGroup/kEndGroup, or if too little data in parsing_state.
 // Note: kStartGroup needs to be skipped with SkipGroup.
-absl::Status SkipField(WireType wire_type, ParsingState& parsing_state);
+ABSL_MUST_USE_RESULT
+bool SkipField(WireType wire_type, ParsingState& parsing_state);
 
 // Skips a field of type "kStartGroup". This is a separate method because it
 // needs to be called differently and we want to ensure that there is no
 // recursion to limit stack growth (so SkipField should never call SkipGroup).
-absl::Status SkipGroup(int field_number, ParsingState& parsing_state);
+ABSL_MUST_USE_RESULT
+bool SkipGroup(int field_number, ParsingState& parsing_state);
 
 }  // namespace proto_parsing
 }  // namespace internal

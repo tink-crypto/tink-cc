@@ -68,11 +68,11 @@ void Uint32Field::Clear() {
 }
 
 bool Uint32Field::ConsumeIntoMember(ParsingState& serialized) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintIntoUint32(serialized);
-  if (!result.ok()) {
+  uint32_t result;
+  if (!ConsumeVarintIntoUint32(serialized, result)) {
     return false;
   }
-  value_ = *result;
+  value_.emplace(result);
   return true;
 }
 
@@ -128,13 +128,14 @@ void Uint64Field::Clear() {
 }
 
 bool Uint64Field::ConsumeIntoMember(ParsingState& serialized) {
-  absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(serialized);
-  if (!result.ok()) {
+  uint64_t result;
+  if (!ConsumeVarintIntoUint64(serialized, result)) {
     return false;
   }
-  value_ = *result;
+  value_ = result;
   return true;
 }
+
 bool Uint64Field::SerializeWithTagInto(SerializationState& out) const {
   if (!RequiresSerialization()) {
     return true;
@@ -188,12 +189,11 @@ void BytesField::Clear() {
 }
 
 bool BytesField::ConsumeIntoMember(ParsingState& serialized) {
-  absl::StatusOr<absl::string_view> result =
-      ConsumeBytesReturnStringView(serialized);
-  if (!result.ok()) {
+  absl::string_view result;
+  if (!ConsumeBytesReturnStringView(serialized, result)) {
     return false;
   }
-  set_value(*result);
+  set_value(result);
   return true;
 }
 

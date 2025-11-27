@@ -56,20 +56,20 @@ class RepeatedSecretDataField : public Field {
   void Clear() override { value_.clear(); }
 
   bool ConsumeIntoMember(ParsingState& parsing_state) override {
-    absl::StatusOr<uint32_t> length = ConsumeVarintForSize(parsing_state);
-    if (!length.ok()) {
+    uint32_t length;
+    if (!ConsumeVarintForSize(parsing_state, length)) {
       return false;
     }
-    if (*length > parsing_state.RemainingData().size()) {
+    if (length > parsing_state.RemainingData().size()) {
       return false;
     }
-    absl::string_view data = parsing_state.RemainingData().substr(0, *length);
+    absl::string_view data = parsing_state.RemainingData().substr(0, length);
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-    parsing_state.Advance(*length);
+    parsing_state.Advance(length);
     value_.push_back(crypto::tink::util::SecretDataFromStringView(data));
 #else
     CallWithCoreDumpProtection([&]() {
-      absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(*length);
+      absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(length);
       value_.push_back(SecretData(data, crc));
     });
 #endif

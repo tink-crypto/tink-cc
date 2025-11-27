@@ -44,20 +44,20 @@ constexpr int kSkipGroupLimit = 100;
 // the proto library is subtly different in each case, and we currently want to
 // follow it closely. In tags, we should restrict parsing to size 5 and handle
 // overflows by taking mod 2^32.
-absl::StatusOr<uint32_t> ConsumeVarintForTag(ParsingState& parsing_state) {
-  uint32_t result = 0;
+bool ConsumeVarintForTag(ParsingState& parsing_state, uint32_t& result) {
+  result = 0;
   for (int i = 0; i < kMax32BitVarintLength; ++i) {
     if (parsing_state.ParsingDone()) {
-      return absl::InvalidArgumentError("Varint too short");
+      return false;
     }
     uint32_t byte = parsing_state.PeekByte();
     parsing_state.Advance(1);
     result |= ((byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
-      return result;
+      return true;
     }
   }
-  return absl::InvalidArgumentError("Varint too long");
+  return false;
 }
 
 }  // namespace
@@ -66,55 +66,55 @@ absl::StatusOr<uint32_t> ConsumeVarintForTag(ParsingState& parsing_state) {
 // The behavior of the proto library is subtly different in each case, and we
 // currently want to follow it closely. In size, we are very strict and do not
 // allow additional bits set.
-absl::StatusOr<uint32_t> ConsumeVarintForSize(ParsingState& parsing_state) {
-  uint32_t result = 0;
+bool ConsumeVarintForSize(ParsingState& parsing_state, uint32_t& result) {
+  result = 0;
   for (int i = 0; i < kMax32BitVarintLength; ++i) {
     if (parsing_state.ParsingDone()) {
-      return absl::InvalidArgumentError("Varint too short");
+      return false;
     }
     uint32_t byte = parsing_state.PeekByte();
     if (i == kMax32BitVarintLength - 1) {
       if ((byte & 0x7F) > (std::numeric_limits<uint32_t>::max() >> (i * 7))) {
-        return absl::InvalidArgumentError(
-            "Length delimeted field declared to be longer than 2^32-1 bytes");
+        return false;
       }
     }
     parsing_state.Advance(1);
     result |= ((byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
-      return result;
+      return true;
     }
   }
-  return absl::InvalidArgumentError("Size varint encoded in more than 5 bytes");
+  return false;
 }
 
 // See https://protobuf.dev/programming-guides/encoding for documentation on
 // the wire format.
 
 // https://protobuf.dev/programming-guides/encoding/#varints
-absl::StatusOr<uint64_t> ConsumeVarintIntoUint64(ParsingState& parsing_state) {
-  uint64_t result = 0;
+bool ConsumeVarintIntoUint64(ParsingState& parsing_state, uint64_t& result) {
+  result = 0;
   for (int i = 0; i < kMax64BitVarintLength; ++i) {
     if (parsing_state.ParsingDone()) {
-      return absl::InvalidArgumentError("Varint too short");
+      return false;
     }
     uint64_t byte = parsing_state.PeekByte();
     parsing_state.Advance(1);
     result |= ((byte & 0x7F) << (i * 7));
     if (!(byte & 0x80)) {
-      return result;
+      return true;
     }
   }
-  return absl::InvalidArgumentError("Varint too long");
+  return false;
 }
 
-absl::StatusOr<uint32_t> ConsumeVarintIntoUint32(ParsingState& parsing_state) {
-  absl::StatusOr<uint64_t> result = ConsumeVarintIntoUint64(parsing_state);
-  if (!result.ok()) {
-    return result.status();
+bool ConsumeVarintIntoUint32(ParsingState& parsing_state, uint32_t& result) {
+  uint64_t result64bit;
+  if (!ConsumeVarintIntoUint64(parsing_state, result64bit)) {
+    return false;
   }
   // Writing static_cast<> isn't needed, but I want to make it explicit.
-  return static_cast<uint32_t>(*result);
+  result = static_cast<uint32_t>(result64bit);
+  return true;
 }
 
 int VarintLength(uint64_t value) {
@@ -143,18 +143,18 @@ bool SerializeVarint(uint64_t value, SerializationState& output) {
 }
 
 // https://protobuf.dev/programming-guides/encoding/#structure
-absl::StatusOr<std::pair<WireType, int>> ConsumeIntoWireTypeAndFieldNumber(
-    ParsingState& parsing_state) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintForTag(parsing_state);
-  if (!result.ok()) {
-    return result.status();
+bool ConsumeIntoWireTypeAndFieldNumber(ParsingState& parsing_state,
+                                       WireType& wire_type, int& field_number) {
+  uint32_t result;
+  if (!ConsumeVarintForTag(parsing_state, result)) {
+    return false;
   }
-  int field_number = *result >> 3;
-  WireType wiretype = static_cast<WireType>(*result & 0x7);
+  field_number = result >> 3;
+  wire_type = static_cast<WireType>(result & 0x7);
   if (field_number == 0) {
-    return absl::InvalidArgumentError("Field number 0 disallowed");
+    return false;
   }
-  return std::make_pair(wiretype, field_number);
+  return true;
 }
 
 bool SerializeWireTypeAndFieldNumber(WireType wire_type, int field_number,
@@ -174,45 +174,44 @@ int WireTypeAndFieldNumberLength(WireType wire_type, int field_number) {
   return (bit_width + 6) / 7;
 }
 
-absl::StatusOr<absl::string_view> ConsumeBytesReturnStringView(
-    ParsingState& parsing_state) {
-  absl::StatusOr<uint32_t> result = ConsumeVarintForSize(parsing_state);
-  if (!result.ok()) {
-    return result.status();
+bool ConsumeBytesReturnStringView(ParsingState& parsing_state,
+                                  absl::string_view& result_view) {
+  uint32_t result;
+  if (!ConsumeVarintForSize(parsing_state, result)) {
+    return false;
   }
-  if (*result > parsing_state.RemainingData().size()) {
-    return absl::InvalidArgumentError(
-        absl::StrCat("Length ", *result, " exceeds remaining input size ",
-                     parsing_state.RemainingData().size()));
+  if (result > parsing_state.RemainingData().size()) {
+    return false;
   }
-  absl::string_view result_view =
-      parsing_state.RemainingData().substr(0, *result);
-  parsing_state.Advance(*result);
-  return result_view;
+  result_view = parsing_state.RemainingData().substr(0, result);
+  parsing_state.Advance(result);
+  return true;
 }
 
-absl::Status ConsumeFixed32(ParsingState& parsing_state) {
+bool ConsumeFixed32(ParsingState& parsing_state) {
   if (parsing_state.RemainingData().size() < 4) {
-    return absl::InvalidArgumentError("Not enough data to read kFixed32");
+    return false;
   }
   parsing_state.Advance(4);
-  return absl::OkStatus();
+  return true;
 }
 
-absl::Status ConsumeFixed64(ParsingState& parsing_state) {
+bool ConsumeFixed64(ParsingState& parsing_state) {
   if (parsing_state.RemainingData().size() < 8) {
-    return absl::InvalidArgumentError("Not enough data to read kFixed64");
+    return false;
   }
   parsing_state.Advance(8);
-  return absl::OkStatus();
+  return true;
 }
 
-absl::Status SkipField(WireType wire_type, ParsingState& parsing_state) {
+bool SkipField(WireType wire_type, ParsingState& parsing_state) {
   if (wire_type == WireType::kVarint) {
-    return ConsumeVarintIntoUint64(parsing_state).status();
+    uint64_t ignored;
+    return ConsumeVarintIntoUint64(parsing_state, ignored);
   }
   if (wire_type == WireType::kLengthDelimited) {
-    return ConsumeBytesReturnStringView(parsing_state).status();
+    absl::string_view ignored;
+    return ConsumeBytesReturnStringView(parsing_state, ignored);
   }
   if (wire_type == WireType::kFixed32) {
     return ConsumeFixed32(parsing_state);
@@ -220,46 +219,44 @@ absl::Status SkipField(WireType wire_type, ParsingState& parsing_state) {
   if (wire_type == WireType::kFixed64) {
     return ConsumeFixed64(parsing_state);
   }
-  return absl::InvalidArgumentError(
-      absl::StrCat("Cannot skip fields of wire type ", wire_type));
+  return false;
 }
 
-absl::Status SkipGroup(int field_number, ParsingState& parsing_state) {
+bool SkipGroup(int field_number, ParsingState& parsing_state) {
   std::vector<int> field_number_stack;
   field_number_stack.push_back(field_number);
 
   while (!field_number_stack.empty()) {
-    absl::StatusOr<std::pair<WireType, int>> wiretype_and_field_number =
-        ConsumeIntoWireTypeAndFieldNumber(parsing_state);
-    if (!wiretype_and_field_number.ok()) {
-      return wiretype_and_field_number.status();
+    WireType wire_type;
+    int field_number;
+    if (!ConsumeIntoWireTypeAndFieldNumber(parsing_state, wire_type,
+                                           field_number)) {
+      return false;
     }
-    switch (wiretype_and_field_number->first) {
+    switch (wire_type) {
       case WireType::kStartGroup: {
-        field_number_stack.push_back(wiretype_and_field_number->second);
+        field_number_stack.push_back(field_number);
         if (field_number_stack.size() > kSkipGroupLimit) {
-          return absl::InvalidArgumentError("Too many SGROUP tags");
+          return false;
         }
         continue;
       }
       case WireType::kEndGroup: {
         int popped = field_number_stack.back();
         field_number_stack.pop_back();
-        if (popped != wiretype_and_field_number->second) {
-          return absl::InvalidArgumentError("Group tags did not match");
+        if (popped != field_number) {
+          return false;
         }
         continue;
       }
       default: {
-        absl::Status s =
-            SkipField(wiretype_and_field_number->first, parsing_state);
-        if (!s.ok()) {
-          return s;
+        if (!SkipField(wire_type, parsing_state)) {
+          return false;
         }
       }
     }
   }
-  return absl::OkStatus();
+  return true;
 }
 
 }  // namespace proto_parsing

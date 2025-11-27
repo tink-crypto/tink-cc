@@ -156,23 +156,22 @@ size_t Message::ByteSizeLong() const {
 
 bool Message::Parse(ParsingState& in) {
   while (!in.ParsingDone()) {
-    absl::StatusOr<std::pair<WireType, int>> wiretype_and_field_number =
-        ConsumeIntoWireTypeAndFieldNumber(in);
-    if (!wiretype_and_field_number.ok()) {
+    WireType wire_type;
+    int field_number;
+    if (!ConsumeIntoWireTypeAndFieldNumber(in, wire_type, field_number)) {
       return false;
     }
-    auto [wire_type, field_number] = *wiretype_and_field_number;
 
     const Field* /*absl_nullable - not yet supported*/ field = FieldWithNumber(field_number);
     if (field == nullptr || field->GetWireType() != wire_type) {
-      absl::Status s;
       if (wire_type == WireType::kStartGroup) {
-        s = SkipGroup(field_number, in);
+        if (!SkipGroup(field_number, in)) {
+          return false;
+        }
       } else {
-        s = SkipField(wire_type, in);
-      }
-      if (!s.ok()) {
-        return false;
+        if (!SkipField(wire_type, in)) {
+          return false;
+        }
       }
       continue;
     }
@@ -186,15 +185,15 @@ bool Message::Parse(ParsingState& in) {
 // MessageFieldBase.
 
 bool MessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
-  absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
-  if (!length.ok()) {
+  uint32_t length;
+  if (!ConsumeVarintForSize(serialized, length)) {
     return false;
   }
-  if (*length > serialized.RemainingData().size()) {
+  if (length > serialized.RemainingData().size()) {
     return false;
   }
   ParsingState submessage_parsing_state =
-      serialized.SplitOffSubmessageState(*length);
+      serialized.SplitOffSubmessageState(length);
   Message* /*absl_nullable - not yet supported*/ msg = mutable_message();
   ABSL_DCHECK(msg != nullptr);
   return msg->Parse(submessage_parsing_state);
@@ -233,15 +232,15 @@ size_t MessageFieldBase::GetSerializedSizeIncludingTag() const {
 // RepeatedMessageFieldBase.
 
 bool RepeatedMessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
-  absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
-  if (!length.ok()) {
+  uint32_t length;
+  if (!ConsumeVarintForSize(serialized, length)) {
     return false;
   }
-  if (*length > serialized.RemainingData().size()) {
+  if (length > serialized.RemainingData().size()) {
     return false;
   }
   ParsingState submessage_parsing_state =
-      serialized.SplitOffSubmessageState(*length);
+      serialized.SplitOffSubmessageState(length);
   Message* to_add = add_message();
   if (!to_add->Parse(submessage_parsing_state)) {
     return false;

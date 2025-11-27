@@ -73,22 +73,21 @@ bool SecretDataField::RequiresSerialization() const {
 }
 
 bool SecretDataField::ConsumeIntoMember(ParsingState& serialized) {
-  absl::StatusOr<uint32_t> length = ConsumeVarintForSize(serialized);
-  if (!length.ok()) {
+  uint32_t length;
+  if (!ConsumeVarintForSize(serialized, length)) {
     return false;
   }
 
-  if (*length > serialized.RemainingData().size()) {
+  if (length > serialized.RemainingData().size()) {
     return false;
   }
-  absl::string_view secret_bytes =
-      serialized.RemainingData().substr(0, *length);
+  absl::string_view secret_bytes = serialized.RemainingData().substr(0, length);
 #if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
   value_ = util::SecretDataFromStringView(secret_bytes);
-  serialized.Advance(*length);
+  serialized.Advance(length);
 #else
   value_ = CallWithCoreDumpProtection([&]() {
-    absl::crc32c_t crc = serialized.AdvanceAndGetCrc(*length);
+    absl::crc32c_t crc = serialized.AdvanceAndGetCrc(length);
     return SecretData(secret_bytes, crc);
   });
 #endif

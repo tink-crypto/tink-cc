@@ -1930,6 +1930,7 @@ tink_cc_library(
     absl::nullability
     absl::crc32c
     absl::absl_check
+    absl::absl_log
     absl::status
     absl::statusor
     absl::strings

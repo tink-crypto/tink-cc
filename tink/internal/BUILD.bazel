@@ -2003,6 +2003,7 @@ cc_library(
         "@abseil-cpp//absl/base:nullability",
         "@abseil-cpp//absl/crc:crc32c",
         "@abseil-cpp//absl/log:absl_check",
+        "@abseil-cpp//absl/log:absl_log",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",

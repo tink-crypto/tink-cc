@@ -24,6 +24,7 @@
 #include "absl/base/nullability.h"
 #include "absl/crc/crc32c.h"
 #include "absl/log/absl_check.h"
+#include "absl/log/absl_log.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
@@ -196,7 +197,14 @@ bool MessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
       serialized.SplitOffSubmessageState(length);
   Message* /*absl_nullable - not yet supported*/ msg = mutable_message();
   ABSL_DCHECK(msg != nullptr);
-  return msg->Parse(submessage_parsing_state);
+  if (!msg->Parse(submessage_parsing_state)) {
+    return false;
+  }
+  if (!submessage_parsing_state.ParsingDone()) {
+    ABSL_LOG(DFATAL) << "Submessage wasn't parsed correctly";
+    return false;
+  }
+  return true;
 }
 
 bool MessageFieldBase::SerializeWithTagInto(
@@ -245,7 +253,10 @@ bool RepeatedMessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
   if (!to_add->Parse(submessage_parsing_state)) {
     return false;
   }
-  ABSL_QCHECK(submessage_parsing_state.ParsingDone());
+  if (!submessage_parsing_state.ParsingDone()) {
+    ABSL_LOG(DFATAL) << "Submessage wasn't parsed correctly";
+    return false;
+  }
   return true;
 }
 

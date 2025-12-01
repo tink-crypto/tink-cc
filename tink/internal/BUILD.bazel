@@ -1777,6 +1777,7 @@ cc_library(
 
 cc_library(
     name = "proto_parser_repeated_secret_data_field",
+    srcs = ["proto_parser_repeated_secret_data_field.cc"],
     hdrs = ["proto_parser_repeated_secret_data_field.h"],
     include_prefix = "tink/internal",
     deps = [
@@ -1788,9 +1789,6 @@ cc_library(
         "//tink:secret_data",
         "//tink/util:secret_data",
         "@abseil-cpp//absl/crc:crc32c",
-        "@abseil-cpp//absl/status",
-        "@abseil-cpp//absl/status:statusor",
-        "@abseil-cpp//absl/strings",
         "@abseil-cpp//absl/strings:string_view",
     ],
 )

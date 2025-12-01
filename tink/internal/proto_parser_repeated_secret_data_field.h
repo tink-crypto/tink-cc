@@ -18,21 +18,11 @@
 #define TINK_INTERNAL_PROTO_PARSER_REPEATED_SECRET_DATA_FIELD_H_
 
 #include <cstddef>
-#include <cstdint>
 #include <vector>
 
-#include "absl/crc/crc32c.h"
-#include "absl/status/status.h"
-#include "absl/status/statusor.h"
-#include "absl/strings/str_cat.h"
-#include "absl/strings/string_view.h"
-#include "tink/internal/call_with_core_dump_protection.h"
 #include "tink/internal/proto_parser_fields.h"
 #include "tink/internal/proto_parser_state.h"
-#include "tink/internal/proto_parsing_helpers.h"
-#include "tink/internal/safe_stringops.h"
 #include "tink/secret_data.h"
-#include "tink/util/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -43,8 +33,7 @@ namespace proto_parsing {
 // It is used to represent a repeated field of SecretData in a proto message.
 class RepeatedSecretDataField : public Field {
  public:
-  explicit RepeatedSecretDataField(int field_number)
-      : Field(field_number, WireType::kLengthDelimited) {}
+  explicit RepeatedSecretDataField(int field_number);
 
   // Copyable and movable.
   RepeatedSecretDataField(const RepeatedSecretDataField&) = default;
@@ -54,66 +43,10 @@ class RepeatedSecretDataField : public Field {
       default;
 
   void Clear() override { value_.clear(); }
-
-  bool ConsumeIntoMember(ParsingState& parsing_state) override {
-    uint32_t length;
-    if (!ConsumeVarintForSize(parsing_state, length)) {
-      return false;
-    }
-    if (length > parsing_state.RemainingData().size()) {
-      return false;
-    }
-    absl::string_view data = parsing_state.RemainingData().substr(0, length);
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-    parsing_state.Advance(length);
-    value_.push_back(crypto::tink::util::SecretDataFromStringView(data));
-#else
-    CallWithCoreDumpProtection([&]() {
-      absl::crc32c_t crc = parsing_state.AdvanceAndGetCrc(length);
-      value_.push_back(SecretData(data, crc));
-    });
-#endif
-    return true;
-  }
-
+  bool ConsumeIntoMember(ParsingState& parsing_state) override;
   bool SerializeWithTagInto(
-      SerializationState& serialization_state) const override {
-    for (const SecretData& secret_data : value_) {
-      if (!SerializeWireTypeAndFieldNumber(
-              WireType::kLengthDelimited, FieldNumber(), serialization_state)) {
-        return false;
-      }
-      absl::string_view data_view = util::SecretDataAsStringView(secret_data);
-
-      if (!SerializeVarint(data_view.size(), serialization_state)) {
-        return false;
-      }
-      if (serialization_state.GetBuffer().size() < data_view.size()) {
-        return false;
-      }
-      SafeMemCopy(serialization_state.GetBuffer().data(), data_view.data(),
-                  data_view.size());
-#if TINK_CPP_SECRET_DATA_IS_STD_VECTOR
-      serialization_state.Advance(data_view.size());
-#else
-      CallWithCoreDumpProtection([&]() {
-        serialization_state.AdvanceWithCrc(data_view.size(),
-                                           secret_data.GetCrc32c());
-      });
-#endif
-    }
-    return true;
-  }
-  size_t GetSerializedSizeIncludingTag() const override {
-    size_t total_size = 0;
-    for (const SecretData& secret_data : value_) {
-      size_t cur_size = secret_data.size();
-      total_size += WireTypeAndFieldNumberLength(WireType::kLengthDelimited,
-                                                 FieldNumber()) +
-                    VarintLength(cur_size) + cur_size;
-    }
-    return total_size;
-  }
+      SerializationState& serialization_state) const override;
+  size_t GetSerializedSizeIncludingTag() const override;
 
   const std::vector<SecretData>& value() const { return value_; }
   std::vector<SecretData>& value() { return value_; }

@@ -1712,6 +1712,7 @@ tink_cc_library(
 tink_cc_library(
   NAME proto_parser_repeated_secret_data_field
   SRCS
+    proto_parser_repeated_secret_data_field.cc
     proto_parser_repeated_secret_data_field.h
   DEPS
     tink::internal::call_with_core_dump_protection
@@ -1720,9 +1721,6 @@ tink_cc_library(
     tink::internal::proto_parsing_helpers
     tink::internal::safe_stringops
     absl::crc32c
-    absl::status
-    absl::statusor
-    absl::strings
     absl::string_view
     tink::core::secret_data
     tink::util::secret_data

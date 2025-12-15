@@ -40,12 +40,10 @@ namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
-using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
-using ::testing::Not;
 
 enum class MyEnum : uint32_t {
   k0 = 0,

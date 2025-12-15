@@ -40,12 +40,10 @@ namespace {
 
 using ::crypto::tink::test::HexDecodeOrDie;
 using ::crypto::tink::test::HexEncode;
-using ::crypto::tink::test::IsOk;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
-using ::testing::Not;
 using ::testing::Test;
 
 constexpr int32_t kUint32Field1Number = 1;

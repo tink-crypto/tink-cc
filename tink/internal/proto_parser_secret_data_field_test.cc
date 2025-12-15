@@ -37,14 +37,12 @@ namespace internal {
 namespace proto_parsing {
 
 using ::crypto::tink::test::HexDecodeOrDie;
-using ::crypto::tink::test::IsOk;
 using ::crypto::tink::util::SecretDataAsStringView;
 using ::crypto::tink::util::SecretDataFromStringView;
 using ::testing::Eq;
 using ::testing::IsEmpty;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
-using ::testing::Not;
 using ::testing::Test;
 
 absl::crc32c_t GetCrc32c(const SecretData& secret_data) {

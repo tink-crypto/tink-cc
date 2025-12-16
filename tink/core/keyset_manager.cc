@@ -53,13 +53,13 @@ absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
 absl::StatusOr<std::unique_ptr<KeysetManager>> KeysetManager::New(
     const KeysetHandle& keyset_handle) {
   auto manager = absl::make_unique<KeysetManager>();
-  absl::MutexLock lock(&manager->keyset_mutex_);
+  absl::MutexLock lock(manager->keyset_mutex_);
   *manager->keyset_ = keyset_handle.get_keyset();
   return std::move(manager);
 }
 
 std::unique_ptr<KeysetHandle> KeysetManager::GetKeysetHandle() {
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   std::unique_ptr<KeysetHandle> handle(new KeysetHandle(keyset_));
   return handle;
 }
@@ -76,7 +76,7 @@ absl::StatusOr<uint32_t> KeysetManager::Add(
   if (!status.ok()) {
     return status;
   }
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   return KeysetHandle::AddToKeyset(key_template, as_primary, config,
                                    keyset_.get());
 }
@@ -87,7 +87,7 @@ absl::StatusOr<uint32_t> KeysetManager::Rotate(
 }
 
 absl::Status KeysetManager::Enable(uint32_t key_id) {
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   for (auto& key : *(keyset_->mutable_key())) {
     if (key.key_id() == key_id) {
       if (key.status() != KeyStatusType::DISABLED &&
@@ -105,7 +105,7 @@ absl::Status KeysetManager::Enable(uint32_t key_id) {
 }
 
 absl::Status KeysetManager::Disable(uint32_t key_id) {
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   if (keyset_->primary_key_id() == key_id) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Cannot disable primary key (key_id %u).", key_id);
@@ -127,7 +127,7 @@ absl::Status KeysetManager::Disable(uint32_t key_id) {
 }
 
 absl::Status KeysetManager::Delete(uint32_t key_id) {
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   if (keyset_->primary_key_id() == key_id) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Cannot delete primary key (key_id %u).", key_id);
@@ -146,7 +146,7 @@ absl::Status KeysetManager::Delete(uint32_t key_id) {
 }
 
 absl::Status KeysetManager::Destroy(uint32_t key_id) {
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   if (keyset_->primary_key_id() == key_id) {
     return ToStatusF(absl::StatusCode::kInvalidArgument,
                      "Cannot destroy primary key (key_id %u).", key_id);
@@ -170,7 +170,7 @@ absl::Status KeysetManager::Destroy(uint32_t key_id) {
 }
 
 absl::Status KeysetManager::SetPrimary(uint32_t key_id) {
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   for (auto& key : keyset_->key()) {
     if (key.key_id() == key_id) {
       if (key.status() != KeyStatusType::ENABLED) {
@@ -188,7 +188,7 @@ absl::Status KeysetManager::SetPrimary(uint32_t key_id) {
 }
 
 int KeysetManager::KeyCount() const {
-  absl::MutexLock lock(&keyset_mutex_);
+  absl::MutexLock lock(keyset_mutex_);
   return keyset_->key_size();
 }
 

@@ -415,6 +415,47 @@ TEST(EcdsaParametersTest, Clone) {
   ASSERT_THAT(*cloned_parameters, Eq(*parameters));
 }
 
+TEST(EcdsaParametersTest, GetPrivateKeyLengthP256) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP256)
+          .SetHashType(EcdsaParameters::HashType::kSha256)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(parameters->GetPrivateKeyLength(), Eq(32));
+}
+
+
+TEST(EcdsaParametersTest, GetPrivateKeyLengthP384) {
+  absl::StatusOr<EcdsaParameters> parameters =
+    EcdsaParameters::Builder()
+    .SetCurveType(EcdsaParameters::CurveType::kNistP384)
+    .SetHashType(EcdsaParameters::HashType::kSha512)
+        .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+        .SetVariant(EcdsaParameters::Variant::kTink)
+        .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(parameters->GetPrivateKeyLength(), Eq(48));
+}
+
+TEST(EcdsaParametersTest, GetPrivateKeyLengthP521) {
+  absl::StatusOr<EcdsaParameters> parameters =
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP521)
+          .SetHashType(EcdsaParameters::HashType::kSha512)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  EXPECT_THAT(parameters->GetPrivateKeyLength(), Eq(66));
+}
+
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

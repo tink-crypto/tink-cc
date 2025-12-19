@@ -136,6 +136,19 @@ absl::StatusOr<EcdsaParameters> EcdsaParameters::Builder::Build() {
                          *variant_);
 }
 
+int EcdsaParameters::GetPrivateKeyLength() const {
+  switch (curve_type_) {
+    case CurveType::kNistP256:
+      return 32;
+    case CurveType::kNistP384:
+      return 48;
+    case CurveType::kNistP521:
+      return 66;
+    default:
+      return 0;
+  }
+}
+
 bool EcdsaParameters::operator==(const Parameters& other) const {
   const EcdsaParameters* that = dynamic_cast<const EcdsaParameters*>(&other);
   if (that == nullptr) return false;

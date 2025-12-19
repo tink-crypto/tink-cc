@@ -104,6 +104,7 @@ class EcdsaParameters : public SignatureParameters {
   HashType GetHashType() const { return hash_type_; }
   SignatureEncoding GetSignatureEncoding() const { return signature_encoding_; }
   Variant GetVariant() const { return variant_; }
+  int GetPrivateKeyLength() const;
 
   bool HasIdRequirement() const override {
     return variant_ != Variant::kNoPrefix;

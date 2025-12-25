@@ -286,7 +286,7 @@ class PrimitiveSet {
                           "PrimitiveSet is not mutable.");
     }
 
-    absl::MutexLock lock(*primitives_mutex_.get());
+    absl::MutexLock lock(*primitives_mutex_);
     return AddPrimitiveImpl(std::move(primitive), key_info, primitives_,
                             primitives_in_keyset_order_);
   }
@@ -317,7 +317,7 @@ class PrimitiveSet {
       return absl::Status(absl::StatusCode::kFailedPrecondition,
                           "PrimitiveSet is not mutable.");
     }
-    absl::MutexLock lock(*primitives_mutex_.get());
+    absl::MutexLock lock(*primitives_mutex_);
     return SetPrimaryImpl(&primary_, primary, primitives_);
   }
 

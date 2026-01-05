@@ -32,7 +32,6 @@ class EcUtil {
  public:
   // Returns the encoding size of a point on the specified elliptic curve
   // when the given 'point_format' is used.
-  ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline absl::StatusOr<uint32_t> EncodingSizeInBytes(
       EllipticCurveType curve_type, EcPointFormat point_format) {
     return internal::EcPointEncodingSizeInBytes(curve_type, point_format);
@@ -40,7 +39,6 @@ class EcUtil {
 
   // Returns the size (in bytes) of an element of the field over which
   // the curve is defined.
-  ABSL_DEPRECATED("Use of this function is discouraged outside Tink.")
   static inline uint32_t FieldSizeInBytes(EllipticCurveType curve_type) {
     absl::StatusOr<int32_t> size = internal::EcFieldSizeInBytes(curve_type);
     if (!size.ok()) {

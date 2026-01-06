@@ -819,7 +819,6 @@ cc_library(
         "//tink:input_stream",
         "//tink:output_stream",
         "//tink/util:status",
-        "//tink/util:statusor",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/strings",

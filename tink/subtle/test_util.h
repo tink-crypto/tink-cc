@@ -25,15 +25,12 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
-#include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "tink/input_stream.h"
 #include "tink/output_stream.h"
 #include "tink/subtle/nonce_based_streaming_aead.h"
 #include "tink/subtle/stream_segment_decrypter.h"
 #include "tink/subtle/stream_segment_encrypter.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -92,15 +89,17 @@ class DummyStreamSegmentEncrypter : public StreamSegmentEncrypter {
       if (pos == 0) {  // The first segment.
         seg_len -= (ct_offset_ + header_.size());
       }
-      if (seg_len > plaintext.size() - pos) {  // The last segment.
+      if (seg_len > static_cast<int>(plaintext.size()) - pos) {
+        // The last segment.
         seg_len = plaintext.size() - pos;
       }
       ct.append(plaintext.substr(pos, seg_len).data(), seg_len);
       pos += seg_len;
       ct.append(reinterpret_cast<const char*>(&seg_no), sizeof(seg_no));
-      ct.append(1, pos < plaintext.size() ? kNotLastSegment : kLastSegment);
+      ct.append(1, pos < static_cast<int>(plaintext.size()) ? kNotLastSegment
+                                                            : kLastSegment);
       seg_no++;
-    } while (pos < plaintext.size());
+    } while (pos < static_cast<int>(plaintext.size()));
     return ct;
   }
 

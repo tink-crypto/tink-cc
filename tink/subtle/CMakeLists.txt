@@ -782,7 +782,6 @@ tink_cc_library(
     tink::core::input_stream
     tink::core::output_stream
     tink::util::status
-    tink::util::statusor
   TESTONLY
 )
 

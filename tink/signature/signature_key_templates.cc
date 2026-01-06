@@ -126,16 +126,6 @@ const KeyTemplate& SignatureKeyTemplates::EcdsaP256() {
   return *key_template;
 }
 
-// Deprecated, use EcdsaP384Sha384() or EcdsaP384Sha512() instead.
-// static
-const KeyTemplate& SignatureKeyTemplates::EcdsaP384() {
-  static const KeyTemplate* key_template =
-      NewEcdsaKeyTemplate(HashType::SHA512, EllipticCurveType::NIST_P384,
-                          EcdsaSignatureEncoding::DER)
-          .release();
-  return *key_template;
-}
-
 // static
 const KeyTemplate& SignatureKeyTemplates::EcdsaP384Sha384() {
   static const KeyTemplate* key_template =

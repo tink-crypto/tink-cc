@@ -48,15 +48,6 @@ class SignatureKeyTemplates {
   // Returns a KeyTemplate that generates new instances of EcdsaPrivateKey
   // with the following parameters:
   //   - EC curve: NIST P-384
-  //   - hash function: SHA512
-  //   - signature encoding: DER
-  //   - OutputPrefixType: TINK
-  ABSL_DEPRECATED("Use EcdsaP384Sha384() or EcdsaP384Sha512() instead")
-  static const google::crypto::tink::KeyTemplate& EcdsaP384();
-
-  // Returns a KeyTemplate that generates new instances of EcdsaPrivateKey
-  // with the following parameters:
-  //   - EC curve: NIST P-384
   //   - hash function: SHA384
   //   - signature encoding: DER
   //   - OutputPrefixType: TINK
@@ -69,6 +60,11 @@ class SignatureKeyTemplates {
   //   - signature encoding: DER
   //   - OutputPrefixType: TINK
   static const google::crypto::tink::KeyTemplate& EcdsaP384Sha512();
+
+  ABSL_DEPRECATE_AND_INLINE()
+  static const google::crypto::tink::KeyTemplate& EcdsaP384() {
+    return EcdsaP384Sha512();
+  }
 
   // Returns a KeyTemplate that generates new instances of EcdsaPrivateKey
   // with the following parameters:

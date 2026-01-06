@@ -16,16 +16,12 @@
 #include "tink/internal/tink_proto_structs.h"
 
 #include <string>
-#include <string_view>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
-#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/internal/testing/field_with_number.h"
-#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/test_matchers.h"
 #include "proto/tink.pb.h"
 
 namespace crypto {
@@ -33,32 +29,9 @@ namespace tink {
 namespace internal {
 namespace {
 
-using ::google::crypto::tink::KeyData;
-using ::google::crypto::tink::KeyTemplate;
-using ::google::crypto::tink::OutputPrefixType;
 using ::testing::Eq;
 using ::testing::IsFalse;
 using ::testing::IsTrue;
-
-std::string GetSerializedKeyTemplate(std::string_view type_url,
-                                     std::string_view value,
-                                     OutputPrefixType output_prefix_type) {
-  KeyTemplate key_template;
-  key_template.set_type_url(type_url);
-  key_template.set_value(value);
-  key_template.set_output_prefix_type(output_prefix_type);
-  return key_template.SerializeAsString();
-}
-
-std::string GetSerializedKeyData(std::string_view type_url,
-                                 std::string_view value,
-                                 KeyData::KeyMaterialType key_material_type) {
-  KeyData key_data;
-  key_data.set_type_url(type_url);
-  key_data.set_value(value);
-  key_data.set_key_material_type(key_material_type);
-  return key_data.SerializeAsString();
-}
 
 TEST(KeyTemplateTPTest, ParseKeyTemplateTP) {
   const std::string serialized_hmac_key_template =

@@ -1694,12 +1694,9 @@ tink_cc_test(
   DEPS
     tink::internal::tink_proto_structs
     gmock
-    absl::statusor
     absl::strings
-    tink::core::secret_data
     tink::internal::testing::field_with_number
     tink::util::secret_data
-    tink::util::test_matchers
     tink::proto::tink_cc_proto
 )
 

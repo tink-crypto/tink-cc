@@ -1759,11 +1759,8 @@ cc_test(
     deps = [
         ":tink_proto_structs",
         "//proto:tink_cc_proto",
-        "//tink:secret_data",
         "//tink/internal/testing:field_with_number",
         "//tink/util:secret_data",
-        "//tink/util:test_matchers",
-        "@abseil-cpp//absl/status:statusor",
         "@abseil-cpp//absl/strings",
         "@googletest//:gtest_main",
     ],

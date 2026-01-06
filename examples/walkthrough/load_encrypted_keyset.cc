@@ -17,7 +17,6 @@
 #include "walkthrough/load_encrypted_keyset.h"
 
 // [START tink_walkthrough_load_encrypted_keyset]
-#include <iostream>
 #include <memory>
 #include <utility>
 
@@ -27,8 +26,6 @@
 #include "tink/json/json_keyset_reader.h"
 #include "tink/keyset_handle.h"
 #include "tink/keyset_reader.h"
-#include "tink/kms_client.h"
-#include "tink/kms_clients.h"
 
 namespace tink_walkthrough {
 
@@ -41,11 +38,11 @@ using ::crypto::tink::KeysetHandle;
 //  - Register AEAD implementations of Tink.
 //  - Create a KMS encrypted keyset, for example using Tinkey with Cloud KMS:
 //
-//    tinkey create-keyset --key-template AES128_GCM \
-//      --out-format json --out encrypted_aead_keyset.json \
-//      --master-key-uri gcp-kms://<KMS key uri> \
-//      --credentials gcp_credentials.json
-//  - Get the keyset encryption AEAD for the key URI with KmsClient::GetAead.
+//    `tinkey create-keyset --key-template AES128_GCM
+//      --out-format json --out encrypted_aead_keyset.json
+//      --master-key-uri gcp-kms://<KMS key uri>
+//      --credentials gcp_credentials.json`
+//  - Get the keyset encryption AEAD for the key URI with `KmsClient::GetAead`.
 //
 absl::StatusOr<std::unique_ptr<KeysetHandle>> LoadKeyset(
     absl::string_view serialized_encrypted_keyset,
@@ -54,7 +51,7 @@ absl::StatusOr<std::unique_ptr<KeysetHandle>> LoadKeyset(
   absl::StatusOr<std::unique_ptr<crypto::tink::KeysetReader>> reader =
       crypto::tink::JsonKeysetReader::New(serialized_encrypted_keyset);
   if (!reader.ok()) return reader.status();
-  // Decrypt using the KMS, parse the keyset and retuns a handle to it.
+  // Decrypt using the KMS, parse the keyset and returns a handle to it.
   return KeysetHandle::Read(*std::move(reader), keyset_encryption_aead);
 }
 

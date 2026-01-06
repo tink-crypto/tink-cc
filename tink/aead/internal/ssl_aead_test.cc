@@ -26,15 +26,16 @@
 #include "gtest/gtest.h"
 #include "absl/container/flat_hash_set.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_util.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -92,6 +93,8 @@ absl::StatusOr<std::unique_ptr<SslOneShotAead>> CipherFromName(
     case CipherType::kXchacha20Poly1305: {
       return CreateXchacha20Poly1305OneShotCrypter(key);
     }
+    default:
+      return absl::InvalidArgumentError("Unsupported cipher");
   }
 }
 

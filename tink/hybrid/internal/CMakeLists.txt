@@ -581,6 +581,7 @@ tink_cc_library(
     absl::string_view
     tink::core::aead
     tink::core::deterministic_aead
+    tink::core::secret_data
     tink::aead::aes_ctr_hmac_aead_key_manager
     tink::daead::subtle::aead_or_daead
     tink::subtle::aes_gcm_boringssl
@@ -589,7 +590,6 @@ tink_cc_library(
     tink::util::errors
     tink::util::protobuf_helper
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::proto::aes_ctr_cc_proto
     tink::proto::aes_ctr_hmac_aead_cc_proto

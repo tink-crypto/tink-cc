@@ -257,13 +257,14 @@ tink_cc_test(
     gmock
     absl::flat_hash_set
     absl::status
+    absl::statusor
     absl::strings
     absl::span
+    tink::core::secret_data
     tink::internal::fips_utils
     tink::internal::ssl_util
     tink::subtle::subtle_util
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

@@ -30,14 +30,12 @@
 #include "tink/aead/aes_ctr_hmac_aead_key_manager.h"
 #include "tink/daead/subtle/aead_or_daead.h"
 #include "tink/deterministic_aead.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/aes_gcm_boringssl.h"
 #include "tink/subtle/aes_siv_boringssl.h"
 #include "tink/subtle/xchacha20_poly1305_boringssl.h"
 #include "tink/util/errors.h"
-#include "tink/util/protobuf_helper.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/aes_ctr.pb.h"
 #include "proto/aes_ctr_hmac_aead.pb.h"
 #include "proto/aes_gcm.pb.h"
@@ -164,6 +162,9 @@ EciesAeadHkdfDemHelper::GetAeadOrDaead(
       return Wrap(subtle::XChacha20Poly1305BoringSsl::New(symmetric_key_value));
     case AES_SIV_KEY:
       return Wrap(subtle::AesSivBoringSsl::New(symmetric_key_value));
+    default:
+      return absl::Status(absl::StatusCode::kInternal,
+                          "GetAeadOrDaead: Unsupported key type.");
   }
 }
 

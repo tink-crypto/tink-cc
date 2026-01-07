@@ -322,12 +322,13 @@ tink_cc_test(
     gmock
     absl::algorithm_container
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     crypto
+    tink::core::secret_data
     tink::subtle::subtle_util
     tink::util::secret_data
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

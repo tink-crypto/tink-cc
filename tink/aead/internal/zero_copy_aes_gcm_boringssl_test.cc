@@ -16,27 +16,25 @@
 
 #include "tink/aead/internal/zero_copy_aes_gcm_boringssl.h"
 
-#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <iterator>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
-
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/algorithm/container.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
 #include "tink/aead/internal/wycheproof_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/subtle_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -60,10 +58,6 @@ constexpr absl::string_view kAssociatedData = "Some data to authenticate.";
 constexpr int kIvSizeInBytes = 12;
 constexpr int kTagSizeInBytes = 16;
 
-// The MaxSizes test verifies these constants.
-constexpr int64_t kMaxEncryptionSize =
-    kMessage.size() + kIvSizeInBytes + kTagSizeInBytes;
-// kMaxEncryptionSize - kIvSize - kTagSize.
 constexpr int64_t kMaxDecryptionSize = kMessage.size();
 
 // Encoded ciphertext of kMessage with kAssociatedData and kKey128Hex.

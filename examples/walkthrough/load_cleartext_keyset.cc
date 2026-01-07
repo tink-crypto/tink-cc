@@ -36,8 +36,8 @@ namespace tink_walkthrough {
 // Prerequisites for this example:
 //  - Create an plaintext keyset in JSON, for example, using Tinkey:
 //
-//    tinkey create-key --key-template AES256_GCM \
-//      --out-format json --out keyset.json
+//    `tinkey create-key --key-template AES256_GCM
+//        --out-format json --out keyset.json`
 //
 absl::StatusOr<std::unique_ptr<crypto::tink::KeysetHandle>> LoadKeyset(
     absl::string_view serialized_keyset) {

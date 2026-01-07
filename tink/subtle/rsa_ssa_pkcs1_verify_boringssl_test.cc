@@ -38,7 +38,6 @@
 #include "tink/signature/internal/testing/signature_test_vector.h"
 #include "tink/signature/rsa_ssa_pkcs1_private_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -204,11 +203,9 @@ bool TestSignatures(const std::string& filename) {
       parsed_input->fields().at("testGroups");
   int passed_tests = 0;
   int failed_tests = 0;
-  int group_count = 0;
   for (const google::protobuf::Value& test_group :
        test_groups.list_value().values()) {
     auto test_group_fields = test_group.struct_value().fields();
-    group_count++;
     auto verifier_result = GetVerifier(test_group);
     ABSL_CHECK_OK(verifier_result.status());
     auto verifier = std::move(verifier_result.value());

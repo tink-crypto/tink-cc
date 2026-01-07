@@ -169,6 +169,7 @@ tink_cc_library(
     tink::util::status
     tink::util::statusor
     absl::core_headers
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor

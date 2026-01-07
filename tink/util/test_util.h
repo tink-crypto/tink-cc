@@ -25,6 +25,7 @@
 #include <utility>
 
 #include "absl/base/thread_annotations.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -366,17 +367,19 @@ class DummyStreamingAead : public StreamingAead {
     absl::StatusOr<int> Next(void** data) override {
       if (!after_init_) {  // Try to initialize.
         after_init_ = true;
-        auto next_result = ct_dest_->Next(data);
+        absl::StatusOr<int> next_result = ct_dest_->Next(data);
         if (!next_result.ok()) {
           status_ = next_result.status();
           return status_;
         }
-        if (next_result.value() < header_.size()) {
+        ABSL_CHECK_GE(*next_result, 0);
+        if (static_cast<size_t>(*next_result) < header_.size()) {
           status_ =
               absl::Status(absl::StatusCode::kInternal, "Buffer too small");
         } else {
-          memcpy(*data, header_.data(), static_cast<int>(header_.size()));
-          ct_dest_->BackUp(next_result.value() - header_.size());
+          memcpy(*data, header_.data(), header_.size());
+          ct_dest_->BackUp(*next_result -
+                           static_cast<int>(header_.size()));
         }
       }
       if (!status_.ok()) return status_;
@@ -433,7 +436,7 @@ class DummyStreamingAead : public StreamingAead {
     absl::StatusOr<int> Next(const void** data) override {
       if (!after_init_) {  // Try to initialize.
         after_init_ = true;
-        auto next_result = ct_source_->Next(data);
+        absl::StatusOr<int> next_result = ct_source_->Next(data);
         if (!next_result.ok()) {
           status_ = next_result.status();
           if (status_.code() == absl::StatusCode::kOutOfRange) {
@@ -442,16 +445,17 @@ class DummyStreamingAead : public StreamingAead {
           }
           return status_;
         }
-        if (next_result.value() < exp_header_.size()) {
+        ABSL_CHECK_GE(*next_result, 0);
+        if (static_cast<size_t>(*next_result) < exp_header_.size()) {
           status_ =
               absl::Status(absl::StatusCode::kInternal, "Buffer too small");
-        } else if (memcmp((*data), exp_header_.data(),
-                          static_cast<int>(exp_header_.size()))) {
+        } else if (memcmp((*data), exp_header_.data(), exp_header_.size())) {
           status_ = absl::Status(absl::StatusCode::kInvalidArgument,
                                  "Corrupted header");
         }
         if (status_.ok()) {
-          ct_source_->BackUp(next_result.value() - exp_header_.size());
+          ct_source_->BackUp(*next_result -
+                             static_cast<int>(exp_header_.size()));
         }
       }
       if (!status_.ok()) return status_;
@@ -531,11 +535,12 @@ class DummyStreamingAead : public StreamingAead {
       // EOF or Ok indicate a valid read has happened.
       header_check_status_ = absl::OkStatus();
       // Invalid header.
-      if (buf->size() < exp_header_.size()) {
+      ABSL_CHECK_GE(buf->size(), 0);
+      if (static_cast<size_t>(buf->size()) < exp_header_.size()) {
         header_check_status_ = absl::Status(absl::StatusCode::kInvalidArgument,
                                             "Could not read header");
       } else if (memcmp(buf->get_mem_block(), exp_header_.data(),
-                        static_cast<int>(exp_header_.size()))) {
+                        exp_header_.size())) {
         header_check_status_ = absl::Status(absl::StatusCode::kInvalidArgument,
                                             "Corrupted header");
       }

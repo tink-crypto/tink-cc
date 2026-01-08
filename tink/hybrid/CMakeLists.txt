@@ -139,16 +139,18 @@ tink_cc_library(
     ecies_aead_hkdf_hybrid_decrypt.cc
     ecies_aead_hkdf_hybrid_decrypt.h
   DEPS
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     tink::core::hybrid_decrypt
+    tink::core::secret_data
     tink::hybrid::internal::ecies_aead_hkdf_dem_helper
     tink::internal::ec_util
     tink::subtle::ecies_hkdf_recipient_kem_boringssl
     tink::util::enums
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
     tink::proto::ecies_aead_hkdf_cc_proto
 )

@@ -16,10 +16,12 @@
 
 #include "tink/hybrid/internal/hpke_decrypt.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -183,17 +185,19 @@ absl::StatusOr<std::unique_ptr<HybridDecrypt>> HpkeDecrypt::New(
 
 absl::StatusOr<std::string> HpkeDecrypt::DecryptNoPrefix(
     absl::string_view ciphertext, absl::string_view context_info) const {
-  absl::StatusOr<int32_t> encoding_size =
+  absl::StatusOr<int32_t> encoding_size_result =
       internal::HpkeEncapsulatedKeyLength(hpke_params_.kem());
-  if (!encoding_size.ok()) return encoding_size.status();
+  if (!encoding_size_result.ok()) return encoding_size_result.status();
 
+  ABSL_CHECK_GE(*encoding_size_result, 0);
+  size_t encoding_size = static_cast<size_t>(*encoding_size_result);
   // Verify that ciphertext length is at least the encapsulated key length.
-  if (ciphertext.size() < *encoding_size) {
+  if (ciphertext.size() < encoding_size) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Ciphertext is too short.");
   }
-  absl::string_view encapsulated_key = ciphertext.substr(0, *encoding_size);
-  absl::string_view ciphertext_payload = ciphertext.substr(*encoding_size);
+  absl::string_view encapsulated_key = ciphertext.substr(0, encoding_size);
+  absl::string_view ciphertext_payload = ciphertext.substr(encoding_size);
 
   absl::StatusOr<internal::HpkeParams> params =
       internal::HpkeParamsProtoToStruct(hpke_params_);

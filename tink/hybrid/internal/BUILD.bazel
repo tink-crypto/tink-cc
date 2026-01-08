@@ -61,6 +61,7 @@ cc_library(
         "//tink/hybrid:hpke_private_key",
         "//tink/util:secret_data",
         "//tink/util:statusor",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

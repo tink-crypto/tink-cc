@@ -16,6 +16,7 @@
 
 #include "tink/hybrid/internal/hpke_context_boringssl.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -100,7 +101,7 @@ TEST_P(HpkeContextBoringSslTest, SenderExport) {
           params->seed_for_testing);
   ASSERT_THAT(sender_hpke_context, IsOk());
 
-  for (int i = 0; i < params->exported_contexts.size(); ++i) {
+  for (size_t i = 0; i < params->exported_contexts.size(); ++i) {
     absl::StatusOr<SecretData> sender_secret =
         sender_hpke_context->context->Export(params->exported_contexts[i], 32);
     ASSERT_THAT(sender_secret,
@@ -121,7 +122,7 @@ TEST_P(HpkeContextBoringSslTest, RecipientExport) {
           params->encapsulated_key, params->application_info);
   ASSERT_THAT(recipient_hpke_context, IsOk());
 
-  for (int i = 0; i < params->exported_contexts.size(); ++i) {
+  for (size_t i = 0; i < params->exported_contexts.size(); ++i) {
     absl::StatusOr<SecretData> recipient_secret =
         (*recipient_hpke_context)->Export(params->exported_contexts[i], 32);
     ASSERT_THAT(recipient_secret,

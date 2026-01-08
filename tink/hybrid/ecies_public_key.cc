@@ -16,6 +16,7 @@
 
 #include "tink/hybrid/ecies_public_key.h"
 
+#include <cstddef>
 #include <string>
 
 #include "absl/status/status.h"
@@ -161,7 +162,8 @@ absl::StatusOr<EciesPublicKey> EciesPublicKey::CreateForCurveX25519(
   }
 
   // Validate key length.
-  if (public_key_bytes.length() != internal::X25519KeyPubKeySize()) {
+  if (public_key_bytes.length() !=
+      static_cast<size_t>(internal::X25519KeyPubKeySize())) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat(

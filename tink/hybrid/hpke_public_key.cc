@@ -16,6 +16,7 @@
 
 #include "tink/hybrid/hpke_public_key.h"
 
+#include <cstddef>
 #include <string>
 
 #include "absl/status/status.h"
@@ -37,7 +38,7 @@ namespace {
 
 absl::Status ValidatePublicKey(HpkeParameters::KemId kem_id,
                                absl::string_view public_key_bytes) {
-  int expected_length;
+  size_t expected_length;
   subtle::EllipticCurveType curve;
   switch (kem_id) {
       // Key lengths from 'Npk' column in

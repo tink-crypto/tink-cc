@@ -16,21 +16,24 @@
 
 #include "tink/hybrid/ecies_aead_hkdf_hybrid_decrypt.h"
 
+#include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/hybrid/internal/ecies_aead_hkdf_dem_helper.h"
 #include "tink/hybrid_decrypt.h"
 #include "tink/internal/ec_util.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/ecies_hkdf_recipient_kem_boringssl.h"
 #include "tink/util/enums.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "proto/ecies_aead_hkdf.pb.h"
 
 using ::google::crypto::tink::EciesAeadHkdfPrivateKey;
@@ -89,12 +92,14 @@ absl::StatusOr<std::unique_ptr<HybridDecrypt>> EciesAeadHkdfHybridDecrypt::New(
 absl::StatusOr<std::string> EciesAeadHkdfHybridDecrypt::Decrypt(
     absl::string_view ciphertext, absl::string_view context_info) const {
   // Extract KEM-bytes from the ciphertext.
-  auto header_size_result = internal::EcPointEncodingSizeInBytes(
-      util::Enums::ProtoToSubtle(
-          recipient_key_params_.kem_params().curve_type()),
-      util::Enums::ProtoToSubtle(recipient_key_params_.ec_point_format()));
+  absl::StatusOr<int32_t> header_size_result =
+      internal::EcPointEncodingSizeInBytes(
+          util::Enums::ProtoToSubtle(
+              recipient_key_params_.kem_params().curve_type()),
+          util::Enums::ProtoToSubtle(recipient_key_params_.ec_point_format()));
   if (!header_size_result.ok()) return header_size_result.status();
-  auto header_size = header_size_result.value();
+  ABSL_CHECK_GE(*header_size_result, 0);
+  size_t header_size = static_cast<size_t>(*header_size_result);
   if (ciphertext.size() < header_size) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");

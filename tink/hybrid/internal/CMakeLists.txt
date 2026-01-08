@@ -50,6 +50,7 @@ tink_cc_library(
   DEPS
     tink::hybrid::internal::hpke_context
     tink::hybrid::internal::hpke_util
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor

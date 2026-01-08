@@ -100,7 +100,7 @@ MutableSerializationRegistry::ParseParametersWithLegacyFallback(
 absl::StatusOr<std::unique_ptr<Key>> MutableSerializationRegistry::ParseKey(
     const Serialization& serialization,
     absl::optional<SecretKeyAccessToken> token) {
-  absl::ReaderMutexLock lock(&registry_mutex_);
+  absl::ReaderMutexLock lock(registry_mutex_);
   return registry_.ParseKey(serialization, token);
 }
 

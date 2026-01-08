@@ -34,8 +34,10 @@ tink_cc_library(
     hkdf_streaming_prf.h
   DEPS
     tink::subtle::prf::streaming_prf
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::input_stream

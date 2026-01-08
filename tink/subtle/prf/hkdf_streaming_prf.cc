@@ -23,8 +23,10 @@
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
@@ -62,7 +64,8 @@ class HkdfInputStream : public InputStream {
     if (!stream_status_.ok()) {
       return stream_status_;
     }
-    if (position_in_ti_ < ti_.size()) {
+    ABSL_CHECK_GE(position_in_ti_, 0);
+    if (static_cast<size_t>(position_in_ti_) < ti_.size()) {
       return returnDataFromPosition(data);
     }
     if (i_ == 255) {

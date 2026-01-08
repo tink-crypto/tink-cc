@@ -16,6 +16,7 @@
 
 #include "tink/jwt/jwk_set_converter.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <ostream>
@@ -24,6 +25,7 @@
 #include <utility>
 
 #include "google/protobuf/struct.pb.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -371,8 +373,13 @@ absl::StatusOr<KeyData> EsPublicKeyDataFromKeyStruct(const Struct& key_struct) {
 absl::StatusOr<std::pair<std::string, std::string>> Sec1EncodeCoordinates(
     absl::string_view x, absl::string_view y,
     subtle::EllipticCurveType curve_type) {
-  absl::StatusOr<int32_t> encoded_size =
+  absl::StatusOr<int32_t> encoded_size_result =
       internal::EcFieldSizeInBytes(curve_type);
+  if (!encoded_size_result.ok()) {
+    return encoded_size_result.status();
+  }
+  ABSL_CHECK_GE(*encoded_size_result, 0);
+  size_t encoded_size = static_cast<size_t>(*encoded_size_result);
   absl::StatusOr<internal::SslUniquePtr<EC_POINT>> point =
       internal::GetEcPoint(curve_type, x, y);
   if (!point.ok()) {
@@ -384,13 +391,13 @@ absl::StatusOr<std::pair<std::string, std::string>> Sec1EncodeCoordinates(
   if (!uncompressed_point.ok()) {
     return uncompressed_point.status();
   }
-  if ((*uncompressed_point).size() != *encoded_size * 2 + 1) {
+  if ((*uncompressed_point).size() != encoded_size * 2 + 1) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "invalid encoded size");
   }
   return std::make_pair(
-      uncompressed_point.value().substr(1, *encoded_size),
-      uncompressed_point.value().substr(*encoded_size + 1, *encoded_size));
+      uncompressed_point.value().substr(1, encoded_size),
+      uncompressed_point.value().substr(encoded_size + 1, encoded_size));
 }
 
 }  // namespace

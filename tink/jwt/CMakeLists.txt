@@ -83,6 +83,7 @@ tink_cc_library(
     jwk_set_converter.h
   DEPS
     protobuf::libprotobuf
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor

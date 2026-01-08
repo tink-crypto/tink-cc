@@ -16,6 +16,7 @@
 
 #include "tink/jwt/internal/raw_jwt_hmac_key_manager.h"
 
+#include <cstddef>
 
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -36,7 +37,7 @@ using google::crypto::tink::JwtHmacKeyFormat;
 
 namespace {
 
-absl::StatusOr<int> MinimumKeySize(const JwtHmacAlgorithm& algorithm) {
+absl::StatusOr<size_t> MinimumKeySize(const JwtHmacAlgorithm& algorithm) {
   switch (algorithm) {
     case JwtHmacAlgorithm::HS256:
       return 32;
@@ -65,7 +66,7 @@ absl::StatusOr<JwtHmacKey> RawJwtHmacKeyManager::CreateKey(
 absl::Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
   absl::Status status = ValidateVersion(key.version(), get_version());
   if (!status.ok()) return status;
-  absl::StatusOr<int> min_key_size = MinimumKeySize(key.algorithm());
+  absl::StatusOr<size_t> min_key_size = MinimumKeySize(key.algorithm());
   if (!min_key_size.ok()) {
     return min_key_size.status();
   }
@@ -79,7 +80,7 @@ absl::Status RawJwtHmacKeyManager::ValidateKey(const JwtHmacKey& key) const {
 // static
 absl::Status RawJwtHmacKeyManager::ValidateKeyFormat(
     const JwtHmacKeyFormat& key_format) const {
-  absl::StatusOr<int> min_key_size = MinimumKeySize(key_format.algorithm());
+  absl::StatusOr<size_t> min_key_size = MinimumKeySize(key_format.algorithm());
   if (!min_key_size.ok()) {
     return min_key_size.status();
   }

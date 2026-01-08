@@ -145,6 +145,7 @@ cc_library(
         "//tink/jwt/internal:jwt_format",
         "//tink/subtle:common_enums",
         "//tink/util:keyset_util",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/memory",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

@@ -18,6 +18,7 @@
 
 #include <stdint.h>
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -232,8 +233,8 @@ TEST_F(KmsEnvelopeAeadTest, MultipleEncryptionsProduceDifferentDeks) {
     ciphertexts.push_back(key);
   }
 
-  for (int i = 0; i < ciphertexts.size() - 1; i++) {
-    for (int j = i + 1; j < ciphertexts.size(); j++) {
+  for (size_t i = 0; i < ciphertexts.size() - 1; i++) {
+    for (size_t j = i + 1; j < ciphertexts.size(); j++) {
       EXPECT_THAT(ciphertexts[i].SerializeAsString(),
                   Not(Eq(ciphertexts[j].SerializeAsString())));
     }

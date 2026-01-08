@@ -18,11 +18,13 @@
 
 #include <stdint.h>
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/aead.h"
 #include "tink/core/key_type_manager.h"
@@ -33,8 +35,6 @@
 #include "tink/util/constants.h"
 #include "tink/util/input_stream_util.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/validation.h"
 #include "proto/tink.pb.h"
 #include "proto/xchacha20_poly1305.pb.h"
@@ -122,7 +122,7 @@ class XChaCha20Poly1305KeyManager
   const std::string key_type_ =
       absl::StrCat(kTypeGoogleapisCom,
                    google::crypto::tink::XChaCha20Poly1305Key().GetTypeName());
-  const int kKeySizeInBytes = 32;
+  const size_t kKeySizeInBytes = 32;
 };
 
 }  // namespace tink

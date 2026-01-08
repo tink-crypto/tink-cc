@@ -21,11 +21,9 @@
 #include "absl/algorithm/container.h"
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
-
 namespace crypto {
 namespace tink {
 
@@ -122,12 +120,12 @@ AesCtrHmacAeadParameters::Builder::Build() {
                      *tag_size_in_bytes_, " bytes."));
   }
   // The maximum allowed value of the tag size is limited by the hash type used.
-  static const absl::flat_hash_map<HashType, uint32_t>* kMaxTagSizes =
-      new absl::flat_hash_map<HashType, uint32_t>{{HashType::kSha1, 20},
-                                                  {HashType::kSha224, 28},
-                                                  {HashType::kSha256, 32},
-                                                  {HashType::kSha384, 48},
-                                                  {HashType::kSha512, 64}};
+  static const absl::flat_hash_map<HashType, int32_t>* kMaxTagSizes =
+      new absl::flat_hash_map<HashType, int32_t>{{HashType::kSha1, 20},
+                                             {HashType::kSha224, 28},
+                                             {HashType::kSha256, 32},
+                                             {HashType::kSha384, 48},
+                                             {HashType::kSha512, 64}};
   if (kMaxTagSizes->find(*hash_type_) == kMaxTagSizes->end()) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,

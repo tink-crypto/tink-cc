@@ -231,6 +231,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     tink::core::aead
     tink::core::key_type_manager
@@ -241,8 +242,6 @@ tink_cc_library(
     tink::util::constants
     tink::util::input_stream_util
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
     tink::util::validation
     tink::proto::tink_cc_proto
     tink::proto::xchacha20_poly1305_cc_proto
@@ -611,10 +610,10 @@ tink_cc_library(
     absl::algorithm_container
     absl::flat_hash_map
     absl::status
+    absl::statusor
     absl::strings
     absl::optional
     tink::core::parameters
-    tink::util::status
     tink::util::statusor
 )
 

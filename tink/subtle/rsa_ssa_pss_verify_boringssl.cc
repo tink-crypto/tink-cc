@@ -16,14 +16,17 @@
 
 #include "tink/subtle/rsa_ssa_pss_verify_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
@@ -41,9 +44,6 @@
 #include "tink/signature/rsa_ssa_pss_parameters.h"
 #include "tink/signature/rsa_ssa_pss_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/errors.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -72,8 +72,9 @@ absl::Status SslRsaSsaPssVerify(RSA* rsa_public_key,
                                 const EVP_MD* sig_md, const EVP_MD* mgf1_md,
                                 int32_t salt_length) {
   const int kHashSize = EVP_MD_size(sig_md);
+  ABSL_CHECK_GE(kHashSize, 0);
   // Make sure the size of the digest is correct.
-  if (message_digest.size() != kHashSize) {
+  if (message_digest.size() != static_cast<size_t>(kHashSize)) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Size of the digest doesn't match the one "

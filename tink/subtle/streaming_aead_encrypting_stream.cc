@@ -23,7 +23,7 @@
 #include <utility>
 #include <vector>
 
-#include "absl/memory/memory.h"
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "tink/output_stream.h"
@@ -170,7 +170,9 @@ absl::Status StreamingAeadEncryptingStream::Close() {
   // The last segment encrypts plaintext from pt_to_encrypt_,
   // unless the current pt_buffer_ has some plaintext bytes.
   std::vector<uint8_t>* pt_last_segment = &pt_to_encrypt_;
-  if ((!pt_buffer_.empty()) && count_backedup_ < pt_buffer_.size()) {
+  ABSL_CHECK_GE(count_backedup_, 0);
+  if ((!pt_buffer_.empty()) &&
+      static_cast<size_t>(count_backedup_) < pt_buffer_.size()) {
     // The last segment encrypts plaintext from pt_buffer_.
     pt_buffer_.resize(pt_buffer_.size() - count_backedup_);
     pt_last_segment = &pt_buffer_;

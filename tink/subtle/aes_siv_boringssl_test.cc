@@ -28,6 +28,7 @@
 #include "absl/strings/string_view.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/testing/wycheproof_util.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
@@ -121,7 +122,7 @@ TEST(AesSivBoringSslTest, testEncryptDecryptKeySizes) {
       "812731321de508761437195ff231765aa4913219873ac6918639816312130011"
       "abc900bba11400187984719827431246bbab1231eb4145215ff7141436616beb"
       "9817298148712fed3aab61000ff123313e");
-  for (int keysize = 0; keysize < keymaterial.size(); ++keysize) {
+  for (size_t keysize = 0; keysize < keymaterial.size(); ++keysize) {
     SecretData key = util::SecretDataFromStringView(
         absl::string_view(keymaterial).substr(0, keysize));
     auto cipher = AesSivBoringSsl::New(key);

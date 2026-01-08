@@ -22,6 +22,7 @@
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/strings/str_cat.h"
@@ -105,7 +106,12 @@ absl::Status EncryptThenDecrypt(StreamingAead* encrypter,
   auto enc_stream = std::move(enc_stream_result.value());
   status = subtle::test::WriteToStream(enc_stream.get(), plaintext);
   if (!status.ok()) return status;
-  if (plaintext.size() != enc_stream->Position()) {
+  int pos = enc_stream->Position();
+  if (pos < 0) {
+    return absl::Status(absl::StatusCode::kInternal,
+                        "Stream position is negative.");
+  }
+  if (plaintext.size() != static_cast<size_t>(pos)) {
     return absl::Status(absl::StatusCode::kInternal,
                         "Plaintext size different from stream position.");
   }

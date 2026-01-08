@@ -16,12 +16,14 @@
 
 #include "tink/subtle/ecies_hkdf_recipient_kem_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/ec.h"
@@ -30,12 +32,10 @@
 #include "tink/internal/ec_util.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/hkdf.h"
 #include "tink/util/errors.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -132,7 +132,7 @@ EciesHkdfX25519RecipientKemBoringSsl::New(EllipticCurveType curve,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "curve is not CURVE25519");
   }
-  if (priv_key.size() != internal::X25519KeyPubKeySize()) {
+  if (priv_key.size() != static_cast<size_t>(internal::X25519KeyPubKeySize())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "pubx has unexpected length");
   }
@@ -163,7 +163,8 @@ absl::StatusOr<SecretData> EciesHkdfX25519RecipientKemBoringSsl::GenerateKey(
         "X25519 only supports compressed elliptic curve points");
   }
 
-  if (kem_bytes.size() != internal::X25519KeyPubKeySize()) {
+  if (kem_bytes.size() !=
+      static_cast<size_t>(internal::X25519KeyPubKeySize())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "kem_bytes has unexpected size");
   }

@@ -24,6 +24,7 @@
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -38,8 +39,6 @@
 #include "tink/public_key_verify.h"
 #include "tink/signature/ed25519_parameters.h"
 #include "tink/signature/ed25519_public_key.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -63,7 +62,8 @@ absl::StatusOr<std::unique_ptr<PublicKeyVerify>> Ed25519VerifyBoringSsl::New(
   auto status = internal::CheckFipsCompatibility<Ed25519VerifyBoringSsl>();
   if (!status.ok()) return status;
 
-  if (public_key.length() != internal::Ed25519KeyPubKeySize()) {
+  if (public_key.length() !=
+      static_cast<size_t>(internal::Ed25519KeyPubKeySize())) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat("Invalid ED25519 public key size (%d). "

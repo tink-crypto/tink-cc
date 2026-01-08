@@ -60,15 +60,16 @@ tink_cc_library(
     tink::subtle::hkdf
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
+    tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::ec_util
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::util::errors
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 
@@ -140,6 +141,7 @@ tink_cc_library(
   DEPS
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     crypto
@@ -288,8 +290,10 @@ tink_cc_library(
     rsa_ssa_pss_verify_boringssl.h
   DEPS
     tink::subtle::common_enums
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::core::partial_key_access
@@ -302,7 +306,6 @@ tink_cc_library(
     tink::internal::util
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_public_key
-    tink::util::errors
     tink::util::status
     tink::util::statusor
 )
@@ -317,12 +320,13 @@ tink_cc_library(
     tink::subtle::subtle_util
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
-    absl::span
     crypto
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
     tink::core::public_key_sign
+    tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::err_util
     tink::internal::fips_utils
@@ -334,7 +338,6 @@ tink_cc_library(
     tink::signature::rsa_ssa_pss_parameters
     tink::signature::rsa_ssa_pss_private_key
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 
@@ -566,19 +569,19 @@ tink_cc_library(
     tink::subtle::ind_cpa_cipher
     tink::subtle::random
     tink::subtle::subtle_util
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     crypto
+    tink::core::secret_data
     tink::internal::aes_util
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::fips_utils
     tink::internal::ssl_unique_ptr
     tink::internal::util
-    tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -740,7 +743,7 @@ tink_cc_library(
     streaming_aead_encrypting_stream.h
   DEPS
     tink::subtle::stream_segment_encrypter
-    absl::memory
+    absl::absl_check
     absl::status
     absl::statusor
     tink::core::output_stream
@@ -809,6 +812,7 @@ tink_cc_library(
     streaming_aead_test_util.h
   DEPS
     tink::subtle::test_util
+    absl::absl_check
     absl::memory
     absl::status
     absl::strings
@@ -1168,6 +1172,7 @@ tink_cc_test(
     gmock
     absl::status
     absl::string_view
+    tink::core::secret_data
     tink::config::tink_fips
     tink::internal::testing::wycheproof_util
     tink::util::secret_data

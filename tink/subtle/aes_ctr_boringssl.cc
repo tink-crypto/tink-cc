@@ -22,8 +22,10 @@
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/evp.h"
 #include "tink/internal/aes_util.h"
@@ -32,12 +34,10 @@
 #include "tink/internal/fips_utils.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/ind_cpa_cipher.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/subtle_util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -104,7 +104,8 @@ absl::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
         if (ret != 1) {
           return absl::Status(absl::StatusCode::kInternal, "encryption failed");
         }
-        if (len != plaintext.size()) {
+        ABSL_CHECK_GE(len, 0);
+        if (static_cast<size_t>(len) != plaintext.size()) {
           return absl::Status(absl::StatusCode::kInternal,
                               "incorrect ciphertext size");
         }
@@ -122,7 +123,8 @@ absl::StatusOr<std::string> AesCtrBoringSsl::Encrypt(
 
 absl::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
     absl::string_view ciphertext) const {
-  if (ciphertext.size() < iv_size_) {
+  ABSL_CHECK_GE(iv_size_, 0);
+  if (ciphertext.size() < static_cast<size_t>(iv_size_)) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "ciphertext too short");
   }
@@ -175,8 +177,8 @@ absl::StatusOr<std::string> AesCtrBoringSsl::Decrypt(
         if (ret != 1) {
           return absl::Status(absl::StatusCode::kInternal, "decryption failed");
         }
-
-        if (len != plaintext_size) {
+        ABSL_CHECK_GE(len, 0);
+        if (static_cast<size_t>(len) != plaintext_size) {
           return absl::Status(absl::StatusCode::kInternal,
                               "incorrect plaintext size");
         }

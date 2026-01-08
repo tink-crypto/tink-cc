@@ -123,7 +123,7 @@ void AesSivBoringSsl::MultiplyByX(uint8_t block[kBlockSize]) {
 void AesSivBoringSsl::XorBlock(const uint8_t x[kBlockSize],
                                const uint8_t y[kBlockSize],
                                uint8_t res[kBlockSize]) {
-  for (int i = 0; i < kBlockSize; ++i) {
+  for (size_t i = 0; i < kBlockSize; ++i) {
     res[i] = x[i] ^ y[i];
   }
 }
@@ -165,14 +165,14 @@ void AesSivBoringSsl::CmacLong(absl::Span<const uint8_t> data,
     idx += kBlockSize;
   }
   size_t remaining = data.size() - idx;
-  for (int j = 0; j < kBlockSize - remaining; ++j) {
+  for (size_t j = 0; j < kBlockSize - remaining; ++j) {
     block[remaining + j] ^= last[j];
   }
   if (remaining == 0) {
     XorBlock(block, cmac_k1_.data(), block);
   } else {
     EncryptBlock(block, block);
-    for (int j = 0; j < remaining; ++j) {
+    for (size_t j = 0; j < remaining; ++j) {
       block[j] ^= last[kBlockSize - remaining + j];
       block[j] ^= data[idx + j];
     }

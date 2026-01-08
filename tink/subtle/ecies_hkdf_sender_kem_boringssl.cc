@@ -16,6 +16,7 @@
 
 #include "tink/subtle/ecies_hkdf_sender_kem_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -145,7 +146,7 @@ EciesHkdfX25519SendKemBoringSsl::New(subtle::EllipticCurveType curve,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "curve is not CURVE25519");
   }
-  if (pubx.size() != internal::X25519KeyPubKeySize()) {
+  if (pubx.size() != static_cast<size_t>(internal::X25519KeyPubKeySize())) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "pubx has unexpected length");
   }

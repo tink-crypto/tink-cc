@@ -180,7 +180,7 @@ absl::Status RegistryImpl::RegisterKeyManager(KeyManager<P>* manager,
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Parameter 'manager' must be non-null.");
   }
-  absl::MutexLock lock(&maps_mutex_);
+  absl::MutexLock lock(maps_mutex_);
   return key_type_info_store_.AddKeyManager(std::move(owned_manager),
                                             new_key_allowed);
 }
@@ -194,7 +194,7 @@ absl::Status RegistryImpl::RegisterKeyTypeManager(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Parameter 'manager' must be non-null.");
   }
-  absl::MutexLock lock(&maps_mutex_);
+  absl::MutexLock lock(maps_mutex_);
   return key_type_info_store_.AddKeyTypeManager(std::move(manager),
                                                 new_key_allowed);
 }
@@ -218,7 +218,7 @@ absl::Status RegistryImpl::RegisterAsymmetricKeyManagers(
                         "Parameter 'public_manager' must be non-null.");
   }
 
-  absl::MutexLock lock(&maps_mutex_);
+  absl::MutexLock lock(maps_mutex_);
   return key_type_info_store_.AddAsymmetricKeyTypeManagers(
       std::move(owned_private_manager), std::move(owned_public_manager),
       new_key_allowed);
@@ -233,7 +233,7 @@ absl::Status RegistryImpl::RegisterPrimitiveWrapper(
   }
   std::unique_ptr<PrimitiveWrapper<P, Q>> owned_wrapper(wrapper);
 
-  absl::MutexLock lock(&maps_mutex_);
+  absl::MutexLock lock(maps_mutex_);
   absl::AnyInvocable<absl::StatusOr<std::unique_ptr<P>>(
       const google::crypto::tink::KeyData& key_data) const>
       primitive_getter = [this](const google::crypto::tink::KeyData& key_data) {
@@ -284,7 +284,7 @@ absl::StatusOr<std::unique_ptr<P>> RegistryImpl::Wrap(
   }
   const PrimitiveWrapper<P, P>* wrapper = nullptr;
   {
-    absl::MutexLock lock(&maps_mutex_);
+    absl::MutexLock lock(maps_mutex_);
     absl::StatusOr<const PrimitiveWrapper<P, P>*> wrapper_status =
         keyset_wrapper_store_.GetPrimitiveWrapper<P>();
     if (!wrapper_status.ok()) {
@@ -301,7 +301,7 @@ absl::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
     const absl::flat_hash_map<std::string, std::string>& annotations) const {
   const KeysetWrapper<P>* keyset_wrapper = nullptr;
   {
-    absl::MutexLock lock(&maps_mutex_);
+    absl::MutexLock lock(maps_mutex_);
     absl::StatusOr<const KeysetWrapper<P>*> keyset_wrapper_status =
         keyset_wrapper_store_.Get<P>();
     if (!keyset_wrapper_status.ok()) {
@@ -315,7 +315,7 @@ absl::StatusOr<std::unique_ptr<P>> RegistryImpl::WrapKeyset(
 }
 
 inline absl::Status RegistryImpl::RestrictToFipsIfEmpty() const {
-  absl::MutexLock lock(&maps_mutex_);
+  absl::MutexLock lock(maps_mutex_);
   // If we are already in FIPS mode, then do nothing..
   if (IsFipsModeEnabled()) {
     return absl::OkStatus();

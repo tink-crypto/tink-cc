@@ -80,7 +80,7 @@ class MutableSerializationRegistry {
   template <typename SerializationT>
   absl::StatusOr<std::unique_ptr<Serialization>> SerializeParameters(
       const Parameters& parameters) ABSL_LOCKS_EXCLUDED(registry_mutex_) {
-    absl::ReaderMutexLock lock(&registry_mutex_);
+    absl::ReaderMutexLock lock(registry_mutex_);
     return registry_.SerializeParameters<SerializationT>(parameters);
   }
 
@@ -101,7 +101,7 @@ class MutableSerializationRegistry {
   absl::StatusOr<std::unique_ptr<Serialization>> SerializeKey(
       const Key& key, absl::optional<SecretKeyAccessToken> token)
       ABSL_LOCKS_EXCLUDED(registry_mutex_) {
-    absl::ReaderMutexLock lock(&registry_mutex_);
+    absl::ReaderMutexLock lock(registry_mutex_);
     return registry_.SerializeKey<SerializationT>(key, token);
   }
 

@@ -44,7 +44,7 @@ using ::google::crypto::tink::KeyTemplate;
 
 absl::StatusOr<const KeyTypeInfoStore::Info*> RegistryImpl::get_key_type_info(
     absl::string_view type_url) const {
-  absl::MutexLock lock(&maps_mutex_);
+  absl::MutexLock lock(maps_mutex_);
   return key_type_info_store_.Get(type_url);
 }
 
@@ -106,7 +106,7 @@ absl::Status RegistryImpl::RegisterMonitoringClientFactory(
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "Monitoring factory must not be null");
   }
-  absl::MutexLock lock(&monitoring_factory_mutex_);
+  absl::MutexLock lock(monitoring_factory_mutex_);
   if (GetMonitoringClientFactory() != nullptr) {
     return absl::Status(absl::StatusCode::kAlreadyExists,
                         "A monitoring factory is already registered");
@@ -117,12 +117,12 @@ absl::Status RegistryImpl::RegisterMonitoringClientFactory(
 
 void RegistryImpl::Reset() {
   {
-    absl::MutexLock lock(&maps_mutex_);
+    absl::MutexLock lock(maps_mutex_);
     key_type_info_store_ = KeyTypeInfoStore();
     keyset_wrapper_store_ = KeysetWrapperStore();
   }
   {
-    absl::MutexLock lock(&monitoring_factory_mutex_);
+    absl::MutexLock lock(monitoring_factory_mutex_);
     internal::MonitoringClientFactory* factory =
         monitoring_factory_.exchange(nullptr);
     delete factory;

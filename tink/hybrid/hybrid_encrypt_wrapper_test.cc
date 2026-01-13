@@ -115,28 +115,27 @@ TEST_F(HybridEncryptSetWrapperTest, testBasic) {
     std::string hybrid_name_0 = "hybrid_0";
     std::string hybrid_name_1 = "hybrid_1";
     std::string hybrid_name_2 = "hybrid_2";
-    auto hybrid_encrypt_set = std::make_unique<PrimitiveSet<HybridEncrypt>>();
-    std::unique_ptr<HybridEncrypt> hybrid_encrypt(
-        new DummyHybridEncrypt(hybrid_name_0));
-    auto entry_result = hybrid_encrypt_set->AddPrimitive(
-        std::move(hybrid_encrypt), keyset_info.key_info(0));
-    ASSERT_TRUE(entry_result.ok());
-    hybrid_encrypt = std::make_unique<DummyHybridEncrypt>(hybrid_name_1);
-    entry_result = hybrid_encrypt_set->AddPrimitive(std::move(hybrid_encrypt),
-                                                    keyset_info.key_info(1));
-    ASSERT_TRUE(entry_result.ok());
-    hybrid_encrypt = std::make_unique<DummyHybridEncrypt>(hybrid_name_2);
-    entry_result = hybrid_encrypt_set->AddPrimitive(std::move(hybrid_encrypt),
-                                                    keyset_info.key_info(2));
-    ASSERT_TRUE(entry_result.ok());
-    // The last key is the primary.
-    ASSERT_THAT(hybrid_encrypt_set->set_primary(entry_result.value()), IsOk());
+    PrimitiveSet<HybridEncrypt>::Builder hybrid_encrypt_set_builder;
+    hybrid_encrypt_set_builder.AddPrimitive(
+        std::make_unique<DummyHybridEncrypt>(hybrid_name_0),
+        keyset_info.key_info(0));
+    hybrid_encrypt_set_builder.AddPrimitive(
+        std::make_unique<DummyHybridEncrypt>(hybrid_name_1),
+        keyset_info.key_info(1));
+    hybrid_encrypt_set_builder.AddPrimaryPrimitive(
+        std::make_unique<DummyHybridEncrypt>(hybrid_name_2),
+        keyset_info.key_info(2));
+    absl::StatusOr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_set =
+        std::move(hybrid_encrypt_set_builder).Build();
+    ASSERT_THAT(hybrid_encrypt_set, IsOk());
 
     // Wrap hybrid_encrypt_set and test the resulting HybridEncrypt.
     auto hybrid_encrypt_result = HybridEncryptWrapper().Wrap(
-        std::move(hybrid_encrypt_set));
+        std::make_unique<PrimitiveSet<HybridEncrypt>>(
+            *std::move(hybrid_encrypt_set)));
     EXPECT_TRUE(hybrid_encrypt_result.ok()) << hybrid_encrypt_result.status();
-    hybrid_encrypt = std::move(hybrid_encrypt_result.value());
+    std::unique_ptr<HybridEncrypt> hybrid_encrypt =
+        std::move(hybrid_encrypt_result.value());
     std::string plaintext = "some_plaintext";
     std::string context_info = "some_context";
 
@@ -213,35 +212,31 @@ class HybridEncryptSetWrapperWithMonitoringTest : public Test {
 // Test that successful encrypt operations are logged.
 TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringEncryptSuccess) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto hybrid_encrypt_primitive_set =
-      absl::make_unique<PrimitiveSet<HybridEncrypt>>(annotations);
-  ASSERT_THAT(
-      hybrid_encrypt_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyHybridEncrypt>("hybrid0"),
-                         keyset_info.key_info(0))
-          , IsOk());
-  ASSERT_THAT(
-      hybrid_encrypt_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyHybridEncrypt>("hybrid1"),
-                         keyset_info.key_info(1))
-          , IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<HybridEncrypt>::Entry<HybridEncrypt>*> last =
-      hybrid_encrypt_primitive_set->AddPrimitive(
-          absl::make_unique<DummyHybridEncrypt>("hybrid2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(hybrid_encrypt_primitive_set->set_primary(*last), IsOk());
+  PrimitiveSet<HybridEncrypt>::Builder hybrid_encrypt_set_builder;
+  hybrid_encrypt_set_builder.AddAnnotations(annotations);
+  hybrid_encrypt_set_builder.AddPrimitive(
+      absl::make_unique<DummyHybridEncrypt>("hybrid0"),
+      keyset_info.key_info(0));
+  hybrid_encrypt_set_builder.AddPrimitive(
+      absl::make_unique<DummyHybridEncrypt>("hybrid1"),
+      keyset_info.key_info(1));
+  hybrid_encrypt_set_builder.AddPrimaryPrimitive(
+      absl::make_unique<DummyHybridEncrypt>("hybrid2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_primitive_set =
+      std::move(hybrid_encrypt_set_builder).Build();
+  ASSERT_THAT(hybrid_encrypt_primitive_set, IsOk());
+
   // Record the ID of the primary key.
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a Hybrid Encrypt and encrypt some data.
   absl::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt =
-      HybridEncryptWrapper().Wrap(std::move(hybrid_encrypt_primitive_set));
+      HybridEncryptWrapper().Wrap(std::make_unique<PrimitiveSet<HybridEncrypt>>(
+          *std::move(hybrid_encrypt_primitive_set)));
   ASSERT_THAT(hybrid_encrypt, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view plaintext = "This is some plaintext!";
@@ -257,33 +252,25 @@ TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
 
 TEST_F(HybridEncryptSetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringEncryptFailures) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto hybrid_encrypt_primitive_set =
-      absl::make_unique<PrimitiveSet<HybridEncrypt>>(annotations);
-  ASSERT_THAT(hybrid_encrypt_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingHybridEncrypt("hybrid0"),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(hybrid_encrypt_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingHybridEncrypt("hybrid1"),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<HybridEncrypt>::Entry<HybridEncrypt>*> last =
-      hybrid_encrypt_primitive_set->AddPrimitive(
-          CreateAlwaysFailingHybridEncrypt("hybrid2"), keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOkAndHolds(NotNull()));
-  ASSERT_THAT(hybrid_encrypt_primitive_set->set_primary(*last), IsOk());
-
+  PrimitiveSet<HybridEncrypt>::Builder hybrid_encrypt_set_builder;
+  hybrid_encrypt_set_builder.AddAnnotations(annotations);
+  hybrid_encrypt_set_builder.AddPrimitive(
+      CreateAlwaysFailingHybridEncrypt("hybrid0"), keyset_info.key_info(0));
+  hybrid_encrypt_set_builder.AddPrimitive(
+      CreateAlwaysFailingHybridEncrypt("hybrid1"), keyset_info.key_info(1));
+  hybrid_encrypt_set_builder.AddPrimaryPrimitive(
+      CreateAlwaysFailingHybridEncrypt("hybrid2"), keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<HybridEncrypt>> hybrid_encrypt_primitive_set =
+      std::move(hybrid_encrypt_set_builder).Build();
+  ASSERT_THAT(hybrid_encrypt_primitive_set, IsOk());
 
   // Create a Hybrid Encrypt and encrypt some data.
   absl::StatusOr<std::unique_ptr<HybridEncrypt>> hybrid_encrypt =
-      HybridEncryptWrapper().Wrap(std::move(hybrid_encrypt_primitive_set));
+      HybridEncryptWrapper().Wrap(std::make_unique<PrimitiveSet<HybridEncrypt>>(
+          *std::move(hybrid_encrypt_primitive_set)));
   ASSERT_THAT(hybrid_encrypt, IsOk());
 
   constexpr absl::string_view plaintext = "This is some plaintext!";

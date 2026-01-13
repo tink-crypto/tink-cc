@@ -477,11 +477,11 @@ tink_cc_library(
     tink::subtle::stream_segment_encrypter
     absl::memory
     absl::status
+    absl::statusor
     absl::string_view
     crypto
     tink::internal::fips_utils
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 
@@ -1063,20 +1063,14 @@ tink_cc_test(
     tink::subtle::common_enums
     tink::subtle::random
     tink::subtle::streaming_aead_test_util
-    tink::subtle::test_util
     gmock
     absl::memory
     absl::status
     absl::statusor
     absl::strings
-    tink::core::output_stream
     tink::core::random_access_stream
     tink::config::tink_fips
     tink::internal::test_random_access_stream
-    tink::util::istream_input_stream
-    tink::util::ostream_output_stream
-    tink::util::status
-    tink::util::statusor
     tink::util::test_matchers
     tink::util::test_util
 )

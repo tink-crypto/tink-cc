@@ -16,12 +16,14 @@
 
 #include "tink/subtle/aes_gcm_hkdf_streaming.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/fips_utils.h"
 #include "tink/subtle/aes_gcm_hkdf_stream_segment_decrypter.h"
@@ -31,8 +33,6 @@
 #include "tink/subtle/random.h"
 #include "tink/subtle/stream_segment_decrypter.h"
 #include "tink/subtle/stream_segment_encrypter.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -45,12 +45,13 @@ absl::Status Validate(const AesGcmHkdfStreaming::Params& params) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "unsupported hkdf_hash");
   }
-  if (params.ikm.size() < 16 || params.ikm.size() < params.derived_key_size) {
-    return absl::Status(absl::StatusCode::kInvalidArgument, "ikm too small");
-  }
   if (params.derived_key_size != 16 && params.derived_key_size != 32) {
     return absl::Status(absl::StatusCode::kInvalidArgument,
                         "derived_key_size must be 16 or 32");
+  }
+  if (params.ikm.size() < 16 ||
+      params.ikm.size() < static_cast<size_t>(params.derived_key_size)) {
+    return absl::Status(absl::StatusCode::kInvalidArgument, "ikm too small");
   }
   if (params.ciphertext_offset < 0) {
     return absl::Status(absl::StatusCode::kInvalidArgument,

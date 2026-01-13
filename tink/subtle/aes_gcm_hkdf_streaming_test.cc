@@ -17,7 +17,6 @@
 #include "tink/subtle/aes_gcm_hkdf_streaming.h"
 
 #include <memory>
-#include <sstream>
 #include <string>
 #include <utility>
 
@@ -29,16 +28,10 @@
 #include "absl/strings/str_cat.h"
 #include "tink/config/tink_fips.h"
 #include "tink/internal/test_random_access_stream.h"
-#include "tink/output_stream.h"
 #include "tink/random_access_stream.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
 #include "tink/subtle/streaming_aead_test_util.h"
-#include "tink/subtle/test_util.h"
-#include "tink/util/istream_input_stream.h"
-#include "tink/util/ostream_output_stream.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 
@@ -110,7 +103,7 @@ TEST(AesGcmHkdfStreamingTest, testIkmSmallerThanDerivedKey) {
   AesGcmHkdfStreaming::Params params;
   int ikm_size = 16;
   params.ikm = Random::GetRandomKeyBytes(ikm_size);
-  params.derived_key_size = 17;
+  params.derived_key_size = 32;
   params.ciphertext_segment_size = 100;
   params.ciphertext_offset = 10;
   params.hkdf_hash = SHA256;
@@ -128,7 +121,7 @@ TEST(AesGcmHkdfStreamingTest, testIkmSize) {
   for (int ikm_size : {5, 10, 15}) {
     AesGcmHkdfStreaming::Params params;
     params.ikm = Random::GetRandomKeyBytes(ikm_size);
-    params.derived_key_size = 17;
+    params.derived_key_size = 32;
     params.ciphertext_segment_size = 100;
     params.ciphertext_offset = 0;
     params.hkdf_hash = SHA256;

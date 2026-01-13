@@ -35,8 +35,6 @@
 #include "tink/internal/registry_impl.h"
 #include "tink/primitive_set.h"
 #include "tink/registry.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
@@ -116,29 +114,26 @@ TEST_F(DeterministicAeadSetWrapperTest, testBasic) {
     std::string daead_name_0 = "daead0";
     std::string daead_name_1 = "daead1";
     std::string daead_name_2 = "daead2";
-    std::unique_ptr<PrimitiveSet<DeterministicAead>> daead_set(
-        new PrimitiveSet<DeterministicAead>());
-    std::unique_ptr<DeterministicAead> daead(
-        new DummyDeterministicAead(daead_name_0));
-    auto entry_result =
-        daead_set->AddPrimitive(std::move(daead), keyset_info.key_info(0));
-    ASSERT_TRUE(entry_result.ok());
-    daead = absl::make_unique<DummyDeterministicAead>(daead_name_1);
-    entry_result =
-        daead_set->AddPrimitive(std::move(daead), keyset_info.key_info(1));
-    ASSERT_TRUE(entry_result.ok());
-    daead = absl::make_unique<DummyDeterministicAead>(daead_name_2);
-    entry_result =
-        daead_set->AddPrimitive(std::move(daead), keyset_info.key_info(2));
-    ASSERT_TRUE(entry_result.ok());
-    // The last key is the primary.
-    ASSERT_THAT(daead_set->set_primary(entry_result.value()), IsOk());
+    PrimitiveSet<DeterministicAead>::Builder daead_set_builder;
+    daead_set_builder.AddPrimitive(
+        std::make_unique<DummyDeterministicAead>(daead_name_0),
+        keyset_info.key_info(0));
+    daead_set_builder.AddPrimitive(
+        std::make_unique<DummyDeterministicAead>(daead_name_1),
+        keyset_info.key_info(1));
+    daead_set_builder.AddPrimaryPrimitive(
+        std::make_unique<DummyDeterministicAead>(daead_name_2),
+        keyset_info.key_info(2));
+    absl::StatusOr<PrimitiveSet<DeterministicAead>> daead_set =
+        std::move(daead_set_builder).Build();
+    ASSERT_THAT(daead_set, IsOk());
 
     // Wrap daead_set and test the resulting DeterministicAead.
-    auto daead_result =
-        DeterministicAeadWrapper().Wrap(std::move(daead_set));
+    auto daead_result = DeterministicAeadWrapper().Wrap(
+        std::make_unique<PrimitiveSet<DeterministicAead>>(
+            *std::move(daead_set)));
     EXPECT_TRUE(daead_result.ok()) << daead_result.status();
-    daead = std::move(daead_result.value());
+    std::unique_ptr<DeterministicAead> daead = std::move(daead_result.value());
     std::string plaintext = "some_plaintext";
     std::string associated_data = "some_associated_data";
 
@@ -237,35 +232,32 @@ class DeterministicAeadSetWrapperWithMonitoringTest : public Test {
 // Test that successful encrypt operations are logged.
 TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringEncryptSuccess) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto daead_primitive_set =
-      absl::make_unique<PrimitiveSet<DeterministicAead>>(annotations);
-  ASSERT_THAT(
-      daead_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyDeterministicAead>("daead0"),
-                         keyset_info.key_info(0))
-          , IsOk());
-  ASSERT_THAT(
-      daead_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyDeterministicAead>("daead1"),
-                         keyset_info.key_info(1))
-          , IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
-      last = daead_primitive_set->AddPrimitive(
-          absl::make_unique<DummyDeterministicAead>("daead2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(daead_primitive_set->set_primary(*last), IsOk());
+  PrimitiveSet<DeterministicAead>::Builder daead_set_builder;
+  daead_set_builder.AddAnnotations(annotations);
+  daead_set_builder.AddPrimitive(
+      absl::make_unique<DummyDeterministicAead>("daead0"),
+      keyset_info.key_info(0));
+  daead_set_builder.AddPrimitive(
+      absl::make_unique<DummyDeterministicAead>("daead1"),
+      keyset_info.key_info(1));
+  daead_set_builder.AddPrimaryPrimitive(
+      absl::make_unique<DummyDeterministicAead>("daead2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<DeterministicAead>> daead_primitive_set =
+      std::move(daead_set_builder).Build();
+  ASSERT_THAT(daead_primitive_set, IsOk());
+
   // Record the ID of the primary key.
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a deterministic AEAD and encrypt some data.
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
-      DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
+      DeterministicAeadWrapper().Wrap(
+          std::make_unique<PrimitiveSet<DeterministicAead>>(
+              *std::move(daead_primitive_set)));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view plaintext = "This is some plaintext!";
@@ -282,38 +274,33 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 // Test that successful encrypt operations are logged.
 TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringDecryptSuccess) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto daead_primitive_set =
-      absl::make_unique<PrimitiveSet<DeterministicAead>>(annotations);
-  ASSERT_THAT(
-      daead_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyDeterministicAead>("daead0"),
-                         keyset_info.key_info(0))
-          .status(),
-      IsOk());
-  ASSERT_THAT(
-      daead_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyDeterministicAead>("daead1"),
-                         keyset_info.key_info(1))
-          .status(),
-      IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
-      last = daead_primitive_set->AddPrimitive(
-          absl::make_unique<DummyDeterministicAead>("daead2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(daead_primitive_set->set_primary(*last), IsOk());
+  PrimitiveSet<DeterministicAead>::Builder daead_set_builder;
+  daead_set_builder.AddAnnotations(annotations);
+  daead_set_builder.AddPrimitive(
+      absl::make_unique<DummyDeterministicAead>("daead0"),
+      keyset_info.key_info(0));
+  daead_set_builder.AddPrimitive(
+      absl::make_unique<DummyDeterministicAead>("daead1"),
+      keyset_info.key_info(1));
+  daead_set_builder.AddPrimaryPrimitive(
+      absl::make_unique<DummyDeterministicAead>("daead2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<DeterministicAead>> daead_primitive_set =
+      std::move(daead_set_builder).Build();
+  ASSERT_THAT(daead_primitive_set, IsOk());
+
   // Record the ID of the primary key.
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
 
   // Create a deterministic AEAD and encrypt/decrypt some data.
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
-      DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
+      DeterministicAeadWrapper().Wrap(
+          std::make_unique<PrimitiveSet<DeterministicAead>>(
+              *std::move(daead_primitive_set)));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view plaintext = "This is some plaintext!";
@@ -336,34 +323,26 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 
 TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringEncryptFailures) {
-  // Create a primitive set and fill it with some entries.
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto daead_primitive_set =
-      absl::make_unique<PrimitiveSet<DeterministicAead>>(annotations);
-  ASSERT_THAT(daead_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingDeterministicAead("daead0"),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(daead_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingDeterministicAead("daead1"),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
-      last = daead_primitive_set->AddPrimitive(
-          CreateAlwaysFailingDeterministicAead("daead2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(daead_primitive_set->set_primary(*last), IsOk());
-
+  PrimitiveSet<DeterministicAead>::Builder daead_set_builder;
+  daead_set_builder.AddAnnotations(annotations);
+  daead_set_builder.AddPrimitive(CreateAlwaysFailingDeterministicAead("daead0"),
+                                 keyset_info.key_info(0));
+  daead_set_builder.AddPrimitive(CreateAlwaysFailingDeterministicAead("daead1"),
+                                 keyset_info.key_info(1));
+  daead_set_builder.AddPrimaryPrimitive(
+      CreateAlwaysFailingDeterministicAead("daead2"), keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<DeterministicAead>> daead_primitive_set =
+      std::move(daead_set_builder).Build();
+  ASSERT_THAT(daead_primitive_set, IsOk());
 
   // Create a deterministic AEAD and encrypt.
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
-      DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
+      DeterministicAeadWrapper().Wrap(
+          std::make_unique<PrimitiveSet<DeterministicAead>>(
+              *std::move(daead_primitive_set)));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view plaintext = "This is some plaintext!";
@@ -380,34 +359,26 @@ TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
 // Test that monitoring logs decryption failures correctly.
 TEST_F(DeterministicAeadSetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringDecryptFailures) {
-  // Create a primitive set and fill it with some entries.
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto daead_primitive_set =
-      absl::make_unique<PrimitiveSet<DeterministicAead>>(annotations);
-  ASSERT_THAT(daead_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingDeterministicAead("daead0"),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(daead_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingDeterministicAead("daead1"),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<DeterministicAead>::Entry<DeterministicAead> *>
-      last = daead_primitive_set->AddPrimitive(
-          CreateAlwaysFailingDeterministicAead("daead2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(daead_primitive_set->set_primary(*last), IsOk());
-
+  PrimitiveSet<DeterministicAead>::Builder daead_set_builder;
+  daead_set_builder.AddAnnotations(annotations);
+  daead_set_builder.AddPrimitive(CreateAlwaysFailingDeterministicAead("daead0"),
+                                 keyset_info.key_info(0));
+  daead_set_builder.AddPrimitive(CreateAlwaysFailingDeterministicAead("daead1"),
+                                 keyset_info.key_info(1));
+  daead_set_builder.AddPrimaryPrimitive(
+      CreateAlwaysFailingDeterministicAead("daead2"), keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<DeterministicAead>> daead_primitive_set =
+      std::move(daead_set_builder).Build();
+  ASSERT_THAT(daead_primitive_set, IsOk());
 
   // Create a deterministic AEAD and decrypt.
   absl::StatusOr<std::unique_ptr<DeterministicAead>> daead =
-      DeterministicAeadWrapper().Wrap(std::move(daead_primitive_set));
+      DeterministicAeadWrapper().Wrap(
+          std::make_unique<PrimitiveSet<DeterministicAead>>(
+              *std::move(daead_primitive_set)));
   ASSERT_THAT(daead, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view associated_data = "Some associated data!";

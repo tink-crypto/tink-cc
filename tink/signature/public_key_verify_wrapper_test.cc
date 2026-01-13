@@ -116,32 +116,27 @@ TEST_F(PublicKeyVerifySetWrapperTest, testBasic) {
     std::string signature_name_0 = "signature_0";
     std::string signature_name_1 = "signature_1";
     std::string signature_name_2 = "signature_2";
-    auto pk_verify_set = std::make_unique<PrimitiveSet<PublicKeyVerify>>();
-
-    std::unique_ptr<PublicKeyVerify> pk_verify(
-        new DummyPublicKeyVerify(signature_name_0));
-    auto entry_result = pk_verify_set->AddPrimitive(std::move(pk_verify),
-                                                    keyset_info.key_info(0));
-    ASSERT_TRUE(entry_result.ok());
-
-    pk_verify = std::make_unique<DummyPublicKeyVerify>(signature_name_1);
-    entry_result = pk_verify_set->AddPrimitive(std::move(pk_verify),
-                                               keyset_info.key_info(1));
-    ASSERT_TRUE(entry_result.ok());
-
-    pk_verify = std::make_unique<DummyPublicKeyVerify>(signature_name_2);
-    entry_result = pk_verify_set->AddPrimitive(std::move(pk_verify),
-                                               keyset_info.key_info(2));
-    ASSERT_TRUE(entry_result.ok());
-
-    // The last key is the primary.
-    ASSERT_THAT(pk_verify_set->set_primary(entry_result.value()), IsOk());
+    PrimitiveSet<PublicKeyVerify>::Builder pk_verify_set_builder;
+    pk_verify_set_builder.AddPrimitive(
+        std::make_unique<DummyPublicKeyVerify>(signature_name_0),
+        keyset_info.key_info(0));
+    pk_verify_set_builder.AddPrimitive(
+        std::make_unique<DummyPublicKeyVerify>(signature_name_1),
+        keyset_info.key_info(1));
+    pk_verify_set_builder.AddPrimaryPrimitive(
+        std::make_unique<DummyPublicKeyVerify>(signature_name_2),
+        keyset_info.key_info(2));
+    absl::StatusOr<PrimitiveSet<PublicKeyVerify>> pk_verify_set =
+        std::move(pk_verify_set_builder).Build();
+    ASSERT_THAT(pk_verify_set, IsOk());
 
     // Wrap pk_verify_set and test the resulting PublicKeyVerify.
-    auto pk_verify_result =
-        PublicKeyVerifyWrapper().Wrap(std::move(pk_verify_set));
+    auto pk_verify_result = PublicKeyVerifyWrapper().Wrap(
+        std::make_unique<PrimitiveSet<PublicKeyVerify>>(
+            *std::move(pk_verify_set)));
     EXPECT_TRUE(pk_verify_result.ok()) << pk_verify_result.status();
-    pk_verify = std::move(pk_verify_result.value());
+    std::unique_ptr<PublicKeyVerify> pk_verify =
+        std::move(pk_verify_result.value());
     std::string data = "some data to sign";
     std::unique_ptr<PublicKeySign> pk_sign(
         new DummyPublicKeySign(signature_name_0));
@@ -216,44 +211,40 @@ class PublicKeyVerifySetWrapperWithMonitoringTest : public Test {
 // Test that successful sign operations are logged.
 TEST_F(PublicKeyVerifySetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringVerifySuccess) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto public_key_verify_primitive_set =
-      absl::make_unique<PrimitiveSet<PublicKeyVerify>>(kAnnotations);
-  ASSERT_THAT(
-      public_key_verify_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyPublicKeyVerify>("verify0"),
-                         keyset_info.key_info(0))
-          .status(),
-      IsOk());
-  ASSERT_THAT(
-      public_key_verify_primitive_set
-          ->AddPrimitive(absl::make_unique<DummyPublicKeyVerify>("sign1"),
-                         keyset_info.key_info(1))
-          .status(),
-      IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>*> last =
-      public_key_verify_primitive_set->AddPrimitive(
-          absl::make_unique<DummyPublicKeyVerify>("sign2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last.status(), IsOk());
-  ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
+  PrimitiveSet<PublicKeyVerify>::Builder pk_verify_set_builder;
+  pk_verify_set_builder.AddAnnotations(kAnnotations);
+  pk_verify_set_builder.AddPrimitive(
+      absl::make_unique<DummyPublicKeyVerify>("verify0"),
+      keyset_info.key_info(0));
+  pk_verify_set_builder.AddPrimitive(
+      absl::make_unique<DummyPublicKeyVerify>("sign1"),
+      keyset_info.key_info(1));
+  pk_verify_set_builder.AddPrimaryPrimitive(
+      absl::make_unique<DummyPublicKeyVerify>("sign2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<PublicKeyVerify>>
+      public_key_verify_primitive_set =
+          std::move(pk_verify_set_builder).Build();
+  ASSERT_THAT(public_key_verify_primitive_set, IsOk());
+
   // Record the ID of the primary key.
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a PublicKeyVerify primitive to verify a signature.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
-      PublicKeyVerifyWrapper().Wrap(std::move(public_key_verify_primitive_set));
+      PublicKeyVerifyWrapper().Wrap(
+          std::make_unique<PrimitiveSet<PublicKeyVerify>>(
+              *std::move(public_key_verify_primitive_set)));
   ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
 
   // Create a PublicKeySign primitive and sign some data we can verify.
   constexpr absl::string_view message = "This is some message!";
-  std::string signature =
-      absl::StrCat((*last)->get_identifier(),
-                   DummyPublicKeySign("sign2").Sign(message).value());
+  std::string signature = absl::StrCat(
+      CryptoFormat::GetOutputPrefix(keyset_info.key_info(2)).value(),
+      DummyPublicKeySign("sign2").Sign(message).value());
 
   // Check that calling Verify triggers a Log() call.
   EXPECT_CALL(*verify_monitoring_client_, Log(primary_key_id, message.size()));
@@ -266,28 +257,24 @@ TEST_F(PublicKeyVerifySetWrapperWithMonitoringTest,
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto public_key_verify_primitive_set =
-      absl::make_unique<PrimitiveSet<PublicKeyVerify>>(kAnnotations);
-  ASSERT_THAT(public_key_verify_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingPublicKeyVerify("sign0"),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(public_key_verify_primitive_set
-                  ->AddPrimitive(CreateAlwaysFailingPublicKeyVerify("sign1"),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
-  // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<PublicKeyVerify>::Entry<PublicKeyVerify>*> last =
-      public_key_verify_primitive_set->AddPrimitive(
-          CreateAlwaysFailingPublicKeyVerify("sign2"), keyset_info.key_info(2));
-  ASSERT_THAT(last.status(), IsOk());
-  ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
+  PrimitiveSet<PublicKeyVerify>::Builder pk_verify_set_builder;
+  pk_verify_set_builder.AddAnnotations(kAnnotations);
+  pk_verify_set_builder.AddPrimitive(
+      CreateAlwaysFailingPublicKeyVerify("sign0"), keyset_info.key_info(0));
+  pk_verify_set_builder.AddPrimitive(
+      CreateAlwaysFailingPublicKeyVerify("sign1"), keyset_info.key_info(1));
+  pk_verify_set_builder.AddPrimaryPrimitive(
+      CreateAlwaysFailingPublicKeyVerify("sign2"), keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<PublicKeyVerify>>
+      public_key_verify_primitive_set =
+          std::move(pk_verify_set_builder).Build();
+  ASSERT_THAT(public_key_verify_primitive_set, IsOk());
 
   // Create a PublicKeySign and sign some data we can verify.
   absl::StatusOr<std::unique_ptr<PublicKeyVerify>> public_key_verify =
-      PublicKeyVerifyWrapper().Wrap(std::move(public_key_verify_primitive_set));
+      PublicKeyVerifyWrapper().Wrap(
+          std::make_unique<PrimitiveSet<PublicKeyVerify>>(
+              *std::move(public_key_verify_primitive_set)));
   ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view message = "This is some message!";

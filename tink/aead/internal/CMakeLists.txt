@@ -36,19 +36,20 @@ tink_cc_library(
     tink::aead::internal::aead_util
     absl::core_headers
     absl::cleanup
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor
     absl::strings
     absl::span
     crypto
+    tink::core::secret_data
     tink::internal::call_with_core_dump_protection
     tink::internal::dfsan_forwarders
     tink::internal::err_util
     tink::internal::ssl_unique_ptr
     tink::internal::util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 
@@ -141,19 +142,19 @@ tink_cc_library(
     zero_copy_aes_gcm_boringssl.cc
     zero_copy_aes_gcm_boringssl.h
   DEPS
-    tink::aead::internal::aead_util
     tink::aead::internal::ssl_aead
     tink::aead::internal::zero_copy_aead
     absl::core_headers
+    absl::absl_check
     absl::memory
     absl::status
+    absl::statusor
     absl::strings
     absl::span
+    tink::core::secret_data
     tink::internal::util
     tink::subtle::random
-    tink::subtle::subtle_util
     tink::util::secret_data
-    tink::util::status
     tink::util::statusor
 )
 
@@ -442,6 +443,7 @@ tink_cc_library(
     tink::aead::internal::base_x_aes_gcm
     tink::aead::internal::cord_aes_gcm_boringssl
     tink::aead::internal::cord_utils
+    absl::absl_check
     absl::status
     absl::statusor
     absl::cord
@@ -536,6 +538,7 @@ tink_cc_library(
     tink::aead::internal::base_x_aes_gcm
     tink::aead::internal::zero_copy_aead
     tink::aead::internal::zero_copy_aes_gcm_boringssl
+    absl::absl_check
     absl::memory
     absl::status
     absl::statusor

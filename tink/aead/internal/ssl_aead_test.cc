@@ -575,8 +575,8 @@ TEST(AesGcmSivBoringSslTest, AesGcmTestSivTestFipsOnly) {
 struct SslOneShotAeadWycheproofTestParams {
   std::string test_name;
   CipherType cipher;
-  int nonce_size;
-  int tag_size;
+  size_t nonce_size;
+  size_t tag_size;
   absl::flat_hash_set<int> key_sizes;
   WycheproofTestVector test_vector;
 };

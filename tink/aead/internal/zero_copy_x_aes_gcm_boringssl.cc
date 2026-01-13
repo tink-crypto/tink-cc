@@ -16,10 +16,12 @@
 
 #include "tink/aead/internal/zero_copy_x_aes_gcm_boringssl.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -52,12 +54,13 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
   absl::StatusOr<int64_t> Encrypt(absl::string_view plaintext,
                                   absl::string_view associated_data,
                                   absl::Span<char> buffer) const override {
-    if (buffer.size() < MaxEncryptionSize(plaintext.size())) {
+    const int64_t max_encryption_size = MaxEncryptionSize(plaintext.size());
+    ABSL_CHECK_GE(max_encryption_size, 0);
+    if (buffer.size() < static_cast<size_t>(max_encryption_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Encryption buffer too small; expected at least ",
-                       MaxEncryptionSize(plaintext.size()), " bytes, got ",
-                       buffer.size()));
+                       max_encryption_size, " bytes, got ", buffer.size()));
     }
     absl::Status status =
         Random::GetRandomBytes(buffer.subspan(0, base_x_aes_gcm_.salt_size()));
@@ -96,14 +99,17 @@ class XAesGcmBoringSslZeroCopyAead : public ZeroCopyAead {
   absl::StatusOr<int64_t> Decrypt(absl::string_view ciphertext,
                                   absl::string_view associated_data,
                                   absl::Span<char> buffer) const override {
-    if (ciphertext.size() < base_x_aes_gcm_.min_ct_size()) {
+    const int min_ct_size = base_x_aes_gcm_.min_ct_size();
+    ABSL_CHECK_GE(min_ct_size, 0);
+    if (ciphertext.size() < static_cast<size_t>(min_ct_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Ciphertext too short; expected at least ",
-                       base_x_aes_gcm_.min_ct_size(), " bytes, got ",
-                       ciphertext.size()));
+                       min_ct_size, " bytes, got ", ciphertext.size()));
     }
-    if (buffer.size() < MaxDecryptionSize(ciphertext.size())) {
+    const int max_decryption_size = MaxDecryptionSize(ciphertext.size());
+    ABSL_CHECK_GE(max_decryption_size, 0);
+    if (buffer.size() < static_cast<size_t>(max_decryption_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Decryption buffer too small; expected at least ",

@@ -16,10 +16,12 @@
 
 #include "tink/aead/internal/cord_x_aes_gcm_boringssl.h"
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
 #include "absl/strings/cord.h"
@@ -31,8 +33,8 @@
 #include "tink/aead/internal/cord_aes_gcm_boringssl.h"
 #include "tink/aead/internal/cord_utils.h"
 #include "tink/aead/x_aes_gcm_key.h"
-#include "tink/subtle/random.h"
 #include "tink/secret_data.h"
+#include "tink/subtle/random.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/statusor.h"
 
@@ -72,7 +74,9 @@ class CordXAesGcmBoringSsl : public CordAead {
 
   absl::StatusOr<absl::Cord> Decrypt(
       absl::Cord ciphertext, absl::Cord associated_data) const override {
-    if (ciphertext.size() < base_x_aes_gcm_.min_ct_size()) {
+    const int min_ct_size = base_x_aes_gcm_.min_ct_size();
+    ABSL_CHECK_GE(min_ct_size, 0);
+    if (ciphertext.size() < static_cast<size_t>(min_ct_size)) {
       return absl::InvalidArgumentError(
           absl::StrFormat("ciphertext too short, expected at least %d bytes",
                           base_x_aes_gcm_.min_ct_size()));

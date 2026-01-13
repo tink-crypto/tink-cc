@@ -21,20 +21,18 @@
 #include <memory>
 #include <utility>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/span.h"
-#include "tink/aead/internal/aead_util.h"
 #include "tink/aead/internal/ssl_aead.h"
 #include "tink/aead/internal/zero_copy_aead.h"
 #include "tink/internal/util.h"
+#include "tink/secret_data.h"
 #include "tink/subtle/random.h"
-#include "tink/subtle/subtle_util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -62,7 +60,8 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Encrypt(
     absl::string_view plaintext, absl::string_view associated_data,
     absl::Span<char> buffer) const {
   const int64_t max_encryption_size = MaxEncryptionSize(plaintext.size());
-  if (buffer.size() < max_encryption_size) {
+  ABSL_CHECK_GE(max_encryption_size, 0);
+  if (buffer.size() < static_cast<size_t>(max_encryption_size)) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Encryption buffer too small; expected at least ",
@@ -112,7 +111,8 @@ absl::StatusOr<int64_t> ZeroCopyAesGcmBoringSsl::Decrypt(
   }
 
   const int64_t max_decryption_size = MaxDecryptionSize(ciphertext.size());
-  if (buffer.size() < max_decryption_size) {
+  ABSL_CHECK_GE(max_decryption_size, 0);
+  if (buffer.size() < static_cast<size_t>(max_decryption_size)) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrCat("Decryption buffer too small; expected at least ",

@@ -25,6 +25,7 @@
 
 #include "absl/base/attributes.h"
 #include "absl/cleanup/cleanup.h"
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
@@ -39,9 +40,7 @@
 #include "tink/internal/err_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/internal/util.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
+#include "tink/secret_data.h"
 
 namespace crypto {
 namespace tink {
@@ -99,7 +98,8 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
     absl::string_view ad = internal::EnsureStringNonNull(associated_data);
 
     const int64_t min_out_buff_size = CiphertextSize(plaintext.size());
-    if (out.size() < min_out_buff_size) {
+    ABSL_CHECK_GE(min_out_buff_size, 0);
+    if (out.size() < static_cast<size_t>(min_out_buff_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Encryption buffer too small; expected at least ",
@@ -111,7 +111,8 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
                           "Plaintext and output buffer must not overlap");
     }
 
-    if (associated_data.size() > std::numeric_limits<int>::max()) {
+    if (associated_data.size() >
+        static_cast<size_t>(std::numeric_limits<int>::max())) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Associated data too large; expected at most ",
@@ -137,7 +138,8 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
     }
 
     const int64_t min_out_buff_size = PlaintextSize(ciphertext.size());
-    if (out.size() < min_out_buff_size) {
+    ABSL_CHECK_GE(min_out_buff_size, 0);
+    if (out.size() < static_cast<size_t>(min_out_buff_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Output buffer too small; expected at least ",
@@ -149,7 +151,8 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
                           "Ciphertext and output buffer must not overlap");
     }
 
-    if (associated_data.size() > std::numeric_limits<int>::max()) {
+    if (associated_data.size() >
+        static_cast<size_t>(std::numeric_limits<int>::max())) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Associated data too large; expected at most ",
@@ -166,7 +169,8 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
   }
 
   int64_t PlaintextSize(int64_t ciphertext_length) const override {
-    if (ciphertext_length < tag_size_) {
+    ABSL_CHECK_GE(ciphertext_length, 0);
+    if (static_cast<size_t>(ciphertext_length) < tag_size_) {
       return 0;
     }
     return ciphertext_length - tag_size_;
@@ -286,7 +290,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
                           "EVP_CIPHER_CTX_new failed");
     }
     const int encryption_flag = encryption ? 1 : 0;
-    if (EVP_CipherInit_ex(context.get(), cipher_, /*impl=*/nullptr,
+    if (EVP_CipherInit_ex(context.get(), cipher_, /*engine=*/nullptr,
                           /*key=*/nullptr, /*iv=*/nullptr,
                           encryption_flag) <= 0) {
       return absl::Status(
@@ -301,7 +305,7 @@ class OpenSslOneShotAeadImpl : public SslOneShotAead {
           absl::StatusCode::kInternal,
           absl::StrCat("Failed stting size of the IV to ", iv.size()));
     }
-    if (EVP_CipherInit_ex(context.get(), /*cipher=*/nullptr, /*impl=*/nullptr,
+    if (EVP_CipherInit_ex(context.get(), /*cipher=*/nullptr, /*engine=*/nullptr,
                           reinterpret_cast<const uint8_t *>(key_.data()),
                           reinterpret_cast<const uint8_t *>(iv.data()),
                           encryption_flag) <= 0) {
@@ -346,7 +350,8 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
     }
 
     const int64_t min_out_buff_size = CiphertextSize(plaintext.size());
-    if (out.size() < min_out_buff_size) {
+    ABSL_CHECK_GE(min_out_buff_size, 0);
+    if (out.size() < static_cast<size_t>(min_out_buff_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Output buffer too small; expected at least ",
@@ -410,7 +415,8 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
     }
 
     const int64_t min_out_buff_size = PlaintextSize(ciphertext.size());
-    if (out.size() < min_out_buff_size) {
+    ABSL_CHECK_GE(min_out_buff_size, 0);
+    if (out.size() < static_cast<size_t>(min_out_buff_size)) {
       return absl::Status(
           absl::StatusCode::kInvalidArgument,
           absl::StrCat("Output buffer too small; expected at least ",
@@ -479,7 +485,8 @@ class BoringSslOneShotAeadImpl : public SslOneShotAead {
   }
 
   int64_t PlaintextSize(int64_t ciphertext_length) const override {
-    if (ciphertext_length < tag_size_) {
+    ABSL_CHECK_GE(ciphertext_length, 0);
+    if (static_cast<size_t>(ciphertext_length) < tag_size_) {
       return 0;
     }
     return ciphertext_length - tag_size_;

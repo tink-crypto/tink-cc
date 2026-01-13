@@ -28,6 +28,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
@@ -184,8 +185,8 @@ TEST(RsaUtilTest, GeneratesDifferentPrivateKeys) {
     return private_key;
   });
 
-  for (int i = 0; i < private_keys.size() - 1; i++) {
-    for (int j = i + 1; j < private_keys.size(); j++) {
+  for (size_t i = 0; i < private_keys.size() - 1; i++) {
+    for (size_t j = i + 1; j < private_keys.size(); j++) {
       // The only field that should be equal.
       EXPECT_EQ(private_keys[i].e, private_keys[j].e);
       EXPECT_NE(private_keys[i].n, private_keys[j].n);

@@ -262,7 +262,7 @@ bool RepeatedMessageFieldBase::ConsumeIntoMember(ParsingState& serialized) {
 
 bool RepeatedMessageFieldBase::SerializeWithTagInto(
     SerializationState& out) const {
-  for (int i = 0; i < num_messages(); ++i) {
+  for (size_t i = 0; i < num_messages(); ++i) {
     const Message& msg = message(i);
     if (!SerializeWireTypeAndFieldNumber(GetWireType(), FieldNumber(), out)) {
       return false;
@@ -286,7 +286,7 @@ size_t RepeatedMessageFieldBase::GetSerializedSizeIncludingTag() const {
   const size_t wire_type_and_field_number_length =
       WireTypeAndFieldNumberLength(GetWireType(), FieldNumber());
   size_t size = 0;
-  for (int i = 0; i < num_messages(); ++i) {
+  for (size_t i = 0; i < num_messages(); ++i) {
     const Message& msg = message(i);
     size += msg.ByteSizeLong() + VarintLength(msg.ByteSizeLong()) +
             wire_type_and_field_number_length;

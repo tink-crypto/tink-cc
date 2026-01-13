@@ -24,6 +24,7 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_split.h"
 #include "absl/strings/string_view.h"
@@ -833,7 +834,8 @@ TEST_P(EcUtilComputeEcdhSharedSecretTest, ComputeEcdhSharedSecretWycheproof) {
   absl::StatusOr<int32_t> point_size =
       internal::EcPointEncodingSizeInBytes(params.curve, params.format);
   ASSERT_THAT(point_size, IsOk());
-  if (*point_size > params.pub_bytes.size()) {
+  ABSL_CHECK_GE(*point_size, 0);
+  if (static_cast<size_t>(*point_size) > params.pub_bytes.size()) {
     GTEST_SKIP();
   }
 

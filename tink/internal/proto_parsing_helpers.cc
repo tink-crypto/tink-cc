@@ -16,6 +16,7 @@
 
 #include "tink/internal/proto_parsing_helpers.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <utility>
@@ -127,7 +128,7 @@ int VarintLength(uint64_t value) {
 }
 
 bool SerializeVarint(uint64_t value, SerializationState& output) {
-  int size = VarintLength(value);
+  size_t size = static_cast<size_t>(VarintLength(value));
   if (output.GetBuffer().size() < size) {
     return false;
   }

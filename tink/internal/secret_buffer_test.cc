@@ -16,6 +16,7 @@
 
 #include "tink/internal/secret_buffer.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
@@ -74,7 +75,7 @@ TEST(SecretBufferTest, Capacity) {
 TEST(SecretBufferTest, ConstructorWithSizeAndVal) {
   SecretBuffer buffer(100, 0x99);
   EXPECT_THAT(buffer.size(), Eq(100));
-  for (int i = 0; i < buffer.size(); ++i) {
+  for (size_t i = 0; i < buffer.size(); ++i) {
     EXPECT_THAT(buffer[i], Eq(0x99)) << i;
   }
 }
@@ -249,8 +250,8 @@ TEST(SecretBufferTest, AppendWithSecretData) {
 TEST(SecretBufferTest, SubstrConstRef) {
   constexpr absl::string_view kData = "Some arbitrary data";
   SecretBuffer buffer(kData);
-  for (int start = 0; start <= kData.size(); ++start) {
-    for (int num = 0; num <= kData.size(); ++num) {
+  for (size_t start = 0; start <= kData.size(); ++start) {
+    for (size_t num = 0; num <= kData.size(); ++num) {
       EXPECT_THAT(buffer.substr(start, num),
                   Eq(SecretBuffer(kData.substr(start, num))))
           << "substr(" << start << ", " << num << ")";
@@ -261,8 +262,8 @@ TEST(SecretBufferTest, SubstrConstRef) {
 TEST(SecretBufferTest, SubstrRvalueRef) {
   constexpr absl::string_view kData = "Some arbitrary data";
   SecretBuffer buffer(kData);
-  for (int start = 0; start <= kData.size(); ++start) {
-    for (int num = 0; num <= kData.size(); ++num) {
+  for (size_t start = 0; start <= kData.size(); ++start) {
+    for (size_t num = 0; num <= kData.size(); ++num) {
       SecretBuffer tmp_buffer = buffer;
       EXPECT_THAT(std::move(tmp_buffer).substr(start, num),
                   Eq(SecretBuffer(kData.substr(start, num))))

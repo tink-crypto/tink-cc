@@ -362,6 +362,7 @@ tink_cc_test(
     tink::internal::ssl_unique_ptr
     gmock
     absl::status
+    absl::statusor
     absl::strings
     crypto
     tink::subtle::random
@@ -400,6 +401,7 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::status
+    absl::statusor
     absl::strings
     absl::span
     crypto

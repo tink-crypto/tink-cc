@@ -81,7 +81,7 @@ class AesCtrTest : public testing::Test {
 // Check that AesCtr128Crypt fails when out buffer is too small.
 TEST_F(AesCtrTest, AesCtrInvalidOutSize) {
   std::string out;
-  for (int size = 0; size < test_vector_.plaintext.size(); size++) {
+  for (size_t size = 0; size < test_vector_.plaintext.size(); size++) {
     subtle::ResizeStringUninitialized(&out, size);
     EXPECT_THAT(AesCtr128Crypt(test_vector_.plaintext,
                                reinterpret_cast<uint8_t*>(&test_vector_.iv[0]),

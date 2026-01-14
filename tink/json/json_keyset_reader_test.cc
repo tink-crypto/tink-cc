@@ -180,10 +180,10 @@ TEST_F(JsonKeysetReaderTest, testReaderCreation) {
 TEST_F(JsonKeysetReaderTest, testReadFromString) {
   {  // Good string.
     auto reader_result = JsonKeysetReader::New(good_json_keyset_);
-    EXPECT_TRUE(reader_result.ok()) << reader_result.status();
+    ASSERT_TRUE(reader_result.ok()) << reader_result.status();
     auto reader = std::move(reader_result.value());
     auto read_result = reader->Read();
-    EXPECT_TRUE(read_result.ok()) << read_result.status();
+    ASSERT_TRUE(read_result.ok()) << read_result.status();
     auto keyset = std::move(read_result.value());
     EXPECT_EQ(keyset_.SerializeAsString(), keyset->SerializeAsString());
   }
@@ -212,10 +212,10 @@ TEST_F(JsonKeysetReaderTest, testReadFromStream) {
     std::unique_ptr<std::istream> good_keyset_stream(new std::stringstream(
         std::string(good_json_keyset_), std::ios_base::in));
     auto reader_result = JsonKeysetReader::New(std::move(good_keyset_stream));
-    EXPECT_TRUE(reader_result.ok()) << reader_result.status();
+    ASSERT_TRUE(reader_result.ok()) << reader_result.status();
     auto reader = std::move(reader_result.value());
     auto read_result = reader->Read();
-    EXPECT_TRUE(read_result.ok()) << read_result.status();
+    ASSERT_TRUE(read_result.ok()) << read_result.status();
     auto keyset = std::move(read_result.value());
     EXPECT_EQ(keyset_.SerializeAsString(), keyset->SerializeAsString());
   }
@@ -235,10 +235,10 @@ TEST_F(JsonKeysetReaderTest, testReadFromStream) {
 TEST_F(JsonKeysetReaderTest, testReadEncryptedFromString) {
   {  // Good string.
     auto reader_result = JsonKeysetReader::New(good_json_encrypted_keyset_);
-    EXPECT_TRUE(reader_result.ok()) << reader_result.status();
+    ASSERT_TRUE(reader_result.ok()) << reader_result.status();
     auto reader = std::move(reader_result.value());
     auto read_encrypted_result = reader->ReadEncrypted();
-    EXPECT_TRUE(read_encrypted_result.ok()) << read_encrypted_result.status();
+    ASSERT_TRUE(read_encrypted_result.ok()) << read_encrypted_result.status();
     auto encrypted_keyset = std::move(read_encrypted_result.value());
     EXPECT_EQ(encrypted_keyset_.SerializeAsString(),
               encrypted_keyset->SerializeAsString());
@@ -262,10 +262,10 @@ TEST_F(JsonKeysetReaderTest, testReadEncryptedFromStream) {
                               std::ios_base::in));
     auto reader_result =
         JsonKeysetReader::New(std::move(good_encrypted_keyset_stream));
-    EXPECT_TRUE(reader_result.ok()) << reader_result.status();
+    ASSERT_TRUE(reader_result.ok()) << reader_result.status();
     auto reader = std::move(reader_result.value());
     auto read_encrypted_result = reader->ReadEncrypted();
-    EXPECT_TRUE(read_encrypted_result.ok()) << read_encrypted_result.status();
+    ASSERT_TRUE(read_encrypted_result.ok()) << read_encrypted_result.status();
     auto encrypted_keyset = std::move(read_encrypted_result.value());
     EXPECT_EQ(encrypted_keyset_.SerializeAsString(),
               encrypted_keyset->SerializeAsString());
@@ -436,7 +436,7 @@ TEST_F(JsonKeysetReaderTest, MissingPrimaryKeyHasValueZero) {
   ASSERT_THAT(reader, IsOk());
   absl::StatusOr<std::unique_ptr<google::crypto::tink::Keyset>> keyset =
       (*reader)->Read();
-  EXPECT_THAT(keyset, IsOk());
+  ASSERT_THAT(keyset, IsOk());
   EXPECT_THAT((*keyset)->primary_key_id(), Eq(0));
 }
 

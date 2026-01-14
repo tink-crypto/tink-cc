@@ -295,7 +295,7 @@ TEST(FakeKeysetDeriver, DeriveKeyset) {
   FakeKeysetDeriver deriver("hello");
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       deriver.DeriveKeyset("salty");
-  EXPECT_THAT(handle, IsOk());
+  ASSERT_THAT(handle, IsOk());
   EXPECT_THAT((*handle)->GetKeysetInfo().primary_key_id(), Eq(119));
   EXPECT_THAT((*handle)->GetKeysetInfo().key_info_size(), Eq(1));
   google::crypto::tink::KeysetInfo::KeyInfo info =

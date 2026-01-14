@@ -214,7 +214,7 @@ TEST(StreamingAeadSetWrapperTest, DecryptionWithRandomAccessStream) {
       // Encrypt the plaintext.
       auto enc_stream_result =
           saead->NewEncryptingStream(std::move(ct_destination), aad);
-      EXPECT_THAT(enc_stream_result, IsOk());
+      ASSERT_THAT(enc_stream_result, IsOk());
       auto enc_stream = std::move(enc_stream_result.value());
       auto status = WriteToStream(enc_stream.get(), plaintext);
       EXPECT_THAT(status, IsOk());
@@ -225,7 +225,7 @@ TEST(StreamingAeadSetWrapperTest, DecryptionWithRandomAccessStream) {
           std::make_unique<internal::TestRandomAccessStream>(ct_buf->str());
       auto dec_stream_result =
           saead->NewDecryptingRandomAccessStream(std::move(ct_source), aad);
-      EXPECT_THAT(dec_stream_result, IsOk());
+      ASSERT_THAT(dec_stream_result, IsOk());
       std::string decrypted;
       status = internal::ReadAllFromRandomAccessStream(
           dec_stream_result.value().get(), decrypted);
@@ -269,7 +269,7 @@ TEST(StreamingAeadSetWrapperTest, DecryptionAfterWrapperIsDestroyed) {
     // Encrypt the plaintext.
     auto enc_stream_result =
         saead->NewEncryptingStream(std::move(ct_destination), aad);
-    EXPECT_THAT(enc_stream_result, IsOk());
+    ASSERT_THAT(enc_stream_result, IsOk());
     auto enc_stream = std::move(enc_stream_result.value());
     auto status = WriteToStream(enc_stream.get(), plaintext);
     EXPECT_THAT(status, IsOk());
@@ -283,7 +283,7 @@ TEST(StreamingAeadSetWrapperTest, DecryptionAfterWrapperIsDestroyed) {
     // Decrypt the ciphertext.
     auto dec_stream_result =
         saead->NewDecryptingStream(std::move(ct_source), aad);
-    EXPECT_THAT(dec_stream_result, IsOk());
+    ASSERT_THAT(dec_stream_result, IsOk());
     dec_stream = std::move(dec_stream_result.value());
   }
   // Now wrapper and saead are out of scope,

@@ -401,7 +401,7 @@ TEST_F(RegistryTest, testConcurrentRegistration) {
   // Check that there are no extra managers.
   std::string key_type = key_type_prefix_a + std::to_string(count_a - 1);
   auto manager_result = Registry::get_key_manager<Aead>(key_type);
-  EXPECT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
   EXPECT_EQ(key_type, manager_result.value()->get_key_type());
 
   key_type = key_type_prefix_a + std::to_string(count_a);
@@ -427,13 +427,13 @@ TEST_F(RegistryTest, testBasic) {
   EXPECT_TRUE(status.ok()) << status;
 
   manager_result = Registry::get_key_manager<Aead>(key_type_1);
-  EXPECT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
   auto manager = manager_result.value();
   EXPECT_TRUE(manager->DoesSupport(key_type_1));
   EXPECT_FALSE(manager->DoesSupport(key_type_2));
 
   manager_result = Registry::get_key_manager<Aead>(key_type_2);
-  EXPECT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
   manager = manager_result.value();
   EXPECT_TRUE(manager->DoesSupport(key_type_2));
   EXPECT_FALSE(manager->DoesSupport(key_type_1));
@@ -466,7 +466,7 @@ TEST_F(RegistryTest, testRegisterKeyManager) {
 
   // Check the key manager is still registered.
   auto manager_result = Registry::get_key_manager<Aead>(key_type_1);
-  EXPECT_TRUE(manager_result.ok()) << manager_result.status();
+  ASSERT_TRUE(manager_result.ok()) << manager_result.status();
   auto manager = manager_result.value();
   EXPECT_TRUE(manager->DoesSupport(key_type_1));
 }
@@ -536,7 +536,7 @@ TEST_F(RegistryTest, testGettingPrimitives) {
   // Key #1.
   {
     auto result = Registry::GetPrimitive<Aead>(keyset.key(0).key_data());
-    EXPECT_TRUE(result.ok()) << result.status();
+    ASSERT_TRUE(result.ok()) << result.status();
     auto aead = std::move(result.value());
     EXPECT_EQ(DummyAead(key_type_1).Encrypt(plaintext, aad).value(),
               aead->Encrypt(plaintext, aad).value());
@@ -545,7 +545,7 @@ TEST_F(RegistryTest, testGettingPrimitives) {
   // Key #3.
   {
     auto result = Registry::GetPrimitive<Aead>(keyset.key(2).key_data());
-    EXPECT_TRUE(result.ok()) << result.status();
+    ASSERT_TRUE(result.ok()) << result.status();
     auto aead = std::move(result.value());
     EXPECT_EQ(DummyAead(key_type_2).Encrypt(plaintext, aad).value(),
               aead->Encrypt(plaintext, aad).value());
@@ -577,7 +577,7 @@ TEST_F(RegistryTest, testNewKeyData) {
     key_template.set_type_url(key_type_1);
     key_template.set_value("test value 42");
     auto new_key_data_result = Registry::NewKeyData(key_template);
-    EXPECT_TRUE(new_key_data_result.ok()) << new_key_data_result.status();
+    ASSERT_TRUE(new_key_data_result.ok()) << new_key_data_result.status();
     EXPECT_EQ(key_type_1, new_key_data_result.value()->type_url());
     EXPECT_EQ(key_template.value(), new_key_data_result.value()->value());
   }
@@ -587,7 +587,7 @@ TEST_F(RegistryTest, testNewKeyData) {
     key_template.set_type_url(key_type_2);
     key_template.set_value("yet another test value 42");
     auto new_key_data_result = Registry::NewKeyData(key_template);
-    EXPECT_TRUE(new_key_data_result.ok()) << new_key_data_result.status();
+    ASSERT_TRUE(new_key_data_result.ok()) << new_key_data_result.status();
     EXPECT_EQ(key_type_2, new_key_data_result.value()->type_url());
     EXPECT_EQ(key_template.value(), new_key_data_result.value()->value());
   }
@@ -646,7 +646,7 @@ TEST_F(RegistryTest, testGetPublicKeyData) {
   auto public_key_data_result = Registry::GetPublicKeyData(
       EciesAeadHkdfPrivateKeyManager().get_key_type(),
       ecies_key.SerializeAsString());
-  EXPECT_TRUE(public_key_data_result.ok()) << public_key_data_result.status();
+  ASSERT_TRUE(public_key_data_result.ok()) << public_key_data_result.status();
   auto public_key_data = std::move(public_key_data_result.value());
   EXPECT_EQ(EciesAeadHkdfPublicKeyManager().get_key_type(),
             public_key_data->type_url());
@@ -813,7 +813,7 @@ TEST_F(RegistryTest, UsualWrappingTest) {
 
   auto aead_result = Registry::Wrap<Aead>(
       std::make_unique<PrimitiveSet<Aead>>(*std::move(primitive_set)));
-  EXPECT_TRUE(aead_result.ok()) << aead_result.status();
+  ASSERT_TRUE(aead_result.ok()) << aead_result.status();
   std::unique_ptr<Aead> aead = std::move(aead_result.value());
   std::string plaintext = "some_plaintext";
   std::string aad = "some_aad";
@@ -874,7 +874,7 @@ TEST_F(RegistryTest, KeysetWrappingTest) {
   absl::StatusOr<std::unique_ptr<AeadVariant>> aead_variant =
       RegistryImpl::GlobalInstance().WrapKeyset<AeadVariant>(
           keyset, /*annotations=*/{});
-  EXPECT_THAT(aead_variant, IsOk());
+  ASSERT_THAT(aead_variant, IsOk());
   EXPECT_THAT(aead_variant.value()->get(), Eq(raw_key));
 }
 
@@ -899,7 +899,7 @@ TEST_F(RegistryTest, TransformingKeysetWrappingTest) {
   absl::StatusOr<std::unique_ptr<std::string>> string_primitive =
       RegistryImpl::GlobalInstance().WrapKeyset<std::string>(
           keyset, /*annotations=*/{});
-  EXPECT_THAT(string_primitive, IsOk());
+  ASSERT_THAT(string_primitive, IsOk());
   EXPECT_THAT(*string_primitive.value(), Eq(raw_key));
 }
 

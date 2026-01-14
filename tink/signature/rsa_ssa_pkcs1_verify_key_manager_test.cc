@@ -205,7 +205,7 @@ TEST(RsaSsaPkcs1VerifyKeyManagerTest, NistTestVector) {
   key.set_e(nist_test_vector.e);
   auto result =
       RsaSsaPkcs1VerifyKeyManager().GetPrimitive<PublicKeyVerify>(key);
-  EXPECT_THAT(result, IsOk());
+  ASSERT_THAT(result, IsOk());
   EXPECT_THAT(result.value()->Verify(nist_test_vector.signature,
                                      nist_test_vector.message),
               IsOk());

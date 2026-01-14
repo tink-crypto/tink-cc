@@ -167,7 +167,7 @@ TEST(StreamingMacImplTest, ComputeCheckStreamPosition) {
   // Check position in first buffer returned by Next();
   void* buffer;
   absl::StatusOr<int> next_result = output_stream->Next(&buffer);
-  EXPECT_THAT(next_result, IsOk());
+  ASSERT_THAT(next_result, IsOk());
   int buffer_size = *next_result;
   EXPECT_EQ(buffer_size, output_stream->Position());
 
@@ -267,7 +267,7 @@ TEST(StreamingMacImplTest, VerifyCheckStreamPosition) {
   // Check position in first buffer returned by Next();
   void* buffer;
   absl::StatusOr<int> next_result = output_stream->Next(&buffer);
-  EXPECT_THAT(next_result, IsOk());
+  ASSERT_THAT(next_result, IsOk());
   int buffer_size = *next_result;
   EXPECT_EQ(buffer_size, output_stream->Position());
 

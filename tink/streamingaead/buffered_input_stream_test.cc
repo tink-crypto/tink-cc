@@ -160,7 +160,7 @@ TEST(BufferedInputStreamTest, SingleBackup) {
       int pos = buf_stream->Position();
       auto next_result = buf_stream->Next(&buf);
       if (read_size < input_size) {
-        EXPECT_THAT(next_result, IsOk());
+        ASSERT_THAT(next_result, IsOk());
         auto next_size = next_result.value();
         EXPECT_LE(next_size, kBufferSize);
         EXPECT_EQ(pos + next_size, buf_stream->Position());
@@ -192,7 +192,7 @@ TEST(BufferedInputStreamTest, SingleBackup) {
       pos = buf_stream->Position();
       next_result = buf_stream->Next(&buf);
       if (read_size < input_size) {
-        EXPECT_THAT(next_result, IsOk());
+        ASSERT_THAT(next_result, IsOk());
         auto next_size = next_result.value();
         EXPECT_EQ(input_size - pos, next_size);
         EXPECT_EQ(input_size, buf_stream->Position());
@@ -223,7 +223,7 @@ TEST(BufferedInputStreamTest, MultipleBackups) {
 
   EXPECT_EQ(0, buf_stream->Position());
   auto next_result = buf_stream->Next(&buffer);
-  EXPECT_THAT(next_result, IsOk());
+  ASSERT_THAT(next_result, IsOk());
   auto next_size = next_result.value();
   EXPECT_EQ(contents.substr(0, next_size),
             std::string(static_cast<const char*>(buffer), next_size));
@@ -239,7 +239,7 @@ TEST(BufferedInputStreamTest, MultipleBackups) {
 
   // Call Next(), it should return exactly the backed up bytes.
   next_result = buf_stream->Next(&buffer);
-  EXPECT_THAT(next_result, IsOk());
+  ASSERT_THAT(next_result, IsOk());
   EXPECT_EQ(total_backup_size, next_result.value());
   EXPECT_EQ(next_size, buf_stream->Position());
   EXPECT_EQ(contents.substr(next_size - total_backup_size, total_backup_size),

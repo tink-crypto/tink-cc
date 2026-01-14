@@ -133,7 +133,7 @@ TEST(AesCmacBoringSslTest, BasicSmallTag) {
       util::SecretDataFromStringView(test::HexDecodeOrDie(kKey256Hex));
   absl::StatusOr<std::unique_ptr<Mac>> cmac =
       AesCmacBoringSsl::New(key, kSmallTagSize);
-  EXPECT_THAT(cmac, IsOk());
+  ASSERT_THAT(cmac, IsOk());
   {  // Test with some example data.
     std::string data = "Some data to test.";
     absl::StatusOr<std::string> tag = (*cmac)->ComputeMac(data);
@@ -250,7 +250,7 @@ class AesCmacBoringSslTestVectorTest
     std::string data = test::HexDecodeOrDie(data_hex);
     absl::StatusOr<std::unique_ptr<Mac>> cmac =
         AesCmacBoringSsl::New(key, kTagSize);
-    EXPECT_THAT(cmac, IsOk());
+    ASSERT_THAT(cmac, IsOk());
     EXPECT_THAT((*cmac)->VerifyMac(tag, data), IsOk());
   }
 };

@@ -122,11 +122,7 @@ TEST(JwtHmacParametersTest, CopyConstructor) {
 
   JwtHmacParameters copy(*parameters);
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(parameters->KeySizeInBytes()));
-  EXPECT_THAT(copy.GetKidStrategy(), Eq(parameters->GetKidStrategy()));
-  EXPECT_THAT(copy.GetAlgorithm(), Eq(parameters->GetAlgorithm()));
-  EXPECT_THAT(copy.AllowKidAbsent(), Eq(parameters->AllowKidAbsent()));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(parameters->HasIdRequirement()));
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(JwtHmacParametersTest, CopyAssignment) {
@@ -136,13 +132,47 @@ TEST(JwtHmacParametersTest, CopyAssignment) {
       JwtHmacParameters::Algorithm::kHs512);
   ASSERT_THAT(parameters, IsOk());
 
-  JwtHmacParameters copy = *parameters;
+  absl::StatusOr<JwtHmacParameters> other_parameters =
+      JwtHmacParameters::Create(
+          /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+          JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(other_parameters, IsOk());
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(parameters->KeySizeInBytes()));
-  EXPECT_THAT(copy.GetKidStrategy(), Eq(parameters->GetKidStrategy()));
-  EXPECT_THAT(copy.GetAlgorithm(), Eq(parameters->GetAlgorithm()));
-  EXPECT_THAT(copy.AllowKidAbsent(), Eq(parameters->AllowKidAbsent()));
-  EXPECT_THAT(copy.HasIdRequirement(), Eq(parameters->HasIdRequirement()));
+  *other_parameters = *parameters;
+
+  EXPECT_THAT(*other_parameters, Eq(*parameters));
+}
+
+TEST(JwtHmacParametersTest, MoveConstructor) {
+  absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/16,
+      JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtHmacParameters::Algorithm::kHs512);
+  ASSERT_THAT(parameters, IsOk());
+
+  JwtHmacParameters copy(*parameters);
+  JwtHmacParameters move(std::move(*parameters));
+
+  EXPECT_THAT(move, Eq(copy));
+}
+
+TEST(JwtHmacParametersTest, MoveAssignment) {
+  absl::StatusOr<JwtHmacParameters> parameters = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/16,
+      JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtHmacParameters::Algorithm::kHs512);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<JwtHmacParameters> other_parameters =
+      JwtHmacParameters::Create(
+          /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+          JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  JwtHmacParameters copy(*parameters);
+  *other_parameters = std::move(*parameters);
+
+  EXPECT_THAT(*other_parameters, Eq(copy));
 }
 
 TEST_P(JwtHmacParametersTest, ParametersEquals) {

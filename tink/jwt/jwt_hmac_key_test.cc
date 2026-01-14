@@ -436,6 +436,118 @@ TEST(JwtHmacKeyTest, Clone) {
   ASSERT_THAT(*cloned_key, Eq(*key));
 }
 
+TEST(JwtHmacKeyTest, CopyConstructor) {
+  absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<JwtHmacKey> key = JwtHmacKey::Builder()
+                                       .SetParameters(*params)
+                                       .SetKeyBytes(secret)
+                                       .SetCustomKid("custom_kid")
+                                       .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  JwtHmacKey copy(*key);
+
+  EXPECT_THAT(copy, Eq(*key));
+}
+
+TEST(JwtHmacKeyTest, CopyAssignment) {
+  absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<JwtHmacKey> key = JwtHmacKey::Builder()
+                                       .SetParameters(*params)
+                                       .SetKeyBytes(secret)
+                                       .SetCustomKid("custom_kid")
+                                       .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<JwtHmacParameters> other_params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/16,
+      JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(other_params, IsOk());
+
+  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/16);
+
+  absl::StatusOr<JwtHmacKey> other_key = JwtHmacKey::Builder()
+                                             .SetParameters(*other_params)
+                                             .SetKeyBytes(other_secret)
+                                             .SetIdRequirement(456)
+                                             .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  *other_key = *key;
+
+  EXPECT_THAT(*other_key, Eq(*key));
+}
+
+TEST(JwtHmacKeyTest, MoveConstructor) {
+  absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<JwtHmacKey> key = JwtHmacKey::Builder()
+                                       .SetParameters(*params)
+                                       .SetKeyBytes(secret)
+                                       .SetCustomKid("custom_kid")
+                                       .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  JwtHmacKey copy(*key);
+  JwtHmacKey move(std::move(*key));
+
+  EXPECT_THAT(move, Eq(copy));
+}
+
+TEST(JwtHmacKeyTest, MoveAssignment) {
+  absl::StatusOr<JwtHmacParameters> params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/32, JwtHmacParameters::KidStrategy::kCustom,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(params, IsOk());
+
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/32);
+
+  absl::StatusOr<JwtHmacKey> key = JwtHmacKey::Builder()
+                                       .SetParameters(*params)
+                                       .SetKeyBytes(secret)
+                                       .SetCustomKid("custom_kid")
+                                       .Build(GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  absl::StatusOr<JwtHmacParameters> other_params = JwtHmacParameters::Create(
+      /*key_size_in_bytes=*/16,
+      JwtHmacParameters::KidStrategy::kBase64EncodedKeyId,
+      JwtHmacParameters::Algorithm::kHs256);
+  ASSERT_THAT(other_params, IsOk());
+
+  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/16);
+
+  absl::StatusOr<JwtHmacKey> other_key = JwtHmacKey::Builder()
+                                             .SetParameters(*other_params)
+                                             .SetKeyBytes(other_secret)
+                                             .SetIdRequirement(456)
+                                             .Build(GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  JwtHmacKey copy(*key);
+  *other_key = std::move(*key);
+
+  EXPECT_THAT(*other_key, Eq(copy));
+}
+
 }  // namespace
 }  // namespace tink
 }  // namespace crypto

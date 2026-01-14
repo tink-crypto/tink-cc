@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -130,9 +131,7 @@ TEST(HkdfPrfParametersTest, CopyConstructor) {
 
   HkdfPrfParameters copy(*parameters);
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(parameters->KeySizeInBytes()));
-  EXPECT_THAT(copy.GetHashType(), Eq(parameters->GetHashType()));
-  EXPECT_THAT(copy.HasIdRequirement(), IsFalse());
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(HkdfPrfParametersTest, CopyAssignment) {
@@ -141,11 +140,42 @@ TEST(HkdfPrfParametersTest, CopyAssignment) {
       /*salt=*/absl::nullopt);
   ASSERT_THAT(parameters, IsOk());
 
-  HkdfPrfParameters copy = *parameters;
+  absl::StatusOr<HkdfPrfParameters> copy = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
+      /*salt=*/test::HexDecodeOrDie(kSalt));
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(parameters->KeySizeInBytes()));
-  EXPECT_THAT(copy.GetHashType(), Eq(parameters->GetHashType()));
-  EXPECT_THAT(copy.HasIdRequirement(), IsFalse());
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(HkdfPrfParametersTest, MoveConstructor) {
+  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
+      /*salt=*/absl::nullopt);
+  ASSERT_THAT(parameters, IsOk());
+
+  HkdfPrfParameters expected = *parameters;
+  HkdfPrfParameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(HkdfPrfParametersTest, MoveAssignment) {
+  util::StatusOr<HkdfPrfParameters> parameters = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/16, HkdfPrfParameters::HashType::kSha256,
+      /*salt=*/absl::nullopt);
+  ASSERT_THAT(parameters, IsOk());
+
+  util::StatusOr<HkdfPrfParameters> moved = HkdfPrfParameters::Create(
+      /*key_size_in_bytes=*/32, HkdfPrfParameters::HashType::kSha512,
+      /*salt=*/test::HexDecodeOrDie(kSalt));
+  ASSERT_THAT(moved, IsOk());
+
+  HkdfPrfParameters expected = *parameters;
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(HkdfPrfParametersTest, ParametersEquals) {

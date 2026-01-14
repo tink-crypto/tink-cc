@@ -445,7 +445,7 @@ TEST_F(KeysetHandleTest, ReadEncryptedKeysetWithAssociatedDataGoodKeyset) {
       BinaryKeysetReader::New(encrypted_keyset.SerializeAsString()).value());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> result =
       KeysetHandle::ReadWithAssociatedData(std::move(reader), aead, "aad");
-  EXPECT_THAT(result, IsOk());
+  ASSERT_THAT(result, IsOk());
   auto handle = std::move(result.value());
   EXPECT_EQ(keyset.SerializeAsString(),
             TestKeysetHandle::GetKeyset(*handle).SerializeAsString());
@@ -696,7 +696,7 @@ TEST_P(KeysetHandlePrefixTest, GenerateNewFromParametersWorks) {
       IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNewFromParameters(*params, config);
-  EXPECT_THAT(handle.status(), IsOk());
+  ASSERT_THAT(handle.status(), IsOk());
   EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
 }
 
@@ -1289,7 +1289,7 @@ TEST_F(KeysetHandleTest,
 
   absl::StatusOr<std::unique_ptr<Aead>> aead =
       handle->GetPrimitive<Aead>(config);
-  EXPECT_THAT(aead, IsOk());
+  ASSERT_THAT(aead, IsOk());
 
   // Check that encrypt/decrypt works.
   const std::string plaintext = "plaintext";
@@ -1314,7 +1314,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveWithBespokeConfigNoPrimitiveGetterFails) {
               IsOk());
   absl::StatusOr<std::unique_ptr<KeysetHandle>> handle =
       KeysetHandle::GenerateNewFromParameters(*params, key_gen_config);
-  EXPECT_THAT(handle, IsOk());
+  ASSERT_THAT(handle, IsOk());
   EXPECT_THAT((*handle)->GetPrimary().GetKey()->GetParameters(), Eq(*params));
 
   Configuration config;
@@ -1457,7 +1457,7 @@ TEST_F(KeysetHandleTest, ReadNoSecretWithAnnotations) {
                   /*new_key_allowed=*/true),
               IsOk());
 
-  EXPECT_THAT((*keyset_handle)
+  ASSERT_THAT((*keyset_handle)
                   ->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry()),
               IsOk());
   EXPECT_EQ(generated_annotations, kAnnotations);

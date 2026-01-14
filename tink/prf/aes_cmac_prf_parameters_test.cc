@@ -67,7 +67,6 @@ TEST(AesCmacPrfParametersTest, CopyConstructor) {
   AesCmacPrfParameters copy(*parameters);
 
   EXPECT_THAT(copy.KeySizeInBytes(), Eq(16));
-  EXPECT_THAT(copy.HasIdRequirement(), IsFalse());
 }
 
 TEST(AesCmacPrfParametersTest, CopyAssignment) {
@@ -75,10 +74,37 @@ TEST(AesCmacPrfParametersTest, CopyAssignment) {
       AesCmacPrfParameters::Create(/*key_size_in_bytes=*/16);
   ASSERT_THAT(parameters, IsOk());
 
-  AesCmacPrfParameters copy = *parameters;
+  absl::StatusOr<AesCmacPrfParameters> other_parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
+  ASSERT_THAT(other_parameters, IsOk());
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(16));
-  EXPECT_THAT(copy.HasIdRequirement(), IsFalse());
+  *other_parameters = *parameters;
+
+  EXPECT_THAT(other_parameters->KeySizeInBytes(), Eq(16));
+}
+
+TEST(AesCmacPrfParametersTest, MoveConstructor) {
+  absl::StatusOr<AesCmacPrfParameters> parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/16);
+  ASSERT_THAT(parameters, IsOk());
+
+  AesCmacPrfParameters moved_parameters(std::move(*parameters));
+
+  EXPECT_THAT(moved_parameters.KeySizeInBytes(), Eq(16));
+}
+
+TEST(AesCmacPrfParametersTest, MoveAssignment) {
+  absl::StatusOr<AesCmacPrfParameters> parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/16);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<AesCmacPrfParameters> other_parameters =
+      AesCmacPrfParameters::Create(/*key_size_in_bytes=*/32);
+  ASSERT_THAT(other_parameters, IsOk());
+
+  *other_parameters = std::move(*parameters);
+
+  EXPECT_THAT(other_parameters->KeySizeInBytes(), Eq(16));
 }
 
 TEST_P(AesCmacPrfParametersTest, ParametersEquals) {

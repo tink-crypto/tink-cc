@@ -17,6 +17,7 @@
 #include "tink/prf/aes_cmac_prf_key.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -106,6 +107,66 @@ TEST(AesCmacPrfKeyTest, DifferentSecretDataNotEqual) {
   EXPECT_TRUE(*other_key != *key);
   EXPECT_FALSE(*key == *other_key);
   EXPECT_FALSE(*other_key == *key);
+}
+
+TEST(AesCmacPrfKeyTest, CopyConstructor) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
+  absl::StatusOr<AesCmacPrfKey> key =
+      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesCmacPrfKey copy(*key);
+
+  EXPECT_THAT(copy.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(copy.GetParameters(), Eq(key->GetParameters()));
+}
+
+TEST(AesCmacPrfKeyTest, CopyAssignment) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
+  absl::StatusOr<AesCmacPrfKey> key =
+      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
+  absl::StatusOr<AesCmacPrfKey> other_key =
+      AesCmacPrfKey::Create(other_secret, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  *other_key = *key;
+
+  EXPECT_THAT(other_key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(other_key->GetParameters(), Eq(key->GetParameters()));
+}
+
+TEST(AesCmacPrfKeyTest, MoveConstructor) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
+  absl::StatusOr<AesCmacPrfKey> key =
+      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  AesCmacPrfParameters parameters = key->GetParameters();
+  AesCmacPrfKey moved_key(std::move(*key));
+
+  EXPECT_THAT(moved_key.GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(moved_key.GetParameters(), Eq(parameters));
+}
+
+TEST(AesCmacPrfKeyTest, MoveAssignment) {
+  RestrictedData secret = RestrictedData(/*num_random_bytes=*/16);
+  absl::StatusOr<AesCmacPrfKey> key =
+      AesCmacPrfKey::Create(secret, GetPartialKeyAccess());
+  ASSERT_THAT(key, IsOk());
+
+  RestrictedData other_secret = RestrictedData(/*num_random_bytes=*/32);
+  absl::StatusOr<AesCmacPrfKey> other_key =
+      AesCmacPrfKey::Create(other_secret, GetPartialKeyAccess());
+  ASSERT_THAT(other_key, IsOk());
+
+  AesCmacPrfParameters parameters = key->GetParameters();
+  *other_key = std::move(*key);
+
+  EXPECT_THAT(other_key->GetKeyBytes(GetPartialKeyAccess()), Eq(secret));
+  EXPECT_THAT(other_key->GetParameters(), Eq(parameters));
 }
 
 TEST(AesCmacPrfKeyTest, Clone) {

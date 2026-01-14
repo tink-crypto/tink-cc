@@ -94,8 +94,7 @@ struct StreamingAeadSpec {
 // The last entry in 'spec' will be the primary primitive in the returned set.
 std::shared_ptr<PrimitiveSet<StreamingAead>> GetTestStreamingAeadSet(
     const std::vector<StreamingAeadSpec>& spec) {
-  std::shared_ptr<PrimitiveSet<StreamingAead>> saead_set =
-      std::make_shared<PrimitiveSet<StreamingAead>>();
+  PrimitiveSet<StreamingAead>::Builder saead_set_builder;
   int i = 0;
   for (auto& s : spec) {
     KeysetInfo::KeyInfo key_info;
@@ -104,14 +103,17 @@ std::shared_ptr<PrimitiveSet<StreamingAead>> GetTestStreamingAeadSet(
     key_info.set_status(KeyStatusType::ENABLED);
     std::unique_ptr<StreamingAead> saead =
         absl::make_unique<DummyStreamingAead>(s.saead_name);
-    auto entry_result = saead_set->AddPrimitive(std::move(saead), key_info);
-    EXPECT_TRUE(entry_result.ok());
     if (i + 1 == spec.size()) {
-      EXPECT_THAT(saead_set->set_primary(entry_result.value()), IsOk());
+      saead_set_builder.AddPrimaryPrimitive(std::move(saead), key_info);
+    } else {
+      saead_set_builder.AddPrimitive(std::move(saead), key_info);
     }
     i++;
   }
-  return saead_set;
+  absl::StatusOr<PrimitiveSet<StreamingAead>> saead_set =
+      std::move(saead_set_builder).Build();
+  EXPECT_THAT(saead_set, IsOk());
+  return std::make_shared<PrimitiveSet<StreamingAead>>(*std::move(saead_set));
 }
 
 TEST(DecryptingRandomAccessStreamTest, BasicDecryption) {

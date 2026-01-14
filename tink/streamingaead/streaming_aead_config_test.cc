@@ -110,16 +110,15 @@ TEST_F(StreamingAeadConfigTest, WrappersRegistered) {
   key_info.set_status(google::crypto::tink::KeyStatusType::ENABLED);
   key_info.set_key_id(1234);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::RAW);
-  auto primitive_set = absl::make_unique<PrimitiveSet<StreamingAead>>();
-  ASSERT_THAT(
-      primitive_set->set_primary(
-          primitive_set
-              ->AddPrimitive(absl::make_unique<DummyStreamingAead>("dummy"),
-                             key_info)
-              .value()),
-      IsOk());
+  PrimitiveSet<StreamingAead>::Builder saead_set_builder;
+  saead_set_builder.AddPrimaryPrimitive(
+      absl::make_unique<DummyStreamingAead>("dummy"), key_info);
+  absl::StatusOr<PrimitiveSet<StreamingAead>> primitive_set =
+      std::move(saead_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
 
-  auto primitive_result = Registry::Wrap(std::move(primitive_set));
+  auto primitive_result = Registry::Wrap(
+      std::make_unique<PrimitiveSet<StreamingAead>>(*std::move(primitive_set)));
   ASSERT_TRUE(primitive_result.ok()) << primitive_result.status();
 }
 

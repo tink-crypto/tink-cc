@@ -430,36 +430,30 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto jwt_mac_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+  PrimitiveSet<JwtMacInternal>::Builder mac_set_builder;
+  mac_set_builder.AddAnnotations(annotations);
 
-  ASSERT_THAT(
-      jwt_mac_primitive_set
-          ->AddPrimitive(
-              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
-              keyset_info.key_info(0))
-          .status(),
-      IsOk());
-  ASSERT_THAT(
-      jwt_mac_primitive_set
-          ->AddPrimitive(
-              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
-              keyset_info.key_info(1))
-          .status(),
-      IsOk());
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
+      keyset_info.key_info(0));
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
+      keyset_info.key_info(1));
   // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
-      jwt_mac_primitive_set->AddPrimitive(
-          JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last.status(), IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+  mac_set_builder.AddPrimaryPrimitive(
+      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>> jwt_mac_primitive_set =
+      std::move(mac_set_builder).Build();
+  ASSERT_THAT(jwt_mac_primitive_set, IsOk());
+
   // Record the ID of the primary key.
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a JWT and compute an authentication tag
   absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
-      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+      JwtMacWrapper().Wrap(std::make_unique<PrimitiveSet<JwtMacInternal>>(
+          *std::move(jwt_mac_primitive_set)));
   ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
 
   absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
@@ -482,37 +476,30 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto jwt_mac_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+  PrimitiveSet<JwtMacInternal>::Builder mac_set_builder;
+  mac_set_builder.AddAnnotations(annotations);
 
-  ASSERT_THAT(
-      jwt_mac_primitive_set
-          ->AddPrimitive(
-              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
-              keyset_info.key_info(0))
-          .status(),
-      IsOk());
-  ASSERT_THAT(
-      jwt_mac_primitive_set
-          ->AddPrimitive(
-              JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
-              keyset_info.key_info(1))
-          .status(),
-      IsOk());
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac0"), "jwtmac0"),
+      keyset_info.key_info(0));
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac1"), "jwtmac1"),
+      keyset_info.key_info(1));
   // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
-      jwt_mac_primitive_set->AddPrimitive(
-          JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last.status(), IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+  mac_set_builder.AddPrimaryPrimitive(
+      JwtMacImpl::Raw(absl::make_unique<DummyMac>("mac2"), "jwtmac2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>> jwt_mac_primitive_set =
+      std::move(mac_set_builder).Build();
+  ASSERT_THAT(jwt_mac_primitive_set, IsOk());
 
   // Record the ID of the primary key.
   const uint32_t primary_key_id = keyset_info.key_info(2).key_id();
 
   // Create a MAC, compute a Mac and verify it.
   absl::StatusOr<std::unique_ptr<JwtMac>> mac =
-      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+      JwtMacWrapper().Wrap(std::make_unique<PrimitiveSet<JwtMacInternal>>(
+          *std::move(jwt_mac_primitive_set)));
   ASSERT_THAT(mac, IsOkAndHolds(NotNull()));
 
   absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
@@ -545,32 +532,27 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
 
-  auto jwt_mac_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+  PrimitiveSet<JwtMacInternal>::Builder mac_set_builder;
+  mac_set_builder.AddAnnotations(annotations);
 
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac0"),
-                                                 "jwtmac0"),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac1"),
-                                                 "jwtmac1"),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(CreateAlwaysFailingMac("mac0"), "jwtmac0"),
+      keyset_info.key_info(0));
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(CreateAlwaysFailingMac("mac1"), "jwtmac1"),
+      keyset_info.key_info(1));
   // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
-      jwt_mac_primitive_set->AddPrimitive(
-          JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last.status(), IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+  mac_set_builder.AddPrimaryPrimitive(
+      JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>> jwt_mac_primitive_set =
+      std::move(mac_set_builder).Build();
+  ASSERT_THAT(jwt_mac_primitive_set, IsOk());
 
   // Create a JWT and compute an authentication tag
   absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
-      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+      JwtMacWrapper().Wrap(std::make_unique<PrimitiveSet<JwtMacInternal>>(
+          *std::move(jwt_mac_primitive_set)));
   ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
 
   absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
@@ -594,32 +576,27 @@ TEST_F(JwtMacSetWrapperWithMonitoringTest,
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
 
-  auto jwt_mac_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtMacInternal>>(annotations);
+  PrimitiveSet<JwtMacInternal>::Builder mac_set_builder;
+  mac_set_builder.AddAnnotations(annotations);
 
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac0"),
-                                                 "jwtmac0"),
-                                 keyset_info.key_info(0))
-                  .status(),
-              IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set
-                  ->AddPrimitive(JwtMacImpl::Raw(CreateAlwaysFailingMac("mac1"),
-                                                 "jwtmac1"),
-                                 keyset_info.key_info(1))
-                  .status(),
-              IsOk());
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(CreateAlwaysFailingMac("mac0"), "jwtmac0"),
+      keyset_info.key_info(0));
+  mac_set_builder.AddPrimitive(
+      JwtMacImpl::Raw(CreateAlwaysFailingMac("mac1"), "jwtmac1"),
+      keyset_info.key_info(1));
   // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<JwtMacInternal>::Entry<JwtMacInternal>*> last =
-      jwt_mac_primitive_set->AddPrimitive(
-          JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last.status(), IsOk());
-  ASSERT_THAT(jwt_mac_primitive_set->set_primary(*last), IsOk());
+  mac_set_builder.AddPrimaryPrimitive(
+      JwtMacImpl::Raw(CreateAlwaysFailingMac("mac2"), "jwtmac2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtMacInternal>> jwt_mac_primitive_set =
+      std::move(mac_set_builder).Build();
+  ASSERT_THAT(jwt_mac_primitive_set, IsOk());
 
   // Create a JWT and verify it
   absl::StatusOr<std::unique_ptr<JwtMac>> jwt_mac =
-      JwtMacWrapper().Wrap(std::move(jwt_mac_primitive_set));
+      JwtMacWrapper().Wrap(std::make_unique<PrimitiveSet<JwtMacInternal>>(
+          *std::move(jwt_mac_primitive_set)));
   ASSERT_THAT(jwt_mac, IsOkAndHolds(NotNull()));
 
   constexpr absl::string_view invalid_compact = "something is wrong here";

@@ -492,41 +492,35 @@ class JwtPublicKeySetWrapperWithMonitoringTest : public Test {
 // Test that successful sign operations are logged.
 TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringSignSuccess) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto public_key_sign_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>(kAnnotations);
+  PrimitiveSet<JwtPublicKeySignInternal>::Builder sign_set_builder;
+  sign_set_builder.AddAnnotations(kAnnotations);
 
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign0 = JwtPublicKeySignImpl::Raw(
       absl::make_unique<DummyPublicKeySign>("sign0"), "jwtsign0");
-  ASSERT_THAT(public_key_sign_primitive_set
-                  ->AddPrimitive(std::move(jwt_sign0), keyset_info.key_info(0))
-                  .status(),
-              IsOk());
+  sign_set_builder.AddPrimitive(std::move(jwt_sign0), keyset_info.key_info(0));
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign1 = JwtPublicKeySignImpl::Raw(
       absl::make_unique<DummyPublicKeySign>("sign1"), "jwtsign1");
-  ASSERT_THAT(public_key_sign_primitive_set
-                  ->AddPrimitive(std::move(jwt_sign1), keyset_info.key_info(1))
-                  .status(),
-              IsOk());
+  sign_set_builder.AddPrimitive(std::move(jwt_sign1), keyset_info.key_info(1));
   // Set the last as primary.
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign2 = JwtPublicKeySignImpl::Raw(
       absl::make_unique<DummyPublicKeySign>("sign2"), "jwtsign2");
-  absl::StatusOr<
-      PrimitiveSet<JwtPublicKeySignInternal>::Entry<JwtPublicKeySignInternal> *>
-      last = public_key_sign_primitive_set->AddPrimitive(
-          std::move(jwt_sign2), keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(public_key_sign_primitive_set->set_primary(*last), IsOk());
+  sign_set_builder.AddPrimaryPrimitive(std::move(jwt_sign2),
+                                       keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtPublicKeySignInternal>>
+      public_key_sign_primitive_set = std::move(sign_set_builder).Build();
+  ASSERT_THAT(public_key_sign_primitive_set, IsOk());
 
   // Record the ID of the primary key.
   const uint32_t kPrimaryKeyId = keyset_info.key_info(2).key_id();
 
   // Create a PublicKeySign primitive and sign some data.
   absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> public_key_sign =
-      JwtPublicKeySignWrapper().Wrap(std::move(public_key_sign_primitive_set));
+      JwtPublicKeySignWrapper().Wrap(
+          std::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>(
+              *std::move(public_key_sign_primitive_set)));
   ASSERT_THAT(public_key_sign, IsOkAndHolds(NotNull()));
 
   absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
@@ -544,38 +538,32 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
 
 TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringSignFailures) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
 
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto public_key_sign_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>(kAnnotations);
+  PrimitiveSet<JwtPublicKeySignInternal>::Builder sign_set_builder;
+  sign_set_builder.AddAnnotations(kAnnotations);
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign0 = JwtPublicKeySignImpl::Raw(
       CreateAlwaysFailingPublicKeySign("sign0"), "jwtsign0");
-  ASSERT_THAT(public_key_sign_primitive_set
-                  ->AddPrimitive(std::move(jwt_sign0), keyset_info.key_info(0))
-                  .status(),
-              IsOk());
+  sign_set_builder.AddPrimitive(std::move(jwt_sign0), keyset_info.key_info(0));
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign1 = JwtPublicKeySignImpl::Raw(
       CreateAlwaysFailingPublicKeySign("sign1"), "jwtsign1");
-  ASSERT_THAT(public_key_sign_primitive_set
-                  ->AddPrimitive(std::move(jwt_sign1), keyset_info.key_info(1))
-                  .status(),
-              IsOk());
+  sign_set_builder.AddPrimitive(std::move(jwt_sign1), keyset_info.key_info(1));
   // Set the last as primary.
   std::unique_ptr<JwtPublicKeySignImpl> jwt_sign2 = JwtPublicKeySignImpl::Raw(
       CreateAlwaysFailingPublicKeySign("sign2"), "jwtsign2");
-  absl::StatusOr<
-      PrimitiveSet<JwtPublicKeySignInternal>::Entry<JwtPublicKeySignInternal> *>
-      last = public_key_sign_primitive_set->AddPrimitive(
-          std::move(jwt_sign2), keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(public_key_sign_primitive_set->set_primary(*last), IsOk());
+  sign_set_builder.AddPrimaryPrimitive(std::move(jwt_sign2),
+                                       keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtPublicKeySignInternal>>
+      public_key_sign_primitive_set = std::move(sign_set_builder).Build();
+  ASSERT_THAT(public_key_sign_primitive_set, IsOk());
 
   // Create a PublicKeySign primitive and sign some data.
   absl::StatusOr<std::unique_ptr<JwtPublicKeySign>> public_key_sign =
-      JwtPublicKeySignWrapper().Wrap(std::move(public_key_sign_primitive_set));
+      JwtPublicKeySignWrapper().Wrap(
+          std::make_unique<PrimitiveSet<JwtPublicKeySignInternal>>(
+              *std::move(public_key_sign_primitive_set)));
   ASSERT_THAT(public_key_sign, IsOkAndHolds(NotNull()));
 
   absl::StatusOr<RawJwt> raw_jwt = RawJwtBuilder()
@@ -594,37 +582,27 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
 // Test that successful verify operations are logged.
 TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
        WrapKeysetWithMonitoringVerifySuccess) {
-  // Create a primitive set and fill it with some entries
   KeysetInfo keyset_info = CreateTestKeysetInfo();
   const absl::flat_hash_map<std::string, std::string> kAnnotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto public_key_verify_primitive_set =
-      absl::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(kAnnotations);
-  ASSERT_THAT(
-      public_key_verify_primitive_set
-          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
-                             absl::make_unique<DummyPublicKeyVerify>("verify0"),
-                             "jwtverify0"),
-                         keyset_info.key_info(0))
-          .status(),
-      IsOk());
-  ASSERT_THAT(
-      public_key_verify_primitive_set
-          ->AddPrimitive(JwtPublicKeyVerifyImpl::Raw(
-                             absl::make_unique<DummyPublicKeyVerify>("verify1"),
-                             "jwtverify1"),
-                         keyset_info.key_info(1))
-          .status(),
-      IsOk());
+  PrimitiveSet<JwtPublicKeyVerifyInternal>::Builder verify_set_builder;
+  verify_set_builder.AddAnnotations(kAnnotations);
+  verify_set_builder.AddPrimitive(
+      JwtPublicKeyVerifyImpl::Raw(
+          absl::make_unique<DummyPublicKeyVerify>("verify0"), "jwtverify0"),
+      keyset_info.key_info(0));
+  verify_set_builder.AddPrimitive(
+      JwtPublicKeyVerifyImpl::Raw(
+          absl::make_unique<DummyPublicKeyVerify>("verify1"), "jwtverify1"),
+      keyset_info.key_info(1));
   // Set the last as primary.
-  absl::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>::Entry<
-      JwtPublicKeyVerifyInternal> *>
-      last = public_key_verify_primitive_set->AddPrimitive(
-          JwtPublicKeyVerifyImpl::Raw(
-              absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
-          keyset_info.key_info(2));
-  ASSERT_THAT(last, IsOk());
-  ASSERT_THAT(public_key_verify_primitive_set->set_primary(*last), IsOk());
+  verify_set_builder.AddPrimaryPrimitive(
+      JwtPublicKeyVerifyImpl::Raw(
+          absl::make_unique<DummyPublicKeyVerify>("verify2"), "jwtverify2"),
+      keyset_info.key_info(2));
+  absl::StatusOr<PrimitiveSet<JwtPublicKeyVerifyInternal>>
+      public_key_verify_primitive_set = std::move(verify_set_builder).Build();
+  ASSERT_THAT(public_key_verify_primitive_set, IsOk());
 
   // Record the ID of the primary key.
   const uint32_t kPrimaryKeyId = keyset_info.key_info(2).key_id();
@@ -632,7 +610,8 @@ TEST_F(JwtPublicKeySetWrapperWithMonitoringTest,
   // Create a PublicKeyVerify primitive and verify some data.
   absl::StatusOr<std::unique_ptr<JwtPublicKeyVerify>> public_key_verify =
       JwtPublicKeyVerifyWrapper().Wrap(
-          std::move(public_key_verify_primitive_set));
+          std::make_unique<PrimitiveSet<JwtPublicKeyVerifyInternal>>(
+              *std::move(public_key_verify_primitive_set)));
   ASSERT_THAT(public_key_verify, IsOkAndHolds(NotNull()));
 
   absl::StatusOr<JwtValidator> validator = JwtValidatorBuilder()

@@ -77,21 +77,7 @@ class FakePrf : public Prf {
   std::string output_;
 };
 
-class PrfSetWrapperTest : public ::testing::Test {
- protected:
-  void SetUp() override { prf_set_ = absl::make_unique<PrimitiveSet<Prf>>(); }
-
-  absl::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> AddPrf(
-      const std::string& output, const KeysetInfo::KeyInfo& key_info) {
-    auto prf = absl::make_unique<FakePrf>(output);
-    return prf_set_->AddPrimitive(std::move(prf), key_info);
-  }
-
-  std::unique_ptr<PrimitiveSet<Prf>>& PrfSet() { return prf_set_; }
-
- private:
-  std::unique_ptr<PrimitiveSet<Prf>> prf_set_;
-};
+class PrfSetWrapperTest : public ::testing::Test {};
 
 TEST_F(PrfSetWrapperTest, NullPrfSet) {
   PrfSetWrapper wrapper;
@@ -107,19 +93,28 @@ TEST_F(PrfSetWrapperTest, EmptyPrfSet) {
 TEST_F(PrfSetWrapperTest, NonRawKeyType) {
   KeysetInfo::KeyInfo key_info = MakeKey(1);
   key_info.set_output_prefix_type(google::crypto::tink::OutputPrefixType::TINK);
-  auto entry = AddPrf("output", key_info);
-  ASSERT_THAT(entry, IsOk());
-  ASSERT_THAT(PrfSet()->set_primary(entry.value()), IsOk());
+  PrimitiveSet<Prf>::Builder prf_set_builder;
+  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<FakePrf>("output"),
+                                      key_info);
+  absl::StatusOr<PrimitiveSet<Prf>> prf_set =
+      std::move(prf_set_builder).Build();
+  ASSERT_THAT(prf_set, IsOk());
   PrfSetWrapper wrapper;
-  EXPECT_THAT(wrapper.Wrap(std::move(PrfSet())), Not(IsOk()));
+  EXPECT_THAT(
+      wrapper.Wrap(std::make_unique<PrimitiveSet<Prf>>(*std::move(prf_set))),
+      Not(IsOk()));
 }
 
 TEST_F(PrfSetWrapperTest, WrapOkay) {
-  auto entry = AddPrf("output", MakeKey(1));
-  ASSERT_THAT(entry, IsOk());
-  ASSERT_THAT(PrfSet()->set_primary(entry.value()), IsOk());
+  PrimitiveSet<Prf>::Builder prf_set_builder;
+  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<FakePrf>("output"),
+                                      MakeKey(1));
+  absl::StatusOr<PrimitiveSet<Prf>> prf_set =
+      std::move(prf_set_builder).Build();
+  ASSERT_THAT(prf_set, IsOk());
   PrfSetWrapper wrapper;
-  auto wrapped = wrapper.Wrap(std::move(PrfSet()));
+  auto wrapped =
+      wrapper.Wrap(std::make_unique<PrimitiveSet<Prf>>(*std::move(prf_set)));
   ASSERT_THAT(wrapped, IsOk());
   EXPECT_THAT(wrapped.value()->ComputePrimary("input", 6),
               IsOkAndHolds(StrEq("output")));
@@ -127,15 +122,21 @@ TEST_F(PrfSetWrapperTest, WrapOkay) {
 
 TEST_F(PrfSetWrapperTest, WrapTwo) {
   std::string primary_output("output");
-  auto entry = AddPrf(primary_output, MakeKey(1));
-  ASSERT_THAT(entry, IsOk());
-  ASSERT_THAT(PrfSet()->set_primary(entry.value()), IsOk());
-
-  ASSERT_THAT(AddPrf(primary_output, MakeKey(1)), IsOk());
   std::string secondary_output("different");
-  ASSERT_THAT(AddPrf(secondary_output, MakeKey(2)), IsOk());
+  PrimitiveSet<Prf>::Builder prf_set_builder;
+  prf_set_builder.AddPrimaryPrimitive(
+      absl::make_unique<FakePrf>(primary_output), MakeKey(1));
+  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>(primary_output),
+                               MakeKey(1));
+  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>(secondary_output),
+                               MakeKey(2));
+  absl::StatusOr<PrimitiveSet<Prf>> prf_set =
+      std::move(prf_set_builder).Build();
+  ASSERT_THAT(prf_set, IsOk());
+
   PrfSetWrapper wrapper;
-  auto wrapped_or = wrapper.Wrap(std::move(PrfSet()));
+  auto wrapped_or =
+      wrapper.Wrap(std::make_unique<PrimitiveSet<Prf>>(*std::move(prf_set)));
   ASSERT_THAT(wrapped_or, IsOk());
   auto wrapped = std::move(wrapped_or.value());
   EXPECT_THAT(wrapped->ComputePrimary("input", 6),
@@ -195,19 +196,18 @@ class AlwaysFailingPrf : public Prf {
 TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringFailure) {
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto primitive_set = absl::make_unique<PrimitiveSet<Prf>>(annotations);
-  absl::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> entry =
-      primitive_set->AddPrimitive(absl::make_unique<AlwaysFailingPrf>(),
-                                  MakeKey(/*id=*/1));
-  ASSERT_THAT(entry, IsOk());
-  ASSERT_THAT(primitive_set->set_primary(entry.value()), IsOk());
-  ASSERT_THAT(primitive_set
-                  ->AddPrimitive(absl::make_unique<FakePrf>("output"),
-                                 MakeKey(/*id=*/1))
-                  .status(),
-              IsOk());
-  absl::StatusOr<std::unique_ptr<PrfSet>> prf_set =
-      PrfSetWrapper().Wrap(std::move(primitive_set));
+  PrimitiveSet<Prf>::Builder prf_set_builder;
+  prf_set_builder.AddAnnotations(annotations);
+  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<AlwaysFailingPrf>(),
+                                      MakeKey(/*id=*/1));
+  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>("output"),
+                               MakeKey(/*id=*/1));
+  absl::StatusOr<PrimitiveSet<Prf>> primitive_set =
+      std::move(prf_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
+
+  absl::StatusOr<std::unique_ptr<PrfSet>> prf_set = PrfSetWrapper().Wrap(
+      std::make_unique<PrimitiveSet<Prf>>(*std::move(primitive_set)));
   ASSERT_THAT(prf_set, IsOk());
   EXPECT_CALL(*monitoring_client_ref_, LogFailure());
   EXPECT_THAT((*prf_set)->ComputePrimary("input", /*output_length=*/16),
@@ -217,21 +217,19 @@ TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringFailure) {
 TEST_F(PrfSetWrapperWithMonitoringTest, WrapKeysetWithMonitoringVerifySuccess) {
   const absl::flat_hash_map<std::string, std::string> annotations = {
       {"key1", "value1"}, {"key2", "value2"}, {"key3", "value3"}};
-  auto primitive_set = absl::make_unique<PrimitiveSet<Prf>>(annotations);
+  PrimitiveSet<Prf>::Builder prf_set_builder;
+  prf_set_builder.AddAnnotations(annotations);
 
-  absl::StatusOr<PrimitiveSet<Prf>::Entry<Prf>*> entry =
-      primitive_set->AddPrimitive(absl::make_unique<FakePrf>("output"),
-                                  MakeKey(/*id=*/1));
-  ASSERT_THAT(entry, IsOk());
-  ASSERT_THAT(primitive_set->set_primary(entry.value()), IsOk());
-  ASSERT_THAT(primitive_set
-                  ->AddPrimitive(absl::make_unique<FakePrf>("output"),
-                                 MakeKey(/*id=*/1))
-                  .status(),
-              IsOk());
+  prf_set_builder.AddPrimaryPrimitive(absl::make_unique<FakePrf>("output"),
+                                      MakeKey(/*id=*/1));
+  prf_set_builder.AddPrimitive(absl::make_unique<FakePrf>("output"),
+                               MakeKey(/*id=*/1));
+  absl::StatusOr<PrimitiveSet<Prf>> primitive_set =
+      std::move(prf_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
 
-  absl::StatusOr<std::unique_ptr<PrfSet>> prf_set =
-      PrfSetWrapper().Wrap(std::move(primitive_set));
+  absl::StatusOr<std::unique_ptr<PrfSet>> prf_set = PrfSetWrapper().Wrap(
+      std::make_unique<PrimitiveSet<Prf>>(*std::move(primitive_set)));
   ASSERT_THAT(prf_set, IsOk());
   std::map<uint32_t, Prf*> prf_map = (*prf_set)->GetPrfs();
   std::string input = "input";

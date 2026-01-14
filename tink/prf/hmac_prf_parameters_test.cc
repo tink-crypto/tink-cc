@@ -17,6 +17,7 @@
 #include "tink/prf/hmac_prf_parameters.h"
 
 #include <memory>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -91,9 +92,7 @@ TEST(HmacPrfParametersTest, CopyConstructor) {
 
   HmacPrfParameters copy(*parameters);
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(parameters->KeySizeInBytes()));
-  EXPECT_THAT(copy.GetHashType(), Eq(parameters->GetHashType()));
-  EXPECT_THAT(copy.HasIdRequirement(), IsFalse());
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(HmacPrfParametersTest, CopyAssignment) {
@@ -101,11 +100,43 @@ TEST(HmacPrfParametersTest, CopyAssignment) {
       /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
   ASSERT_THAT(parameters, IsOk());
 
-  HmacPrfParameters copy = *parameters;
+  absl::StatusOr<HmacPrfParameters> copy =
+      HmacPrfParameters::Create(
+          /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha512);
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.KeySizeInBytes(), Eq(parameters->KeySizeInBytes()));
-  EXPECT_THAT(copy.GetHashType(), Eq(parameters->GetHashType()));
-  EXPECT_THAT(copy.HasIdRequirement(), IsFalse());
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(HmacPrfParametersTest, MoveConstructor) {
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
+  ASSERT_THAT(parameters, IsOk());
+
+  HmacPrfParameters expected = *parameters;
+
+  HmacPrfParameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(HmacPrfParametersTest, MoveAssignment) {
+  absl::StatusOr<HmacPrfParameters> parameters = HmacPrfParameters::Create(
+      /*key_size_in_bytes=*/16, HmacPrfParameters::HashType::kSha256);
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<HmacPrfParameters> moved =
+      HmacPrfParameters::Create(
+          /*key_size_in_bytes=*/32, HmacPrfParameters::HashType::kSha512);
+  ASSERT_THAT(moved, IsOk());
+
+  HmacPrfParameters expected = *parameters;
+
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(HmacPrfParametersTest, ParametersEquals) {

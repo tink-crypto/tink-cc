@@ -305,14 +305,17 @@ TEST(KeysetWrapperStoreTest, GetPrimitiveWrapper) {
   keyset_info.mutable_key_info(0)->set_key_id(1234543);
   keyset_info.mutable_key_info(0)->set_status(KeyStatusType::ENABLED);
   keyset_info.set_primary_key_id(1234543);
-  auto primitive_set = std::make_unique<PrimitiveSet<FakePrimitive>>();
-  auto entry = primitive_set->AddPrimitive(
+  PrimitiveSet<FakePrimitive>::Builder primitive_set_builder;
+  primitive_set_builder.AddPrimaryPrimitive(
       absl::make_unique<FakePrimitive>(raw_key), keyset_info.key_info(0));
-  ASSERT_THAT(entry, IsOk());
-  ASSERT_THAT(primitive_set->set_primary(*entry), IsOk());
+  absl::StatusOr<PrimitiveSet<FakePrimitive>> primitive_set =
+      std::move(primitive_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
 
   absl::StatusOr<std::unique_ptr<FakePrimitive>> legacy_aead =
-      (*legacy_wrapper)->Wrap(std::move(primitive_set));
+      (*legacy_wrapper)
+          ->Wrap(std::make_unique<PrimitiveSet<FakePrimitive>>(
+              *std::move(primitive_set)));
   ASSERT_THAT(legacy_aead, IsOk());
   EXPECT_THAT((*legacy_aead)->get(), Eq(raw_key));
 }

@@ -444,7 +444,7 @@ TEST_F(PrimitiveSetTest, GetAll) {
 }
 
 TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
-  auto pset = absl::make_unique<PrimitiveSet<KeysetDeriver>>();
+  PrimitiveSet<KeysetDeriver>::Builder pset_builder;
   std::vector<KeysetInfo::KeyInfo> key_infos;
 
   KeysetInfo::KeyInfo key_info;
@@ -453,9 +453,8 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   key_info.set_output_prefix_type(OutputPrefixType::RAW);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  ASSERT_THAT(pset->AddPrimitive(
-                  absl::make_unique<test::FakeKeysetDeriver>("one"), key_info),
-              IsOk());
+  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("one"),
+                            key_info);
   key_infos.push_back(key_info);
 
   key_info.set_key_id(2020202);
@@ -463,9 +462,8 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   key_info.set_output_prefix_type(OutputPrefixType::LEGACY);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  ASSERT_THAT(pset->AddPrimitive(
-                  absl::make_unique<test::FakeKeysetDeriver>("two"), key_info),
-              IsOk());
+  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("two"),
+                            key_info);
   key_infos.push_back(key_info);
 
   key_info.set_key_id(3030303);
@@ -473,11 +471,13 @@ TEST_F(PrimitiveSetTest, GetAllInKeysetOrder) {
   key_info.set_output_prefix_type(OutputPrefixType::TINK);
   key_info.set_type_url(
       "type.googleapis.com/google.crypto.tink.PrfBasedDeriverKey");
-  ASSERT_THAT(
-      pset->AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("three"),
-                         key_info),
-      IsOk());
+  pset_builder.AddPrimitive(absl::make_unique<test::FakeKeysetDeriver>("three"),
+                            key_info);
   key_infos.push_back(key_info);
+
+  absl::StatusOr<PrimitiveSet<KeysetDeriver>> pset =
+      std::move(pset_builder).Build();
+  ASSERT_THAT(pset, IsOk());
 
   std::vector<PrimitiveSet<KeysetDeriver>::Entry<KeysetDeriver>*> entries =
       pset->get_all_in_keyset_order();

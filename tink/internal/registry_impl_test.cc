@@ -796,24 +796,23 @@ TEST_F(RegistryTest, UsualWrappingTest) {
   keyset_info.mutable_key_info(2)->set_key_id(7213743);
   keyset_info.mutable_key_info(2)->set_status(KeyStatusType::ENABLED);
 
-  auto primitive_set = absl::make_unique<PrimitiveSet<Aead>>();
-  ASSERT_TRUE(primitive_set
-                  ->AddPrimitive(absl::make_unique<DummyAead>("aead0"),
-                                 keyset_info.key_info(0))
-                  .ok());
-  ASSERT_TRUE(primitive_set
-                  ->AddPrimitive(absl::make_unique<DummyAead>("aead1"),
-                                 keyset_info.key_info(1))
-                  .ok());
-  auto entry_result = primitive_set->AddPrimitive(
+  PrimitiveSet<Aead>::Builder primitive_set_builder;
+  primitive_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead0"),
+                                     keyset_info.key_info(0));
+  primitive_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead1"),
+                                     keyset_info.key_info(1));
+  primitive_set_builder.AddPrimaryPrimitive(
       absl::make_unique<DummyAead>("primary_aead"), keyset_info.key_info(2));
-  ASSERT_THAT(primitive_set->set_primary(entry_result.value()), IsOk());
+  absl::StatusOr<PrimitiveSet<Aead>> primitive_set =
+      std::move(primitive_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
 
   EXPECT_TRUE(
       Registry::RegisterPrimitiveWrapper(absl::make_unique<AeadWrapper>())
           .ok());
 
-  auto aead_result = Registry::Wrap<Aead>(std::move(primitive_set));
+  auto aead_result = Registry::Wrap<Aead>(
+      std::make_unique<PrimitiveSet<Aead>>(*std::move(primitive_set)));
   EXPECT_TRUE(aead_result.ok()) << aead_result.status();
   std::unique_ptr<Aead> aead = std::move(aead_result.value());
   std::string plaintext = "some_plaintext";
@@ -928,13 +927,16 @@ TEST_F(RegistryTest, TransformingPrimitiveWrapperCustomKeyManager) {
   keyset_info.mutable_key_info(0)->set_status(KeyStatusType::ENABLED);
   keyset_info.set_primary_key_id(1234543);
 
-  auto primitive_set = absl::make_unique<PrimitiveSet<Aead>>();
-  ASSERT_TRUE(primitive_set
-                  ->AddPrimitive(absl::make_unique<DummyAead>("aead0"),
-                                 keyset_info.key_info(0))
-                  .ok());
+  PrimitiveSet<Aead>::Builder primitive_set_builder;
+  primitive_set_builder.AddPrimitive(absl::make_unique<DummyAead>("aead0"),
+                                     keyset_info.key_info(0));
+  absl::StatusOr<PrimitiveSet<Aead>> primitive_set =
+      std::move(primitive_set_builder).Build();
+  ASSERT_THAT(primitive_set, IsOk());
 
-  EXPECT_THAT(Registry::Wrap<Aead>(std::move(primitive_set)).status(),
+  EXPECT_THAT(Registry::Wrap<Aead>(std::make_unique<PrimitiveSet<Aead>>(
+                                       *std::move(primitive_set)))
+                  .status(),
               StatusIs(absl::StatusCode::kFailedPrecondition,
                        HasSubstr("custom key manager")));
 }

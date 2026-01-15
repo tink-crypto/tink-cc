@@ -88,7 +88,9 @@ tink_cc_library(
     signature_key_templates.h
   DEPS
     absl::core_headers
+    absl::absl_check
     absl::memory
+    absl::statusor
     absl::strings
     crypto
     tink::internal::bn_util
@@ -665,7 +667,9 @@ tink_cc_library(
     rsa_ssa_pss_parameters.h
   DEPS
     tink::signature::signature_parameters
+    absl::absl_check
     absl::status
+    absl::statusor
     absl::strings
     absl::string_view
     absl::optional
@@ -675,7 +679,6 @@ tink_cc_library(
     tink::internal::bn_util
     tink::internal::rsa_util
     tink::internal::ssl_unique_ptr
-    tink::util::status
     tink::util::statusor
 )
 

@@ -121,6 +121,7 @@ cc_library(
         "//proto:tink_cc_proto",
         "//tink/internal:bn_util",
         "//tink/internal:ssl_unique_ptr",
+        "@abseil-cpp//absl/log:absl_check",
         "@abseil-cpp//absl/status:statusor",
         "@boringssl//:crypto",
     ],

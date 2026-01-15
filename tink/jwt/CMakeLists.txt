@@ -150,6 +150,7 @@ tink_cc_library(
     jwt_key_templates.cc
     jwt_key_templates.h
   DEPS
+    absl::absl_check
     absl::statusor
     crypto
     tink::internal::bn_util

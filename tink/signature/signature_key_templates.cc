@@ -17,8 +17,11 @@
 #include "tink/signature/signature_key_templates.h"
 
 #include <memory>
+#include <string>
 
+#include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "openssl/bn.h"
 #include "openssl/rsa.h"
@@ -86,8 +89,10 @@ std::unique_ptr<KeyTemplate> NewRsaSsaPkcs1KeyTemplate(HashType hash_type,
   key_format.set_modulus_size_in_bits(modulus_size_in_bits);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), public_exponent);
-  key_format.set_public_exponent(
-      internal::BignumToString(e.get(), BN_num_bytes(e.get())).value());
+  absl::StatusOr<std::string> public_exponent_str =
+      internal::BignumToString(e.get(), BN_num_bytes(e.get()));
+  ABSL_CHECK_OK(public_exponent_str.status());
+  key_format.set_public_exponent(*public_exponent_str);
   key_format.SerializeToString(key_template->mutable_value());
   return key_template;
 }
@@ -109,8 +114,10 @@ std::unique_ptr<KeyTemplate> NewRsaSsaPssKeyTemplate(HashType sig_hash,
   key_format.set_modulus_size_in_bits(modulus_size_in_bits);
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), public_exponent);
-  key_format.set_public_exponent(
-      internal::BignumToString(e.get(), BN_num_bytes(e.get())).value());
+  absl::StatusOr<std::string> public_exponent_str =
+      internal::BignumToString(e.get(), BN_num_bytes(e.get()));
+  ABSL_CHECK_OK(public_exponent_str.status());
+  key_format.set_public_exponent(*public_exponent_str);
   key_format.SerializeToString(key_template->mutable_value());
   return key_template;
 }

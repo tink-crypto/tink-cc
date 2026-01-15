@@ -19,7 +19,9 @@
 #include <set>
 #include <string>
 
+#include "absl/log/absl_check.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/string_view.h"
 #ifdef OPENSSL_IS_BORINGSSL
@@ -32,8 +34,6 @@
 #include "tink/internal/rsa_util.h"
 #include "tink/internal/ssl_unique_ptr.h"
 #include "tink/parameters.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -195,9 +195,10 @@ BigInteger RsaSsaPssParameters::Builder::CreateDefaultPublicExponent() {
   internal::SslUniquePtr<BIGNUM> e(BN_new());
   BN_set_word(e.get(), kF4);
 
-  std::string F4_string =
-      internal::BignumToString(e.get(), BN_num_bytes(e.get())).value();
-  return BigInteger(F4_string);
+  absl::StatusOr<std::string> F4_string =
+      internal::BignumToString(e.get(), BN_num_bytes(e.get()));
+  ABSL_CHECK_OK(F4_string.status());
+  return BigInteger(*F4_string);
 }
 
 }  // namespace tink

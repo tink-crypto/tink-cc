@@ -428,15 +428,14 @@ TEST(EcdsaParametersTest, GetPrivateKeyLengthP256) {
   EXPECT_THAT(parameters->GetPrivateKeyLength(), Eq(32));
 }
 
-
 TEST(EcdsaParametersTest, GetPrivateKeyLengthP384) {
   absl::StatusOr<EcdsaParameters> parameters =
-    EcdsaParameters::Builder()
-    .SetCurveType(EcdsaParameters::CurveType::kNistP384)
-    .SetHashType(EcdsaParameters::HashType::kSha512)
-        .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
-        .SetVariant(EcdsaParameters::Variant::kTink)
-        .Build();
+      EcdsaParameters::Builder()
+          .SetCurveType(EcdsaParameters::CurveType::kNistP384)
+          .SetHashType(EcdsaParameters::HashType::kSha512)
+          .SetSignatureEncoding(EcdsaParameters::SignatureEncoding::kDer)
+          .SetVariant(EcdsaParameters::Variant::kTink)
+          .Build();
   ASSERT_THAT(parameters, IsOk());
 
   EXPECT_THAT(parameters->GetPrivateKeyLength(), Eq(48));
@@ -454,7 +453,6 @@ TEST(EcdsaParametersTest, GetPrivateKeyLengthP521) {
 
   EXPECT_THAT(parameters->GetPrivateKeyLength(), Eq(66));
 }
-
 
 }  // namespace
 }  // namespace tink

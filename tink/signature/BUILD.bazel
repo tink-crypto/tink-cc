@@ -760,8 +760,6 @@ cc_library(
     deps = [
         ":signature_parameters",
         "//tink:parameters",
-        "//tink/util:status",
-        "//tink/util:statusor",
         "@abseil-cpp//absl/algorithm:container",
         "@abseil-cpp//absl/status",
         "@abseil-cpp//absl/status:statusor",

@@ -751,8 +751,6 @@ tink_cc_library(
     absl::string_view
     absl::optional
     tink::core::parameters
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(

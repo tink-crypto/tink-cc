@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
@@ -279,12 +280,7 @@ TEST(RsaSsaPkcs1ParametersTest, CopyConstructor) {
 
   RsaSsaPkcs1Parameters copy(*parameters);
 
-  EXPECT_THAT(copy.GetVariant(), Eq(RsaSsaPkcs1Parameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
-  EXPECT_THAT(parameters->GetModulusSizeInBits(), Eq(2048));
-  EXPECT_THAT(parameters->GetPublicExponent(), Eq(kF4));
-  EXPECT_THAT(parameters->GetHashType(),
-              Eq(RsaSsaPkcs1Parameters::HashType::kSha512));
+  EXPECT_THAT(copy, Eq(*parameters));
 }
 
 TEST(RsaSsaPkcs1ParametersTest, CopyAssignment) {
@@ -297,14 +293,59 @@ TEST(RsaSsaPkcs1ParametersTest, CopyAssignment) {
           .Build();
   ASSERT_THAT(parameters, IsOk());
 
-  RsaSsaPkcs1Parameters copy = *parameters;
+  absl::StatusOr<RsaSsaPkcs1Parameters> copy =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(3072)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kLegacy)
+          .Build();
+  ASSERT_THAT(copy, IsOk());
 
-  EXPECT_THAT(copy.GetVariant(), Eq(RsaSsaPkcs1Parameters::Variant::kTink));
-  EXPECT_THAT(copy.HasIdRequirement(), IsTrue());
-  EXPECT_THAT(parameters->GetModulusSizeInBits(), Eq(2048));
-  EXPECT_THAT(parameters->GetPublicExponent(), Eq(kF4));
-  EXPECT_THAT(parameters->GetHashType(),
-              Eq(RsaSsaPkcs1Parameters::HashType::kSha512));
+  *copy = *parameters;
+
+  EXPECT_THAT(*copy, Eq(*parameters));
+}
+
+TEST(RsaSsaPkcs1ParametersTest, MoveConstructor) {
+  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  RsaSsaPkcs1Parameters expected = *parameters;
+  RsaSsaPkcs1Parameters moved(std::move(*parameters));
+
+  EXPECT_THAT(moved, Eq(expected));
+}
+
+TEST(RsaSsaPkcs1ParametersTest, MoveAssignment) {
+  absl::StatusOr<RsaSsaPkcs1Parameters> parameters =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(2048)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha512)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kTink)
+          .Build();
+  ASSERT_THAT(parameters, IsOk());
+
+  absl::StatusOr<RsaSsaPkcs1Parameters> moved =
+      RsaSsaPkcs1Parameters::Builder()
+          .SetModulusSizeInBits(3072)
+          .SetPublicExponent(kF4)
+          .SetHashType(RsaSsaPkcs1Parameters::HashType::kSha256)
+          .SetVariant(RsaSsaPkcs1Parameters::Variant::kLegacy)
+          .Build();
+  ASSERT_THAT(moved, IsOk());
+
+  RsaSsaPkcs1Parameters expected = *parameters;
+  *moved = std::move(*parameters);
+
+  EXPECT_THAT(*moved, Eq(expected));
 }
 
 TEST_P(RsaSsaPkcs1ParametersTest, ParametersEquals) {

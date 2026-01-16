@@ -29,6 +29,8 @@
 #include "tink/big_integer.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
@@ -122,8 +124,8 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLength) {
                                      "0fffffffffffffff", "00ffffffffffffff"};
   for (const std::string& s : bn_str) {
     const std::string bn_bytes = test::HexDecodeOrDie(s);
-    RestrictedBigInteger bn_bytes_restricted(
-        bn_bytes, InsecureSecretKeyAccess::Get());
+    RestrictedData bn_bytes_restricted(bn_bytes,
+                                       InsecureSecretKeyAccess::Get());
     absl::StatusOr<SecretData> bn_bytes_fixed_length =
         GetSecretValueOfFixedLength(bn_bytes_restricted, 10,
                                     InsecureSecretKeyAccess::Get());
@@ -138,8 +140,7 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthIntegerTooBig) {
   std::string bn_str = "0fffffffffffffff";
   const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
 
-  RestrictedBigInteger bn_bytes_restricted(bn_bytes,
-                                           InsecureSecretKeyAccess::Get());
+  RestrictedData bn_bytes_restricted(bn_bytes, InsecureSecretKeyAccess::Get());
   absl::StatusOr<SecretData> bn_bytes_fixed_length =
       GetSecretValueOfFixedLength(bn_bytes_restricted, 2,
                                   InsecureSecretKeyAccess::Get());
@@ -150,10 +151,60 @@ TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthIntegerTooBig) {
 TEST(BnEncodingUtilTest, GetSecretValueOfFixedLengthSameLength) {
   std::string bn_str = "0fffffffffffffff";
   const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
+  RestrictedData bn_bytes_restricted(bn_bytes, InsecureSecretKeyAccess::Get());
+
+  absl::StatusOr<SecretData> bn_bytes_fixed_length =
+      GetSecretValueOfFixedLength(bn_bytes_restricted, 8,
+                                  InsecureSecretKeyAccess::Get());
+
+  EXPECT_THAT(
+      bn_bytes_fixed_length,
+      IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(bn_bytes))));
+}
+
+TEST(BnEncodingUtilTest, GetSecretRestrictedBigIntegerValueOfFixedLength) {
+  std::vector<std::string> bn_str = {"0000000000000000", "0000000000000001",
+                                     "1000000000000000", "ffffffffffffffff",
+                                     "0fffffffffffffff", "00ffffffffffffff"};
+  for (const std::string& s : bn_str) {
+    const std::string bn_bytes = test::HexDecodeOrDie(s);
+    RestrictedBigInteger bn_bytes_restricted(bn_bytes,
+                                             InsecureSecretKeyAccess::Get());
+    absl::StatusOr<SecretData> bn_bytes_fixed_length =
+        // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
+        GetSecretValueOfFixedLength(bn_bytes_restricted, 10,
+                                    InsecureSecretKeyAccess::Get());
+
+    EXPECT_THAT(bn_bytes_fixed_length,
+                IsOkAndHolds(EqualsSecretData(SecretDataFromStringView(
+                    test::HexDecodeOrDie(absl::StrCat("0000", s))))));
+  }
+}
+
+TEST(BnEncodingUtilTest,
+     GetSecretRestrictedBigIntegerValueOfFixedLengthIntegerTooBig) {
+  std::string bn_str = "0fffffffffffffff";
+  const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
+
+  RestrictedBigInteger bn_bytes_restricted(bn_bytes,
+                                           InsecureSecretKeyAccess::Get());
+  absl::StatusOr<SecretData> bn_bytes_fixed_length =
+      // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
+      GetSecretValueOfFixedLength(bn_bytes_restricted, 2,
+                                  InsecureSecretKeyAccess::Get());
+  EXPECT_THAT(bn_bytes_fixed_length.status(),
+              StatusIs(absl::StatusCode::kInvalidArgument));
+}
+
+TEST(BnEncodingUtilTest,
+     GetSecretRestrictedBigIntegerValueOfFixedLengthSameLength) {
+  std::string bn_str = "0fffffffffffffff";
+  const std::string bn_bytes = test::HexDecodeOrDie(bn_str);
   RestrictedBigInteger bn_bytes_restricted(bn_bytes,
                                            InsecureSecretKeyAccess::Get());
 
   absl::StatusOr<SecretData> bn_bytes_fixed_length =
+      // NOLINTNEXTLINE(clang-diagnostic-deprecated-declarations)
       GetSecretValueOfFixedLength(bn_bytes_restricted, 8,
                                   InsecureSecretKeyAccess::Get());
 

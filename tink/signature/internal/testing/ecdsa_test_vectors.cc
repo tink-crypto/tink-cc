@@ -16,24 +16,21 @@
 
 #include "tink/signature/internal/testing/ecdsa_test_vectors.h"
 
-#include <string>
 #include <vector>
 
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
-#include "absl/strings/escaping.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/big_integer.h"
 #include "tink/ec_point.h"
 #include "tink/insecure_secret_key_access.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/signature/internal/testing/signature_test_vector.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 #include "tink/util/test_util.h"
 
 namespace crypto {
@@ -52,8 +49,8 @@ EcPoint P256Point() {
           "7903FE1008B8BC99A41AE9E95628BC64F2F1B20C2D7E9F5177A3C294D4462299")));
 }
 
-RestrictedBigInteger P256SecretValue() {
-  return RestrictedBigInteger(
+RestrictedData P256SecretValue() {
+  return RestrictedData(
       HexDecodeOrDie(
           "C9AFA9D845BA75166B5C215767B1D6934E50C3DB36E89B127B8A622B120F6721"),
       InsecureSecretKeyAccess::Get());
@@ -69,8 +66,8 @@ EcPoint P384Point() {
                                 "0b2c990ae92b62d6c75180ba")));
 }
 
-RestrictedBigInteger P384SecretValue() {
-  return RestrictedBigInteger(
+RestrictedData P384SecretValue() {
+  return RestrictedData(
       HexDecodeOrDie("670dc60402d8a4fe52f4e552d2b71f0f81bcf195d8a71a6c7d84efb4f"
                      "0e4b4a5d0f60a27c94caac46bdeeb79897a3ed9"),
       InsecureSecretKeyAccess::Get());
@@ -88,10 +85,10 @@ EcPoint P521Point() {
           "CF5")));
 }
 
-RestrictedBigInteger P521SecretValue() {
-  return RestrictedBigInteger(
+RestrictedData P521SecretValue() {
+  return RestrictedData(
       HexDecodeOrDie(
-          "FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75C"
+          "00FAD06DAA62BA3B25D2FB40133DA757205DE67F5BB0018FEE8C86E1B68C7E75C"
           "AA896EB32F1F47C70855836A6D16FCC1466F6D8FBEC67DB89EC0C08B0E996B83"
           "538"),
       InsecureSecretKeyAccess::Get());

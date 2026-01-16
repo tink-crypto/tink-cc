@@ -1356,16 +1356,18 @@ tink_cc_library(
   DEPS
     tink::internal::safe_stringops
     tink::internal::secret_buffer
+    absl::core_headers
     absl::status
+    absl::statusor
     absl::strings
     absl::str_format
     absl::string_view
     crypto
     tink::core::restricted_big_integer
+    tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     tink::util::secret_data
-    tink::util::status
-    tink::util::statusor
 )
 
 tink_cc_library(
@@ -1389,6 +1391,8 @@ tink_cc_test(
     tink::core::big_integer
     tink::core::insecure_secret_key_access
     tink::core::restricted_big_integer
+    tink::core::restricted_data
+    tink::core::secret_data
     tink::util::secret_data
     tink::util::test_matchers
     tink::util::test_util
@@ -1579,12 +1583,12 @@ tink_cc_test(
     gmock
     absl::absl_check
     absl::memory
+    absl::statusor
     absl::optional
     tink::core::big_integer
     tink::core::ec_point
     tink::core::key
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::aead::aes_ctr_hmac_aead_key
     tink::aead::aes_ctr_hmac_aead_parameters
@@ -1625,7 +1629,6 @@ tink_cc_test(
     tink::streamingaead::aes_gcm_hkdf_streaming_parameters
     tink::subtle::common_enums
     tink::subtle::random
-    tink::util::secret_data
     tink::util::test_matchers
 )
 

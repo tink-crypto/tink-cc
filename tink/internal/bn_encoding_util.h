@@ -20,11 +20,13 @@
 
 #include <string>
 
+#include "absl/base/macros.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/string_view.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
-#include "tink/util/secret_data.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -37,8 +39,15 @@ absl::StatusOr<std::string> GetValueOfFixedLength(
     absl::string_view big_integer_encoding, int length);
 
 absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
+    const RestrictedData& big_integer, int length, SecretKeyAccessToken token);
+
+ABSL_DEPRECATE_AND_INLINE()
+inline absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
     const RestrictedBigInteger& big_integer, int length,
-    SecretKeyAccessToken token);
+    SecretKeyAccessToken token) {
+  return GetSecretValueOfFixedLength(
+      RestrictedData(big_integer.GetSecret(token), token), length, token);
+}
 
 }  // namespace internal
 }  // namespace tink

@@ -846,6 +846,8 @@ cc_library(
     hdrs = ["restricted_big_integer.h"],
     include_prefix = "tink",
     deps = [
+        ":restricted_data",
+        ":secret_data",
         ":secret_key_access_token",
         "//tink/internal:call_with_core_dump_protection",
         "//tink/util:secret_data",

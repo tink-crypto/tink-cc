@@ -26,7 +26,6 @@
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "tink/internal/tink_proto_structs.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/util/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
@@ -597,8 +596,8 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWorks) {
   absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                               InsecureSecretKeyAccess::Get()),
+          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                         InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
 
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
@@ -802,8 +801,8 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWorks) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -871,8 +870,8 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

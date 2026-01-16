@@ -246,7 +246,6 @@ tink_cc_test(
     tink::core::partial_key_access
     tink::core::partial_key_access_token
     tink::core::registry
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_key_access_token
     tink::aead::aes_ctr_hmac_aead_key

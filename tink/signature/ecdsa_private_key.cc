@@ -16,11 +16,19 @@
 
 #include "tink/signature/ecdsa_private_key.h"
 
+#include <cstddef>
 #include <memory>
+#include <utility>
 
+#include "absl/base/call_once.h"
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
+#include "absl/strings/string_view.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/internal/safe_stringops.h"
+#include "tink/internal/secret_buffer.h"
+#include "tink/util/secret_data.h"
 #ifdef OPENSSL_IS_BORINGSSL
 #include "openssl/base.h"
 #include "openssl/ec_key.h"
@@ -36,11 +44,10 @@
 #include "tink/key.h"
 #include "tink/partial_key_access_token.h"
 #include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_public_key.h"
 #include "tink/subtle/common_enums.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -62,7 +69,7 @@ absl::StatusOr<subtle::EllipticCurveType> SubtleCurveType(
 }
 
 absl::Status ValidateKeyPair(const EcdsaPublicKey& public_key,
-                             const RestrictedBigInteger& private_key_value,
+                             const RestrictedData& private_key_value,
                              PartialKeyAccessToken token) {
   internal::SslUniquePtr<EC_KEY> key(EC_KEY_new());
 
@@ -120,9 +127,15 @@ absl::Status ValidateKeyPair(const EcdsaPublicKey& public_key,
 }  // namespace
 
 absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
-    const EcdsaPublicKey& public_key,
-    const RestrictedBigInteger& private_key_value,
+    const EcdsaPublicKey& public_key, const RestrictedData& private_key_value,
     PartialKeyAccessToken token) {
+  size_t key_length = public_key.GetParameters().GetPrivateKeyLength();
+  if (private_key_value.size() != key_length) {
+    return absl::InvalidArgumentError(
+        absl::StrCat("Private key length ", private_key_value.size(),
+                     " is different from expected length ", key_length));
+  }
+
   // Validate that the public and private key match.
   absl::Status key_pair_validation =
       ValidateKeyPair(public_key, private_key_value, token);
@@ -131,6 +144,63 @@ absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::Create(
   }
 
   return EcdsaPrivateKey(public_key, private_key_value);
+}
+
+absl::StatusOr<EcdsaPrivateKey> EcdsaPrivateKey::CreateAllowNonConstantTime(
+    const EcdsaPublicKey& public_key, const RestrictedData& private_key_value,
+    PartialKeyAccessToken token) {
+  size_t expected_length = public_key.GetParameters().GetPrivateKeyLength();
+
+  auto adjust_private_key =
+      [&](absl::string_view current_key_sv) -> absl::StatusOr<RestrictedData> {
+    absl::string_view tmp_key = current_key_sv;
+
+    // If key is longer than expected, we remove leading bytes and check that
+    // each of them is zero.
+    while (tmp_key.length() > expected_length) {
+      if (tmp_key[0] != '\0') {
+        return absl::InvalidArgumentError(absl::StrCat(
+            "Private key is too long and has a non-zero leading byte. "
+            "Expected length: ",
+            expected_length, ", Actual length: ", current_key_sv.length()));
+      }
+      tmp_key.remove_prefix(1);
+    }
+
+    // Initialize a string of expected_length with all zeros.
+    internal::SecretBuffer padded_key(expected_length, '\0');
+
+    // Replace the end of the string with tmp_key.
+    internal::SafeMemCopy(
+        padded_key.data() + expected_length - tmp_key.length(), tmp_key.data(),
+        tmp_key.length());
+    return RestrictedData(util::internal::AsSecretData(std::move(padded_key)),
+                          InsecureSecretKeyAccess::Get());
+  };
+
+  absl::StatusOr<RestrictedData> adjusted_private_key =
+      internal::CallWithCoreDumpProtection(
+          [&]() -> absl::StatusOr<RestrictedData> {
+            absl::string_view private_key_string =
+                private_key_value.GetSecret(InsecureSecretKeyAccess::Get());
+            absl::StatusOr<RestrictedData> adjusted_private_key =
+                adjust_private_key(private_key_string);
+            return adjusted_private_key;
+          });
+
+  if (!adjusted_private_key.ok()) {
+    return adjusted_private_key.status();
+  }
+  return Create(public_key, *adjusted_private_key, token);
+}
+
+const RestrictedBigInteger& EcdsaPrivateKey::GetPrivateKeyValue(
+    PartialKeyAccessToken token) const {
+  absl::call_once(once_, [&] {
+    private_key_value_big_integer_ = std::make_unique<RestrictedBigInteger>(
+        private_key_value_, InsecureSecretKeyAccess::Get());
+  });
+  return *private_key_value_big_integer_;
 }
 
 bool EcdsaPrivateKey::operator==(const Key& other) const {

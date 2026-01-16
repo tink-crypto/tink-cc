@@ -88,18 +88,16 @@ tink_cc_library(
     tink::signature::internal::testing::signature_test_vector
     absl::absl_check
     absl::memory
-    absl::strings
+    absl::statusor
     absl::optional
     tink::core::big_integer
     tink::core::ec_point
     tink::core::insecure_secret_key_access
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
+    tink::core::restricted_data
     tink::signature::ecdsa_parameters
     tink::signature::ecdsa_private_key
     tink::signature::ecdsa_public_key
-    tink::util::secret_data
-    tink::util::statusor
     tink::util::test_util
   TESTONLY
 )

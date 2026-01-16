@@ -69,7 +69,6 @@
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/prf/hmac_prf_proto_serialization.h"
 #include "tink/registry.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/signature/ecdsa_parameters.h"
@@ -285,9 +284,9 @@ std::unique_ptr<EcdsaPrivateKey> CreateEcdsaPrivateKey(
                              public_point, id_requirement,
                              GetPartialKeyAccess())
           .value();
-  RestrictedBigInteger private_key_bytes =
-      RestrictedBigInteger(util::SecretDataAsStringView(key_pair.priv),
-                           InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_bytes =
+      RestrictedData(util::SecretDataAsStringView(key_pair.priv),
+                     InsecureSecretKeyAccess::Get());
   return std::make_unique<EcdsaPrivateKey>(
       EcdsaPrivateKey::Create(public_key, private_key_bytes,
                               GetPartialKeyAccess())

@@ -34,7 +34,6 @@
 #include "tink/internal/internal_insecure_secret_key_access.h"
 #include "tink/internal/secret_buffer.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -192,9 +191,9 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> CreateEcdsaKey(
     return public_key.status();
   }
 
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           GetInsecureSecretKeyAccessInternal());
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     GetInsecureSecretKeyAccessInternal());
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());

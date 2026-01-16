@@ -15,20 +15,19 @@
 ///////////////////////////////////////////////////////////////////////////////
 #include "tink/internal/bn_encoding_util.h"
 
-#include <cstring>
 #include <string>
 
 #include "absl/status/status.h"
+#include "absl/status/statusor.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
 #include "absl/strings/string_view.h"
 #include "tink/internal/safe_stringops.h"
 #include "tink/internal/secret_buffer.h"
-#include "tink/restricted_big_integer.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
-#include "tink/util/status.h"
-#include "tink/util/statusor.h"
 
 namespace crypto {
 namespace tink {
@@ -53,23 +52,22 @@ absl::StatusOr<std::string> GetValueOfFixedLength(
 }
 
 absl::StatusOr<SecretData> GetSecretValueOfFixedLength(
-    const RestrictedBigInteger& big_integer, int length,
-    SecretKeyAccessToken token) {
-  if (big_integer.SizeInBytes() == length) {
+    const RestrictedData& big_integer, int length, SecretKeyAccessToken token) {
+  if (big_integer.size() == length) {
     return util::SecretDataFromStringView(big_integer.GetSecret(token));
   }
 
-  if (big_integer.SizeInBytes() > length) {
+  if (big_integer.size() > length) {
     return absl::Status(
         absl::StatusCode::kInvalidArgument,
         absl::StrFormat(
             "Value too large for the given length. Expected %d, got %d", length,
-            big_integer.SizeInBytes()));
+            big_integer.size()));
   }
 
   internal::SecretBuffer padded(length, 0);
   crypto::tink::internal::SafeMemCopy(
-      padded.data() + length - big_integer.SizeInBytes(),
+      padded.data() + length - big_integer.size(),
       big_integer.GetSecret(token).data(), big_integer.GetSecret(token).size());
   return util::internal::AsSecretData(padded);
 }

@@ -22,6 +22,7 @@
 #include "gtest/gtest.h"
 #include "absl/log/absl_check.h"
 #include "absl/memory/memory.h"
+#include "absl/status/statusor.h"
 #include "absl/types/optional.h"
 #include "tink/aead/aes_ctr_hmac_aead_key.h"
 #include "tink/aead/aes_ctr_hmac_aead_parameters.h"
@@ -58,7 +59,6 @@
 #include "tink/prf/hkdf_prf_parameters.h"
 #include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_parameters.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -72,7 +72,6 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_parameters.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/subtle/random.h"
-#include "tink/util/secret_data.h"
 #include "tink/util/test_matchers.h"
 
 namespace crypto {
@@ -225,10 +224,8 @@ std::unique_ptr<const EcdsaPrivateKey> CreateEcdsaPrivateKey() {
                              /*id_requirement=*/123, GetPartialKeyAccess());
   ABSL_CHECK_OK(public_key);
 
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           GetInsecureSecretKeyAccessInternal());
-
+  RestrictedData private_key_value =
+      RestrictedData(ec_key->priv, GetInsecureSecretKeyAccessInternal());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());
   ABSL_CHECK_OK(private_key);

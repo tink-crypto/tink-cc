@@ -141,7 +141,6 @@ tink_cc_library(
     tink::core::key
     tink::core::parameters
     tink::core::partial_key_access
-    tink::core::restricted_big_integer
     tink::core::restricted_data
     tink::core::secret_data
     tink::aead::aes_ctr_hmac_aead_key
@@ -185,6 +184,7 @@ tink_cc_library(
     tink::streamingaead::aes_gcm_hkdf_streaming_proto_serialization
     tink::subtle::common_enums
     tink::util::input_stream_util
+    tink::util::secret_data
     tink::proto::aes_gcm_cc_proto
     tink::proto::tink_cc_proto
 )

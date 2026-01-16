@@ -20,6 +20,8 @@
 #include <cstdint>
 
 #include "absl/strings/string_view.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
@@ -50,6 +52,9 @@ class RestrictedBigInteger {
   // after removing the leading zeros. Note that creating a `token` requires
   // access to InsecureSecretKeyAccess::Get().
   explicit RestrictedBigInteger(SecretData secret_big_integer,
+                                SecretKeyAccessToken token);
+
+  explicit RestrictedBigInteger(const RestrictedData& secret_big_integer,
                                 SecretKeyAccessToken token);
 
   // Returns the value of this RestrictedBigInteger object.

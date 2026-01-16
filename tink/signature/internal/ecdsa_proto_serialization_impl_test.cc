@@ -45,7 +45,6 @@
 #include "tink/key.h"
 #include "tink/parameters.h"
 #include "tink/partial_key_access.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/signature/ecdsa_parameters.h"
 #include "tink/signature/ecdsa_private_key.h"
@@ -832,8 +831,8 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithMutableRegistry) {
   absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                               InsecureSecretKeyAccess::Get()),
+          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                         InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
 
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
@@ -899,8 +898,8 @@ TEST_P(EcdsaProtoSerializationTest, ParsePrivateKeyWithRegistryBuilder) {
   absl::StatusOr<EcdsaPrivateKey> expected_private_key =
       EcdsaPrivateKey::Create(
           *expected_public_key,
-          RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                               InsecureSecretKeyAccess::Get()),
+          RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                         InsecureSecretKeyAccess::Get()),
           GetPartialKeyAccess());
 
   EXPECT_THAT(**private_key, Eq(*expected_private_key));
@@ -1106,8 +1105,8 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithMutableRegistry) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -1176,8 +1175,8 @@ TEST_P(EcdsaProtoSerializationTest, SerializePrivateKeyWithRegistryBuilder) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 
@@ -1244,8 +1243,8 @@ TEST_F(EcdsaProtoSerializationTest, SerializePrivateKeyNoSecretKeyAccessFails) {
 
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key,
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get()),
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get()),
       GetPartialKeyAccess());
   ASSERT_THAT(private_key, IsOk());
 

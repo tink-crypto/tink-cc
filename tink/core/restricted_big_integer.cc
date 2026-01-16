@@ -22,6 +22,8 @@
 #include "absl/strings/string_view.h"
 #include "openssl/crypto.h"
 #include "tink/internal/call_with_core_dump_protection.h"
+#include "tink/restricted_data.h"
+#include "tink/secret_data.h"
 #include "tink/secret_key_access_token.h"
 #include "tink/util/secret_data.h"
 
@@ -46,6 +48,19 @@ RestrictedBigInteger::RestrictedBigInteger(SecretData secret_big_integer,
   internal::CallWithCoreDumpProtection([&] {
     absl::string_view big_integer =
         util::SecretDataAsStringView(secret_big_integer);
+    size_t padding_pos = big_integer.find_first_not_of('\0');
+    if (padding_pos != std::string::npos) {
+      secret_ = util::SecretDataFromStringView(big_integer.substr(padding_pos));
+    } else {
+      secret_ = util::SecretDataFromStringView("");
+    }
+  });
+}
+
+RestrictedBigInteger::RestrictedBigInteger(
+    const RestrictedData& secret_big_integer, SecretKeyAccessToken token) {
+  internal::CallWithCoreDumpProtection([&] {
+    absl::string_view big_integer = secret_big_integer.GetSecret(token);
     size_t padding_pos = big_integer.find_first_not_of('\0');
     if (padding_pos != std::string::npos) {
       secret_ = util::SecretDataFromStringView(big_integer.substr(padding_pos));

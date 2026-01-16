@@ -61,7 +61,6 @@
 #include "tink/prf/hmac_prf_key.h"
 #include "tink/prf/hmac_prf_parameters.h"
 #include "tink/prf/hmac_prf_proto_serialization.h"
-#include "tink/restricted_big_integer.h"
 #include "tink/restricted_data.h"
 #include "tink/secret_data.h"
 #include "tink/signature/ecdsa_parameters.h"
@@ -80,6 +79,7 @@
 #include "tink/streamingaead/aes_gcm_hkdf_streaming_proto_serialization.h"
 #include "tink/subtle/common_enums.h"
 #include "tink/util/input_stream_util.h"
+#include "tink/util/secret_data.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
 
@@ -345,9 +345,9 @@ absl::StatusOr<std::unique_ptr<EcdsaPrivateKey>> DeriveEcdsaPrivateKey(
     return public_key.status();
   }
 
-  RestrictedBigInteger private_key_value =
-      RestrictedBigInteger(util::SecretDataAsStringView(ec_key->priv),
-                           InsecureSecretKeyAccess::Get());
+  RestrictedData private_key_value =
+      RestrictedData(util::SecretDataAsStringView(ec_key->priv),
+                     InsecureSecretKeyAccess::Get());
   absl::StatusOr<EcdsaPrivateKey> private_key = EcdsaPrivateKey::Create(
       *public_key, private_key_value, GetPartialKeyAccess());
   if (!private_key.ok()) {

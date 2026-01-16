@@ -786,6 +786,8 @@ tink_cc_library(
     core/restricted_big_integer.cc
     restricted_big_integer.h
   DEPS
+    tink::core::restricted_data
+    tink::core::secret_data
     tink::core::secret_key_access_token
     absl::string_view
     crypto

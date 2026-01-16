@@ -249,7 +249,6 @@ cc_test(
         "//tink:partial_key_access",
         "//tink:partial_key_access_token",
         "//tink:registry",
-        "//tink:restricted_big_integer",
         "//tink:restricted_data",
         "//tink:secret_key_access_token",
         "//tink/aead:aes_ctr_hmac_aead_key",

@@ -28,12 +28,14 @@
 #include "tink/keyset_handle.h"
 #include "tink/util/status.h"
 #include "tink/util/test_keyset_handle.h"
+#include "tink/util/test_matchers.h"
 #include "tink/util/test_util.h"
 #include "proto/tink.pb.h"
 
 using crypto::tink::test::AddRawKey;
 using crypto::tink::test::AddTinkKey;
 
+using ::crypto::tink::test::IsOk;
 using google::crypto::tink::KeyData;
 using google::crypto::tink::Keyset;
 using google::crypto::tink::KeyStatusType;
@@ -59,7 +61,7 @@ TEST_F(CleartextKeysetHandleTest, testRead) {
     auto reader =
         std::move(BinaryKeysetReader::New(keyset.SerializeAsString()).value());
     auto result = CleartextKeysetHandle::Read(std::move(reader));
-    EXPECT_TRUE(result.ok()) << result.status();
+    EXPECT_THAT(result, IsOk());
     auto handle = std::move(result.value());
     EXPECT_EQ(keyset.SerializeAsString(),
               TestKeysetHandle::GetKeyset(*handle).SerializeAsString());

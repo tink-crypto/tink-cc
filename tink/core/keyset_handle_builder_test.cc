@@ -100,7 +100,7 @@ class KeysetHandleBuilderTest : public Test {
  protected:
   void SetUp() override {
     absl::Status status = TinkConfig::Register();
-    ASSERT_TRUE(status.ok()) << status;
+    ASSERT_THAT(status, IsOk());
   }
 };
 

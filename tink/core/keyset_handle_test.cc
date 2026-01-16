@@ -121,7 +121,7 @@ class KeysetHandleTest : public ::testing::Test {
   void SetUp() override {
     Registry::Reset();
     auto status = TinkConfig::Register();
-    ASSERT_TRUE(status.ok()) << status;
+    ASSERT_THAT(status, IsOk());
 
     internal::UnSetFipsRestricted();
   }
@@ -329,7 +329,7 @@ TEST_F(KeysetHandleTest, ReadEncryptedKeysetBinary) {
     auto reader = std::move(
         BinaryKeysetReader::New(encrypted_keyset.SerializeAsString()).value());
     auto result = KeysetHandle::Read(std::move(reader), aead);
-    EXPECT_TRUE(result.ok()) << result.status();
+    EXPECT_THAT(result, IsOk());
     auto handle = std::move(result.value());
     EXPECT_EQ(keyset.SerializeAsString(),
               TestKeysetHandle::GetKeyset(*handle).SerializeAsString());
@@ -564,15 +564,15 @@ TEST_F(KeysetHandleTest, WriteEncryptedKeysetWithAssociatedData) {
   // Write the keyset handle and check the result.
   auto status =
       keyset_handle->WriteWithAssociatedData(writer.get(), aead, "aad");
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   auto reader_result = BinaryKeysetReader::New(buffer.str());
-  EXPECT_TRUE(reader_result.ok()) << reader_result.status();
+  EXPECT_THAT(reader_result, IsOk());
   auto read_encrypted_result = reader_result.value()->ReadEncrypted();
-  EXPECT_TRUE(read_encrypted_result.ok()) << read_encrypted_result.status();
+  EXPECT_THAT(read_encrypted_result, IsOk());
   auto encrypted_keyset = std::move(read_encrypted_result.value());
   auto decrypt_result =
       aead.Decrypt(encrypted_keyset->encrypted_keyset(), "aad");
-  EXPECT_TRUE(decrypt_result.status().ok()) << decrypt_result.status();
+  EXPECT_THAT(decrypt_result.status(), IsOk());
   auto decrypted = decrypt_result.value();
   EXPECT_EQ(decrypted, keyset.SerializeAsString());
 
@@ -846,7 +846,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandle) {
   {  // A keyset with a single key.
     auto handle_result = KeysetHandle::GenerateNew(
         SignatureKeyTemplates::EcdsaP256(), TestKeyGenConfig());
-    ASSERT_TRUE(handle_result.ok()) << handle_result.status();
+    ASSERT_THAT(handle_result, IsOk());
     auto handle = std::move(handle_result.value());
     auto public_handle_result =
         handle->GetPublicKeysetHandle(TestKeyGenConfig());
@@ -885,7 +885,7 @@ TEST_F(KeysetHandleTest, GetPublicKeysetHandleErrors) {
   {  // A keyset with a single key.
     auto handle_result = KeysetHandle::GenerateNew(
         AeadKeyTemplates::Aes128Eax(), TestKeyGenConfig());
-    ASSERT_TRUE(handle_result.ok()) << handle_result.status();
+    ASSERT_THAT(handle_result, IsOk());
     auto handle = std::move(handle_result.value());
     auto public_handle_result =
         handle->GetPublicKeysetHandle(TestKeyGenConfig());
@@ -1049,7 +1049,7 @@ TEST_F(KeysetHandleTest, GetPrimitive) {
   // Check that encryption with the primary can be decrypted with key_data_1.
   auto aead_result =
       keyset_handle->GetPrimitive<crypto::tink::Aead>(ConfigGlobalRegistry());
-  ASSERT_TRUE(aead_result.ok()) << aead_result.status();
+  ASSERT_THAT(aead_result, IsOk());
   std::unique_ptr<Aead> aead = std::move(aead_result.value());
 
   std::string plaintext = "plaintext";
@@ -1402,7 +1402,7 @@ TEST_F(KeysetHandleTest, GetPrimitiveCustomKeyManager) {
 TEST_F(KeysetHandleTest, Copiable) {
   auto handle_result = KeysetHandle::GenerateNew(AeadKeyTemplates::Aes128Eax(),
                                                  TestKeyGenConfig());
-  ASSERT_TRUE(handle_result.ok()) << handle_result.status();
+  ASSERT_THAT(handle_result, IsOk());
   std::unique_ptr<KeysetHandle> handle = std::move(handle_result.value());
   KeysetHandle handle_copy = *handle;
 }
@@ -1538,7 +1538,7 @@ TEST_F(KeysetHandleTest, WriteNoSecret) {
   auto writer =
       test::DummyKeysetWriter::New(std::move(destination_stream)).value();
   auto result = handle->WriteNoSecret(writer.get());
-  EXPECT_TRUE(result.ok());
+  EXPECT_THAT(result, IsOk());
 }
 
 TEST_F(KeysetHandleTest, WriteNoSecretFailForTypeUnknown) {

@@ -61,7 +61,7 @@ void add_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
     key_info.set_status(KeyStatusType::ENABLED);
     std::unique_ptr<Mac> mac(new DummyMac("dummy MAC"));
     auto add_result = primitive_set->AddPrimitive(std::move(mac), key_info);
-    EXPECT_TRUE(add_result.ok()) << add_result.status();
+    EXPECT_THAT(add_result, IsOk());
   }
 }
 
@@ -88,7 +88,7 @@ void access_primitives(PrimitiveSet<Mac>* primitive_set, int key_id_offset,
     key_info.set_status(KeyStatusType::ENABLED);
     std::string prefix = CryptoFormat::GetOutputPrefix(key_info).value();
     auto get_result = primitive_set->get_primitives(prefix);
-    EXPECT_TRUE(get_result.ok()) << get_result.status();
+    EXPECT_THAT(get_result, IsOk());
     EXPECT_GE(get_result.value()->size(), 1);
   }
 }
@@ -109,7 +109,7 @@ TEST_F(PrimitiveSetTest, ConcurrentOperations) {
   add_primitives_b.join();
 
   auto mac_set_result = std::move(mac_set_builder).Build();
-  ASSERT_TRUE(mac_set_result.ok()) << mac_set_result.status();
+  ASSERT_THAT(mac_set_result, IsOk());
   PrimitiveSet<Mac> mac_set = std::move(mac_set_result.value());
 
   // Access primitives.
@@ -126,7 +126,7 @@ TEST_F(PrimitiveSetTest, ConcurrentOperations) {
     key_info.set_status(KeyStatusType::ENABLED);
     std::string prefix = CryptoFormat::GetOutputPrefix(key_info).value();
     auto get_result = mac_set.get_primitives(prefix);
-    EXPECT_TRUE(get_result.ok()) << get_result.status();
+    EXPECT_THAT(get_result, IsOk());
     auto macs = get_result.value();
     if (key_id >= offset_b && key_id < offset_a + count) {
       EXPECT_EQ(2, macs->size());  // overlapping key_id range
@@ -198,7 +198,7 @@ TEST_F(PrimitiveSetTest, Basic) {
                                   .AddPrimitive(std::move(mac_6), key_6)
                                   .Build();
 
-  ASSERT_TRUE(primitive_set_result.ok()) << primitive_set_result.status();
+  ASSERT_THAT(primitive_set_result, IsOk());
   PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
 
   std::string data = "some data";
@@ -291,7 +291,7 @@ TEST_F(PrimitiveSetTest, PrimaryKeyWithIdCollisions) {
     primitive_set_builder.AddPrimaryPrimitive(std::move(mac_1), key_info_1);
 
     auto primitive_set_result = std::move(primitive_set_builder).Build();
-    ASSERT_TRUE(primitive_set_result.ok()) << primitive_set_result.status();
+    ASSERT_THAT(primitive_set_result, IsOk());
     PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
 
     std::string identifier = "";
@@ -312,7 +312,7 @@ TEST_F(PrimitiveSetTest, PrimaryKeyWithIdCollisions) {
     primitive_set_builder.AddPrimaryPrimitive(std::move(mac_1), key_info_1);
 
     auto primitive_set_result = std::move(primitive_set_builder).Build();
-    ASSERT_TRUE(primitive_set_result.ok()) << primitive_set_result.status();
+    ASSERT_THAT(primitive_set_result, IsOk());
     PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
     std::string identifier = CryptoFormat::GetOutputPrefix(key_info_1).value();
     const auto& primitives =
@@ -332,7 +332,7 @@ TEST_F(PrimitiveSetTest, PrimaryKeyWithIdCollisions) {
     primitive_set_builder.AddPrimaryPrimitive(std::move(mac_1), key_info_1);
 
     auto primitive_set_result = std::move(primitive_set_builder).Build();
-    ASSERT_TRUE(primitive_set_result.ok()) << primitive_set_result.status();
+    ASSERT_THAT(primitive_set_result, IsOk());
     PrimitiveSet<Mac> primitive_set = std::move(primitive_set_result.value());
     std::string identifier = CryptoFormat::GetOutputPrefix(key_info_1).value();
     const auto& primitives =
@@ -416,7 +416,7 @@ TEST_F(PrimitiveSetTest, GetAll) {
                         "type.googleapis.com/google.crypto.tink.AesCmacKey"))
           .Build();
 
-  ASSERT_TRUE(pset_result.ok()) << pset_result.status();
+  ASSERT_THAT(pset_result, IsOk());
   PrimitiveSet<Mac> pset = std::move(pset_result.value());
 
   std::vector<MacIdAndTypeUrl> mac_id_and_type;
@@ -592,23 +592,23 @@ TEST_F(PrimitiveSetTest, LegacyBasic) {
   // Add all the primitives.
   auto add_primitive_result =
       primitive_set.AddPrimitive(std::move(mac_1), key_1);
-  EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+  EXPECT_THAT(add_primitive_result, IsOk());
 
   add_primitive_result = primitive_set.AddPrimitive(std::move(mac_2), key_2);
-  EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+  EXPECT_THAT(add_primitive_result, IsOk());
 
   add_primitive_result = primitive_set.AddPrimitive(std::move(mac_3), key_3);
-  EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+  EXPECT_THAT(add_primitive_result, IsOk());
   EXPECT_THAT(primitive_set.set_primary(add_primitive_result.value()), IsOk());
 
   add_primitive_result = primitive_set.AddPrimitive(std::move(mac_4), key_4);
-  EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+  EXPECT_THAT(add_primitive_result, IsOk());
 
   add_primitive_result = primitive_set.AddPrimitive(std::move(mac_5), key_5);
-  EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+  EXPECT_THAT(add_primitive_result, IsOk());
 
   add_primitive_result = primitive_set.AddPrimitive(std::move(mac_6), key_6);
-  EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+  EXPECT_THAT(add_primitive_result, IsOk());
 
   // Try adding a "consumed" unique_ptr as a primitive.
   add_primitive_result = primitive_set.AddPrimitive(std::move(mac_6), key_6);
@@ -706,7 +706,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     // Add the first primitive, and set it as primary.
     auto add_primitive_result =
         primitive_set.AddPrimitive(std::move(mac_1), key_info_1);
-    EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+    EXPECT_THAT(add_primitive_result, IsOk());
     ASSERT_THAT(primitive_set.set_primary(add_primitive_result.value()),
                 IsOk());
 
@@ -719,7 +719,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     //  Adding another primitive should not invalidate the primary.
     add_primitive_result =
         primitive_set.AddPrimitive(std::move(mac_2), key_info_2);
-    EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+    EXPECT_THAT(add_primitive_result, IsOk());
     EXPECT_EQ(2, primitives.size());
     EXPECT_EQ(primitive_set.get_primary(), primitives[0].get());
   }
@@ -735,7 +735,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     // Add the first primitive, and set it as primary.
     auto add_primitive_result =
         primitive_set.AddPrimitive(std::move(mac_1), key_info_1);
-    EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+    EXPECT_THAT(add_primitive_result, IsOk());
     ASSERT_THAT(primitive_set.set_primary(add_primitive_result.value()),
                 IsOk());
 
@@ -748,7 +748,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     //  Adding another primitive should not invalidate the primary.
     add_primitive_result =
         primitive_set.AddPrimitive(std::move(mac_2), key_info_2);
-    EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+    EXPECT_THAT(add_primitive_result, IsOk());
     EXPECT_EQ(2, primitives.size());
     EXPECT_EQ(primitive_set.get_primary(), primitives[0].get());
   }
@@ -764,7 +764,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     // Add the first primitive, and set it as primary.
     auto add_primitive_result =
         primitive_set.AddPrimitive(std::move(mac_1), key_info_1);
-    EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+    EXPECT_THAT(add_primitive_result, IsOk());
     ASSERT_THAT(primitive_set.set_primary(add_primitive_result.value()),
                 IsOk());
 
@@ -777,7 +777,7 @@ TEST_F(PrimitiveSetTest, LegacyPrimaryKeyWithIdCollisions) {
     //  Adding another primitive should not invalidate the primary.
     add_primitive_result =
         primitive_set.AddPrimitive(std::move(mac_2), key_info_2);
-    EXPECT_TRUE(add_primitive_result.ok()) << add_primitive_result.status();
+    EXPECT_THAT(add_primitive_result, IsOk());
     EXPECT_EQ(2, primitives.size());
     EXPECT_EQ(primitive_set.get_primary(), primitives[0].get());
   }

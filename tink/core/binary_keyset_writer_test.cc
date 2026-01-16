@@ -95,7 +95,7 @@ TEST_F(BinaryKeysetWriterTest, testWriterCreation) {
   {  // Stream with good keyset.
     std::unique_ptr<std::ostream> destination_stream(new std::stringstream());
     auto writer_result = BinaryKeysetWriter::New(std::move(destination_stream));
-    EXPECT_TRUE(writer_result.ok()) << writer_result.status();
+    EXPECT_THAT(writer_result, IsOk());
   }
 }
 
@@ -103,10 +103,10 @@ TEST_F(BinaryKeysetWriterTest, testWriteKeyset) {
   std::stringbuf buffer;
   auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer_result = BinaryKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
   auto status = writer->Write(keyset_);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   EXPECT_EQ(binary_keyset_, buffer.str());
 }
 
@@ -114,10 +114,10 @@ TEST_F(BinaryKeysetWriterTest, testWriteEncryptedKeyset) {
   std::stringbuf buffer;
   auto destination_stream = std::make_unique<std::ostream>(&buffer);
   auto writer_result = BinaryKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
   auto status = writer->Write(encrypted_keyset_);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   EXPECT_EQ(binary_encrypted_keyset_, buffer.str());
 }
 
@@ -126,7 +126,7 @@ TEST_F(BinaryKeysetWriterTest, testDestinationStreamErrors) {
   auto destination_stream = std::make_unique<std::ostream>(&buffer);
   destination_stream->setstate(std::ostream::badbit);
   auto writer_result = BinaryKeysetWriter::New(std::move(destination_stream));
-  ASSERT_TRUE(writer_result.ok()) << writer_result.status();
+  ASSERT_THAT(writer_result, IsOk());
   auto writer = std::move(writer_result.value());
   {  // Write keyset.
     auto status = writer->Write(keyset_);

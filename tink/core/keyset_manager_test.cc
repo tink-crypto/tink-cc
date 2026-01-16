@@ -24,6 +24,7 @@
 #include "tink/aead/aes_gcm_key_manager.h"
 #include "tink/keyset_handle.h"
 #include "tink/util/test_keyset_handle.h"
+#include "tink/util/test_matchers.h"
 #include "proto/aes_gcm.pb.h"
 #include "proto/tink.pb.h"
 
@@ -33,6 +34,8 @@ using google::crypto::tink::KeyStatusType;
 using google::crypto::tink::KeyTemplate;
 using google::crypto::tink::OutputPrefixType;
 
+using ::crypto::tink::test::IsOk;
+
 namespace crypto {
 namespace tink {
 
@@ -40,7 +43,7 @@ class KeysetManagerTest : public ::testing::Test {
  protected:
   void SetUp() override {
     auto status = AeadConfig::Register();
-    ASSERT_TRUE(status.ok()) << status;
+    ASSERT_THAT(status, IsOk());
   }
   void TearDown() override {}
 };
@@ -55,7 +58,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
 
   // Create a keyset manager with a single key.
   auto new_result = KeysetManager::New(key_template);
-  EXPECT_TRUE(new_result.ok()) << new_result.status();
+  EXPECT_THAT(new_result, IsOk());
   auto keyset_manager = std::move(new_result.value());
   EXPECT_EQ(1, keyset_manager->KeyCount());
 
@@ -74,7 +77,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
   // Add another key.
   key_template.set_output_prefix_type(OutputPrefixType::RAW);
   auto add_result = keyset_manager->Add(key_template);
-  EXPECT_TRUE(add_result.ok()) << add_result.status();
+  EXPECT_THAT(add_result, IsOk());
   EXPECT_EQ(2, keyset_manager->KeyCount());
   auto key_id_1 = add_result.value();
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
@@ -91,7 +94,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
   // And another one, via rotation.
   key_template.set_output_prefix_type(OutputPrefixType::LEGACY);
   auto rotate_result = keyset_manager->Rotate(key_template);
-  EXPECT_TRUE(rotate_result.ok()) << add_result.status();
+  EXPECT_THAT(rotate_result, IsOk());
   EXPECT_EQ(3, keyset_manager->KeyCount());
   auto key_id_2 = rotate_result.value();
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
@@ -125,7 +128,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
   // Disable a key, and try to set it as primary.
   EXPECT_EQ(KeyStatusType::ENABLED, keyset.key(2).status());
   status = keyset_manager->Disable(key_id_2);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   EXPECT_EQ(3, keyset_manager->KeyCount());
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
   EXPECT_EQ(KeyStatusType::DISABLED, keyset.key(2).status());
@@ -141,26 +144,26 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
   // Enable ENABLED key, disable a DISABLED one.
   EXPECT_EQ(KeyStatusType::ENABLED, keyset.key(1).status());
   status = keyset_manager->Enable(key_id_1);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
   EXPECT_EQ(KeyStatusType::ENABLED, keyset.key(1).status());
 
   EXPECT_EQ(KeyStatusType::DISABLED, keyset.key(2).status());
   status = keyset_manager->Disable(key_id_2);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
   EXPECT_EQ(KeyStatusType::DISABLED, keyset.key(2).status());
 
   // Enable the disabled key, then destroy it, and try to re-enable.
   EXPECT_EQ(KeyStatusType::DISABLED, keyset.key(2).status());
   status = keyset_manager->Enable(key_id_2);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
   EXPECT_EQ(KeyStatusType::ENABLED, keyset.key(2).status());
   EXPECT_TRUE(keyset.key(2).has_key_data());
 
   status = keyset_manager->Destroy(key_id_2);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   EXPECT_EQ(3, keyset_manager->KeyCount());
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
   EXPECT_EQ(KeyStatusType::DESTROYED, keyset.key(2).status());
@@ -177,7 +180,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
 
   // Delete the destroyed key, then try to destroy and delete it again.
   status = keyset_manager->Delete(key_id_2);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   EXPECT_EQ(2, keyset_manager->KeyCount());
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
 
@@ -218,7 +221,7 @@ TEST_F(KeysetManagerTest, testBasicOperations) {
 
   // Delete the first key, then try to set it as primary.
   status = keyset_manager->Delete(key_id_0);
-  EXPECT_TRUE(status.ok()) << status;
+  EXPECT_THAT(status, IsOk());
   keyset = TestKeysetHandle::GetKeyset(*(keyset_manager->GetKeysetHandle()));
   EXPECT_EQ(1, keyset.key().size());
   EXPECT_EQ(key_id_1, keyset.key(0).key_id());

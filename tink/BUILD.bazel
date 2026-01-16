@@ -930,6 +930,7 @@ cc_test(
     deps = [
         ":binary_keyset_reader",
         "//proto:tink_cc_proto",
+        "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
@@ -1118,6 +1119,7 @@ cc_test(
         "//tink/aead:aead_config",
         "//tink/aead:aes_gcm_key_manager",
         "//tink/util:test_keyset_handle",
+        "//tink/util:test_matchers",
         "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",
     ],
@@ -1134,6 +1136,7 @@ cc_test(
         "//proto:tink_cc_proto",
         "//tink/util:status",
         "//tink/util:test_keyset_handle",
+        "//tink/util:test_matchers",
         "//tink/util:test_util",
         "@abseil-cpp//absl/status",
         "@googletest//:gtest_main",

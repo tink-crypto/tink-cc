@@ -29,6 +29,7 @@ namespace crypto {
 namespace tink {
 namespace {
 
+using ::crypto::tink::test::IsOk;
 using ::crypto::tink::test::StatusIs;
 using ::google::crypto::tink::KeysetInfo;
 using ::google::crypto::tink::OutputPrefixType;
@@ -38,7 +39,7 @@ void TestNonRawPrefix(const KeysetInfo::KeyInfo& key_info, int prefix_size,
                       uint8_t prefix_first_byte) {
   auto prefix_result =
       CryptoFormat::GetOutputPrefix(key_info);
-  EXPECT_TRUE(prefix_result.ok()) << prefix_result.status();
+  EXPECT_THAT(prefix_result, IsOk());
   auto prefix = prefix_result.value();
   EXPECT_EQ(prefix_size, prefix.length());
   EXPECT_EQ(prefix_first_byte, prefix[0]);
@@ -97,7 +98,7 @@ TEST_F(CryptoFormatTest, testRawPrefix) {
   key_info.set_key_id(key_id);
   auto prefix_result =
       CryptoFormat::GetOutputPrefix(key_info);
-  EXPECT_TRUE(prefix_result.ok()) << prefix_result.status();
+  EXPECT_THAT(prefix_result, IsOk());
   auto prefix = prefix_result.value();
   EXPECT_EQ(CryptoFormat::kRawPrefixSize, prefix.length());
 }
